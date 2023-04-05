@@ -26,6 +26,7 @@ from .core.const import (
     CHANNEL_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
+    SIGNAL_ATTR_UPDATED,
     Strobe,
 )
 from .core.registries import ZHA_ENTITIES
@@ -210,6 +211,18 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         await self._channel.cluster.write_attributes(
             {self._select_attr: self._enum[option.replace(" ", "_")]}
         )
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        self.async_accept_signal(
+            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+        )
+
+    @callback
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any):
+        """Handle state update from channel."""
         self.async_write_ha_state()
 
 
@@ -490,3 +503,20 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
     _enum = AqaraFeedingMode
     _attr_name = "Mode"
     _attr_icon: str = "mdi:wrench-clock"
+
+
+class AqaraThermostatPresetMode(types.enum8):
+    """Thermostat preset mode."""
+
+    Manual = 0x00
+    Auto = 0x01
+    Away = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatPreset(ZCLEnumSelectEntity, id_suffix="preset"):
+    """Representation of an Aqara thermostat preset configuration entity."""
+
+    _select_attr = "preset"
+    _enum = AqaraThermostatPresetMode
+    _attr_name = "Preset"

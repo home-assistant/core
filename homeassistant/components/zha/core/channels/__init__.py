@@ -240,6 +240,11 @@ class ChannelPool:
         return self._channels.zha_device.model
 
     @property
+    def quirk_class(self) -> str:
+        """Return device quirk class."""
+        return self._channels.zha_device.quirk_class
+
+    @property
     def skip_configuration(self) -> bool:
         """Return True if device does not require channel configuration."""
         return self._channels.zha_device.skip_configuration

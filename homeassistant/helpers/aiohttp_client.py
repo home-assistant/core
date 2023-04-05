@@ -143,7 +143,7 @@ def _async_create_clientsession(
         {USER_AGENT: SERVER_SOFTWARE},
     )
 
-    clientsession.close = warn_use(  # type: ignore[assignment]
+    clientsession.close = warn_use(  # type: ignore[method-assign]
         clientsession.close,
         WARN_CLOSE_MSG,
     )
@@ -271,9 +271,9 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context: bool | SSLContext = ssl_util.client_context()
+        ssl_context: bool | SSLContext = ssl_util.get_default_context()
     else:
-        ssl_context = False
+        ssl_context = ssl_util.get_default_no_verify_context()
 
     connector = aiohttp.TCPConnector(
         enable_cleanup_closed=True,
