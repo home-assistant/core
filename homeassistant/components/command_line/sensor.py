@@ -145,6 +145,8 @@ class CommandSensor(SensorEntity):
                     None,
                 )
             )
+        elif self._json_attributes:
+            self._attr_native_value = None
         else:
             self._attr_native_value = value
 
