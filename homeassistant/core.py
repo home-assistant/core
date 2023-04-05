@@ -505,12 +505,14 @@ class HomeAssistant:
 
         return task
 
-    def create_task(self, target: Coroutine[Any, Any, Any]) -> None:
+    def create_task(
+        self, target: Coroutine[Any, Any, Any], name: str | None = None
+    ) -> None:
         """Add task to the executor pool.
 
         target: target to call.
         """
-        self.loop.call_soon_threadsafe(self.async_create_task, target)
+        self.loop.call_soon_threadsafe(self.async_create_task, target, name)
 
     @callback
     def async_create_task(
@@ -1950,7 +1952,11 @@ class Config:
         )
 
     def is_allowed_path(self, path: str) -> bool:
-        """Check if the path is valid for access from outside."""
+        """Check if the path is valid for access from outside.
+
+        This function does blocking I/O and should not be called from the event loop.
+        Use hass.async_add_executor_job to schedule it on the executor.
+        """
         assert path is not None
 
         thepath = pathlib.Path(path)
