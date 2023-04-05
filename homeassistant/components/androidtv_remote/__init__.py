@@ -46,7 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def on_hass_stop(event) -> None:
+    @callback
+    def on_hass_stop(event) -> None:
         """Stop push updates when hass stops."""
         api.disconnect()
 
