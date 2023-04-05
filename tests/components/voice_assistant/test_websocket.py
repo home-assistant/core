@@ -1,9 +1,11 @@
 """Websocket tests for Voice Assistant integration."""
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.voice_assistant.const import DOMAIN
+from homeassistant.components.voice_assistant.pipeline import Pipeline, PipelineStore
 from homeassistant.core import HomeAssistant
 
 from tests.typing import WebSocketGenerator
@@ -398,3 +400,160 @@ async def test_invalid_stage_order(
     # result
     msg = await client.receive_json()
     assert not msg["success"]
+
+
+async def test_add_pipeline(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can add a pipeline."""
+    client = await hass_ws_client(hass)
+    pipeline_store: PipelineStore = hass.data[DOMAIN]
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/add",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"pipeline_id": ANY}
+
+    assert len(pipeline_store.pipelines) == 1
+    pipeline = pipeline_store.pipelines[msg["result"]["pipeline_id"]]
+    assert pipeline == Pipeline(
+        conversation_engine="test_conversation_engine",
+        id=msg["result"]["pipeline_id"],
+        language="test_language",
+        name="test_name",
+        stt_engine="test_stt_engine",
+        tts_engine="test_tts_engine",
+    )
+
+
+async def test_delete_pipeline(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can delete a pipeline."""
+    client = await hass_ws_client(hass)
+    pipeline_store: PipelineStore = hass.data[DOMAIN]
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/add",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(pipeline_store.pipelines) == 1
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/delete",
+            "pipeline_id": msg["result"]["pipeline_id"],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(pipeline_store.pipelines) == 0
+
+
+async def test_list_pipelines(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can list pipelines."""
+    client = await hass_ws_client(hass)
+    pipeline_store: PipelineStore = hass.data[DOMAIN]
+
+    await client.send_json_auto_id({"type": "voice_assistant/pipeline/list"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"pipelines": []}
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/add",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(pipeline_store.pipelines) == 1
+
+    await client.send_json_auto_id({"type": "voice_assistant/pipeline/list"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "pipelines": [
+            {
+                "conversation_engine": "test_conversation_engine",
+                "id": ANY,
+                "language": "test_language",
+                "name": "test_name",
+                "stt_engine": "test_stt_engine",
+                "tts_engine": "test_tts_engine",
+            }
+        ]
+    }
+
+
+async def test_update_pipeline(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can list pipelines."""
+    client = await hass_ws_client(hass)
+    pipeline_store: PipelineStore = hass.data[DOMAIN]
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/add",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id = msg["result"]["pipeline_id"]
+    assert len(pipeline_store.pipelines) == 1
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/update",
+            "conversation_engine": "new_conversation_engine",
+            "language": "new_language",
+            "name": "new_name",
+            "pipeline_id": pipeline_id,
+            "stt_engine": "new_stt_engine",
+            "tts_engine": "new_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    assert len(pipeline_store.pipelines) == 1
+    pipeline = pipeline_store.pipelines[pipeline_id]
+    assert pipeline == Pipeline(
+        conversation_engine="new_conversation_engine",
+        id=pipeline_id,
+        language="new_language",
+        name="new_name",
+        stt_engine="new_stt_engine",
+        tts_engine="new_tts_engine",
+    )

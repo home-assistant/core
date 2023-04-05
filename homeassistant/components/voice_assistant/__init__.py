@@ -16,6 +16,7 @@ from .pipeline import (
     PipelineInput,
     PipelineRun,
     PipelineStage,
+    PipelineStore,
     async_get_pipeline,
 )
 from .websocket_api import async_register_websocket_api
@@ -31,8 +32,10 @@ __all__ = (
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Voice Assistant integration."""
-    hass.data[DOMAIN] = {}
+    pipeline_store = PipelineStore(hass)
+    await pipeline_store.async_load()
     async_register_websocket_api(hass)
+    hass.data[DOMAIN] = pipeline_store
 
     return True
 
