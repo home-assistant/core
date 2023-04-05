@@ -10,19 +10,15 @@ import wave
 import async_timeout
 
 from homeassistant.components import stt, tts
+from homeassistant.components.voice_assistant import async_pipeline_from_audio_stream
 from homeassistant.components.voice_assistant.pipeline import (
     Pipeline,
     PipelineEvent,
     PipelineEventType,
-    PipelineInput,
-    PipelineRun,
-    PipelineStage,
-    async_get_pipeline,
 )
 from homeassistant.components.voice_assistant.vad import VoiceCommandSegmenter
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import HomeAssistant
 
-from .error import VoipError
 from .rtp_audio import RtpOpusInput, RtpOpusOutput
 from .sip import CallInfo, SipDatagramProtocol
 
@@ -50,25 +46,12 @@ class VoipDatagramProtocol(SipDatagramProtocol):
             rtp_port,
         )
 
-        language = self.hass.config.language
-        if language == "en":
-            language = "en-US"
-
-        pipeline = async_get_pipeline(
-            self.hass,
-            language=language,
-        )
-        if pipeline is None:
-            raise VoipError(
-                f"Pipeline not found for language: {language}",
-            )
-
         # Handle RTP packets in pipeline server
         self.hass.async_create_task(
             self.hass.loop.create_datagram_endpoint(
                 lambda: PipelineDatagramProtocol(
                     self.hass,
-                    pipeline,
+                    self.hass.config.language,
                 ),
                 (rtp_ip, rtp_port),
             ),
@@ -95,10 +78,11 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
     def __init__(
         self,
         hass: HomeAssistant,
-        pipeline: Pipeline,
+        language: str,
     ) -> None:
         self.hass = hass
-        self.pipeline = pipeline
+        self.language = language
+        self.pipeline: Pipeline | None = None
         self.transport = None
         self.addr = None
 
@@ -106,6 +90,7 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
         self._rtp_input = RtpOpusInput()
         self._rtp_output = RtpOpusOutput()
         self._pipeline_task: asyncio.Task | None = None
+        self._conversation_id: str | None = None
 
     def connection_made(self, transport):
         self.transport = transport
@@ -171,7 +156,13 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
                     self.transport = None
 
         def event_callback(event: PipelineEvent):
-            if (event.type == PipelineEventType.TTS_END) and event.data:
+            if not event.data:
+                return
+
+            if event.type == PipelineEventType.INTENT_END:
+                # Capture conversation id
+                self._conversation_id = event.data["intent_output"]["conversation_id"]
+            elif event.type == PipelineEventType.TTS_END:
                 # Send TTS audio to caller over RTP
                 media_id = event.data["tts_output"]["media_id"]
                 self.hass.async_create_background_task(
@@ -179,32 +170,25 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
                     "voip_pipeline_tts",
                 )
 
-        pipeline_input = PipelineInput(
-            PipelineRun(
-                hass=self.hass,
-                context=Context(),
-                pipeline=self.pipeline,
-                start_stage=PipelineStage.STT,
-                end_stage=PipelineStage.TTS,
-                event_callback=event_callback,
-            ),
-            stt_metadata=stt.SpeechMetadata(
-                language=self.pipeline.language,
-                format=stt.AudioFormats.WAV,
-                codec=stt.AudioCodecs.PCM,
-                bit_rate=stt.AudioBitRates.BITRATE_16,
-                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                channel=stt.AudioChannels.CHANNEL_MONO,
-            ),
-            stt_stream=stt_stream(),
-        )
-
         try:
-            await pipeline_input.validate()
-
             # Run pipeline with a timeout
             async with async_timeout.timeout(pipeline_timeout):
-                await pipeline_input.execute()
+                await async_pipeline_from_audio_stream(
+                    self.hass,
+                    event_callback=event_callback,
+                    stt_metadata=stt.SpeechMetadata(
+                        language="",  # set in async_pipeline_from_audio_stream
+                        format=stt.AudioFormats.WAV,
+                        codec=stt.AudioCodecs.PCM,
+                        bit_rate=stt.AudioBitRates.BITRATE_16,
+                        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                        channel=stt.AudioChannels.CHANNEL_MONO,
+                    ),
+                    stt_stream=stt_stream(),
+                    language=self.language,
+                    conversation_id=self._conversation_id,
+                )
+
         except asyncio.TimeoutError:
             # Expected after caller hangs up
             _LOGGER.debug("Pipeline timeout")
