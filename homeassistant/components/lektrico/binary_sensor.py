@@ -47,8 +47,11 @@ class HasActiveErrorsBinarySensorEntityDescription(
                 lektrico_binary_sensor.coordinator.data.critical_temp,
                 lektrico_binary_sensor.coordinator.data.overcurrent,
                 lektrico_binary_sensor.coordinator.data.meter_fault,
-                lektrico_binary_sensor.coordinator.data.voltage_error,
+                lektrico_binary_sensor.coordinator.data.undervoltage_error,
+                lektrico_binary_sensor.coordinator.data.overvoltage_error,
                 lektrico_binary_sensor.coordinator.data.rcd_error,
+                lektrico_binary_sensor.coordinator.data.cp_diode_failure,
+                lektrico_binary_sensor.coordinator.data.contactor_failure,
             )
 
 
@@ -113,8 +116,11 @@ class LektricoBinarySensor(CoordinatorEntity, BinarySensorEntity):
                 "critical_temp": "",
                 "overcurrent": "",
                 "meter_fault": "",
-                "voltage_error": "",
+                "undervoltage_error": "",
+                "overvoltage_error": "",
                 "rcd_error": "",
+                "cp_diode_failure": "",
+                "contactor_failure": "",
             }
 
     @property
@@ -138,6 +144,9 @@ class LektricoBinarySensor(CoordinatorEntity, BinarySensorEntity):
         value5: bool,
         value6: bool,
         value7: bool,
+        value8: bool,
+        value9: bool,
+        value10: bool,
     ) -> None:
         """Set _attr_extra_state_attributes for HasActiveErrors binary sensor."""
         self._attr_extra_state_attributes["state_e_activated"] = value1
@@ -145,5 +154,8 @@ class LektricoBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_extra_state_attributes["critical_temp"] = value3
         self._attr_extra_state_attributes["overcurrent"] = value4
         self._attr_extra_state_attributes["meter_fault"] = value5
-        self._attr_extra_state_attributes["voltage_error"] = value6
-        self._attr_extra_state_attributes["rcd_error"] = value7
+        self._attr_extra_state_attributes["undervoltage_error"] = value6
+        self._attr_extra_state_attributes["overvoltage_error"] = value7
+        self._attr_extra_state_attributes["rcd_error"] = value8
+        self._attr_extra_state_attributes["cp_diode_failure"] = value9
+        self._attr_extra_state_attributes["contactor_failure"] = value10
