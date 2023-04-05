@@ -20,8 +20,7 @@ def init_state(url: str) -> dict:
 
 
 class StateFetcher:
-    """
-    Representation of the coordinator state handling.
+    """Representation of the coordinator state handling.
 
     Whenever the coordinator is triggered, it will call the APIs and update status data.
     """

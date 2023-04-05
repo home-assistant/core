@@ -101,8 +101,7 @@ def _setup_api(config: ConfigType) -> dict:
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """
-    Set up the Awattar defined via the UI.
+    """Set up the Awattar defined via the UI.
 
     - setup of the API
     - coordinator
