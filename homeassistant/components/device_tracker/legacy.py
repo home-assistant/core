@@ -475,7 +475,7 @@ def async_setup_scanner_platform(
         hass,
         async_device_tracker_scan,
         interval,
-        f"device_tracker {platform} legacy scan",
+        name=f"device_tracker {platform} legacy scan",
     )
     hass.async_create_task(async_device_tracker_scan(None))
 
