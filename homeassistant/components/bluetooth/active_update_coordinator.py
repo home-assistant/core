@@ -143,7 +143,7 @@ class ActiveBluetoothDataUpdateCoordinator(
             self._last_poll = monotonic_time_coarse()
 
         if not self.last_poll_successful:
-            self.logger.debug("%s: Polling recovered")
+            self.logger.debug("%s: Polling recovered", self.address)
             self.last_poll_successful = True
 
         self._async_handle_bluetooth_poll()

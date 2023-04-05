@@ -230,8 +230,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/cups/ @fabaff
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
-/homeassistant/components/darksky/ @fabaff
-/tests/components/darksky/ @fabaff
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -285,7 +283,7 @@ build.json @home-assistant/supervisor
 /tests/components/dsmr_reader/ @depl0y @glodenox
 /homeassistant/components/dunehd/ @bieniu
 /tests/components/dunehd/ @bieniu
-/homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95
+/homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95 @andarotajo
 /homeassistant/components/dynalite/ @ziv1234
 /tests/components/dynalite/ @ziv1234
 /homeassistant/components/eafm/ @Jc2k
@@ -787,7 +785,8 @@ build.json @home-assistant/supervisor
 /tests/components/nexia/ @bdraco
 /homeassistant/components/nextbus/ @vividboarder
 /tests/components/nextbus/ @vividboarder
-/homeassistant/components/nextcloud/ @meichthys
+/homeassistant/components/nextcloud/ @mib1185
+/tests/components/nextcloud/ @mib1185
 /homeassistant/components/nextdns/ @bieniu
 /tests/components/nextdns/ @bieniu
 /homeassistant/components/nfandroidtv/ @tkdrob
@@ -934,6 +933,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/pvpc_hourly_pricing/ @azogue
 /tests/components/pvpc_hourly_pricing/ @azogue
 /homeassistant/components/qbittorrent/ @geoffreylagaisse
+/tests/components/qbittorrent/ @geoffreylagaisse
 /homeassistant/components/qingping/ @bdraco @skgsergio
 /tests/components/qingping/ @bdraco @skgsergio
 /homeassistant/components/qld_bushfire/ @exxamalte
@@ -979,6 +979,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/repairs/ @home-assistant/core
 /tests/components/repairs/ @home-assistant/core
 /homeassistant/components/repetier/ @MTrab @ShadowBr0ther
+/homeassistant/components/rest/ @epenet
+/tests/components/rest/ @epenet
 /homeassistant/components/rflink/ @javicalle
 /tests/components/rflink/ @javicalle
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
@@ -1105,6 +1107,7 @@ build.json @home-assistant/supervisor
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/sms/ @ocalvo
 /homeassistant/components/snapcast/ @luar123
+/tests/components/snapcast/ @luar123
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/solaredge/ @frenck
@@ -1156,8 +1159,8 @@ build.json @home-assistant/supervisor
 /tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
 /tests/components/stream/ @hunterjm @uvjustin @allenporter
-/homeassistant/components/stt/ @pvizeli
-/tests/components/stt/ @pvizeli
+/homeassistant/components/stt/ @home-assistant/core @pvizeli
+/tests/components/stt/ @home-assistant/core @pvizeli
 /homeassistant/components/subaru/ @G-Two
 /tests/components/subaru/ @G-Two
 /homeassistant/components/suez_water/ @ooii
@@ -1295,8 +1298,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/velux/ @Julius2342
 /homeassistant/components/venstar/ @garbled1
 /tests/components/venstar/ @garbled1
-/homeassistant/components/verisure/ @frenck
-/tests/components/verisure/ @frenck
+/homeassistant/components/verisure/ @frenck @niro1987
+/tests/components/verisure/ @frenck @niro1987
 /homeassistant/components/versasense/ @flamm3blemuff1n
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
@@ -1358,15 +1361,14 @@ build.json @home-assistant/supervisor
 /tests/components/wled/ @frenck
 /homeassistant/components/wolflink/ @adamkrol93
 /tests/components/wolflink/ @adamkrol93
-/homeassistant/components/workday/ @fabaff
-/tests/components/workday/ @fabaff
+/homeassistant/components/workday/ @fabaff @gjohansson-ST
+/tests/components/workday/ @fabaff @gjohansson-ST
 /homeassistant/components/worldclock/ @fabaff
 /tests/components/worldclock/ @fabaff
 /homeassistant/components/ws66i/ @ssaenger
 /tests/components/ws66i/ @ssaenger
 /homeassistant/components/xbox/ @hunterjm
 /tests/components/xbox/ @hunterjm
-/homeassistant/components/xbox_live/ @MartinHjelmare
 /homeassistant/components/xiaomi_aqara/ @danielhiversen @syssi
 /tests/components/xiaomi_aqara/ @danielhiversen @syssi
 /homeassistant/components/xiaomi_ble/ @Jc2k @Ernst79

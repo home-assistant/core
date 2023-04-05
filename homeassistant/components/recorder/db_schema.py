@@ -88,6 +88,8 @@ TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 STATISTICS_TABLES = ("statistics", "statistics_short_term")
 
 MAX_STATE_ATTRS_BYTES = 16384
+MAX_EVENT_DATA_BYTES = 32768
+
 PSQL_DIALECT = SupportedDialect.POSTGRESQL
 
 ALL_TABLES = [
@@ -119,13 +121,17 @@ STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 LEGACY_STATES_EVENT_ID_INDEX = "ix_states_event_id"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
+MYSQL_COLLATE = "utf8mb4_unicode_ci"
+MYSQL_DEFAULT_CHARSET = "utf8mb4"
+MYSQL_ENGINE = "InnoDB"
+
 _DEFAULT_TABLE_ARGS = {
-    "mysql_default_charset": "utf8mb4",
-    "mysql_collate": "utf8mb4_unicode_ci",
-    "mysql_engine": "InnoDB",
-    "mariadb_default_charset": "utf8mb4",
-    "mariadb_collate": "utf8mb4_unicode_ci",
-    "mariadb_engine": "InnoDB",
+    "mysql_default_charset": MYSQL_DEFAULT_CHARSET,
+    "mysql_collate": MYSQL_COLLATE,
+    "mysql_engine": MYSQL_ENGINE,
+    "mariadb_default_charset": MYSQL_DEFAULT_CHARSET,
+    "mariadb_collate": MYSQL_COLLATE,
+    "mariadb_engine": MYSQL_ENGINE,
 }
 
 
@@ -154,6 +160,7 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
+DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
 
@@ -322,8 +329,18 @@ class EventData(Base):
     ) -> bytes:
         """Create shared_data from an event."""
         if dialect == SupportedDialect.POSTGRESQL:
-            return json_bytes_strip_null(event.data)
-        return json_bytes(event.data)
+            bytes_result = json_bytes_strip_null(event.data)
+        bytes_result = json_bytes(event.data)
+        if len(bytes_result) > MAX_EVENT_DATA_BYTES:
+            _LOGGER.warning(
+                "Event data for %s exceed maximum size of %s bytes. "
+                "This can cause database performance issues; Event data "
+                "will not be stored",
+                event.event_type,
+                MAX_EVENT_DATA_BYTES,
+            )
+            return b"{}"
+        return bytes_result
 
     @staticmethod
     @lru_cache
@@ -350,7 +367,7 @@ class EventTypes(Base):
     __tablename__ = TABLE_EVENT_TYPES
     event_type_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     event_type: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True
+        String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True, unique=True
     )
 
     def __repr__(self) -> str:
@@ -600,7 +617,7 @@ class StatesMeta(Base):
     __tablename__ = TABLE_STATES_META
     metadata_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
     entity_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_STATE_ENTITY_ID), index=True
+        String(MAX_LENGTH_STATE_ENTITY_ID), index=True, unique=True
     )
 
     def __repr__(self) -> str:

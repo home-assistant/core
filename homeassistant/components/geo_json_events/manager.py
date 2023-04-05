@@ -12,7 +12,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-DOMAIN = "geo_json_events"
+from .const import DOMAIN, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,8 +77,8 @@ class GeoJsonFeedEntityManager:
 
     async def _update_entity(self, external_id: str) -> None:
         """Update entity."""
-        async_dispatcher_send(self._hass, f"geo_json_events_update_{external_id}")
+        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
 
     async def _remove_entity(self, external_id: str) -> None:
         """Remove entity."""
-        async_dispatcher_send(self._hass, f"geo_json_events_delete_{external_id}")
+        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))

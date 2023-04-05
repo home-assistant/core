@@ -82,8 +82,8 @@ from .const import (
 from .helpers import (
     async_enable_statistics,
     async_get_node_from_device_id,
+    async_update_data_collection_preference,
     get_device_id,
-    update_data_collection_preference,
 )
 
 DATA_UNSUBSCRIBE = "unsubs"
@@ -1860,7 +1860,7 @@ async def websocket_update_data_collection_preference(
 ) -> None:
     """Update preference for data collection and enable/disable collection."""
     opted_in = msg[OPTED_IN]
-    update_data_collection_preference(hass, entry, opted_in)
+    async_update_data_collection_preference(hass, entry, opted_in)
 
     if opted_in:
         await async_enable_statistics(driver)
