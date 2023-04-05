@@ -76,7 +76,7 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Start pairing with the Android TV. Navigate to the pair flow to enter the PIN shown on screen."""
         assert self.host
         self.api = create_api(self.hass, self.host)
-        self.api.generate_cert_if_missing()
+        await self.api.async_generate_cert_if_missing()
         await self.api.async_start_pairing()
         return await self.async_step_pair()
 

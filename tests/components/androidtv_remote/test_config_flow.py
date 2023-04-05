@@ -35,6 +35,7 @@ async def test_user_flow_success(
     pin = "123456"
 
     mock_api.async_get_name_and_mac = AsyncMock(return_value=(name, mac))
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_start_pairing = AsyncMock(return_value=None)
 
     result = await hass.config_entries.flow.async_configure(
@@ -46,7 +47,7 @@ async def test_user_flow_success(
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
 
-    mock_api.generate_cert_if_missing.assert_called()
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_start_pairing.assert_called()
 
     mock_api.async_finish_pairing = AsyncMock(return_value=None)
@@ -133,6 +134,7 @@ async def test_user_flow_pairing_invalid_auth(
     pin = "123456"
 
     mock_api.async_get_name_and_mac = AsyncMock(return_value=(name, mac))
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_start_pairing = AsyncMock(return_value=None)
 
     result = await hass.config_entries.flow.async_configure(
@@ -144,7 +146,7 @@ async def test_user_flow_pairing_invalid_auth(
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
 
-    mock_api.generate_cert_if_missing.assert_called()
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_start_pairing.assert_called()
 
     mock_api.async_finish_pairing = AsyncMock(side_effect=InvalidAuth())
@@ -194,6 +196,7 @@ async def test_user_flow_pairing_connection_closed(
     pin = "123456"
 
     mock_api.async_get_name_and_mac = AsyncMock(return_value=(name, mac))
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_start_pairing = AsyncMock(return_value=None)
 
     result = await hass.config_entries.flow.async_configure(
@@ -205,7 +208,7 @@ async def test_user_flow_pairing_connection_closed(
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
 
-    mock_api.generate_cert_if_missing.assert_called()
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_start_pairing.assert_called()
 
     mock_api.async_finish_pairing = AsyncMock(side_effect=ConnectionClosed())
@@ -255,6 +258,7 @@ async def test_user_flow_pairing_connection_closed_followed_by_cannot_connect(
     pin = "123456"
 
     mock_api.async_get_name_and_mac = AsyncMock(return_value=(name, mac))
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_start_pairing = AsyncMock(side_effect=[None, CannotConnect()])
 
     result = await hass.config_entries.flow.async_configure(
@@ -266,7 +270,7 @@ async def test_user_flow_pairing_connection_closed_followed_by_cannot_connect(
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
 
-    mock_api.generate_cert_if_missing.assert_called()
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_start_pairing.assert_called()
 
     mock_api.async_finish_pairing = AsyncMock(side_effect=ConnectionClosed())
@@ -442,6 +446,7 @@ async def test_zeroconf_flow_success(
     assert result["context"]["unique_id"] == unique_id
     assert result["context"]["title_placeholders"] == {"name": name}
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_start_pairing = AsyncMock(return_value=None)
 
     result = await hass.config_entries.flow.async_configure(
@@ -453,7 +458,7 @@ async def test_zeroconf_flow_success(
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
 
-    mock_api.generate_cert_if_missing.assert_called()
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_start_pairing.assert_called()
 
     mock_api.async_finish_pairing = AsyncMock(return_value=None)
@@ -511,6 +516,7 @@ async def test_zeroconf_flow_cannot_connect(
     assert result["step_id"] == "zeroconf_confirm"
     assert not result["data_schema"]
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_start_pairing = AsyncMock(side_effect=CannotConnect())
 
     result = await hass.config_entries.flow.async_configure(
@@ -520,7 +526,7 @@ async def test_zeroconf_flow_cannot_connect(
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    mock_api.generate_cert_if_missing.assert_called()
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_start_pairing.assert_called()
 
     await hass.async_block_till_done()
@@ -561,6 +567,7 @@ async def test_zeroconf_flow_pairing_invalid_auth(
     assert result["step_id"] == "zeroconf_confirm"
     assert not result["data_schema"]
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_start_pairing = AsyncMock(return_value=None)
 
     result = await hass.config_entries.flow.async_configure(
@@ -572,7 +579,7 @@ async def test_zeroconf_flow_pairing_invalid_auth(
     assert "pin" in result["data_schema"].schema
     assert not result["errors"]
 
-    mock_api.generate_cert_if_missing.assert_called()
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_start_pairing.assert_called()
 
     mock_api.async_finish_pairing = AsyncMock(side_effect=InvalidAuth())
@@ -742,6 +749,7 @@ async def test_reauth_flow_success(
     assert result["context"]["unique_id"] == unique_id
     assert result["context"]["title_placeholders"] == {"name": name}
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_start_pairing = AsyncMock(return_value=None)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -751,7 +759,7 @@ async def test_reauth_flow_success(
     assert not result["errors"]
 
     mock_api.async_get_name_and_mac.assert_not_called()
-    mock_api.generate_cert_if_missing.assert_called()
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_start_pairing.assert_called()
 
     mock_api.async_finish_pairing = AsyncMock(return_value=None)
@@ -810,6 +818,7 @@ async def test_reauth_flow_cannot_connect(
     assert result["context"]["unique_id"] == unique_id
     assert result["context"]["title_placeholders"] == {"name": name}
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_start_pairing = AsyncMock(side_effect=CannotConnect())
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -818,7 +827,7 @@ async def test_reauth_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     mock_api.async_get_name_and_mac.assert_not_called()
-    mock_api.generate_cert_if_missing.assert_called()
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_start_pairing.assert_called()
 
     await hass.async_block_till_done()
