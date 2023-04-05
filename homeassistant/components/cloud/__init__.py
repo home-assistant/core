@@ -308,7 +308,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     account_link.async_setup(hass)
 
-    _startup_repairs_callback = async_call_later(
+    _cancel_repairs_callback = async_call_later(
         hass=hass,
         delay=timedelta(hours=STARTUP_REPAIR_DELAY),
         action=async_startup_repairs,
@@ -320,7 +320,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         Cancel the repairs startup if it hasn't run yet.
         """
-        _startup_repairs_callback()
+        _cancel_repairs_callback()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
