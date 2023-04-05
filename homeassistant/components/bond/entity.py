@@ -177,6 +177,7 @@ class BondEntity(Entity):
         self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
         self._async_schedule_bpup_alive_or_poll()
 
+    @callback
     def _async_schedule_bpup_alive_or_poll(self) -> None:
         """Schedule the BPUP alive or poll."""
         alive = self._bpup_subs.alive
@@ -186,14 +187,10 @@ class BondEntity(Entity):
             self._async_update_if_bpup_not_alive,
         )
 
-    def _async_cancel_bpup_alive_or_poll(self) -> None:
-        """Cancel the BPUP alive or poll check."""
-        if self._bpup_polling_fallback:
-            self._bpup_polling_fallback()
-            self._bpup_polling_fallback = None
-
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from BPUP data on remove."""
         await super().async_will_remove_from_hass()
         self._bpup_subs.unsubscribe(self._device_id, self._async_bpup_callback)
-        self._async_cancel_bpup_alive_or_poll()
+        if self._bpup_polling_fallback:
+            self._bpup_polling_fallback()
+            self._bpup_polling_fallback = None
