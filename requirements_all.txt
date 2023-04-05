@@ -156,7 +156,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.6.0
+aioesphomeapi==13.6.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.1
+aiohomekit==2.6.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -798,7 +798,7 @@ glances_api==0.4.1
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.30
+goodwe==0.2.31
 
 # homeassistant.components.google_mail
 google-api-python-client==2.71.0
@@ -907,7 +907,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230401.0
+home-assistant-frontend==20230403.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
@@ -1069,7 +1069,7 @@ limitlessled==1.1.3
 linode-api==4.1.9b1
 
 # homeassistant.components.google_maps
-locationsharinglib==4.1.5
+locationsharinglib==5.0.0
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
@@ -1540,7 +1540,7 @@ pycfdns==2.0.1
 pychannels==1.2.3
 
 # homeassistant.components.cast
-pychromecast==13.0.6
+pychromecast==13.0.7
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.1
@@ -2392,7 +2392,7 @@ spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.7
+sqlalchemy==2.0.8
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2692,7 +2692,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.53.0
+zeroconf==0.54.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
