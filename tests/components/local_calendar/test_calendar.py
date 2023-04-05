@@ -28,6 +28,7 @@ async def test_empty_calendar(
     assert len(events) == 0
 
     state = hass.states.get(TEST_ENTITY)
+    assert state
     assert state.name == FRIENDLY_NAME
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
@@ -36,10 +37,27 @@ async def test_empty_calendar(
     }
 
 
+@pytest.mark.parametrize(
+    ("dtstart", "dtend"),
+    [
+        ("1997-07-14T18:00:00+01:00", "1997-07-15T05:00:00+01:00"),
+        ("1997-07-14T17:00:00+00:00", "1997-07-15T04:00:00+00:00"),
+        ("1997-07-14T11:00:00-06:00", "1997-07-14T22:00:00-06:00"),
+        ("1997-07-14T10:00:00-07:00", "1997-07-14T21:00:00-07:00"),
+    ],
+)
 async def test_api_date_time_event(
-    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+    ws_client: ClientFixture,
+    setup_integration: None,
+    get_events: GetEventsFn,
+    dtstart: str,
+    dtend: str,
 ) -> None:
-    """Test an event with a start/end date time."""
+    """Test an event with a start/end date time.
+
+    Events created in various timezones are ultimately returned relative
+    to local home assistant timezone.
+    """
     client = await ws_client()
     await client.cmd_result(
         "create",
@@ -47,8 +65,8 @@ async def test_api_date_time_event(
             "entity_id": TEST_ENTITY,
             "event": {
                 "summary": "Bastille Day Party",
-                "dtstart": "1997-07-14T17:00:00+00:00",
-                "dtend": "1997-07-15T04:00:00+00:00",
+                "dtstart": dtstart,
+                "dtend": dtend,
             },
         },
     )
@@ -62,6 +80,8 @@ async def test_api_date_time_event(
         }
     ]
 
+    # Query events in UTC
+
     # Time range before event
     events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T16:00:00Z")
     assert len(events) == 0
@@ -74,6 +94,12 @@ async def test_api_date_time_event(
     assert len(events) == 1
     # Overlap with event end
     events = await get_events("1997-07-15T03:00:00Z", "1997-07-15T06:00:00Z")
+    assert len(events) == 1
+
+    # Query events overlapping with start and end but in another timezone
+    events = await get_events("1997-07-12T23:00:00-01:00", "1997-07-14T17:00:00-01:00")
+    assert len(events) == 1
+    events = await get_events("1997-07-15T02:00:00-01:00", "1997-07-15T05:00:00-01:00")
     assert len(events) == 1
 
 
@@ -140,6 +166,7 @@ async def test_active_event(
     )
 
     state = hass.states.get(TEST_ENTITY)
+    assert state
     assert state.name == FRIENDLY_NAME
     assert state.state == STATE_ON
     assert dict(state.attributes) == {
@@ -176,6 +203,7 @@ async def test_upcoming_event(
     )
 
     state = hass.states.get(TEST_ENTITY)
+    assert state
     assert state.name == FRIENDLY_NAME
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
@@ -642,9 +670,10 @@ async def test_invalid_rrule(
             },
         },
     )
+    assert resp
     assert not resp.get("success")
     assert "error" in resp
-    assert resp.get("error").get("code") == "invalid_format"
+    assert resp["error"].get("code") == "invalid_format"
 
 
 @pytest.mark.parametrize(
@@ -720,9 +749,10 @@ async def test_start_end_types(
             },
         },
     )
+    assert result
     assert not result.get("success")
     assert "error" in result
-    assert "code" in result.get("error")
+    assert "code" in result["error"]
     assert result["error"]["code"] == "invalid_format"
 
 
@@ -743,9 +773,10 @@ async def test_end_before_start(
             },
         },
     )
+    assert result
     assert not result.get("success")
     assert "error" in result
-    assert "code" in result.get("error")
+    assert "code" in result["error"]
     assert result["error"]["code"] == "invalid_format"
 
 
@@ -767,9 +798,10 @@ async def test_invalid_recurrence_rule(
             },
         },
     )
+    assert result
     assert not result.get("success")
     assert "error" in result
-    assert "code" in result.get("error")
+    assert "code" in result["error"]
     assert result["error"]["code"] == "invalid_format"
 
 
@@ -790,9 +822,10 @@ async def test_invalid_date_formats(
             },
         },
     )
+    assert result
     assert not result.get("success")
     assert "error" in result
-    assert "code" in result.get("error")
+    assert "code" in result["error"]
     assert result["error"]["code"] == "invalid_format"
 
 
@@ -815,9 +848,30 @@ async def test_update_invalid_event_id(
             },
         },
     )
+    assert resp
     assert not resp.get("success")
     assert "error" in resp
-    assert resp.get("error").get("code") == "failed"
+    assert resp["error"].get("code") == "failed"
+
+
+async def test_delete_invalid_event_id(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+) -> None:
+    """Test deleting an event with an invalid event uid."""
+    client = await ws_client()
+    resp = await client.cmd(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "uid-does-not-exist",
+        },
+    )
+    assert resp
+    assert not resp.get("success")
+    assert "error" in resp
+    assert resp["error"].get("code") == "failed"
 
 
 @pytest.mark.parametrize(
@@ -844,6 +898,7 @@ async def test_create_event_service(
             "start_date_time": start_date_time,
             "end_date_time": end_date_time,
             "summary": "Bastille Day Party",
+            "location": "Test Location",
         },
         target={"entity_id": TEST_ENTITY},
         blocking=True,
@@ -857,6 +912,7 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
         }
     ]
 
@@ -866,6 +922,7 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
         }
     ]
 
@@ -880,5 +937,6 @@ async def test_create_event_service(
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+            "location": "Test Location",
         }
     ]

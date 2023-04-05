@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info")
+pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
 
 
 @pytest.fixture(autouse=True)
@@ -56,7 +56,7 @@ async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) 
     await hass.async_block_till_done()
 
     # Reboot success
-    service_data = {ATTR_ENTITY_ID: "button.sfr_box_reboot"}
+    service_data = {ATTR_ENTITY_ID: "button.sfr_box_restart"}
     with patch(
         "homeassistant.components.sfr_box.button.SFRBox.system_reboot"
     ) as mock_action:
@@ -68,7 +68,7 @@ async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) 
     assert mock_action.mock_calls[0][1] == ()
 
     # Reboot failed
-    service_data = {ATTR_ENTITY_ID: "button.sfr_box_reboot"}
+    service_data = {ATTR_ENTITY_ID: "button.sfr_box_restart"}
     with patch(
         "homeassistant.components.sfr_box.button.SFRBox.system_reboot",
         side_effect=SFRBoxError,

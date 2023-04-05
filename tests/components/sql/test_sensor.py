@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -193,14 +194,19 @@ async def test_invalid_url_on_update(
         "column": "value",
         "name": "count_tables",
     }
-    await init_integration(hass, config)
+
+    class MockSession:
+        """Mock session."""
+
+        def execute(self, query: Any) -> None:
+            """Execute the query."""
+            raise SQLAlchemyError("sqlite://homeassistant:hunter2@homeassistant.local")
 
     with patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
-        side_effect=SQLAlchemyError(
-            "sqlite://homeassistant:hunter2@homeassistant.local"
-        ),
+        "homeassistant.components.sql.sensor.scoped_session",
+        return_value=MockSession,
     ):
+        await init_integration(hass, config)
         async_fire_time_changed(
             hass,
             dt.utcnow() + timedelta(minutes=1),

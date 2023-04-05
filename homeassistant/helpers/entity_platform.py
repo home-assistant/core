@@ -479,6 +479,7 @@ class EntityPlatform:
             self.hass,
             self._update_entity_states,
             self.scan_interval,
+            f"EntityPlatform poll {self.domain}.{self.platform_name}",
         )
 
     def _entity_id_already_exists(self, entity_id: str) -> tuple[bool, bool]:

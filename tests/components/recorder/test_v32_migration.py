@@ -6,6 +6,7 @@ import importlib
 import sys
 from unittest.mock import patch
 
+import py
 import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
@@ -51,7 +52,9 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
+async def test_migrate_times(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test we can migrate times."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -88,6 +91,10 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     )
     number_of_migrations = 5
 
+    def _get_states_index_names():
+        with session_scope(hass=hass) as session:
+            return inspect(session.connection()).get_indexes("states")
+
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
@@ -110,6 +117,8 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
         "homeassistant.components.recorder.Recorder._migrate_entity_ids",
     ), patch(
         "homeassistant.components.recorder.Recorder._post_migrate_entity_ids"
+    ), patch(
+        "homeassistant.components.recorder.Recorder._cleanup_legacy_states_event_ids"
     ):
         hass = await async_test_home_assistant(asyncio.get_running_loop())
         recorder_helper.async_initialize_recorder(hass)
@@ -129,10 +138,18 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
         await hass.async_block_till_done()
         await recorder.get_instance(hass).async_block_till_done()
 
+        states_indexes = await recorder.get_instance(hass).async_add_executor_job(
+            _get_states_index_names
+        )
+        states_index_names = {index["name"] for index in states_indexes}
+        assert recorder.get_instance(hass).use_legacy_events_index is True
+
         await hass.async_stop()
         await hass.async_block_till_done()
 
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+
+    assert "ix_states_event_id" in states_index_names
 
     # Test that the duplicates are removed during migration from schema 23
     hass = await async_test_home_assistant(asyncio.get_running_loop())
@@ -183,13 +200,25 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
         with session_scope(hass=hass) as session:
             return inspect(session.connection()).get_indexes("events")
 
-    indexes = await recorder.get_instance(hass).async_add_executor_job(
+    events_indexes = await recorder.get_instance(hass).async_add_executor_job(
         _get_events_index_names
     )
-    index_names = {index["name"] for index in indexes}
+    events_index_names = {index["name"] for index in events_indexes}
 
-    assert "ix_events_context_id_bin" in index_names
-    assert "ix_events_context_id" not in index_names
+    assert "ix_events_context_id_bin" in events_index_names
+    assert "ix_events_context_id" not in events_index_names
+
+    states_indexes = await recorder.get_instance(hass).async_add_executor_job(
+        _get_states_index_names
+    )
+    states_index_names = {index["name"] for index in states_indexes}
+
+    # sqlite does not support dropping foreign keys so the
+    # ix_states_event_id index is not dropped in this case
+    # but use_legacy_events_index is still False
+    assert "ix_states_event_id" in states_index_names
+
+    assert recorder.get_instance(hass).use_legacy_events_index is False
 
     await hass.async_stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ

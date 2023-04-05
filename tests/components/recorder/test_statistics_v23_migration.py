@@ -9,6 +9,7 @@ import json
 import sys
 from unittest.mock import patch
 
+import py
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -52,7 +53,9 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
+def test_delete_duplicates(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -222,7 +225,9 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
     assert "Found duplicated" not in caplog.text
 
 
-def test_delete_duplicates_many(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
+def test_delete_duplicates_many(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -400,7 +405,7 @@ def test_delete_duplicates_many(caplog: pytest.LogCaptureFixture, tmpdir) -> Non
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 def test_delete_duplicates_non_identical(
-    caplog: pytest.LogCaptureFixture, tmpdir
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
 ) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
@@ -572,7 +577,9 @@ def test_delete_duplicates_non_identical(
     ]
 
 
-def test_delete_duplicates_short_term(caplog: pytest.LogCaptureFixture, tmpdir) -> None:
+def test_delete_duplicates_short_term(
+    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+) -> None:
     """Test removal of duplicated statistics."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
