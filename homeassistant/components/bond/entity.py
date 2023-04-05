@@ -180,10 +180,9 @@ class BondEntity(Entity):
     def _async_schedule_bpup_alive_or_poll(self) -> None:
         """Schedule the BPUP alive or poll."""
         alive = self._bpup_subs.alive
-        interval = _BPUP_ALIVE_SCAN_INTERVAL if alive else _FALLBACK_SCAN_INTERVAL
         self._bpup_polling_fallback = async_call_later(
             self.hass,
-            interval,
+            _BPUP_ALIVE_SCAN_INTERVAL if alive else _FALLBACK_SCAN_INTERVAL,
             self._async_update_if_bpup_not_alive,
         )
 
