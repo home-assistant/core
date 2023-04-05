@@ -101,7 +101,7 @@ class BaseHaScanner(ABC):
                 self.hass,
                 self._async_scanner_watchdog,
                 SCANNER_WATCHDOG_INTERVAL,
-                f"{self.name} Bluetooth scanner watchdog",
+                name=f"{self.name} Bluetooth scanner watchdog",
             )
 
     @hass_callback
@@ -230,7 +230,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             self.hass,
             self._async_expire_devices,
             timedelta(seconds=30),
-            f"{self.name} Bluetooth scanner device expire",
+            name=f"{self.name} Bluetooth scanner device expire",
         )
         cancel_stop = self.hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP, self._async_save_history
