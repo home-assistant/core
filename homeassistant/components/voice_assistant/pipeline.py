@@ -552,7 +552,8 @@ class PipelineStore:
         tts_engine: str | None,
     ) -> None:
         """Update a pipeline."""
-        del self.pipelines[pipeline_id]
+        if pipeline_id not in self.pipelines:
+            raise KeyError(pipeline_id)
         new_pipeline = Pipeline(
             conversation_engine=conversation_engine,
             id=pipeline_id,

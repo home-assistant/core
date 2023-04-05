@@ -223,7 +223,16 @@ async def pipeline_delete(
 ) -> None:
     """Delete a pipeline."""
     pipeline_store: PipelineStore = hass.data[DOMAIN]
-    pipeline_store.async_delete(msg["pipeline_id"])
+    pipeline_id = msg["pipeline_id"]
+    try:
+        pipeline_store.async_delete(pipeline_id)
+    except KeyError:
+        connection.send_error(
+            msg["id"],
+            "pipeline-not-found",
+            f"Pipeline not found: id={pipeline_id}",
+        )
+        return
     connection.send_result(msg["id"])
 
 
@@ -267,12 +276,21 @@ async def pipeline_update(
 ) -> None:
     """Update a pipeline."""
     pipeline_store: PipelineStore = hass.data[DOMAIN]
-    pipeline_store.async_update(
-        msg["pipeline_id"],
-        conversation_engine=msg["conversation_engine"],
-        language=msg["language"],
-        name=msg["name"],
-        stt_engine=msg["stt_engine"],
-        tts_engine=msg["tts_engine"],
-    )
+    pipeline_id = msg["pipeline_id"]
+    try:
+        pipeline_store.async_update(
+            pipeline_id,
+            conversation_engine=msg["conversation_engine"],
+            language=msg["language"],
+            name=msg["name"],
+            stt_engine=msg["stt_engine"],
+            tts_engine=msg["tts_engine"],
+        )
+    except KeyError:
+        connection.send_error(
+            msg["id"],
+            "pipeline-not-found",
+            f"Pipeline not found: id={pipeline_id}",
+        )
+        return
     connection.send_result(msg["id"])
