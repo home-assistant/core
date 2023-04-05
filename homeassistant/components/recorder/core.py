@@ -299,7 +299,7 @@ class Recorder(threading.Thread):
             self.hass,
             self._async_check_queue,
             timedelta(minutes=10),
-            "Recorder queue watcher",
+            name="Recorder queue watcher",
         )
 
     @callback
@@ -602,7 +602,7 @@ class Recorder(threading.Thread):
                 self.hass,
                 self._async_keep_alive,
                 timedelta(seconds=KEEPALIVE_TIME),
-                "Recorder keep alive",
+                name="Recorder keep alive",
             )
 
         # If the commit interval is not 0, we need to commit periodically
@@ -611,7 +611,7 @@ class Recorder(threading.Thread):
                 self.hass,
                 self._async_commit,
                 timedelta(seconds=self.commit_interval),
-                "Recorder commit",
+                name="Recorder commit",
             )
 
         # Run nightly tasks at 4:12am
