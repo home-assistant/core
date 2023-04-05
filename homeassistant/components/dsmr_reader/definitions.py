@@ -342,8 +342,8 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/meter-stats/electricity_tariff",
-        device_class=SensorDeviceClass.ENUM,
         translation_key="electricity_tariff",
+        device_class=SensorDeviceClass.ENUM,
         options=["low", "high"],
         icon="mdi:flash",
         state=tariff_transform,
