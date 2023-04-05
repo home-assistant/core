@@ -2,21 +2,30 @@
 from hashlib import sha1
 from http import HTTPStatus
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 import homeassistant.components.mailbox as mailbox
+from homeassistant.core import HomeAssistant
+
+from tests.common import assert_setup_component
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-def mock_http_client(hass, hass_client):
+async def mock_http_client(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     config = {mailbox.DOMAIN: {"platform": "demo"}}
-    hass.loop.run_until_complete(async_setup_component(hass, mailbox.DOMAIN, config))
-    return hass.loop.run_until_complete(hass_client())
+    with assert_setup_component(1, mailbox.DOMAIN):
+        await async_setup_component(hass, mailbox.DOMAIN, config)
+        await hass.async_block_till_done()
+    return await hass_client()
 
 
-async def test_get_platforms_from_mailbox(mock_http_client) -> None:
+async def test_get_platforms_from_mailbox(mock_http_client: TestClient) -> None:
     """Get platforms from mailbox."""
     url = "/api/mailbox/platforms"
 
@@ -27,7 +36,7 @@ async def test_get_platforms_from_mailbox(mock_http_client) -> None:
     assert result[0].get("name") == "DemoMailbox"
 
 
-async def test_get_messages_from_mailbox(mock_http_client) -> None:
+async def test_get_messages_from_mailbox(mock_http_client: TestClient) -> None:
     """Get messages from mailbox."""
     url = "/api/mailbox/messages/DemoMailbox"
 
@@ -37,7 +46,7 @@ async def test_get_messages_from_mailbox(mock_http_client) -> None:
     assert len(result) == 10
 
 
-async def test_get_media_from_mailbox(mock_http_client) -> None:
+async def test_get_media_from_mailbox(mock_http_client: TestClient) -> None:
     """Get audio from mailbox."""
     mp3sha = "3f67c4ea33b37d1710f772a26dd3fb43bb159d50"
     msgtxt = "Message 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
@@ -50,7 +59,7 @@ async def test_get_media_from_mailbox(mock_http_client) -> None:
     assert sha1(data).hexdigest() == mp3sha
 
 
-async def test_delete_from_mailbox(mock_http_client) -> None:
+async def test_delete_from_mailbox(mock_http_client: TestClient) -> None:
     """Get audio from mailbox."""
     msgtxt1 = "Message 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
     msgtxt2 = "Message 3. Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
@@ -69,7 +78,7 @@ async def test_delete_from_mailbox(mock_http_client) -> None:
     assert len(result) == 8
 
 
-async def test_get_messages_from_invalid_mailbox(mock_http_client) -> None:
+async def test_get_messages_from_invalid_mailbox(mock_http_client: TestClient) -> None:
     """Get messages from mailbox."""
     url = "/api/mailbox/messages/mailbox.invalid_mailbox"
 
@@ -77,7 +86,7 @@ async def test_get_messages_from_invalid_mailbox(mock_http_client) -> None:
     assert req.status == HTTPStatus.NOT_FOUND
 
 
-async def test_get_media_from_invalid_mailbox(mock_http_client) -> None:
+async def test_get_media_from_invalid_mailbox(mock_http_client: TestClient) -> None:
     """Get messages from mailbox."""
     msgsha = "0000000000000000000000000000000000000000"
     url = f"/api/mailbox/media/mailbox.invalid_mailbox/{msgsha}"
@@ -86,7 +95,7 @@ async def test_get_media_from_invalid_mailbox(mock_http_client) -> None:
     assert req.status == HTTPStatus.NOT_FOUND
 
 
-async def test_get_media_from_invalid_msgid(mock_http_client) -> None:
+async def test_get_media_from_invalid_msgid(mock_http_client: TestClient) -> None:
     """Get messages from mailbox."""
     msgsha = "0000000000000000000000000000000000000000"
     url = f"/api/mailbox/media/DemoMailbox/{msgsha}"
@@ -95,7 +104,7 @@ async def test_get_media_from_invalid_msgid(mock_http_client) -> None:
     assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-async def test_delete_from_invalid_mailbox(mock_http_client) -> None:
+async def test_delete_from_invalid_mailbox(mock_http_client: TestClient) -> None:
     """Get audio from mailbox."""
     msgsha = "0000000000000000000000000000000000000000"
     url = f"/api/mailbox/delete/mailbox.invalid_mailbox/{msgsha}"
