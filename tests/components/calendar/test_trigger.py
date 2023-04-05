@@ -53,7 +53,7 @@ TEST_UPDATE_INTERVAL = datetime.timedelta(minutes=7)
 class FakeSchedule:
     """Test fixture class for return events in a specific date range."""
 
-    def __init__(self, hass, freezer):
+    def __init__(self, hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
         """Initiailize FakeSchedule."""
         self.hass = hass
         self.freezer = freezer
@@ -62,8 +62,8 @@ class FakeSchedule:
 
     def create_event(
         self,
-        start: datetime.timedelta,
-        end: datetime.timedelta,
+        start: datetime.datetime,
+        end: datetime.datetime,
         summary: str | None = None,
         description: str | None = None,
         location: str | None = None,
@@ -103,7 +103,7 @@ class FakeSchedule:
         async_fire_time_changed(self.hass, trigger_time)
         await self.hass.async_block_till_done()
 
-    async def fire_until(self, end: datetime.timedelta) -> None:
+    async def fire_until(self, end: datetime.datetime) -> None:
         """Simulate the passage of time by firing alarms until the time is reached."""
 
         current_time = dt_util.as_utc(self.freezer())
@@ -120,7 +120,7 @@ class FakeSchedule:
 
 
 @pytest.fixture
-def set_time_zone(hass):
+def set_time_zone(hass: HomeAssistant) -> None:
     """Set the time zone for the tests."""
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round
@@ -128,7 +128,9 @@ def set_time_zone(hass):
 
 
 @pytest.fixture
-def fake_schedule(hass, freezer):
+def fake_schedule(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> Generator[FakeSchedule, None, None]:
     """Fixture that tests can use to make fake events."""
 
     # Setup start time for all tests
@@ -173,11 +175,11 @@ async def create_automation(hass: HomeAssistant, event_type: str, offset=None) -
 
 
 @pytest.fixture
-def calls(hass: HomeAssistant) -> Callable[[], list]:
+def calls(hass: HomeAssistant) -> Callable[[], list[dict[str, Any]]]:
     """Fixture to return payload data for automation calls."""
     service_calls = async_mock_service(hass, "test", "automation")
 
-    def get_trigger_data() -> list:
+    def get_trigger_data() -> list[dict[str, Any]]:
         return [c.data for c in service_calls]
 
     return get_trigger_data
@@ -193,7 +195,11 @@ def mock_update_interval() -> Generator[None, None, None]:
         yield
 
 
-async def test_event_start_trigger(hass: HomeAssistant, calls, fake_schedule) -> None:
+async def test_event_start_trigger(
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+) -> None:
     """Test the a calendar trigger based on start time."""
     event_data = fake_schedule.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
@@ -222,7 +228,11 @@ async def test_event_start_trigger(hass: HomeAssistant, calls, fake_schedule) ->
     ],
 )
 async def test_event_start_trigger_with_offset(
-    hass: HomeAssistant, calls, fake_schedule, offset_str, offset_delta
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    offset_str,
+    offset_delta,
 ) -> None:
     """Test the a calendar trigger based on start time with an offset."""
     event_data = fake_schedule.create_event(
@@ -250,7 +260,11 @@ async def test_event_start_trigger_with_offset(
     ]
 
 
-async def test_event_end_trigger(hass: HomeAssistant, calls, fake_schedule) -> None:
+async def test_event_end_trigger(
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+) -> None:
     """Test the a calendar trigger based on end time."""
     event_data = fake_schedule.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
@@ -285,7 +299,11 @@ async def test_event_end_trigger(hass: HomeAssistant, calls, fake_schedule) -> N
     ],
 )
 async def test_event_end_trigger_with_offset(
-    hass: HomeAssistant, calls, fake_schedule, offset_str, offset_delta
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    offset_str,
+    offset_delta,
 ) -> None:
     """Test the a calendar trigger based on end time with an offset."""
     event_data = fake_schedule.create_event(
@@ -314,7 +332,9 @@ async def test_event_end_trigger_with_offset(
 
 
 async def test_calendar_trigger_with_no_events(
-    hass: HomeAssistant, calls, fake_schedule
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
 ) -> None:
     """Test a calendar trigger setup  with no events."""
 
@@ -328,7 +348,11 @@ async def test_calendar_trigger_with_no_events(
     assert len(calls()) == 0
 
 
-async def test_multiple_start_events(hass: HomeAssistant, calls, fake_schedule) -> None:
+async def test_multiple_start_events(
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+) -> None:
     """Test that a trigger fires for multiple events."""
 
     event_data1 = fake_schedule.create_event(
@@ -358,7 +382,11 @@ async def test_multiple_start_events(hass: HomeAssistant, calls, fake_schedule) 
     ]
 
 
-async def test_multiple_end_events(hass: HomeAssistant, calls, fake_schedule) -> None:
+async def test_multiple_end_events(
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+) -> None:
     """Test that a trigger fires for multiple events."""
 
     event_data1 = fake_schedule.create_event(
@@ -389,7 +417,9 @@ async def test_multiple_end_events(hass: HomeAssistant, calls, fake_schedule) ->
 
 
 async def test_multiple_events_sharing_start_time(
-    hass: HomeAssistant, calls, fake_schedule
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
 ) -> None:
     """Test that a trigger fires for every event sharing a start time."""
 
@@ -420,7 +450,11 @@ async def test_multiple_events_sharing_start_time(
     ]
 
 
-async def test_overlap_events(hass: HomeAssistant, calls, fake_schedule) -> None:
+async def test_overlap_events(
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+) -> None:
     """Test that a trigger fires for events that overlap."""
 
     event_data1 = fake_schedule.create_event(
@@ -492,7 +526,11 @@ async def test_legacy_entity_type(
     assert "is not a calendar entity" in caplog.text
 
 
-async def test_update_next_event(hass: HomeAssistant, calls, fake_schedule) -> None:
+async def test_update_next_event(
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+) -> None:
     """Test detection of a new event after initial trigger is setup."""
 
     event_data1 = fake_schedule.create_event(
@@ -531,7 +569,11 @@ async def test_update_next_event(hass: HomeAssistant, calls, fake_schedule) -> N
     ]
 
 
-async def test_update_missed(hass: HomeAssistant, calls, fake_schedule) -> None:
+async def test_update_missed(
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+) -> None:
     """Test that new events are missed if they arrive outside the update interval."""
 
     event_data1 = fake_schedule.create_event(
@@ -619,9 +661,9 @@ async def test_update_missed(hass: HomeAssistant, calls, fake_schedule) -> None:
 )
 async def test_event_payload(
     hass: HomeAssistant,
-    calls,
-    fake_schedule,
-    set_time_zone,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    set_time_zone: None,
     create_data,
     fire_time,
     payload_data,
@@ -642,7 +684,10 @@ async def test_event_payload(
 
 
 async def test_trigger_timestamp_window_edge(
-    hass: HomeAssistant, calls, fake_schedule, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that events in the edge of a scan are included."""
     freezer.move_to("2022-04-19 11:00:00+00:00")
@@ -668,7 +713,10 @@ async def test_trigger_timestamp_window_edge(
 
 
 async def test_event_start_trigger_dst(
-    hass: HomeAssistant, calls, fake_schedule, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    calls: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a calendar event trigger happening at the start of daylight savings time."""
     tzinfo = zoneinfo.ZoneInfo("America/Los_Angeles")
