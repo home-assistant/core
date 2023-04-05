@@ -523,6 +523,9 @@ def hass(
 
     yield hass
 
+    for config_entry in hass.config_entries.async_entries():
+        loop.run_until_complete(config_entry.async_unload(hass))
+
     loop.run_until_complete(hass.async_stop(force=True))
 
     # Restore timezone, it is set when creating the hass object
