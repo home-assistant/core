@@ -1,10 +1,10 @@
 """Voice over IP (VoIP) implementation."""
 import asyncio
-import functools
 import logging
 import math
 from pathlib import Path
 import socket
+import time
 import wave
 
 import async_timeout
@@ -22,6 +22,7 @@ from homeassistant.components.voice_assistant.pipeline import (
 from homeassistant.components.voice_assistant.vad import VoiceCommandSegmenter
 from homeassistant.core import Context, HomeAssistant
 
+from .error import VoipError
 from .rtp_audio import RtpOpusInput, RtpOpusOutput
 from .sip import CallInfo, SipDatagramProtocol
 
@@ -57,7 +58,10 @@ class VoipDatagramProtocol(SipDatagramProtocol):
             self.hass,
             language=language,
         )
-        assert pipeline is not None
+        if pipeline is None:
+            raise VoipError(
+                f"Pipeline not found for language: {language}",
+            )
 
         # Handle RTP packets in pipeline server
         self.hass.async_create_task(
@@ -214,7 +218,9 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
 
     async def _send_audio(self, media_id: str) -> None:
         """Sends TTS audio to caller via RTP."""
-        assert self.transport is not None
+        if self.transport is None:
+            return
+
         _extension, audio_bytes = await tts.async_get_media_source_audio(
             self.hass,
             media_id,
@@ -287,19 +293,18 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
 
         self._media_sent = True
 
-        self.hass.async_create_background_task(
-            functools.partial(
-                self._send_media,
-                addr,
-            ),
-            "voip_media",
+        # Run in executor since we are doing I/O
+        self.hass.async_add_executor_job(
+            self._send_media,
+            addr,
         )
 
-    async def _send_media(self, addr):
-        assert self.transport is not None
+    def _send_media(self, addr):
+        if self.transport is None:
+            return
 
         # Pause before sending to allow time for user to pick up phone.
-        await asyncio.sleep(self.silence_before)
+        time.sleep(self.silence_before)
 
         wav_file: wave.Wave_read = wave.open(self.wav_path, "rb")
         with wav_file:
@@ -332,7 +337,7 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
                     # Sending too slow will cause audio artifacts if there is
                     # network jitter, which is why programs like GStreamer are
                     # much better at this.
-                    await asyncio.sleep(seconds_per_rtp * 0.99)
+                    time.sleep(seconds_per_rtp * 0.99)
 
         # Done
         self.transport.close()

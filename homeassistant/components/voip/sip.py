@@ -4,6 +4,8 @@ from dataclasses import dataclass
 import logging
 import re
 
+from .error import VoipError
+
 SIP_PORT = 5060
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,12 +67,14 @@ class SipDatagramProtocol(asyncio.DatagramProtocol):
                     if parts[0] == "audio":
                         caller_rtp_port = int(parts[1])
 
-        assert caller_rtp_port is not None, "No caller RTP port"
+        if caller_rtp_port is None:
+            raise VoipError("No caller RTP port")
 
         # Extract our visible IP from SIP header.
         # This must be the IP we use for RTP.
         server_ip_match = _SIP_IP.match(headers["to"])
-        assert server_ip_match is not None
+        if server_ip_match is None:
+            raise VoipError("Failed to find 'to' IP address")
         server_ip = server_ip_match.group(1)
 
         self.on_call(
@@ -92,7 +96,8 @@ class SipDatagramProtocol(asyncio.DatagramProtocol):
         server_rtp_port: int,
     ):
         """Send OK message to caller with our IP and RTP port."""
-        assert self.transport is not None
+        if self.transport is None:
+            return
 
         # SDP = Session Description Protocol
         # See: https://datatracker.ietf.org/doc/html/rfc2327

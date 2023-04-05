@@ -9,6 +9,8 @@ from typing import Any
 
 import opuslib
 
+from .error import RtpError
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -42,18 +44,22 @@ class RtpOpusInput:
             raise ValueError("Only mono and stereo audio is supported")
 
         # Minimum header size
-        assert len(rtp_bytes) >= 12, "RTP packet is too small"
+        if len(rtp_bytes) < 12:
+            raise RtpError("RTP packet is too small")
 
         # See: https://en.wikipedia.org/wiki/Real-time_Transport_Protocol#Packet_header
         flags, payload_type, _sequence_num, _timestamp, _ssrc = struct.unpack(
             ">BBHLL", rtp_bytes[:12]
         )
 
-        assert flags == 0b10000000, "Padding and extension headers not supported"
+        if flags != 0b10000000:
+            raise RtpError("Padding and extension headers not supported")
+
         payload_type &= 0x7F  # Remove marker bit
-        assert (
-            payload_type == self.opus_payload
-        ), f"Expected payload type {self.opus_payload}, got {payload_type}"
+        if payload_type != self.opus_payload:
+            raise RtpError(
+                f"Expected payload type {self.opus_payload}, got {payload_type}"
+            )
 
         # Assume no padding, extension headers, etc.
         opus_bytes = rtp_bytes[12:]
