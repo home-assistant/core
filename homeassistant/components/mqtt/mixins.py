@@ -855,7 +855,14 @@ class MqttDiscoveryUpdate(Entity):
 
         @callback
         def discovery_callback(payload: MQTTDiscoveryPayload) -> None:
-            """Handle discovery update."""
+            """Handle discovery update.
+
+            If the payload has changed we will create a task to
+            do the discovery update.
+
+            As this callback can fire when nothing has changed, this
+            is a normal function to avoid task creation until it is needed.
+            """
             _LOGGER.debug(
                 "Got update for entity with hash: %s '%s'",
                 discovery_hash,
