@@ -505,12 +505,14 @@ class HomeAssistant:
 
         return task
 
-    def create_task(self, target: Coroutine[Any, Any, Any]) -> None:
+    def create_task(
+        self, target: Coroutine[Any, Any, Any], name: str | None = None
+    ) -> None:
         """Add task to the executor pool.
 
         target: target to call.
         """
-        self.loop.call_soon_threadsafe(self.async_create_task, target)
+        self.loop.call_soon_threadsafe(self.async_create_task, target, name)
 
     @callback
     def async_create_task(
