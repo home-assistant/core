@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 
 CONF_REGION_NAME: Final = "region_name"
 
