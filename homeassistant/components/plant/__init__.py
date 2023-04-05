@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONDUCTIVITY,
     CONF_SENSORS,
@@ -30,50 +29,44 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import (
+    ATTR_DICT_OF_UNITS_OF_MEASUREMENT,
+    ATTR_MAX_BRIGHTNESS_HISTORY,
+    ATTR_PROBLEM,
+    ATTR_SENSORS,
+    BATTERY_SENSOR,
+    BRIGHTNESS_SENSOR,
+    CONDUCTIVITY_SENSOR,
+    CONF_CHECK_DAYS,
+    CONF_MAX_BRIGHTNESS,
+    CONF_MAX_CONDUCTIVITY,
+    CONF_MAX_MOISTURE,
+    CONF_MAX_TEMPERATURE,
+    CONF_MIN_BATTERY_LEVEL,
+    CONF_MIN_BRIGHTNESS,
+    CONF_MIN_CONDUCTIVITY,
+    CONF_MIN_MOISTURE,
+    CONF_MIN_TEMPERATURE,
+    DEFAULT_CHECK_DAYS,
+    DEFAULT_MAX_CONDUCTIVITY,
+    DEFAULT_MAX_MOISTURE,
+    DEFAULT_MIN_BATTERY_LEVEL,
+    DEFAULT_MIN_CONDUCTIVITY,
+    DEFAULT_MIN_MOISTURE,
+    DOMAIN,
+    MOISTURE_SENSOR,
+    PROBLEM_NONE,
+    TEMPERATURE_SENSOR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "plant"
 
-READING_BATTERY = "battery"
-READING_TEMPERATURE = ATTR_TEMPERATURE
-READING_MOISTURE = "moisture"
-READING_CONDUCTIVITY = "conductivity"
-READING_BRIGHTNESS = "brightness"
-
-ATTR_PROBLEM = "problem"
-ATTR_SENSORS = "sensors"
-PROBLEM_NONE = "none"
-ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
-
-# we're not returning only one value, we're returning a dict here. So we need
-# to have a separate literal for it to avoid confusion.
-ATTR_DICT_OF_UNITS_OF_MEASUREMENT = "unit_of_measurement_dict"
-
-CONF_MIN_BATTERY_LEVEL = f"min_{READING_BATTERY}"
-CONF_MIN_TEMPERATURE = f"min_{READING_TEMPERATURE}"
-CONF_MAX_TEMPERATURE = f"max_{READING_TEMPERATURE}"
-CONF_MIN_MOISTURE = f"min_{READING_MOISTURE}"
-CONF_MAX_MOISTURE = f"max_{READING_MOISTURE}"
-CONF_MIN_CONDUCTIVITY = f"min_{READING_CONDUCTIVITY}"
-CONF_MAX_CONDUCTIVITY = f"max_{READING_CONDUCTIVITY}"
-CONF_MIN_BRIGHTNESS = f"min_{READING_BRIGHTNESS}"
-CONF_MAX_BRIGHTNESS = f"max_{READING_BRIGHTNESS}"
-CONF_CHECK_DAYS = "check_days"
-
-CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
-CONF_SENSOR_MOISTURE = READING_MOISTURE
-CONF_SENSOR_CONDUCTIVITY = READING_CONDUCTIVITY
-CONF_SENSOR_TEMPERATURE = READING_TEMPERATURE
-CONF_SENSOR_BRIGHTNESS = READING_BRIGHTNESS
-
-DEFAULT_MIN_BATTERY_LEVEL = 20
-DEFAULT_MIN_MOISTURE = 20
-DEFAULT_MAX_MOISTURE = 60
-DEFAULT_MIN_CONDUCTIVITY = 500
-DEFAULT_MAX_CONDUCTIVITY = 3000
-DEFAULT_CHECK_DAYS = 3
+CONF_SENSOR_BATTERY_LEVEL = BATTERY_SENSOR
+CONF_SENSOR_MOISTURE = MOISTURE_SENSOR
+CONF_SENSOR_CONDUCTIVITY = CONDUCTIVITY_SENSOR
+CONF_SENSOR_TEMPERATURE = TEMPERATURE_SENSOR
+CONF_SENSOR_BRIGHTNESS = BRIGHTNESS_SENSOR
 
 SCHEMA_SENSORS = vol.Schema(
     {
@@ -144,38 +137,38 @@ class Plant(Entity):
     _attr_should_poll = False
 
     READINGS = {
-        READING_BATTERY: {
+        BATTERY_SENSOR: {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_BATTERY_LEVEL,
         },
-        READING_TEMPERATURE: {
+        TEMPERATURE_SENSOR: {
             ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             "min": CONF_MIN_TEMPERATURE,
             "max": CONF_MAX_TEMPERATURE,
         },
-        READING_MOISTURE: {
+        MOISTURE_SENSOR: {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_MOISTURE,
             "max": CONF_MAX_MOISTURE,
         },
-        READING_CONDUCTIVITY: {
+        CONDUCTIVITY_SENSOR: {
             ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY,
             "min": CONF_MIN_CONDUCTIVITY,
             "max": CONF_MAX_CONDUCTIVITY,
         },
-        READING_BRIGHTNESS: {
+        BRIGHTNESS_SENSOR: {
             ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX,
             "min": CONF_MIN_BRIGHTNESS,
             "max": CONF_MAX_BRIGHTNESS,
         },
     }
 
-    def __init__(self, name, config):
+    def __init__(self, name, config) -> None:
         """Initialize the Plant component."""
         self._config = config
         self._sensormap = {}
         self._readingmap = {}
-        self._unit_of_measurement = {}
+        self._unit_of_measurement: dict = {}
         for reading, entity_id in config["sensors"].items():
             self._sensormap[entity_id] = reading
             self._readingmap[reading] = entity_id
@@ -209,23 +202,23 @@ class Plant(Entity):
             return
 
         reading = self._sensormap[entity_id]
-        if reading == READING_MOISTURE:
+        if reading == MOISTURE_SENSOR:
             if value != STATE_UNAVAILABLE:
                 value = int(float(value))
             self._moisture = value
-        elif reading == READING_BATTERY:
+        elif reading == BATTERY_SENSOR:
             if value != STATE_UNAVAILABLE:
                 value = int(float(value))
             self._battery = value
-        elif reading == READING_TEMPERATURE:
+        elif reading == TEMPERATURE_SENSOR:
             if value != STATE_UNAVAILABLE:
                 value = float(value)
             self._temperature = value
-        elif reading == READING_CONDUCTIVITY:
+        elif reading == CONDUCTIVITY_SENSOR:
             if value != STATE_UNAVAILABLE:
                 value = int(float(value))
             self._conductivity = value
-        elif reading == READING_BRIGHTNESS:
+        elif reading == BRIGHTNESS_SENSOR:
             if value != STATE_UNAVAILABLE:
                 value = int(float(value))
             self._brightness = value
@@ -251,7 +244,7 @@ class Plant(Entity):
                 if value == STATE_UNAVAILABLE:
                     result.append(f"{sensor_name} unavailable")
                 else:
-                    if sensor_name == READING_BRIGHTNESS:
+                    if sensor_name == BRIGHTNESS_SENSOR:
                         result.append(
                             self._check_min(
                                 sensor_name, self._brightness_history.max, params
@@ -311,7 +304,7 @@ class Plant(Entity):
         """
 
         start_date = dt_util.utcnow() - timedelta(days=self._conf_check_days)
-        entity_id = self._readingmap.get(READING_BRIGHTNESS)
+        entity_id = self._readingmap.get(BRIGHTNESS_SENSOR)
         if entity_id is None:
             _LOGGER.debug(
                 "Not reading the history from the database as "
@@ -374,11 +367,11 @@ class DailyHistory:
     At the moment only the maximum value per day is kept.
     """
 
-    def __init__(self, max_length):
+    def __init__(self, max_length) -> None:
         """Create new DailyHistory with a maximum length of the history."""
         self.max_length = max_length
         self._days = None
-        self._max_dict = {}
+        self._max_dict: dict = {}
         self.max = None
 
     def add_measurement(self, value, timestamp=None):

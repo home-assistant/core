@@ -49,7 +49,7 @@ default_sensor_values = {
 
 
 class PlantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Example config flow."""
+    """Plant config flow."""
 
     # The schema version of the entries that it creates
     # Home Assistant will call your migrate method if the version changes
@@ -62,7 +62,7 @@ class PlantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """asd."""
+        """Render first step."""
         if user_input is None:
             return await self._show_plant_name_form({})
 
@@ -72,72 +72,13 @@ class PlantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_sensors(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """asd."""
+        """Render sensor step."""
         if user_input is None:
             return await self._show_plant_name_form({})
 
         self.data[SENSORS] = user_input
 
         return await self._show_limits_form({})
-
-        # if user_input is not None:
-        #     scheme = {}
-        #     if user_input.get(READING_MOISTURE) is not None:
-        #         self.data[READING_MOISTURE] = user_input[READING_MOISTURE]
-        #         scheme[vol.Optional(CONF_MIN_MOISTURE)] = int
-        #         scheme[vol.Optional(CONF_MAX_MOISTURE)] = int
-        #     if user_input.get(READING_BATTERY) is not None:
-        #         self.data[READING_BATTERY] = user_input[READING_BATTERY]
-        #         scheme[vol.Optional(CONF_MIN_BATTERY_LEVEL)] = int
-        #     if user_input.get(READING_BRIGHTNESS) is not None:
-        #         self.data[READING_BRIGHTNESS] = user_input[READING_BRIGHTNESS]
-        #         scheme[vol.Optional(CONF_MIN_BRIGHTNESS)] = int
-        #         scheme[vol.Optional(CONF_MAX_BRIGHTNESS)] = int
-        #     if user_input.get(READING_CONDUCTIVITY) is not None:
-        #         self.data[READING_CONDUCTIVITY] = user_input[READING_CONDUCTIVITY]
-        #         scheme[vol.Optional(CONF_MIN_CONDUCTIVITY)] = int
-        #         scheme[vol.Optional(CONF_MAX_CONDUCTIVITY)] = int
-        #     if user_input.get(READING_TEMPERATURE) is not None:
-        #         self.data[READING_TEMPERATURE] = user_input[READING_TEMPERATURE]
-        #         scheme[vol.Optional(CONF_MIN_TEMPERATURE)] = int
-        #         scheme[vol.Optional(CONF_MAX_TEMPERATURE)] = int
-        #     return self.async_show_form(
-        #         step_id="limits",
-        #         data_schema=vol.Schema(scheme),
-        #     )
-
-        # return self.async_show_form(
-        #     step_id="user",
-        #     data_schema=vol.Schema(
-        #         {
-        #             vol.Optional(READING_MOISTURE): selector.EntitySelector(
-        #                 selector.EntitySelectorConfig(
-        #                     domain=["sensor", "number", "input_number"]
-        #                 ),
-        #             ),
-        #             vol.Optional(READING_BATTERY): selector.EntitySelector(
-        #                 selector.EntitySelectorConfig(
-        #                     domain=["sensor", "number", "input_number"]
-        #                 ),
-        #             ),
-        #             vol.Optional(READING_BRIGHTNESS): selector.EntitySelector(
-        #                 selector.EntitySelectorConfig(
-        #                     domain=["sensor", "number", "input_number"]
-        #                 ),
-        #             ),
-        #             vol.Optional(READING_CONDUCTIVITY): selector.EntitySelector(
-        #                 selector.EntitySelectorConfig(
-        #                     domain=["sensor", "number", "input_number"]
-        #                 ),
-        #             ),
-        #             vol.Optional(READING_TEMPERATURE): selector.EntitySelector(
-        #                 selector.EntitySelectorConfig(
-        #                     domain=["sensor", "number", "input_number"]
-        #                 ),
-        #             ),
-        #         }
-        #     ),
-        # )
 
     async def _show_plant_name_form(
         self, user_input: dict[str, Any] | None
@@ -157,50 +98,33 @@ class PlantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="sensors",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        MOISTURE_SENSOR, default=user_input.get(MOISTURE_SENSOR)
-                    ): selector.EntitySelector(
+                    vol.Optional(MOISTURE_SENSOR): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=["sensor", "number", "input_number"]
                         ),
                     ),
-                    vol.Optional(
-                        BATTERY_SENSOR, default=user_input.get(BATTERY_SENSOR)
-                    ): selector.EntitySelector(
+                    vol.Optional(BATTERY_SENSOR): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=["sensor", "number", "input_number"]
                         ),
                     ),
-                    vol.Optional(
-                        TEMPERATURE_SENSOR,
-                        default=user_input.get(TEMPERATURE_SENSOR),
-                    ): selector.EntitySelector(
+                    vol.Optional(TEMPERATURE_SENSOR): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=["sensor", "number", "input_number"]
                         ),
                     ),
-                    vol.Optional(
-                        CONDUCTIVITY_SENSOR,
-                        default=user_input.get(CONDUCTIVITY_SENSOR),
-                    ): selector.EntitySelector(
+                    vol.Optional(CONDUCTIVITY_SENSOR): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=["sensor", "number", "input_number"]
                         ),
                     ),
-                    vol.Optional(
-                        BRIGHTNESS_SENSOR, default=user_input.get(BRIGHTNESS_SENSOR)
-                    ): selector.EntitySelector(
+                    vol.Optional(BRIGHTNESS_SENSOR): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=["sensor", "number", "input_number"]
                         ),
                     ),
                 }
             ),
-        )
-
-    async def _sensor_selector(self) -> selector.EntitySelector:
-        return selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=["sensor", "number", "input_number"]),
         )
 
     async def _show_limits_form(self, user_input: dict[str, Any] | None) -> FlowResult:
@@ -247,5 +171,5 @@ class PlantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
         return self.async_create_entry(
-            title="test", data={"sensors": self.data, **user_input}
+            title=self.data[PLANT_NAME], data={"sensors": self.data, **user_input}
         )
