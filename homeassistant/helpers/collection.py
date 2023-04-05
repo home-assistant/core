@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from itertools import groupby
 import logging
+from operator import attrgetter
 from typing import Any, cast
 
 import voluptuous as vol
@@ -410,9 +411,8 @@ def sync_entity_lifecycle(
         # Create a new bucket every time we have a different change type
         # to ensure operations happen in order. We only group
         # the same change type.
-        for _, grouped in groupby(
-            change_sets, lambda change_set: change_set.change_type
-        ):
+        groupby_key = attrgetter("change_type")
+        for _, grouped in groupby(change_sets, groupby_key):
             new_entities = [
                 entity
                 for entity in await asyncio.gather(

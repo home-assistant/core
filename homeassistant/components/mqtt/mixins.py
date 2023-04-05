@@ -247,7 +247,7 @@ def warn_for_legacy_schema(domain: str) -> Callable[[ConfigType], ConfigType]:
             (
                 "Manually configured MQTT %s(s) found under platform key '%s', "
                 "please move to the mqtt integration key, see "
-                "https://www.home-assistant.io/integrations/%s.mqtt/#new_format"
+                "https://www.home-assistant.io/integrations/%s.mqtt/"
             ),
             domain,
             domain,
@@ -562,7 +562,6 @@ class MqttAvailability(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         mqtt_data = get_mqtt_data(self.hass)
-        assert mqtt_data.client is not None
         client = mqtt_data.client
         if not client.connected and not self.hass.is_stopping:
             return False

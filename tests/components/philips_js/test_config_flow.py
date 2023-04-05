@@ -12,6 +12,7 @@ from . import (
     MOCK_CONFIG,
     MOCK_CONFIG_PAIRED,
     MOCK_PASSWORD,
+    MOCK_SYSTEM,
     MOCK_SYSTEM_UNPAIRED,
     MOCK_USERINPUT,
     MOCK_USERNAME,
@@ -54,6 +55,42 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     assert result2["title"] == "Philips TV (1234567890)"
     assert result2["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth(
+    hass: HomeAssistant, mock_setup_entry, mock_config_entry, mock_tv
+) -> None:
+    """Test we get the form."""
+
+    mock_tv.system = MOCK_SYSTEM | {"model": "changed"}
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": mock_config_entry.unique_id,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USERINPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert mock_config_entry.data == MOCK_CONFIG | {"system": mock_tv.system}
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:

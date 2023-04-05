@@ -35,7 +35,7 @@ async def test_async_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -
             hass,
             dt_util.parse_datetime(data[0]["from"]),
             None,
-            [statistic_id],
+            {statistic_id},
             "hour",
             None,
             {"start", "state", "mean", "min", "max", "last_reset", "sum"},
