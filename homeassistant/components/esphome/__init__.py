@@ -349,7 +349,12 @@ async def async_setup_entry(  # noqa: C901
         # the next state update of that type when the device reconnects
         for state_keys in entry_data.state.values():
             state_keys.clear()
-        entry_data.async_update_device_state(hass)
+        if not hass.is_stopping:
+            # Avoid marking every esphome entity as unavailable on shutdown
+            # since it generates a lot of state changed events and database
+            # writes when we already know we're shutting down and the state
+            # will be cleared anyway.
+            entry_data.async_update_device_state(hass)
 
     async def on_connect_error(err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""

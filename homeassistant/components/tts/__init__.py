@@ -136,6 +136,44 @@ class TTSCache(TypedDict):
     voice: bytes
 
 
+@callback
+def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
+    """Resolve engine.
+
+    Returns None if no engines found or invalid engine passed in.
+    """
+    manager: SpeechManager = hass.data[DOMAIN]
+
+    if engine is not None:
+        if engine not in manager.providers:
+            return None
+        return engine
+
+    if not manager.providers:
+        return None
+
+    if "cloud" in manager.providers:
+        return "cloud"
+
+    return next(iter(manager.providers))
+
+
+async def async_support_options(
+    hass: HomeAssistant,
+    engine: str,
+    language: str | None = None,
+    options: dict | None = None,
+) -> bool:
+    """Return if an engine supports options."""
+    manager: SpeechManager = hass.data[DOMAIN]
+    try:
+        manager.process_options(engine, language, options)
+    except HomeAssistantError:
+        return False
+
+    return True
+
+
 async def async_get_media_source_audio(
     hass: HomeAssistant,
     media_source_id: str,

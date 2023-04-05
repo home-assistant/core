@@ -144,3 +144,4 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._host.api, self._channel, option)
+        self.async_write_ha_state()

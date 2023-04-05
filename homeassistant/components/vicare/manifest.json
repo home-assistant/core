@@ -1,7 +1,7 @@
 {
   "domain": "vicare",
   "name": "Viessmann ViCare",
-  "codeowners": ["@oischinger"],
+  "codeowners": [],
   "config_flow": true,
   "dhcp": [
     {
@@ -11,5 +11,5 @@
   "documentation": "https://www.home-assistant.io/integrations/vicare",
   "iot_class": "cloud_polling",
   "loggers": ["PyViCare"],
-  "requirements": ["PyViCare==2.21.0"]
+  "requirements": ["PyViCare==2.25.0"]
 }
