@@ -2664,6 +2664,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "kat_bulgaria": {
+      "name": "KAT Bulgaria",
+      "integration_type": "service",
+      "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
     "keba": {
       "name": "Keba Charging Station",
       "integration_type": "hub",

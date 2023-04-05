@@ -1011,6 +1011,9 @@ justnimbus==0.6.0
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.0.0
 
+# homeassistant.components.kat_bulgaria
+kat_bulgaria==0.2.3
+
 # homeassistant.components.keba
 keba-kecontact==1.1.0
 

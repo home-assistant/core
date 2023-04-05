@@ -1,0 +1,1 @@
+"""KAT Bulgaria component."""
