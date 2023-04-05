@@ -164,17 +164,17 @@ class NMBSLiveBoard(SensorEntity):
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
 
-        if (
-            liveboard is None
-            or liveboard == API_FAILURE
-            or liveboard.get("departures") is None
-            or liveboard.get("departures").get("number") is None
-            or liveboard.get("departures").get("number") == "0"
-            or liveboard.get("departures").get("departure") is None
-        ):
+        if liveboard == API_FAILURE:
+            _LOGGER.warning("API fails in NMBSLiveBoard")
             return
 
-        next_departure = liveboard["departures"]["departure"][0]
+        try:
+            if liveboard.get("departures").get("number") == "0":
+                return
+            next_departure = liveboard["departures"]["departure"][0]
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.debug("%r in NMBSLiveBoard | API return data: %r", exc, liveboard)
+            return
 
         self._attrs = next_departure
         self._state = (
@@ -293,17 +293,18 @@ class NMBSSensor(SensorEntity):
             self._station_from, self._station_to
         )
 
-        if (
-            connections is None
-            or connections == API_FAILURE
-            or connections.get("connection") is None
-        ):
+        if connections == API_FAILURE:
+            _LOGGER.warning("API fails in NMBSSensor")
             return
 
-        if int(connections["connection"][0]["departure"]["left"]) > 0:
-            next_connection = connections["connection"][1]
-        else:
-            next_connection = connections["connection"][0]
+        try:
+            if int(connections["connection"][0]["departure"]["left"]) > 0:
+                next_connection = connections["connection"][1]
+            else:
+                next_connection = connections["connection"][0]
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.debug("%r in NMBSSensor | API return data: %r", exc, connections)
+            return
 
         self._attrs = next_connection
 
