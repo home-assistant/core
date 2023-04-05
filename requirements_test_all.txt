@@ -146,7 +146,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.6.0
+aioesphomeapi==13.6.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -614,7 +614,7 @@ glances_api==0.4.1
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.30
+goodwe==0.2.31
 
 # homeassistant.components.google_mail
 google-api-python-client==2.71.0
@@ -693,7 +693,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230403.0
+home-assistant-frontend==20230405.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
