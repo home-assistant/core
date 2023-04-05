@@ -14,6 +14,7 @@ from tests.typing import WebSocketGenerator
 async def test_text_only_pipeline(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with text input (no STT/TTS)."""
@@ -53,7 +54,10 @@ async def test_text_only_pipeline(
 
 
 async def test_audio_pipeline(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with audio input/output."""
     client = await hass_ws_client(hass)
@@ -273,6 +277,7 @@ async def test_audio_pipeline_timeout(
 async def test_stt_provider_missing(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
@@ -299,6 +304,7 @@ async def test_stt_provider_missing(
 async def test_stt_stream_failed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
