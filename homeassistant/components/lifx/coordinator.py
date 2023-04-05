@@ -53,6 +53,7 @@ SENSOR_UPDATE_INTERVAL = 30
 REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
 RSSI_DBM_FW = AwesomeVersion("2.77")
+MAX_TIMEOUTS_TO_DECLARE_UPDATE_FAILED = 3
 
 
 class FirmwareEffect(IntEnum):
@@ -82,6 +83,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         self._update_rssi: bool = False
         self._rssi: int = 0
         self.last_used_theme: str = ""
+        self._timeouts = 0
+        self._did_first_update = False
 
         super().__init__(
             hass,
@@ -189,41 +192,54 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
         async with self.lock:
-            if self.device.host_firmware_version is None:
-                self.device.get_hostfirmware()
-            if self.device.product is None:
-                self.device.get_version()
-            if self.device.group is None:
-                self.device.get_group()
+            try:
+                if self.device.host_firmware_version is None:
+                    self.device.get_hostfirmware()
+                if self.device.product is None:
+                    self.device.get_version()
+                if self.device.group is None:
+                    self.device.get_group()
 
-            response = await async_execute_lifx(self.device.get_color)
+                response = await async_execute_lifx(self.device.get_color)
 
-            if self.device.product is None:
-                raise UpdateFailed(
-                    f"Failed to fetch get version from device: {self.device.ip_addr}"
-                )
+                if self.device.product is None:
+                    raise UpdateFailed(
+                        f"Failed to fetch get version from device: {self.device.ip_addr}"
+                    )
 
-            # device.mac_addr is not the mac_address, its the serial number
-            if self.device.mac_addr == TARGET_ANY:
-                self.device.mac_addr = response.target_addr
+                # device.mac_addr is not the mac_address, its the serial number
+                if self.device.mac_addr == TARGET_ANY:
+                    self.device.mac_addr = response.target_addr
 
-            if self._update_rssi is True:
-                await self.async_update_rssi()
+                if self._update_rssi is True:
+                    await self.async_update_rssi()
 
-            # Update extended multizone devices
-            if lifx_features(self.device)["extended_multizone"]:
-                await self.async_get_extended_color_zones()
-                await self.async_get_multizone_effect()
-            # use legacy methods for older devices
-            elif lifx_features(self.device)["multizone"]:
-                await self.async_get_color_zones()
-                await self.async_get_multizone_effect()
+                # Update extended multizone devices
+                if lifx_features(self.device)["extended_multizone"]:
+                    await async_execute_lifx(self.device.get_extended_color_zones)
+                    await self.async_get_multizone_effect()
+                # use legacy methods for older devices
+                elif lifx_features(self.device)["multizone"]:
+                    await self.async_get_color_zones()
+                    await self.async_get_multizone_effect()
 
-            if lifx_features(self.device)["hev"]:
-                await self.async_get_hev_cycle()
+                if lifx_features(self.device)["hev"]:
+                    await self.async_get_hev_cycle()
 
-            if lifx_features(self.device)["infrared"]:
-                await async_execute_lifx(self.device.get_infrared)
+                if lifx_features(self.device)["infrared"]:
+                    await async_execute_lifx(self.device.get_infrared)
+            except asyncio.TimeoutError as ex:
+                self._timeouts += 1
+                if (
+                    not self._did_first_update
+                    or self._timeouts >= MAX_TIMEOUTS_TO_DECLARE_UPDATE_FAILED
+                ):
+                    raise UpdateFailed(
+                        f"The device failed to respond after {MAX_TIMEOUTS_TO_DECLARE_UPDATE_FAILED} attempts"
+                    ) from ex
+            else:
+                self._timeouts = 0
+                self._did_first_update = True
 
     async def async_get_color_zones(self) -> None:
         """Get updated color information for each zone."""
