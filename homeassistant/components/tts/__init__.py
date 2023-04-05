@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from datetime import datetime
 import functools as ft
 import hashlib
 from http import HTTPStatus
@@ -34,12 +35,14 @@ from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
+    EVENT_HOMEASSISTANT_STOP,
     PLATFORM_FORMAT,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -645,11 +648,23 @@ class SpeechManager:
         }
 
         @callback
-        def async_remove_from_mem() -> None:
+        def async_remove_from_mem(_: datetime) -> None:
             """Cleanup memcache."""
             self.mem_cache.pop(cache_key, None)
 
-        self.hass.loop.call_later(self.time_memory, async_remove_from_mem)
+        cancel_remove_from_mem = async_call_later(
+            self.hass, self.time_memory, async_remove_from_mem
+        )
+
+        @callback
+        def _on_hass_stop(_: Event) -> None:
+            """Cleanup when Home Assistant stops.
+
+            Cancel the async_remove_from_mem schedule.
+            """
+            cancel_remove_from_mem()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
     async def async_read_tts(self, filename: str) -> tuple[str | None, bytes]:
         """Read a voice file and return binary.
