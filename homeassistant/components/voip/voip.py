@@ -33,7 +33,7 @@ class VoipDatagramProtocol(SipDatagramProtocol):
     """UDP server for Voice over IP (VoIP)."""
 
     def __init__(self, hass: HomeAssistant) -> None:
-        super().__init__()
+        super().__init__(hass)
         self.hass = hass
 
     def on_call(self, call_info: CallInfo):

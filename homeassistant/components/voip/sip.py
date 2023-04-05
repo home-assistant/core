@@ -4,6 +4,9 @@ from dataclasses import dataclass
 import logging
 import re
 
+from homeassistant.const import __version__
+from homeassistant.core import HomeAssistant
+
 from .error import VoipError
 
 SIP_PORT = 5060
@@ -15,7 +18,7 @@ _SDP_ID = "".join(str(ord(c)) for c in "hass")  # 10497115115
 _OPUS_PAYLOAD = "123"
 
 # <sip:IP:PORT>;tag=...
-_SIP_IP = re.compile(r"^<sip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d+>(;.+)?$")
+_SIP_IP = re.compile(r"^<sip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d+>$")
 
 
 @dataclass
@@ -32,7 +35,8 @@ class CallInfo:
 class SipDatagramProtocol(asyncio.DatagramProtocol):
     """UDP server for the Session Initiation Protocol (SIP)."""
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
+        self.hass = hass
         self.transport = None
 
     def connection_made(self, transport):
@@ -104,7 +108,7 @@ class SipDatagramProtocol(asyncio.DatagramProtocol):
         body_lines = [
             "v=0",
             f"o={_SDP_USERNAME} {_SDP_ID} 1 IN IP4 {call_info.server_ip}",
-            f"s={_SDP_USERNAME} 1.0",
+            f"s={_SDP_USERNAME} {__version__}",
             f"c=IN IP4 {call_info.server_ip}",
             "t=0 0",
             f"m=audio {server_rtp_port} RTP/AVP {_OPUS_PAYLOAD}",
