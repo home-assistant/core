@@ -33,13 +33,13 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.util import get_instance, session_scope
 from homeassistant.components.sensor import ATTR_OPTIONS, DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     assert_multiple_states_equal_without_context_and_last_changed,
@@ -5059,9 +5059,15 @@ def record_states_partially_unavailable(hass, zero, entity_id, attributes):
     return four, states
 
 
+@patch(
+    "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+    [Platform.SENSOR],
+)
 async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test sensor attributes to be excluded."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
+    config_entry = MockConfigEntry(domain="demo")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
@@ -5091,3 +5097,7 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
             continue
         assert ATTR_OPTIONS not in state.attributes
         assert ATTR_FRIENDLY_NAME in state.attributes
+
+    # Unload config entry to cleanup lingering timers
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
