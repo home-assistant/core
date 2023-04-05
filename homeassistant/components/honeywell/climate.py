@@ -434,11 +434,10 @@ class HoneywellUSThermostat(ClimateEntity):
                 )
             except (
                 aiosomecomfort.SomeComfortError,
-                OSError,
                 ClientConnectionError,
                 asyncio.TimeoutError,
             ):
                 self._attr_available = False
 
-        except (OSError, ClientConnectionError, asyncio.TimeoutError):
+        except (ClientConnectionError, asyncio.TimeoutError):
             self._attr_available = False
