@@ -17,9 +17,8 @@ async def test_text_only_pipeline(
     """Test events from a pipeline run with text input (no STT/TTS)."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "voice_assistant/run",
             "start_stage": "intent",
             "end_stage": "intent",
@@ -57,9 +56,8 @@ async def test_audio_pipeline(
     """Test events from a pipeline run with audio input/output."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "voice_assistant/run",
             "start_stage": "stt",
             "end_stage": "tts",
@@ -127,9 +125,8 @@ async def test_intent_timeout(
         "homeassistant.components.conversation.async_converse",
         new=sleepy_converse,
     ):
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "intent",
                 "end_stage": "intent",
@@ -174,9 +171,8 @@ async def test_text_pipeline_timeout(
         "homeassistant.components.voice_assistant.pipeline.PipelineInput.execute",
         new=sleepy_run,
     ):
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "intent",
                 "end_stage": "intent",
@@ -208,9 +204,8 @@ async def test_intent_failed(
         "homeassistant.components.conversation.async_converse",
         new=MagicMock(return_value=RuntimeError),
     ):
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "intent",
                 "end_stage": "intent",
@@ -254,9 +249,8 @@ async def test_audio_pipeline_timeout(
         "homeassistant.components.voice_assistant.pipeline.PipelineInput.execute",
         new=sleepy_run,
     ):
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
@@ -286,9 +280,8 @@ async def test_stt_provider_missing(
     ):
         client = await hass_ws_client(hass)
 
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
@@ -313,9 +306,8 @@ async def test_stt_stream_failed(
     ):
         client = await hass_ws_client(hass)
 
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
@@ -394,9 +386,8 @@ async def test_invalid_stage_order(
     """Test pipeline run with invalid stage order."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "voice_assistant/run",
             "start_stage": "tts",
             "end_stage": "stt",
