@@ -423,7 +423,12 @@ def async_setup_scanner_platform(
 
             hass.async_create_task(async_see_device(**kwargs))
 
-    async_track_time_interval(hass, async_device_tracker_scan, interval)
+    async_track_time_interval(
+        hass,
+        async_device_tracker_scan,
+        interval,
+        name=f"device_tracker {platform} legacy scan",
+    )
     hass.async_create_task(async_device_tracker_scan(None))
 
 

@@ -2,61 +2,22 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
-from typing import Any, Final
+from typing import Any
 
-from AIOAladdinConnect import AladdinConnectClient
-import voluptuous as vol
+from AIOAladdinConnect import AladdinConnectClient, session_manager
 
-from homeassistant.components.cover import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
-    CoverDeviceClass,
-    CoverEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPENING,
-)
+from homeassistant.components.cover import CoverDeviceClass, CoverEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, STATES_MAP, SUPPORTED_FEATURES
 from .model import DoorDevice
 
-_LOGGER: Final = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
 SCAN_INTERVAL = timedelta(seconds=300)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up Aladdin Connect devices yaml depreciated."""
-    _LOGGER.warning(
-        "Configuring Aladdin Connect through yaml is deprecated. Please remove it from"
-        " your configuration as it has already been imported to a config entry"
-    )
-    await hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
@@ -85,7 +46,7 @@ class AladdinDevice(CoverEntity):
     ) -> None:
         """Initialize the Aladdin Connect cover."""
         self._acc = acc
-
+        self._entry_id = entry.entry_id
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._name = device["name"]
@@ -124,7 +85,18 @@ class AladdinDevice(CoverEntity):
 
     async def async_update(self) -> None:
         """Update status of cover."""
-        await self._acc.get_doors(self._serial)
+        try:
+            await self._acc.get_doors(self._serial)
+            self._attr_available = True
+
+        except session_manager.ConnectionError:
+            self._attr_available = False
+
+        except session_manager.InvalidPasswordError:
+            self._attr_available = False
+            await self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self._entry_id)
+            )
 
     @property
     def is_closed(self) -> bool | None:

@@ -7,10 +7,10 @@ from homeassistant.components import conversation
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import (
-    area_registry,
-    device_registry,
+    area_registry as ar,
+    device_registry as dr,
     entity,
-    entity_registry,
+    entity_registry as er,
     intent,
 )
 from homeassistant.setup import async_setup_component
@@ -29,19 +29,18 @@ async def init_components(hass):
 @pytest.mark.parametrize(
     "er_kwargs",
     [
-        {"hidden_by": entity_registry.RegistryEntryHider.USER},
-        {"hidden_by": entity_registry.RegistryEntryHider.INTEGRATION},
+        {"hidden_by": er.RegistryEntryHider.USER},
+        {"hidden_by": er.RegistryEntryHider.INTEGRATION},
         {"entity_category": entity.EntityCategory.CONFIG},
         {"entity_category": entity.EntityCategory.DIAGNOSTIC},
     ],
 )
 async def test_hidden_entities_skipped(
-    hass: HomeAssistant, init_components, er_kwargs
+    hass: HomeAssistant, init_components, er_kwargs, entity_registry: er.EntityRegistry
 ) -> None:
     """Test we skip hidden entities."""
 
-    er = entity_registry.async_get(hass)
-    er.async_get_or_create(
+    entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="Test light", **er_kwargs
     )
     hass.states.async_set("light.test_light", "off")
@@ -71,27 +70,34 @@ async def test_exposed_domains(hass: HomeAssistant, init_components) -> None:
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
 
 
-async def test_exposed_areas(hass: HomeAssistant, init_components) -> None:
+async def test_exposed_areas(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that only expose areas with an exposed entity/device."""
-    areas = area_registry.async_get(hass)
-    area_kitchen = areas.async_get_or_create("kitchen")
-    area_bedroom = areas.async_get_or_create("bedroom")
+    area_kitchen = area_registry.async_get_or_create("kitchen")
+    area_bedroom = area_registry.async_get_or_create("bedroom")
 
-    devices = device_registry.async_get(hass)
-    kitchen_device = devices.async_get_or_create(
+    kitchen_device = device_registry.async_get_or_create(
         config_entry_id="1234", connections=set(), identifiers={("demo", "id-1234")}
     )
-    devices.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
+    device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
-    entities = entity_registry.async_get(hass)
-    kitchen_light = entities.async_get_or_create("light", "demo", "1234")
-    entities.async_update_entity(kitchen_light.entity_id, device_id=kitchen_device.id)
+    kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    entity_registry.async_update_entity(
+        kitchen_light.entity_id, device_id=kitchen_device.id
+    )
     hass.states.async_set(
         kitchen_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
     )
 
-    bedroom_light = entities.async_get_or_create("light", "demo", "5678")
-    entities.async_update_entity(bedroom_light.entity_id, area_id=area_bedroom.id)
+    bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
+    entity_registry.async_update_entity(
+        bedroom_light.entity_id, area_id=area_bedroom.id
+    )
     hass.states.async_set(
         bedroom_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
     )

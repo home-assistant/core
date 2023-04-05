@@ -174,7 +174,10 @@ class BondEntity(Entity):
         self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
         self.async_on_remove(
             async_track_time_interval(
-                self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL
+                self.hass,
+                self._async_update_if_bpup_not_alive,
+                _FALLBACK_SCAN_INTERVAL,
+                name=f"Bond {self.entity_id} fallback polling",
             )
         )
 

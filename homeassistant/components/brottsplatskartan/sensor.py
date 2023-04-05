@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import timedelta
-import logging
 import uuid
 
 import brottsplatskartan
@@ -16,37 +15,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_AREA = "area"
-
-DEFAULT_NAME = "Brottsplatskartan"
+from .const import AREAS, CONF_AREA, DEFAULT_NAME, LOGGER
 
 SCAN_INTERVAL = timedelta(minutes=30)
-
-AREAS = [
-    "Blekinge län",
-    "Dalarnas län",
-    "Gotlands län",
-    "Gävleborgs län",
-    "Hallands län",
-    "Jämtlands län",
-    "Jönköpings län",
-    "Kalmar län",
-    "Kronobergs län",
-    "Norrbottens län",
-    "Skåne län",
-    "Stockholms län",
-    "Södermanlands län",
-    "Uppsala län",
-    "Värmlands län",
-    "Västerbottens län",
-    "Västernorrlands län",
-    "Västmanlands län",
-    "Västra Götalands län",
-    "Örebro län",
-    "Östergötlands län",
-]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -99,7 +70,7 @@ class BrottsplatskartanSensor(SensorEntity):
         incidents = self._brottsplatskartan.get_incidents()
 
         if incidents is False:
-            _LOGGER.debug("Problems fetching incidents")
+            LOGGER.debug("Problems fetching incidents")
             return
 
         for incident in incidents:

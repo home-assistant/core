@@ -89,19 +89,13 @@ async def test_wireless_clients(
         "is_wired": False,
         "mac": "00:00:00:00:00:02",
     }
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[client_1, client_2]
     )
     await flush_store(hass.data[unifi.UNIFI_WIRELESS_CLIENTS]._store)
 
-    for mac in [
+    assert sorted(hass_storage[unifi.STORAGE_KEY]["data"]["wireless_clients"]) == [
         "00:00:00:00:00:00",
         "00:00:00:00:00:01",
         "00:00:00:00:00:02",
-    ]:
-        assert (
-            mac
-            in hass_storage[unifi.STORAGE_KEY]["data"][config_entry.entry_id][
-                "wireless_devices"
-            ]
-        )
+    ]

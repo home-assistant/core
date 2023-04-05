@@ -40,7 +40,7 @@ def get_scanner(
 
 
 class ActiontecDeviceScanner(DeviceScanner):
-    """This class queries an actiontec router for connected devices."""
+    """Class which queries an actiontec router for connected devices."""
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the scanner."""

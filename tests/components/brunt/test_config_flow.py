@@ -1,5 +1,5 @@
 """Test the Brunt config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientResponseError
 from aiohttp.client_exceptions import ServerDisconnectedError
@@ -14,8 +14,10 @@ from tests.common import MockConfigEntry
 
 CONFIG = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_form(hass: HomeAssistant) -> None:
+
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -26,10 +28,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
         return_value=None,
-    ), patch(
-        "homeassistant.components.brunt.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,

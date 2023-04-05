@@ -2,6 +2,7 @@
 import logging
 
 from pyhap.const import (
+    CATEGORY_DOOR,
     CATEGORY_GARAGE_DOOR_OPENER,
     CATEGORY_WINDOW,
     CATEGORY_WINDOW_COVERING,
@@ -54,6 +55,7 @@ from .const import (
     HK_POSITION_STOPPED,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
+    SERV_DOOR,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW,
     SERV_WINDOW_COVERING,
@@ -321,6 +323,18 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         self.char_position_state.set_value(position_state)
 
         super().async_update_state(new_state)
+
+
+@TYPES.register("Door")
+class Door(OpeningDevice):
+    """Generate a Door accessory for a cover entity.
+
+    The entity must support: set_cover_position.
+    """
+
+    def __init__(self, *args):
+        """Initialize a Door accessory object."""
+        super().__init__(*args, category=CATEGORY_DOOR, service=SERV_DOOR)
 
 
 @TYPES.register("Window")
