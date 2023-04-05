@@ -32,14 +32,13 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
 )
 from homeassistant.components.recorder.util import get_instance, session_scope
-from homeassistant.components.sensor import ATTR_OPTIONS, DOMAIN
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import async_fire_time_changed
 from tests.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     assert_multiple_states_equal_without_context_and_last_changed,
@@ -5059,11 +5058,21 @@ def record_states_partially_unavailable(hass, zero, entity_id, attributes):
     return four, states
 
 
-async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_exclude_attributes(
+    recorder_mock: Recorder, hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test sensor attributes to be excluded."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        has_entity_name=True,
+        unique_id="test",
+        name="Test",
+        native_value="option1",
+        device_class=SensorDeviceClass.ENUM,
+        options=["option1", "option2"],
+    )
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
@@ -5085,9 +5094,6 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
             return native_states
 
     states: list[State] = await hass.async_add_executor_job(_fetch_states)
-    assert len(states) > 1
-    for state in states:
-        if state.domain != DOMAIN:
-            continue
-        assert ATTR_OPTIONS not in state.attributes
-        assert ATTR_FRIENDLY_NAME in state.attributes
+    assert len(states) == 1
+    assert ATTR_OPTIONS not in states[0].attributes
+    assert ATTR_FRIENDLY_NAME in states[0].attributes
