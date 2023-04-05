@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -308,11 +308,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     account_link.async_setup(hass)
 
-    async_call_later(
+    _startup_repairs_callback = async_call_later(
         hass=hass,
         delay=timedelta(hours=STARTUP_REPAIR_DELAY),
         action=async_startup_repairs,
     )
+
+    @callback
+    def _on_hass_stop(_: Event) -> None:
+        """Cleanup when Home Assistant stops.
+
+        Cancel the repairs startup if it hasn't run yet.
+        """
+        _startup_repairs_callback()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
     return True
 
