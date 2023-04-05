@@ -241,7 +241,7 @@
       "iot_class": "local_polling"
     },
     "androidtv": {
-      "name": "Android TV",
+      "name": "Android Debug Bridge",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -925,12 +925,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "darksky": {
-      "name": "Dark Sky",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "datadog": {
       "name": "Datadog",
@@ -3293,12 +3287,6 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Xbox"
-        },
-        "xbox_live": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "name": "Xbox Live"
         }
       }
     },

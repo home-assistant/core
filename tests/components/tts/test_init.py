@@ -1,6 +1,7 @@
 """The tests for the TTS component."""
 from http import HTTPStatus
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -972,3 +973,26 @@ async def test_generate_media_source_id_invalid_options(
     """Test generating a media source ID."""
     with pytest.raises(HomeAssistantError):
         tts.generate_media_source_id(hass, "msg", engine, language, options, None)
+
+
+def test_resolve_engine(hass: HomeAssistant, setup_tts) -> None:
+    """Test resolving engine."""
+    assert tts.async_resolve_engine(hass, None) == "test"
+    assert tts.async_resolve_engine(hass, "test") == "test"
+    assert tts.async_resolve_engine(hass, "non-existing") is None
+
+    with patch.dict(hass.data[tts.DOMAIN].providers, {}, clear=True):
+        assert tts.async_resolve_engine(hass, "test") is None
+
+    with patch.dict(hass.data[tts.DOMAIN].providers, {"cloud": object()}):
+        assert tts.async_resolve_engine(hass, None) == "cloud"
+
+
+async def test_support_options(hass: HomeAssistant, setup_tts) -> None:
+    """Test supporting options."""
+    assert await tts.async_support_options(hass, "test", "en") is True
+    assert await tts.async_support_options(hass, "test", "nl") is False
+    assert (
+        await tts.async_support_options(hass, "test", "en", {"invalid_option": "yo"})
+        is False
+    )
