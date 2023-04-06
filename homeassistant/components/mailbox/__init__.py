@@ -14,6 +14,7 @@ import async_timeout
 
 from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -86,7 +87,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component = EntityComponent[MailboxEntity](
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
         )
-        await component.async_setup(config)
+        # pylint: disable-next=[protected-access]
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, component._async_shutdown)
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [
