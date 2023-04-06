@@ -39,6 +39,7 @@ FLOWS = {
         "ambient_station",
         "android_ip_webcam",
         "androidtv",
+        "androidtv_remote",
         "anthemav",
         "apcupsd",
         "apple_tv",

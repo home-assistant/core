@@ -332,6 +332,9 @@ amcrest==1.9.7
 # homeassistant.components.androidtv
 androidtv[async]==0.0.70
 
+# homeassistant.components.androidtv_remote
+androidtvremote2==0.0.4
+
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
@@ -729,7 +732,7 @@ flux_led==0.28.36
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnvhash==0.1.0
+fnv-hash-fast==0.3.1
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1684,7 +1687,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.0
+pyinsteon==1.4.1
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
