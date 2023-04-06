@@ -138,7 +138,8 @@ class CommandSensor(SensorEntity):
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
             if self._value_template is None:
-                value = None
+                self._attr_native_value = None
+                return
 
         if self._value_template is not None:
             self._attr_native_value = (
