@@ -1,4 +1,5 @@
 """Support for Rheem EcoNet water heaters."""
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -22,6 +23,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
+
+SCAN_INTERVAL = timedelta(hours=1)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,11 +61,11 @@ async def async_setup_entry(
 class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
     """Define a Econet water heater."""
 
+    _attr_should_poll = True
+
     def __init__(self, water_heater):
         """Initialize."""
         super().__init__(water_heater)
-        self._running = water_heater.running
-        self._attr_should_poll = True  # Override False default from EcoNetEntity
         self.water_heater = water_heater
         self.econet_state_to_ha = {}
         self.ha_state_to_econet = {}
@@ -70,10 +73,6 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
     @callback
     def on_update_received(self):
         """Update was pushed from the ecoent API."""
-        if self._running != self.water_heater.running:
-            # Water heater running state has changed so check usage on next update
-            self._attr_should_poll = True
-            self._running = self.water_heater.running
         self.async_write_ha_state()
 
     @property
@@ -154,7 +153,10 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         await self.water_heater.get_energy_usage()
         await self.water_heater.get_water_usage()
         self.async_write_ha_state()
-        self._attr_should_poll = False
+
+    async def async_added_to_hass(self) -> None:
+        """Initialize energy usage."""
+        await self.async_update_ha_state(force_refresh=True)
 
     def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
