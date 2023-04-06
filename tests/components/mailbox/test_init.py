@@ -1,5 +1,6 @@
 """The tests for the mailbox component."""
 from collections.abc import AsyncGenerator
+from datetime import datetime
 from hashlib import sha1
 from http import HTTPStatus
 from typing import Any
@@ -23,12 +24,12 @@ MESSAGE_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
 
 def _create_message(idx: int) -> dict[str, Any]:
     """Create a sample message."""
-    msgtime = int(dt_util.as_timestamp(dt_util.utcnow()) - 3600 * 24 * (10 - idx))
+    msgtime = dt_util.as_timestamp(datetime(2010, 12, idx + 1, 13, 17, 00))
     msgtxt = f"Message {idx + 1}. {MESSAGE_TEXT}"
     msgsha = sha1(msgtxt.encode("utf-8")).hexdigest()
     return {
         "info": {
-            "origtime": msgtime,
+            "origtime": int(msgtime),
             "callerid": "John Doe <212-555-1212>",
             "duration": "10",
         },
