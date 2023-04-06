@@ -1,11 +1,10 @@
 """Support for Roborock vacuum class."""
 from typing import Any
 
-from roborock.code_mappings import FAN_SPEED_CODES
-from roborock.typing import RoborockCommand, RoborockDeviceInfo
+from roborock.code_mappings import RoborockFanPowerCode, RoborockStateCode
+from roborock.typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED_LIST,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -20,34 +19,35 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from . import RoborockDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
+from .models import RoborockHassDeviceInfo
 
 STATE_CODE_TO_STATE = {
-    1: STATE_IDLE,  # "Starting"
-    2: STATE_IDLE,  # "Charger disconnected"
-    3: STATE_IDLE,  # "Idle"
-    4: STATE_CLEANING,  # "Remote control active"
-    5: STATE_CLEANING,  # "Cleaning"
-    6: STATE_RETURNING,  # "Returning home"
-    7: STATE_CLEANING,  # "Manual mode"
-    8: STATE_DOCKED,  # "Charging"
-    9: STATE_ERROR,  # "Charging problem"
-    10: STATE_PAUSED,  # "Paused"
-    11: STATE_CLEANING,  # "Spot cleaning"
-    12: STATE_ERROR,  # "Error"
-    13: STATE_IDLE,  # "Shutting down"
-    14: STATE_DOCKED,  # "Updating"
-    15: STATE_RETURNING,  # "Docking"
-    16: STATE_CLEANING,  # "Going to target"
-    17: STATE_CLEANING,  # "Zoned cleaning"
-    18: STATE_CLEANING,  # "Segment cleaning"
-    22: STATE_DOCKED,  # "Emptying the bin" on s7+
-    23: STATE_DOCKED,  # "Washing the mop" on s7maxV
-    26: STATE_RETURNING,  # "Going to wash the mop" on s7maxV
-    100: STATE_DOCKED,  # "Charging complete"
-    101: STATE_ERROR,  # "Device offline"
+    RoborockStateCode["1"]: STATE_IDLE,  # "Starting"
+    RoborockStateCode["2"]: STATE_IDLE,  # "Charger disconnected"
+    RoborockStateCode["3"]: STATE_IDLE,  # "Idle"
+    RoborockStateCode["4"]: STATE_CLEANING,  # "Remote control active"
+    RoborockStateCode["5"]: STATE_CLEANING,  # "Cleaning"
+    RoborockStateCode["6"]: STATE_RETURNING,  # "Returning home"
+    RoborockStateCode["7"]: STATE_CLEANING,  # "Manual mode"
+    RoborockStateCode["8"]: STATE_DOCKED,  # "Charging"
+    RoborockStateCode["9"]: STATE_ERROR,  # "Charging problem"
+    RoborockStateCode["10"]: STATE_PAUSED,  # "Paused"
+    RoborockStateCode["11"]: STATE_CLEANING,  # "Spot cleaning"
+    RoborockStateCode["12"]: STATE_ERROR,  # "Error"
+    RoborockStateCode["13"]: STATE_IDLE,  # "Shutting down"
+    RoborockStateCode["14"]: STATE_DOCKED,  # "Updating"
+    RoborockStateCode["15"]: STATE_RETURNING,  # "Docking"
+    RoborockStateCode["16"]: STATE_CLEANING,  # "Going to target"
+    RoborockStateCode["17"]: STATE_CLEANING,  # "Zoned cleaning"
+    RoborockStateCode["18"]: STATE_CLEANING,  # "Segment cleaning"
+    RoborockStateCode["22"]: STATE_DOCKED,  # "Emptying the bin" on s7+
+    RoborockStateCode["23"]: STATE_DOCKED,  # "Washing the mop" on s7maxV
+    RoborockStateCode["26"]: STATE_RETURNING,  # "Going to wash the mop" on s7maxV
+    RoborockStateCode["100"]: STATE_DOCKED,  # "Charging complete"
+    RoborockStateCode["101"]: STATE_ERROR,  # "Device offline"
 }
 
 
@@ -66,7 +66,7 @@ async def async_setup_entry(
     ]
     async_add_entities(
         RoborockVacuum(slugify(device_id), device_info, coordinator)
-        for device_id, device_info in coordinator.api.device_map.items()
+        for device_id, device_info in coordinator.api.devices_info.items()
     )
 
 
@@ -87,12 +87,12 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
     )
-    _attr_fan_speed_list = list(FAN_SPEED_CODES.values())
+    _attr_fan_speed_list = RoborockFanPowerCode.values()
 
     def __init__(
         self,
         unique_id: str,
-        device: RoborockDeviceInfo,
+        device: RoborockHassDeviceInfo,
         coordinator: RoborockDataUpdateCoordinator,
     ) -> None:
         """Initialize a vacuum."""
@@ -124,14 +124,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Get the error str if an error code exists."""
         return self._device_status.error
 
-    @property
-    def capability_attributes(self) -> dict[str, list[str]]:
-        """Return capability attributes."""
-        capability_attributes = {}
-        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
-            capability_attributes[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
-        return capability_attributes
-
     async def async_start(self) -> None:
         """Start the vacuum."""
         await self.send(RoborockCommand.APP_START)
@@ -160,7 +152,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Set vacuum fan speed."""
         await self.send(
             RoborockCommand.SET_CUSTOM_MODE,
-            [k for k, v in FAN_SPEED_CODES.items() if v == fan_speed],
+            [k for k, v in RoborockFanPowerCode.items() if v == fan_speed],
         )
         await self.coordinator.async_request_refresh()
 

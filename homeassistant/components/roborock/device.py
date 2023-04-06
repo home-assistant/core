@@ -3,13 +3,14 @@
 from typing import Any
 
 from roborock.containers import Status
-from roborock.typing import RoborockCommand, RoborockDeviceInfo
+from roborock.typing import RoborockCommand
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RoborockDataUpdateCoordinator
 from .const import DOMAIN
+from .models import RoborockHassDeviceInfo
 
 
 class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]):
@@ -20,7 +21,7 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
     def __init__(
         self,
         unique_id: str,
-        device_info: RoborockDeviceInfo,
+        device_info: RoborockHassDeviceInfo,
         coordinator: RoborockDataUpdateCoordinator,
     ) -> None:
         """Initialize the coordinated Roborock Device."""

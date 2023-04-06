@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from roborock.api import RoborockClient
+from roborock.api import RoborockApiClient
 from roborock.containers import UserData
 from roborock.exceptions import RoborockException
 import voluptuous as vol
@@ -26,7 +26,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._username: str | None = None
-        self._client: RoborockClient | None = None
+        self._client: RoborockApiClient | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -39,11 +39,10 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(username.lower())
             self._abort_if_unique_id_configured()
             self._username = username
+            _LOGGER.debug("Requesting code for Roborock account")
+            self._client = RoborockApiClient(username)
             try:
-                _LOGGER.debug("Requesting code for Roborock account")
-                client = RoborockClient(username)
-                self._client = client
-                await client.request_code()
+                await self._client.request_code()
             except RoborockException as ex:
                 _LOGGER.exception(ex)
                 errors["base"] = "invalid_email"
@@ -68,8 +67,8 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._username
         if user_input is not None:
             code = user_input[CONF_ENTRY_CODE]
+            _LOGGER.debug("Logging into Roborock account using email provided code")
             try:
-                _LOGGER.debug("Logging into Roborock account using email provided code")
                 login_data = await self._client.code_login(code)
             except RoborockException as ex:
                 _LOGGER.exception(ex)
@@ -87,14 +86,14 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     def _create_entry(
-        self, client: RoborockClient, username: str, user_data: UserData
+        self, client: RoborockApiClient, username: str, user_data: UserData
     ) -> FlowResult:
         """Finished config flow and create entry."""
         return self.async_create_entry(
             title=username,
             data={
                 CONF_USERNAME: username,
-                CONF_USER_DATA: user_data,
+                CONF_USER_DATA: user_data.as_dict(),
                 CONF_BASE_URL: client.base_url,
             },
         )
