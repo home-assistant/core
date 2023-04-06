@@ -21,7 +21,7 @@ from homeassistant.components.alexa import (
     state_report as alexa_state_report,
 )
 from homeassistant.components.homeassistant.exposed_entities import (
-    async_get_exposed_entities,
+    async_get_assistant_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -70,7 +70,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         self._cloud = cloud
         self._token = None
         self._token_valid = None
-        self._cur_entity_prefs = async_get_exposed_entities(hass, CLOUD_ALEXA)
+        self._cur_entity_prefs = async_get_assistant_settings(hass, CLOUD_ALEXA)
         self._alexa_sync_unsub: Callable[[], None] | None = None
         self._endpoint = None
 
@@ -292,7 +292,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         """Sync the updated preferences to Alexa."""
         self._alexa_sync_unsub = None
         old_prefs = self._cur_entity_prefs
-        new_prefs = async_get_exposed_entities(self.hass, CLOUD_ALEXA)
+        new_prefs = async_get_assistant_settings(self.hass, CLOUD_ALEXA)
 
         seen = set()
         to_update = []

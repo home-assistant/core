@@ -4,7 +4,7 @@ import pytest
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
-    async_get_exposed_entities,
+    async_get_assistant_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -244,11 +244,11 @@ async def test_listen_updates(
     assert len(calls) == 2
 
 
-async def test_get_exposed_entities(
+async def test_get_assistant_settings(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test get exposed entities."""
+    """Test get assistant settings."""
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
@@ -256,13 +256,13 @@ async def test_get_exposed_entities(
 
     entry = entity_registry.async_get_or_create("climate", "test", "unique1")
 
-    assert async_get_exposed_entities(hass, "cloud.alexa") == {}
+    assert async_get_assistant_settings(hass, "cloud.alexa") == {}
 
     exposed_entities.async_expose_entity("cloud.alexa", entry.entity_id, True)
-    assert async_get_exposed_entities(hass, "cloud.alexa") == {
+    assert async_get_assistant_settings(hass, "cloud.alexa") == {
         "climate.test_unique1": {"should_expose": True}
     }
-    assert async_get_exposed_entities(hass, "cloud.google_assistant") == {}
+    assert async_get_assistant_settings(hass, "cloud.google_assistant") == {}
 
 
 async def test_should_expose(

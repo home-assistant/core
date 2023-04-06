@@ -139,10 +139,10 @@ class ExposedEntities:
         self._async_schedule_save()
 
     @callback
-    def async_get_exposed_entities(
+    def async_get_assistant_settings(
         self, assistant: str
     ) -> dict[str, Mapping[str, Any]]:
-        """Get all exposed entities."""
+        """Get all entity expose settings for an assistant."""
         entity_registry = er.async_get(self._hass)
         result: dict[str, Mapping[str, Any]] = {}
 
@@ -336,12 +336,12 @@ def async_listen_entity_updates(
 
 
 @callback
-def async_get_exposed_entities(
+def async_get_assistant_settings(
     hass: HomeAssistant, assistant: str
 ) -> dict[str, Mapping[str, Any]]:
-    """Get all exposed entities."""
+    """Get all entity expose settings for an assistant."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    return exposed_entities.async_get_exposed_entities(assistant)
+    return exposed_entities.async_get_assistant_settings(assistant)
 
 
 @callback
