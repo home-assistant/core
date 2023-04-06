@@ -472,7 +472,7 @@ async def test_fan_available(hass: HomeAssistant) -> None:
 
 async def test_setup_smart_by_bond_fan(hass: HomeAssistant) -> None:
     """Test setting up a fan without a hub."""
-    await setup_platform(
+    config_entry = await setup_platform(
         hass,
         FAN_DOMAIN,
         ceiling_fan("name-1"),
@@ -495,11 +495,13 @@ async def test_setup_smart_by_bond_fan(hass: HomeAssistant) -> None:
     assert device.manufacturer == "Olibra"
     assert device.identifiers == {("bond", "KXXX12345", "test-device-id")}
     assert device.hw_version == "test-hw-version"
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_setup_hub_template_fan(hass: HomeAssistant) -> None:
     """Test setting up a fan on a hub created from a template."""
-    await setup_platform(
+    config_entry = await setup_platform(
         hass,
         FAN_DOMAIN,
         {**ceiling_fan("name-1"), "template": "test-template"},
@@ -524,3 +526,5 @@ async def test_setup_hub_template_fan(hass: HomeAssistant) -> None:
     assert device.manufacturer == "Olibra"
     assert device.identifiers == {("bond", "ZXXX12345", "test-device-id")}
     assert device.hw_version is None
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
