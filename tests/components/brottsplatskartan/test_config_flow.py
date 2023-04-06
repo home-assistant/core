@@ -28,7 +28,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_AREA: "N/A",
+            CONF_AREA: "none",
         },
     )
     await hass.async_block_till_done()
@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Brottsplatskartan HOME"
     assert result2["data"] == {
-        "area": "N/A",
+        "area": None,
         "latitude": None,
         "longitude": None,
         "app_id": "ha-1234567890",
@@ -55,7 +55,7 @@ async def test_form_location(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_AREA: "N/A",
+            CONF_AREA: "none",
             CONF_LOCATION: {
                 CONF_LATITUDE: 59.32,
                 CONF_LONGITUDE: 18.06,
@@ -67,7 +67,7 @@ async def test_form_location(hass: HomeAssistant) -> None:
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Brottsplatskartan 59.32, 18.06"
     assert result2["data"] == {
-        "area": "N/A",
+        "area": None,
         "latitude": 59.32,
         "longitude": 18.06,
         "app_id": "ha-1234567890",
@@ -123,7 +123,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "latitude": None,
         "longitude": None,
-        "area": "N/A",
+        "area": None,
         "app_id": "ha-1234567890",
     }
 
@@ -149,7 +149,7 @@ async def test_import_flow_location_success(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "latitude": 59.32,
         "longitude": 18.06,
-        "area": "N/A",
+        "area": None,
         "app_id": "ha-1234567890",
     }
 
@@ -189,7 +189,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
         data={
             "latitude": None,
             "longitude": None,
-            "area": "N/A",
+            "area": None,
             "app_id": "ha-1234567890",
         },
         unique_id="bpk-home",

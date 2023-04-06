@@ -67,7 +67,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Brottsplatskartan sensor entry."""
 
-    area = entry.data[CONF_AREA] if entry.data[CONF_AREA] != "N/A" else None
+    area = entry.data[CONF_AREA]
     latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
     longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     app = entry.data[CONF_APP_ID]

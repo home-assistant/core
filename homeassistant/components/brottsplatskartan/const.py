@@ -14,7 +14,7 @@ CONF_APP_ID = "app_id"
 DEFAULT_NAME = "Brottsplatskartan"
 
 AREAS = [
-    "N/A",
+    "none",
     "Blekinge län",
     "Dalarnas län",
     "Gotlands län",

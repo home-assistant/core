@@ -18,9 +18,11 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_LOCATION): selector.LocationSelector(
             selector.LocationSelectorConfig(radius=False, icon="")
         ),
-        vol.Optional(CONF_AREA, default="N/A"): selector.SelectSelector(
+        vol.Optional(CONF_AREA, default="none"): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=AREAS, mode=selector.SelectSelectorMode.DROPDOWN
+                options=AREAS,
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key="areas",
             )
         ),
     }
@@ -41,7 +43,7 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LONGITUDE: config[CONF_LONGITUDE],
             }
         if not config.get(CONF_AREA):
-            config[CONF_AREA] = "N/A"
+            config[CONF_AREA] = "none"
         else:
             config[CONF_AREA] = config[CONF_AREA][0]
 
@@ -60,9 +62,11 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             longitude: float | None = user_input.get(CONF_LOCATION, {}).get(
                 CONF_LONGITUDE
             )
-            area: str = user_input[CONF_AREA]
+            area: str | None = (
+                user_input[CONF_AREA] if user_input[CONF_AREA] != "none" else None
+            )
 
-            if area != "N/A":
+            if area:
                 name = f"{DEFAULT_NAME} {area}"
                 unique_id = f"bpk-{area.casefold()}"
             elif latitude and longitude:
