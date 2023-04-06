@@ -3,7 +3,8 @@ from copy import deepcopy
 from unittest.mock import patch
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
-from httpx import HTTPError, HTTPStatusError, Request, Response
+from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
+from httpx import RequestError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
@@ -38,13 +39,11 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 
 async def test_authentication_error(hass: HomeAssistant) -> None:
-    """Test we show user form on BMW connected drive connection error."""
+    """Test we show user form on MyBMW authentication error."""
 
     with patch(
         "bimmer_connected.api.authentication.MyBMWAuthentication.login",
-        side_effect=HTTPStatusError(
-            "Login failed", request=Request("POST", ""), response=Response(403)
-        ),
+        side_effect=MyBMWAuthError("Login failed"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -58,14 +57,29 @@ async def test_authentication_error(hass: HomeAssistant) -> None:
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:
-    """Test we show user form on BMW connected drive connection error."""
-
-    def _mock_get_oauth_token(*args, **kwargs):
-        pass
+    """Test we show user form on MyBMW API error."""
 
     with patch(
         "bimmer_connected.api.authentication.MyBMWAuthentication.login",
-        side_effect=HTTPError("login failure"),
+        side_effect=RequestError("Connection reset"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=FIXTURE_USER_INPUT,
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_api_error(hass: HomeAssistant) -> None:
+    """Test we show user form on general connection error."""
+
+    with patch(
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=MyBMWAPIError("400 Bad Request"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

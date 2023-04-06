@@ -6,14 +6,14 @@ import logging
 
 from bimmer_connected.account import MyBMWAccount
 from bimmer_connected.api.regions import get_region_from_name
-from bimmer_connected.models import GPSPosition
-from httpx import HTTPError, HTTPStatusError
+from bimmer_connected.models import GPSPosition, MyBMWAPIError, MyBMWAuthError
+from httpx import RequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN
 
@@ -56,21 +56,19 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             await self.account.get_vehicles()
-        except (HTTPError, HTTPStatusError) as err:
-            if isinstance(err, HTTPStatusError) and err.response.status_code in (
-                401,
-                403,
-            ):
-                # Clear refresh token and trigger reauth
-                self._update_config_entry_refresh_token(None)
-                raise ConfigEntryAuthFailed(str(err)) from err
+        except MyBMWAuthError as err:
+            # Clear refresh token and trigger reauth
+            self._update_config_entry_refresh_token(None)
+            raise ConfigEntryAuthFailed(str(err)) from err
 
-            error_message = (
-                f"Error communicating with BMW API ({type(err).__name__}): {err}"
-            )
+        except (MyBMWAPIError, RequestError) as err:
             if self.last_update_success is True:
-                _LOGGER.exception(error_message, exc_info=True)
-            raise UpdateFailed(error_message) from err
+                _LOGGER.warning(
+                    "Error communicating with BMW API (%s): %s",
+                    type(err).__name__,
+                    err,
+                )
+                self.last_update_success = False
 
         if self.account.refresh_token != old_refresh_token:
             self._update_config_entry_refresh_token(self.account.refresh_token)
@@ -79,6 +77,9 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 old_refresh_token,
                 self.account.refresh_token,
             )
+
+        if self.last_update_success is False:
+            _LOGGER.info("Reconnected to BMW API")
 
     def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
         """Update or delete the refresh_token in the Config Entry."""
