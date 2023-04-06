@@ -29,11 +29,6 @@ async def validate_input(hass: core.HomeAssistant, data):
         LOGGER.error("Error connecting to the Flo API: %s", request_error)
         raise CannotConnect from request_error
 
-    user_info = await api.user.get_info()
-    a_location_id = user_info["locations"][0]["id"]
-    location_info = await api.location.get_info(a_location_id)
-    return {"title": location_info["nickname"]}
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for flo."""
@@ -47,8 +42,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
             try:
-                info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
+                await validate_input(self.hass, user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                    )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
