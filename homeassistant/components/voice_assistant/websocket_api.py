@@ -1,6 +1,6 @@
 """Voice Assistant Websocket API."""
 import asyncio
-import audioop
+import audioop  # pylint: disable=deprecated-module
 from collections.abc import Callable
 import logging
 from typing import Any

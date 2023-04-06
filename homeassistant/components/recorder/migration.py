@@ -913,7 +913,7 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
         _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
         _create_index(session_maker, "states", "ix_states_last_updated_ts")
-        _migrate_columns_to_timestamp(session_maker, engine)
+        _migrate_columns_to_timestamp(instance, session_maker, engine)
     elif new_version == 32:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
@@ -966,7 +966,7 @@ def _apply_update(  # noqa: C901
             "ix_statistics_short_term_statistic_id_start_ts",
         )
         try:
-            _migrate_statistics_columns_to_timestamp(session_maker, engine)
+            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
         except IntegrityError as ex:
             _LOGGER.error(
                 "Statistics table contains duplicate entries: %s; "
@@ -979,7 +979,7 @@ def _apply_update(  # noqa: C901
             # and try again
             with session_scope(session=session_maker()) as session:
                 delete_statistics_duplicates(instance, hass, session)
-            _migrate_statistics_columns_to_timestamp(session_maker, engine)
+            _migrate_statistics_columns_to_timestamp(instance, session_maker, engine)
             # Log at error level to ensure the user sees this message in the log
             # since we logged the error above.
             _LOGGER.error(
@@ -1195,8 +1195,9 @@ def _wipe_old_string_time_columns(
         session.commit()
 
 
+@database_job_retry_wrapper("Migrate columns to timestamp", 3)
 def _migrate_columns_to_timestamp(
-    session_maker: Callable[[], Session], engine: Engine
+    instance: Recorder, session_maker: Callable[[], Session], engine: Engine
 ) -> None:
     """Migrate columns to use timestamp."""
     # Migrate all data in Events.time_fired to Events.time_fired_ts
@@ -1283,8 +1284,9 @@ def _migrate_columns_to_timestamp(
                 )
 
 
+@database_job_retry_wrapper("Migrate statistics columns to timestamp", 3)
 def _migrate_statistics_columns_to_timestamp(
-    session_maker: Callable[[], Session], engine: Engine
+    instance: Recorder, session_maker: Callable[[], Session], engine: Engine
 ) -> None:
     """Migrate statistics columns to use timestamp."""
     # Migrate all data in statistics.start to statistics.start_ts

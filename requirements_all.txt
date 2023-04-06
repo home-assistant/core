@@ -137,7 +137,7 @@ aiobafi6==0.8.0
 aiobotocore==2.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==1.4.15
+aiodiscover==1.4.16
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
@@ -331,6 +331,9 @@ amcrest==1.9.7
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.70
+
+# homeassistant.components.androidtv_remote
+androidtvremote2==0.0.4
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -729,7 +732,7 @@ flux_led==0.28.36
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnvhash==0.1.0
+fnv-hash-fast==0.3.1
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -748,7 +751,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.11.0
+fritzconnection==1.12.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -1684,7 +1687,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.0
+pyinsteon==1.4.1
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -2343,7 +2346,7 @@ simplehound==0.3
 simplepush==2.1.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.12.0
+simplisafe-python==2023.04.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
@@ -2644,7 +2647,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.16.4
+xiaomi-ble==0.17.0
 
 # homeassistant.components.knx
 xknx==2.7.0
