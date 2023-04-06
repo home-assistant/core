@@ -32,8 +32,7 @@
     "error": {
       "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
       "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "country_not_exist": "Country does not exist or not available"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "options": {
