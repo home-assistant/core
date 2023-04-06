@@ -228,7 +228,6 @@ class DashboardsCollection(collection.StorageCollection):
         """Initialize the dashboards collection."""
         super().__init__(
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
-            _LOGGER,
         )
 
     async def _async_load_data(self) -> dict | None:

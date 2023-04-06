@@ -144,7 +144,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     id_manager = collection.IDManager()
     storage_collection = ApplicationCredentialsStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     await storage_collection.async_load()
