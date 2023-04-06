@@ -544,9 +544,6 @@ connect-box==0.2.8
 # homeassistant.components.xiaomi_miio
 construct==2.10.56
 
-# homeassistant.components.coronavirus
-coronavirus==1.1.1
-
 # homeassistant.components.utility_meter
 croniter==1.0.6
 
@@ -910,7 +907,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230405.0
+home-assistant-frontend==20230406.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29

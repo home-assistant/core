@@ -217,8 +217,6 @@ build.json @home-assistant/supervisor
 /tests/components/conversation/ @home-assistant/core @synesthesiam
 /homeassistant/components/coolmaster/ @OnFreund
 /tests/components/coolmaster/ @OnFreund
-/homeassistant/components/coronavirus/ @home-assistant/core
-/tests/components/coronavirus/ @home-assistant/core
 /homeassistant/components/counter/ @fabaff
 /tests/components/counter/ @fabaff
 /homeassistant/components/cover/ @home-assistant/core
