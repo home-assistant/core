@@ -345,10 +345,13 @@ async def async_setup_entry(  # noqa: C901
             disconnect_cb()
         entry_data.disconnect_callbacks = []
         entry_data.available = False
-        # Clear out the states so that we will always dispatch
+        # Mark state as stale so that we will always dispatch
         # the next state update of that type when the device reconnects
-        for state_keys in entry_data.state.values():
-            state_keys.clear()
+        entry_data.stale_state = {
+            (type(entity_state), key)
+            for state_dict in entry_data.state.values()
+            for key, entity_state in state_dict.items()
+        }
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
             # since it generates a lot of state changed events and database
