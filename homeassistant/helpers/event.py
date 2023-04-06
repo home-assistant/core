@@ -1389,7 +1389,6 @@ def async_call_later(
     @callback
     def unsub_call_later_listener() -> None:
         """Cancel the call_later."""
-        assert cancel_callback is not None
         cancel_callback.cancel()
         if _unsub_cancel_on_hass_stop:
             _unsub_cancel_on_hass_stop()
@@ -1399,7 +1398,7 @@ def async_call_later(
         @callback
         def _on_hass_stop(_: Event) -> None:
             """Cancel the job when Home Assistant stops."""
-            unsub_call_later_listener()
+            cancel_callback.cancel()
 
         _unsub_cancel_on_hass_stop = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, _on_hass_stop
