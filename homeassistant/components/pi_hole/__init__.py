@@ -64,27 +64,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
+    name_to_key = {
+        "Core Update Available": "core_update_available",
+        "Web Update Available": "web_update_available",
+        "FTL Update Available": "ftl_update_available",
+        "Status": "status",
+        "Ads Blocked Today": "ads_blocked_today",
+        "Ads Percentage Blocked Today": "ads_percentage_today",
+        "Seen Clients": "clients_ever_seen",
+        "DNS Queries Today": "dns_queries_today",
+        "Domains Blocked": "domains_being_blocked",
+        "DNS Queries Cached": "queries_cached",
+        "DNS Queries Forwarded": "queries_forwarded",
+        "DNS Unique Clients": "unique_clients",
+        "DNS Unique Domains": "unique_domains",
+    }
+
     @callback
     def update_unique_id(
         entity_entry: er.RegistryEntry,
     ) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
-        name_to_key = {
-            "Core Update Available": "core_update_available",
-            "Web Update Available": "web_update_available",
-            "FTL Update Available": "ftl_update_available",
-            "Status": "status",
-            "Ads Blocked Today": "ads_blocked_today",
-            "Ads Percentage Blocked Today": "ads_percentage_today",
-            "Seen Clients": "clients_ever_seen",
-            "DNS Queries Today": "dns_queries_today",
-            "Domains Blocked": "domains_being_blocked",
-            "DNS Queries Cached": "queries_cached",
-            "DNS Queries Forwarded": "queries_forwarded",
-            "DNS Unique Clients": "unique_clients",
-            "DNS Unique Domains": "unique_domains",
-        }
-
         unique_id_parts = entity_entry.unique_id.split("/")
         if len(unique_id_parts) == 2 and unique_id_parts[1] in name_to_key:
             name = unique_id_parts[1]
