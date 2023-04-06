@@ -1,5 +1,5 @@
 """Tests for the init module."""
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from pyvesync import VeSync
@@ -7,7 +7,6 @@ from pyvesync import VeSync
 from homeassistant.components.vesync import async_setup_entry
 from homeassistant.components.vesync.const import (
     DOMAIN,
-    SERVICE_UPDATE_DEVS,
     VS_FANS,
     VS_LIGHTS,
     VS_MANAGER,
@@ -68,51 +67,37 @@ async def test_async_setup_entry__no_devices(
 
     assert manager.login.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
+    assert not hass.data[DOMAIN][VS_SWITCHES]
     assert not hass.data[DOMAIN][VS_FANS]
     assert not hass.data[DOMAIN][VS_LIGHTS]
     assert not hass.data[DOMAIN][VS_SENSORS]
-    assert not hass.data[DOMAIN][VS_SWITCHES]
 
 
-async def test_async_setup_entry__with_devices(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    manager_devices: VeSync,
+async def test_async_setup_entry__loads_fans(
+    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync, fan
 ) -> None:
     """Test setup connects to vesync and loads fan platform."""
+    fans = [fan]
+    manager.fans = fans
+    manager._dev_list = {
+        "fans": fans,
+    }
+
     with patch.object(
-        hass,
-        "async_add_executor_job",
-        new=AsyncMock(),
-    ) as mock_add_executor_job, patch.object(
         hass.config_entries, "async_forward_entry_setups"
     ) as setups_mock, patch.object(
-        hass.services, "async_register"
-    ) as register_mock:
+        hass.config_entries, "async_forward_entry_setup"
+    ) as setup_mock:
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
-
-        assert mock_add_executor_job.call_count == 2
-        assert mock_add_executor_job.call_args_list == [
-            call(manager_devices.login),
-            call(manager_devices.update),
-        ]
         assert setups_mock.call_count == 1
         assert setups_mock.call_args.args[0] == config_entry
-        assert list(setups_mock.call_args.args[1]) == [
-            Platform.SWITCH,
-            Platform.FAN,
-            Platform.LIGHT,
-            Platform.SENSOR,
-        ]
-        assert register_mock.call_count == 1
-        assert register_mock.call_args.args[0] == DOMAIN
-        assert register_mock.call_args.args[1] == SERVICE_UPDATE_DEVS
-        assert callable(register_mock.call_args.args[2])
-
-    assert hass.data[DOMAIN][VS_MANAGER] == manager_devices
-    assert len(hass.data[DOMAIN][VS_FANS]) == 1
-    assert len(hass.data[DOMAIN][VS_LIGHTS]) == 2
-    assert len(hass.data[DOMAIN][VS_SENSORS]) == 2
-    assert len(hass.data[DOMAIN][VS_SWITCHES]) == 2
+        assert setups_mock.call_args.args[1] == [Platform.FAN, Platform.SENSOR]
+        assert setup_mock.call_count == 0
+    assert manager.login.call_count == 1
+    assert hass.data[DOMAIN][VS_MANAGER] == manager
+    assert not hass.data[DOMAIN][VS_SWITCHES]
+    assert hass.data[DOMAIN][VS_FANS] == [fan]
+    assert not hass.data[DOMAIN][VS_LIGHTS]
+    assert hass.data[DOMAIN][VS_SENSORS] == [fan]
