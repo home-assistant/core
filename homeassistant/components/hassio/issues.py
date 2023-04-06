@@ -72,9 +72,8 @@ UNSUPPORTED_REASONS = {
     "systemd_journal",
     "systemd_resolved",
 }
-# Some unsupported reasons also mark the system as unhealthy.
-# # If the unsupported reason provides no additional information
-# beyond the unhealthy one then skip that repair.
+# Some unsupported reasons also mark the system as unhealthy. If the unsupported reason
+# provides no additional information beyond the unhealthy one then skip that repair.
 UNSUPPORTED_SKIP_REPAIR = {"privileged"}
 UNHEALTHY_REASONS = {
     "docker",
