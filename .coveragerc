@@ -584,7 +584,6 @@ omit =
     homeassistant/components/justnimbus/sensor.py
     homeassistant/components/kaiterra/*
     homeassistant/components/kankun/switch.py
-    homeassistant/components/kat_bulgaria/binary_sensor.py
     homeassistant/components/keba/*
     homeassistant/components/keenetic_ndms2/__init__.py
     homeassistant/components/keenetic_ndms2/binary_sensor.py

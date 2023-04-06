@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import generate_entity_name
 from .const import (
+    ATTR_LAST_UPDATED,
     BINARY_SENSOR_ENTITY_PREFIX,
     CONF_DRIVING_LICENSE,
     CONF_PERSON_EGN,
@@ -61,10 +62,11 @@ class KatObligationsSensor(BinarySensorEntity):
         resp: KatApiResponse[bool] = await self.api.async_check_obligations(
             self.egn, self.license_number
         )
+
         if resp.success:
             self._attr_is_on = resp.data
             self._attr_extra_state_attributes = {
-                "last_updated": datetime.now().isoformat()
+                ATTR_LAST_UPDATED: datetime.now().isoformat()
             }
         else:
-            _LOGGER.warning(resp.error_message)
+            _LOGGER.info(resp.error_message)

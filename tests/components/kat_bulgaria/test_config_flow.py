@@ -7,8 +7,6 @@ from kat_bulgaria.obligations import KatApiResponse, KatErrorType
 import pytest
 
 from homeassistant import config_entries
-
-# from homeassistant.components.kat_bulgaria.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.kat_bulgaria.common import generate_entity_name
 from homeassistant.components.kat_bulgaria.const import (
     CONF_DRIVING_LICENSE,
@@ -18,6 +16,8 @@ from homeassistant.components.kat_bulgaria.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .const import KAT_API_VERIFY_CREDENTIALS
 
 
 @pytest.fixture(autouse=True, name="mock_setup_entry")
@@ -38,7 +38,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] is None
 
     with patch(
-        "kat_bulgaria.obligations.KatApi.async_verify_credentials",
+        KAT_API_VERIFY_CREDENTIALS,
         return_value=KatApiResponse(True),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -68,7 +68,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "kat_bulgaria.obligations.KatApi.async_verify_credentials",
+        KAT_API_VERIFY_CREDENTIALS,
         return_value=KatApiResponse(
             False, "Error message", KatErrorType.VALIDATION_ERROR
         ),
@@ -94,7 +94,7 @@ async def test_form_cannot_connect_website_down(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "kat_bulgaria.obligations.KatApi.async_verify_credentials",
+        KAT_API_VERIFY_CREDENTIALS,
         return_value=KatApiResponse(
             False, "Error message", KatErrorType.API_UNAVAILABLE
         ),
@@ -120,7 +120,7 @@ async def test_form_cannot_connect_timeout(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "kat_bulgaria.obligations.KatApi.async_verify_credentials",
+        KAT_API_VERIFY_CREDENTIALS,
         return_value=KatApiResponse(False, "Error message", KatErrorType.TIMEOUT),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -144,7 +144,7 @@ async def test_form_unknown_error_type(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "kat_bulgaria.obligations.KatApi.async_verify_credentials",
+        KAT_API_VERIFY_CREDENTIALS,
         return_value=KatApiResponse(False, "Error message", None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -201,7 +201,7 @@ async def test_form_already_configured_check_not_existing(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "kat_bulgaria.obligations.KatApi.async_verify_credentials",
+        KAT_API_VERIFY_CREDENTIALS,
         return_value=KatApiResponse(True),
     ), patch(
         "homeassistant.config_entries.ConfigFlow._async_current_entries",
