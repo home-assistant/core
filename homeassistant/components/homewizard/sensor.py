@@ -103,7 +103,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_import_kwh,
+        value_fn=lambda data: data.total_power_import_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t1_kwh",
@@ -111,7 +111,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_import_t1_kwh,
+        value_fn=lambda data: data.total_power_import_t1_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t2_kwh",
@@ -119,7 +119,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_import_t2_kwh,
+        value_fn=lambda data: data.total_power_import_t2_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t3_kwh",
@@ -127,7 +127,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_import_t3_kwh,
+        value_fn=lambda data: data.total_power_import_t3_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t4_kwh",
@@ -135,7 +135,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_import_t4_kwh,
+        value_fn=lambda data: data.total_power_import_t4_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_kwh",
@@ -143,7 +143,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_export_kwh,
+        value_fn=lambda data: data.total_power_export_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t1_kwh",
@@ -151,7 +151,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_export_t1_kwh,
+        value_fn=lambda data: data.total_power_export_t1_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t2_kwh",
@@ -159,7 +159,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_export_t2_kwh,
+        value_fn=lambda data: data.total_power_export_t2_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t3_kwh",
@@ -167,7 +167,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_export_t3_kwh,
+        value_fn=lambda data: data.total_power_export_t3_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t4_kwh",
@@ -175,7 +175,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_power_export_t4_kwh,
+        value_fn=lambda data: data.total_power_export_t4_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_w",
@@ -348,7 +348,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_gas_m3,
+        value_fn=lambda data: data.total_gas_m3 or None,
     ),
     HomeWizardSensorEntityDescription(
         key="gas_unique_id",
@@ -372,7 +372,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         icon="mdi:gauge",
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_liter_m3,
+        value_fn=lambda data: data.total_liter_m3 or None,
     ),
 )
 
