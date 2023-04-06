@@ -84,11 +84,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         mailboxes.append(mailbox)
         mailbox_entity = MailboxEntity(mailbox)
-        component = EntityComponent[MailboxEntity](
+        component = MailboxEntityComponent(
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
         )
-        # pylint: disable-next=[protected-access]
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, component._async_shutdown)
+        await component.async_setup()
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [
@@ -143,6 +142,20 @@ class MailboxEntity(Entity):
         """Retrieve messages from platform."""
         messages = await self.mailbox.async_get_messages()
         self.message_count = len(messages)
+
+
+class MailboxEntityComponent(EntityComponent[MailboxEntity]):
+    """Mailbox entity component."""
+
+    async def async_setup(self, config: ConfigType | None = None) -> None:
+        """Set up a full mailbox entity component.
+
+        Overridden to avoid loading the platforms from the config and listening
+        for supported discovered platforms.
+
+        This method must be run in the event loop.
+        """
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
 
 class Mailbox:
