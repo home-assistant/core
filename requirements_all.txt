@@ -119,7 +119,7 @@ aioairq==0.2.4
 aioairzone==0.5.2
 
 # homeassistant.components.ambient_station
-aioambient==2021.11.0
+aioambient==2022.10.0
 
 # homeassistant.components.aseko_pool_live
 aioaseko==0.0.2
@@ -137,7 +137,7 @@ aiobafi6==0.8.0
 aiobotocore==2.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==1.4.15
+aiodiscover==1.4.16
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
@@ -748,7 +748,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.11.0
+fritzconnection==1.12.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -757,7 +757,7 @@ gTTS==2.2.4
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==4.1.2
+gcal-sync==4.1.3
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.0
@@ -907,7 +907,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230405.0
+home-assistant-frontend==20230406.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
@@ -1684,7 +1684,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.0
+pyinsteon==1.4.1
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -2231,7 +2231,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.12
 
 # homeassistant.components.reolink
-reolink-aio==0.5.9
+reolink-aio==0.5.10
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2343,7 +2343,7 @@ simplehound==0.3
 simplepush==2.1.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.12.0
+simplisafe-python==2023.04.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
