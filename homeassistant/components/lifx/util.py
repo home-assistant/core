@@ -28,7 +28,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.color as color_util
 
-from .const import _LOGGER, DOMAIN, INFRARED_BRIGHTNESS_VALUES_MAP, OVERALL_TIMEOUT
+from .const import (
+    _LOGGER,
+    DOMAIN,
+    INFRARED_BRIGHTNESS_VALUES_MAP,
+    OVERALL_TIMEOUT,
+    TARGET_ANY,
+)
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 
@@ -181,6 +187,13 @@ async def async_execute_lifx(method: Callable) -> Message:
     future: asyncio.Future[Message] = asyncio.Future()
 
     def _callback(bulb: Light, message: Message) -> None:
+        if (
+            message is not None
+            and message.target_addr != TARGET_ANY
+            and bulb.mac_addr == TARGET_ANY
+        ):
+            bulb.mac_addr = message.target_addr
+
         if not future.done():
             # The future will get canceled out from under
             # us by async_timeout when we hit the OVERALL_TIMEOUT
@@ -194,4 +207,5 @@ async def async_execute_lifx(method: Callable) -> Message:
 
     if result is None:
         raise asyncio.TimeoutError("No response from LIFX bulb")
+
     return result

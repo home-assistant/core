@@ -93,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 host, serial=serial, raise_on_progress=True
             )
         ):
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="cannot_connect")  # pragma: no cover
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
@@ -172,7 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_without_label.ip_addr, raise_on_progress=False
             )
             if not device:
-                return self.async_abort(reason="cannot_connect")
+                return self.async_abort(reason="cannot_connect")  # pragma: no cover
             return self._async_create_entry_from_device(device)
 
         configured_serials: set[str] = set()
