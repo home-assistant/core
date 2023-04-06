@@ -24,7 +24,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import AREAS, CONF_APP_ID, CONF_AREA, DEFAULT_NAME, DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(minutes=30)
-ICON = "mdi:account-alert"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -83,12 +82,11 @@ class BrottsplatskartanSensor(SensorEntity):
     """Representation of a Brottsplatskartan Sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_icon = ICON
-    _attr_has_entity_name = True
 
     def __init__(self, bpk: BrottsplatsKartan, name: str, unique_id: str) -> None:
         """Initialize the Brottsplatskartan sensor."""
         self._bpk = bpk
+        self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -104,7 +102,7 @@ class BrottsplatskartanSensor(SensorEntity):
         incidents = self._bpk.get_incidents()
 
         if incidents is False:
-            LOGGER.error("Could not fetch incidents")
+            LOGGER.debug("Problems fetching incidents")
             return
 
         for incident in incidents:
