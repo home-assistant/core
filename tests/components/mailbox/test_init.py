@@ -1,7 +1,6 @@
 """The tests for the mailbox component."""
 from hashlib import sha1
 from http import HTTPStatus
-import os
 from typing import Any
 
 from aiohttp.test_utils import TestClient
@@ -64,9 +63,7 @@ class TestMailbox(mailbox.Mailbox):
         if msgid not in self._messages:
             raise mailbox.StreamError("Message not found")
 
-        audio_path = os.path.join(os.path.dirname(__file__), "mailbox_media.mp3")
-        with open(audio_path, "rb") as file:
-            return file.read()
+        return b"3f67c4ea33b37d1710f"
 
     async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""
@@ -138,7 +135,7 @@ async def test_get_messages_from_mailbox(mock_http_client: TestClient) -> None:
 
 async def test_get_media_from_mailbox(mock_http_client: TestClient) -> None:
     """Get audio from mailbox."""
-    mp3sha = "3f67c4ea33b37d1710f772a26dd3fb43bb159d50"
+    mp3sha = "7cad61312c7b66f619295be2da8c7ac73b4968f1"
     msgtxt = "Message 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
     msgsha = sha1(msgtxt.encode("utf-8")).hexdigest()
 
