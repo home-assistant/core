@@ -1,7 +1,7 @@
 PyJWT==2.6.0
 PyNaCl==1.5.0
 PyTurboJPEG==1.6.7
-aiodiscover==1.4.15
+aiodiscover==1.4.16
 aiohttp==3.8.4
 aiohttp_cors==0.7.0
 astral==2.2
@@ -20,12 +20,12 @@ certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==40.0.1
 dbus-fast==1.84.2
-fnvhash==0.1.0
+fnv-hash-fast==0.3.1
 ha-av==10.0.0
 hass-nabucasa==0.63.1
 hassil==1.0.6
 home-assistant-bluetooth==1.9.3
-home-assistant-frontend==20230403.0
+home-assistant-frontend==20230405.0
 home-assistant-intents==2023.3.29
 httpx==0.23.3
 ifaddr==0.1.7
@@ -44,9 +44,9 @@ pyudev==0.23.2
 pyyaml==6.0
 requests==2.28.2
 scapy==2.5.0
-sqlalchemy==2.0.7
+sqlalchemy==2.0.8
 typing-extensions>=4.5.0,<5.0
-ulid-transform==0.5.1
+ulid-transform==0.6.0
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 yarl==1.8.1
@@ -157,3 +157,8 @@ uamqp==1.6.0;python_version<'3.11'
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
+
+# websockets 11.0 is missing files in the source distribution
+# which break wheel builds
+# https://github.com/aaugustin/websockets/issues/1329
+websockets<11.0

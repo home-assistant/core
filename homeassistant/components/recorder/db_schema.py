@@ -3,13 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from functools import lru_cache
 import logging
 import time
 from typing import Any, cast
 
 import ciso8601
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
     JSON,
     BigInteger,
@@ -343,10 +342,9 @@ class EventData(Base):
         return bytes_result
 
     @staticmethod
-    @lru_cache
     def hash_shared_data_bytes(shared_data_bytes: bytes) -> int:
         """Return the hash of json encoded shared data."""
-        return cast(int, fnv1a_32(shared_data_bytes))
+        return fnv1a_32(shared_data_bytes)
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an event data dictionary."""
@@ -592,10 +590,9 @@ class StateAttributes(Base):
         return bytes_result
 
     @staticmethod
-    @lru_cache(maxsize=2048)
     def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:
         """Return the hash of json encoded shared attributes."""
-        return cast(int, fnv1a_32(shared_attrs_bytes))
+        return fnv1a_32(shared_attrs_bytes)
 
     def to_native(self) -> dict[str, Any]:
         """Convert to a state attributes dictionary."""

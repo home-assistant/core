@@ -127,7 +127,7 @@ aiobafi6==0.8.0
 aiobotocore==2.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==1.4.15
+aiodiscover==1.4.16
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
@@ -146,7 +146,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.6.0
+aioesphomeapi==13.6.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -307,6 +307,9 @@ ambiclimate==0.2.1
 # homeassistant.components.androidtv
 androidtv[async]==0.0.70
 
+# homeassistant.components.androidtv_remote
+androidtvremote2==0.0.4
+
 # homeassistant.components.anthemav
 anthemav==1.4.1
 
@@ -426,9 +429,6 @@ colorthief==0.2.1
 # homeassistant.components.eq3btsmart
 # homeassistant.components.xiaomi_miio
 construct==2.10.56
-
-# homeassistant.components.coronavirus
-coronavirus==1.1.1
 
 # homeassistant.components.utility_meter
 croniter==1.0.6
@@ -557,7 +557,7 @@ flux_led==0.28.36
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnvhash==0.1.0
+fnv-hash-fast==0.3.1
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -570,7 +570,7 @@ freebox-api==1.1.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.11.0
+fritzconnection==1.12.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -614,7 +614,7 @@ glances_api==0.4.1
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.30
+goodwe==0.2.31
 
 # homeassistant.components.google_mail
 google-api-python-client==2.71.0
@@ -693,7 +693,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230403.0
+home-assistant-frontend==20230405.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
@@ -1218,7 +1218,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.0
+pyinsteon==1.4.1
 
 # homeassistant.components.ipma
 pyipma==3.0.6
@@ -1673,7 +1673,7 @@ simplehound==0.3
 simplepush==2.1.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.12.0
+simplisafe-python==2023.04.0
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1713,7 +1713,7 @@ spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.7
+sqlalchemy==2.0.8
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -1899,7 +1899,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.16.4
+xiaomi-ble==0.17.0
 
 # homeassistant.components.knx
 xknx==2.7.0

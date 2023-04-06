@@ -151,7 +151,7 @@ class DeviceWithPrograms(HomeConnectDevice):
             programs_available = self.appliance.get_programs_available()
         except (HomeConnectError, ValueError):
             _LOGGER.debug("Unable to fetch available programs. Probably offline")
-            programs_available = None
+            programs_available = []
         return programs_available
 
     def get_program_switches(self):

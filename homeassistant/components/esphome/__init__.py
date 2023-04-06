@@ -5,12 +5,11 @@ from collections.abc import Callable
 import functools
 import logging
 import math
-from typing import Any, Generic, NamedTuple, TypeVar, cast, overload
+from typing import Any, Generic, NamedTuple, TypeVar, cast
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
-    APIIntEnum,
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
@@ -64,6 +63,7 @@ from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
+from .enum_mapper import EsphomeEnumMapper
 
 CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
@@ -685,41 +685,6 @@ def esphome_state_property(
         return val
 
     return _wrapper
-
-
-_EnumT = TypeVar("_EnumT", bound=APIIntEnum)
-_ValT = TypeVar("_ValT")
-
-
-class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
-    """Helper class to convert between hass and esphome enum values."""
-
-    def __init__(self, mapping: dict[_EnumT, _ValT]) -> None:
-        """Construct a EsphomeEnumMapper."""
-        # Add none mapping
-        augmented_mapping: dict[
-            _EnumT | None, _ValT | None
-        ] = mapping  # type: ignore[assignment]
-        augmented_mapping[None] = None
-
-        self._mapping = augmented_mapping
-        self._inverse: dict[_ValT, _EnumT] = {v: k for k, v in mapping.items()}
-
-    @overload
-    def from_esphome(self, value: _EnumT) -> _ValT:
-        ...
-
-    @overload
-    def from_esphome(self, value: _EnumT | None) -> _ValT | None:
-        ...
-
-    def from_esphome(self, value: _EnumT | None) -> _ValT | None:
-        """Convert from an esphome int representation to a hass string."""
-        return self._mapping[value]
-
-    def from_hass(self, value: _ValT) -> _EnumT:
-        """Convert from a hass string to a esphome int representation."""
-        return self._inverse[value]
 
 
 ICON_SCHEMA = vol.Schema(cv.icon)
