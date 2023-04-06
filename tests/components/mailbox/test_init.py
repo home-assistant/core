@@ -16,31 +16,35 @@ from tests.common import MockModule, mock_integration, mock_platform
 from tests.typing import ClientSessionGenerator
 
 MAILBOX_NAME = "TestMailbox"
+MESSAGE_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+
+
+def _create_message(idx: int) -> dict[str, Any]:
+    """Create a sample message."""
+    msgtime = int(dt_util.as_timestamp(dt_util.utcnow()) - 3600 * 24 * (10 - idx))
+    msgtxt = f"Message {idx + 1}. {MESSAGE_TEXT * (1 + idx * (idx % 2))}"
+    msgsha = sha1(msgtxt.encode("utf-8")).hexdigest()
+    return {
+        "info": {
+            "origtime": msgtime,
+            "callerid": "John Doe <212-555-1212>",
+            "duration": "10",
+        },
+        "text": msgtxt,
+        "sha": msgsha,
+    }
 
 
 class TestMailbox(mailbox.Mailbox):
-    """Test Mailbox."""
+    """Test Mailbox, with 10 sample messages."""
 
     def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize Test mailbox."""
         super().__init__(hass, name)
         self._messages: dict[str, dict[str, Any]] = {}
-        txt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
         for idx in range(0, 10):
-            msgtime = int(
-                dt_util.as_timestamp(dt_util.utcnow()) - 3600 * 24 * (10 - idx)
-            )
-            msgtxt = f"Message {idx + 1}. {txt * (1 + idx * (idx % 2))}"
-            msgsha = sha1(msgtxt.encode("utf-8")).hexdigest()
-            msg = {
-                "info": {
-                    "origtime": msgtime,
-                    "callerid": "John Doe <212-555-1212>",
-                    "duration": "10",
-                },
-                "text": msgtxt,
-                "sha": msgsha,
-            }
+            msg = _create_message(idx)
+            msgsha = msg["sha"]
             self._messages[msgsha] = msg
 
     @property
