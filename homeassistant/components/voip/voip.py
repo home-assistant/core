@@ -7,11 +7,11 @@ import async_timeout
 from voip_utils import CallInfo, RtpDatagramProtocol, SdpInfo, VoipDatagramProtocol
 
 from homeassistant.components import stt, tts
-from homeassistant.components.voice_assistant import async_pipeline_from_audio_stream
-from homeassistant.components.voice_assistant.pipeline import (
+from homeassistant.components.voice_assistant import (
     Pipeline,
     PipelineEvent,
     PipelineEventType,
+    async_pipeline_from_audio_stream,
 )
 from homeassistant.components.voice_assistant.vad import VoiceCommandSegmenter
 from homeassistant.const import __version__

@@ -9,7 +9,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .error import PipelineNotFound
-from .pipeline import (
+from .pipeline import (  # pylint: disable=unused-import  # noqa: F401
+    Pipeline,
     PipelineEvent,
     PipelineEventCallback,
     PipelineEventType,
