@@ -32,8 +32,6 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: config_entries.ConfigEntry | None
-
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
 
@@ -56,14 +54,18 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            latitude: float = user_input.get(CONF_LOCATION, {}).get(CONF_LATITUDE)
-            longitude: float = user_input.get(CONF_LOCATION, {}).get(CONF_LONGITUDE)
+            latitude: float | None = user_input.get(CONF_LOCATION, {}).get(
+                CONF_LATITUDE
+            )
+            longitude: float | None = user_input.get(CONF_LOCATION, {}).get(
+                CONF_LONGITUDE
+            )
             area: str = user_input[CONF_AREA]
 
             if area != "N/A":
                 name = f"{DEFAULT_NAME} {area}"
                 unique_id = f"bpk-{area.casefold()}"
-            elif latitude:
+            elif latitude and longitude:
                 name = f"{DEFAULT_NAME} {round(latitude, 2)}, {round(longitude, 2)}"
                 unique_id = f"bpk-{latitude}-{longitude}"
             else:
