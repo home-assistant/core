@@ -102,7 +102,7 @@ class BondEntity(Entity):
         return device_info
 
     async def async_update(self) -> None:
-        """Fetch assumed state of the cover from the hub using API."""
+        """Perform a manual update from API."""
         await self._async_update_from_api()
 
     @callback
