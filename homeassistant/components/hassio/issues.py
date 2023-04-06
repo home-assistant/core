@@ -241,11 +241,6 @@ class SupervisorIssues:
 
         self._unsupported_reasons = reasons
 
-    @property
-    def issues(self) -> set[Issue]:
-        """Get issues from Supervisor. Returns empty set if there are none."""
-        return set(self._issues.values())
-
     def add_issue(self, issue: Issue) -> None:
         """Add or update an issue in the list. Create or update a repair if necessary."""
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:

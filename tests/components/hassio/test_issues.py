@@ -1,6 +1,7 @@
 """Test issues from supervisor issues."""
 from __future__ import annotations
 
+from asyncio import TimeoutError
 import os
 from typing import Any
 from unittest.mock import ANY, patch
@@ -636,3 +637,48 @@ async def test_supervisor_issues_add_remove(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"issues": []}
+
+
+async def test_supervisor_issues_suggestions_fail(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test failing to get suggestions for issue skips it."""
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/info",
+        json={
+            "result": "ok",
+            "data": {
+                "unsupported": [],
+                "unhealthy": [],
+                "suggestions": [],
+                "issues": [
+                    {
+                        "uuid": "1234",
+                        "type": "reboot_required",
+                        "context": "system",
+                        "reference": None,
+                    }
+                ],
+                "checks": [
+                    {"enabled": True, "slug": "supervisor_trust"},
+                    {"enabled": True, "slug": "free_space"},
+                ],
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/issue/1234/suggestions",
+        exc=TimeoutError(),
+    )
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 0
