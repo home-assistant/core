@@ -162,20 +162,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             require_ssl=False,
         )
     except NoURLAvailableError:
-        try:
-            hass_url = get_url(
-                hass,
-                allow_cloud=False,
-                allow_external=True,
-                allow_ip=True,
-                require_ssl=False,
-            )
-        except NoURLAvailableError as err:
-            webhook.async_unregister(hass, entry.entry_id)
-            raise ConfigEntryNotReady(
-                f"Error registering URL for webhook {entry.entry_id}: "
-                "HomeAssistant URL is not available"
-            ) from err
+        webhook.async_unregister(hass, entry.entry_id)
+        raise ConfigEntryNotReady(
+            f"Error registering URL for webhook {entry.entry_id}: "
+            "HomeAssistant URL is not available"
+        ) from None
 
     url = f"{hass_url}{webhook_url}"
 
