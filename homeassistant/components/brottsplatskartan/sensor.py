@@ -82,11 +82,11 @@ class BrottsplatskartanSensor(SensorEntity):
     """Representation of a Brottsplatskartan Sensor."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(self, bpk: BrottsplatsKartan, name: str, unique_id: str) -> None:
         """Initialize the Brottsplatskartan sensor."""
-        self._bpk = bpk
-        self._attr_name = name
+        self._brottsplatskartan = bpk
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -98,8 +98,8 @@ class BrottsplatskartanSensor(SensorEntity):
     def update(self) -> None:
         """Update device state."""
 
-        incident_counts: dict[str, int] = defaultdict(int)
-        incidents = self._bpk.get_incidents()
+        incident_counts: defaultdict[str, int] = defaultdict(int)
+        incidents = self._brottsplatskartan.get_incidents()
 
         if incidents is False:
             LOGGER.debug("Problems fetching incidents")
