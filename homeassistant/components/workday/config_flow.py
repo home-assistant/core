@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 import holidays
-from holidays import HolidayBase, list_supported_countries
+from holidays import HolidayBase
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -67,12 +67,6 @@ def add_province_to_schema(
 
         new_schema = vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
     return new_schema
-
-
-def validate_country(user_input: dict[str, Any]) -> None:
-    """Validate if country exists."""
-    if user_input[CONF_COUNTRY] not in list(list_supported_countries()):
-        raise CountryNotExist
 
 
 def validate_custom_dates(user_input: dict[str, Any]) -> None:
@@ -184,10 +178,6 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.data = user_input
-            try:
-                validate_country(user_input)
-            except CountryNotExist:
-                errors["country"] = "country_not_exist"
             return await self.async_step_options()
         return self.async_show_form(
             step_id="user",
