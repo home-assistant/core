@@ -26,7 +26,7 @@ STORAGE_VERSION = 1
 
 SAVE_DELAY = 10
 
-DEFAULT_EXPOSED_DOMAINS = [
+DEFAULT_EXPOSED_DOMAINS = {
     "climate",
     "cover",
     "fan",
@@ -38,9 +38,9 @@ DEFAULT_EXPOSED_DOMAINS = [
     "switch",
     "vacuum",
     "water_heater",
-]
+}
 
-DEFAULT_EXPOSED_BINARY_SENSOR_DEVICE_CLASSES = [
+DEFAULT_EXPOSED_BINARY_SENSOR_DEVICE_CLASSES = {
     BinarySensorDeviceClass.DOOR,
     BinarySensorDeviceClass.GARAGE_DOOR,
     BinarySensorDeviceClass.LOCK,
@@ -48,9 +48,9 @@ DEFAULT_EXPOSED_BINARY_SENSOR_DEVICE_CLASSES = [
     BinarySensorDeviceClass.OPENING,
     BinarySensorDeviceClass.PRESENCE,
     BinarySensorDeviceClass.WINDOW,
-]
+}
 
-DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES = [
+DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES = {
     SensorDeviceClass.AQI,
     SensorDeviceClass.CO,
     SensorDeviceClass.CO2,
@@ -59,7 +59,7 @@ DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES = [
     SensorDeviceClass.PM25,
     SensorDeviceClass.TEMPERATURE,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-]
+}
 
 
 @dataclasses.dataclass(frozen=True)
@@ -302,7 +302,7 @@ def ws_expose_entity(
 def ws_expose_new_entities_get(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Check if new entities are exposed to an assistatant."""
+    """Check if new entities are exposed to an assistant."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     expose_new = exposed_entities.async_get_expose_new_entities(msg["assistant"])
     connection.send_result(msg["id"], {"expose_new": expose_new})
