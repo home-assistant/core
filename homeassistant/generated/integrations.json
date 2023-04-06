@@ -2666,8 +2666,8 @@
     },
     "kat_bulgaria": {
       "name": "KAT Bulgaria",
-      "integration_type": "service",
-      "config_flow": false,
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "keba": {

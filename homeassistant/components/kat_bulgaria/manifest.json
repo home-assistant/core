@@ -2,8 +2,12 @@
   "domain": "kat_bulgaria",
   "name": "KAT Bulgaria",
   "codeowners": ["@Nedevski"],
+  "config_flow": true,
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/kat_bulgaria",
-  "integration_type": "service",
+  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["kat_bulgaria==0.2.3"]
+  "requirements": ["kat_bulgaria==0.5.2"],
+  "ssdp": [],
+  "zeroconf": []
 }

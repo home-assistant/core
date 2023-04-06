@@ -604,6 +604,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
 /homeassistant/components/kat_bulgaria/ @Nedevski
+/tests/components/kat_bulgaria/ @Nedevski
 /homeassistant/components/keba/ @dannerph
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
