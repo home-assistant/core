@@ -63,10 +63,10 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator):
         self.client = AuroraSerialClient(address, comport, parity="N", timeout=1)
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
-    async def _async_update_data(self) -> dict[str, float]:
+    def _update_data(self) -> dict[str, float]:
         """Fetch new state data for the sensor.
 
-        This is the only method that should fetch new data for Home Assistant.
+        This is the only function that should fetch new data for Home Assistant.
         """
         data: dict[str, float] = {}
         try:
@@ -105,3 +105,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator):
                 self.client.close()
 
         return data
+
+    async def _async_update_data(self) -> dict[str, float]:
+        """Update inverter data in the executor."""
+        return await self.hass.async_add_executor_job(self._update_data)
