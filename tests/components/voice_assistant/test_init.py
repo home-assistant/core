@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 
 async def test_pipeline_from_audio_stream(
-    hass: HomeAssistant, mock_stt_provider, snapshot: SnapshotAssertion
+    hass: HomeAssistant, mock_stt_provider, init_components, snapshot: SnapshotAssertion
 ) -> None:
     """Test creating a pipeline from an audio stream."""
 
