@@ -36,10 +36,12 @@ class SipDatagramProtocol(asyncio.DatagramProtocol):
     """UDP server for the Session Initiation Protocol (SIP)."""
 
     def __init__(self, hass: HomeAssistant) -> None:
+        """Set up SIP server."""
         self.hass = hass
         self.transport = None
 
     def connection_made(self, transport):
+        """Server ready."""
         self.transport = transport
 
     def datagram_received(self, data: bytes, addr):
@@ -92,7 +94,7 @@ class SipDatagramProtocol(asyncio.DatagramProtocol):
         )
 
     def on_call(self, call_info: CallInfo):
-        """Callback for incoming call."""
+        """Handle incoming calls."""
 
     def answer(
         self,
