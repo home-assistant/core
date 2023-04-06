@@ -30,7 +30,6 @@ from homeassistant.util.unit_conversion import (
     VolumeConverter,
 )
 
-from .const import MAX_QUEUE_BACKLOG
 from .models import StatisticPeriod
 from .statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
@@ -504,7 +503,7 @@ def ws_info(
 
     recorder_info = {
         "backlog": backlog,
-        "max_backlog": MAX_QUEUE_BACKLOG,
+        "max_backlog": instance.max_backlog,
         "migration_in_progress": migration_in_progress,
         "migration_is_live": migration_is_live,
         "recording": recording,

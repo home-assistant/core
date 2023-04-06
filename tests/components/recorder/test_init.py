@@ -1768,7 +1768,7 @@ async def test_database_lock_and_overflow(
 
     instance = get_instance(hass)
 
-    with patch.object(recorder.core, "MAX_QUEUE_BACKLOG", 1), patch.object(
+    with patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
         recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.1
     ):
         await instance.lock_database()

@@ -1033,6 +1033,7 @@ progettihwsw==0.1.1
 prometheus_client==0.7.1
 
 # homeassistant.components.hardware
+# homeassistant.components.recorder
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.androidtv
