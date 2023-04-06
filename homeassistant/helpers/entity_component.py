@@ -88,6 +88,8 @@ class EntityComponent(Generic[_EntityT]):
 
         hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+
     @property
     def entities(self) -> Iterable[_EntityT]:
         """Return an iterable that returns all entities.
@@ -126,7 +128,6 @@ class EntityComponent(Generic[_EntityT]):
 
         This method must be run in the event loop.
         """
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
         self.config = config
 
