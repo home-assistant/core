@@ -95,7 +95,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection = InputButtonStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
