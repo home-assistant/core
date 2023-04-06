@@ -83,14 +83,13 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator):
             energy_wh = self.client.cumulated_energy(5)
             data["totalenergy"] = round(energy_wh / 1000, 2)
             self.available = True
-            self.data = data
 
         except AuroraTimeoutError:
-            self.data = {}
+            data = {}
             self.available = False
             _LOGGER.debug("No response from inverter (could be dark)")
         except AuroraError as error:
-            self.data = {}
+            data = {}
             self.available = False
             raise error
         finally:

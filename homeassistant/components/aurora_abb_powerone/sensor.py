@@ -19,13 +19,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AuroraAbbDataUpdateCoordinator
-from .aurora_device import AuroraEntity
-from .const import DOMAIN
+from .const import (
+    ATTR_DEVICE_NAME,
+    ATTR_FIRMWARE,
+    ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
+    DEFAULT_DEVICE_NAME,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,9 +81,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class AuroraSensor(
-    CoordinatorEntity[AuroraAbbDataUpdateCoordinator], AuroraEntity, SensorEntity
-):
+class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEntity):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
     def __init__(
@@ -93,3 +99,21 @@ class AuroraSensor(
     def native_value(self) -> StateType:
         """Get the value of the sensor from previously collected data."""
         return self.coordinator.data.get(self.entity_description.key)
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique id for this device."""
+        if (serial := self._data.get(ATTR_SERIAL_NUMBER)) is None:
+            return None
+        return f"{serial}_{self.entity_description.key}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(DOMAIN, self._data[ATTR_SERIAL_NUMBER])},
+            "manufacturer": MANUFACTURER,
+            "model": self._data[ATTR_MODEL],
+            "name": self._data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
+            "sw_version": self._data[ATTR_FIRMWARE],
+        }
