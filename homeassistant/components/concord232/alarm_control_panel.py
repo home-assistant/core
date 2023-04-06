@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -89,8 +90,9 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         self._alarm = concord232_client.Client(self._url)
         self._alarm.partitions = self._alarm.list_partitions()
 
-    def update(self) -> None:
-        """Update values from API."""
+    @property
+    def alarm_status(self) -> str:
+        """Get current status from API."""
         try:
             part = self._alarm.list_partitions()[0]
         except requests.exceptions.ConnectionError as ex:
@@ -98,17 +100,21 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
                 "Unable to connect to %(host)s: %(reason)s",
                 {"host": self._url, "reason": ex},
             )
-            return
+            return STATE_UNAVAILABLE
         except IndexError:
             _LOGGER.error("Concord232 reports no partitions")
-            return
+            return STATE_UNAVAILABLE
 
         if part["arming_level"] == "Off":
-            self._attr_state = STATE_ALARM_DISARMED
-        elif "Home" in part["arming_level"]:
-            self._attr_state = STATE_ALARM_ARMED_HOME
-        else:
-            self._attr_state = STATE_ALARM_ARMED_AWAY
+            return STATE_ALARM_DISARMED
+        if "Home" in part["arming_level"]:
+            return STATE_ALARM_ARMED_HOME
+
+        return STATE_ALARM_ARMED_AWAY
+
+    def update(self) -> None:
+        """Update alarm panel state."""
+        self._attr_state = self.alarm_status
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
