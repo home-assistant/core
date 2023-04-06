@@ -157,7 +157,11 @@ async def async_setup_sensor(
     upper_query = query_str.upper()
     if use_database_executor:
         redacted_query = redact_credentials(query_str)
+
         issue_key = unique_id if unique_id else redacted_query
+        # If the query has a unique id and they fix it we can dismiss the issue
+        # but if it doesn't have a unique id they have to ignore it instead
+
         if "ENTITY_ID" in upper_query and "STATES_META" not in upper_query:
             _LOGGER.error(
                 "The query `%s` contains the keyword `entity_id` but does not "
@@ -180,12 +184,9 @@ async def async_setup_sensor(
                 "Query contains entity_id but does not reference states_meta"
             )
 
-        if unique_id:
-            # If the query has a unique id and they fix it we can dismiss the issue
-            # but if it doesn't have a unique id they have to ignore it instead
-            ir.async_delete_issue(
-                hass, DOMAIN, f"entity_id_query_does_full_table_scan_{issue_key}"
-            )
+        ir.async_delete_issue(
+            hass, DOMAIN, f"entity_id_query_does_full_table_scan_{issue_key}"
+        )
 
     # MSSQL uses TOP and not LIMIT
     if not ("LIMIT" in upper_query or "SELECT TOP" in upper_query):
