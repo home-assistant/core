@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from aiowatttime import Client
 from aiowatttime.errors import InvalidCredentialsError, WattTimeError
@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data() -> dict[str, Any]:
         """Get the latest realtime emissions data."""
         try:
-            return await client.emissions.async_get_realtime_emissions(
+            data = await client.emissions.async_get_realtime_emissions(
                 entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE]
             )
         except InvalidCredentialsError as err:
@@ -53,6 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(
                 f"Error while requesting data from WattTime: {err}"
             ) from err
+
+        return cast(dict[str, Any], data)
 
     coordinator = DataUpdateCoordinator(
         hass,
