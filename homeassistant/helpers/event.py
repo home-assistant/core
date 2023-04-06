@@ -1375,9 +1375,9 @@ def async_call_later(
     @callback
     def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
         """Call the action."""
+        hass.async_run_hass_job(job, time_tracker_utcnow())
         if _unsub_cancel_on_hass_stop:
             _unsub_cancel_on_hass_stop()
-        hass.async_run_hass_job(job, time_tracker_utcnow())
 
     job = (
         action
@@ -1389,10 +1389,10 @@ def async_call_later(
     @callback
     def unsub_call_later_listener() -> None:
         """Cancel the call_later."""
-        if _unsub_cancel_on_hass_stop:
-            _unsub_cancel_on_hass_stop()
         assert cancel_callback is not None
         cancel_callback.cancel()
+        if _unsub_cancel_on_hass_stop:
+            _unsub_cancel_on_hass_stop()
 
     if cancel_on_hass_stop:
 
