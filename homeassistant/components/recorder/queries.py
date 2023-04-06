@@ -5,7 +5,6 @@ from collections.abc import Iterable
 from datetime import datetime
 
 from sqlalchemy import delete, distinct, func, lambda_stmt, select, union_all, update
-from sqlalchemy.orm import aliased
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
@@ -724,9 +723,6 @@ def find_entity_ids_to_migrate() -> StatementLambdaElement:
     )
 
 
-_InnerStates = aliased(States)
-
-
 def batch_cleanup_entity_ids() -> StatementLambdaElement:
     """Find entity_id to cleanup."""
     # Self join because This version of MariaDB doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'
@@ -734,16 +730,18 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
         lambda: update(States)
         .where(
             States.state_id.in_(
-                select(_InnerStates.state_id).join(
+                select(States.state_id)
+                .join(
                     states_with_entity_ids := select(
-                        _InnerStates.state_id.label("state_id_with_entity_id")
+                        States.state_id.label("state_id_with_entity_id")
                     )
-                    .filter(_InnerStates.entity_id.is_not(None))
+                    .filter(States.entity_id.is_not(None))
                     .limit(5000)
                     .subquery(),
-                    _InnerStates.state_id
-                    == states_with_entity_ids.c.state_id_with_entity_id,
+                    States.state_id == states_with_entity_ids.c.state_id_with_entity_id,
                 )
+                .alias("states_with_entity_ids")
+                .select()
             )
         )
         .values(entity_id=None)
