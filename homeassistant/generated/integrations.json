@@ -6068,6 +6068,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "voip": {
+      "name": "Voice over IP",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "volkszaehler": {
       "name": "Volkszaehler",
       "integration_type": "hub",

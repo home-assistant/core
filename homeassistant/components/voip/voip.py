@@ -28,12 +28,18 @@ _LOGGER = logging.getLogger(__name__)
 class VoipDatagramProtocol(SipDatagramProtocol):
     """UDP server for Voice over IP (VoIP)."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, allow_ips: set[str]) -> None:
+        """Set up VoIP call handler."""
         super().__init__(hass)
         self.hass = hass
+        self.allow_ips = allow_ips
 
     def on_call(self, call_info: CallInfo):
-        """Callback for incoming call."""
+        """Answer incoming calls and start RTP server on a random port."""
+        if call_info.caller_ip not in self.allow_ips:
+            _LOGGER.warning("Call rejected from IP %s", call_info.caller_ip)
+            return
+
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setblocking(False)
 
@@ -80,6 +86,7 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
         hass: HomeAssistant,
         language: str,
     ) -> None:
+        """Set up pipeline RTP server."""
         self.hass = hass
         self.language = language
         self.pipeline: Pipeline | None = None
@@ -93,6 +100,7 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
         self._conversation_id: str | None = None
 
     def connection_made(self, transport):
+        """Server is ready."""
         self.transport = transport
         _LOGGER.debug(
             "Started pipeline server on %s",
@@ -201,7 +209,7 @@ class PipelineDatagramProtocol(asyncio.DatagramProtocol):
             self._pipeline_task = None
 
     async def _send_audio(self, media_id: str) -> None:
-        """Sends TTS audio to caller via RTP."""
+        """Send TTS audio to caller via RTP."""
         if self.transport is None:
             return
 
@@ -256,6 +264,7 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
         wav_path: str | Path,
         silence_before: float = 0.0,
     ) -> None:
+        """Set up media output RTP stream."""
         self.hass = hass
         self.transport = None
         self.silence_before = silence_before
@@ -264,6 +273,7 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
         self._media_sent = False
 
     def connection_made(self, transport):
+        """Server is ready."""
         self.transport = transport
         _LOGGER.debug(
             "Started media output server on %s",
@@ -271,7 +281,7 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
         )
 
     def datagram_received(self, data, addr):
-        # Send media when first packet is received from caller
+        """Send media when first packet is received from caller."""
         if self._media_sent:
             return
 
@@ -284,6 +294,7 @@ class MediaOutputDatagramProtocol(asyncio.DatagramProtocol):
         )
 
     def _send_media(self, addr):
+        """Read WAV file and sent over RTP + OPUS."""
         if self.transport is None:
             return
 
