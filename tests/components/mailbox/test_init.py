@@ -17,6 +17,7 @@ from tests.common import MockModule, mock_integration, mock_platform
 from tests.typing import ClientSessionGenerator
 
 MAILBOX_NAME = "TestMailbox"
+MEDIA_DATA = b"3f67c4ea33b37d1710f"
 MESSAGE_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
 
 
@@ -68,7 +69,7 @@ class TestMailbox(mailbox.Mailbox):
         if msgid not in self._messages:
             raise mailbox.StreamError("Message not found")
 
-        return b"3f67c4ea33b37d1710f"
+        return MEDIA_DATA
 
     async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""
