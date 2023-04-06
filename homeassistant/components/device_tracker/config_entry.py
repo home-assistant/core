@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
+import logging
 from typing import final
 
 from homeassistant.components import zone
@@ -11,6 +13,7 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
     STATE_NOT_HOME,
     EntityCategory,
@@ -19,7 +22,10 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import (
+    DEFAULT_SCAN_INTERVAL,
+    EntityComponent,
+)
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
 
@@ -39,14 +45,12 @@ from .const import (
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an entry."""
-    component: EntityComponent[BaseTrackerEntity] | None = hass.data.get(DOMAIN)
+    component: DeviceTrackerEntityComponent | None = hass.data.get(DOMAIN)
 
     if component is not None:
         return await component.async_setup_entry(entry)
 
-    component = hass.data[DOMAIN] = EntityComponent[BaseTrackerEntity](
-        LOGGER, DOMAIN, hass
-    )
+    component = hass.data[DOMAIN] = DeviceTrackerEntityComponent(LOGGER, DOMAIN, hass)
 
     # Clean up old devices created by device tracker entities in the past.
     # Can be removed after 2022.6
@@ -75,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an entry."""
-    component: EntityComponent[BaseTrackerEntity] = hass.data[DOMAIN]
+    component: DeviceTrackerEntityComponent = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -206,6 +210,22 @@ class BaseTrackerEntity(Entity):
             attr[ATTR_BATTERY_LEVEL] = self.battery_level
 
         return attr
+
+
+class DeviceTrackerEntityComponent(EntityComponent[BaseTrackerEntity]):
+    """Mailbox entity component."""
+
+    def __init__(
+        self,
+        logger: logging.Logger,
+        domain: str,
+        hass: HomeAssistant,
+        scan_interval: timedelta = DEFAULT_SCAN_INTERVAL,
+    ) -> None:
+        """Initialize an entity component."""
+        super().__init__(logger, domain, hass, scan_interval)
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
 
 class TrackerEntity(BaseTrackerEntity):

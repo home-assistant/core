@@ -16,7 +16,6 @@ from homeassistant.components.device_tracker.const import (
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_component import EntityComponent
 
 from tests.common import MockConfigEntry
 
@@ -49,17 +48,12 @@ async def test_scanner_entity_device_tracker(
     }
     assert entity_state.state == STATE_NOT_HOME
 
-    platform: EntityComponent = hass.data[DOMAIN]
-    entity = platform.get_entity(entity_id)
+    entity = hass.data[DOMAIN].get_entity(entity_id)
     entity.set_connected()
     await hass.async_block_till_done()
 
     entity_state = hass.states.get(entity_id)
     assert entity_state.state == STATE_HOME
-
-    # Remove entity to cleanup lingering timers
-    await platform.async_remove_entity(entity_id)
-    await hass.async_block_till_done()
 
 
 def test_scanner_entity() -> None:
