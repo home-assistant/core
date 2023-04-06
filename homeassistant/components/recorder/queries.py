@@ -730,7 +730,8 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
         lambda: update(States)
         .where(
             States.state_id.in_(
-                select(States.state_id).join(
+                select(States.state_id)
+                .join(
                     states_with_entity_ids := select(
                         States.state_id.label("state_id_with_entity_id")
                     )
@@ -739,6 +740,8 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
                     .subquery(),
                     States.state_id == states_with_entity_ids.c.state_id_with_entity_id,
                 )
+                .alias("states_with_entity_ids")
+                .select()
             )
         )
         .values(entity_id=None)
