@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+import time
 
 from concord232 import client as concord232_client
 import requests
@@ -21,7 +22,9 @@ from homeassistant.const import (
     CONF_PORT,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -121,6 +124,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         if not self._validate_code(code, STATE_ALARM_DISARMED):
             return
         self._alarm.disarm(code)
+        self.wait_for_state(STATE_ALARM_DISARMED)
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
@@ -130,12 +134,39 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
             self._alarm.arm("stay", "silent")
         else:
             self._alarm.arm("stay")
+        self.wait_for_state(STATE_ALARM_ARMED_HOME)
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_AWAY):
             return
         self._alarm.arm("away")
+        self.wait_for_state(STATE_ALARM_ARMED_AWAY)
+
+    def wait_for_state(self, target_state: str, timeout: int = 5) -> None:
+        """Wait for alarm panel to arm/disarm."""
+        if target_state.startswith("disarm"):
+            self._attr_state = STATE_ALARM_DISARMING
+        else:
+            self._attr_state = STATE_ALARM_ARMING
+
+        self.async_write_ha_state()
+
+        timeout_time = time.time() + timeout
+
+        while True:
+            time.sleep(0.5)
+            if self.alarm_status == target_state:
+                break
+            if time.time() > timeout_time:
+                _LOGGER.error(
+                    "Timed out waiting for '%(t)s'. Current state is '%(c)s'",
+                    {"t": target_state, "c": self._attr_state},
+                )
+
+                break
+
+        self._attr_state = self.alarm_status
 
     def _validate_code(self, code, state) -> bool:
         """Validate given code."""
