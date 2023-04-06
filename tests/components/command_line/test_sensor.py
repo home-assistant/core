@@ -176,7 +176,7 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
 
 
 async def test_update_with_json_attrs_and_value_template(hass: HomeAssistant) -> None:
-    """Test attributes get extracted from a JSON result."""
+    """Test attributes get extracted and state populated from a JSON result with value_template."""
     await setup_test_entities(
         hass,
         {
