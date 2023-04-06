@@ -67,7 +67,6 @@ class ImageStorageCollection(collection.StorageCollection):
         """Initialize media storage collection."""
         super().__init__(
             Store(hass, STORAGE_VERSION, STORAGE_KEY),
-            logging.getLogger(f"{__name__}.storage_collection"),
         )
         self.async_add_listener(self._change_listener)
         self.image_dir = image_dir

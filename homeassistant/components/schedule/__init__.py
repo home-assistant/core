@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import itertools
-import logging
 from typing import Any, Literal
 
 import voluptuous as vol
@@ -173,7 +172,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             version=STORAGE_VERSION,
             minor_version=STORAGE_VERSION_MINOR,
         ),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     sync_entity_lifecycle(hass, DOMAIN, DOMAIN, component, storage_collection, Schedule)

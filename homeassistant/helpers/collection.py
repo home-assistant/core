@@ -124,11 +124,8 @@ class CollectionEntity(Entity):
 class ObservableCollection(ABC):
     """Base collection type that can be observed."""
 
-    def __init__(
-        self, logger: logging.Logger, id_manager: IDManager | None = None
-    ) -> None:
+    def __init__(self, id_manager: IDManager | None) -> None:
         """Initialize the base collection."""
-        self.logger = logger
         self.id_manager = id_manager or IDManager()
         self.data: dict[str, dict] = {}
         self.listeners: list[ChangeListener] = []
@@ -175,6 +172,15 @@ class ObservableCollection(ABC):
 class YamlCollection(ObservableCollection):
     """Offer a collection based on static data."""
 
+    def __init__(
+        self,
+        logger: logging.Logger,
+        id_manager: IDManager | None = None,
+    ) -> None:
+        """Initialize the storage collection."""
+        super().__init__(id_manager)
+        self.logger = logger
+
     @staticmethod
     def create_entity(
         entity_class: type[CollectionEntity], config: ConfigType
@@ -218,11 +224,10 @@ class StorageCollection(ObservableCollection, ABC):
     def __init__(
         self,
         store: Store,
-        logger: logging.Logger,
         id_manager: IDManager | None = None,
     ) -> None:
         """Initialize the storage collection."""
-        super().__init__(logger, id_manager)
+        super().__init__(id_manager)
         self.store = store
 
     @staticmethod

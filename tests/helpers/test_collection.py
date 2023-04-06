@@ -202,7 +202,7 @@ async def test_storage_collection(hass: HomeAssistant) -> None:
         }
     )
     id_manager = collection.IDManager()
-    coll = MockStorageCollection(store, _LOGGER, id_manager)
+    coll = MockStorageCollection(store, id_manager)
     changes = track_changes(coll)
 
     await coll.async_load()
@@ -434,7 +434,7 @@ async def test_storage_collection_websocket(
 ) -> None:
     """Test exposing a storage collection via websockets."""
     store = storage.Store(hass, 1, "test-data")
-    coll = MockStorageCollection(store, _LOGGER)
+    coll = MockStorageCollection(store)
     changes = track_changes(coll)
     collection.StorageCollectionWebsocket(
         coll,
