@@ -36,12 +36,12 @@ COMMON_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_VERSION,
-        translation_key=ATTR_VERSION,
+        translation_key="version",
     ),
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_VERSION_LATEST,
-        translation_key=ATTR_VERSION_LATEST,
+        translation_key="version_latest",
     ),
 )
 
@@ -49,7 +49,7 @@ STATS_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_CPU_PERCENT,
-        translation_key=ATTR_CPU_PERCENT,
+        translation_key="cpu_percent",
         icon="mdi:cpu-64-bit",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -57,7 +57,7 @@ STATS_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_MEMORY_PERCENT,
-        translation_key=ATTR_MEMORY_PERCENT,
+        translation_key="memory_percent",
         icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
