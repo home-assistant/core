@@ -2,14 +2,33 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Callable
 import socket
-from typing import cast
+from typing import Any, cast
+
+from aioesphomeapi import VoiceAssistantEventType
 
 from homeassistant.components import stt, voice_assistant
 from homeassistant.core import HomeAssistant, callback
 
 from .entry_data import RuntimeEntryData
+from .enum_mapper import EsphomeEnumMapper
+
+_VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
+    VoiceAssistantEventType, voice_assistant.PipelineEventType
+] = EsphomeEnumMapper(
+    {
+        VoiceAssistantEventType.VOICE_ASSISTANT_ERROR: voice_assistant.PipelineEventType.ERROR,
+        VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START: voice_assistant.PipelineEventType.RUN_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END: voice_assistant.PipelineEventType.RUN_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_START: voice_assistant.PipelineEventType.STT_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_END: voice_assistant.PipelineEventType.STT_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START: voice_assistant.PipelineEventType.INTENT_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: voice_assistant.PipelineEventType.INTENT_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: voice_assistant.PipelineEventType.TTS_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: voice_assistant.PipelineEventType.TTS_END,
+    }
+)
 
 
 class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
@@ -57,7 +76,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     @callback
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle incoming UDP packet."""
-        if self.queue:
+        if self.queue is not None:
             self.queue.put_nowait(data)
 
     def error_received(self, exc) -> None:
@@ -85,20 +104,17 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         while data := await self.queue.get():
             yield data
 
-    async def run_pipeline(self) -> None:
+    async def run_pipeline(
+        self, handle_event: Callable[[VoiceAssistantEventType, dict[str, Any]], None]
+    ) -> None:
         """Run the Voice Assistant pipeline."""
 
         @callback
         def handle_pipeline_event(event: voice_assistant.PipelineEvent) -> None:
             """Handle pipeline events."""
 
-            if event.type not in (
-                voice_assistant.PipelineEventType.RUN_END,
-                voice_assistant.PipelineEventType.ERROR,
-            ):
-                return
-
-            # TODO We're done. Send message to ESPHome device
+            type = _VOICE_ASSISTANT_EVENT_TYPES.from_hass(event.type)
+            handle_event(type, event.data)
 
         await voice_assistant.async_pipeline_from_audio_stream(
             self.hass,

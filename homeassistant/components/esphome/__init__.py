@@ -22,6 +22,7 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    VoiceAssistantEventType,
 )
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -287,18 +288,34 @@ async def async_setup_entry(  # noqa: C901
 
     voice_assistant_udp_server: VoiceAssistantUDPServer | None = None
 
-    async def handle_pipeline_start() -> int:
+    def handle_pipeline_event(
+        type: VoiceAssistantEventType, data: dict[str, Any] | None
+    ) -> None:
+        """Handle a voice assistant pipeline event."""
+        data_to_send = None
+        if type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
+            data_to_send = {"text": data["stt_output"]["text"]}
+        elif type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
+            data_to_send = {"text": data["tts_input"]}
+        elif type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
+            data_to_send = {"url": data["tts_output"]["url"]}
+        elif type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
+            data_to_send = {"code": data["code"], "message": data["message"]}
+
+        cli.send_voice_assistant_event(type, data_to_send)
+
+    async def handle_pipeline_start() -> int | None:
         """Start a voice assistant pipeline."""
         nonlocal voice_assistant_udp_server
 
         if voice_assistant_udp_server is not None:
-            return
+            return None
 
         voice_assistant_udp_server = VoiceAssistantUDPServer(hass, entry_data)
         port = await voice_assistant_udp_server.start_server()
 
         hass.async_create_background_task(
-            voice_assistant_udp_server.run_pipeline(),
+            voice_assistant_udp_server.run_pipeline(handle_pipeline_event),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
 
@@ -359,7 +376,8 @@ async def async_setup_entry(  # noqa: C901
             if device_info.voice_assistant_version:
                 entry_data.disconnect_callbacks.append(
                     await cli.subscribe_voice_assistant(
-                        handle_pipeline_start, handle_pipeline_stop
+                        handle_pipeline_start,
+                        handle_pipeline_stop,
                     )
                 )
 
