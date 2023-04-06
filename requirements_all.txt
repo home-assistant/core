@@ -1295,9 +1295,6 @@ openwrt-luci-rpc==1.1.11
 # homeassistant.components.ubus
 openwrt-ubus-rpc==0.0.2
 
-# homeassistant.components.voip
-opuslib==3.0.1
-
 # homeassistant.components.oralb
 oralb-ble==0.17.6
 
@@ -2581,6 +2578,9 @@ venstarcolortouch==0.19
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
+
+# homeassistant.components.voip
+voip-utils==0.0.1
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
