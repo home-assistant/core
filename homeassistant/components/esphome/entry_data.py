@@ -214,7 +214,7 @@ class RuntimeEntryData:
         current_state_by_type = self.state[state_type]
         current_state = current_state_by_type.get(key, _SENTINEL)
         subscription_key = (state_type, key)
-        if current_state == state or subscription_key in stale_state:
+        if current_state == state and subscription_key not in stale_state:
             _LOGGER.debug(
                 "%s: ignoring duplicate update with and key %s: %s",
                 self.name,
