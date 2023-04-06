@@ -70,6 +70,10 @@ class RuntimeEntryData:
     client: APIClient
     store: Store
     state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
+    # When the disconnect callback is called, we mark all states
+    # as stale so we will always dispatch a state update when the
+    # device reconnects. This is the same format as state_subscriptions.
+    stale_state: set[tuple[type[EntityState], int]] = field(default_factory=set)
     info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
@@ -206,9 +210,11 @@ class RuntimeEntryData:
         """Distribute an update of state information to the target."""
         key = state.key
         state_type = type(state)
+        stale_state = self.stale_state
         current_state_by_type = self.state[state_type]
         current_state = current_state_by_type.get(key, _SENTINEL)
-        if current_state == state:
+        subscription_key = (state_type, key)
+        if current_state == state and subscription_key not in stale_state:
             _LOGGER.debug(
                 "%s: ignoring duplicate update with and key %s: %s",
                 self.name,
@@ -222,8 +228,8 @@ class RuntimeEntryData:
             key,
             state,
         )
+        stale_state.discard(subscription_key)
         current_state_by_type[key] = state
-        subscription_key = (state_type, key)
         if subscription_key in self.state_subscriptions:
             self.state_subscriptions[subscription_key]()
 
