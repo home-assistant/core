@@ -56,7 +56,6 @@ class ResourceStorageCollection(collection.StorageCollection):
         """Initialize the storage collection."""
         super().__init__(
             storage.Store(hass, RESOURCES_STORAGE_VERSION, RESOURCE_STORAGE_KEY),
-            _LOGGER,
         )
         self.ll_config = ll_config
 

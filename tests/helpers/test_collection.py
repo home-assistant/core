@@ -116,7 +116,7 @@ def test_id_manager() -> None:
 
 async def test_observable_collection() -> None:
     """Test observerable collection."""
-    coll = collection.ObservableCollection(_LOGGER)
+    coll = collection.ObservableCollection(None)
     assert coll.async_items() == []
     coll.data["bla"] = 1
     assert coll.async_items() == [1]
@@ -202,7 +202,7 @@ async def test_storage_collection(hass: HomeAssistant) -> None:
         }
     )
     id_manager = collection.IDManager()
-    coll = MockStorageCollection(store, _LOGGER, id_manager)
+    coll = MockStorageCollection(store, id_manager)
     changes = track_changes(coll)
 
     await coll.async_load()
@@ -257,7 +257,7 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
     """Test attaching collection to entity component."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     await ent_comp.async_setup({})
-    coll = MockObservableCollection(_LOGGER)
+    coll = MockObservableCollection(None)
     collection.sync_entity_lifecycle(hass, "test", "test", ent_comp, coll, MockEntity)
 
     await coll.notify_changes(
@@ -297,7 +297,7 @@ async def test_entity_component_collection_abort(hass: HomeAssistant) -> None:
     """Test aborted entity adding is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     await ent_comp.async_setup({})
-    coll = MockObservableCollection(_LOGGER)
+    coll = MockObservableCollection(None)
 
     async_update_config_calls = []
     async_remove_calls = []
@@ -364,7 +364,7 @@ async def test_entity_component_collection_entity_removed(hass: HomeAssistant) -
     """Test entity removal is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     await ent_comp.async_setup({})
-    coll = MockObservableCollection(_LOGGER)
+    coll = MockObservableCollection(None)
 
     async_update_config_calls = []
     async_remove_calls = []
@@ -434,7 +434,7 @@ async def test_storage_collection_websocket(
 ) -> None:
     """Test exposing a storage collection via websockets."""
     store = storage.Store(hass, 1, "test-data")
-    coll = MockStorageCollection(store, _LOGGER)
+    coll = MockStorageCollection(store)
     changes = track_changes(coll)
     collection.StorageCollectionWebsocket(
         coll,

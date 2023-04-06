@@ -197,12 +197,11 @@ class PersonStorageCollection(collection.StorageCollection):
     def __init__(
         self,
         store: Store,
-        logger: logging.Logger,
         id_manager: collection.IDManager,
         yaml_collection: collection.YamlCollection,
     ) -> None:
         """Initialize a person storage collection."""
-        super().__init__(store, logger, id_manager)
+        super().__init__(store, id_manager)
         self.yaml_collection = yaml_collection
 
     async def _async_load_data(self) -> dict | None:
@@ -337,7 +336,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     storage_collection = PersonStorageCollection(
         PersonStore(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
         yaml_collection,
     )
