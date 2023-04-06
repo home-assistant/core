@@ -69,7 +69,7 @@ async def async_get_device_diagnostics(
         include_disabled_entities=True,
     )
 
-    for entity_entry in sorted(hass_entities, key=lambda ent: ent.entity_id):
+    for entity_entry in hass_entities:
         state = hass.states.get(entity_entry.entity_id)
         state_dict = None
         if state:
