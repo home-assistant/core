@@ -551,7 +551,7 @@ class PipelineStorageCollection(StorageCollection[Pipeline]):
 async def async_setup_pipeline_store(hass):
     """Set up the pipeline storage collection."""
     pipeline_store = PipelineStorageCollection(
-        Store(hass, STORAGE_VERSION, STORAGE_KEY), None
+        Store(hass, STORAGE_VERSION, STORAGE_KEY)
     )
     await pipeline_store.async_load()
     StorageCollectionWebsocket(

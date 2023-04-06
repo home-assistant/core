@@ -50,9 +50,7 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
     await store1.async_delete_item(pipeline_ids[1])
     assert len(store1.data) == 2
 
-    store2 = PipelineStorageCollection(
-        Store(hass, STORAGE_VERSION, STORAGE_KEY), None, None
-    )
+    store2 = PipelineStorageCollection(Store(hass, STORAGE_VERSION, STORAGE_KEY))
     await flush_store(store1.store)
     await store2.async_load()
 
