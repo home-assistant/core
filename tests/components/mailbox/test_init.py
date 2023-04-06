@@ -24,7 +24,7 @@ MESSAGE_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
 def _create_message(idx: int) -> dict[str, Any]:
     """Create a sample message."""
     msgtime = int(dt_util.as_timestamp(dt_util.utcnow()) - 3600 * 24 * (10 - idx))
-    msgtxt = f"Message {idx + 1}. {MESSAGE_TEXT * (1 + idx * (idx % 2))}"
+    msgtxt = f"Message {idx + 1}. {MESSAGE_TEXT}"
     msgsha = sha1(msgtxt.encode("utf-8")).hexdigest()
     return {
         "info": {
