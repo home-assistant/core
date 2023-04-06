@@ -162,7 +162,7 @@ async def async_setup_sensor(
             _LOGGER.error(
                 "The query `%s` contains the keyword `entity_id` but does not "
                 "reference the `states_meta` table. This will cause a full table "
-                "scan. Please use check the documentation and use "
+                "scan and database instability. Please use check the documentation and use "
                 "`states_meta.entity_id` instead",
                 redacted_query,
             )
