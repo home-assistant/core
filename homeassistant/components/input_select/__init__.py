@@ -156,7 +156,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         InputSelectStore(
             hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
         ),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
