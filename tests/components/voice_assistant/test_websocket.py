@@ -5,7 +5,10 @@ from unittest.mock import ANY, MagicMock, patch
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.voice_assistant.const import DOMAIN
-from homeassistant.components.voice_assistant.pipeline import Pipeline, PipelineStore
+from homeassistant.components.voice_assistant.pipeline import (
+    Pipeline,
+    PipelineStorageCollection,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.typing import WebSocketGenerator
@@ -413,11 +416,11 @@ async def test_add_pipeline(
 ) -> None:
     """Test we can add a pipeline."""
     client = await hass_ws_client(hass)
-    pipeline_store: PipelineStore = hass.data[DOMAIN]
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/add",
+            "type": "voice_assistant/pipeline/create",
             "conversation_engine": "test_conversation_engine",
             "language": "test_language",
             "name": "test_name",
@@ -427,13 +430,20 @@ async def test_add_pipeline(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"pipeline_id": ANY}
+    assert msg["result"] == {
+        "conversation_engine": "test_conversation_engine",
+        "id": ANY,
+        "language": "test_language",
+        "name": "test_name",
+        "stt_engine": "test_stt_engine",
+        "tts_engine": "test_tts_engine",
+    }
 
-    assert len(pipeline_store.pipelines) == 1
-    pipeline = pipeline_store.pipelines[msg["result"]["pipeline_id"]]
+    assert len(pipeline_store.data) == 1
+    pipeline = pipeline_store.data[msg["result"]["id"]]
     assert pipeline == Pipeline(
         conversation_engine="test_conversation_engine",
-        id=msg["result"]["pipeline_id"],
+        id=msg["result"]["id"],
         language="test_language",
         name="test_name",
         stt_engine="test_stt_engine",
@@ -446,11 +456,11 @@ async def test_delete_pipeline(
 ) -> None:
     """Test we can delete a pipeline."""
     client = await hass_ws_client(hass)
-    pipeline_store: PipelineStore = hass.data[DOMAIN]
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/add",
+            "type": "voice_assistant/pipeline/create",
             "conversation_engine": "test_conversation_engine",
             "language": "test_language",
             "name": "test_name",
@@ -460,9 +470,9 @@ async def test_delete_pipeline(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert len(pipeline_store.pipelines) == 1
+    assert len(pipeline_store.data) == 1
 
-    pipeline_id = msg["result"]["pipeline_id"]
+    pipeline_id = msg["result"]["id"]
 
     await client.send_json_auto_id(
         {
@@ -472,7 +482,7 @@ async def test_delete_pipeline(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert len(pipeline_store.pipelines) == 0
+    assert len(pipeline_store.data) == 0
 
     await client.send_json_auto_id(
         {
@@ -483,8 +493,8 @@ async def test_delete_pipeline(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {
-        "code": "pipeline-not-found",
-        "message": f"Pipeline not found: id={pipeline_id}",
+        "code": "not_found",
+        "message": f"Unable to find pipeline_id {pipeline_id}",
     }
 
 
@@ -493,16 +503,16 @@ async def test_list_pipelines(
 ) -> None:
     """Test we can list pipelines."""
     client = await hass_ws_client(hass)
-    pipeline_store: PipelineStore = hass.data[DOMAIN]
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
 
     await client.send_json_auto_id({"type": "voice_assistant/pipeline/list"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"pipelines": []}
+    assert msg["result"] == []
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/add",
+            "type": "voice_assistant/pipeline/create",
             "conversation_engine": "test_conversation_engine",
             "language": "test_language",
             "name": "test_name",
@@ -512,23 +522,21 @@ async def test_list_pipelines(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert len(pipeline_store.pipelines) == 1
+    assert len(pipeline_store.data) == 1
 
     await client.send_json_auto_id({"type": "voice_assistant/pipeline/list"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {
-        "pipelines": [
-            {
-                "conversation_engine": "test_conversation_engine",
-                "id": ANY,
-                "language": "test_language",
-                "name": "test_name",
-                "stt_engine": "test_stt_engine",
-                "tts_engine": "test_tts_engine",
-            }
-        ]
-    }
+    assert msg["result"] == [
+        {
+            "conversation_engine": "test_conversation_engine",
+            "id": ANY,
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    ]
 
 
 async def test_update_pipeline(
@@ -536,7 +544,7 @@ async def test_update_pipeline(
 ) -> None:
     """Test we can list pipelines."""
     client = await hass_ws_client(hass)
-    pipeline_store: PipelineStore = hass.data[DOMAIN]
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
 
     await client.send_json_auto_id(
         {
@@ -552,13 +560,13 @@ async def test_update_pipeline(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {
-        "code": "pipeline-not-found",
-        "message": "Pipeline not found: id=no_such_pipeline",
+        "code": "not_found",
+        "message": "Unable to find pipeline_id no_such_pipeline",
     }
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/add",
+            "type": "voice_assistant/pipeline/create",
             "conversation_engine": "test_conversation_engine",
             "language": "test_language",
             "name": "test_name",
@@ -568,8 +576,8 @@ async def test_update_pipeline(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    pipeline_id = msg["result"]["pipeline_id"]
-    assert len(pipeline_store.pipelines) == 1
+    pipeline_id = msg["result"]["id"]
+    assert len(pipeline_store.data) == 1
 
     await client.send_json_auto_id(
         {
@@ -584,10 +592,17 @@ async def test_update_pipeline(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] is None
+    assert msg["result"] == {
+        "conversation_engine": "new_conversation_engine",
+        "language": "new_language",
+        "name": "new_name",
+        "id": pipeline_id,
+        "stt_engine": "new_stt_engine",
+        "tts_engine": "new_tts_engine",
+    }
 
-    assert len(pipeline_store.pipelines) == 1
-    pipeline = pipeline_store.pipelines[pipeline_id]
+    assert len(pipeline_store.data) == 1
+    pipeline = pipeline_store.data[pipeline_id]
     assert pipeline == Pipeline(
         conversation_engine="new_conversation_engine",
         id=pipeline_id,

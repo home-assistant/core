@@ -7,12 +7,18 @@ from dataclasses import asdict, dataclass, field
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import conversation, media_source, stt, tts
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers.collection import (
+    StorageCollection,
+    StorageCollectionWebsocket,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 
@@ -29,27 +35,36 @@ _LOGGER = logging.getLogger(__name__)
 STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
 
+STORAGE_FIELDS = {
+    vol.Required("conversation_engine"): str,
+    vol.Required("language"): str,
+    vol.Required("name"): str,
+    vol.Required("stt_engine"): str,
+    vol.Required("tts_engine"): str,
+}
+
 SAVE_DELAY = 10
 
 
-@callback
-def async_get_pipeline(
+async def async_get_pipeline(
     hass: HomeAssistant, pipeline_id: str | None = None, language: str | None = None
 ) -> Pipeline | None:
     """Get a pipeline by id or create one for a language."""
-    pipeline_store: PipelineStore = hass.data[DOMAIN]
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
 
     if pipeline_id is not None:
-        return pipeline_store.pipelines.get(pipeline_id)
+        return pipeline_store.data.get(pipeline_id)
 
     # Construct a pipeline for the required/configured language
     language = language or hass.config.language
-    return pipeline_store.async_add(
-        name=language,
-        language=language,
-        stt_engine=None,  # first engine
-        conversation_engine=None,  # first agent
-        tts_engine=None,  # first engine
+    return await pipeline_store.async_create_item(
+        {
+            "name": language,
+            "language": language,
+            "stt_engine": None,  # first engine
+            "conversation_engine": None,  # first agent
+            "tts_engine": None,  # first engine
+        }
     )
 
 
@@ -501,96 +516,45 @@ class PipelineInput:
             await asyncio.gather(*prepare_tasks)
 
 
-class PipelineStore:
-    """Class to hold a collection of pipelines."""
+class PipelineStorageCollection(StorageCollection[Pipeline]):
+    """Pipeline storage collection."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the pipeline store."""
-        self.hass = hass
-        self.pipelines: dict[str, Pipeline] = {}
-        self._store: Store[dict[str, Any]] = Store(
-            hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
-        )
+    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
-    @callback
-    def async_add(
-        self,
-        *,
-        conversation_engine: str | None,
-        language: str | None,
-        name: str,
-        stt_engine: str | None,
-        tts_engine: str | None,
-    ) -> Pipeline:
-        """Add a pipeline."""
-        pipeline = Pipeline(
-            conversation_engine=conversation_engine,
-            language=language,
-            name=name,
-            stt_engine=stt_engine,
-            tts_engine=tts_engine,
-        )
-        self.pipelines[pipeline.id] = pipeline
-        self.async_schedule_save()
-        return pipeline
-
-    @callback
-    def async_delete(self, pipeline_id: str) -> None:
-        """Delete a pipeline."""
-        del self.pipelines[pipeline_id]
-        self.async_schedule_save()
-
-    @callback
-    def async_update(
-        self,
-        pipeline_id: str,
-        *,
-        conversation_engine: str | None,
-        language: str | None,
-        name: str,
-        stt_engine: str | None,
-        tts_engine: str | None,
-    ) -> None:
-        """Update a pipeline."""
-        if pipeline_id not in self.pipelines:
-            raise KeyError(pipeline_id)
-        new_pipeline = Pipeline(
-            conversation_engine=conversation_engine,
-            id=pipeline_id,
-            language=language,
-            name=name,
-            stt_engine=stt_engine,
-            tts_engine=tts_engine,
-        )
-        self.pipelines[pipeline_id] = new_pipeline
-
-    async def async_load(self) -> None:
-        """Load the datasets."""
-        data = await self._store.async_load()
-
-        pipelines: dict[str, Pipeline] = {}
-
-        if data is not None:
-            for pipeline in data["pipelines"]:
-                pipelines[pipeline["id"]] = Pipeline(
-                    conversation_engine=pipeline["conversation_engine"],
-                    id=pipeline["id"],
-                    language=pipeline["language"],
-                    name=pipeline["name"],
-                    stt_engine=pipeline["stt_engine"],
-                    tts_engine=pipeline["tts_engine"],
-                )
-
-        self.pipelines = pipelines
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the dataset store."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
-
-    @callback
-    def _data_to_save(self) -> dict[str, Any]:
-        """Return data of datasets to store in a file."""
-        data: dict[str, Any] = {}
-        data["pipelines"] = [pipeline.to_json() for pipeline in self.pipelines.values()]
+    async def _process_create_data(self, data: dict) -> dict:
+        """Validate the config is valid."""
+        # We don't need to validate, the WS API has already validated
         return data
+
+    @callback
+    def _get_suggested_id(self, info: dict) -> str:
+        """Suggest an ID based on the config."""
+        return ulid_util.ulid()
+
+    async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
+        """Return a new updated item."""
+        return Pipeline(id=item.id, **update_data)
+
+    def _create_item(self, item_id: str, data: dict) -> Pipeline:
+        """Create an item from validated config."""
+        return Pipeline(id=item_id, **data)
+
+    def _deserialize_item(self, data: dict) -> Pipeline:
+        """Create an item from its serialized representation."""
+        return Pipeline(**data)
+
+    def _serialize_item(self, item_id: str, item: Pipeline) -> dict:
+        """Return the serialized representation of an item."""
+        return item.to_json()
+
+
+async def async_setup_pipeline_store(hass):
+    """Set up the pipeline storage collection."""
+    pipeline_store = PipelineStorageCollection(
+        Store(hass, STORAGE_VERSION, STORAGE_KEY), None
+    )
+    await pipeline_store.async_load()
+    StorageCollectionWebsocket(
+        pipeline_store, f"{DOMAIN}/pipeline", "pipeline", STORAGE_FIELDS, STORAGE_FIELDS
+    ).async_setup(hass)
+    hass.data[DOMAIN] = pipeline_store

@@ -2,8 +2,13 @@
 from typing import Any
 
 from homeassistant.components.voice_assistant.const import DOMAIN
-from homeassistant.components.voice_assistant.pipeline import STORAGE_KEY, PipelineStore
+from homeassistant.components.voice_assistant.pipeline import (
+    STORAGE_KEY,
+    STORAGE_VERSION,
+    PipelineStorageCollection,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 from homeassistant.setup import async_setup_component
 
 from tests.common import flush_store
@@ -37,22 +42,24 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
     ]
     pipeline_ids = []
 
-    store1: PipelineStore = hass.data[DOMAIN]
+    store1: PipelineStorageCollection = hass.data[DOMAIN]
     for pipeline in pipelines:
-        pipeline_ids.append(store1.async_add(**pipeline).id)
-    assert len(store1.pipelines) == 3
+        pipeline_ids.append((await store1.async_create_item(pipeline)).id)
+    assert len(store1.data) == 3
 
-    store1.async_delete(pipeline_ids[1])
-    assert len(store1.pipelines) == 2
+    await store1.async_delete_item(pipeline_ids[1])
+    assert len(store1.data) == 2
 
-    store2 = PipelineStore(hass)
-    await flush_store(store1._store)
+    store2 = PipelineStorageCollection(
+        Store(hass, STORAGE_VERSION, STORAGE_KEY), None, None
+    )
+    await flush_store(store1.store)
     await store2.async_load()
 
-    assert len(store2.pipelines) == 2
+    assert len(store2.data) == 2
 
-    assert store1.pipelines is not store2.pipelines
-    assert store1.pipelines == store2.pipelines
+    assert store1.data is not store2.data
+    assert store1.data == store2.data
 
 
 async def test_loading_datasets_from_storage(
@@ -64,7 +71,7 @@ async def test_loading_datasets_from_storage(
         "minor_version": 1,
         "key": "voice_assistant.pipelines",
         "data": {
-            "pipelines": [
+            "items": [
                 {
                     "conversation_engine": "conversation_engine_1",
                     "id": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
@@ -95,5 +102,5 @@ async def test_loading_datasets_from_storage(
 
     assert await async_setup_component(hass, "voice_assistant", {})
 
-    store: PipelineStore = hass.data[DOMAIN]
-    assert len(store.pipelines) == 3
+    store: PipelineStorageCollection = hass.data[DOMAIN]
+    assert len(store.data) == 3
