@@ -35,10 +35,9 @@ from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
-    EVENT_HOMEASSISTANT_STOP,
     PLATFORM_FORMAT,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
@@ -652,19 +651,9 @@ class SpeechManager:
             """Cleanup memcache."""
             self.mem_cache.pop(cache_key, None)
 
-        cancel_remove_from_mem = async_call_later(
-            self.hass, self.time_memory, async_remove_from_mem
+        async_call_later(
+            self.hass, self.time_memory, async_remove_from_mem, cancel_on_hass_stop=True
         )
-
-        @callback
-        def _on_hass_stop(_: Event) -> None:
-            """Cleanup when Home Assistant stops.
-
-            Cancel the async_remove_from_mem schedule.
-            """
-            cancel_remove_from_mem()
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
     async def async_read_tts(self, filename: str) -> tuple[str | None, bytes]:
         """Read a voice file and return binary.
