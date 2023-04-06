@@ -1,7 +1,7 @@
 {
   "domain": "flo",
   "name": "Flo",
-  "codeowners": ["@dmulcahey"],
+  "codeowners": ["@dmulcahey", "@amattas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flo",
   "iot_class": "cloud_polling",
