@@ -80,6 +80,8 @@ build.json @home-assistant/supervisor
 /tests/components/android_ip_webcam/ @engrbm87
 /homeassistant/components/androidtv/ @JeffLIrion @ollo69
 /tests/components/androidtv/ @JeffLIrion @ollo69
+/homeassistant/components/androidtv_remote/ @tronikos
+/tests/components/androidtv_remote/ @tronikos
 /homeassistant/components/anthemav/ @hyralex
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
@@ -215,8 +217,6 @@ build.json @home-assistant/supervisor
 /tests/components/conversation/ @home-assistant/core @synesthesiam
 /homeassistant/components/coolmaster/ @OnFreund
 /tests/components/coolmaster/ @OnFreund
-/homeassistant/components/coronavirus/ @home-assistant/core
-/tests/components/coronavirus/ @home-assistant/core
 /homeassistant/components/counter/ @fabaff
 /tests/components/counter/ @fabaff
 /homeassistant/components/cover/ @home-assistant/core

@@ -17,6 +17,7 @@ from .pipeline import (
     PipelineRun,
     PipelineStage,
     async_get_pipeline,
+    async_setup_pipeline_store,
 )
 from .websocket_api import async_register_websocket_api
 
@@ -31,7 +32,7 @@ __all__ = (
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Voice Assistant integration."""
-    hass.data[DOMAIN] = {}
+    await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)
 
     return True
@@ -61,7 +62,7 @@ async def async_pipeline_from_audio_stream(
     if context is None:
         context = Context()
 
-    pipeline = async_get_pipeline(
+    pipeline = await async_get_pipeline(
         hass,
         pipeline_id=pipeline_id,
         language=language,
