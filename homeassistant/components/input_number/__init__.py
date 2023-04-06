@@ -170,7 +170,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class NumberStorageCollection(collection.StorageCollection):
+class NumberStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
     SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_number))
@@ -184,7 +184,7 @@ class NumberStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _async_load_data(self) -> dict | None:
+    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data.
 
         A past bug caused frontend to add initial value to all input numbers.
@@ -200,10 +200,10 @@ class NumberStorageCollection(collection.StorageCollection):
 
         return data
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.SCHEMA(update_data)
-        return {CONF_ID: data[CONF_ID]} | update_data
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
 class InputNumber(collection.CollectionEntity, RestoreEntity):

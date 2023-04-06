@@ -61,7 +61,7 @@ async def websocket_run(
         language = "en-US"
 
     pipeline_id = msg.get("pipeline")
-    pipeline = async_get_pipeline(
+    pipeline = await async_get_pipeline(
         hass,
         pipeline_id=pipeline_id,
         language=language,

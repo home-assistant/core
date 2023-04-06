@@ -20,8 +20,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.collection import (
     CollectionEntity,
+    DictStorageCollection,
     IDManager,
-    StorageCollection,
+    SerializedStorageCollection,
     StorageCollectionWebsocket,
     YamlCollection,
     sync_entity_lifecycle,
@@ -208,7 +209,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class ScheduleStorageCollection(StorageCollection):
+class ScheduleStorageCollection(DictStorageCollection):
     """Schedules stored in storage."""
 
     SCHEMA = vol.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
@@ -224,12 +225,12 @@ class ScheduleStorageCollection(StorageCollection):
         name: str = info[CONF_NAME]
         return name
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         self.SCHEMA(update_data)
-        return data | update_data
+        return item | update_data
 
-    async def _async_load_data(self) -> dict | None:
+    async def _async_load_data(self) -> SerializedStorageCollection | None:
         """Load the data."""
         if data := await super()._async_load_data():
             data["items"] = [STORAGE_SCHEMA(item) for item in data["items"]]
