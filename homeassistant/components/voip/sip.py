@@ -2,10 +2,10 @@
 import asyncio
 from dataclasses import dataclass
 import logging
-import re
 
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
+from homeassistant.util import network
 
 from .error import VoipError
 
@@ -16,9 +16,6 @@ _CRLF = "\r\n"
 _SDP_USERNAME = "homeassistant"
 _SDP_ID = "".join(str(ord(c)) for c in "hass")  # 10497115115
 _OPUS_PAYLOAD = "123"
-
-# <sip:IP:PORT>;tag=...
-_SIP_IP = re.compile(r"^<sip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d+>$")
 
 
 @dataclass
@@ -77,11 +74,12 @@ class SipDatagramProtocol(asyncio.DatagramProtocol):
             raise VoipError("No caller RTP port")
 
         # Extract our visible IP from SIP header.
-        # This must be the IP we use for RTP.
-        server_ip_match = _SIP_IP.match(headers["to"])
-        if server_ip_match is None:
-            raise VoipError("Failed to find 'to' IP address")
-        server_ip = server_ip_match.group(1)
+        # <sip:123.123.123.123:1234>;tag=...
+        sip_ip_str = headers["to"].partition(";")[0]
+        sip_ip_str = sip_ip_str[1:-1]
+        _sip, server_ip, _port = sip_ip_str.split(":", maxsplit=2)
+        if not network.is_ipv4_address(server_ip):
+            raise VoipError(f"Invalid IPv4 address in {sip_ip_str}")
 
         self.on_call(
             CallInfo(
