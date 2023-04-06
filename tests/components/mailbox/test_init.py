@@ -1,5 +1,4 @@
 """The tests for the mailbox component."""
-from collections.abc import AsyncGenerator
 from datetime import datetime
 from hashlib import sha1
 from http import HTTPStatus
@@ -11,7 +10,6 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 import homeassistant.components.mailbox as mailbox
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import DATA_INSTANCES, EntityComponent
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -102,14 +100,10 @@ class MockMailbox:
 
 
 @pytest.fixture
-async def mock_mailbox(hass: HomeAssistant) -> AsyncGenerator[None, None]:
+def mock_mailbox(hass: HomeAssistant) -> None:
     """Mock mailbox."""
     mock_integration(hass, MockModule(domain="test"))
     mock_platform(hass, "test.mailbox", MockMailbox())
-    yield
-    # Reset entity component to cleanup lingering timers
-    component: EntityComponent = hass.data[DATA_INSTANCES][mailbox.DOMAIN]
-    await component._async_reset()
 
 
 @pytest.fixture
