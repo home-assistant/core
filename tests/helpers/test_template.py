@@ -2546,7 +2546,9 @@ async def test_expand(hass: HomeAssistant) -> None:
         hass,
         "{{ expand(states.group) | sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}",
     )
-    assert_result_info(info, "test.object", {"test.object"}, ["group"])
+    assert_result_info(
+        info, "test.object", {"group.new_group", "test.object"}, ["group"]
+    )
     assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
     info = render_to_info(
