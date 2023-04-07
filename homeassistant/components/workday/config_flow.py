@@ -166,9 +166,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             abort_match[CONF_PROVINCE] = province
 
         self._async_abort_entries_match(abort_match)
-        return await self.async_step_options(
-            user_input={**config, CONF_PROVINCE: province}
-        )
+        return await self.async_step_options(user_input=config)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

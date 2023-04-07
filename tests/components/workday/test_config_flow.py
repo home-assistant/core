@@ -102,6 +102,35 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         "remove_holidays": [],
     }
 
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_NAME: "Workday Sensor 2",
+            CONF_COUNTRY: "DE",
+            CONF_PROVINCE: "BW",
+            CONF_EXCLUDES: DEFAULT_EXCLUDES,
+            CONF_OFFSET: DEFAULT_OFFSET,
+            CONF_WORKDAYS: DEFAULT_WORKDAYS,
+            CONF_ADD_HOLIDAYS: [],
+            CONF_REMOVE_HOLIDAYS: [],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Workday Sensor 2"
+    assert result2["options"] == {
+        "name": "Workday Sensor 2",
+        "country": "DE",
+        "province": "BW",
+        "excludes": ["sat", "sun", "holiday"],
+        "days_offset": 0,
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+        "add_holidays": [],
+        "remove_holidays": [],
+    }
+
 
 async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     """Test import of yaml already exist."""
