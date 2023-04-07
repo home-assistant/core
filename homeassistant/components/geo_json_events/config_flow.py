@@ -32,7 +32,7 @@ from .const import (
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.string,
-        vol.Optional(CONF_LOCATION): selector.LocationSelector(
+        vol.Required(CONF_LOCATION): selector.LocationSelector(
             selector.LocationSelectorConfig(radius=True, icon="")
         ),
         vol.Required(
@@ -49,17 +49,13 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        legacy_scan_interval = import_config.get(CONF_SCAN_INTERVAL, None)
+        legacy_scan_interval: timedelta | None = import_config.get(CONF_SCAN_INTERVAL)
         # Convert scan interval because it now has to be in seconds.
-        if legacy_scan_interval and isinstance(legacy_scan_interval, timedelta):
+        if legacy_scan_interval:
             import_config[CONF_SCAN_INTERVAL] = legacy_scan_interval.total_seconds()
         url: str = import_config[CONF_URL]
-        latitude: float | None = import_config.get(
-            CONF_LATITUDE, self.hass.config.latitude
-        )
-        longitude: float | None = import_config.get(
-            CONF_LONGITUDE, self.hass.config.longitude
-        )
+        latitude: float = import_config.get(CONF_LATITUDE, self.hass.config.latitude)
+        longitude: float = import_config.get(CONF_LONGITUDE, self.hass.config.longitude)
         self._async_abort_entries_match(
             {
                 CONF_URL: url,
@@ -101,8 +97,9 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         url: str = user_input[CONF_URL]
-        latitude: float | None = user_input.get(CONF_LOCATION, {}).get(CONF_LATITUDE)
-        longitude: float | None = user_input.get(CONF_LOCATION, {}).get(CONF_LONGITUDE)
+        location: dict[str, Any] = user_input[CONF_LOCATION]
+        latitude: float = location[CONF_LATITUDE]
+        longitude: float = location[CONF_LONGITUDE]
         self._async_abort_entries_match(
             {
                 CONF_URL: url,
@@ -117,14 +114,10 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
                 CONF_RADIUS: DistanceConverter.convert(
-                    user_input.get(CONF_LOCATION, {}).get(
-                        CONF_RADIUS, DEFAULT_RADIUS_IN_M
-                    ),
+                    location[CONF_RADIUS],
                     UnitOfLength.METERS,
                     UnitOfLength.KILOMETERS,
                 ),
-                CONF_SCAN_INTERVAL: user_input.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
+                CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
             },
         )

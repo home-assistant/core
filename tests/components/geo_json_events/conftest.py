@@ -1,5 +1,6 @@
 """Configuration for GeoJSON Events tests."""
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -18,7 +19,7 @@ URL = "http://geo.json.local/geo_json_events.json"
 
 
 @pytest.fixture
-def config_entry():
+def config_entry() -> MockConfigEntry:
     """Create a mock GeoJSON Events config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -35,9 +36,9 @@ def config_entry():
 
 
 @pytest.fixture
-def mock_setup_entry():
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock geo_json_events entry setup."""
     with patch(
         "homeassistant.components.geo_json_events.async_setup_entry", return_value=True
-    ):
-        yield
+    ) as mock_setup_entry:
+        yield mock_setup_entry
