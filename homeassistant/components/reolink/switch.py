@@ -98,7 +98,7 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.ptz_guard_enabled(ch),
         method=lambda api, ch, value: api.set_ptz_guard(ch, enable=value),
     ),
-    ReolinkNVRSwitchEntityDescription(
+    ReolinkSwitchEntityDescription(
         key="email",
         name="Email on event",
         icon="mdi:email",
@@ -107,7 +107,7 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.email_enabled(ch),
         method=lambda api, ch, value: api.set_email(ch, value),
     ),
-    ReolinkNVRSwitchEntityDescription(
+    ReolinkSwitchEntityDescription(
         key="ftp_upload",
         name="FTP upload",
         icon="mdi:swap-horizontal",
@@ -116,7 +116,7 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.ftp_enabled(ch),
         method=lambda api, ch, value: api.set_ftp(ch, value),
     ),
-    ReolinkNVRSwitchEntityDescription(
+    ReolinkSwitchEntityDescription(
         key="push_notifications",
         name="Push notifications",
         icon="mdi:message-badge",
@@ -125,7 +125,7 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.push_enabled(ch),
         method=lambda api, ch, value: api.set_push(ch, value),
     ),
-    ReolinkNVRSwitchEntityDescription(
+    ReolinkSwitchEntityDescription(
         key="record",
         name="Record",
         icon="mdi:record-rec",
@@ -133,7 +133,7 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.recording_enabled(ch),
         method=lambda api, ch, value: api.set_recording(ch, value),
     ),
-    ReolinkNVRSwitchEntityDescription(
+    ReolinkSwitchEntityDescription(
         key="buzzer",
         name="Buzzer on event",
         icon="mdi:room-service",
