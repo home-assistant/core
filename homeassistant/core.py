@@ -217,14 +217,14 @@ class HassJob(Generic[_P, _R_co]):
     we run the job.
     """
 
-    __slots__ = ("job_type", "target", "name", "cancel_on_hass_stop")
+    __slots__ = ("job_type", "target", "name", "cancel_on_shutdown")
 
     def __init__(self, target: Callable[_P, _R_co], name: str | None = None) -> None:
         """Create a job object."""
         self.target = target
         self.name = name
         self.job_type = _get_hassjob_callable_job_type(target)
-        self.cancel_on_hass_stop: bool | None = None
+        self.cancel_on_shutdown: bool | None = None
 
     def __repr__(self) -> str:
         """Return the job."""
