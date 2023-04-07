@@ -9,7 +9,7 @@ from aioimaplib import AioImapException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -25,7 +25,7 @@ from .const import (
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
@@ -77,14 +77,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _reauth_entry: config_entries.ConfigEntry | None
 
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+        """Handle the import from imap_email_content integration."""
+        data = CONFIG_SCHEMA(
+            {
+                CONF_SERVER: user_input[CONF_SERVER],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_FOLDER: user_input[CONF_FOLDER],
+            }
+        )
+        self._async_abort_entries_match(
+            {
+                key: data[key]
+                for key in (CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH)
+            }
+        )
+        title = user_input[CONF_NAME]
+        if await validate_input(data):
+            raise AbortFlow("cannot_connect")
+        return self.async_create_entry(title=title, data=data)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+            return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
 
         self._async_abort_entries_match(
             {
@@ -98,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=title, data=user_input)
 
-        schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
+        schema = self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:

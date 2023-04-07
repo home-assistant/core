@@ -1244,28 +1244,21 @@ def test_monthly_statistics(
 
 def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
-    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
     stmt = _generate_statistics_during_period_stmt(
-        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm
+        dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, set()
     )
     cache_key_1 = stmt._generate_cache_key()
     stmt2 = _generate_statistics_during_period_stmt(
-        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm
+        dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, set()
     )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    columns2 = select(
-        StatisticsShortTerm.metadata_id,
-        StatisticsShortTerm.start_ts,
-        StatisticsShortTerm.sum,
-        StatisticsShortTerm.mean,
-    )
     stmt3 = _generate_statistics_during_period_stmt(
-        columns2,
         dt_util.utcnow(),
         dt_util.utcnow(),
         [0],
         StatisticsShortTerm,
+        {"sum", "mean"},
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3
@@ -1321,18 +1314,13 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
 
 def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
     """Test cache key for _generate_statistics_at_time_stmt."""
-    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
-    stmt = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    stmt = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    stmt2 = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    columns2 = select(
-        StatisticsShortTerm.metadata_id,
-        StatisticsShortTerm.start_ts,
-        StatisticsShortTerm.sum,
-        StatisticsShortTerm.mean,
+    stmt3 = _generate_statistics_at_time_stmt(
+        StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
     )
-    stmt3 = _generate_statistics_at_time_stmt(columns2, StatisticsShortTerm, {0}, 0.0)
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3

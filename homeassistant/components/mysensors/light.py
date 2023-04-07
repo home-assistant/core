@@ -172,7 +172,7 @@ class MySensorsLightRGB(MySensorsLight):
         new_rgb: tuple[int, int, int] | None = kwargs.get(ATTR_RGB_COLOR)
         if new_rgb is None:
             return
-        hex_color = "%02x%02x%02x" % new_rgb
+        hex_color = "{:02x}{:02x}{:02x}".format(*new_rgb)
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, hex_color, ack=1
         )
@@ -219,7 +219,7 @@ class MySensorsLightRGBW(MySensorsLightRGB):
         new_rgbw: tuple[int, int, int, int] | None = kwargs.get(ATTR_RGBW_COLOR)
         if new_rgbw is None:
             return
-        hex_color = "%02x%02x%02x%02x" % new_rgbw
+        hex_color = "{:02x}{:02x}{:02x}{:02x}".format(*new_rgbw)
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, hex_color, ack=1
         )

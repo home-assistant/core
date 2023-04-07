@@ -119,7 +119,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection = TimerStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -163,7 +162,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class TimerStorageCollection(collection.StorageCollection):
+class TimerStorageCollection(collection.DictStorageCollection):
     """Timer storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
@@ -180,9 +179,9 @@ class TimerStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        data = {CONF_ID: data[CONF_ID]} | self.CREATE_UPDATE_SCHEMA(update_data)
+        data = {CONF_ID: item[CONF_ID]} | self.CREATE_UPDATE_SCHEMA(update_data)
         # make duration JSON serializeable
         if CONF_DURATION in update_data:
             data[CONF_DURATION] = _format_timedelta(data[CONF_DURATION])
