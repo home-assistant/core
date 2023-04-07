@@ -66,7 +66,7 @@ async def async_setup_entry(
     ]
     async_add_entities(
         RoborockVacuum(slugify(device_id), device_info, coordinator)
-        for device_id, device_info in coordinator.api.devices_info.items()
+        for device_id, device_info in coordinator.devices_info.items()
     )
 
 
