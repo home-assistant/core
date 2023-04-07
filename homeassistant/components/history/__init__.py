@@ -128,7 +128,7 @@ class HistoryPeriodView(HomeAssistantView):
         hass: HomeAssistant,
         start_time: dt,
         end_time: dt,
-        entity_ids: list[str] | None,
+        entity_ids: list[str],
         include_start_time_state: bool,
         significant_changes_only: bool,
         minimal_response: bool,
