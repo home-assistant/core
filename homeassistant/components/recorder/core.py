@@ -58,6 +58,7 @@ from .const import (
     SupportedDialect,
 )
 from .db_schema import (
+    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
     LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
     TABLE_STATES,
@@ -96,6 +97,7 @@ from .tasks import (
     CompileMissingStatisticsTask,
     DatabaseLockTask,
     EntityIDMigrationTask,
+    EntityIDPostMigrationTask,
     EventIdMigrationTask,
     EventsContextIDMigrationTask,
     EventTask,
@@ -757,6 +759,18 @@ class Recorder(threading.Thread):
             else:
                 _LOGGER.debug("Activating states_meta manager as all data is migrated")
                 self.states_meta_manager.active = True
+                with contextlib.suppress(SQLAlchemyError):
+                    # If ix_states_entity_id_last_updated_ts still exists
+                    # on the states table it means the entity id migration
+                    # finished by the EntityIDPostMigrationTask did not
+                    # because they restarted in the middle of it. We need
+                    # to pick back up where we left off.
+                    if get_index_by_name(
+                        session,
+                        TABLE_STATES,
+                        LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
+                    ):
+                        self.queue_task(EntityIDPostMigrationTask())
 
             if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
                 with contextlib.suppress(SQLAlchemyError):
