@@ -12,16 +12,8 @@ from homeassistant.core import HomeAssistant
 from . import TEST_CONFIG_EXAMPLE_1, TEST_CONFIG_WITH_PROVINCE, init_integration
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
-    """Test setup entry."""
-    await init_integration(hass, TEST_CONFIG_EXAMPLE_1)
-
-    state = hass.states.get("binary_sensor.workday_sensor")
-    assert state
-
-
-async def test_remove_entry(hass: HomeAssistant) -> None:
-    """Test remove entry."""
+async def test_load_unload_entry(hass: HomeAssistant) -> None:
+    """Test load and unload entry."""
     entry = await init_integration(hass, TEST_CONFIG_EXAMPLE_1)
 
     state = hass.states.get("binary_sensor.workday_sensor")
