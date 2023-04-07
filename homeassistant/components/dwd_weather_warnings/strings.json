@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To identify the desired region, the warncell ID / name is required.",
+        "data": {
+          "name": "Name of the sensor (default: DWD Weather Warnings)",
+          "region_identifier": "Warncell ID or name",
+          "monitored_conditions": "Monitored conditions (default: all)"
+        }
+      }
+    },
+    "error": {
+      "no_identifier": "The warncell identifier has to be specified."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Deutscher Wetterdienst (DWD) Weather Warnings YAML configuration is being removed",
+      "description": "Configuring Deutscher Wetterdienst (DWD) Weather Warnings using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Deutscher Wetterdienst (DWD) Weather Warnings YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}
