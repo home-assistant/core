@@ -56,6 +56,29 @@ async def test_create_entry_with_region_identifier(hass: HomeAssistant) -> None:
     }
 
 
+async def test_create_entry_without_monitored_conditions(hass: HomeAssistant) -> None:
+    """Test that the user step works without any monitored condition set."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    data: dict = DEMO_CONFIG_ENTRY.copy()
+    data.pop(CONF_MONITORED_CONDITIONS)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEMO_CONFIG_ENTRY[CONF_NAME]
+    assert result["data"] == {
+        CONF_NAME: DEMO_CONFIG_ENTRY[CONF_NAME],
+        CONF_REGION_IDENTIFIER: DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER],
+        CONF_MONITORED_CONDITIONS: DEMO_CONFIG_ENTRY[CONF_MONITORED_CONDITIONS],
+    }
+
+
 async def test_user_no_identifier(hass: HomeAssistant) -> None:
     """Test that error is shown when no region_identifier is set."""
     data: dict = DEMO_CONFIG_ENTRY.copy()
