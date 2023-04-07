@@ -177,7 +177,7 @@ class BondEntity(Entity):
                 self.hass,
                 self._async_update_if_bpup_not_alive,
                 _FALLBACK_SCAN_INTERVAL,
-                f"Bond {self.entity_id} fallback polling",
+                name=f"Bond {self.entity_id} fallback polling",
             )
         )
 
