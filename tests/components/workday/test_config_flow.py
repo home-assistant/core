@@ -125,7 +125,13 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
         data={
+            CONF_NAME: "Workday sensor 2",
             CONF_COUNTRY: "DE",
+            CONF_EXCLUDES: ["sat", "sun", "holiday"],
+            CONF_OFFSET: 0,
+            CONF_WORKDAYS: ["mon", "tue", "wed", "thu", "fri"],
+            CONF_ADD_HOLIDAYS: [],
+            CONF_REMOVE_HOLIDAYS: [],
         },
     )
     await hass.async_block_till_done()
