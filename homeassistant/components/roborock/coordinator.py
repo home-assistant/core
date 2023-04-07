@@ -42,8 +42,7 @@ class RoborockDataUpdateCoordinator(
         local_devices_info: dict[str, RoborockLocalDeviceInfo] = {}
         hass_devices_info: dict[str, RoborockHassDeviceInfo] = {}
         for device in devices:
-            networking = devices_networking.get(device.duid)
-            if networking is None:
+            if not (networking := devices_networking.get(device.duid):
                 _LOGGER.warning("Device %s is offline and cannot be setup", device.duid)
                 continue
             hass_devices_info[device.duid] = RoborockHassDeviceInfo(
