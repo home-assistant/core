@@ -8,7 +8,6 @@ from homeassistant.components.geo_json_events.const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    FEED,
 )
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.const import (
@@ -40,11 +39,11 @@ async def test_component_unload_config_entry(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_feed_manager_update.call_count == 1
-        assert hass.data[DOMAIN][FEED][config_entry.entry_id] is not None
+        assert hass.data[DOMAIN][config_entry.entry_id] is not None
         # Unload config entry.
         assert await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.data[DOMAIN][FEED].get(config_entry.entry_id) is None
+        assert hass.data[DOMAIN].get(config_entry.entry_id) is None
 
 
 async def test_entity_lifecycle(

@@ -13,7 +13,6 @@ ATTR_EXTERNAL_ID: Final = "external_id"
 DEFAULT_RADIUS_IN_KM: Final = 20.0
 DEFAULT_RADIUS_IN_M: Final = 20000.0
 DEFAULT_SCAN_INTERVAL: Final = 300
-FEED: Final = "feed"
 SOURCE: Final = "geo_json_events"
 
 SIGNAL_DELETE_ENTITY: Final = "geo_json_events_delete_{}"

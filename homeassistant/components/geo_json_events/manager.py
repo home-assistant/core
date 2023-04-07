@@ -21,7 +21,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN, PLATFORMS, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,10 +62,6 @@ class GeoJsonFeedEntityManager:
 
     async def async_init(self) -> None:
         """Schedule initial and regular updates based on configured time interval."""
-
-        await self._hass.config_entries.async_forward_entry_setups(
-            self._config_entry, PLATFORMS
-        )
 
         async def update(event_time: datetime) -> None:
             """Update."""

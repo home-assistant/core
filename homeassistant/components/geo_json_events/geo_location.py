@@ -29,7 +29,6 @@ from .const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_RADIUS_IN_KM,
     DOMAIN,
-    FEED,
     SIGNAL_DELETE_ENTITY,
     SIGNAL_UPDATE_ENTITY,
     SOURCE,
@@ -51,8 +50,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the NSW Rural Fire Service Feeds platform."""
-    manager: GeoJsonFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
+    """Set up the GeoJSON Events platform."""
+    manager: GeoJsonFeedEntityManager = hass.data[DOMAIN][entry.entry_id]
 
     @callback
     def async_add_geolocation(
