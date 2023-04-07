@@ -420,6 +420,14 @@ class UtilityMeterSensor(RestoreSensor):
     @callback
     def async_reading(self, event: Event):
         """Handle the sensor state changes."""
+        if (
+            source_state := self.hass.states.get(self._sensor_source_id)
+        ) is None or source_state.state == STATE_UNAVAILABLE:
+            self._attr_available = False
+            return
+
+        self._attr_available = True
+
         old_state: State | None = event.data.get("old_state")
         new_state: State = event.data.get("new_state")  # type: ignore[assignment] # a state change event always has a new state
 
