@@ -32,7 +32,7 @@ async def test_notify_file(hass: HomeAssistant, timestamp: bool) -> None:
     """Test the notify file output."""
     filename = "mock_file"
     message = "one, two, testing, testing"
-    with assert_setup_component(1) as handle_config:
+    with assert_setup_component(1, notify.DOMAIN) as handle_config:
         assert await async_setup_component(
             hass,
             notify.DOMAIN,
@@ -42,7 +42,7 @@ async def test_notify_file(hass: HomeAssistant, timestamp: bool) -> None:
                     "platform": "file",
                     "filename": filename,
                     "timestamp": timestamp,
-                }
+                },
             },
         )
     assert handle_config[notify.DOMAIN]

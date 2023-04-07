@@ -1,0 +1,28 @@
+write:
+  name: "Write file"
+  description: "Writes a file to disk."
+  fields:
+    filename:
+      name: Filename
+      description: The name of the file to write. Relative paths use '/config' as the working directory.
+      required: true
+      example: "output/example.txt"
+      selector:
+        text:
+    content:
+      name: Content
+      description: The content to write to the file as a string.
+      required: true
+      example: "File content"
+      selector:
+        template:
+    mode:
+      name: Mode
+      description: 'The mode to write to the file ("w": overwrite, "a": append, or "x": new file).'
+      default: w
+      selector:
+        select:
+          options:
+            - w
+            - a
+            - x
