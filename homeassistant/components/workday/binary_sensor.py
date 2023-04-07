@@ -126,7 +126,7 @@ async def async_setup_entry(
     year: int = (dt.now() + timedelta(days=days_offset)).year
     obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
 
-    if province and province != "None":
+    if province:
         try:
             obj_holidays = getattr(holidays, country)(subdiv=province, years=year)
         except NotImplementedError:
