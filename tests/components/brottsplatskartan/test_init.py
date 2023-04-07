@@ -8,20 +8,17 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-TEST_CONFIG = {
-    "latitude": None,
-    "longitude": None,
-    "area": "N/A",
-    "app_id": "ha-1234567890",
-}
-
 
 async def test_load_unload_entry(hass: HomeAssistant) -> None:
     """Test load and unload entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=TEST_CONFIG,
-        unique_id="bpk-home",
+        data={
+            "latitude": hass.config.latitude,
+            "longitude": hass.config.longitude,
+            "area": None,
+            "app_id": "ha-1234567890",
+        },
         title="BPK-HOME",
     )
     entry.add_to_hass(hass)
