@@ -386,7 +386,7 @@ async def async_setup_entry(
     async_add_entities(
         HomeWizardSensorEntity(coordinator, entry, description)
         for description in SENSORS
-        if description.value_fn(coordinator.data.data) is not None
+        if getattr(coordinator.data.data, description.key, None) is not None
     )
 
 
@@ -417,7 +417,7 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
                 "total_power_export_t3_kwh",
                 "total_power_export_t4_kwh",
             ]
-            and self.native_value == 0
+            and self.native_value is None
         ):
             self._attr_entity_registry_enabled_default = False
 
