@@ -37,8 +37,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == "Brottsplatskartan HOME"
     assert result2["data"] == {
         "area": None,
-        "latitude": None,
-        "longitude": None,
+        "latitude": hass.config.latitude,
+        "longitude": hass.config.longitude,
         "app_id": "ha-1234567890",
     }
 
@@ -98,8 +98,8 @@ async def test_form_area(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Brottsplatskartan Stockholms län"
     assert result2["data"] == {
-        "latitude": 59.32,
-        "longitude": 18.06,
+        "latitude": None,
+        "longitude": None,
         "area": "Stockholms län",
         "app_id": "ha-1234567890",
     }
@@ -121,8 +121,8 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Brottsplatskartan HOME"
     assert result2["data"] == {
-        "latitude": None,
-        "longitude": None,
+        "latitude": hass.config.latitude,
+        "longitude": hass.config.longitude,
         "area": None,
         "app_id": "ha-1234567890",
     }
@@ -174,8 +174,8 @@ async def test_import_flow_location_area_success(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Brottsplatskartan Blekinge län"
     assert result2["data"] == {
-        "latitude": 59.32,
-        "longitude": 18.06,
+        "latitude": None,
+        "longitude": None,
         "area": "Blekinge län",
         "app_id": "ha-1234567890",
     }
@@ -187,8 +187,8 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         data={
-            "latitude": None,
-            "longitude": None,
+            "latitude": hass.config.latitude,
+            "longitude": hass.config.longitude,
             "area": None,
             "app_id": "ha-1234567890",
         },

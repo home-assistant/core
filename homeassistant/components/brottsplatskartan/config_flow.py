@@ -56,31 +56,30 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            latitude: float | None = user_input.get(CONF_LOCATION, {}).get(
-                CONF_LATITUDE
-            )
-            longitude: float | None = user_input.get(CONF_LOCATION, {}).get(
-                CONF_LONGITUDE
-            )
+            latitude: float | None = None
+            longitude: float | None = None
             area: str | None = (
                 user_input[CONF_AREA] if user_input[CONF_AREA] != "none" else None
             )
 
             if area:
                 name = f"{DEFAULT_NAME} {area}"
-                unique_id = f"bpk-{area.casefold()}"
-            elif latitude and longitude:
-                name = f"{DEFAULT_NAME} {round(latitude, 2)}, {round(longitude, 2)}"
-                unique_id = f"bpk-{latitude}-{longitude}"
             else:
-                name = f"{DEFAULT_NAME} HOME"
-                unique_id = "bpk-home"
+                latitude = user_input.get(CONF_LOCATION, {}).get(CONF_LATITUDE)
+                longitude = user_input.get(CONF_LOCATION, {}).get(CONF_LONGITUDE)
 
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            if latitude and longitude:
+                name = f"{DEFAULT_NAME} {round(latitude, 2)}, {round(longitude, 2)}"
+            if not latitude and not longitude and not area:
+                latitude = self.hass.config.latitude
+                longitude = self.hass.config.longitude
+                name = f"{DEFAULT_NAME} HOME"
 
             app = f"ha-{uuid.getnode()}"
 
+            self._async_abort_entries_match(
+                {CONF_AREA: area, CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude}
+            )
             return self.async_create_entry(
                 title=name,
                 data={
