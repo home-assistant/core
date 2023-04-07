@@ -1362,8 +1362,6 @@ def async_call_later(
     delay: float | timedelta,
     action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
-    *,
-    cancel_on_shutdown: bool = False,
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
     if isinstance(delay, timedelta):
@@ -1379,8 +1377,6 @@ def async_call_later(
         if isinstance(action, HassJob)
         else HassJob(action, f"call_later {delay}")
     )
-    if cancel_on_shutdown:
-        job.cancel_on_shutdown = True
     cancel_callback = hass.loop.call_later(delay, run_action, job)
 
     @callback
