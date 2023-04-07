@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -40,7 +40,7 @@ class KodiConnectionManager:
     _cb_on_ws_disconnect: list = []
 
     # Will be set when watchdog is created
-    _remove_watchdog = None
+    _remove_watchdog: CALLBACK_TYPE | None = None
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize KodiConnectionManager and its connection."""
@@ -226,8 +226,8 @@ class KodiConnectionManager:
             await self.kodi.ping()
         except (TransportError, CannotConnectError):
             return False
-        else:
-            return True
+
+        return True
 
     async def _async_connect_websocket_if_disconnected(self, *_):
         """Reconnect the websocket if it fails."""

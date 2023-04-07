@@ -9,7 +9,6 @@ import re
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
-from pykodi import CannotConnectError
 import voluptuous as vol
 
 from homeassistant.components import media_source

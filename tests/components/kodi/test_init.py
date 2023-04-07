@@ -3,10 +3,12 @@ from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import init_integration
+
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
-    entry = kodi_connection
+    entry = await init_integration(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
