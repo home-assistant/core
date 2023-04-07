@@ -464,8 +464,8 @@ class Filter:
             raise ValueError(f"State <{fstate.state}> is not a Number")
 
         filtered = self._filter_state(fstate)
-        if self.filter_precision is not None:
-            filtered.set_precision(self.filter_precision)
+        filtered.set_precision(self.filter_precision)
+
         if self._store_raw:
             self.states.append(copy(FilterState(new_state)))
         else:
