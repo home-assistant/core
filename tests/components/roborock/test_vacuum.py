@@ -6,10 +6,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-from .mock_data import HOME_DATA
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
-DEVICE_ID = HOME_DATA.devices[0].duid
+DEVICE_ID = "abc123"
 
 
 async def test_registry_entries(hass: HomeAssistant, bypass_api_fixture) -> None:

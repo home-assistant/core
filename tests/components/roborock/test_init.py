@@ -16,7 +16,7 @@ async def test_unload_entry(hass: HomeAssistant, bypass_api_fixture) -> None:
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
     with patch(
-        "homeassistant.components.roborock.RoborockMqttClient.async_disconnect"
+        "homeassistant.components.roborock.RoborockLocalClient.async_disconnect"
     ) as mock_disconnect:
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
