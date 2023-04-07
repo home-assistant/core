@@ -25,20 +25,24 @@ async def test_duplicate_error_user(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that errors are shown when duplicates are added."""
-    conf = {
-        CONF_URL: URL,
-        CONF_LOCATION: {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25.0},
-    }
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=conf
+        result["flow_id"],
+        user_input={
+            CONF_URL: URL,
+            CONF_LOCATION: {
+                CONF_LATITUDE: -41.2,
+                CONF_LONGITUDE: 174.7,
+                CONF_RADIUS: 25.0,
+            },
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -48,11 +52,17 @@ async def test_duplicate_error_import(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that errors are shown when duplicates are added."""
-    conf = {CONF_URL: URL, CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25}
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_URL: URL,
+            CONF_LATITUDE: -41.2,
+            CONF_LONGITUDE: 174.7,
+            CONF_RADIUS: 25,
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -60,16 +70,16 @@ async def test_duplicate_error_import(
 
 async def test_step_import(hass: HomeAssistant) -> None:
     """Test that the import step works."""
-    conf = {
-        CONF_URL: URL,
-        CONF_LATITUDE: -41.2,
-        CONF_LONGITUDE: 174.7,
-        CONF_RADIUS: 25,
-        CONF_SCAN_INTERVAL: timedelta(minutes=4),
-    }
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_URL: URL,
+            CONF_LATITUDE: -41.2,
+            CONF_LONGITUDE: 174.7,
+            CONF_RADIUS: 25,
+            CONF_SCAN_INTERVAL: timedelta(minutes=4),
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert (
@@ -86,25 +96,22 @@ async def test_step_import(hass: HomeAssistant) -> None:
 
 async def test_step_user(hass: HomeAssistant) -> None:
     """Test that the user step works."""
-    hass.config.latitude = -41.2
-    hass.config.longitude = 174.7
-    conf = {
-        CONF_URL: URL,
-        CONF_LOCATION: {
-            CONF_LATITUDE: -41.2,
-            CONF_LONGITUDE: 174.7,
-            CONF_RADIUS: 25000.0,
-        },
-    }
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=conf
+        result["flow_id"],
+        user_input={
+            CONF_URL: URL,
+            CONF_LOCATION: {
+                CONF_LATITUDE: -41.2,
+                CONF_LONGITUDE: 174.7,
+                CONF_RADIUS: 25000.0,
+            },
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert (
