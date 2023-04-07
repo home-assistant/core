@@ -411,7 +411,9 @@ class UtilityMeterSensor(RestoreSensor):
         if (old_state_val := self._validate_state(old_state)) is not None:
             return new_state_val - old_state_val
         _LOGGER.warning(
-            "Invalid state (%s > %s)",
+            "%s received an invalid state change coming from %s (%s > %s)",
+            self.name,
+            self._sensor_source_id,
             old_state.state if old_state else None,
             new_state_val,
         )
@@ -423,8 +425,14 @@ class UtilityMeterSensor(RestoreSensor):
         old_state: State | None = event.data.get("old_state")
         new_state: State = event.data.get("new_state")  # type: ignore[assignment] # a state change event always has a new state
 
+        # First check if the new_state is valid (see discussion in PR #88446)
         if (new_state_val := self._validate_state(new_state)) is None:
-            _LOGGER.warning("Invalid state %s", new_state.state)
+            _LOGGER.warning(
+                "%s received an invalid new state from %s : %s",
+                self.name,
+                self._sensor_source_id,
+                new_state.state,
+            )
             return
 
         if self._state is None:

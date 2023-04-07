@@ -817,7 +817,7 @@ async def test_non_net_consumption(
             force_update=True,
         )
         await hass.async_block_till_done()
-    assert "Invalid state " in caplog.text
+    assert "invalid new state " in caplog.text
 
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
@@ -903,7 +903,7 @@ async def test_delta_values(
             force_update=True,
         )
         await hass.async_block_till_done()
-    assert "Invalid state None" in caplog.text
+    assert "invalid new state from sensor.energy : None" in caplog.text
 
     now += timedelta(seconds=30)
     with freeze_time(now):
