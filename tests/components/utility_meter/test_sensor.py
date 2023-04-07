@@ -35,7 +35,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -106,7 +105,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         await hass.async_block_till_done()
         entity_id = config_entry_config["source"]
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     hass.states.async_set(
@@ -302,7 +301,6 @@ async def test_init(hass: HomeAssistant, yaml_config, config_entry_config) -> No
         await hass.async_block_till_done()
         entity_id = config_entry_config["source"]
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
@@ -348,7 +346,6 @@ async def test_unique_id(
     assert await async_setup_component(hass, DOMAIN, yaml_config)
     await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
@@ -403,7 +400,6 @@ async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) ->
     assert await async_setup_component(hass, DOMAIN, yaml_config)
     await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
@@ -479,7 +475,6 @@ async def test_device_class(
     entity_id_energy = "sensor.energy"
     entity_id_gas = "sensor.gas"
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     await hass.async_block_till_done()
@@ -663,7 +658,7 @@ async def test_restore_state(
     assert state.state == STATE_UNKNOWN
 
     # utility_meter is loaded, now set sensors according to utility_meter:
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     await hass.async_block_till_done()
@@ -727,7 +722,6 @@ async def test_net_consumption(
         await hass.async_block_till_done()
         entity_id = config_entry_config["source"]
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     hass.states.async_set(
@@ -802,7 +796,6 @@ async def test_non_net_consumption(
         await hass.async_block_till_done()
         entity_id = config_entry_config["source"]
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     hass.states.async_set(
@@ -894,7 +887,6 @@ async def test_delta_values(
             await hass.async_block_till_done()
             entity_id = config_entry_config["source"]
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
         async_fire_time_changed(hass, now)
@@ -1005,7 +997,6 @@ async def test_non_periodically_resetting(
             await hass.async_block_till_done()
             entity_id = config_entry_config["source"]
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
         async_fire_time_changed(hass, now)
@@ -1134,7 +1125,6 @@ async def test_non_periodically_resetting_meter_with_tariffs(
         await hass.async_block_till_done()
         entity_id = config_entry_config["source"]
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     await hass.async_block_till_done()
@@ -1242,7 +1232,6 @@ async def _test_self_reset(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         entity_id = config[DOMAIN]["energy_bill"]["source"]
 
@@ -1466,8 +1455,6 @@ def test_calculate_adjustment_invalid_new_state(
         tariff=None,
         tariff_entity=None,
     )
-
-    mock_sensor._warnings_on = True
 
     new_state: State = State(entity_id="sensor.test", state="unknown")
     assert mock_sensor.calculate_adjustment(None, new_state) is None
