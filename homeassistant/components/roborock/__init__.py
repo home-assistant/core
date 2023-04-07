@@ -6,14 +6,7 @@ import logging
 
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
-from roborock.containers import (
-    HomeDataDevice,
-    HomeDataProduct,
-    RoborockDeviceInfo,
-    RoborockLocalDeviceInfo,
-    UserData,
-)
-from roborock.local_api import RoborockLocalClient
+from roborock.containers import HomeDataDevice, RoborockDeviceInfo, UserData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -21,7 +14,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator
-from .models import RoborockHassDeviceInfo
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -37,30 +29,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Getting home data")
     home_data = await api_client.get_home_data(user_data)
     _LOGGER.debug("Got home data %s", home_data)
-
-    mqtt_devices_info: dict[str, RoborockDeviceInfo] = {}
     devices: list[HomeDataDevice] = home_data.devices + home_data.received_devices
-    for device in devices:
-        mqtt_devices_info[device.duid] = RoborockDeviceInfo(device)
     # Create a mqtt_client, which is needed to get the networking information of the device for local connection and in the future, get the map.
-    mqtt_client = RoborockMqttClient(user_data, mqtt_devices_info)
-    local_devices_info: dict[str, RoborockLocalDeviceInfo] = {}
-    hass_devices_info: dict[str, RoborockHassDeviceInfo] = {}
-    product_info: dict[str, HomeDataProduct] = {}
-    for product in home_data.products:
-        product_info[product.id] = product
-    for device in devices:
-        networking = await mqtt_client.get_networking(device.duid)
-        if networking is None:
-            _LOGGER.warning("Device %s is offline and cannot be setup", device.duid)
-            continue
-        hass_devices_info[device.duid] = RoborockHassDeviceInfo(
-            device, networking, product_info[device.product_id]
-        )
-        local_devices_info[device.duid] = RoborockLocalDeviceInfo(device, networking)
+    mqtt_client = RoborockMqttClient(
+        user_data, {device.duid: RoborockDeviceInfo(device) for device in devices}
+    )
+    network_info = {
+        device.duid: await mqtt_client.get_networking(device.duid) for device in devices
+    }
     await mqtt_client.async_disconnect()
-    client = RoborockLocalClient(local_devices_info)
-    coordinator = RoborockDataUpdateCoordinator(hass, client, hass_devices_info)
+    product_info = {product.id: product for product in home_data.products}
+    coordinator = RoborockDataUpdateCoordinator(
+        hass,
+        devices,
+        network_info,
+        product_info,
+    )
 
     await coordinator.async_config_entry_first_refresh()
 

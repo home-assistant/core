@@ -4,6 +4,12 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from roborock.containers import (
+    HomeDataDevice,
+    HomeDataProduct,
+    NetworkInfo,
+    RoborockLocalDeviceInfo,
+)
 from roborock.exceptions import RoborockException
 from roborock.local_api import RoborockLocalClient
 from roborock.typing import RoborockDeviceProp
@@ -27,13 +33,30 @@ class RoborockDataUpdateCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
-        client: RoborockLocalClient,
-        devices_info: dict[str, RoborockHassDeviceInfo],
+        devices: list[HomeDataDevice],
+        devices_networking: dict[str, NetworkInfo],
+        product_info: dict[str, HomeDataProduct],
     ) -> None:
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-        self.api = client
-        self.devices_info = devices_info
+        local_devices_info: dict[str, RoborockLocalDeviceInfo] = {}
+        hass_devices_info: dict[str, RoborockHassDeviceInfo] = {}
+        for device in devices:
+            networking = devices_networking.get(device.duid)
+            if networking is None:
+                _LOGGER.warning("Device %s is offline and cannot be setup", device.duid)
+                continue
+            hass_devices_info[device.duid] = RoborockHassDeviceInfo(
+                device,
+                networking,
+                product_info[device.product_id],
+                RoborockDeviceProp(),
+            )
+            local_devices_info[device.duid] = RoborockLocalDeviceInfo(
+                device, networking
+            )
+        self.api = RoborockLocalClient(local_devices_info)
+        self.devices_info = hass_devices_info
 
     async def release(self) -> None:
         """Disconnect from API."""
