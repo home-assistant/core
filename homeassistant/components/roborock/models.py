@@ -1,5 +1,5 @@
 """Roborock Models."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from roborock.containers import HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.typing import RoborockDeviceProp
@@ -12,4 +12,4 @@ class RoborockHassDeviceInfo:
     device: HomeDataDevice
     network_info: NetworkInfo
     product: HomeDataProduct
-    props: RoborockDeviceProp = RoborockDeviceProp()
+    props: RoborockDeviceProp = field(default_factory=RoborockDeviceProp())
