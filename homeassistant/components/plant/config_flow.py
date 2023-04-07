@@ -15,6 +15,8 @@ from .const import (
     CONF_MIN_BATTERY_LEVEL,
     CONF_MIN_CONDUCTIVITY,
     CONF_MIN_MOISTURE,
+    CONF_PLANT_NAME,
+    CONF_SENSORS,
     DEFAULT_CHECK_DAYS,
     DEFAULT_MAX_CONDUCTIVITY,
     DEFAULT_MAX_MOISTURE,
@@ -27,8 +29,6 @@ from .const import (
     READING_CONDUCTIVITY,
     READING_MOISTURE,
     READING_TEMPERATURE,
-    CONF_PLANT_NAME,
-    CONF_SENSORS,
 )
 
 sensor_datatype = {
@@ -88,7 +88,9 @@ class PlantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             default = user_input.get(CONF_PLANT_NAME, "")
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_PLANT_NAME, default=default): str}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_PLANT_NAME, default=default): str}
+            ),
         )
 
     async def _show_sensors_form(self) -> FlowResult:
@@ -169,5 +171,6 @@ class PlantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
         return self.async_create_entry(
-            title=self.data[CONF_PLANT_NAME], data={"sensors": self.data, **user_input}
+            title=self.data[CONF_PLANT_NAME],
+            data={"sensors": self.data[CONF_SENSORS], **user_input},
         )
