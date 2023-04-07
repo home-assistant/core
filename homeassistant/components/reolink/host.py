@@ -363,22 +363,17 @@ class ReolinkHost:
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ):
         """Shield the incoming webhook callback from cancellation."""
-        await asyncio.shield(self.handle_webhook_shielded(hass, webhook_id, request))
+        _LOGGER.debug("Webhook '%s' called", webhook_id)
+        data = await request.text()
+        await asyncio.shield(self.handle_webhook_shielded(hass, webhook_id, data))
 
     async def handle_webhook_shielded(
-        self, hass: HomeAssistant, webhook_id: str, request: Request
+        self, hass: HomeAssistant, webhook_id: str, data: str
     ):
         """Handle incoming webhook from Reolink for inbound messages and calls."""
-
-        _LOGGER.debug("Webhook '%s' called", webhook_id)
         if not self._webhook_reachable.is_set():
             self._webhook_reachable.set()
 
-        if not request.body_exists:
-            _LOGGER.debug("Webhook '%s' triggered without payload", webhook_id)
-            return
-
-        data = await request.text()
         if not data:
             _LOGGER.debug(
                 "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
