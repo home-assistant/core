@@ -358,6 +358,11 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             manager.hosts.discard("10.10.10.4")
             manager.hosts.discard("10.10.10.5")
 
+        def device_is_invisible(ip_addr: str) -> bool:
+            if ip_addr == "10.10.10.1":
+                return True
+            return False
+
         # Test 8 both succeed, speakers do not exist, first one is invisible
         with patch.object(
             manager, "_async_handle_discovery_message", new=AsyncMock()
@@ -371,7 +376,7 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             manager, "is_device_invisible"
         ) as mock_is_device_invisible:
             mock_async_add_executor_job.return_value = []
-            mock_is_device_invisible.side_effect = [True, False]
+            mock_is_device_invisible.side_effect = device_is_invisible
             await manager.async_poll_manual_hosts()
             assert len(manager.hosts) == 1
             assert "10.10.10.2" in manager.hosts
