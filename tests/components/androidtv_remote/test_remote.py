@@ -58,10 +58,10 @@ async def test_remote_receives_push_updates(
         hass.states.get(REMOTE_ENTITY).attributes.get("current_activity") == "activity1"
     )
 
-    is_available_updated_callback(False)
+    is_available_updated_callback(False, Exception("disconnect exception"))
     assert hass.states.is_state(REMOTE_ENTITY, STATE_UNAVAILABLE)
 
-    is_available_updated_callback(True)
+    is_available_updated_callback(True, None)
     assert hass.states.is_state(REMOTE_ENTITY, STATE_ON)
 
 
