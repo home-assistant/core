@@ -48,6 +48,7 @@ from .const import SupportedDialect
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
     DOUBLE_PRECISION_TYPE_SQL,
+    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
     LEGACY_STATES_EVENT_ID_INDEX,
     MYSQL_COLLATE,
     MYSQL_DEFAULT_CHARSET,
@@ -1586,7 +1587,7 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
 
     if is_done:
         # Drop the old indexes since they are no longer needed
-        _drop_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
+        _drop_index(session_maker, "states", LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX)
 
     _LOGGER.debug("Cleanup legacy entity_ids done=%s", is_done)
     return is_done
