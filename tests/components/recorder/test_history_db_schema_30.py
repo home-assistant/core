@@ -357,7 +357,7 @@ def test_get_significant_states(hass_recorder: Callable[..., HomeAssistant]) -> 
     instance = recorder.get_instance(hass)
     with patch.object(instance.states_meta_manager, "active", False):
         zero, four, states = record_states(hass)
-        hist = history.get_significant_states(hass, zero, four)
+        hist = history.get_significant_states(hass, zero, four, entity_ids=list(states))
         assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
@@ -376,7 +376,9 @@ def test_get_significant_states_minimal_response(
     instance = recorder.get_instance(hass)
     with patch.object(instance.states_meta_manager, "active", False):
         zero, four, states = record_states(hass)
-        hist = history.get_significant_states(hass, zero, four, minimal_response=True)
+        hist = history.get_significant_states(
+            hass, zero, four, minimal_response=True, entity_ids=list(states)
+        )
         entites_with_reducable_states = [
             "media_player.test",
             "media_player.test3",
@@ -460,6 +462,7 @@ def test_get_significant_states_with_initial(
             one_and_half,
             four,
             include_start_time_state=True,
+            entity_ids=list(states),
         )
         assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
@@ -495,6 +498,7 @@ def test_get_significant_states_without_initial(
             one_and_half,
             four,
             include_start_time_state=False,
+            entity_ids=list(states),
         )
         assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
@@ -613,7 +617,10 @@ def test_get_significant_states_only(
             states.append(set_state("412", attributes={"attribute": 54.23}))
 
         hist = history.get_significant_states(
-            hass, start, significant_changes_only=True
+            hass,
+            start,
+            significant_changes_only=True,
+            entity_ids=list({state.entity_id for state in states}),
         )
 
         assert len(hist[entity_id]) == 2
@@ -628,7 +635,10 @@ def test_get_significant_states_only(
         )
 
         hist = history.get_significant_states(
-            hass, start, significant_changes_only=False
+            hass,
+            start,
+            significant_changes_only=False,
+            entity_ids=list({state.entity_id for state in states}),
         )
 
         assert len(hist[entity_id]) == 3
@@ -741,15 +751,7 @@ def test_state_changes_during_period_multiple_entities_single_test(
         wait_recording_done(hass)
         end = dt_util.utcnow()
 
-        hist = history.state_changes_during_period(hass, start, end, None)
-        for entity_id, value in test_entites.items():
-            hist[entity_id][0].state == value
-
         for entity_id, value in test_entites.items():
             hist = history.state_changes_during_period(hass, start, end, entity_id)
             assert len(hist) == 1
-            hist[entity_id][0].state == value
-
-        hist = history.state_changes_during_period(hass, start, end, None)
-        for entity_id, value in test_entites.items():
-            hist[entity_id][0].state == value
+            assert hist[entity_id][0].state == value
