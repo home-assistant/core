@@ -80,7 +80,6 @@ FLOWS = {
         "coinbase",
         "control4",
         "coolmaster",
-        "coronavirus",
         "cpuspeed",
         "crownstone",
         "daikin",
