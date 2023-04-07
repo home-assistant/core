@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
-import logging
 from typing import final
 
 from homeassistant.components import zone
@@ -22,12 +20,9 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_component import (
-    DEFAULT_SCAN_INTERVAL,
-    EntityComponent,
-)
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import (
     ATTR_HOST_NAME,
@@ -51,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await component.async_setup_entry(entry)
 
     component = hass.data[DOMAIN] = DeviceTrackerEntityComponent(LOGGER, DOMAIN, hass)
+    await component.async_setup(None)
 
     # Clean up old devices created by device tracker entities in the past.
     # Can be removed after 2022.6
@@ -213,17 +209,10 @@ class BaseTrackerEntity(Entity):
 
 
 class DeviceTrackerEntityComponent(EntityComponent[BaseTrackerEntity]):
-    """Mailbox entity component."""
+    """Device tracker entity component."""
 
-    def __init__(
-        self,
-        logger: logging.Logger,
-        domain: str,
-        hass: HomeAssistant,
-        scan_interval: timedelta = DEFAULT_SCAN_INTERVAL,
-    ) -> None:
-        """Initialize an entity component."""
-        super().__init__(logger, domain, hass, scan_interval)
+    async def async_setup(self, _: ConfigType | None) -> None:
+        """Override EntityComponent setup to bypass platform setup and discovery."""
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
