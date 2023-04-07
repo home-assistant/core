@@ -1,0 +1,42 @@
+"""Const for Plant."""
+from typing import Final
+
+from homeassistant.const import ATTR_TEMPERATURE
+
+DOMAIN: Final = "plant"
+
+PLANT_NAME = "plant_name"
+SENSORS = "sensors"
+
+MOISTURE_SENSOR = "moisture"
+BATTERY_SENSOR = "battery"
+TEMPERATURE_SENSOR = ATTR_TEMPERATURE
+CONDUCTIVITY_SENSOR = "conductivity"
+BRIGHTNESS_SENSOR = "brightness"
+
+CONF_MIN_BATTERY_LEVEL = f"min_{BATTERY_SENSOR}"
+CONF_MIN_TEMPERATURE = f"min_{TEMPERATURE_SENSOR}"
+CONF_MAX_TEMPERATURE = f"max_{TEMPERATURE_SENSOR}"
+CONF_MIN_MOISTURE = f"min_{MOISTURE_SENSOR}"
+CONF_MAX_MOISTURE = f"max_{MOISTURE_SENSOR}"
+CONF_MIN_CONDUCTIVITY = f"min_{CONDUCTIVITY_SENSOR}"
+CONF_MAX_CONDUCTIVITY = f"max_{CONDUCTIVITY_SENSOR}"
+CONF_MIN_BRIGHTNESS = f"min_{BRIGHTNESS_SENSOR}"
+CONF_MAX_BRIGHTNESS = f"max_{BRIGHTNESS_SENSOR}"
+CONF_CHECK_DAYS = "check_days"
+
+DEFAULT_MIN_BATTERY_LEVEL = 20
+DEFAULT_MIN_MOISTURE = 20
+DEFAULT_MAX_MOISTURE = 60
+DEFAULT_MIN_CONDUCTIVITY = 500
+DEFAULT_MAX_CONDUCTIVITY = 3000
+DEFAULT_CHECK_DAYS = 3
+
+ATTR_PROBLEM = "problem"
+ATTR_SENSORS = "sensors"
+PROBLEM_NONE = "none"
+ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
+
+# we're not returning only one value, we're returning a dict here. So we need
+# to have a separate literal for it to avoid confusion.
+ATTR_DICT_OF_UNITS_OF_MEASUREMENT = "unit_of_measurement_dict"
