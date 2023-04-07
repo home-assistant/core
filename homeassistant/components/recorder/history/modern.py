@@ -139,8 +139,7 @@ def _significant_states_stmt(
             | (States.last_changed_ts == States.last_updated_ts)
             | States.last_changed_ts.is_(None)
         )
-    else:
-        stmt += lambda q: q.filter(States.metadata_id.in_(metadata_ids))
+    stmt += lambda q: q.filter(States.metadata_id.in_(metadata_ids))
     start_time_ts = start_time.timestamp()
     stmt += lambda q: q.filter(States.last_updated_ts > start_time_ts)
     if end_time:
