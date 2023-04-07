@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfEnergy,
@@ -370,6 +371,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._sensor_periodically_resetting = periodically_resetting
         self._tariff = tariff
         self._tariff_entity = tariff_entity
+        self._warnings_on = False
 
     def start(self, unit):
         """Initialize unit and state upon source initial update."""
@@ -396,7 +398,8 @@ class UtilityMeterSensor(RestoreSensor):
 
         # First check if the new_state is valid (see discussion in PR #88446)
         if (new_state_val := self._validate_state(new_state)) is None:
-            _LOGGER.warning("Invalid state %s", new_state.state)
+            if self._warnings_on:
+                _LOGGER.warning("Invalid state %s", new_state.state)
             return None
 
         if self._sensor_delta_values:
@@ -410,13 +413,15 @@ class UtilityMeterSensor(RestoreSensor):
 
         if (old_state_val := self._validate_state(old_state)) is not None:
             return new_state_val - old_state_val
-        _LOGGER.warning(
-            "%s received an invalid state change coming from %s (%s > %s)",
-            self.name,
-            self._sensor_source_id,
-            old_state.state if old_state else None,
-            new_state_val,
-        )
+
+        if self._warnings_on:
+            _LOGGER.warning(
+                "%s received an invalid state change coming from %s (%s > %s)",
+                self.name,
+                self._sensor_source_id,
+                old_state.state if old_state else None,
+                new_state_val,
+            )
         return None
 
     @callback
@@ -427,12 +432,13 @@ class UtilityMeterSensor(RestoreSensor):
 
         # First check if the new_state is valid (see discussion in PR #88446)
         if (new_state_val := self._validate_state(new_state)) is None:
-            _LOGGER.warning(
-                "%s received an invalid new state from %s : %s",
-                self.name,
-                self._sensor_source_id,
-                new_state.state,
-            )
+            if self._warnings_on:
+                _LOGGER.warning(
+                    "%s received an invalid new state from %s : %s",
+                    self.name,
+                    self._sensor_source_id,
+                    new_state.state,
+                )
             return
 
         if self._state is None:
@@ -514,6 +520,15 @@ class UtilityMeterSensor(RestoreSensor):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+
+        @callback
+        def log_issues_with_source_sensor(event):
+            """Log issues with source sensor."""
+            self._warnings_on = True
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, log_issues_with_source_sensor
+        )
 
         if self._cron_pattern is not None:
             self.async_on_remove(
