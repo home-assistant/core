@@ -1,4 +1,4 @@
-"""This platform allows several binary sensor to be grouped into one binary sensor."""
+"""Platform allowing several binary sensor to be grouped into one binary sensor."""
 from __future__ import annotations
 
 import voluptuous as vol

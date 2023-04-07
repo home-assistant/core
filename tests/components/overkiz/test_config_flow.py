@@ -1,7 +1,7 @@
 """Tests for Overkiz (by Somfy) config flow."""
 from __future__ import annotations
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
 from pyoverkiz.exceptions import (
@@ -20,6 +20,8 @@ from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 TEST_EMAIL = "test@testdomain.com"
 TEST_EMAIL2 = "test@testdomain.nl"
@@ -49,7 +51,7 @@ FAKE_ZERO_CONF_INFO = ZeroconfServiceInfo(
 )
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -60,9 +62,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
-    ), patch(
-        "homeassistant.components.overkiz.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
@@ -157,7 +157,7 @@ async def test_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways",
         return_value=MOCK_GATEWAY_RESPONSE,
-    ), patch("homeassistant.components.overkiz.async_setup_entry", return_value=True):
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
@@ -182,7 +182,7 @@ async def test_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways",
         return_value=MOCK_GATEWAY_RESPONSE,
-    ), patch("homeassistant.components.overkiz.async_setup_entry", return_value=True):
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
@@ -197,7 +197,7 @@ async def test_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
     }
 
 
-async def test_dhcp_flow(hass: HomeAssistant) -> None:
+async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test that DHCP discovery for new bridge works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -214,9 +214,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
 
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
-    ), patch(
-        "homeassistant.components.overkiz.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
@@ -256,7 +254,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_flow(hass: HomeAssistant) -> None:
+async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test that zeroconf discovery for new bridge works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -269,9 +267,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
 
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
         "pyoverkiz.client.OverkizClient.get_gateways", return_value=None
-    ), patch(
-        "homeassistant.components.overkiz.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},

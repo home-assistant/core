@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections.abc import AsyncIterable
 from dataclasses import asdict, dataclass
 import logging
 from typing import Any
 
-from aiohttp import StreamReader, web
+from aiohttp import web
 from aiohttp.hdrs import istr
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
@@ -153,7 +154,7 @@ class Provider(ABC):
 
     @abstractmethod
     async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service.
 

@@ -306,8 +306,8 @@ async def test_gateway_initialize_failure_transient(
     ],
 )
 async def test_gateway_initialize_bellows_thread(
-    device_path, thread_state, config_override, hass, coordinator
-):
+    device_path, thread_state, config_override, hass: HomeAssistant, coordinator
+) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -323,3 +323,32 @@ async def test_gateway_initialize_bellows_thread(
         await zha_gateway.async_initialize()
 
     assert mock_new.mock_calls[0].args[0]["use_thread"] is thread_state
+
+
+@pytest.mark.parametrize(
+    ("device_path", "config_override", "expected_channel"),
+    [
+        ("/dev/ttyUSB0", {}, None),
+        ("socket://192.168.1.123:9999", {}, None),
+        ("socket://192.168.1.123:9999", {"network": {"channel": 20}}, 20),
+        ("socket://core-silabs-multiprotocol:9999", {}, 15),
+        ("socket://core-silabs-multiprotocol:9999", {"network": {"channel": 20}}, 20),
+    ],
+)
+async def test_gateway_force_multi_pan_channel(
+    device_path: str,
+    config_override: dict,
+    expected_channel: int | None,
+    hass: HomeAssistant,
+    coordinator,
+) -> None:
+    """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+
+    zha_gateway.config_entry.data = dict(zha_gateway.config_entry.data)
+    zha_gateway.config_entry.data["device"]["path"] = device_path
+    zha_gateway._config.setdefault("zigpy_config", {}).update(config_override)
+
+    _, config = zha_gateway.get_application_controller_data()
+    assert config["network"]["channel"] == expected_channel

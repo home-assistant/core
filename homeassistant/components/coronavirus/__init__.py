@@ -8,7 +8,11 @@ import coronavirus
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, entity_registry, update_coordinator
+from homeassistant.helpers import (
+    aiohttp_client,
+    entity_registry as er,
+    update_coordinator,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -31,16 +35,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         @callback
-        def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+        def _async_migrator(entity_entry: er.RegistryEntry):
             """Migrate away from unstable ID."""
             country, info_type = entity_entry.unique_id.rsplit("-", 1)
             if not country.isnumeric():
                 return None
             return {"new_unique_id": f"{entry.title}-{info_type}"}
 
-        await entity_registry.async_migrate_entries(
-            hass, entry.entry_id, _async_migrator
-        )
+        await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=entry.data["country"])

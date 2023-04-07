@@ -1,4 +1,4 @@
-"""This component provides sensors for UniFi Protect."""
+"""Component providing sensors for UniFi Protect."""
 from __future__ import annotations
 
 from dataclasses import dataclass

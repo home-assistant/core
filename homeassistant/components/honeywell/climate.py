@@ -1,9 +1,11 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 from __future__ import annotations
 
+import asyncio
 import datetime
 from typing import Any
 
+from aiohttp import ClientConnectionError
 import aiosomecomfort
 
 from homeassistant.components.climate import (
@@ -292,21 +294,22 @@ class HoneywellUSThermostat(ClimateEntity):
                 hour_cool, minute_cool = divmod(
                     self._device.raw_ui_data["CoolNextPeriod"] * 15, 60
                 )
-                # Set hold time
+                # Set temporary hold time and temperature
                 if mode in COOLING_MODES:
                     await self._device.set_hold_cool(
-                        datetime.time(hour_cool, minute_cool)
+                        datetime.time(hour_cool, minute_cool), temperature
                     )
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(
-                        datetime.time(hour_heat, minute_heat)
+                        datetime.time(hour_heat, minute_heat), temperature
                     )
 
-            # Set temperature if not in auto
-            if mode == "cool":
-                await self._device.set_setpoint_cool(temperature)
-            if mode == "heat":
-                await self._device.set_setpoint_heat(temperature)
+            # Set temperature if not in auto - set the temperature
+            else:
+                if mode == "cool":
+                    await self._device.set_setpoint_cool(temperature)
+                if mode == "heat":
+                    await self._device.set_setpoint_heat(temperature)
 
         except aiosomecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
@@ -350,11 +353,9 @@ class HoneywellUSThermostat(ClimateEntity):
             # Set permanent hold
             # and Set temperature
             if mode in COOLING_MODES:
-                await self._device.set_hold_cool(True)
-                await self._device.set_setpoint_cool(self._cool_away_temp)
+                await self._device.set_hold_cool(True, self._cool_away_temp)
             if mode in HEATING_MODES:
-                await self._device.set_hold_heat(True)
-                await self._device.set_setpoint_heat(self._heat_away_temp)
+                await self._device.set_hold_heat(True, self._heat_away_temp)
 
         except aiosomecomfort.SomeComfortError:
             _LOGGER.error(
@@ -422,10 +423,7 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.refresh()
             self._attr_available = True
-        except (
-            aiosomecomfort.SomeComfortError,
-            OSError,
-        ):
+        except aiosomecomfort.SomeComfortError:
             try:
                 await self._data.client.login()
 
@@ -434,5 +432,12 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self._data.entry_id)
                 )
-            except aiosomecomfort.SomeComfortError:
+            except (
+                aiosomecomfort.SomeComfortError,
+                ClientConnectionError,
+                asyncio.TimeoutError,
+            ):
                 self._attr_available = False
+
+        except (ClientConnectionError, asyncio.TimeoutError):
+            self._attr_available = False

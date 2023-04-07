@@ -401,7 +401,7 @@ class Scanner:
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self._cancel_scan = async_track_time_interval(
-            self.hass, self.async_scan, SCAN_INTERVAL
+            self.hass, self.async_scan, SCAN_INTERVAL, name="SSDP scanner"
         )
 
         # Trigger the initial-scan.

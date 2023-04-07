@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from sfrbox_api.models import DslInfo, SystemInfo
+from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -42,10 +42,28 @@ class SFRBoxBinarySensorEntityDescription(
 DSL_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[DslInfo], ...] = (
     SFRBoxBinarySensorEntityDescription[DslInfo](
         key="status",
-        name="Status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",
+        translation_key="dsl_status",
+    ),
+)
+FTTH_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[FtthInfo], ...] = (
+    SFRBoxBinarySensorEntityDescription[FtthInfo](
+        key="status",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda x: x.status == "up",
+        translation_key="ftth_status",
+    ),
+)
+WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
+    SFRBoxBinarySensorEntityDescription[WanInfo](
+        key="status",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda x: x.status == "up",
+        translation_key="wan_status",
     ),
 )
 
@@ -56,10 +74,20 @@ async def async_setup_entry(
     """Set up the sensors."""
     data: DomainData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
-        SFRBoxBinarySensor(data.dsl, description, data.system.data)
-        for description in DSL_SENSOR_TYPES
+    entities: list[SFRBoxBinarySensor] = [
+        SFRBoxBinarySensor(data.wan, description, data.system.data)
+        for description in WAN_SENSOR_TYPES
     ]
+    if (net_infra := data.system.data.net_infra) == "adsl":
+        entities.extend(
+            SFRBoxBinarySensor(data.dsl, description, data.system.data)
+            for description in DSL_SENSOR_TYPES
+        )
+    elif net_infra == "ftth":
+        entities.extend(
+            SFRBoxBinarySensor(data.ftth, description, data.system.data)
+            for description in FTTH_SENSOR_TYPES
+        )
 
     async_add_entities(entities)
 

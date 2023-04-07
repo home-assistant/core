@@ -1,4 +1,4 @@
-"""This component provides HA sensor support for Ring Door Bell/Chimes."""
+"""Component providing HA sensor support for Ring Door Bell/Chimes."""
 from __future__ import annotations
 
 from dataclasses import dataclass

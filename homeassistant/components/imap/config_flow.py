@@ -9,8 +9,9 @@ from aioimaplib import AioImapException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -31,6 +32,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_SERVER): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_CHARSET, default="utf-8"): str,
+        vol.Optional(CONF_FOLDER, default="INBOX"): str,
+        vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
     }
@@ -80,25 +88,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match(
             {
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_FOLDER: user_input[CONF_FOLDER],
-                CONF_SEARCH: user_input[CONF_SEARCH],
+                key: user_input[key]
+                for key in (CONF_USERNAME, CONF_SERVER, CONF_FOLDER, CONF_SEARCH)
             }
         )
 
         if not (errors := await validate_input(user_input)):
-            # To be removed when YAML import is removed
-            title = user_input.get(CONF_NAME, user_input[CONF_USERNAME])
+            title = user_input[CONF_USERNAME]
 
             return self.async_create_entry(title=title, data=user_input)
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
@@ -134,3 +135,53 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return OptionsFlow(config_entry)
+
+
+class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+    """Option flow handler."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        errors: dict[str, str] | None = None
+        entry_data: dict[str, Any] = dict(self._config_entry.data)
+        if user_input is not None:
+            try:
+                self._async_abort_entries_match(
+                    {
+                        CONF_SERVER: self._config_entry.data[CONF_SERVER],
+                        CONF_USERNAME: self._config_entry.data[CONF_USERNAME],
+                        CONF_FOLDER: user_input[CONF_FOLDER],
+                        CONF_SEARCH: user_input[CONF_SEARCH],
+                    }
+                    if user_input
+                    else None
+                )
+            except AbortFlow as err:
+                errors = {"base": err.reason}
+            else:
+                entry_data.update(user_input)
+                errors = await validate_input(entry_data)
+                if not errors:
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, data=entry_data
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(
+                            self.config_entry.entry_id
+                        )
+                    )
+                    return self.async_create_entry(data={})
+
+        schema = self.add_suggested_values_to_schema(OPTIONS_SCHEMA, entry_data)
+
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

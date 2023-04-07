@@ -8,7 +8,6 @@ from typing import Any
 from unittest.mock import patch
 import urllib
 
-from aiohttp import ClientWebSocketResponse
 from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 import pytest
@@ -32,7 +31,7 @@ from .conftest import (
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_ENTITY = TEST_API_ENTITY
 TEST_ENTITY_NAME = TEST_API_ENTITY_NAME
@@ -134,7 +133,7 @@ ClientFixture = Callable[[], Awaitable[Client]]
 @pytest.fixture
 async def ws_client(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> ClientFixture:
     """Fixture for creating the test websocket client."""
 
@@ -889,6 +888,7 @@ async def test_websocket_create(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": "Bastille Day Party",
         "description": None,
+        "location": None,
         "start": {
             "dateTime": "1997-07-14T11:00:00-06:00",
             "timeZone": "America/Regina",
@@ -932,6 +932,7 @@ async def test_websocket_create_all_day(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": "Bastille Day Party",
         "description": None,
+        "location": None,
         "start": {
             "date": "1997-07-14",
         },

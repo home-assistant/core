@@ -10,7 +10,7 @@ from typing import Any, cast
 import jinja2
 import voluptuous as vol
 
-from homeassistant import config as conf_util, config_entries
+from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,16 +25,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import TemplateError, Unauthorized
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery_flow,
-    event,
-    template,
-)
+from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import (
     async_integration_yaml_config,
     async_reload_integration_platforms,
@@ -52,11 +46,9 @@ from .client import (  # noqa: F401
     subscribe,
 )
 from .config_integration import (
-    CONFIG_SCHEMA_BASE,
     CONFIG_SCHEMA_ENTRY,
     DEFAULT_VALUES,
-    DEPRECATED_CERTIFICATE_CONFIG_KEYS,
-    DEPRECATED_CONFIG_KEYS,
+    PLATFORM_CONFIG_SCHEMA_BASE,
 )
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
@@ -74,7 +66,6 @@ from .const import (  # noqa: F401
     CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_TLS_INSECURE,
-    CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
@@ -100,7 +91,6 @@ from .models import (  # noqa: F401
 from .util import (
     async_create_certificate_temp_files,
     get_mqtt_data,
-    migrate_certificate_file_to_content,
     mqtt_config_entry_enabled,
     valid_publish_topic,
     valid_qos_schema,
@@ -147,23 +137,22 @@ CONFIG_ENTRY_CONFIG_KEYS = [
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_BIRTH_MESSAGE),  # Deprecated in HA Core 2022.3
-            cv.deprecated(CONF_BROKER),  # Deprecated in HA Core 2022.3
-            cv.deprecated(CONF_CERTIFICATE),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_CLIENT_ID),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_CLIENT_CERT),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_CLIENT_KEY),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_DISCOVERY),  # Deprecated in HA Core 2022.3
-            cv.deprecated(CONF_DISCOVERY_PREFIX),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_KEEPALIVE),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_PASSWORD),  # Deprecated in HA Core 2022.3
-            cv.deprecated(CONF_PORT),  # Deprecated in HA Core 2022.3
-            cv.deprecated(CONF_PROTOCOL),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_TLS_INSECURE),  # Deprecated in HA Core 2022.11
-            cv.deprecated(CONF_TLS_VERSION),  # Deprecated June 2020
-            cv.deprecated(CONF_USERNAME),  # Deprecated in HA Core 2022.3
-            cv.deprecated(CONF_WILL_MESSAGE),  # Deprecated in HA Core 2022.3
-            CONFIG_SCHEMA_BASE,
+            cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
+            cv.removed(CONF_BROKER),  # Removed in HA Core 2023.4
+            cv.removed(CONF_CERTIFICATE),  # Removed in HA Core 2023.4
+            cv.removed(CONF_CLIENT_ID),  # Removed in HA Core 2023.4
+            cv.removed(CONF_CLIENT_CERT),  # Removed in HA Core 2023.4
+            cv.removed(CONF_CLIENT_KEY),  # Removed in HA Core 2023.4
+            cv.removed(CONF_DISCOVERY),  # Removed in HA Core 2022.3
+            cv.removed(CONF_DISCOVERY_PREFIX),  # Removed in HA Core 2023.4
+            cv.removed(CONF_KEEPALIVE),  # Removed in HA Core 2023.4
+            cv.removed(CONF_PASSWORD),  # Removed in HA Core 2023.4
+            cv.removed(CONF_PORT),  # Removed in HA Core 2023.4
+            cv.removed(CONF_PROTOCOL),  # Removed in HA Core 2023.4
+            cv.removed(CONF_TLS_INSECURE),  # Removed in HA Core 2023.4
+            cv.removed(CONF_USERNAME),  # Removed in HA Core 2023.4
+            cv.removed(CONF_WILL_MESSAGE),  # Removed in HA Core 2023.4
+            PLATFORM_CONFIG_SCHEMA_BASE,
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -199,34 +188,8 @@ async def _async_setup_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MQTT protocol service."""
-    mqtt_data = get_mqtt_data(hass, True)
-
-    conf: ConfigType | None = config.get(DOMAIN)
-
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
-
-    if conf:
-        conf = dict(conf)
-        mqtt_data.config = conf
-
-    if (mqtt_entry_status := mqtt_config_entry_enabled(hass)) is None:
-        # Create an import flow if the user has yaml configured entities etc.
-        # but no broker configuration. Note: The intention is not for this to
-        # import broker configuration from YAML because that has been deprecated.
-        discovery_flow.async_create_flow(
-            hass,
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data={},
-        )
-        mqtt_data.reload_needed = True
-    elif mqtt_entry_status is False:
-        _LOGGER.info(
-            "MQTT will be not available until the config entry is enabled",
-        )
-        mqtt_data.reload_needed = True
-
     return True
 
 
@@ -249,30 +212,15 @@ def _filter_entry_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass.config_entries.async_update_entry(entry, data=filtered_data)
 
 
-async def _async_merge_basic_config(
+async def _async_auto_mend_config(
     hass: HomeAssistant, entry: ConfigEntry, yaml_config: dict[str, Any]
 ) -> None:
-    """Merge basic options in configuration.yaml config with config entry.
+    """Mends config fetched from config entry and adds missing values.
 
     This mends incomplete migration from old version of HA Core.
     """
     entry_updated = False
     entry_config = {**entry.data}
-    for key in DEPRECATED_CERTIFICATE_CONFIG_KEYS:
-        if key in yaml_config and key not in entry_config:
-            if (
-                content := await hass.async_add_executor_job(
-                    migrate_certificate_file_to_content, yaml_config[key]
-                )
-            ) is not None:
-                entry_config[key] = content
-                entry_updated = True
-
-    for key in DEPRECATED_CONFIG_KEYS:
-        if key in yaml_config and key not in entry_config:
-            entry_config[key] = yaml_config[key]
-            entry_updated = True
-
     for key in MANDATORY_DEFAULT_VALUES:
         if key not in entry_config:
             entry_config[key] = DEFAULT_VALUES[key]
@@ -300,17 +248,16 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 async def async_fetch_config(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any] | None:
-    """Fetch fresh MQTT yaml config from the hass config when (re)loading the entry."""
+    """Fetch fresh MQTT yaml config from the hass config."""
     mqtt_data = get_mqtt_data(hass)
-    if mqtt_data.reload_entry:
-        hass_config = await conf_util.async_hass_config_yaml(hass)
-        mqtt_data.config = CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+    hass_config = await conf_util.async_hass_config_yaml(hass)
+    mqtt_data.config = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
 
     # Remove unknown keys from config entry data
     _filter_entry_config(hass, entry)
 
-    # Merge basic configuration, and add missing defaults for basic options
-    await _async_merge_basic_config(hass, entry, mqtt_data.config or {})
+    # Add missing defaults to migrate older config entries
+    await _async_auto_mend_config(hass, entry, mqtt_data.config or {})
     # Bail out if broker setting is missing
     if CONF_BROKER not in entry.data:
         _LOGGER.error("MQTT broker is not configured, please configure it")
@@ -321,37 +268,6 @@ async def async_fetch_config(
     if (conf := mqtt_data.config) is None:
         conf = CONFIG_SCHEMA_ENTRY(dict(entry.data))
 
-    # User has configuration.yaml config, warn about config entry overrides
-    elif any(key in conf for key in entry.data):
-        shared_keys = conf.keys() & entry.data.keys()
-        override = {k: entry.data[k] for k in shared_keys if conf[k] != entry.data[k]}
-        if CONF_PASSWORD in override:
-            override[CONF_PASSWORD] = "********"
-        if CONF_CLIENT_KEY in override:
-            override[CONF_CLIENT_KEY] = "-----PRIVATE KEY-----"
-        if override:
-            _LOGGER.warning(
-                (
-                    "Deprecated configuration settings found in configuration.yaml. "
-                    "These settings from your configuration entry will override: %s"
-                ),
-                override,
-            )
-        # Register a repair issue
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_broker_settings",
-            breaks_in_ha_version="2023.4.0",  # Warning first added in 2022.11.0
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_broker_settings",
-            translation_placeholders={
-                "more_info_url": "https://www.home-assistant.io/integrations/mqtt/",
-                "deprecated_settings": str(shared_keys)[1:-1],
-            },
-        )
-
     # Merge advanced configuration values from configuration.yaml
     conf = _merge_extended_config(entry, conf)
     return conf
@@ -361,10 +277,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     mqtt_data = get_mqtt_data(hass, True)
 
-    # Merge basic configuration, and add missing defaults for basic options
+    # Fetch configuration and add missing defaults for basic options
     if (conf := await async_fetch_config(hass, entry)) is None:
         # Bail out
         return False
+
     await async_create_certificate_temp_files(hass, dict(entry.data))
     mqtt_data.client = MQTT(hass, entry, conf)
     # Restore saved subscriptions
@@ -482,6 +399,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _reload_config(call: ServiceCall) -> None:
             """Reload the platforms."""
+            # Fetch updated manual configured items and validate
+            config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
+            mqtt_data.updated_config = config_yaml.get(DOMAIN, {})
+
             # Reload the modern yaml platforms
             mqtt_platforms = async_get_platforms(hass, DOMAIN)
             tasks = [
@@ -495,8 +416,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ]
             await asyncio.gather(*tasks)
 
-            config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
-            mqtt_data.updated_config = config_yaml.get(DOMAIN, {})
             await asyncio.gather(
                 *(
                     [
@@ -706,7 +625,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for component in PLATFORMS
         )
     )
-    await hass.async_block_till_done()
+    await asyncio.sleep(0)
     # Unsubscribe reload dispatchers
     while reload_dispatchers := mqtt_data.reload_dispatchers:
         reload_dispatchers.pop()()
