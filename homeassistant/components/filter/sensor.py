@@ -484,6 +484,7 @@ class RangeFilter(Filter, SensorEntity):
 
     def __init__(
         self,
+        *,
         entity: str,
         precision: int | None = None,
         lower_bound: float | None = None,
@@ -541,6 +542,7 @@ class OutlierFilter(Filter, SensorEntity):
 
     def __init__(
         self,
+        *,
         window_size: int,
         entity: str,
         radius: float,
@@ -587,6 +589,7 @@ class LowPassFilter(Filter, SensorEntity):
 
     def __init__(
         self,
+        *,
         window_size: int,
         entity: str,
         time_constant: int,
@@ -623,6 +626,7 @@ class TimeSMAFilter(Filter, SensorEntity):
 
     def __init__(
         self,
+        *,
         window_size: timedelta,
         entity: str,
         type: str,  # pylint: disable=redefined-builtin
@@ -675,7 +679,9 @@ class ThrottleFilter(Filter, SensorEntity):
     One sample per window.
     """
 
-    def __init__(self, window_size: int, entity: str, precision: None = None) -> None:
+    def __init__(
+        self, *, window_size: int, entity: str, precision: None = None
+    ) -> None:
         """Initialize Filter."""
         super().__init__(
             FILTER_NAME_THROTTLE, window_size, precision=precision, entity=entity
