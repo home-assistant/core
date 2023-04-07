@@ -4,7 +4,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.nut.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -34,6 +34,8 @@ def _get_mock_pynutclient(
 async def async_init_integration(
     hass: HomeAssistant,
     ups_fixture: str = None,
+    username: str = "mock",
+    password: str = "mock",
     list_ups: dict[str, str] = None,
     list_vars: dict[str, str] = None,
     list_commands_return_value: dict[str, str] = None,
@@ -64,7 +66,12 @@ async def async_init_integration(
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
-            data={CONF_HOST: "mock", CONF_PORT: "mock"},
+            data={
+                CONF_HOST: "mock",
+                CONF_PASSWORD: password,
+                CONF_PORT: "mock",
+                CONF_USERNAME: username,
+            },
         )
         entry.add_to_hass(hass)
 

@@ -27,12 +27,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     COORDINATOR,
     DEFAULT_SCAN_INTERVAL,
-    DEVICE_SUPPORTED_COMMANDS,
     DOMAIN,
     INTEGRATION_SUPPORTED_COMMANDS,
     PLATFORMS,
     PYNUT_DATA,
     PYNUT_UNIQUE_ID,
+    USER_AVAILABLE_COMMANDS,
 )
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
@@ -83,12 +83,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     status = coordinator.data
 
-    supported_commands = {
-        device_supported_command
-        for device_supported_command in data.list_commands() or {}
-        if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS
-    }
-
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -96,12 +90,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unique_id is None:
         unique_id = entry.entry_id
 
+    user_available_commands = (
+        {
+            device_supported_command
+            for device_supported_command in data.list_commands() or {}
+            if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS
+        }
+        if username is not None and password is not None
+        else set[str]()
+    )
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         PYNUT_DATA: data,
         PYNUT_UNIQUE_ID: unique_id,
-        DEVICE_SUPPORTED_COMMANDS: supported_commands,
+        USER_AVAILABLE_COMMANDS: user_available_commands,
     }
 
     device_registry = dr.async_get(hass)

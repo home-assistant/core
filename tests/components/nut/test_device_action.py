@@ -17,17 +17,20 @@ from .util import async_init_integration
 from tests.common import assert_lists_same, async_get_device_automations
 
 
-async def test_get_all_actions(
+async def test_get_all_actions_for_specified_user(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test we get all the expected actions from a nut."""
-    list_commands_return_value = {}
-    for supported_command in INTEGRATION_SUPPORTED_COMMANDS:
-        list_commands_return_value[supported_command] = supported_command
+    """Test we get all the expected actions from a nut if user is specified."""
+    list_commands_return_value = {
+        supported_command: supported_command
+        for supported_command in INTEGRATION_SUPPORTED_COMMANDS
+    }
 
     await async_init_integration(
         hass,
+        username="someuser",
+        password="somepassword",
         list_vars={"ups.status": "OL"},
         list_commands_return_value=list_commands_return_value,
     )
@@ -45,6 +48,28 @@ async def test_get_all_actions(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
     assert_lists_same(actions, expected_actions)
+
+
+async def test_no_actions_for_anonymous_user(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test we get no actions if user is not specified."""
+    list_commands_return_value = {"some action": "some description"}
+
+    await async_init_integration(
+        hass,
+        username=None,
+        password=None,
+        list_vars={"ups.status": "OL"},
+        list_commands_return_value=list_commands_return_value,
+    )
+    device_entry = next(device for device in device_registry.devices.values())
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+
+    assert len(actions) == 0
 
 
 async def test_no_actions_invalid_device(

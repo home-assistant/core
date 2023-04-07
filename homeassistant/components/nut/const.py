@@ -21,7 +21,7 @@ PYNUT_DATA = "data"
 PYNUT_UNIQUE_ID = "unique_id"
 
 
-DEVICE_SUPPORTED_COMMANDS = "device_supported_commands"
+USER_AVAILABLE_COMMANDS = "user_available_commands"
 
 STATE_TYPES = {
     "OL": "Online",
