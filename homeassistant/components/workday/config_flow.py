@@ -290,11 +290,11 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
 
 class AddDatesError(HomeAssistantError):
-    """Exception for Adding dates error."""
+    """Exception for error adding dates."""
 
 
 class RemoveDatesError(HomeAssistantError):
-    """Exception for Adding dates error."""
+    """Exception for error removing dates."""
 
 
 class CountryNotExist(HomeAssistantError):
