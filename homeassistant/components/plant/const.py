@@ -3,9 +3,6 @@ from typing import Final
 
 DOMAIN: Final = "plant"
 
-PLANT_NAME = "plant_name"
-SENSORS = "sensors"
-
 READING_MOISTURE = "moisture"
 READING_BATTERY = "battery"
 READING_TEMPERATURE = "temperature"
