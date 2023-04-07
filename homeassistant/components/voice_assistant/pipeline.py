@@ -357,12 +357,17 @@ class PipelineRun:
                 message=f"Text to speech engine '{engine}' not found",
             )
 
-        if not await tts.async_support_options(self.hass, engine, self.language):
+        if not await tts.async_support_options(
+            self.hass,
+            engine,
+            self.language,
+            {tts.ATTR_AUDIO_OUTPUT: "raw"},
+        ):
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=(
                     f"Text to speech engine {engine} "
-                    f"does not support language {self.language}"
+                    f"does not support language {self.language} or raw audio"
                 ),
             )
 
@@ -390,7 +395,7 @@ class PipelineRun:
                 tts_input,
                 engine=self.tts_engine,
                 language=self.language,
-                options={"audio_output": "raw"},
+                options={tts.ATTR_AUDIO_OUTPUT: "raw"},
             )
             tts_media = await media_source.async_resolve_media(
                 self.hass,

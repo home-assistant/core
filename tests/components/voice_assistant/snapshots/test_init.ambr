@@ -70,8 +70,9 @@
     dict({
       'data': dict({
         'tts_output': dict({
+          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&audio_output=raw",
           'mime_type': 'audio/mpeg',
-          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
+          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_682ce19722_test.raw',
         }),
       }),
       'type': <PipelineEventType.TTS_END: 'tts-end'>,
