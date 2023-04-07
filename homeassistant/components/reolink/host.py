@@ -8,6 +8,7 @@ from typing import Any
 
 import aiohttp
 from aiohttp.web import Request
+import async_timeout
 from reolink_aio.api import Host
 from reolink_aio.exceptions import ReolinkError, SubscriptionError
 
@@ -23,6 +24,7 @@ from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
 DEFAULT_TIMEOUT = 60
+FIRST_ONVIF_TIMEOUT = 15
 SUBSCRIPTION_RENEW_THRESHOLD = 300
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,9 +84,15 @@ class ReolinkHost:
                 f"'{self._api.user_level}', only admin users can change camera settings"
             )
 
+        enable_rtsp = None
         enable_onvif = None
         enable_rtmp = None
-        enable_rtsp = None
+
+        if not self._api.rtsp_enabled:
+            _LOGGER.debug(
+                "RTSP is disabled on %s, trying to enable it", self._api.nvr_name
+            )
+            enable_rtsp = True
 
         if not self._api.onvif_enabled:
             _LOGGER.debug(
@@ -97,11 +105,6 @@ class ReolinkHost:
                 "RTMP is disabled on %s, trying to enable it", self._api.nvr_name
             )
             enable_rtmp = True
-        elif not self._api.rtsp_enabled and self._api.protocol == "rtsp":
-            _LOGGER.debug(
-                "RTSP is disabled on %s, trying to enable it", self._api.nvr_name
-            )
-            enable_rtsp = True
 
         if enable_onvif or enable_rtmp or enable_rtsp:
             try:
@@ -112,13 +115,14 @@ class ReolinkHost:
                 )
             except ReolinkError:
                 ports = ""
+                if enable_rtsp:
+                    ports += "RTSP "
+
                 if enable_onvif:
                     ports += "ONVIF "
 
                 if enable_rtmp:
                     ports += "RTMP "
-                elif enable_rtsp:
-                    ports += "RTSP "
 
                 ir.async_create_issue(
                     self._hass,
@@ -144,11 +148,13 @@ class ReolinkHost:
             "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
         )
         try:
-            await asyncio.wait_for(self._webhook_reachable.wait(), timeout=15)
+            async with async_timeout.timeout(FIRST_ONVIF_TIMEOUT):
+                await self._webhook_reachable.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug(
-                "Did not receive initial ONVIF state on webhook '%s' after 15 seconds",
+                "Did not receive initial ONVIF state on webhook '%s' after %i seconds",
                 self._webhook_url,
+                FIRST_ONVIF_TIMEOUT,
             )
             ir.async_create_issue(
                 self._hass,

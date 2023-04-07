@@ -7,5 +7,5 @@
   "integration_type": "system",
   "iot_class": "calculated",
   "quality_scale": "internal",
-  "requirements": ["securetar==2022.2.0"]
+  "requirements": ["securetar==2023.3.0"]
 }
