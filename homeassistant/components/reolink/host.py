@@ -169,8 +169,6 @@ class ReolinkHost:
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
-        else:
-            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
         if self._api.sw_version_update_required:
             ir.async_create_issue(
@@ -373,6 +371,7 @@ class ReolinkHost:
         _LOGGER.debug("Webhook '%s' called", webhook_id)
         if not self._webhook_reachable.is_set():
             self._webhook_reachable.set()
+            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
         if not request.body_exists:
             _LOGGER.debug("Webhook '%s' triggered without payload", webhook_id)
