@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import COORDINATORS, DOMAIN, ProxmoxEntity, device_info
+from . import COORDINATORS, DOMAIN, device_info
 from .const import CONF_LXC, CONF_QEMU, ProxmoxKeyAPIParse, ProxmoxType
-
+from .entity import ProxmoxEntity
 
 async def async_setup_entry(
     hass: HomeAssistant,

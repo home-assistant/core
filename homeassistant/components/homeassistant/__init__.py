@@ -30,16 +30,18 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
-from homeassistant.helpers.template import async_load_custom_jinja
+from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
+
+from .const import DATA_EXPOSED_ENTITIES, DOMAIN
+from .exposed_entities import ExposedEntities
 
 ATTR_ENTRY_ID = "entry_id"
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
 SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
-SERVICE_RELOAD_CUSTOM_JINJA = "reload_custom_jinja"
+SERVICE_RELOAD_CUSTOM_TEMPLATES = "reload_custom_templates"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
@@ -260,12 +262,12 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
     )
 
-    async def async_handle_reload_jinja(call: ha.ServiceCall) -> None:
+    async def async_handle_reload_templates(call: ha.ServiceCall) -> None:
         """Service handler to reload custom Jinja."""
-        await async_load_custom_jinja(hass)
+        await async_load_custom_templates(hass)
 
     async_register_admin_service(
-        hass, ha.DOMAIN, SERVICE_RELOAD_CUSTOM_JINJA, async_handle_reload_jinja
+        hass, ha.DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES, async_handle_reload_templates
     )
 
     async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
@@ -300,7 +302,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         Additionally, it also calls the `homeasssitant.reload_core_config`
         service, as that reloads the core YAML configuration, the
         `frontend.reload_themes` service that reloads the themes, and the
-        `homeassistant.reload_custom_jinja` service that reloads any custom
+        `homeassistant.reload_custom_templates` service that reloads any custom
         jinja into memory.
 
         We only do so, if there are no configuration errors.
@@ -330,7 +332,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             for domain, service in (
                 (ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG),
                 ("frontend", "reload_themes"),
-                (ha.DOMAIN, SERVICE_RELOAD_CUSTOM_JINJA),
+                (ha.DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES),
             )
         ]
 
@@ -339,5 +341,9 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_RELOAD_ALL, async_handle_reload_all
     )
+
+    exposed_entities = ExposedEntities(hass)
+    await exposed_entities.async_initialize()
+    hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
 
     return True

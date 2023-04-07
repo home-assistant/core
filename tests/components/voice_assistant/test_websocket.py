@@ -1,111 +1,30 @@
 """Websocket tests for Voice Assistant integration."""
 import asyncio
-from collections.abc import AsyncIterable
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import stt
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-
-from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
-    mock_get_cache_files,
-    mock_init_cache_dir,
+from homeassistant.components.voice_assistant.const import DOMAIN
+from homeassistant.components.voice_assistant.pipeline import (
+    Pipeline,
+    PipelineStorageCollection,
 )
+from homeassistant.core import HomeAssistant
+
 from tests.typing import WebSocketGenerator
-
-_TRANSCRIPT = "test transcript"
-
-
-class MockSttProvider(stt.Provider):
-    """Mock STT provider."""
-
-    def __init__(self, hass: HomeAssistant, text: str) -> None:
-        """Init test provider."""
-        self.hass = hass
-        self.text = text
-
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-        return ["en-US"]
-
-    @property
-    def supported_formats(self) -> list[stt.AudioFormats]:
-        """Return a list of supported formats."""
-        return [stt.AudioFormats.WAV]
-
-    @property
-    def supported_codecs(self) -> list[stt.AudioCodecs]:
-        """Return a list of supported codecs."""
-        return [stt.AudioCodecs.PCM]
-
-    @property
-    def supported_bit_rates(self) -> list[stt.AudioBitRates]:
-        """Return a list of supported bitrates."""
-        return [stt.AudioBitRates.BITRATE_16]
-
-    @property
-    def supported_sample_rates(self) -> list[stt.AudioSampleRates]:
-        """Return a list of supported samplerates."""
-        return [stt.AudioSampleRates.SAMPLERATE_16000]
-
-    @property
-    def supported_channels(self) -> list[stt.AudioChannels]:
-        """Return a list of supported channels."""
-        return [stt.AudioChannels.CHANNEL_MONO]
-
-    async def async_process_audio_stream(
-        self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
-    ) -> stt.SpeechResult:
-        """Process an audio stream."""
-        return stt.SpeechResult(self.text, stt.SpeechResultState.SUCCESS)
-
-
-@pytest.fixture(autouse=True)
-async def init_components(
-    hass: HomeAssistant,
-    mock_get_cache_files,  # noqa: F811
-    mock_init_cache_dir,  # noqa: F811
-):
-    """Initialize relevant components with empty configs."""
-    assert await async_setup_component(hass, "media_source", {})
-    assert await async_setup_component(
-        hass,
-        "tts",
-        {
-            "tts": {
-                "platform": "demo",
-            }
-        },
-    )
-    assert await async_setup_component(hass, "stt", {})
-
-    # mock_platform fails because it can't import
-    hass.data[stt.DOMAIN] = {"test": MockSttProvider(hass, _TRANSCRIPT)}
-
-    assert await async_setup_component(hass, "voice_assistant", {})
-
-    with patch(
-        "homeassistant.components.demo.tts.DemoProvider.get_tts_audio",
-        return_value=("mp3", b""),
-    ) as mock_get_tts:
-        yield mock_get_tts
 
 
 async def test_text_only_pipeline(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with text input (no STT/TTS)."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "voice_assistant/run",
             "start_stage": "intent",
             "end_stage": "intent",
@@ -138,14 +57,16 @@ async def test_text_only_pipeline(
 
 
 async def test_audio_pipeline(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with audio input/output."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "voice_assistant/run",
             "start_stage": "stt",
             "end_stage": "tts",
@@ -167,7 +88,7 @@ async def test_audio_pipeline(
     assert msg["event"]["data"] == snapshot
 
     # End of audio stream (handler id + empty payload)
-    await client.send_bytes(b"1")
+    await client.send_bytes(bytes([1]))
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "stt-end"
@@ -213,14 +134,13 @@ async def test_intent_timeout(
         "homeassistant.components.conversation.async_converse",
         new=sleepy_converse,
     ):
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "intent",
                 "end_stage": "intent",
                 "input": {"text": "Are the lights on?"},
-                "timeout": 0.00001,
+                "timeout": 0.1,
             }
         )
 
@@ -257,12 +177,11 @@ async def test_text_pipeline_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.voice_assistant.pipeline.PipelineInput._execute",
+        "homeassistant.components.voice_assistant.pipeline.PipelineInput.execute",
         new=sleepy_run,
     ):
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "intent",
                 "end_stage": "intent",
@@ -294,9 +213,8 @@ async def test_intent_failed(
         "homeassistant.components.conversation.async_converse",
         new=MagicMock(return_value=RuntimeError),
     ):
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "intent",
                 "end_stage": "intent",
@@ -337,12 +255,11 @@ async def test_audio_pipeline_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.voice_assistant.pipeline.PipelineInput._execute",
+        "homeassistant.components.voice_assistant.pipeline.PipelineInput.execute",
         new=sleepy_run,
     ):
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
@@ -363,6 +280,7 @@ async def test_audio_pipeline_timeout(
 async def test_stt_provider_missing(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
@@ -372,9 +290,8 @@ async def test_stt_provider_missing(
     ):
         client = await hass_ws_client(hass)
 
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
@@ -383,42 +300,25 @@ async def test_stt_provider_missing(
 
         # result
         msg = await client.receive_json()
-        assert msg["success"]
-
-        # run start
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "run-start"
-        assert msg["event"]["data"] == snapshot
-
-        # stt
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "stt-start"
-        assert msg["event"]["data"] == snapshot
-
-        # End of audio stream (handler id + empty payload)
-        await client.send_bytes(b"1")
-
-        # stt error
-        msg = await client.receive_json()
-        assert msg["event"]["type"] == "error"
-        assert msg["event"]["data"]["code"] == "stt-provider-missing"
+        assert not msg["success"]
+        assert msg["error"]["code"] == "stt-provider-missing"
 
 
 async def test_stt_stream_failed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
     with patch(
-        "tests.components.voice_assistant.test_websocket.MockSttProvider.async_process_audio_stream",
+        "tests.components.voice_assistant.conftest.MockSttProvider.async_process_audio_stream",
         new=MagicMock(side_effect=RuntimeError),
     ):
         client = await hass_ws_client(hass)
 
-        await client.send_json(
+        await client.send_json_auto_id(
             {
-                "id": 5,
                 "type": "voice_assistant/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
@@ -497,9 +397,8 @@ async def test_invalid_stage_order(
     """Test pipeline run with invalid stage order."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "voice_assistant/run",
             "start_stage": "tts",
             "end_stage": "stt",
@@ -510,3 +409,205 @@ async def test_invalid_stage_order(
     # result
     msg = await client.receive_json()
     assert not msg["success"]
+
+
+async def test_add_pipeline(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can add a pipeline."""
+    client = await hass_ws_client(hass)
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": "test_conversation_engine",
+        "id": ANY,
+        "language": "test_language",
+        "name": "test_name",
+        "stt_engine": "test_stt_engine",
+        "tts_engine": "test_tts_engine",
+    }
+
+    assert len(pipeline_store.data) == 1
+    pipeline = pipeline_store.data[msg["result"]["id"]]
+    assert pipeline == Pipeline(
+        conversation_engine="test_conversation_engine",
+        id=msg["result"]["id"],
+        language="test_language",
+        name="test_name",
+        stt_engine="test_stt_engine",
+        tts_engine="test_tts_engine",
+    )
+
+
+async def test_delete_pipeline(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can delete a pipeline."""
+    client = await hass_ws_client(hass)
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(pipeline_store.data) == 1
+
+    pipeline_id = msg["result"]["id"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/delete",
+            "pipeline_id": pipeline_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(pipeline_store.data) == 0
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/delete",
+            "pipeline_id": pipeline_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": f"Unable to find pipeline_id {pipeline_id}",
+    }
+
+
+async def test_list_pipelines(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can list pipelines."""
+    client = await hass_ws_client(hass)
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
+
+    await client.send_json_auto_id({"type": "voice_assistant/pipeline/list"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == []
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(pipeline_store.data) == 1
+
+    await client.send_json_auto_id({"type": "voice_assistant/pipeline/list"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == [
+        {
+            "conversation_engine": "test_conversation_engine",
+            "id": ANY,
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    ]
+
+
+async def test_update_pipeline(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can list pipelines."""
+    client = await hass_ws_client(hass)
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/update",
+            "conversation_engine": "new_conversation_engine",
+            "language": "new_language",
+            "name": "new_name",
+            "pipeline_id": "no_such_pipeline",
+            "stt_engine": "new_stt_engine",
+            "tts_engine": "new_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": "Unable to find pipeline_id no_such_pipeline",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id = msg["result"]["id"]
+    assert len(pipeline_store.data) == 1
+
+    await client.send_json_auto_id(
+        {
+            "type": "voice_assistant/pipeline/update",
+            "conversation_engine": "new_conversation_engine",
+            "language": "new_language",
+            "name": "new_name",
+            "pipeline_id": pipeline_id,
+            "stt_engine": "new_stt_engine",
+            "tts_engine": "new_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": "new_conversation_engine",
+        "language": "new_language",
+        "name": "new_name",
+        "id": pipeline_id,
+        "stt_engine": "new_stt_engine",
+        "tts_engine": "new_tts_engine",
+    }
+
+    assert len(pipeline_store.data) == 1
+    pipeline = pipeline_store.data[pipeline_id]
+    assert pipeline == Pipeline(
+        conversation_engine="new_conversation_engine",
+        id=pipeline_id,
+        language="new_language",
+        name="new_name",
+        stt_engine="new_stt_engine",
+        tts_engine="new_tts_engine",
+    )

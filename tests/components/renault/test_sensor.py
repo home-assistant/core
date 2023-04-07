@@ -36,6 +36,7 @@ def _check_and_enable_disabled_entities(
         if expected_entity.get(ATTR_DEFAULT_DISABLED):
             entity_id = expected_entity[ATTR_ENTITY_ID]
             registry_entry = entity_registry.entities.get(entity_id)
+            assert registry_entry, f"{entity_id} not found in registry"
             assert registry_entry.disabled
             assert registry_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
             entity_registry.async_update_entity(entity_id, **{"disabled_by": None})

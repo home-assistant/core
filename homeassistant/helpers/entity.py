@@ -698,7 +698,10 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.add_job(self.async_update_ha_state(force_refresh))
+        self.hass.create_task(
+            self.async_update_ha_state(force_refresh),
+            f"Entity {self.entity_id} schedule update ha state",
+        )
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:
@@ -944,25 +947,6 @@ class Entity(ABC):
         assert self.platform is not None
         self.entity_id = self.registry_entry.entity_id
         await self.platform.async_add_entities([self])
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        if not isinstance(other, self.__class__):
-            return False
-
-        # Can only decide equality if both have a unique id
-        if self.unique_id is None or other.unique_id is None:
-            return False
-
-        # Ensure they belong to the same platform
-        if self.platform is not None or other.platform is not None:
-            if self.platform is None or other.platform is None:
-                return False
-
-            if self.platform.platform != other.platform.platform:
-                return False
-
-        return self.unique_id == other.unique_id
 
     def __repr__(self) -> str:
         """Return the representation."""

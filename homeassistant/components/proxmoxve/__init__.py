@@ -37,7 +37,6 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
@@ -557,53 +556,6 @@ def device_info(
         hw_version=None,
         via_device=(DOMAIN, via_device),
     )
-
-
-class ProxmoxEntity(CoordinatorEntity):
-    """Represents any entity created for the Proxmox VE platform."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id: str,
-        name: str,
-        icon: str,
-        host_name: str,
-        node_name: str,
-        vm_id: int | None = None,
-    ) -> None:
-        """Initialize the Proxmox entity."""
-        super().__init__(coordinator)
-
-        self.coordinator = coordinator
-        self._unique_id = unique_id
-        self._name = name
-        self._icon = icon
-        self._available = True
-
-        self._state = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self._available
 
 
 class ProxmoxClient:
