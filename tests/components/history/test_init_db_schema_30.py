@@ -108,7 +108,7 @@ def test_get_significant_states(legacy_hass_history) -> None:
     """
     hass = legacy_hass_history
     zero, four, states = record_states(hass)
-    hist = get_significant_states(hass, zero, four, filters=history.Filters())
+    hist = get_significant_states(hass, zero, four)
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
@@ -124,9 +124,7 @@ def test_get_significant_states_minimal_response(legacy_hass_history) -> None:
     """
     hass = legacy_hass_history
     zero, four, states = record_states(hass)
-    hist = get_significant_states(
-        hass, zero, four, filters=history.Filters(), minimal_response=True
-    )
+    hist = get_significant_states(hass, zero, four, minimal_response=True)
     entites_with_reducable_states = [
         "media_player.test",
         "media_player.test3",
@@ -202,7 +200,6 @@ def test_get_significant_states_with_initial(legacy_hass_history) -> None:
         hass,
         one_and_half,
         four,
-        filters=history.Filters(),
         include_start_time_state=True,
     )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
@@ -234,7 +231,6 @@ def test_get_significant_states_without_initial(legacy_hass_history) -> None:
         hass,
         one_and_half,
         four,
-        filters=history.Filters(),
         include_start_time_state=False,
     )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
@@ -253,9 +249,7 @@ def test_get_significant_states_entity_id(hass_history) -> None:
         del states["thermostat.test2"]
         del states["script.can_cancel_this_one"]
 
-        hist = get_significant_states(
-            hass, zero, four, ["media_player.test"], filters=history.Filters()
-        )
+        hist = get_significant_states(hass, zero, four, ["media_player.test"])
         assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
@@ -273,7 +267,6 @@ def test_get_significant_states_multiple_entity_ids(legacy_hass_history) -> None
         zero,
         four,
         ["media_player.test", "thermostat.test"],
-        filters=history.Filters(),
     )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
@@ -523,14 +516,10 @@ def test_get_significant_states_are_ordered(legacy_hass_history) -> None:
     hass = legacy_hass_history
     zero, four, _states = record_states(hass)
     entity_ids = ["media_player.test", "media_player.test2"]
-    hist = get_significant_states(
-        hass, zero, four, entity_ids, filters=history.Filters()
-    )
+    hist = get_significant_states(hass, zero, four, entity_ids)
     assert list(hist.keys()) == entity_ids
     entity_ids = ["media_player.test2", "media_player.test"]
-    hist = get_significant_states(
-        hass, zero, four, entity_ids, filters=history.Filters()
-    )
+    hist = get_significant_states(hass, zero, four, entity_ids)
     assert list(hist.keys()) == entity_ids
 
 
@@ -600,16 +589,7 @@ def test_get_significant_states_only(legacy_hass_history) -> None:
 
 def check_significant_states(hass, zero, four, states, config):
     """Check if significant states are retrieved."""
-    domain_config = config[history.DOMAIN]
-    exclude = domain_config.get(CONF_EXCLUDE, {})
-    include = domain_config.get(CONF_INCLUDE, {})
-    filters = history.Filters(
-        excluded_entities=exclude.get(CONF_ENTITIES, []),
-        excluded_domains=exclude.get(CONF_DOMAINS, []),
-        included_entities=include.get(CONF_ENTITIES, []),
-        included_domains=include.get(CONF_DOMAINS, []),
-    )
-    hist = get_significant_states(hass, zero, four, filters=filters)
+    hist = get_significant_states(hass, zero, four)
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
