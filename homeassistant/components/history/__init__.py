@@ -12,31 +12,18 @@ import voluptuous as vol
 
 from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import (
-    DOMAIN as RECORDER_DOMAIN,
-    get_instance,
-    history,
-)
-from homeassistant.components.recorder.filters import (
-    Filters,
-    extract_include_exclude_filter_conf,
-    merge_include_exclude_filters,
-    sqlalchemy_filter_from_include_exclude_conf,
-)
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import (
-    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
-    convert_include_exclude_filter,
-)
+from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import websocket_api
 from .const import DOMAIN
 from .helpers import entities_may_have_state_changes_after
-from .models import HistoryConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +33,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.deprecated(CONF_ORDER),
+            cv.deprecated(CONF_INCLUDE),
+            cv.deprecated(CONF_EXCLUDE),
             INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
                 {vol.Optional(CONF_ORDER, default=False): cv.boolean}
             ),
@@ -57,23 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
-    conf = config.get(DOMAIN, {})
-    recorder_conf = config.get(RECORDER_DOMAIN, {})
-    history_conf = config.get(DOMAIN, {})
-    recorder_filter = extract_include_exclude_filter_conf(recorder_conf)
-    logbook_filter = extract_include_exclude_filter_conf(history_conf)
-    merged_filter = merge_include_exclude_filters(recorder_filter, logbook_filter)
-
-    possible_merged_entities_filter = convert_include_exclude_filter(merged_filter)
-
-    sqlalchemy_filter = None
-    entity_filter = None
-    if not possible_merged_entities_filter.empty_filter:
-        sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(conf)
-        entity_filter = possible_merged_entities_filter
-
-    hass.data[DOMAIN] = HistoryConfig(sqlalchemy_filter, entity_filter)
-    hass.http.register_view(HistoryPeriodView(sqlalchemy_filter))
+    hass.http.register_view(HistoryPeriodView())
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
     websocket_api.async_setup(hass)
     return True
@@ -85,10 +58,6 @@ class HistoryPeriodView(HomeAssistantView):
     url = "/api/history/period"
     name = "api:history:view-period"
     extra_urls = ["/api/history/period/{datetime}"]
-
-    def __init__(self, filters: Filters | None) -> None:
-        """Initialize the history period view."""
-        self.filters = filters
 
     async def get(
         self, request: web.Request, datetime: str | None = None
@@ -116,10 +85,10 @@ class HistoryPeriodView(HomeAssistantView):
                 return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
         else:
             end_time = start_time + one_day
-        entity_ids_str = request.query.get("filter_entity_id")
-        entity_ids = None
-        if entity_ids_str:
-            entity_ids = entity_ids_str.lower().split(",")
+        entity_ids_str = request.query.get("filter_entity_id") or ""
+        entity_ids = entity_ids_str.lower().split(",")
+        if not entity_ids:
+            return self.json_message("Entity ID is missing", HTTPStatus.BAD_REQUEST)
         include_start_time_state = "skip_initial_state" not in request.query
         significant_changes_only = (
             request.query.get("significant_changes_only", "1") != "0"
@@ -175,7 +144,7 @@ class HistoryPeriodView(HomeAssistantView):
                 start_time,
                 end_time,
                 entity_ids,
-                self.filters,
+                None,
                 include_start_time_state,
                 significant_changes_only,
                 minimal_response,
