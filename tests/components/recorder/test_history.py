@@ -68,7 +68,6 @@ async def _async_get_states(
                     utc_point_in_time,
                     entity_ids,
                     run,
-                    None,
                     no_attributes,
                 )
             ]
