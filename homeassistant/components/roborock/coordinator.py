@@ -1,6 +1,7 @@
 """Roborock Coordinator."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -42,7 +43,7 @@ class RoborockDataUpdateCoordinator(
         local_devices_info: dict[str, RoborockLocalDeviceInfo] = {}
         hass_devices_info: dict[str, RoborockHassDeviceInfo] = {}
         for device in devices:
-            if not (networking := devices_networking.get(device.duid):
+            if not (networking := devices_networking.get(device.duid)):
                 _LOGGER.warning("Device %s is offline and cannot be setup", device.duid)
                 continue
             hass_devices_info[device.duid] = RoborockHassDeviceInfo(
@@ -73,8 +74,12 @@ class RoborockDataUpdateCoordinator(
     async def _async_update_data(self) -> dict[str, RoborockDeviceProp]:
         """Update data via library."""
         try:
-            for device_info in self.devices_info.values():
-                await self._update_device_prop(device_info)
+            asyncio.gather(
+                *[
+                    self._update_device_prop(device_info)
+                    for device_info in self.devices_info.values()
+                ]
+            )
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
         return {
