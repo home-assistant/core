@@ -87,6 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component = MailboxEntityComponent(
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
         )
+        await component.async_setup(config)
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [
@@ -146,15 +147,8 @@ class MailboxEntity(Entity):
 class MailboxEntityComponent(EntityComponent[MailboxEntity]):
     """Mailbox entity component."""
 
-    def __init__(
-        self,
-        logger: logging.Logger,
-        domain: str,
-        hass: HomeAssistant,
-        scan_interval: timedelta,
-    ) -> None:
-        """Initialize an entity component."""
-        super().__init__(logger, domain, hass, scan_interval)
+    async def async_setup(self, _: ConfigType) -> None:
+        """Override EntityComponent setup to bypass platform setup and discovery."""
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
