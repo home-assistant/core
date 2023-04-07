@@ -152,7 +152,7 @@ class Plant(Entity):
         },
     }
 
-    def __init__(self, name, config) -> None:
+    def __init__(self, name, config):
         """Initialize the Plant component."""
         self._config = config
         self._sensormap = {}
@@ -356,7 +356,7 @@ class DailyHistory:
     At the moment only the maximum value per day is kept.
     """
 
-    def __init__(self, max_length) -> None:
+    def __init__(self, max_length):
         """Create new DailyHistory with a maximum length of the history."""
         self.max_length = max_length
         self._days = None
