@@ -30,37 +30,37 @@
   "entity": {
     "sensor": {
       "caqi": {
-        "name": "CAQI"
+        "name": "Common air quality index"
       },
       "pm1": {
-        "name": "PM1.0"
+        "name": "[%key:component::sensor::entity_component::pm1::name%]"
       },
       "pm25": {
-        "name": "PM2.5"
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },
       "pm10": {
-        "name": "PM10"
+        "name": "[%key:component::sensor::entity_component::pm10::name%]"
       },
       "humidity": {
-        "name": "Humidity"
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
       },
       "pressure": {
-        "name": "Pressure"
+        "name": "[%key:component::sensor::entity_component::pressure::name%]"
       },
       "temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "co": {
-        "name": "Carbon monoxide"
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       },
       "no2": {
-        "name": "Nitrogen dioxide"
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },
       "so2": {
-        "name": "Sulphur dioxide"
+        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
       },
       "o3": {
-        "name": "Ozone"
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
       }
     }
   }
