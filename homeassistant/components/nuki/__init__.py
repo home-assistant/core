@@ -31,7 +31,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -152,9 +152,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     webhook_url = webhook.async_generate_path(entry.entry_id)
-    hass_url = get_url(
-        hass, allow_cloud=False, allow_external=False, allow_ip=True, require_ssl=False
-    )
+
+    try:
+        hass_url = get_url(
+            hass,
+            allow_cloud=False,
+            allow_external=False,
+            allow_ip=True,
+            require_ssl=False,
+        )
+    except NoURLAvailableError:
+        webhook.async_unregister(hass, entry.entry_id)
+        raise ConfigEntryNotReady(
+            f"Error registering URL for webhook {entry.entry_id}: "
+            "HomeAssistant URL is not available"
+        ) from None
+
     url = f"{hass_url}{webhook_url}"
 
     if hass_url.startswith("https"):

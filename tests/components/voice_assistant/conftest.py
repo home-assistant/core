@@ -117,7 +117,7 @@ async def mock_stt_provider(hass) -> MockSttProvider:
     return MockSttProvider(hass, _TRANSCRIPT)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 async def init_components(
     hass: HomeAssistant,
     mock_stt_provider: MockSttProvider,
