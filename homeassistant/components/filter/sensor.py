@@ -701,7 +701,7 @@ class TimeThrottleFilter(Filter, SensorEntity):
     """
 
     def __init__(
-        self, window_size: timedelta, entity: str, precision: int | None = None
+        self, *, window_size: timedelta, entity: str, precision: int | None = None
     ) -> None:
         """Initialize Filter."""
         super().__init__(
