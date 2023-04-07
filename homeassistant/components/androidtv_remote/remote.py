@@ -80,7 +80,7 @@ class AndroidTVRemoteEntity(RemoteEntity):
             self.async_write_ha_state()
 
         @callback
-        def is_available_updated(is_available: bool) -> None:
+        def is_available_updated(is_available: bool, exc: Exception | None) -> None:
             if is_available:
                 _LOGGER.info(
                     "Reconnected to %s at %s",
@@ -89,9 +89,10 @@ class AndroidTVRemoteEntity(RemoteEntity):
                 )
             else:
                 _LOGGER.warning(
-                    "Disconnected from %s at %s",
+                    "Disconnected from %s at %s due to error: %s",
                     self._name,
                     self._host,
+                    exc,
                 )
             self._attr_available = is_available
             self.async_write_ha_state()
