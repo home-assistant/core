@@ -17,7 +17,6 @@ import attr
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_CORE_CONFIG_UPDATE,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SUN_EVENT_SUNRISE,
@@ -1370,39 +1369,25 @@ def async_call_later(
     if isinstance(delay, timedelta):
         delay = delay.total_seconds()
 
-    _unsub_cancel_on_hass_stop: CALLBACK_TYPE | None = None
-
     @callback
     def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
         """Call the action."""
         hass.async_run_hass_job(job, time_tracker_utcnow())
-        if _unsub_cancel_on_hass_stop:
-            _unsub_cancel_on_hass_stop()
 
     job = (
         action
         if isinstance(action, HassJob)
         else HassJob(action, f"call_later {delay}")
     )
+    if cancel_on_hass_stop:
+        job.cancel_on_hass_stop = True
     cancel_callback = hass.loop.call_later(delay, run_action, job)
 
     @callback
     def unsub_call_later_listener() -> None:
         """Cancel the call_later."""
+        assert cancel_callback is not None
         cancel_callback.cancel()
-        if _unsub_cancel_on_hass_stop:
-            _unsub_cancel_on_hass_stop()
-
-    if cancel_on_hass_stop:
-
-        @callback
-        def _on_hass_stop(_: Event) -> None:
-            """Cancel the job when Home Assistant stops."""
-            cancel_callback.cancel()
-
-        _unsub_cancel_on_hass_stop = hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _on_hass_stop
-        )
 
     return unsub_call_later_listener
 
