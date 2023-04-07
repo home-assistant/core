@@ -144,31 +144,32 @@ class ReolinkHost:
 
         await self.subscribe()
 
-        _LOGGER.debug(
-            "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
-        )
-        try:
-            async with async_timeout.timeout(FIRST_ONVIF_TIMEOUT):
-                await self._webhook_reachable.wait()
-        except asyncio.TimeoutError:
+        if self._api.supported(None, "initial_ONVIF_state"):
             _LOGGER.debug(
-                "Did not receive initial ONVIF state on webhook '%s' after %i seconds",
-                self._webhook_url,
-                FIRST_ONVIF_TIMEOUT,
+                "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
             )
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                "webhook_url",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="webhook_url",
-                translation_placeholders={
-                    "name": self._api.nvr_name,
-                    "base_url": self._base_url,
-                    "network_link": "https://my.home-assistant.io/redirect/network/",
-                },
-            )
+            try:
+                async with async_timeout.timeout(FIRST_ONVIF_TIMEOUT):
+                    await self._webhook_reachable.wait()
+            except asyncio.TimeoutError:
+                _LOGGER.debug(
+                    "Did not receive initial ONVIF state on webhook '%s' after %i seconds",
+                    self._webhook_url,
+                    FIRST_ONVIF_TIMEOUT,
+                )
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    "webhook_url",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="webhook_url",
+                    translation_placeholders={
+                        "name": self._api.nvr_name,
+                        "base_url": self._base_url,
+                        "network_link": "https://my.home-assistant.io/redirect/network/",
+                    },
+                )
 
         if self._api.sw_version_update_required:
             ir.async_create_issue(
