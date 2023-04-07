@@ -57,7 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class ImageStorageCollection(collection.StorageCollection):
+class ImageStorageCollection(collection.DictStorageCollection):
     """Image collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -125,11 +125,11 @@ class ImageStorageCollection(collection.StorageCollection):
 
     async def _update_data(
         self,
-        data: dict[str, Any],
+        item: dict[str, Any],
         update_data: dict[str, Any],
     ) -> dict[str, Any]:
         """Return a new updated data object."""
-        return {**data, **self.UPDATE_SCHEMA(update_data)}
+        return {**item, **self.UPDATE_SCHEMA(update_data)}
 
     async def _change_listener(
         self,
