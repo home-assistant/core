@@ -816,17 +816,15 @@ class HomeAssistant:
 
     def _cancel_cancellable_timers(self) -> None:
         """Cancel timer handles marked as cancellable."""
-        # pylint: disable-next=[protected-access]
+        # pylint: disable-next=protected-access
         handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
         for handle in handles:
             if (
                 not handle.cancelled()
-                and (args := handle._args)  # pylint: disable=[protected-access]
-                and getattr(
-                    args[0],
-                    "cancel_on_shutdown",
-                    None,
-                )
+                and (args := handle._args)  # pylint: disable=protected-access
+                # pylint: disable-next=unidiomatic-typecheck
+                and type(job := args[0]) is HassJob
+                and job.cancel_on_shutdown
             ):
                 handle.cancel()
 
