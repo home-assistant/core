@@ -170,6 +170,11 @@ class ReolinkHost:
                         "network_link": "https://my.home-assistant.io/redirect/network/",
                     },
                 )
+        else:
+            _LOGGER.debug(
+                "Camera model %s most likely does not push its initial state"
+                "upon ONVIF subscription, do not check", self._api.model
+            )
 
         if self._api.sw_version_update_required:
             ir.async_create_issue(
