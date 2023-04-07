@@ -140,6 +140,43 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_import_flow_province_no_conflict(hass: HomeAssistant) -> None:
+    """Test import of yaml with province."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Workday Sensor",
+            "country": "DE",
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "add_holidays": [],
+            "remove_holidays": [],
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_NAME: "Workday sensor 2",
+            CONF_COUNTRY: "DE",
+            CONF_PROVINCE: "BW",
+            CONF_EXCLUDES: ["sat", "sun", "holiday"],
+            CONF_OFFSET: 0,
+            CONF_WORKDAYS: ["mon", "tue", "wed", "thu", "fri"],
+            CONF_ADD_HOLIDAYS: [],
+            CONF_REMOVE_HOLIDAYS: [],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
 async def test_options_form(hass: HomeAssistant) -> None:
     """Test we get the form in options."""
 

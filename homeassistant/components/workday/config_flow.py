@@ -162,6 +162,9 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ADD_HOLIDAYS: config[CONF_ADD_HOLIDAYS],
             CONF_REMOVE_HOLIDAYS: config[CONF_REMOVE_HOLIDAYS],
         }
+        if province := config.get(CONF_PROVINCE):
+            abort_match[CONF_PROVINCE] = province
+
         self._async_abort_entries_match(abort_match)
         return await self.async_step_options(user_input=config)
 
@@ -206,6 +209,8 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
                 CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
             }
+            if province := combined_input.get(CONF_PROVINCE):
+                abort_match[CONF_PROVINCE] = province
 
             self._async_abort_entries_match(abort_match)
             if not errors:
