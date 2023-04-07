@@ -166,7 +166,9 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             abort_match[CONF_PROVINCE] = province
 
         self._async_abort_entries_match(abort_match)
-        return await self.async_step_options(user_input=config)
+        return await self.async_step_options(
+            user_input={**config, CONF_PROVINCE: province}
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -214,11 +216,10 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match(abort_match)
             if not errors:
-                name = self.data.get(CONF_NAME, user_input.get(CONF_NAME))
                 return self.async_create_entry(
-                    title=name,
+                    title=combined_input[CONF_NAME],
                     data={},
-                    options={**self.data, **user_input},
+                    options=combined_input,
                 )
 
         schema = await self.hass.async_add_executor_job(

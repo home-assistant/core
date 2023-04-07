@@ -102,10 +102,7 @@ async def async_setup_platform(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={
-                **config,
-                CONF_PROVINCE: config.get(CONF_PROVINCE),
-            },
+            data=config,
         )
     )
 
