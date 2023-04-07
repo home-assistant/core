@@ -824,7 +824,7 @@ class HomeAssistant:
                 and (args := handle._args)  # pylint: disable=[protected-access]
                 and getattr(
                     args[0],
-                    "cancel_on_hass_stop",
+                    "cancel_on_shutdown",
                     None,
                 )
             ):
