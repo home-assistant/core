@@ -217,20 +217,19 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         entity_id, "*", {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.energy_bill_midpeak")
+    state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
-    assert state.state == "0.123"
+    assert state.state == "3"
 
     # test unavailable source
     hass.states.async_set(
         entity_id,
         STATE_UNAVAILABLE,
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.energy_bill_midpeak")
+    state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
-    assert state.state == "0.123"
+    assert state.state == "unavailable"
 
 
 @pytest.mark.parametrize(

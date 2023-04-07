@@ -424,6 +424,7 @@ class UtilityMeterSensor(RestoreSensor):
             source_state := self.hass.states.get(self._sensor_source_id)
         ) is None or source_state.state == STATE_UNAVAILABLE:
             self._attr_available = False
+            self.async_write_ha_state()
             return
 
         self._attr_available = True
