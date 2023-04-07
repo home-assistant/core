@@ -9,7 +9,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .error import PipelineNotFound
-from .pipeline import (  # pylint: disable=unused-import  # noqa: F401
+from .pipeline import (
     Pipeline,
     PipelineEvent,
     PipelineEventCallback,
@@ -26,6 +26,7 @@ __all__ = (
     "DOMAIN",
     "async_setup",
     "async_pipeline_from_audio_stream",
+    "Pipeline",
     "PipelineEvent",
     "PipelineEventType",
 )
