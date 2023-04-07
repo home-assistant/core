@@ -1,4 +1,6 @@
 """Define tests for the GeoJSON Events config flow."""
+from datetime import timedelta
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -63,7 +65,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_SCAN_INTERVAL: 240,
+        CONF_SCAN_INTERVAL: timedelta(minutes=4),
     }
 
     result = await hass.config_entries.flow.async_init(
