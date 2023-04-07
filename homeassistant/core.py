@@ -819,10 +819,14 @@ class HomeAssistant:
         # pylint: disable-next=[protected-access]
         handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
         for handle in handles:
-            if not handle.cancelled() and getattr(
-                handle._args[0],  # pylint: disable=[protected-access]
-                "cancel_on_hass_stop",
-                None,
+            if (
+                not handle.cancelled()
+                and (args := handle._args)  # pylint: disable=[protected-access]
+                and getattr(
+                    args[0],
+                    "cancel_on_hass_stop",
+                    None,
+                )
             ):
                 handle.cancel()
 
