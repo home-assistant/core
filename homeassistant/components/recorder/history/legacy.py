@@ -341,9 +341,7 @@ def get_significant_states_with_session(
         significant_changes_only,
         no_attributes,
     )
-    states = execute_stmt_lambda_element(
-        session, stmt, None if entity_ids else start_time, end_time
-    )
+    states = execute_stmt_lambda_element(session, stmt, None, end_time)
     return _sorted_states_to_dict(
         hass,
         session,
@@ -394,7 +392,7 @@ def _state_changed_during_period_stmt(
     schema_version: int,
     start_time: datetime,
     end_time: datetime | None,
-    entity_id: str | None,
+    entity_id: str,
     no_attributes: bool,
     descending: bool,
     limit: int | None,
@@ -425,8 +423,7 @@ def _state_changed_during_period_stmt(
             stmt += lambda q: q.filter(States.last_updated_ts < end_time_ts)
         else:
             stmt += lambda q: q.filter(States.last_updated < end_time)
-    if entity_id:
-        stmt += lambda q: q.filter(States.entity_id == entity_id)
+    stmt += lambda q: q.filter(States.entity_id == entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -472,9 +469,7 @@ def state_changes_during_period(
             descending,
             limit,
         )
-        states = execute_stmt_lambda_element(
-            session, stmt, None if entity_id else start_time, end_time
-        )
+        states = execute_stmt_lambda_element(session, stmt, None, end_time)
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
@@ -632,7 +627,7 @@ def _get_rows_with_session(
 ) -> Iterable[Row]:
     """Return the states at a specific point in time."""
     schema_version = _schema_version(hass)
-    if entity_ids and len(entity_ids) == 1:
+    if len(entity_ids) == 1:
         return execute_stmt_lambda_element(
             session,
             _get_single_entity_states_stmt(
@@ -761,7 +756,7 @@ def _sorted_states_to_dict(
         elapsed = time.perf_counter() - timer_start
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
-    if entity_ids and len(entity_ids) == 1:
+    if len(entity_ids) == 1:
         states_iter: Iterable[tuple[str, Iterator[Row]]] = (
             (entity_ids[0], iter(states)),
         )

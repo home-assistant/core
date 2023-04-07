@@ -207,9 +207,7 @@ def get_significant_states_with_session(
         significant_changes_only,
         no_attributes,
     )
-    states = execute_stmt_lambda_element(
-        session, stmt, None if entity_ids else start_time, end_time
-    )
+    states = execute_stmt_lambda_element(session, stmt, None, end_time)
     return _sorted_states_to_dict(
         hass,
         session,
@@ -309,11 +307,9 @@ def state_changes_during_period(
 
     with session_scope(hass=hass, read_only=True) as session:
         metadata_id: int | None = None
-        entity_id_to_metadata_id = None
-        if entity_id:
-            instance = recorder.get_instance(hass)
-            metadata_id = instance.states_meta_manager.get(entity_id, session, False)
-            entity_id_to_metadata_id = {entity_id: metadata_id}
+        instance = recorder.get_instance(hass)
+        metadata_id = instance.states_meta_manager.get(entity_id, session, False)
+        entity_id_to_metadata_id = {entity_id: metadata_id}
         stmt = _state_changed_during_period_stmt(
             start_time,
             end_time,
@@ -322,9 +318,7 @@ def state_changes_during_period(
             descending,
             limit,
         )
-        states = execute_stmt_lambda_element(
-            session, stmt, None if entity_id else start_time, end_time
-        )
+        states = execute_stmt_lambda_element(session, stmt, None, end_time)
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
@@ -463,13 +457,13 @@ def _get_rows_with_session(
     hass: HomeAssistant,
     session: Session,
     utc_point_in_time: datetime,
-    entity_ids: list[str] | None = None,
+    entity_ids: list[str],
     entity_id_to_metadata_id: dict[str, int | None] | None = None,
     run: RecorderRuns | None = None,
     no_attributes: bool = False,
 ) -> Iterable[Row]:
     """Return the states at a specific point in time."""
-    if entity_ids and len(entity_ids) == 1:
+    if len(entity_ids) == 1:
         if not entity_id_to_metadata_id or not (
             metadata_id := entity_id_to_metadata_id.get(entity_ids[0])
         ):
@@ -530,7 +524,7 @@ def _sorted_states_to_dict(
     states: Iterable[Row],
     start_time: datetime,
     entity_ids: list[str],
-    entity_id_to_metadata_id: dict[str, int | None] | None,
+    entity_id_to_metadata_id: dict[str, int | None],
     include_start_time_state: bool = True,
     minimal_response: bool = False,
     no_attributes: bool = False,
@@ -568,11 +562,9 @@ def _sorted_states_to_dict(
     for ent_id in entity_ids:
         result[ent_id] = []
 
-    if entity_id_to_metadata_id:
-        metadata_id_to_entity_id = {
-            v: k for k, v in entity_id_to_metadata_id.items() if v is not None
-        }
-
+    metadata_id_to_entity_id = {
+        v: k for k, v in entity_id_to_metadata_id.items() if v is not None
+    }
     # Get the states at the start time
     initial_states: dict[int, Row] = {}
     if include_start_time_state:
@@ -588,7 +580,7 @@ def _sorted_states_to_dict(
             )
         }
 
-    if entity_ids and len(entity_ids) == 1:
+    if len(entity_ids) == 1:
         if not entity_id_to_metadata_id or not (
             metadata_id := entity_id_to_metadata_id.get(entity_ids[0])
         ):
