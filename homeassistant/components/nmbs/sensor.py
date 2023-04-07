@@ -165,16 +165,18 @@ class NMBSLiveBoard(SensorEntity):
         liveboard = self._api_client.get_liveboard(self._station)
 
         if liveboard == API_FAILURE:
-            _LOGGER.warning("API fails in NMBSLiveBoard")
+            _LOGGER.warning("API failed in NMBSLiveBoard")
             return
 
-        try:
-            if liveboard.get("departures").get("number") == "0":
-                return
-            next_departure = liveboard["departures"]["departure"][0]
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.debug("%r in NMBSLiveBoard | API return data: %r", exc, liveboard)
+        if not (departures := liveboard.get("departures")):
+            _LOGGER.warning("API returned invalid departures: %r", liveboard)
             return
+
+        _LOGGER.debug("API returned departures: %r", departures)
+        if departures["number"] == "0":
+            # No trains are scheduled
+            return
+        next_departure = departures["departure"][0]
 
         self._attrs = next_departure
         self._state = (
@@ -294,17 +296,18 @@ class NMBSSensor(SensorEntity):
         )
 
         if connections == API_FAILURE:
-            _LOGGER.warning("API fails in NMBSSensor")
+            _LOGGER.warning("API failed in NMBSSensor")
             return
 
-        try:
-            if int(connections["connection"][0]["departure"]["left"]) > 0:
-                next_connection = connections["connection"][1]
-            else:
-                next_connection = connections["connection"][0]
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.debug("%r in NMBSSensor | API return data: %r", exc, connections)
+        if not (connection := connections.get("connection")):
+            _LOGGER.warning("API returned invalid connection: %r", connections)
             return
+
+        _LOGGER.debug("API returned connection: %r", connection)
+        if int(connection[0]["departure"]["left"]) > 0:
+            next_connection = connection[1]
+        else:
+            next_connection = connection[0]
 
         self._attrs = next_connection
 
