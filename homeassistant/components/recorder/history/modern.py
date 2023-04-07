@@ -121,7 +121,7 @@ def get_significant_states(
 def _significant_states_stmt(
     start_time: datetime,
     end_time: datetime | None,
-    metadata_ids: list[int] | None,
+    metadata_ids: list[int],
     metadata_ids_in_significant_domains: list[int],
     significant_changes_only: bool,
     no_attributes: bool,
@@ -130,7 +130,7 @@ def _significant_states_stmt(
     stmt = _lambda_stmt_and_join_attributes(
         no_attributes, include_last_changed=not significant_changes_only
     )
-    if metadata_ids and significant_changes_only:
+    if significant_changes_only:
         # Since we are filtering on entity_id (metadata_id) we can avoid
         # the join of the states_meta table since we already know which
         # metadata_ids are in the significant domains.
@@ -139,11 +139,8 @@ def _significant_states_stmt(
             | (States.last_changed_ts == States.last_updated_ts)
             | States.last_changed_ts.is_(None)
         )
-    if metadata_ids:
-        stmt += lambda q: q.filter(
-            # https://github.com/python/mypy/issues/2608
-            States.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
-        )
+    else:
+        stmt += lambda q: q.filter(States.metadata_id.in_(metadata_ids))
     start_time_ts = start_time.timestamp()
     stmt += lambda q: q.filter(States.last_updated_ts > start_time_ts)
     if end_time:
@@ -188,21 +185,20 @@ def get_significant_states_with_session(
     metadata_ids: list[int] | None = None
     entity_id_to_metadata_id: dict[str, int | None] | None = None
     metadata_ids_in_significant_domains: list[int] = []
-    if entity_ids:
-        instance = recorder.get_instance(hass)
-        if not (
-            entity_id_to_metadata_id := instance.states_meta_manager.get_many(
-                entity_ids, session, False
-            )
-        ) or not (metadata_ids := extract_metadata_ids(entity_id_to_metadata_id)):
-            return {}
-        if significant_changes_only:
-            metadata_ids_in_significant_domains = [
-                metadata_id
-                for entity_id, metadata_id in entity_id_to_metadata_id.items()
-                if metadata_id is not None
-                and split_entity_id(entity_id)[0] in SIGNIFICANT_DOMAINS
-            ]
+    instance = recorder.get_instance(hass)
+    if not (
+        entity_id_to_metadata_id := instance.states_meta_manager.get_many(
+            entity_ids, session, False
+        )
+    ) or not (metadata_ids := extract_metadata_ids(entity_id_to_metadata_id)):
+        return {}
+    if significant_changes_only:
+        metadata_ids_in_significant_domains = [
+            metadata_id
+            for entity_id, metadata_id in entity_id_to_metadata_id.items()
+            if metadata_id is not None
+            and split_entity_id(entity_id)[0] in SIGNIFICANT_DOMAINS
+        ]
     stmt = _significant_states_stmt(
         start_time,
         end_time,
@@ -307,8 +303,9 @@ def state_changes_during_period(
     include_start_time_state: bool = True,
 ) -> MutableMapping[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
-    entity_id = entity_id.lower() if entity_id is not None else None
-    entity_ids = [entity_id] if entity_id is not None else None
+    if not entity_id:
+        raise ValueError("entity_id must be provided")
+    entity_ids = [entity_id.lower()]
 
     with session_scope(hass=hass, read_only=True) as session:
         metadata_id: int | None = None
@@ -532,7 +529,7 @@ def _sorted_states_to_dict(
     session: Session,
     states: Iterable[Row],
     start_time: datetime,
-    entity_ids: list[str] | None,
+    entity_ids: list[str],
     entity_id_to_metadata_id: dict[str, int | None] | None,
     include_start_time_state: bool = True,
     minimal_response: bool = False,
@@ -568,18 +565,13 @@ def _sorted_states_to_dict(
     metadata_id_idx = field_map["metadata_id"]
 
     # Set all entity IDs to empty lists in result set to maintain the order
-    if entity_ids is not None:
-        for ent_id in entity_ids:
-            result[ent_id] = []
+    for ent_id in entity_ids:
+        result[ent_id] = []
 
-        if entity_id_to_metadata_id:
-            metadata_id_to_entity_id = {
-                v: k for k, v in entity_id_to_metadata_id.items() if v is not None
-            }
-    else:
-        metadata_id_to_entity_id = recorder.get_instance(
-            hass
-        ).states_meta_manager.get_metadata_id_to_entity_id(session)
+    if entity_id_to_metadata_id:
+        metadata_id_to_entity_id = {
+            v: k for k, v in entity_id_to_metadata_id.items() if v is not None
+        }
 
     # Get the states at the start time
     initial_states: dict[int, Row] = {}
