@@ -37,7 +37,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     PLATFORM_FORMAT,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
@@ -652,7 +652,13 @@ class SpeechManager:
             self.mem_cache.pop(cache_key, None)
 
         async_call_later(
-            self.hass, self.time_memory, async_remove_from_mem, cancel_on_hass_stop=True
+            self.hass,
+            self.time_memory,
+            HassJob(
+                async_remove_from_mem,
+                name="tts remove_from_mem",
+                cancel_on_shutdown=True,
+            ),
         )
 
     async def async_read_tts(self, filename: str) -> tuple[str | None, bytes]:
