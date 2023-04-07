@@ -155,17 +155,12 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import a configuration from config.yaml."""
 
         abort_match = {
-            k: v
-            for k, v in config.items()
-            if k
-            in {
-                CONF_COUNTRY,
-                CONF_EXCLUDES,
-                CONF_OFFSET,
-                CONF_WORKDAYS,
-                CONF_ADD_HOLIDAYS,
-                CONF_REMOVE_HOLIDAYS,
-            }
+            CONF_COUNTRY: config[CONF_COUNTRY],
+            CONF_EXCLUDES: config[CONF_EXCLUDES],
+            CONF_OFFSET: config[CONF_OFFSET],
+            CONF_WORKDAYS: config[CONF_WORKDAYS],
+            CONF_ADD_HOLIDAYS: config[CONF_ADD_HOLIDAYS],
+            CONF_REMOVE_HOLIDAYS: config[CONF_REMOVE_HOLIDAYS],
         }
         self._async_abort_entries_match(abort_match)
         return await self.async_step_options(user_input=config)
@@ -204,18 +199,14 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.async_abort(reason="incorrect_province")
 
             abort_match = {
-                k: v
-                for k, v in combined_input.items()
-                if k
-                in {
-                    CONF_COUNTRY,
-                    CONF_EXCLUDES,
-                    CONF_OFFSET,
-                    CONF_WORKDAYS,
-                    CONF_ADD_HOLIDAYS,
-                    CONF_REMOVE_HOLIDAYS,
-                }
+                CONF_COUNTRY: combined_input[CONF_COUNTRY],
+                CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
+                CONF_OFFSET: combined_input[CONF_OFFSET],
+                CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
+                CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
+                CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
             }
+
             self._async_abort_entries_match(abort_match)
             if not errors:
                 name = self.data.get(CONF_NAME, user_input.get(CONF_NAME))
