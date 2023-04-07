@@ -12,7 +12,7 @@ def bypass_api_fixture() -> None:
     with patch("homeassistant.components.roborock.RoborockMqttClient.connect"), patch(
         "homeassistant.components.roborock.RoborockMqttClient.send_command"
     ), patch(
-        "homeassistant.components.roborock.RoborockLocalClient.get_prop",
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
         return_value=PROP,
     ):
         yield
