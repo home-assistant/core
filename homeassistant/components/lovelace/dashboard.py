@@ -217,7 +217,7 @@ def _config_info(mode, config):
     }
 
 
-class DashboardsCollection(collection.DictStorageCollection):
+class DashboardsCollection(collection.LegacyDictStorageCollection):
     """Collection of dashboards."""
 
     CREATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
@@ -229,9 +229,11 @@ class DashboardsCollection(collection.DictStorageCollection):
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
         )
 
-    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
+    async def _async_load_data(  # type: ignore[override]
+        self,
+    ) -> collection.LegacySerializedStorageCollection | None:
         """Load the data."""
-        if (data := await self.store.async_load()) is None:
+        if (data := await super()._async_load_data()) is None:
             return data
 
         updated = False
@@ -242,7 +244,7 @@ class DashboardsCollection(collection.DictStorageCollection):
                 item[CONF_URL_PATH] = f"lovelace-{item[CONF_URL_PATH]}"
 
         if updated:
-            await self.store.async_save(data)
+            await self.store.async_save(data)  # type: ignore[arg-type]
 
         return data
 

@@ -117,9 +117,9 @@ def test_id_manager() -> None:
 async def test_observable_collection() -> None:
     """Test observerable collection."""
     coll = collection.ObservableCollection(None)
-    assert coll.async_items() == []
+    assert coll.async_items() == {}
     coll.data["bla"] = 1
-    assert coll.async_items() == [1]
+    assert coll.async_items() == {"bla": 1}
 
     changes = track_changes(coll)
     await coll.notify_changes(
@@ -195,6 +195,69 @@ async def test_storage_collection(hass: HomeAssistant) -> None:
     store = storage.Store(hass, 1, "test-data")
     await store.async_save(
         {
+            "items": {
+                "mock-1": {"name": "Mock 1", "data": 1},
+                "mock-2": {"name": "Mock 2", "data": 2},
+            }
+        }
+    )
+    id_manager = collection.IDManager()
+    coll = MockStorageCollection(store, id_manager)
+    changes = track_changes(coll)
+
+    await coll.async_load()
+    assert id_manager.has_id("mock-1")
+    assert id_manager.has_id("mock-2")
+    assert len(changes) == 2
+    assert changes[0] == (
+        collection.CHANGE_ADDED,
+        "mock-1",
+        {"name": "Mock 1", "data": 1},
+    )
+    assert changes[1] == (
+        collection.CHANGE_ADDED,
+        "mock-2",
+        {"name": "Mock 2", "data": 2},
+    )
+
+    item_id, item = await coll.async_create_item({"name": "Mock 3"})
+    assert item_id == "mock_3"
+    assert len(changes) == 3
+    assert changes[2] == (
+        collection.CHANGE_ADDED,
+        "mock_3",
+        {"name": "Mock 3"},
+    )
+
+    updated_item = await coll.async_update_item("mock-2", {"name": "Mock 2 updated"})
+    assert id_manager.has_id("mock-2")
+    assert updated_item == {"name": "Mock 2 updated", "data": 2}
+    assert len(changes) == 4
+    assert changes[3] == (collection.CHANGE_UPDATED, "mock-2", updated_item)
+
+    with pytest.raises(ValueError):
+        await coll.async_update_item("mock-2", {"id": "mock-2-updated"})
+
+    assert id_manager.has_id("mock-2")
+    assert not id_manager.has_id("mock-2-updated")
+    assert len(changes) == 4
+
+    await flush_store(store)
+
+    assert await storage.Store(hass, 1, "test-data").async_load() == {
+        "items": {
+            "mock-1": {"name": "Mock 1", "data": 1},
+            "mock-2": {"name": "Mock 2 updated", "data": 2},
+            "mock_3": {"name": "Mock 3"},
+        }
+    }
+
+
+async def test_storage_collection_migration(hass: HomeAssistant) -> None:
+    """Test storage collection migration from old store format."""
+    store = storage.Store(hass, 1, "test-data")
+    await store.async_save(
+        {
             "items": [
                 {"id": "mock-1", "name": "Mock 1", "data": 1},
                 {"id": "mock-2", "name": "Mock 2", "data": 2},
@@ -212,44 +275,19 @@ async def test_storage_collection(hass: HomeAssistant) -> None:
     assert changes[0] == (
         collection.CHANGE_ADDED,
         "mock-1",
-        {"id": "mock-1", "name": "Mock 1", "data": 1},
+        {"name": "Mock 1", "data": 1},
     )
     assert changes[1] == (
         collection.CHANGE_ADDED,
         "mock-2",
-        {"id": "mock-2", "name": "Mock 2", "data": 2},
+        {"name": "Mock 2", "data": 2},
     )
-
-    item = await coll.async_create_item({"name": "Mock 3"})
-    assert item["id"] == "mock_3"
-    assert len(changes) == 3
-    assert changes[2] == (
-        collection.CHANGE_ADDED,
-        "mock_3",
-        {"id": "mock_3", "name": "Mock 3"},
-    )
-
-    updated_item = await coll.async_update_item("mock-2", {"name": "Mock 2 updated"})
-    assert id_manager.has_id("mock-2")
-    assert updated_item == {"id": "mock-2", "name": "Mock 2 updated", "data": 2}
-    assert len(changes) == 4
-    assert changes[3] == (collection.CHANGE_UPDATED, "mock-2", updated_item)
-
-    with pytest.raises(ValueError):
-        await coll.async_update_item("mock-2", {"id": "mock-2-updated"})
-
-    assert id_manager.has_id("mock-2")
-    assert not id_manager.has_id("mock-2-updated")
-    assert len(changes) == 4
-
-    await flush_store(store)
 
     assert await storage.Store(hass, 1, "test-data").async_load() == {
-        "items": [
-            {"id": "mock-1", "name": "Mock 1", "data": 1},
-            {"id": "mock-2", "name": "Mock 2 updated", "data": 2},
-            {"id": "mock_3", "name": "Mock 3"},
-        ]
+        "items": {
+            "mock-1": {"name": "Mock 1", "data": 1},
+            "mock-2": {"name": "Mock 2", "data": 2},
+        }
     }
 
 
@@ -477,6 +515,7 @@ async def test_storage_collection_websocket(
         "immutable_string": "no-changes",
     }
     assert len(changes) == 1
+    response["result"].pop("id")
     assert changes[0] == (collection.CHANGE_ADDED, "initial_name", response["result"])
 
     # List
@@ -537,6 +576,7 @@ async def test_storage_collection_websocket(
         "immutable_string": "no-changes",
     }
     assert len(changes) == 2
+    response["result"].pop("id")
     assert changes[1] == (collection.CHANGE_UPDATED, "initial_name", response["result"])
 
     # Delete invalid ID
@@ -560,7 +600,6 @@ async def test_storage_collection_websocket(
         collection.CHANGE_REMOVED,
         "initial_name",
         {
-            "id": "initial_name",
             "immutable_string": "no-changes",
             "name": "Updated name",
         },

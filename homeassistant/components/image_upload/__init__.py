@@ -57,7 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class ImageStorageCollection(collection.DictStorageCollection):
+class ImageStorageCollection(collection.LegacyDictStorageCollection):
     """Image collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -156,7 +156,7 @@ class ImageUploadView(HomeAssistantView):
         request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
 
         data = await request.post()
-        item = await request.app["hass"].data[DOMAIN].async_create_item(data)
+        _, item = await request.app["hass"].data[DOMAIN].async_create_item(data)
         return self.json(item)
 
 

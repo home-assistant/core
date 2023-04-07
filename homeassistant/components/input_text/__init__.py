@@ -164,7 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class InputTextStorageCollection(collection.DictStorageCollection):
+class InputTextStorageCollection(collection.LegacyDictStorageCollection):
     """Input storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_text))

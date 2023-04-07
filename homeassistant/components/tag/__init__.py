@@ -59,7 +59,7 @@ class TagIDManager(collection.IDManager):
         return suggestion
 
 
-class TagStorageCollection(collection.DictStorageCollection):
+class TagStorageCollection(collection.LegacyDictStorageCollection):
     """Tag collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)

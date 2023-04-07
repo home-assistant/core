@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_DOMAIN,
-    CONF_ID,
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -125,10 +124,10 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
     def async_client_credentials(self, domain: str) -> dict[str, ClientCredential]:
         """Return ClientCredentials in storage for the specified domain."""
         credentials = {}
-        for item in self.async_items():
+        for item_id, item in self.data.items():
             if item[CONF_DOMAIN] != domain:
                 continue
-            auth_domain = item.get(CONF_AUTH_DOMAIN, item[CONF_ID])
+            auth_domain = item.get(CONF_AUTH_DOMAIN, item_id)
             credentials[auth_domain] = ClientCredential(
                 client_id=item[CONF_CLIENT_ID],
                 client_secret=item[CONF_CLIENT_SECRET],
@@ -244,8 +243,7 @@ async def _async_config_entry_app_credentials(
         return None
 
     storage_collection = hass.data[DOMAIN][DATA_STORAGE]
-    for item in storage_collection.async_items():
-        item_id = item[CONF_ID]
+    for item_id, item in storage_collection.async_items().items():
         if (
             item[CONF_DOMAIN] == config_entry.domain
             and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain

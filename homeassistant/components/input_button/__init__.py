@@ -56,7 +56,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-class InputButtonStorageCollection(collection.DictStorageCollection):
+class InputButtonStorageCollection(collection.LegacyDictStorageCollection):
     """Input button collection stored in storage."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)

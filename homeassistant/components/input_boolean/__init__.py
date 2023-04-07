@@ -65,7 +65,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-class InputBooleanStorageCollection(collection.DictStorageCollection):
+class InputBooleanStorageCollection(collection.LegacyDictStorageCollection):
     """Input boolean collection stored in storage."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)

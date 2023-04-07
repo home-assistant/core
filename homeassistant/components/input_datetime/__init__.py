@@ -203,7 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class DateTimeStorageCollection(collection.DictStorageCollection):
+class DateTimeStorageCollection(collection.LegacyDictStorageCollection):
     """Input storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, has_date_or_time))

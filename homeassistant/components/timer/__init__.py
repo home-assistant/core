@@ -162,7 +162,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class TimerStorageCollection(collection.DictStorageCollection):
+class TimerStorageCollection(collection.LegacyDictStorageCollection):
     """Timer storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)

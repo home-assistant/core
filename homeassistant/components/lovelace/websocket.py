@@ -64,7 +64,7 @@ async def websocket_lovelace_resources(
         await resources.async_load()
         resources.loaded = True
 
-    connection.send_result(msg["id"], resources.async_items())
+    connection.send_result(msg["id"], resources.async_values())
 
 
 @websocket_api.websocket_command(

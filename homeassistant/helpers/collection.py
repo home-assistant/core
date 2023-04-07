@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from itertools import groupby
 import logging
 from operator import attrgetter
-from typing import Any, Generic, TypedDict, TypeVar
+from typing import Any, Generic, TypedDict, TypeVar, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -138,7 +138,12 @@ class ObservableCollection(ABC, Generic[_ItemT]):
         self.id_manager.add_collection(self.data)
 
     @callback
-    def async_items(self) -> list[_ItemT]:
+    def async_items(self) -> dict[str, _ItemT]:
+        """Return a shallow copy of the collection."""
+        return dict(self.data)
+
+    @callback
+    def async_values(self) -> list[_ItemT]:
         """Return list of items in collection."""
         return list(self.data.values())
 
@@ -229,7 +234,19 @@ class YamlCollection(ObservableCollection[dict]):
 class SerializedStorageCollection(TypedDict):
     """Serialized storage collection."""
 
+    items: list[dict[str, Any]] | dict[str, dict[str, Any]]
+
+
+class LegacySerializedStorageCollection(TypedDict):
+    """Serialized storage collection."""
+
     items: list[dict[str, Any]]
+
+
+class ModernSerializedStorageCollection(TypedDict):
+    """Serialized storage collection."""
+
+    items: dict[str, dict[str, Any]]
 
 
 class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
@@ -258,20 +275,29 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
 
     async def _async_load_data(self) -> _StoreT | None:
         """Load the data."""
-        return await self.store.async_load()
+        if (raw_storage := await self.store.async_load()) is None:
+            return raw_storage
+
+        if isinstance(raw_storage["items"], list):
+            raw_storage["items"] = {
+                item.pop(CONF_ID): item for item in raw_storage["items"]
+            }
+            await self.store.async_save(raw_storage)
+
+        return raw_storage
 
     async def async_load(self) -> None:
-        """Load the storage Manager."""
+        """Load the collection."""
         if not (raw_storage := await self._async_load_data()):
             return
 
-        for item in raw_storage["items"]:
-            self.data[item[CONF_ID]] = self._deserialize_item(item)
+        for item_id, item in raw_storage["items"].items():
+            self.data[item_id] = self._deserialize_item(item)
 
         await self.notify_changes(
             [
-                CollectionChangeSet(CHANGE_ADDED, item[CONF_ID], item)
-                for item in raw_storage["items"]
+                CollectionChangeSet(CHANGE_ADDED, item_id, item)
+                for item_id, item in raw_storage["items"].items()
             ]
         )
 
@@ -297,13 +323,10 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
         """Create an item from its serialized representation."""
 
     @abstractmethod
-    def _serialize_item(self, item_id: str, item: _ItemT) -> dict:
-        """Return the serialized representation of an item for storing.
+    def _serialize_item(self, item: _ItemT) -> dict:
+        """Return the serialized representation of an item for storing."""
 
-        The serialized representation must include the item_id in the "id" key.
-        """
-
-    async def async_create_item(self, data: dict) -> _ItemT:
+    async def async_create_item(self, data: dict) -> tuple[str, _ItemT]:
         """Create a new item."""
         validated_data = await self._process_create_data(data)
         item_id = self.id_manager.generate_id(self._get_suggested_id(validated_data))
@@ -311,7 +334,7 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
         self.data[item_id] = item
         self._async_schedule_save()
         await self.notify_changes([CollectionChangeSet(CHANGE_ADDED, item_id, item)])
-        return item
+        return item_id, item
 
     async def async_update_item(self, item_id: str, updates: dict) -> _ItemT:
         """Update item."""
@@ -353,10 +376,10 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
     def _base_data_to_save(self) -> SerializedStorageCollection:
         """Return JSON-compatible data for storing to file."""
         return {
-            "items": [
-                self._serialize_item(item_id, item)
+            "items": {
+                item_id: self._serialize_item(item)
                 for item_id, item in self.data.items()
-            ]
+            }
         }
 
     @abstractmethod
@@ -370,13 +393,13 @@ class DictStorageCollection(StorageCollection[dict, SerializedStorageCollection]
 
     def _create_item(self, item_id: str, data: dict) -> dict:
         """Create an item from its validated, serialized representation."""
-        return {CONF_ID: item_id} | data
+        return data
 
     def _deserialize_item(self, data: dict) -> dict:
         """Create an item from its validated, serialized representation."""
         return data
 
-    def _serialize_item(self, item_id: str, item: dict) -> dict:
+    def _serialize_item(self, item: dict) -> dict:
         """Return the serialized representation of an item for storing."""
         return item
 
@@ -384,6 +407,43 @@ class DictStorageCollection(StorageCollection[dict, SerializedStorageCollection]
     def _data_to_save(self) -> SerializedStorageCollection:
         """Return JSON-compatible date for storing to file."""
         return self._base_data_to_save()
+
+
+class LegacyDictStorageCollection(DictStorageCollection):
+    """A specialized StorageCollection where the items are untyped dicts."""
+
+    async def _async_load_data(self) -> LegacySerializedStorageCollection | None:  # type: ignore[override]
+        """Load the data."""
+        return cast(
+            LegacySerializedStorageCollection | None,
+            await self.store.async_load(),
+        )
+
+    async def async_load(self) -> None:
+        """Load the collection."""
+        raw_storage = await self._async_load_data()
+
+        if raw_storage is None:
+            raw_storage = {"items": []}
+
+        for item in raw_storage["items"]:
+            self.data[item[CONF_ID]] = self._deserialize_item(item)
+
+        await self.notify_changes(
+            [
+                CollectionChangeSet(CHANGE_ADDED, item[CONF_ID], item)
+                for item in raw_storage["items"]
+            ]
+        )
+
+    def _create_item(self, item_id: str, data: dict) -> dict:
+        """Create an item from its validated, serialized representation."""
+        return {CONF_ID: item_id} | data
+
+    @callback
+    def _data_to_save(self) -> SerializedStorageCollection:
+        """Return JSON-compatible data for storing to file."""
+        return {"items": [self._serialize_item(item) for item in self.data.values()]}
 
 
 class IDLessCollection(YamlCollection):
@@ -583,7 +643,13 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
         """List items."""
-        connection.send_result(msg["id"], self.storage_collection.async_items())
+        connection.send_result(
+            msg["id"],
+            [
+                {CONF_ID: item_id} | item
+                for item_id, item in self.storage_collection.data.items()
+            ],
+        )
 
     async def ws_create_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -593,8 +659,8 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
             data = dict(msg)
             data.pop("id")
             data.pop("type")
-            item = await self.storage_collection.async_create_item(data)
-            connection.send_result(msg["id"], item)
+            item_id, item = await self.storage_collection.async_create_item(data)
+            connection.send_result(msg["id"], {CONF_ID: item_id} | item)
         except vol.Invalid as err:
             connection.send_error(
                 msg["id"],
@@ -617,7 +683,7 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
 
         try:
             item = await self.storage_collection.async_update_item(item_id, data)
-            connection.send_result(msg_id, item)
+            connection.send_result(msg_id, {CONF_ID: item_id} | item)
         except ItemNotFound:
             connection.send_error(
                 msg["id"],

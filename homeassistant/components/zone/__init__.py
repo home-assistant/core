@@ -163,7 +163,7 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
     return zone_dist - radius < cast(float, zone.attributes[ATTR_RADIUS])
 
 
-class ZoneStorageCollection(collection.DictStorageCollection):
+class ZoneStorageCollection(collection.LegacyDictStorageCollection):
     """Zone collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)

@@ -139,7 +139,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class CounterStorageCollection(collection.DictStorageCollection):
+class CounterStorageCollection(collection.LegacyDictStorageCollection):
     """Input storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)

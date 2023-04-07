@@ -170,7 +170,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class NumberStorageCollection(collection.DictStorageCollection):
+class NumberStorageCollection(collection.LegacyDictStorageCollection):
     """Input storage based collection."""
 
     SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_number))
@@ -184,7 +184,9 @@ class NumberStorageCollection(collection.DictStorageCollection):
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
+    async def _async_load_data(  # type: ignore[override]
+        self,
+    ) -> collection.LegacySerializedStorageCollection | None:
         """Load the data.
 
         A past bug caused frontend to add initial value to all input numbers.

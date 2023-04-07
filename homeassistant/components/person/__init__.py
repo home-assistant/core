@@ -109,7 +109,7 @@ async def async_add_user_device_tracker(
     """Add a device tracker to a person linked to a user."""
     coll: PersonStorageCollection = hass.data[DOMAIN][1]
 
-    for person in coll.async_items():
+    for person in coll.async_values():
         if person.get(ATTR_USER_ID) != user_id:
             continue
 
@@ -188,7 +188,7 @@ class PersonStore(Store):
         return {"items": old_data["persons"]}
 
 
-class PersonStorageCollection(collection.DictStorageCollection):
+class PersonStorageCollection(collection.LegacyDictStorageCollection):
     """Person collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -204,7 +204,9 @@ class PersonStorageCollection(collection.DictStorageCollection):
         super().__init__(store, id_manager)
         self.yaml_collection = yaml_collection
 
-    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
+    async def _async_load_data(  # type: ignore[override]
+        self,
+    ) -> collection.LegacySerializedStorageCollection | None:
         """Load the data.
 
         A past bug caused onboarding to create invalid person objects.
@@ -286,7 +288,10 @@ class PersonStorageCollection(collection.DictStorageCollection):
         if await self.hass.auth.async_get_user(user_id) is None:
             raise ValueError("User does not exist")
 
-        for persons in (self.data.values(), self.yaml_collection.async_items()):
+        for persons in (
+            self.data.values(),
+            self.yaml_collection.async_values(),
+        ):
             if any(person for person in persons if person.get(CONF_USER_ID) == user_id):
                 raise ValueError("User already taken")
 
@@ -363,7 +368,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _handle_user_removed(event: Event) -> None:
         """Handle a user being removed."""
         user_id = event.data[ATTR_USER_ID]
-        for person in storage_collection.async_items():
+        for person in storage_collection.async_values():
             if person[CONF_USER_ID] == user_id:
                 await storage_collection.async_update_item(
                     person[CONF_ID], {CONF_USER_ID: None}
@@ -556,7 +561,11 @@ def ws_list_person(
     """List persons."""
     yaml, storage, _ = hass.data[DOMAIN]
     connection.send_result(
-        msg[ATTR_ID], {"storage": storage.async_items(), "config": yaml.async_items()}
+        msg[ATTR_ID],
+        {
+            "storage": storage.async_items(),
+            "config": yaml.async_values(),
+        },
     )
 
 

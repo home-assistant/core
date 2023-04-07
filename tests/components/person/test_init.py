@@ -473,7 +473,7 @@ async def test_ws_create(
     )
     resp = await client.receive_json()
 
-    persons = manager.async_items()
+    persons = manager.async_values()
     assert len(persons) == 2
 
     assert resp["success"]
@@ -504,7 +504,7 @@ async def test_ws_create_requires_admin(
     )
     resp = await client.receive_json()
 
-    persons = manager.async_items()
+    persons = manager.async_values()
     assert len(persons) == 1
 
     assert not resp["success"]
@@ -517,7 +517,7 @@ async def test_ws_update(
     manager = hass.data[DOMAIN][1]
 
     client = await hass_ws_client(hass)
-    persons = manager.async_items()
+    persons = manager.async_values()
 
     resp = await client.send_json(
         {
@@ -544,7 +544,7 @@ async def test_ws_update(
     )
     resp = await client.receive_json()
 
-    persons = manager.async_items()
+    persons = manager.async_values()
     assert len(persons) == 1
 
     assert resp["success"]
@@ -570,7 +570,7 @@ async def test_ws_update_require_admin(
     manager = hass.data[DOMAIN][1]
 
     client = await hass_ws_client(hass)
-    original = dict(manager.async_items()[0])
+    original = dict(manager.async_values()[0])
 
     resp = await client.send_json(
         {
@@ -585,7 +585,7 @@ async def test_ws_update_require_admin(
     resp = await client.receive_json()
     assert not resp["success"]
 
-    not_updated = dict(manager.async_items()[0])
+    not_updated = dict(manager.async_values()[0])
     assert original == not_updated
 
 
@@ -596,14 +596,14 @@ async def test_ws_delete(
     manager = hass.data[DOMAIN][1]
 
     client = await hass_ws_client(hass)
-    persons = manager.async_items()
+    persons = manager.async_values()
 
     resp = await client.send_json(
         {"id": 6, "type": "person/delete", "person_id": persons[0]["id"]}
     )
     resp = await client.receive_json()
 
-    persons = manager.async_items()
+    persons = manager.async_values()
     assert len(persons) == 0
 
     assert resp["success"]
@@ -628,7 +628,7 @@ async def test_ws_delete_require_admin(
         {
             "id": 6,
             "type": "person/delete",
-            "person_id": manager.async_items()[0]["id"],
+            "person_id": manager.async_values()[0]["id"],
             "name": "Updated Name",
             "device_trackers": [DEVICE_TRACKER_2],
             "user_id": None,
@@ -637,7 +637,7 @@ async def test_ws_delete_require_admin(
     resp = await client.receive_json()
     assert not resp["success"]
 
-    persons = manager.async_items()
+    persons = manager.async_values()
     assert len(persons) == 1
 
 
@@ -670,7 +670,7 @@ async def test_update_double_user_id(
     await storage_collection.async_create_item(
         {"name": "Hello", "user_id": hass_admin_user.id}
     )
-    person = await storage_collection.async_create_item({"name": "Hello"})
+    _, person = await storage_collection.async_create_item({"name": "Hello"})
 
     with pytest.raises(ValueError):
         await storage_collection.async_update_item(
@@ -680,7 +680,7 @@ async def test_update_double_user_id(
 
 async def test_update_invalid_user_id(hass: HomeAssistant, storage_collection) -> None:
     """Test updating to invalid user ID."""
-    person = await storage_collection.async_create_item({"name": "Hello"})
+    _, person = await storage_collection.async_create_item({"name": "Hello"})
 
     with pytest.raises(ValueError):
         await storage_collection.async_update_item(
@@ -694,7 +694,7 @@ async def test_update_person_when_user_removed(
     """Update person when user is removed."""
     storage_collection = hass.data[DOMAIN][1]
 
-    person = await storage_collection.async_create_item(
+    _, person = await storage_collection.async_create_item(
         {"name": "Hello", "user_id": hass_read_only_user.id}
     )
 
@@ -712,7 +712,7 @@ async def test_removing_device_tracker(hass: HomeAssistant, storage_setup) -> No
         "device_tracker", "mobile_app", "bla", suggested_object_id="pixel"
     )
 
-    person = await storage_collection.async_create_item(
+    _, person = await storage_collection.async_create_item(
         {"name": "Hello", "device_trackers": [entry.entity_id]}
     )
 
@@ -727,7 +727,7 @@ async def test_add_user_device_tracker(
 ) -> None:
     """Test adding a device tracker to a person tied to a user."""
     storage_collection = hass.data[DOMAIN][1]
-    pers = await storage_collection.async_create_item(
+    _, pers = await storage_collection.async_create_item(
         {
             "name": "Hello",
             "user_id": hass_read_only_user.id,

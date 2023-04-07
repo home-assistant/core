@@ -37,15 +37,15 @@ class ResourceYAMLCollection:
 
     async def async_get_info(self):
         """Return the resources info for YAML mode."""
-        return {"resources": len(self.async_items() or [])}
+        return {"resources": len(self.async_values() or [])}
 
     @callback
-    def async_items(self) -> list[dict]:
+    def async_values(self) -> list[dict]:
         """Return list of items in collection."""
         return self.data
 
 
-class ResourceStorageCollection(collection.DictStorageCollection):
+class ResourceStorageCollection(collection.LegacyDictStorageCollection):
     """Collection to store resources."""
 
     loaded = False
@@ -67,9 +67,11 @@ class ResourceStorageCollection(collection.DictStorageCollection):
 
         return {"resources": len(self.async_items() or [])}
 
-    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
+    async def _async_load_data(  # type: ignore[override]
+        self,
+    ) -> collection.LegacySerializedStorageCollection | None:
         """Load the data."""
-        if (store_data := await self.store.async_load()) is not None:
+        if (store_data := await super()._async_load_data()) is not None:
             return store_data
 
         # Import it from config.
@@ -95,9 +97,9 @@ class ResourceStorageCollection(collection.DictStorageCollection):
         for item in resources:
             item[CONF_ID] = uuid.uuid4().hex
 
-        data: collection.SerializedStorageCollection = {"items": resources}
+        data: collection.LegacySerializedStorageCollection = {"items": resources}
 
-        await self.store.async_save(data)
+        await self.store.async_save(data)  # type: ignore[arg-type]
         await self.ll_config.async_save(conf)
 
         return data
