@@ -62,7 +62,7 @@
       "test_panel_start": "Start testing the UPS panel",
       "test_panel_stop": "Stop a UPS panel test",
       "test_system_start": "Start a system test"
-     }
+    }
   },
   "entity": {
     "sensor": {
