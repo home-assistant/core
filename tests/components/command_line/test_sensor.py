@@ -1,32 +1,29 @@
 """The tests for the Command line sensor platform."""
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt
+
+from tests.common import async_fire_time_changed
 
 
 async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line sensor entity."""
+    hass.states.async_set("sensor.input_sensor", "sensor_value")
     assert await setup.async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            DOMAIN: [
-                {
-                    "platform": "template",
-                    "sensors": {
-                        "template_sensor": {
-                            "value_template": "template_value",
-                        }
-                    },
-                },
+            SENSOR_DOMAIN: [
                 {"platform": "command_line", "name": "Test", **config_dict},
             ]
         },
@@ -71,30 +68,46 @@ async def test_template_render(hass: HomeAssistant) -> None:
     await setup_test_entities(
         hass,
         {
-            "command": "echo {{ states.sensor.template_sensor.state }}",
+            "command": "echo {{ states.sensor.input_sensor.state }}",
         },
     )
+
+    # Give time for template to load
+    async_fire_time_changed(
+        hass,
+        dt.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done()
+
     entity_state = hass.states.get("sensor.test")
     assert entity_state
-    assert entity_state.state == "template_value"
+    assert entity_state.state == "sensor_value"
 
 
 async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     """Ensure command with templates and quotes get rendered properly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"Works\n",
     ) as check_output:
         await setup_test_entities(
             hass,
             {
-                "command": 'echo "{{ states.sensor.template_sensor.state }}" "3 4"',
+                "command": 'echo "{{ states.sensor.input_sensor.state }}" "3 4"',
             },
         )
 
-        check_output.assert_called_once_with(
-            'echo "template_value" "3 4"',
+        # Give time for template to load
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done()
+
+        assert len(check_output.mock_calls) == 2
+        check_output.assert_called_with(
+            'echo "sensor_value" "3 4"',
             shell=True,  # nosec # shell by design
             timeout=15,
             close_fds=False,
@@ -156,6 +169,28 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     )
     entity_state = hass.states.get("sensor.test")
     assert entity_state
+    assert entity_state.state == "unknown"
+    assert entity_state.attributes["key"] == "some_json_value"
+    assert entity_state.attributes["another_key"] == "another_json_value"
+    assert entity_state.attributes["key_three"] == "value_three"
+
+
+async def test_update_with_json_attrs_and_value_template(hass: HomeAssistant) -> None:
+    """Test json_attributes can be used together with value_template."""
+    await setup_test_entities(
+        hass,
+        {
+            "command": (
+                'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
+                '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+            ),
+            "json_attributes": ["key", "another_key", "key_three"],
+            "value_template": '{{ value_json["key"] }}',
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "some_json_value"
     assert entity_state.attributes["key"] == "some_json_value"
     assert entity_state.attributes["another_key"] == "another_json_value"
     assert entity_state.attributes["key_three"] == "value_three"
@@ -266,9 +301,9 @@ async def test_unique_id(
     """Test unique_id option and if it only creates one sensor per id."""
     assert await setup.async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            DOMAIN: [
+            SENSOR_DOMAIN: [
                 {
                     "platform": "command_line",
                     "unique_id": "unique",

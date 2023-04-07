@@ -167,7 +167,6 @@ class SensorEntity(Entity):
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
     )
-    _invalid_numeric_value_reported = False
     _invalid_state_class_reported = False
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
@@ -463,7 +462,7 @@ class SensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> Any:  # noqa: C901
+    def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
@@ -581,33 +580,13 @@ class SensorEntity(Entity):
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]
             except (TypeError, ValueError) as err:
-                # Raise if precision is not None, for other cases log a warning
-                if suggested_precision is not None:
-                    raise ValueError(
-                        f"Sensor {self.entity_id} has device class {device_class}, "
-                        f"state class {state_class} unit {unit_of_measurement} and "
-                        f"suggested precision {suggested_precision} thus indicating it "
-                        f"has a numeric value; however, it has the non-numeric value: "
-                        f"{value} ({type(value)})"
-                    ) from err
-                # This should raise in Home Assistant Core 2023.4
-                if not self._invalid_numeric_value_reported:
-                    self._invalid_numeric_value_reported = True
-                    report_issue = self._suggest_report_issue()
-                    _LOGGER.warning(
-                        "Sensor %s has device class %s, state class %s and unit %s "
-                        "thus indicating it has a numeric value; however, it has the "
-                        "non-numeric value: %s (%s); Please update your configuration "
-                        "if your entity is manually configured, otherwise %s",
-                        self.entity_id,
-                        device_class,
-                        state_class,
-                        unit_of_measurement,
-                        value,
-                        type(value),
-                        report_issue,
-                    )
-                return value
+                raise ValueError(
+                    f"Sensor {self.entity_id} has device class {device_class}, "
+                    f"state class {state_class} unit {unit_of_measurement} and "
+                    f"suggested precision {suggested_precision} thus indicating it "
+                    f"has a numeric value; however, it has the non-numeric value: "
+                    f"{value} ({type(value)})"
+                ) from err
         else:
             numerical_value = value
 
@@ -737,7 +716,7 @@ class SensorEntity(Entity):
             or "suggested_display_precision" not in self.registry_entry.options
         ):
             return
-        sensor_options = self.registry_entry.options.get(DOMAIN, {})
+        sensor_options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
         if (
             "suggested_display_precision" in sensor_options
             and sensor_options["suggested_display_precision"] == display_precision

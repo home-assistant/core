@@ -279,6 +279,11 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_androidtvremote2._tcp.local.": [
+        {
+            "domain": "androidtv_remote",
+        },
+    ],
     "_api._tcp.local.": [
         {
             "domain": "baf",

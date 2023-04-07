@@ -25,7 +25,7 @@ memory:
           max: 3600
           unit_of_measurement: seconds
 start_log_objects:
-  name: Start log objects
+  name: Start logging objects
   description: Start logging growth of objects in memory
   fields:
     scan_interval:
@@ -38,7 +38,7 @@ start_log_objects:
           max: 3600
           unit_of_measurement: seconds
 stop_log_objects:
-  name: Stop log objects
+  name: Stop logging objects
   description: Stop logging growth of objects in memory.
 dump_log_objects:
   name: Dump log objects
@@ -51,6 +51,34 @@ dump_log_objects:
       example: State
       selector:
         text:
+start_log_object_sources:
+  name: Start logging object sources
+  description: Start logging sources of new objects in memory
+  fields:
+    scan_interval:
+      name: Scan interval
+      description: The number of seconds between logging objects.
+      default: 30.0
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    max_objects:
+      name: Maximum objects
+      description: The maximum number of objects to log.
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 30
+          unit_of_measurement: objects
+stop_log_object_sources:
+  name: Stop logging object sources
+  description: Stop logging sources of new objects in memory.
+lru_stats:
+  name: Log LRU stats
+  description: Log the stats of all lru caches.
 log_thread_frames:
   name: Log thread frames
   description: Log the current frames for all threads.

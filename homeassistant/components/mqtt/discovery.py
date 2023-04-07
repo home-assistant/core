@@ -99,7 +99,7 @@ async def async_start(  # noqa: C901
     mqtt_integrations = {}
 
     @callback
-    def async_discovery_message_received(msg: ReceiveMessage) -> None:
+    def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
         """Process the received message."""
         mqtt_data.last_discovery = time.time()
         payload = msg.payload

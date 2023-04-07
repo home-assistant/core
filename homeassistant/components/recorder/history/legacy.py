@@ -213,7 +213,7 @@ def get_significant_states(
     compressed_state_format: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         return get_significant_states_with_session(
             hass,
             session,
@@ -306,9 +306,8 @@ def _significant_states_stmt(
     else:
         stmt += _ignore_domains_filter
         if filters and filters.has_config:
-            entity_filter = filters.states_entity_filter()
             stmt = stmt.add_criteria(
-                lambda q: q.filter(entity_filter), track_on=[filters]
+                lambda q: q.filter(filters.states_entity_filter()), track_on=[filters]  # type: ignore[union-attr]
             )
 
     if schema_version >= 31:
@@ -488,7 +487,7 @@ def state_changes_during_period(
     entity_id = entity_id.lower() if entity_id is not None else None
     entity_ids = [entity_id] if entity_id is not None else None
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         stmt = _state_changed_during_period_stmt(
             _schema_version(hass),
             start_time,
@@ -558,7 +557,7 @@ def get_last_state_changes(
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         stmt = _get_last_state_changes_stmt(
             _schema_version(hass), number_of_states, entity_id_lower
         )
@@ -713,8 +712,9 @@ def _get_states_for_all_stmt(
         )
     stmt += _ignore_domains_filter
     if filters and filters.has_config:
-        entity_filter = filters.states_entity_filter()
-        stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])
+        stmt = stmt.add_criteria(
+            lambda q: q.filter(filters.states_entity_filter()), track_on=[filters]  # type: ignore[union-attr]
+        )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
@@ -742,7 +742,7 @@ def _get_rows_with_session(
         )
 
     if run is None:
-        run = recorder.get_instance(hass).run_history.get(utc_point_in_time)
+        run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
 
     if run is None or process_timestamp(run.start) > utc_point_in_time:
         # History did not run before utc_point_in_time

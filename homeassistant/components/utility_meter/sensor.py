@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfEnergy,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -50,6 +50,7 @@ from .const import (
     CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
+    CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
@@ -85,6 +86,7 @@ ATTR_SOURCE_ID = "source"
 ATTR_STATUS = "status"
 ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
+ATTR_LAST_VALID_STATE = "last_valid_state"
 ATTR_TARIFF = "tariff"
 
 DEVICE_CLASS_MAP = {
@@ -92,7 +94,6 @@ DEVICE_CLASS_MAP = {
     UnitOfEnergy.KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
 }
 
-ICON = "mdi:counter"
 
 PRECISION = 3
 PAUSED = "paused"
@@ -127,6 +128,7 @@ async def async_setup_entry(
         meter_type = None
     name = config_entry.title
     net_consumption = config_entry.options[CONF_METER_NET_CONSUMPTION]
+    periodically_resetting = config_entry.options[CONF_METER_PERIODICALLY_RESETTING]
     tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
 
     meters = []
@@ -142,6 +144,7 @@ async def async_setup_entry(
             name=name,
             net_consumption=net_consumption,
             parent_meter=entry_id,
+            periodically_resetting=periodically_resetting,
             source_entity=source_entity_id,
             tariff_entity=tariff_entity,
             tariff=None,
@@ -160,6 +163,7 @@ async def async_setup_entry(
                 name=f"{name} {tariff}",
                 net_consumption=net_consumption,
                 parent_meter=entry_id,
+                periodically_resetting=periodically_resetting,
                 source_entity=source_entity_id,
                 tariff_entity=tariff_entity,
                 tariff=tariff,
@@ -223,6 +227,9 @@ async def async_setup_platform(
         conf_meter_net_consumption = hass.data[DATA_UTILITY][meter][
             CONF_METER_NET_CONSUMPTION
         ]
+        conf_meter_periodically_resetting = hass.data[DATA_UTILITY][meter][
+            CONF_METER_PERIODICALLY_RESETTING
+        ]
         conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
             CONF_TARIFF_ENTITY
         )
@@ -235,6 +242,7 @@ async def async_setup_platform(
             name=conf_sensor_name,
             net_consumption=conf_meter_net_consumption,
             parent_meter=meter,
+            periodically_resetting=conf_meter_periodically_resetting,
             source_entity=conf_meter_source,
             tariff_entity=conf_meter_tariff_entity,
             tariff=conf_sensor_tariff,
@@ -262,6 +270,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
 
     last_period: Decimal
     last_reset: datetime | None
+    last_valid_state: Decimal | None
     status: str
 
     def as_dict(self) -> dict[str, Any]:
@@ -270,6 +279,9 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         data["last_period"] = str(self.last_period)
         if isinstance(self.last_reset, (datetime)):
             data["last_reset"] = self.last_reset.isoformat()
+        data["last_valid_state"] = (
+            str(self.last_valid_state) if self.last_valid_state else None
+        )
         data["status"] = self.status
 
         return data
@@ -284,6 +296,11 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         try:
             last_period: Decimal = Decimal(restored["last_period"])
             last_reset: datetime | None = dt_util.parse_datetime(restored["last_reset"])
+            last_valid_state: Decimal | None = (
+                Decimal(restored["last_valid_state"])
+                if restored.get("last_valid_state")
+                else None
+            )
             status: str = restored["status"]
         except KeyError:
             # restored is a dict, but does not have all values
@@ -297,6 +314,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
             extra.native_unit_of_measurement,
             last_period,
             last_reset,
+            last_valid_state,
             status,
         )
 
@@ -304,6 +322,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
 class UtilityMeterSensor(RestoreSensor):
     """Representation of an utility meter sensor."""
 
+    _attr_icon = "mdi:counter"
     _attr_should_poll = False
 
     def __init__(
@@ -316,6 +335,7 @@ class UtilityMeterSensor(RestoreSensor):
         name,
         net_consumption,
         parent_meter,
+        periodically_resetting,
         source_entity,
         tariff_entity,
         tariff,
@@ -330,6 +350,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._state = None
         self._last_period = Decimal(0)
         self._last_reset = dt_util.utcnow()
+        self._last_valid_state = None
         self._collecting = None
         self._name = name
         self._unit_of_measurement = None
@@ -346,6 +367,7 @@ class UtilityMeterSensor(RestoreSensor):
             self._cron_pattern = cron_pattern
         self._sensor_delta_values = delta_values
         self._sensor_net_consumption = net_consumption
+        self._sensor_periodically_resetting = periodically_resetting
         self._tariff = tariff
         self._tariff_entity = tariff_entity
 
@@ -355,53 +377,70 @@ class UtilityMeterSensor(RestoreSensor):
         self._state = 0
         self.async_write_ha_state()
 
-    @callback
-    def async_reading(self, event):
-        """Handle the sensor state changes."""
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    @staticmethod
+    def _validate_state(state: State | None) -> Decimal | None:
+        """Parse the state as a Decimal if available. Throws DecimalException if the state is not a number."""
+        try:
+            return (
+                None
+                if state is None or state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]
+                else Decimal(state.state)
+            )
+        except DecimalException:
+            return None
 
-        if self._state is None and new_state.state:
+    def calculate_adjustment(
+        self, old_state: State | None, new_state: State
+    ) -> Decimal | None:
+        """Calculate the adjustment based on the old and new state."""
+
+        # First check if the new_state is valid (see discussion in PR #88446)
+        if (new_state_val := self._validate_state(new_state)) is None:
+            _LOGGER.warning("Invalid state %s", new_state.state)
+            return None
+
+        if self._sensor_delta_values:
+            return new_state_val
+
+        if (
+            not self._sensor_periodically_resetting
+            and self._last_valid_state is not None
+        ):  # Fallback to old_state if sensor is periodically resetting but last_valid_state is None
+            return new_state_val - self._last_valid_state
+
+        if (old_state_val := self._validate_state(old_state)) is not None:
+            return new_state_val - old_state_val
+        _LOGGER.warning(
+            "Invalid state (%s > %s)",
+            old_state.state if old_state else None,
+            new_state_val,
+        )
+        return None
+
+    @callback
+    def async_reading(self, event: Event):
+        """Handle the sensor state changes."""
+        old_state: State | None = event.data.get("old_state")
+        new_state: State = event.data.get("new_state")  # type: ignore[assignment] # a state change event always has a new state
+
+        if (new_state_val := self._validate_state(new_state)) is None:
+            _LOGGER.warning("Invalid state %s", new_state.state)
+            return
+
+        if self._state is None:
             # First state update initializes the utility_meter sensors
-            source_state = self.hass.states.get(self._sensor_source_id)
             for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
                 DATA_TARIFF_SENSORS
             ]:
-                sensor.start(source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+                sensor.start(new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
         if (
-            new_state is None
-            or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-            or (
-                not self._sensor_delta_values
-                and (
-                    old_state is None
-                    or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-                )
-            )
-        ):
-            return
+            adjustment := self.calculate_adjustment(old_state, new_state)
+        ) is not None and (self._sensor_net_consumption or adjustment >= 0):
+            # If net_consumption is off, the adjustment must be non-negative
+            self._state += adjustment  # type: ignore[operator] # self._state will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
-        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
-        try:
-            if self._sensor_delta_values:
-                adjustment = Decimal(new_state.state)
-            else:
-                adjustment = Decimal(new_state.state) - Decimal(old_state.state)
-
-            if (not self._sensor_net_consumption) and adjustment < 0:
-                # Source sensor just rolled over for unknown reasons,
-                return
-            self._state += adjustment
-
-        except DecimalException as err:
-            if self._sensor_delta_values:
-                _LOGGER.warning("Invalid adjustment of %s: %s", new_state.state, err)
-            else:
-                _LOGGER.warning(
-                    "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
-                )
+        self._last_valid_state = new_state_val
         self.async_write_ha_state()
 
     @callback
@@ -421,6 +460,11 @@ class UtilityMeterSensor(RestoreSensor):
             if self._collecting:
                 self._collecting()
             self._collecting = None
+
+        # Reset the last_valid_state during state change because if the last state before the tariff change was invalid,
+        # there is no way to know how much "adjustment" counts for which tariff. Therefore, we set the last_valid_state
+        # to None and let the fallback mechanism handle the case that the old state was valid
+        self._last_valid_state = None
 
         _LOGGER.debug(
             "%s - %s - source <%s>",
@@ -484,6 +528,7 @@ class UtilityMeterSensor(RestoreSensor):
             self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
             self._last_period = last_sensor_data.last_period
             self._last_reset = last_sensor_data.last_reset
+            self._last_valid_state = last_sensor_data.last_valid_state
             if last_sensor_data.status == COLLECTING:
                 # Null lambda to allow cancelling the collection on tariff change
                 self._collecting = lambda: None
@@ -507,6 +552,12 @@ class UtilityMeterSensor(RestoreSensor):
                     if state.attributes.get(ATTR_LAST_PERIOD)
                     and is_number(state.attributes[ATTR_LAST_PERIOD])
                     else Decimal(0)
+                )
+                self._last_valid_state = (
+                    Decimal(state.attributes[ATTR_LAST_VALID_STATE])
+                    if state.attributes.get(ATTR_LAST_VALID_STATE)
+                    and is_number(state.attributes[ATTR_LAST_VALID_STATE])
+                    else None
                 )
                 self._last_reset = dt_util.as_utc(
                     dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
@@ -590,6 +641,7 @@ class UtilityMeterSensor(RestoreSensor):
             ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
             ATTR_LAST_PERIOD: str(self._last_period),
+            ATTR_LAST_VALID_STATE: str(self._last_valid_state),
         }
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period
@@ -608,11 +660,6 @@ class UtilityMeterSensor(RestoreSensor):
         return state_attr
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
     def extra_restore_state_data(self) -> UtilitySensorExtraStoredData:
         """Return sensor specific state data to be restored."""
         return UtilitySensorExtraStoredData(
@@ -620,6 +667,7 @@ class UtilityMeterSensor(RestoreSensor):
             self.native_unit_of_measurement,
             self._last_period,
             self._last_reset,
+            self._last_valid_state,
             PAUSED if self._collecting is None else COLLECTING,
         )
 

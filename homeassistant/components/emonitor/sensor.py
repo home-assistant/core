@@ -123,6 +123,6 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         return self._paired_attr(self.entity_description.key)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, int]:
         """Return the device specific state attributes."""
         return {"channel": self.channel_number}

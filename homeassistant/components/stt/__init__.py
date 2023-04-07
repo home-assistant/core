@@ -1,13 +1,11 @@
 """Provide functionality to STT."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import asyncio
-from dataclasses import asdict, dataclass
-import logging
+from dataclasses import asdict
 from typing import Any
 
-from aiohttp import StreamReader, web
+from aiohttp import web
 from aiohttp.hdrs import istr
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
@@ -16,10 +14,8 @@ from aiohttp.web_exceptions import (
 )
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_prepare_setup_platform
 
 from .const import (
     DOMAIN,
@@ -30,149 +26,38 @@ from .const import (
     AudioSampleRates,
     SpeechResultState,
 )
+from .legacy import (
+    Provider,
+    SpeechMetadata,
+    SpeechResult,
+    async_get_provider,
+    async_setup_legacy,
+)
 
-_LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def async_get_provider(hass: HomeAssistant, domain: str | None = None) -> Provider:
-    """Return provider."""
-    if domain is None:
-        domain = next(iter(hass.data[DOMAIN]))
-
-    return hass.data[DOMAIN][domain]
+__all__ = [
+    "async_get_provider",
+    "AudioBitRates",
+    "AudioChannels",
+    "AudioCodecs",
+    "AudioFormats",
+    "AudioSampleRates",
+    "DOMAIN",
+    "Provider",
+    "SpeechMetadata",
+    "SpeechResult",
+    "SpeechResultState",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
-    providers = hass.data[DOMAIN] = {}
+    platform_setups = async_setup_legacy(hass, config)
 
-    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Set up a TTS platform."""
-        if p_config is None:
-            p_config = {}
+    if platform_setups:
+        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
 
-        platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
-        if platform is None:
-            return
-
-        try:
-            provider = await platform.async_get_engine(hass, p_config, discovery_info)
-            if provider is None:
-                _LOGGER.error("Error setting up platform %s", p_type)
-                return
-
-            provider.name = p_type
-            provider.hass = hass
-
-            providers[provider.name] = provider
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up platform: %s", p_type)
-            return
-
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(p_type, p_config))
-        for p_type, p_config in config_per_platform(config, DOMAIN)
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
-
-    # Add discovery support
-    async def async_platform_discovered(platform, info):
-        """Handle for discovered platform."""
-        await async_setup_platform(platform, discovery_info=info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-
-    hass.http.register_view(SpeechToTextView(providers))
+    hass.http.register_view(SpeechToTextView(hass.data[DOMAIN]))
     return True
-
-
-@dataclass
-class SpeechMetadata:
-    """Metadata of audio stream."""
-
-    language: str
-    format: AudioFormats
-    codec: AudioCodecs
-    bit_rate: AudioBitRates
-    sample_rate: AudioSampleRates
-    channel: AudioChannels
-
-    def __post_init__(self) -> None:
-        """Finish initializing the metadata."""
-        self.bit_rate = AudioBitRates(int(self.bit_rate))
-        self.sample_rate = AudioSampleRates(int(self.sample_rate))
-        self.channel = AudioChannels(int(self.channel))
-
-
-@dataclass
-class SpeechResult:
-    """Result of audio Speech."""
-
-    text: str | None
-    result: SpeechResultState
-
-
-class Provider(ABC):
-    """Represent a single STT provider."""
-
-    hass: HomeAssistant | None = None
-    name: str | None = None
-
-    @property
-    @abstractmethod
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-
-    @property
-    @abstractmethod
-    def supported_formats(self) -> list[AudioFormats]:
-        """Return a list of supported formats."""
-
-    @property
-    @abstractmethod
-    def supported_codecs(self) -> list[AudioCodecs]:
-        """Return a list of supported codecs."""
-
-    @property
-    @abstractmethod
-    def supported_bit_rates(self) -> list[AudioBitRates]:
-        """Return a list of supported bit rates."""
-
-    @property
-    @abstractmethod
-    def supported_sample_rates(self) -> list[AudioSampleRates]:
-        """Return a list of supported sample rates."""
-
-    @property
-    @abstractmethod
-    def supported_channels(self) -> list[AudioChannels]:
-        """Return a list of supported channels."""
-
-    @abstractmethod
-    async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
-    ) -> SpeechResult:
-        """Process an audio stream to STT service.
-
-        Only streaming of content are allow!
-        """
-
-    @callback
-    def check_metadata(self, metadata: SpeechMetadata) -> bool:
-        """Check if given metadata supported by this provider."""
-        if (
-            metadata.language not in self.supported_languages
-            or metadata.format not in self.supported_formats
-            or metadata.codec not in self.supported_codecs
-            or metadata.bit_rate not in self.supported_bit_rates
-            or metadata.sample_rate not in self.supported_sample_rates
-            or metadata.channel not in self.supported_channels
-        ):
-            return False
-        return True
 
 
 class SpeechToTextView(HomeAssistantView):
@@ -194,7 +79,7 @@ class SpeechToTextView(HomeAssistantView):
 
         # Get metadata
         try:
-            metadata = metadata_from_header(request)
+            metadata = _metadata_from_header(request)
         except ValueError as err:
             raise HTTPBadRequest(text=str(err)) from err
 
@@ -228,7 +113,7 @@ class SpeechToTextView(HomeAssistantView):
         )
 
 
-def metadata_from_header(request: web.Request) -> SpeechMetadata:
+def _metadata_from_header(request: web.Request) -> SpeechMetadata:
     """Extract STT metadata from header.
 
     X-Speech-Content:

@@ -24,12 +24,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    EsphomeEntity,
-    EsphomeEnumMapper,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .enum_mapper import EsphomeEnumMapper
 
 
 async def async_setup_entry(
@@ -115,7 +111,9 @@ class EsphomeMediaPlayer(
         )
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

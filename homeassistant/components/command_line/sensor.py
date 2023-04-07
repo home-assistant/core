@@ -8,25 +8,31 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    STATE_CLASSES_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND,
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import check_output_or_log
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .utils import check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,19 +51,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
     }
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command Sensor."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name: str = config[CONF_NAME]
     command: str = config[CONF_COMMAND]
@@ -70,8 +78,17 @@ def setup_platform(
     json_attributes: list[str] | None = config.get(CONF_JSON_ATTRIBUTES)
     data = CommandSensorData(hass, command, command_timeout)
 
-    add_entities(
-        [CommandSensor(data, name, unit, value_template, json_attributes, unique_id)],
+    async_add_entities(
+        [
+            CommandSensor(
+                data,
+                name,
+                unit,
+                value_template,
+                json_attributes,
+                unique_id,
+            )
+        ],
         True,
     )
 
@@ -89,18 +106,18 @@ class CommandSensor(SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
+        self._attr_name = name
         self.data = data
         self._attr_extra_state_attributes = {}
         self._json_attributes = json_attributes
-        self._attr_name = name
         self._attr_native_value = None
-        self._attr_native_unit_of_measurement = unit_of_measurement
         self._value_template = value_template
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_unique_id = unique_id
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data and updates the state."""
-        self.data.update()
+        await self.hass.async_add_executor_job(self.data.update)
         value = self.data.value
 
         if self._json_attributes:
@@ -120,13 +137,15 @@ class CommandSensor(SensorEntity):
                     _LOGGER.warning("Unable to parse output as JSON: %s", value)
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
+            if self._value_template is None:
+                self._attr_native_value = None
+                return
 
-        if value is None:
-            value = STATE_UNKNOWN
-        elif self._value_template is not None:
+        if self._value_template is not None:
             self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
-                    value, STATE_UNKNOWN
+                self._value_template.async_render_with_possible_json_value(
+                    value,
+                    None,
                 )
             )
         else:
