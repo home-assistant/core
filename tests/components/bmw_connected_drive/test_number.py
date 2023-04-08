@@ -1,4 +1,4 @@
-"""Test BMW selects."""
+"""Test BMW numbers."""
 from bimmer_connected.vehicle.remote_services import RemoteServices
 import pytest
 import respx
@@ -14,21 +14,19 @@ async def test_entity_state_attrs(
     bmw_fixture: respx.Router,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test select options and values.."""
+    """Test number options and values.."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
 
-    # Get all select entities
-    assert hass.states.async_all("select") == snapshot
+    # Get all number entities
+    assert hass.states.async_all("number") == snapshot
 
 
 @pytest.mark.parametrize(
     ("entity_id", "value"),
     [
-        ("select.i3_rex_charging_mode", "IMMEDIATE_CHARGING"),
-        ("select.i4_edrive40_ac_charging_limit", "16"),
-        ("select.i4_edrive40_charging_mode", "DELAYED_CHARGING"),
+        ("number.i4_edrive40_target_soc", "80"),
     ],
 )
 async def test_update_triggers_success(
@@ -37,16 +35,16 @@ async def test_update_triggers_success(
     value: str,
     bmw_fixture: respx.Router,
 ) -> None:
-    """Test allowed values for select inputs."""
+    """Test allowed values for number inputs."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
 
     # Test
     await hass.services.async_call(
-        "select",
-        "select_option",
-        service_data={"option": value},
+        "number",
+        "set_value",
+        service_data={"value": value},
         blocking=True,
         target={"entity_id": entity_id},
     )
@@ -56,7 +54,7 @@ async def test_update_triggers_success(
 @pytest.mark.parametrize(
     ("entity_id", "value"),
     [
-        ("select.i4_edrive40_ac_charging_limit", "17"),
+        ("number.i4_edrive40_target_soc", "81"),
     ],
 )
 async def test_update_triggers_fail(
@@ -65,7 +63,7 @@ async def test_update_triggers_fail(
     value: str,
     bmw_fixture: respx.Router,
 ) -> None:
-    """Test not allowed values for select inputs."""
+    """Test not allowed values for number inputs."""
 
     # Setup component
     assert await setup_mocked_integration(hass)
@@ -73,9 +71,9 @@ async def test_update_triggers_fail(
     # Test
     with pytest.raises(ValueError):
         await hass.services.async_call(
-            "select",
-            "select_option",
-            service_data={"option": value},
+            "number",
+            "set_value",
+            service_data={"value": value},
             blocking=True,
             target={"entity_id": entity_id},
         )

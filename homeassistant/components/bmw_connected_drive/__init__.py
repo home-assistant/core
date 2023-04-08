@@ -41,6 +41,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.NOTIFY,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
 ]
