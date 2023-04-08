@@ -768,6 +768,16 @@ def test_get_significant_states_without_entity_ids_raises(
         history.get_significant_states(hass, now, None)
 
 
+def test_state_changes_during_period_without_entity_ids_raises(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test at least one entity id is required for state_changes_during_period."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    with pytest.raises(ValueError, match="entity_id must be provided"):
+        history.state_changes_during_period(hass, now, None)
+
+
 def test_get_significant_states_with_filters_raises(
     hass_recorder: Callable[..., HomeAssistant]
 ) -> None:
@@ -778,3 +788,31 @@ def test_get_significant_states_with_filters_raises(
         history.get_significant_states(
             hass, now, None, ["media_player.test"], Filters()
         )
+
+
+def test_get_significant_states_with_non_existent_entity_ids_returns_empty(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test get_significant_states returns an empty dict when entities not in the db."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    assert history.get_significant_states(hass, now, None, ["nonexistent.entity"]) == {}
+
+
+def test_state_changes_during_period_with_non_existent_entity_ids_returns_empty(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test state_changes_during_period returns an empty dict when entities not in the db."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    assert (
+        history.state_changes_during_period(hass, now, None, "nonexistent.entity") == {}
+    )
+
+
+def test_get_last_state_changes_with_non_existent_entity_ids_returns_empty(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test get_last_state_changes returns an empty dict when entities not in the db."""
+    hass = hass_recorder()
+    assert history.get_last_state_changes(hass, 1, "nonexistent.entity") == {}
