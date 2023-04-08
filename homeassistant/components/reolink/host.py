@@ -404,3 +404,4 @@ class ReolinkHost:
         
         if not self._webhook_reachable.is_set():
             self._webhook_reachable.set()
+            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
