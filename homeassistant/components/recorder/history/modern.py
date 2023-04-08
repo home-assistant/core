@@ -178,7 +178,7 @@ def get_significant_states_with_session(
     thermostat so that we get current temperature in our graphs).
     """
     if filters is not None:
-        raise NotImplementedError("Filters are no longer supported yet")
+        raise NotImplementedError("Filters are no longer supported")
     if not entity_ids:
         raise ValueError("entity_ids must be provided")
     metadata_ids: list[int] | None = None
