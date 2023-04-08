@@ -368,7 +368,7 @@ class ReolinkHost:
             data = await request.text()
         except (ConnectionResetError, asyncio.CancelledError):
             await asyncio.shield(self.handle_webhook_error_shielded(hass, webhook_id))
-            return
+            raise
 
         await asyncio.shield(self.handle_webhook_shielded(hass, webhook_id, data))
 
