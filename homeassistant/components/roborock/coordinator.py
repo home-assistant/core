@@ -75,10 +75,10 @@ class RoborockDataUpdateCoordinator(
         """Update data via library."""
         try:
             asyncio.gather(
-                *[
+                *(
                     self._update_device_prop(device_info)
                     for device_info in self.devices_info.values()
-                ]
+                )
             )
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
