@@ -24,11 +24,11 @@ async def test_file_write(hass: HomeAssistant, mode: str) -> None:
     """Test the notify file output."""
     filename = "mock_file"
     content = "one, two, testing, testing"
-    with assert_setup_component(0):
+    with assert_setup_component(1):
         assert await async_setup_component(
             hass,
             file.DOMAIN,
-            {},
+            {"file": {"allowlist_write_dirs": [hass.config.path()]}},
         )
 
     m_open = mock_open()
@@ -44,3 +44,18 @@ async def test_file_write(hass: HomeAssistant, mode: str) -> None:
             full_filename, mode if mode is not None else "w", encoding="utf8"
         )
         assert m_open.return_value.write.call_count == 1
+
+
+async def test_file_write_allowlist(hass: HomeAssistant) -> None:
+    """Test the allowlist."""
+    content = "one, two, testing, testing"
+    with assert_setup_component(1):
+        assert await async_setup_component(
+            hass,
+            file.DOMAIN,
+            {"file": {"allowlist_write_dirs": ["inner"]}},
+        )
+
+    with pytest.raises(ValueError):
+        args = {"content": content, "filename": "mock_file"}
+        await hass.services.async_call("file", "write", args, blocking=True)
