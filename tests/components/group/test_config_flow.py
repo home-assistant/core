@@ -482,3 +482,42 @@ async def test_import(hass: HomeAssistant) -> None:
         "ignore_non_numeric": False,
         "type": "sum",
     }
+
+
+async def test_import_already_exist(hass: HomeAssistant) -> None:
+    """Test import config flow."""
+
+    members = ["sensor.one", "sensor.two"]
+    for member in members:
+        hass.states.async_set(member, "on", {})
+
+    group_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": members,
+            "group_type": "sensor",
+            "hide_members": False,
+            "ignore_non_numeric": False,
+            "type": "sum",
+            "name": "Sensor Group sum",
+        },
+        title="Sensor Group sum",
+    )
+    group_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            "ignore_non_numeric": False,
+            "entities": members,
+            "hide_members": False,
+            "type": "sum",
+            "name": "Sensor Group sum",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "already_configured"}
