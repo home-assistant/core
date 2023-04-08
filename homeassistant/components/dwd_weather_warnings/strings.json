@@ -5,13 +5,9 @@
         "description": "To identify the desired region, the warncell ID / name is required.",
         "data": {
           "name": "Name of the sensor (default: DWD Weather Warnings)",
-          "region_identifier": "Warncell ID or name",
-          "monitored_conditions": "Monitored conditions (default: all)"
+          "region_identifier": "Warncell ID or name"
         }
       }
-    },
-    "error": {
-      "no_identifier": "The warncell identifier has to be specified."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

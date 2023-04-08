@@ -12,13 +12,10 @@ from .const import CONF_REGION_IDENTIFIER, DOMAIN, PLATFORMS
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    region_identifier: str = entry.data.get(CONF_REGION_IDENTIFIER, None)
+    region_identifier: str = entry.data[CONF_REGION_IDENTIFIER]
 
     # Initialize the API.
-    if region_identifier is not None:
-        api = await hass.async_add_executor_job(
-            DwdWeatherWarningsAPI, region_identifier
-        )
+    api = await hass.async_add_executor_job(DwdWeatherWarningsAPI, region_identifier)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = api

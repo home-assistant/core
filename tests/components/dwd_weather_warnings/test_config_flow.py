@@ -9,6 +9,7 @@ from homeassistant.components.dwd_weather_warnings.const import (
     CONF_OLD_REGION_NAME,
     CONF_REGION_IDENTIFIER,
     CURRENT_WARNING_SENSOR,
+    DEFAULT_MONITORED_CONDITIONS,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -20,9 +21,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 DEMO_CONFIG_ENTRY: Final = {
-    CONF_NAME: "Unit Test",
     CONF_REGION_IDENTIFIER: "807111000",
-    CONF_MONITORED_CONDITIONS: [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR],
 }
 
 DEMO_YAML_CONFIGURATION: Final = {
@@ -30,6 +29,8 @@ DEMO_YAML_CONFIGURATION: Final = {
     CONF_OLD_REGION_NAME: "807111000",
     CONF_MONITORED_CONDITIONS: [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR],
 }
+
+EXPECTED_NAME: Final = f"{DEFAULT_NAME} {DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER]}"
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -41,54 +42,18 @@ async def test_create_entry_with_region_identifier(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], DEMO_CONFIG_ENTRY
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEMO_CONFIG_ENTRY[CONF_NAME]
+    assert result["title"] == EXPECTED_NAME
     assert result["data"] == {
-        CONF_NAME: DEMO_CONFIG_ENTRY[CONF_NAME],
+        CONF_NAME: EXPECTED_NAME,
         CONF_REGION_IDENTIFIER: DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER],
-        CONF_MONITORED_CONDITIONS: DEMO_CONFIG_ENTRY[CONF_MONITORED_CONDITIONS],
+        CONF_MONITORED_CONDITIONS: DEFAULT_MONITORED_CONDITIONS,
     }
-
-
-async def test_create_entry_without_monitored_conditions(hass: HomeAssistant) -> None:
-    """Test that the user step works without any monitored condition set."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
-
-    data: dict = DEMO_CONFIG_ENTRY.copy()
-    data.pop(CONF_MONITORED_CONDITIONS)
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEMO_CONFIG_ENTRY[CONF_NAME]
-    assert result["data"] == {
-        CONF_NAME: DEMO_CONFIG_ENTRY[CONF_NAME],
-        CONF_REGION_IDENTIFIER: DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER],
-        CONF_MONITORED_CONDITIONS: DEMO_CONFIG_ENTRY[CONF_MONITORED_CONDITIONS],
-    }
-
-
-async def test_user_no_identifier(hass: HomeAssistant) -> None:
-    """Test that error is shown when no region_identifier is set."""
-    data: dict = DEMO_CONFIG_ENTRY.copy()
-    data.pop(CONF_REGION_IDENTIFIER)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=data
-    )
-
-    assert result["errors"] == {"base": "no_identifier"}
 
 
 async def test_import_flow_full_data(hass: HomeAssistant) -> None:
@@ -119,12 +84,11 @@ async def test_import_flow_no_name(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
+    assert result["title"] == EXPECTED_NAME
 
     result_data = DEMO_YAML_CONFIGURATION.copy()
-    result_data[CONF_NAME] = DEFAULT_NAME
-    result_data[CONF_REGION_IDENTIFIER] = result_data[CONF_OLD_REGION_NAME]
-    result_data.pop(CONF_OLD_REGION_NAME)
+    result_data[CONF_NAME] = EXPECTED_NAME
+    result_data[CONF_REGION_IDENTIFIER] = result_data.pop(CONF_OLD_REGION_NAME)
 
     assert result["data"] == result_data
 
@@ -133,31 +97,32 @@ async def test_import_flow_only_required(hass: HomeAssistant) -> None:
     """Test a successful import of a YAML configuration with only required properties."""
     data = DEMO_YAML_CONFIGURATION.copy()
     data.pop(CONF_NAME)
-    data.pop(CONF_MONITORED_CONDITIONS)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=data
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
+    assert result["title"] == EXPECTED_NAME
 
     result_data = DEMO_YAML_CONFIGURATION.copy()
-    result_data[CONF_NAME] = DEFAULT_NAME
-    result_data[CONF_REGION_IDENTIFIER] = result_data[CONF_OLD_REGION_NAME]
-    result_data.pop(CONF_OLD_REGION_NAME)
+    result_data[CONF_NAME] = EXPECTED_NAME
+    result_data[CONF_REGION_IDENTIFIER] = result_data.pop(CONF_OLD_REGION_NAME)
 
     assert result["data"] == result_data
 
 
 async def test_import_flow_device_already_configured(hass: HomeAssistant) -> None:
     """Test aborting, if the device is already configured during the import."""
-    entry = MockConfigEntry(domain=DOMAIN, data=DEMO_CONFIG_ENTRY.copy())
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEMO_CONFIG_ENTRY.copy(),
+        unique_id=DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER],
+    )
     entry.add_to_hass(hass)
 
-    yaml_data = DEMO_YAML_CONFIGURATION.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=yaml_data
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=DEMO_YAML_CONFIGURATION.copy()
     )
 
     assert result["type"] == FlowResultType.ABORT
@@ -166,7 +131,11 @@ async def test_import_flow_device_already_configured(hass: HomeAssistant) -> Non
 
 async def test_config_flow_device_already_configured(hass: HomeAssistant) -> None:
     """Test aborting, if the device is already configured during the config."""
-    entry = MockConfigEntry(domain=DOMAIN, data=DEMO_CONFIG_ENTRY.copy())
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEMO_CONFIG_ENTRY.copy(),
+        unique_id=DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER],
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -176,11 +145,7 @@ async def test_config_flow_device_already_configured(hass: HomeAssistant) -> Non
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_NAME: DEMO_CONFIG_ENTRY[CONF_NAME],
-            CONF_REGION_IDENTIFIER: DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER],
-            CONF_MONITORED_CONDITIONS: DEMO_CONFIG_ENTRY[CONF_MONITORED_CONDITIONS],
-        },
+        DEMO_CONFIG_ENTRY,
     )
     await hass.async_block_till_done()
 

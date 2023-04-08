@@ -11,10 +11,17 @@ Wetterwarnungen (Stufe 1)
 
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+import voluptuous as vol
+
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -37,7 +44,9 @@ from .const import (
     ATTR_REGION_NAME,
     ATTR_WARNING_COUNT,
     ATTRIBUTION,
+    CONF_OLD_REGION_NAME,
     CURRENT_WARNING_SENSOR,
+    DEFAULT_MONITORED_CONDITIONS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
@@ -56,6 +65,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_OLD_REGION_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(
+            CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED_CONDITIONS
+        ): vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)]),
+    }
+)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -69,6 +88,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
+        breaks_in_ha_version="2023.7.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -101,6 +121,8 @@ async def async_setup_entry(
 class DwdWeatherWarningsSensor(SensorEntity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(
         self,
         api,
@@ -124,7 +146,6 @@ class DwdWeatherWarningsSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         data = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_REGION_NAME: self._api.api.warncell_name,
             ATTR_REGION_ID: self._api.api.warncell_id,
             ATTR_LAST_UPDATE: self._api.api.last_update,
