@@ -96,23 +96,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
 
         # Set supported features and HVAC modes based on current operating mode
-        if self.preset_mode == ADVANTAGE_AIR_MYZONE:
-            self._attr_supported_features = (
-                ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
-            )
-            self._attr_hvac_modes = [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.FAN_ONLY,
-                HVACMode.DRY,
-            ]
-
-        elif self.preset_mode == ADVANTAGE_AIR_MYTEMP:
-            self._attr_supported_features = ClimateEntityFeature.FAN_MODE
-            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
-
-        elif self.preset_mode == ADVANTAGE_AIR_MYAUTO:
+        if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
             self._attr_supported_features = (
                 ClimateEntityFeature.FAN_MODE
                 | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -125,6 +109,21 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 HVACMode.FAN_ONLY,
                 HVACMode.DRY,
                 HVACMode.HEAT_COOL,
+            ]
+        elif self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
+            self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
+
+        else:
+            self._attr_supported_features = (
+                ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+            )
+            self._attr_hvac_modes = [
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.FAN_ONLY,
+                HVACMode.DRY,
             ]
 
         # Add "ezfan" mode if supported
