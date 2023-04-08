@@ -313,6 +313,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 f"{wlan.name}{wlan.name_combine_suffix}"
                 for wlan in self.controller.api.wlans.values()
                 if not wlan.name_combine_enabled
+                and wlan.name_combine_suffix is not None
             }
             | {
                 wlan["name"]

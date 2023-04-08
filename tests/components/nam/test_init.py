@@ -19,7 +19,9 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry."""
     await init_integration(hass)
 
-    state = hass.states.get("sensor.nettigo_air_monitor_sds011_particulate_matter_2_5")
+    state = hass.states.get(
+        "sensor.nettigo_air_monitor_sds011_particulate_matter_2_5_mm"
+    )
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "11.0"
