@@ -33,7 +33,7 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HassJob, HomeAssistant, State
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
     InvalidStateError,
@@ -2081,3 +2081,26 @@ async def test_shutdown_does_not_block_on_shielded_tasks(
 
     # Cleanup lingering task after test is done
     sleep_task.cancel()
+
+
+async def test_cancellable_hassjob(hass: HomeAssistant) -> None:
+    """Simulate a shutdown, ensure cancellable jobs are cancelled."""
+    job = MagicMock()
+
+    @ha.callback
+    def run_job(job: HassJob) -> None:
+        """Call the action."""
+        hass.async_run_hass_job(job)
+
+    timer1 = hass.loop.call_later(
+        60, run_job, HassJob(ha.callback(job), cancel_on_shutdown=True)
+    )
+    timer2 = hass.loop.call_later(60, run_job, HassJob(ha.callback(job)))
+
+    await hass.async_stop()
+
+    assert timer1.cancelled()
+    assert not timer2.cancelled()
+
+    # Cleanup
+    timer2.cancel()

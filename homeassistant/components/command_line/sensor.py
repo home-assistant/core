@@ -137,8 +137,11 @@ class CommandSensor(SensorEntity):
                     _LOGGER.warning("Unable to parse output as JSON: %s", value)
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
+            if self._value_template is None:
+                self._attr_native_value = None
+                return
 
-        elif self._value_template is not None:
+        if self._value_template is not None:
             self._attr_native_value = (
                 self._value_template.async_render_with_possible_json_value(
                     value,
