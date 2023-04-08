@@ -366,7 +366,7 @@ class ReolinkHost:
         _LOGGER.debug("Webhook '%s' called", webhook_id)
         try:
             data = await request.text()
-        except ConnectionResetError:
+        except ConnectionResetError, asyncio.CancelledError:
             await asyncio.shield(self.handle_webhook_error_shielded(hass, webhook_id))
             return
 
