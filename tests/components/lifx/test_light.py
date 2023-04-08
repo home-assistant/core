@@ -1124,7 +1124,7 @@ async def test_config_zoned_light_strip_fails(hass: HomeAssistant) -> None:
     entity_id = "light.my_bulb"
 
     class MockFailingLifxCommand:
-        """Mock a lifx command that fails on the 3rd try."""
+        """Mock a lifx command that fails on the 3rd and 4th try then restores itself."""
 
         def __init__(self, bulb, **kwargs):
             """Init command."""
@@ -1134,7 +1134,10 @@ async def test_config_zoned_light_strip_fails(hass: HomeAssistant) -> None:
         def __call__(self, callb=None, *args, **kwargs):
             """Call command."""
             self.call_count += 1
-            response = None if self.call_count >= 3 else MockMessage()
+            if 3 <= self.call_count <= 5:
+                response = None
+            else:
+                response = MockMessage()
             if callb:
                 callb(self.bulb, response)
 
@@ -1150,6 +1153,10 @@ async def test_config_zoned_light_strip_fails(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_white_light_fails(hass: HomeAssistant) -> None:

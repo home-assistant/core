@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, HEV_CYCLE_STATE
@@ -40,6 +40,7 @@ class LIFXHevCycleBinarySensorEntity(LIFXEntity, BinarySensorEntity):
     """LIFX HEV cycle state binary sensor."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -50,15 +51,8 @@ class LIFXHevCycleBinarySensorEntity(LIFXEntity, BinarySensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
-        self._async_update_attrs()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
-    @callback
-    def _async_update_attrs(self) -> None:
-        """Handle coordinator updates."""
-        self._attr_is_on = self.coordinator.async_get_hev_cycle_state()
+    @property
+    def is_on(self) -> bool | None:
+        """Returns true if a HEV cycle is currently running."""
+        return self.coordinator.async_get_hev_cycle_state()

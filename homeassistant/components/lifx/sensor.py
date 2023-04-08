@@ -1,8 +1,6 @@
 """Sensors for LIFX lights."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,8 +15,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import ATTR_RSSI, DOMAIN
 from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 RSSI_SENSOR = SensorEntityDescription(
     key=ATTR_RSSI,
@@ -42,6 +38,7 @@ class LIFXRssiSensor(LIFXEntity, SensorEntity):
     """LIFX RSSI sensor."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -55,16 +52,10 @@ class LIFXRssiSensor(LIFXEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_native_unit_of_measurement = coordinator.rssi_uom
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
-    @callback
-    def _async_update_attrs(self) -> None:
-        """Handle coordinator updates."""
-        self._attr_native_value = self.coordinator.rssi
+    @property
+    def native_value(self) -> int:
+        """Return last known RSSI value."""
+        return self.coordinator.rssi
 
     @callback
     async def async_added_to_hass(self) -> None:

@@ -93,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 host, serial=serial, raise_on_progress=True
             )
         ):
-            return self.async_abort(reason="cannot_connect")  # pragma: no cover
+            return self.async_abort(reason="cannot_connect")
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
@@ -172,7 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_without_label.ip_addr, raise_on_progress=False
             )
             if not device:
-                return self.async_abort(reason="cannot_connect")  # pragma: no cover
+                return self.async_abort(reason="cannot_connect")
             return self._async_create_entry_from_device(device)
 
         configured_serials: set[str] = set()
@@ -243,9 +243,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             or lifx_features(device)["relays"] is True
             or device.host_firmware_version is None
         ):
-            return None  # relays not supported
-        # device.mac_addr is not the mac_address, its the serial number
-        device.mac_addr = serial or messages[0].target_addr
+            return None
+
         await self.async_set_unique_id(
             formatted_serial(device.mac_addr), raise_on_progress=raise_on_progress
         )

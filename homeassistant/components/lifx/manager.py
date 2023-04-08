@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import timedelta
 from typing import Any
 
 import aiolifx_effects
@@ -32,8 +31,6 @@ from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from .const import ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator, Light
 from .util import convert_8_to_16, find_hsbk
-
-SCAN_INTERVAL = timedelta(seconds=10)
 
 SERVICE_EFFECT_COLORLOOP = "effect_colorloop"
 SERVICE_EFFECT_FLAME = "effect_flame"
