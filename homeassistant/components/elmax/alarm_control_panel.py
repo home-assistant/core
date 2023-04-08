@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import InvalidStateError
+from homeassistant.exceptions import HomeAssistantError, InvalidStateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElmaxCoordinator
@@ -83,6 +83,12 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
+        # Elmax alarm panels do always require a code to be passed for disarm operations
+        if code is None or code == "":
+            raise HomeAssistantError(
+                "Disarm operation failed: please input the disarm code."
+            )
+
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id,
             command=AreaCommand.DISARM,
