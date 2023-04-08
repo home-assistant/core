@@ -374,11 +374,7 @@ class ReolinkHost:
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ):
         """Handle incoming webhook from Reolink for inbound messages and calls."""
-
         _LOGGER.debug("Webhook '%s' called", webhook_id)
-        if not self._webhook_reachable.is_set():
-            self._webhook_reachable.set()
-            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
         if not request.body_exists:
             _LOGGER.debug("Webhook '%s' triggered without payload", webhook_id)
@@ -398,3 +394,7 @@ class ReolinkHost:
         else:
             for channel in channels:
                 async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
+
+        if not self._webhook_reachable.is_set():
+            self._webhook_reachable.set()
+            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
