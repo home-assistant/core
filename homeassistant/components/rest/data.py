@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import ssl
 
 import httpx
 
@@ -84,6 +85,14 @@ class RestData:
             if log_errors:
                 _LOGGER.error(
                     "Error fetching data: %s failed with %s", self._resource, ex
+                )
+            self.last_exception = ex
+            self.data = None
+            self.headers = None
+        except ssl.SSLError as ex:
+            if log_errors:
+                _LOGGER.error(
+                    "Error connecting to %s failed with %s", self._resource, ex
                 )
             self.last_exception = ex
             self.data = None
