@@ -5,7 +5,6 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
-import logging
 from operator import attrgetter
 import time
 from typing import Any, cast
@@ -41,9 +40,6 @@ from .const import (
     SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE,
     STATE_KEY,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
 
 _BASE_STATES = (
     States.entity_id,
@@ -738,7 +734,7 @@ def _sorted_states_to_dict(
         result[ent_id] = []
 
     # Get the states at the start time
-    timer_start = time.perf_counter()
+    time.perf_counter()
     initial_states: dict[str, Row] = {}
     if include_start_time_state:
         initial_states = {
@@ -751,10 +747,6 @@ def _sorted_states_to_dict(
                 no_attributes=no_attributes,
             )
         }
-
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        elapsed = time.perf_counter() - timer_start
-        _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
     if len(entity_ids) == 1:
         states_iter: Iterable[tuple[str, Iterator[Row]]] = (
