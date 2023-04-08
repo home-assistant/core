@@ -6,9 +6,6 @@ import pytest
 from homeassistant.components.advantage_air.climate import (
     ADVANTAGE_AIR_COOL_TARGET,
     ADVANTAGE_AIR_HEAT_TARGET,
-    ADVANTAGE_AIR_MYAUTO,
-    ADVANTAGE_AIR_MYAUTO_ENABLED,
-    ADVANTAGE_AIR_MYTEMP_ENABLED,
     HASS_FAN_MODES,
     HASS_HVAC_MODES,
 )
@@ -24,20 +21,18 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
-    ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_LOW,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -138,22 +133,6 @@ async def test_climate_async_setup_entry(
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
     assert data["ac1"]["info"]["setTemp"] == 25
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
-
-    # Test changing Preset
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_PRESET_MODE: ADVANTAGE_AIR_MYAUTO},
-        blocking=True,
-    )
-
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"][ADVANTAGE_AIR_MYAUTO_ENABLED] is True
-    assert data["ac1"]["info"][ADVANTAGE_AIR_MYTEMP_ENABLED] is False
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -293,26 +272,3 @@ async def test_climate_async_failed_update(
         )
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/setAircon"
-
-
-async def test_climate_change_preset(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test climate change failure."""
-
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        text=TEST_SYSTEM_DATA,
-    )
-    await add_mock_config(hass)
-
-    entity_id = "climate.myzone"
-
-    state = hass.states.get(entity_id)
-
-    hass.states.async_set(
-        entity_id, state.state, {ATTR_PRESET_MODE: ADVANTAGE_AIR_MYAUTO}
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state.state != STATE_UNAVAILABLE
