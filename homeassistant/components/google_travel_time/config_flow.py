@@ -8,6 +8,11 @@ from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
@@ -30,27 +35,79 @@ from .const import (
     DEPARTURE_TIME,
     DOMAIN,
     TIME_TYPES,
+    TRAFFIC_MODEL,
     TRANSIT_PREFS,
     TRANSPORT_TYPE,
     TRAVEL_MODE,
-    TRAVEL_MODEL,
     UNITS,
     UNITS_IMPERIAL,
     UNITS_METRIC,
 )
 from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
 
+NONE_SENTINEL = "none"
+
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_MODE): vol.In(TRAVEL_MODE),
-        vol.Optional(CONF_LANGUAGE): vol.In([None, *ALL_LANGUAGES]),
-        vol.Optional(CONF_AVOID): vol.In([None, *AVOID]),
-        vol.Optional(CONF_UNITS): vol.In(UNITS),
-        vol.Optional(CONF_TIME_TYPE): vol.In(TIME_TYPES),
-        vol.Optional(CONF_TIME): cv.string,
-        vol.Optional(CONF_TRAFFIC_MODEL): vol.In([None, *TRAVEL_MODEL]),
-        vol.Optional(CONF_TRANSIT_MODE): vol.In([None, *TRANSPORT_TYPE]),
-        vol.Optional(CONF_TRANSIT_ROUTING_PREFERENCE): vol.In([None, *TRANSIT_PREFS]),
+        vol.Required(CONF_MODE): SelectSelector(
+            SelectSelectorConfig(
+                options=sorted(TRAVEL_MODE),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_MODE,
+            )
+        ),
+        vol.Optional(CONF_LANGUAGE, default=NONE_SENTINEL): SelectSelector(
+            SelectSelectorConfig(
+                options=[NONE_SENTINEL] + sorted(ALL_LANGUAGES),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_LANGUAGE,
+            )
+        ),
+        vol.Optional(CONF_AVOID, default=NONE_SENTINEL): SelectSelector(
+            SelectSelectorConfig(
+                options=[NONE_SENTINEL] + sorted(AVOID),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_AVOID,
+            )
+        ),
+        vol.Required(CONF_UNITS): SelectSelector(
+            SelectSelectorConfig(
+                options=sorted(UNITS),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_UNITS,
+            )
+        ),
+        vol.Required(CONF_TIME_TYPE): SelectSelector(
+            SelectSelectorConfig(
+                options=sorted(TIME_TYPES),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_TIME_TYPE,
+            )
+        ),
+        vol.Optional(CONF_TIME, default=""): cv.string,
+        vol.Optional(CONF_TRAFFIC_MODEL, default=NONE_SENTINEL): SelectSelector(
+            SelectSelectorConfig(
+                options=[NONE_SENTINEL] + sorted(TRAFFIC_MODEL),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_TRAFFIC_MODEL,
+            )
+        ),
+        vol.Optional(CONF_TRANSIT_MODE, default=NONE_SENTINEL): SelectSelector(
+            SelectSelectorConfig(
+                options=[NONE_SENTINEL] + sorted(TRANSPORT_TYPE),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_TRANSIT_MODE,
+            )
+        ),
+        vol.Optional(
+            CONF_TRANSIT_ROUTING_PREFERENCE, default=NONE_SENTINEL
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=[NONE_SENTINEL] + sorted(TRANSIT_PREFS),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_TRANSIT_ROUTING_PREFERENCE,
+            )
+        ),
     }
 )
 
@@ -65,6 +122,15 @@ def default_options(hass: HomeAssistant) -> dict[str, str | None]:
     }
 
 
+def _strip_sentinel(options: dict[str, str]) -> dict[str, str]:
+    """Remove entries with sentinel values."""
+    result = {}
+    for key, value in options.items():
+        if value != NONE_SENTINEL:
+            result[key] = value
+    return result
+
+
 class GoogleOptionsFlow(config_entries.OptionsFlow):
     """Handle an options flow for Google Travel Time."""
 
@@ -75,6 +141,7 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
+            user_input = _strip_sentinel(user_input)
             time_type = user_input.pop(CONF_TIME_TYPE)
             if time := user_input.pop(CONF_TIME, None):
                 if time_type == ARRIVAL_TIME:
