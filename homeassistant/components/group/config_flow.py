@@ -9,7 +9,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback, async_get_hass
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -175,8 +175,8 @@ def import_sensor() -> (
             if all(
                 item
                 in ChainMap(
-                    entry.options,
-                    entry.data,
+                    entry.options,  # type: ignore[arg-type]
+                    entry.data,  # type: ignore[arg-type]
                 ).items()
                 for item in match_dict.items()
             ):
