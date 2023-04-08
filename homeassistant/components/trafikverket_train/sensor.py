@@ -53,7 +53,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Departure state",
         icon="mdi:clock",
         value_fn=lambda data: data["departure_state"],
-        device_class="trafikverket_train__depart_state",
+        translation_key="depart_state",
     ),
     TrafikverketSensorEntityDescription(
         key="cancelled",
