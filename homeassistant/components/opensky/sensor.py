@@ -14,6 +14,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
+    CONF_USERNAME,
+    CONF_PASSWORD,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
@@ -100,7 +102,7 @@ class OpenSkySensor(SensorEntity):
         "Information provided by the OpenSky Network (https://opensky-network.org)"
     )
 
-    def __init__(self, hass, name, latitude, longitude, radius, altitude):
+    def __init__(self, hass, name, latitude, longitude, radius, altitude, username, password):
         """Initialize the sensor."""
         self._session = requests.Session()
         self._latitude = latitude
@@ -112,6 +114,8 @@ class OpenSkySensor(SensorEntity):
         self._state = 0
         self._hass = hass
         self._name = name
+        self._username = username
+        self._password = password
         self._previously_tracked = None
 
     @property
@@ -153,7 +157,7 @@ class OpenSkySensor(SensorEntity):
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
-        states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
+        states = self._session.get(OPENSKY_API_URL, auth=(self._username, self._password)).json().get(ATTR_STATES)
         for state in states:
             flight = dict(zip(OPENSKY_API_FIELDS, state))
             callsign = flight[ATTR_CALLSIGN].strip()
