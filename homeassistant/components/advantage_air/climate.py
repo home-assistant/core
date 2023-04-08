@@ -148,15 +148,6 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
 
     @property
-    def preset_mode(self) -> str:
-        """Return the current preset mode."""
-        if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
-            return ADVANTAGE_AIR_MYAUTO
-        if self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
-            return ADVANTAGE_AIR_MYTEMP
-        return ADVANTAGE_AIR_MYZONE
-
-    @property
     def target_temperature_high(self) -> float | None:
         """Return the temperature cool mode is enabled."""
         return self._ac.get(ADVANTAGE_AIR_COOL_TARGET)
