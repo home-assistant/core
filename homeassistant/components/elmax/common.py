@@ -1,6 +1,7 @@
 """Elmax integration common classes and utilities."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from logging import Logger
@@ -105,9 +106,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 # If the panel is online, proceed with fetching its state
                 # and return it right away
                 if panel.online:
-                    status = await self._client.get_panel_status(
-                        control_panel_id=panel.hash, pin=self._panel_pin
-                    )  # type: PanelStatus
+                    status = await self._retriable_update(panel)
 
                     # Store a dictionary for fast endpoint state access
                     self._state_by_endpoint = {
@@ -128,6 +127,20 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
             raise UpdateFailed(
                 "A network error occurred while communicating with Elmax cloud."
             ) from err
+
+    async def _retriable_update(
+        self, panel, max_attempts: int = 2, wait_interval: float = 1.5
+    ) -> PanelStatus:
+        for attempt in range(0, max_attempts):
+            try:
+                return await self._client.get_panel_status(
+                    control_panel_id=panel.hash, pin=self._panel_pin
+                )
+            except ElmaxApiError as err:
+                if err.status_code == 422 and attempt < (max_attempts - 1):
+                    await asyncio.sleep(wait_interval)
+                    continue
+                raise
 
 
 class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
