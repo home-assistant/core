@@ -12,6 +12,7 @@ from roborock.containers import HomeDataDevice, RoborockDeviceInfo, UserData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator
@@ -39,9 +40,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         *(mqtt_client.get_networking(device.duid) for device in devices)
     )
     network_info = {
-        device.duid: result for device, result in zip(devices, network_results)
+        device.duid: result
+        for device, result in zip(devices, network_results)
+        if result is not None
     }
     await mqtt_client.async_disconnect()
+    if len(network_info) == 0:
+        raise ConfigEntryNotReady(
+            "Could not get network information about your devices"
+        )
+
     product_info = {product.id: product for product in home_data.products}
     coordinator = RoborockDataUpdateCoordinator(
         hass,
