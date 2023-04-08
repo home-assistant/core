@@ -240,9 +240,6 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
-        )
 
     @property
     def hvac_mode(self) -> HVACMode:
