@@ -20,7 +20,7 @@ async def test_setup_and_remove_config_entry(
     input_sensors = ["sensor.input_one", "sensor.input_two"]
 
     registry = er.async_get(hass)
-    min_max_entity_id = f"{platform}.my_min_max"
+    group_entity_id = "sensor.sensor_group_my_min_max"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -38,17 +38,19 @@ async def test_setup_and_remove_config_entry(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check the entity is registered in the entity registry
-    assert registry.async_get(min_max_entity_id) is not None
+    # Check the entity is registered in the entity registry imported to Group
+    entity = registry.async_get(group_entity_id)
+    assert entity is not None
+    assert entity.platform == "group"
 
     # Check the platform is setup correctly
-    state = hass.states.get(min_max_entity_id)
+    state = hass.states.get(group_entity_id)
     assert state.state == "20.0"
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Check the state and entity registry entry are removed
-    assert hass.states.get(min_max_entity_id) is None
-    assert registry.async_get(min_max_entity_id) is None
+    # Check the state and entity registry entry persist when min_max entry is unloaded
+    assert hass.states.get(group_entity_id) is not None
+    assert registry.async_get(group_entity_id) is not None
