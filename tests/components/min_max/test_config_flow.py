@@ -8,8 +8,6 @@ from homeassistant.components.min_max.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.parametrize("platform", ("sensor",))
 async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
@@ -63,72 +61,3 @@ def get_suggested(schema, key):
             return k.description["suggested_value"]
     # Wanted key absent from schema
     raise Exception
-
-
-@pytest.mark.parametrize("platform", ("sensor",))
-async def test_options(hass: HomeAssistant, platform: str) -> None:
-    """Test reconfiguring."""
-    hass.states.async_set("sensor.input_one", "10")
-    hass.states.async_set("sensor.input_two", "20")
-    hass.states.async_set("sensor.input_three", "33.33")
-
-    input_sensors1 = ["sensor.input_one", "sensor.input_two"]
-    input_sensors2 = ["sensor.input_one", "sensor.input_two", "sensor.input_three"]
-
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "entity_ids": input_sensors1,
-            "name": "My min_max",
-            "round_digits": 0,
-            "type": "min",
-        },
-        title="My min_max",
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-    schema = result["data_schema"].schema
-    assert get_suggested(schema, "entity_ids") == input_sensors1
-    assert get_suggested(schema, "round_digits") == 0
-    assert get_suggested(schema, "type") == "min"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "entity_ids": input_sensors2,
-            "round_digits": 1,
-            "type": "mean",
-        },
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        "entity_ids": input_sensors2,
-        "name": "My min_max",
-        "round_digits": 1,
-        "type": "mean",
-    }
-    assert config_entry.data == {}
-    assert config_entry.options == {
-        "entity_ids": input_sensors2,
-        "name": "My min_max",
-        "round_digits": 1,
-        "type": "mean",
-    }
-    assert config_entry.title == "My min_max"
-
-    # Check config entry is reloaded with new options
-    await hass.async_block_till_done()
-
-    # Check the entity was updated, no new entity was created
-    assert len(hass.states.async_all()) == 4
-
-    # Check the state of the entity has changed as expected
-    state = hass.states.get(f"{platform}.my_min_max")
-    assert state.state == "21.1"
