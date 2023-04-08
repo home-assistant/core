@@ -446,3 +446,39 @@ async def test_options_flow_hides_members(
 
     assert registry.async_get(f"{group_type}.one").hidden_by == hidden_by
     assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by
+
+
+async def test_import(hass: HomeAssistant) -> None:
+    """Test import config flow."""
+
+    members = ["sensor.one", "sensor.two"]
+    for member in members:
+        hass.states.async_set(member, "on", {})
+
+    with patch(
+        "homeassistant.components.group.async_setup_entry", wraps=async_setup_entry
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "ignore_non_numeric": False,
+                "entities": ["sensor.one", "sensor.two"],
+                "hide_members": False,
+                "type": "sum",
+                "name": "Sensor Group sum",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Sensor Group sum"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "entities": members,
+        "group_type": "sensor",
+        "hide_members": False,
+        "name": "Sensor Group sum",
+        "ignore_non_numeric": False,
+        "type": "sum",
+    }
