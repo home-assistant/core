@@ -59,3 +59,22 @@ async def test_file_write_allowlist(hass: HomeAssistant) -> None:
     with pytest.raises(ValueError):
         args = {"content": content, "filename": "mock_file"}
         await hass.services.async_call("file", "write", args, blocking=True)
+
+    with pytest.raises(ValueError):
+        args = {"content": content, "filename": "inner/../filename"}
+        await hass.services.async_call("file", "write", args, blocking=True)
+
+    with pytest.raises(ValueError):
+        args = {"content": content, "filename": "/inner/filename"}
+        await hass.services.async_call("file", "write", args, blocking=True)
+
+    m_open = mock_open()
+    with patch("homeassistant.components.file.open", m_open, create=True):
+        filename = "inner/filename"
+        args = {"content": content, "filename": filename}
+        await hass.services.async_call("file", "write", args, blocking=True)
+
+        full_filename = os.path.join(hass.config.path(), filename)
+        assert m_open.call_count == 1
+        assert m_open.call_args == call(full_filename, "w", encoding="utf8")
+        assert m_open.return_value.write.call_count == 1
