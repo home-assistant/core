@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from homewizard_energy import HomeWizardEnergy
+from homewizard_energy.const import SUPPORTS_STATE
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -84,15 +85,16 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        HomeWizardSwitchEntity(
-            coordinator=coordinator,
-            description=description,
-            entry=entry,
+    if coordinator.data.device.product_type in SUPPORTS_STATE:
+        async_add_entities(
+            HomeWizardSwitchEntity(
+                coordinator=coordinator,
+                description=description,
+                entry=entry,
+            )
+            for description in SWITCHES
+            if description.available_fn(coordinator.data)
         )
-        for description in SWITCHES
-        if description.available_fn(coordinator.data)
-    )
 
 
 class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
