@@ -1,8 +1,6 @@
 """Support for displaying minimal, maximal, mean or median values."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.group.sensor import SensorGroup
@@ -20,8 +18,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MIN_VALUE = "min_value"
 ATTR_MIN_ENTITY_ID = "min_entity_id"
@@ -70,7 +66,7 @@ async def async_setup_entry(
         hass,
         DOMAIN,
         "deprecated_integration",
-        breaks_in_ha_version="2023.5.0",
+        breaks_in_ha_version="2023.7.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_integration",
@@ -104,7 +100,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_integration",
-        breaks_in_ha_version="2023.4.0",
+        breaks_in_ha_version="2023.7.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_integration_yaml",
@@ -114,24 +110,6 @@ async def async_setup_platform(
     name: str | None = config.get(CONF_NAME)
     sensor_type: str = config[CONF_TYPE]
     unique_id = config.get(CONF_UNIQUE_ID)
-
-    import_config = {
-        "ignore_non_numeric": False,
-        "entities": entity_ids,
-        "hide_members": False,
-        "type": sensor_type,
-        "name": f"Sensor Group {name}"
-        if name
-        else f"Sensor Group {sensor_type}".capitalize(),
-    }
-
-    await hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            "group",
-            context={"source": SOURCE_IMPORT},
-            data=import_config,
-        )
-    )
 
     async_add_entities(
         [
