@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.group.sensor import SensorGroup
+from homeassistant.components.group.sensor import (
+    async_setup_platform as group_setup_platform,
+)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -99,7 +101,7 @@ async def async_setup_platform(
     async_create_issue(
         hass,
         DOMAIN,
-        "deprecated_integration",
+        "deprecated_integration_yaml",
         breaks_in_ha_version="2023.7.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
@@ -111,17 +113,11 @@ async def async_setup_platform(
     sensor_type: str = config[CONF_TYPE]
     unique_id = config.get(CONF_UNIQUE_ID)
 
-    async_add_entities(
-        [
-            SensorGroup(
-                unique_id,
-                name if name else f"{sensor_type} sensor".capitalize(),
-                entity_ids,
-                False,
-                sensor_type,
-                None,
-                None,
-                None,
-            )
-        ]
-    )
+    group_config = {
+        "entities": entity_ids,
+        "type": sensor_type,
+        "name": name if name else f"{sensor_type} sensor".capitalize(),
+        "unique_id": unique_id,
+        "ignore_non_numeric": False,
+    }
+    await group_setup_platform(hass, group_config, async_add_entities)
