@@ -369,7 +369,7 @@ class ReolinkHost:
         except ConnectionResetError:
             await asyncio.shield(self.handle_webhook_error_shielded(hass, webhook_id))
             return
-            
+
         await asyncio.shield(self.handle_webhook_shielded(hass, webhook_id, data))
 
     async def handle_webhook_shielded(
@@ -395,13 +395,18 @@ class ReolinkHost:
 
     async def handle_webhook_error_shielded(self, hass: HomeAssistant, webhook_id: str):
         """Handle error from incoming webhook by polling the state."""
-        _LOGGER.debug("Webhook '%s' called, but lost connection before reading message, issuing poll", webhook_id)
+        _LOGGER.debug(
+            "Webhook '%s' called, but lost connection before reading message, issuing poll",
+            webhook_id,
+        )
         if not await self._api.get_motion_state_all_ch():
-            _LOGGER.error("Could not poll motion state after getting error during receiving ONVIF event")
+            _LOGGER.error(
+                "Could not poll motion state after getting error during receiving ONVIF event"
+            )
             return
 
         async_dispatcher_send(hass, f"{webhook_id}_all", {})
-        
+
         if not self._webhook_reachable.is_set():
             self._webhook_reachable.set()
             ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
