@@ -187,11 +187,16 @@ class SmartThingsAcceleration(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
+        try:
+            attr_name = self._cluster.attributes[attrid].name
+        except KeyError:
+            attr_name = UNKNOWN
+
         if attrid == self.value_attribute:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
                 attrid,
-                self._cluster.attributes.get(attrid, [UNKNOWN])[0],
+                attr_name,
                 value,
             )
             return
@@ -200,7 +205,7 @@ class SmartThingsAcceleration(ZigbeeChannel):
             SIGNAL_ATTR_UPDATED,
             {
                 ATTR_ATTRIBUTE_ID: attrid,
-                ATTR_ATTRIBUTE_NAME: self._cluster.attributes.get(attrid, [UNKNOWN])[0],
+                ATTR_ATTRIBUTE_NAME: attr_name,
                 ATTR_VALUE: value,
             },
         )
