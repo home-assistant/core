@@ -89,7 +89,6 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
-    _attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
 
     def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
