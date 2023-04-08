@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
-import logging
-import time
 from typing import cast
 
 from aiohttp import web
@@ -24,10 +22,9 @@ from . import websocket_api
 from .const import DOMAIN
 from .helpers import entities_may_have_state_changes_after
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_ORDER = "use_include_order"
 
+_ONE_DAY = timedelta(days=1)
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -64,35 +61,37 @@ class HistoryPeriodView(HomeAssistantView):
     ) -> web.Response:
         """Return history over a period of time."""
         datetime_ = None
+        query = request.query
+
         if datetime and (datetime_ := dt_util.parse_datetime(datetime)) is None:
             return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
 
-        now = dt_util.utcnow()
+        if not (entity_ids_str := query.get("filter_entity_id")) or not (
+            entity_ids := entity_ids_str.strip().lower().split(",")
+        ):
+            return self.json_message(
+                "filter_entity_id is missing", HTTPStatus.BAD_REQUEST
+            )
 
-        one_day = timedelta(days=1)
+        now = dt_util.utcnow()
         if datetime_:
             start_time = dt_util.as_utc(datetime_)
         else:
-            start_time = now - one_day
+            start_time = now - _ONE_DAY
 
         if start_time > now:
             return self.json([])
 
-        if end_time_str := request.query.get("end_time"):
+        if end_time_str := query.get("end_time"):
             if end_time := dt_util.parse_datetime(end_time_str):
                 end_time = dt_util.as_utc(end_time)
             else:
                 return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
         else:
-            end_time = start_time + one_day
-        entity_ids_str = request.query.get("filter_entity_id") or ""
-        entity_ids = entity_ids_str.lower().split(",")
-        if not entity_ids:
-            return self.json_message("Entity ID is missing", HTTPStatus.BAD_REQUEST)
-        include_start_time_state = "skip_initial_state" not in request.query
-        significant_changes_only = (
-            request.query.get("significant_changes_only", "1") != "0"
-        )
+            end_time = start_time + _ONE_DAY
+
+        include_start_time_state = "skip_initial_state" not in query
+        significant_changes_only = query.get("significant_changes_only", "1") != "0"
 
         minimal_response = "minimal_response" in request.query
         no_attributes = "no_attributes" in request.query
@@ -135,26 +134,20 @@ class HistoryPeriodView(HomeAssistantView):
         no_attributes: bool,
     ) -> web.Response:
         """Fetch significant stats from the database as json."""
-        timer_start = time.perf_counter()
-
         with session_scope(hass=hass, read_only=True) as session:
-            states = history.get_significant_states_with_session(
-                hass,
-                session,
-                start_time,
-                end_time,
-                entity_ids,
-                None,
-                include_start_time_state,
-                significant_changes_only,
-                minimal_response,
-                no_attributes,
+            return self.json(
+                list(
+                    history.get_significant_states_with_session(
+                        hass,
+                        session,
+                        start_time,
+                        end_time,
+                        entity_ids,
+                        None,
+                        include_start_time_state,
+                        significant_changes_only,
+                        minimal_response,
+                        no_attributes,
+                    ).values()
+                )
             )
-
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            elapsed = time.perf_counter() - timer_start
-            _LOGGER.debug(
-                "Extracted %d states in %fs", sum(map(len, states.values())), elapsed
-            )
-
-        return self.json(list(states.values()))

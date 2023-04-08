@@ -465,9 +465,9 @@ async def test_fetch_period_api(
     with patch.object(instance.states_meta_manager, "active", False):
         client = await hass_client()
         response = await client.get(
-            f"/api/history/period/{dt_util.utcnow().isoformat()}"
+            f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=sensor.power"
         )
-        assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_minimal_response(
@@ -521,8 +521,8 @@ async def test_fetch_period_api_with_no_timestamp(
     instance = recorder.get_instance(hass)
     with patch.object(instance.states_meta_manager, "active", False):
         client = await hass_client()
-        response = await client.get("/api/history/period")
-        assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        response = await client.get("/api/history/period?filter_entity_id=sensor.power")
+        assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_include_order(

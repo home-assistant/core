@@ -396,7 +396,9 @@ async def test_fetch_period_api(
     """Test the fetch period view for history."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
-    response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=sensor.power"
+    )
     assert response.status == HTTPStatus.OK
 
 
@@ -408,7 +410,9 @@ async def test_fetch_period_api_with_use_include_order(
         hass, "history", {history.DOMAIN: {history.CONF_ORDER: True}}
     )
     client = await hass_client()
-    response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=sensor.power"
+    )
     assert response.status == HTTPStatus.OK
 
 
@@ -460,7 +464,7 @@ async def test_fetch_period_api_with_no_timestamp(
     """Test the fetch period view for history with no timestamp."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
-    response = await client.get("/api/history/period")
+    response = await client.get("/api/history/period?filter_entity_id=sensor.power")
     assert response.status == HTTPStatus.OK
 
 
@@ -544,3 +548,148 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
     assert response_json[1][0]["entity_id"] == "light.cow"
+
+
+async def test_fetch_period_api_before_history_started(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the fetch period view for history for the far past."""
+    await async_setup_component(
+        hass,
+        "history",
+        {},
+    )
+    await async_wait_recording_done(hass)
+    far_past = dt_util.utcnow() - timedelta(days=365)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{far_past.isoformat()}?filter_entity_id=light.kitchen",
+    )
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+    assert response_json == []
+
+
+async def test_fetch_period_api_far_future(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the fetch period view for history for the far future."""
+    await async_setup_component(
+        hass,
+        "history",
+        {},
+    )
+    await async_wait_recording_done(hass)
+    far_future = dt_util.utcnow() + timedelta(days=365)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{far_future.isoformat()}?filter_entity_id=light.kitchen",
+    )
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+    assert response_json == []
+
+
+async def test_fetch_period_api_with_invalid_datetime(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the fetch period view for history with an invalid date time."""
+    await async_setup_component(
+        hass,
+        "history",
+        {},
+    )
+    await async_wait_recording_done(hass)
+    client = await hass_client()
+    response = await client.get(
+        "/api/history/period/INVALID?filter_entity_id=light.kitchen",
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+    response_json = await response.json()
+    assert response_json == {"message": "Invalid datetime"}
+
+
+async def test_fetch_period_api_invalid_end_time(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the fetch period view for history with an invalid end time."""
+    await async_setup_component(
+        hass,
+        "history",
+        {},
+    )
+    await async_wait_recording_done(hass)
+    far_past = dt_util.utcnow() - timedelta(days=365)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{far_past.isoformat()}",
+        params={"filter_entity_id": "light.kitchen", "end_time": "INVALID"},
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+    response_json = await response.json()
+    assert response_json == {"message": "Invalid end_time"}
+
+
+async def test_entity_ids_limit_via_api_with_end_time(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test limiting history to entity_ids with end_time."""
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    start = dt_util.utcnow()
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.nomatch", "on")
+
+    await async_wait_recording_done(hass)
+
+    end_time = start + timedelta(minutes=1)
+    future_second = dt_util.utcnow() + timedelta(seconds=1)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{future_second.isoformat()}",
+        params={
+            "filter_entity_id": "light.kitchen,light.cow",
+            "end_time": end_time.isoformat(),
+        },
+    )
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+    assert len(response_json) == 0
+
+    when = start - timedelta(minutes=1)
+    response = await client.get(
+        f"/api/history/period/{when.isoformat()}",
+        params={
+            "filter_entity_id": "light.kitchen,light.cow",
+            "end_time": end_time.isoformat(),
+        },
+    )
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0][0]["entity_id"] == "light.kitchen"
+    assert response_json[1][0]["entity_id"] == "light.cow"
+
+
+async def test_fetch_period_api_with_no_entity_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the fetch period view for history with minimal_response."""
+    await async_setup_component(hass, "history", {})
+    await async_wait_recording_done(hass)
+
+    yesterday = dt_util.utcnow() - timedelta(days=1)
+
+    client = await hass_client()
+    response = await client.get(f"/api/history/period/{yesterday.isoformat()}")
+    assert response.status == HTTPStatus.BAD_REQUEST
+    response_json = await response.json()
+    assert response_json == {"message": "filter_entity_id is missing"}
