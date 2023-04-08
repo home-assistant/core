@@ -93,7 +93,6 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
-        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
 
         # Set supported features and HVAC modes based on current operating mode
         if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
