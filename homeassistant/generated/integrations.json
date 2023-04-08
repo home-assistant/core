@@ -6670,6 +6670,7 @@
       "iot_class": "local_push"
     },
     "min_max": {
+      "name": "Min/Max",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
@@ -6730,7 +6731,6 @@
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
-    "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",
     "moon",
