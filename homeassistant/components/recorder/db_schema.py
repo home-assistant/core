@@ -3,13 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from functools import lru_cache
 import logging
 import time
 from typing import Any, cast
 
 import ciso8601
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
     JSON,
     BigInteger,
@@ -88,6 +87,8 @@ TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 STATISTICS_TABLES = ("statistics", "statistics_short_term")
 
 MAX_STATE_ATTRS_BYTES = 16384
+MAX_EVENT_DATA_BYTES = 32768
+
 PSQL_DIALECT = SupportedDialect.POSTGRESQL
 
 ALL_TABLES = [
@@ -117,6 +118,7 @@ METADATA_ID_LAST_UPDATED_INDEX_TS = "ix_states_metadata_id_last_updated_ts"
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
 STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 LEGACY_STATES_EVENT_ID_INDEX = "ix_states_event_id"
+LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated_ts"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
 MYSQL_COLLATE = "utf8mb4_unicode_ci"
@@ -327,14 +329,23 @@ class EventData(Base):
     ) -> bytes:
         """Create shared_data from an event."""
         if dialect == SupportedDialect.POSTGRESQL:
-            return json_bytes_strip_null(event.data)
-        return json_bytes(event.data)
+            bytes_result = json_bytes_strip_null(event.data)
+        bytes_result = json_bytes(event.data)
+        if len(bytes_result) > MAX_EVENT_DATA_BYTES:
+            _LOGGER.warning(
+                "Event data for %s exceed maximum size of %s bytes. "
+                "This can cause database performance issues; Event data "
+                "will not be stored",
+                event.event_type,
+                MAX_EVENT_DATA_BYTES,
+            )
+            return b"{}"
+        return bytes_result
 
     @staticmethod
-    @lru_cache
     def hash_shared_data_bytes(shared_data_bytes: bytes) -> int:
         """Return the hash of json encoded shared data."""
-        return cast(int, fnv1a_32(shared_data_bytes))
+        return fnv1a_32(shared_data_bytes)
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an event data dictionary."""
@@ -580,10 +591,9 @@ class StateAttributes(Base):
         return bytes_result
 
     @staticmethod
-    @lru_cache(maxsize=2048)
     def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:
         """Return the hash of json encoded shared attributes."""
-        return cast(int, fnv1a_32(shared_attrs_bytes))
+        return fnv1a_32(shared_attrs_bytes)
 
     def to_native(self) -> dict[str, Any]:
         """Convert to a state attributes dictionary."""
