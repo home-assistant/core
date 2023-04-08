@@ -59,7 +59,7 @@ ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEAT
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 30
+SCHEMA_VERSION = 32
 
 _LOGGER = logging.getLogger(__name__)
 
