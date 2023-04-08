@@ -37,8 +37,8 @@ async def async_setup_entry(
                 # Only add zone vent controls when zone in vent control mode.
                 if zone["type"] == 0:
                     entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
-    if "myThings" in instance["coordinator"].data:
-        for thing in instance["coordinator"].data["myThings"]["things"].values():
+    if things := instance["coordinator"].data.get("myThings"):
+        for thing in things.values():
             if thing["channelDipState"] in [1, 2]:  # 1 = "Blind", 2 = "Blind 2"
                 entities.append(
                     AdvantageAirThingCover(instance, thing, CoverDeviceClass.BLIND)
