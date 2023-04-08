@@ -97,6 +97,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 
         # Set supported features and HVAC modes based on current operating mode
         if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
+            # MyAuto
             self._attr_supported_features = (
                 ClimateEntityFeature.FAN_MODE
                 | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -111,10 +112,12 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 HVACMode.HEAT_COOL,
             ]
         elif self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
+            # MyTemp
             self._attr_supported_features = ClimateEntityFeature.FAN_MODE
             self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
 
         else:
+            # MyZone
             self._attr_supported_features = (
                 ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
             )
