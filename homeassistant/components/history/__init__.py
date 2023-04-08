@@ -14,7 +14,6 @@ from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
@@ -29,17 +28,18 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ORDER = "use_include_order"
 
+
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_ORDER),
-            cv.deprecated(CONF_INCLUDE),
-            cv.deprecated(CONF_EXCLUDE),
-            INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-                {vol.Optional(CONF_ORDER, default=False): cv.boolean}
-            ),
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.All(
+                INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+                    {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+                ),
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
