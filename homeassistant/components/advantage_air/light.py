@@ -31,8 +31,8 @@ async def async_setup_entry(
                 entities.append(AdvantageAirLight(instance, light))
             else:
                 entities.append(AdvantageAirLightDimmable(instance, light))
-    if my_things := instance["coordinator"].data.get("myThings"):
-        for thing in my_things["things"].values():
+    if things := instance["coordinator"].data.get("myThings"):
+        for thing in things["things"].values():
             if thing["channelDipState"] == 4:  # 4 = "Light (on/off)""
                 entities.append(AdvantageAirThingLight(instance, thing))
             elif thing["channelDipState"] == 5:  # 5 = "Light (Dimmable)""
