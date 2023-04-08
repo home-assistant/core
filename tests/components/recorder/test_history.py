@@ -21,6 +21,7 @@ from homeassistant.components.recorder.db_schema import (
     States,
     StatesMeta,
 )
+from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.history import legacy
 from homeassistant.components.recorder.models import LazyState, process_timestamp
 from homeassistant.components.recorder.models.legacy import LazyStatePreSchema31
@@ -610,6 +611,28 @@ def test_get_significant_states_entity_id(
 
     hist = history.get_significant_states(hass, zero, four, ["media_player.test"])
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+
+def test_get_significant_states_without_entity_ids_raises(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test at least one entity id is required for get_significant_states."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    with pytest.raises(ValueError, match="entity_ids must be provided"):
+        history.get_significant_states(hass, now, None)
+
+
+def test_get_significant_states_with_filters_raises(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test passing filters is no longer supported."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    with pytest.raises(NotImplementedError, match="Filters are no longer supported"):
+        history.get_significant_states(
+            hass, now, None, ["media_player.test"], Filters()
+        )
 
 
 def test_get_significant_states_multiple_entity_ids(

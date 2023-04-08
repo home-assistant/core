@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import core, history, statistics
+from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, State
@@ -755,3 +756,25 @@ def test_state_changes_during_period_multiple_entities_single_test(
             hist = history.state_changes_during_period(hass, start, end, entity_id)
             assert len(hist) == 1
             assert hist[entity_id][0].state == value
+
+
+def test_get_significant_states_without_entity_ids_raises(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test at least one entity id is required for get_significant_states."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    with pytest.raises(ValueError, match="entity_ids must be provided"):
+        history.get_significant_states(hass, now, None)
+
+
+def test_get_significant_states_with_filters_raises(
+    hass_recorder: Callable[..., HomeAssistant]
+) -> None:
+    """Test passing filters is no longer supported."""
+    hass = hass_recorder()
+    now = dt_util.utcnow()
+    with pytest.raises(NotImplementedError, match="Filters are no longer supported"):
+        history.get_significant_states(
+            hass, now, None, ["media_player.test"], Filters()
+        )
