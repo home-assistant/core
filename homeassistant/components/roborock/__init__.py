@@ -41,7 +41,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     network_info = {
         device.duid: result for device, result in zip(devices, network_results)
     }
-
     await mqtt_client.async_disconnect()
     product_info = {product.id: product for product in home_data.products}
     coordinator = RoborockDataUpdateCoordinator(
