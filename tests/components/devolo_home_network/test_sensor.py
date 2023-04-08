@@ -92,7 +92,7 @@ async def test_update_neighboring_wifi_networks(
     assert state.state == "1"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{entry.title} Neighboring Wifi networks"
+        == f"{entry.title} Neighboring Wi-Fi networks"
     )
     assert (
         entity_registry.async_get(state_key).entity_category
