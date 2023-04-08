@@ -307,8 +307,11 @@ def state_changes_during_period(
     with session_scope(hass=hass, read_only=True) as session:
         metadata_id: int | None = None
         instance = recorder.get_instance(hass)
-        metadata_id = instance.states_meta_manager.get(entity_id, session, False)
-        entity_id_to_metadata_id = {entity_id: metadata_id}
+        if not (
+            metadata_id := instance.states_meta_manager.get(entity_id, session, False)
+        ):
+            return {}
+        entity_id_to_metadata_id: dict[str, int | None] = {entity_id: metadata_id}
         stmt = _state_changed_during_period_stmt(
             start_time,
             end_time,
@@ -580,10 +583,8 @@ def _sorted_states_to_dict(
         }
 
     if len(entity_ids) == 1:
-        if not entity_id_to_metadata_id or not (
-            metadata_id := entity_id_to_metadata_id.get(entity_ids[0])
-        ):
-            return {}
+        metadata_id = entity_id_to_metadata_id[entity_ids[0]]
+        assert metadata_id is not None  # should not be possible if we got here
         states_iter: Iterable[tuple[int, Iterator[Row]]] = (
             (metadata_id, iter(states)),
         )
