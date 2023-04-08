@@ -11,14 +11,21 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.sql.const import DOMAIN
+from homeassistant.components.sql.const import CONF_QUERY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import CONF_UNIQUE_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from . import YAML_CONFIG, YAML_CONFIG_BINARY, init_integration
+from . import (
+    YAML_CONFIG,
+    YAML_CONFIG_BINARY,
+    YAML_CONFIG_FULL_TABLE_SCAN,
+    YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID,
+    init_integration,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -322,3 +329,48 @@ async def test_binary_data_from_yaml_setup(
     state = hass.states.get("sensor.get_binary_value")
     assert state.state == "0xd34324324230392032"
     assert state.attributes["test_attr"] == "0xd343aa"
+
+
+async def test_issue_when_using_old_query(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we create an issue for an old query that will do a full table scan."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG_FULL_TABLE_SCAN)
+    await hass.async_block_till_done()
+    assert "Query contains entity_id but does not reference states_meta" in caplog.text
+
+    assert not hass.states.async_all()
+    issue_registry = ir.async_get(hass)
+
+    config = YAML_CONFIG_FULL_TABLE_SCAN["sql"]
+
+    unique_id = config[CONF_UNIQUE_ID]
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"entity_id_query_does_full_table_scan_{unique_id}"
+    )
+    assert issue.translation_placeholders == {"query": config[CONF_QUERY]}
+
+
+async def test_issue_when_using_old_query_without_unique_id(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we create an issue for an old query that will do a full table scan."""
+
+    assert await async_setup_component(
+        hass, DOMAIN, YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID
+    )
+    await hass.async_block_till_done()
+    assert "Query contains entity_id but does not reference states_meta" in caplog.text
+
+    assert not hass.states.async_all()
+    issue_registry = ir.async_get(hass)
+
+    config = YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID["sql"]
+    query = config[CONF_QUERY]
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"entity_id_query_does_full_table_scan_{query}"
+    )
+    assert issue.translation_placeholders == {"query": query}
