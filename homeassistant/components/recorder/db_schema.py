@@ -284,7 +284,7 @@ class Events(Base):
         """Convert to a native HA Event."""
         context = Context(
             id=bytes_to_ulid_or_none(self.context_id_bin),
-            user_id=bytes_to_uuid_hex_or_none(self.context_user_id),
+            user_id=bytes_to_uuid_hex_or_none(self.context_user_id_bin),
             parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:
@@ -507,7 +507,7 @@ class States(Base):
         """Convert to an HA state object."""
         context = Context(
             id=bytes_to_ulid_or_none(self.context_id_bin),
-            user_id=bytes_to_uuid_hex_or_none(self.context_user_id),
+            user_id=bytes_to_uuid_hex_or_none(self.context_user_id_bin),
             parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:
