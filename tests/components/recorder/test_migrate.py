@@ -58,7 +58,7 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
 def _get_native_states(hass, entity_id):
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
         metadata_id = instance.states_meta_manager.get(entity_id, session, True)
         states = []
@@ -364,7 +364,7 @@ async def test_schema_migrate(
 
         # Check and report the outcome of the migration; if migration fails
         # the recorder will silently create a new database.
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             res = (
                 session.query(db_schema.SchemaChanges)
                 .order_by(db_schema.SchemaChanges.change_id.desc())
@@ -957,7 +957,7 @@ async def test_migrate_event_type_ids(
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_events():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             events = (
                 session.query(Events.event_id, Events.time_fired, EventTypes.event_type)
                 .filter(
@@ -1028,7 +1028,7 @@ async def test_migrate_entity_ids(
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_states():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             states = (
                 session.query(
                     States.state,
@@ -1094,7 +1094,7 @@ async def test_post_migrate_entity_ids(
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_states():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             states = session.query(
                 States.state,
                 States.entity_id,
@@ -1150,7 +1150,7 @@ async def test_migrate_null_entity_ids(
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_states():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             states = (
                 session.query(
                     States.state,
@@ -1221,7 +1221,7 @@ async def test_migrate_null_event_type_ids(
     await async_recorder_block_till_done(hass)
 
     def _fetch_migrated_events():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             events = (
                 session.query(Events.event_id, Events.time_fired, EventTypes.event_type)
                 .filter(
