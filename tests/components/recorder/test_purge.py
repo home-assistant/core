@@ -2065,7 +2065,11 @@ async def test_purge_entities_keep_days(
     await async_recorder_block_till_done(hass)
 
     states = await instance.async_add_executor_job(
-        get_significant_states, hass, one_month_ago
+        get_significant_states,
+        hass,
+        one_month_ago,
+        None,
+        ["sensor.keep", "sensor.purge"],
     )
     assert len(states["sensor.keep"]) == 2
     assert len(states["sensor.purge"]) == 3
@@ -2082,7 +2086,11 @@ async def test_purge_entities_keep_days(
     await async_wait_purge_done(hass)
 
     states = await instance.async_add_executor_job(
-        get_significant_states, hass, one_month_ago
+        get_significant_states,
+        hass,
+        one_month_ago,
+        None,
+        ["sensor.keep", "sensor.purge"],
     )
     assert len(states["sensor.keep"]) == 2
     assert len(states["sensor.purge"]) == 1
@@ -2098,7 +2106,11 @@ async def test_purge_entities_keep_days(
     await async_wait_purge_done(hass)
 
     states = await instance.async_add_executor_job(
-        get_significant_states, hass, one_month_ago
+        get_significant_states,
+        hass,
+        one_month_ago,
+        None,
+        ["sensor.keep", "sensor.purge"],
     )
     assert len(states["sensor.keep"]) == 2
     assert "sensor.purge" not in states
