@@ -36,7 +36,6 @@ from homeassistant.components.recorder.tasks import PurgeTask
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_THEMES_UPDATED, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
@@ -621,6 +620,8 @@ async def test_purge_cutoff_date(
                         attributes_id=1000 + row,
                     )
                 )
+            convert_pending_events_to_event_types(instance, session)
+            convert_pending_states_to_meta(instance, session)
 
     instance = await async_setup_recorder_instance(hass, None)
     await async_wait_purge_done(hass)
@@ -635,7 +636,6 @@ async def test_purge_cutoff_date(
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        events = session.query(Events)
         assert states.filter(States.state == "purge").count() == rows - 1
         assert states.filter(States.state == "keep").count() == 1
         assert (
@@ -646,8 +646,18 @@ async def test_purge_cutoff_date(
             .count()
             == 1
         )
-        assert events.filter(Events.event_type == "PURGE").count() == rows - 1
-        assert events.filter(Events.event_type == "KEEP").count() == 1
+        assert (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("PURGE",))))
+            .count()
+            == rows - 1
+        )
+        assert (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("KEEP",))))
+            .count()
+            == 1
+        )
 
     instance.queue_task(PurgeTask(cutoff, repack=False, apply_filter=False))
     await hass.async_block_till_done()
@@ -657,7 +667,7 @@ async def test_purge_cutoff_date(
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        events = session.query(Events)
+        session.query(Events)
         assert states.filter(States.state == "purge").count() == 0
         assert (
             state_attributes.outerjoin(
@@ -676,8 +686,18 @@ async def test_purge_cutoff_date(
             .count()
             == 1
         )
-        assert events.filter(Events.event_type == "PURGE").count() == 0
-        assert events.filter(Events.event_type == "KEEP").count() == 1
+        assert (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("PURGE",))))
+            .count()
+            == 0
+        )
+        assert (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("KEEP",))))
+            .count()
+            == 1
+        )
 
     # Make sure we can purge everything
     instance.queue_task(PurgeTask(dt_util.utcnow(), repack=False, apply_filter=False))
@@ -1668,7 +1688,6 @@ async def test_purge_old_events_purges_the_event_type_ids(
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
     far_past = utcnow - timedelta(days=1000)
-    event_data = {"test_attr": 5, "test_attr_10": "nice"}
 
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
@@ -1704,8 +1723,6 @@ async def test_purge_old_events_purges_the_event_type_ids(
                         Events(
                             event_type=None,
                             event_type_id=event_type.event_type_id,
-                            event_data=json_dumps(event_data),
-                            origin="LOCAL",
                             time_fired_ts=dt_util.utc_to_timestamp(timestamp),
                         )
                     )
