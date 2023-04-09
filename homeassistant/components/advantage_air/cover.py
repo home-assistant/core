@@ -128,6 +128,8 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
 class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
     """Representation of Advantage Air Cover controlled by MyPlace."""
 
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+
     def __init__(
         self,
         instance: dict[str, Any],
@@ -150,12 +152,8 @@ class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open zone vent."""
-        await self.set({"id": self._id, "value": 100})
+        await self.async_turn_on()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Fully close zone vent."""
-        await self.set({"id": self._id, "value": 0})
-
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Change cover position."""
-        await self.set({"id": self._id, "value": kwargs[ATTR_POSITION]})
+        await self.async_turn_off()
