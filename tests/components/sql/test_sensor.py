@@ -24,6 +24,7 @@ from . import (
     YAML_CONFIG_BINARY,
     YAML_CONFIG_FULL_TABLE_SCAN,
     YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID,
+    YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS,
     YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID,
     init_integration,
 )
@@ -354,21 +355,29 @@ async def test_issue_when_using_old_query(
     assert issue.translation_placeholders == {"query": config[CONF_QUERY]}
 
 
+@pytest.mark.parametrize(
+    "yaml_config",
+    [
+        YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID,
+        YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS,
+    ],
+)
 async def test_issue_when_using_old_query_without_unique_id(
-    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    yaml_config: dict[str, Any],
 ) -> None:
     """Test we create an issue for an old query that will do a full table scan."""
 
-    assert await async_setup_component(
-        hass, DOMAIN, YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID
-    )
+    assert await async_setup_component(hass, DOMAIN, yaml_config)
     await hass.async_block_till_done()
     assert "Query contains entity_id but does not reference states_meta" in caplog.text
 
     assert not hass.states.async_all()
     issue_registry = ir.async_get(hass)
 
-    config = YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID["sql"]
+    config = yaml_config["sql"]
     query = config[CONF_QUERY]
 
     issue = issue_registry.async_get_issue(

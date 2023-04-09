@@ -81,6 +81,13 @@ YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID = {
     }
 }
 
+YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT entity_id,state_id from states",
+        CONF_COLUMN_NAME: "entity_id",
+    }
+}
 
 YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID = {
     "sql": {
