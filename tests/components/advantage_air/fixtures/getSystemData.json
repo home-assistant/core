@@ -247,14 +247,14 @@
         "buttonType": "onOff",
         "channelDipState": 4,
         "id": "203",
-        "name": "Light",
+        "name": "Thing Light",
         "value": 100
       },
       "204": {
         "buttonType": "upDown",
         "channelDipState": 5,
         "id": "204",
-        "name": "Light Dimmable",
+        "name": "Thing Light Dimmable",
         "value": 100
       },
       "205": {

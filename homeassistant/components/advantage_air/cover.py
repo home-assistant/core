@@ -38,7 +38,7 @@ async def async_setup_entry(
                 if zone["type"] == 0:
                     entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
     if things := instance["coordinator"].data.get("myThings"):
-        for thing in things.values():
+        for thing in things["things"].values():
             if thing["channelDipState"] in [1, 2]:  # 1 = "Blind", 2 = "Blind 2"
                 entities.append(
                     AdvantageAirThingCover(instance, thing, CoverDeviceClass.BLIND)
@@ -131,7 +131,7 @@ class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
     def __init__(self, instance, thing, device_class):
         """Initialize an Advantage Air Things Cover."""
         super().__init__(instance, thing)
-        self.device_class = device_class
+        self._attr_device_class = device_class
 
     @property
     def is_closed(self) -> bool:
@@ -145,12 +145,12 @@ class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open zone vent."""
-        await self.things({"id": self._id, "value": 100})
+        await self.set_value(100)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Fully close zone vent."""
-        await self.things({"id": self._id, "value": 0})
+        await self.set_value(0)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Change cover position."""
-        await self.things({"id": self._id, "value": kwargs[ATTR_POSITION]})
+        await self.set_value(kwargs[ATTR_POSITION])

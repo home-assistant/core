@@ -58,10 +58,10 @@ class AdvantageAirZoneEntity(AdvantageAirAcEntity):
 class AdvantageAirThingEntity(AdvantageAirEntity):
     """Parent class for Advantage Air Things Entities."""
 
-    def __init__(self, instance, thing):
+    def __init__(self, instance, thing) -> None:
         """Initialize common aspects of an Advantage Air Things entity."""
         super().__init__(instance)
-        self.things = instance["things"]
+        self.set = instance["things"]
         self._id = thing["id"]
         self._attr_unique_id += f"-{self._id}"
 
@@ -74,7 +74,7 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
         )
 
     @property
-    def _data(self):
+    def _data(self) -> dict:
         """Return the thing data."""
         return self.coordinator.data["myThings"]["things"][self._id]
 
@@ -83,10 +83,14 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
         """Return if the thing is considered on."""
         return self._data["value"] > 0
 
+    async def set_value(self, value: int) -> None:
+        """Set the entities value."""
+        await self.set({"id": self._id, "value": value})
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the thing on."""
-        await self.things({"id": self._id, "value": 100})
+        await self.set_value(100)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the thing off."""
-        await self.things({"id": self._id, "value": 0})
+        await self.set_value(0)

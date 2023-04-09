@@ -19,6 +19,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import (
     TEST_SET_RESPONSE,
+    TEST_SET_THING_URL,
     TEST_SET_URL,
     TEST_SYSTEM_DATA,
     TEST_SYSTEM_URL,
@@ -141,6 +142,7 @@ async def test_ac_cover(
     assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
     assert data["ac3"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_OPEN
 
+
 async def test_things_cover(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -151,7 +153,7 @@ async def test_things_cover(
         text=TEST_SYSTEM_DATA,
     )
     aioclient_mock.get(
-        TEST_SET_URL,
+        TEST_SET_THING_URL,
         text=TEST_SET_RESPONSE,
     )
 
@@ -159,17 +161,17 @@ async def test_things_cover(
 
     registry = er.async_get(hass)
 
-    # Test Cover Zone Entity
-    entity_id = "cover.myauto_zone_y"
+    # Test Blind 1 Entity
+    entity_id = "cover.blind_1"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN
-    assert state.attributes.get("device_class") == CoverDeviceClass.DAMPER
+    assert state.attributes.get("device_class") == CoverDeviceClass.BLIND
     assert state.attributes.get("current_position") == 100
 
     entry = registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "uniqueid-ac3-z01"
+    assert entry.unique_id == "uniqueid-200"
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -178,8 +180,37 @@ async def test_things_cover(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
+    assert aioclient_mock.mock_calls[-2][1].path == "/setThing"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    assert data["id"] == "200"
+    assert data["value"] == 0
+    assert aioclient_mock.mock_calls[-1][0] == "GET"
+    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: [entity_id]},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[-2][0] == "GET"
+    assert aioclient_mock.mock_calls[-2][1].path == "/setThing"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["id"] == "200"
+    assert data["value"] == 100
+    assert aioclient_mock.mock_calls[-1][0] == "GET"
+    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 50},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[-2][0] == "GET"
+    assert aioclient_mock.mock_calls[-2][1].path == "/setThing"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["id"] == "200"
+    assert data["value"] == 50
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
