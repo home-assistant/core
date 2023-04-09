@@ -1,6 +1,7 @@
 """Trigger entity."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 from typing import Any
 
@@ -18,6 +19,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
@@ -77,6 +79,7 @@ class TriggerBaseEntity(Entity):
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
         self._parse_result = {CONF_AVAILABILITY}
+        self._variables: str = ""
 
     @property
     def name(self):
@@ -144,7 +147,11 @@ class TriggerBaseEntity(Entity):
         this = None
         if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
-        variables = {"this": this}
+
+        run_variables: dict[str, Any] = {"value": self._variables}
+        with suppress(*JSON_DECODE_EXCEPTIONS):
+            run_variables["value_json"] = json_loads(run_variables["value"])
+        variables = {"this": this, **(run_variables or {})}
 
         try:
             rendered = dict(self._static_rendered)
