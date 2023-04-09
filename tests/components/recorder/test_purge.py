@@ -719,7 +719,7 @@ async def test_purge_filtered_states(
             for days in range(1, 4):
                 timestamp = dt_util.utcnow() - timedelta(days=days)
                 for event_id in range(1000, 1020):
-                    _add_state_and_state_changed_event(
+                    _add_state_with_state_attributes(
                         session,
                         "sensor.excluded",
                         "purgeme",
@@ -740,7 +740,7 @@ async def test_purge_filtered_states(
             # Add states and state_changed events that should be keeped
             timestamp = dt_util.utcnow() - timedelta(days=2)
             for event_id in range(200, 210):
-                _add_state_and_state_changed_event(
+                _add_state_with_state_attributes(
                     session,
                     "sensor.keep",
                     "keep",
@@ -803,13 +803,9 @@ async def test_purge_filtered_states(
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 74
-        events_state_changed = session.query(Events).filter(
-            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
-        )
         events_keep = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
         )
-        assert events_state_changed.count() == 70
         assert events_keep.count() == 1
 
     # Normal purge doesn't remove excluded entities
@@ -822,10 +818,6 @@ async def test_purge_filtered_states(
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 74
-        events_state_changed = session.query(Events).filter(
-            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
-        )
-        assert events_state_changed.count() == 70
         events_keep = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
         )
@@ -845,10 +837,6 @@ async def test_purge_filtered_states(
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 13
-        events_state_changed = session.query(Events).filter(
-            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
-        )
-        assert events_state_changed.count() == 10
         events_keep = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
         )
@@ -926,7 +914,7 @@ async def test_purge_filtered_states_to_empty(
             for days in range(1, 4):
                 timestamp = dt_util.utcnow() - timedelta(days=days)
                 for event_id in range(1000, 1020):
-                    _add_state_and_state_changed_event(
+                    _add_state_with_state_attributes(
                         session,
                         "sensor.excluded",
                         "purgeme",
@@ -1066,7 +1054,7 @@ async def test_purge_filtered_events(
             # Add states and state_changed events that should be keeped
             timestamp = dt_util.utcnow() - timedelta(days=1)
             for event_id in range(200, 210):
-                _add_state_and_state_changed_event(
+                _add_state_with_state_attributes(
                     session,
                     "sensor.keep",
                     "keep",
@@ -1082,13 +1070,9 @@ async def test_purge_filtered_events(
         events_purge = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
         )
-        events_keep = session.query(Events).filter(
-            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
-        )
         states = session.query(States)
 
         assert events_purge.count() == 60
-        assert events_keep.count() == 10
         assert states.count() == 10
 
     # Normal purge doesn't remove excluded events
@@ -1102,12 +1086,8 @@ async def test_purge_filtered_events(
         events_purge = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
         )
-        events_keep = session.query(Events).filter(
-            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
-        )
         states = session.query(States)
         assert events_purge.count() == 60
-        assert events_keep.count() == 10
         assert states.count() == 10
 
     # Test with 'apply_filter' = True
@@ -1125,12 +1105,8 @@ async def test_purge_filtered_events(
         events_purge = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
         )
-        events_keep = session.query(Events).filter(
-            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
-        )
         states = session.query(States)
         assert events_purge.count() == 0
-        assert events_keep.count() == 10
         assert states.count() == 10
 
 
@@ -1158,7 +1134,7 @@ async def test_purge_filtered_events_state_changed(
             for days in range(1, 4):
                 timestamp = dt_util.utcnow() - timedelta(days=days)
                 for event_id in range(1000, 1020):
-                    _add_state_and_state_changed_event(
+                    _add_state_with_state_attributes(
                         session,
                         "sensor.excluded",
                         "purgeme",
@@ -1303,7 +1279,7 @@ async def test_purge_entities(
             for days in range(1, 4):
                 timestamp = dt_util.utcnow() - timedelta(days=days)
                 for event_id in range(1000, 1020):
-                    _add_state_and_state_changed_event(
+                    _add_state_with_state_attributes(
                         session,
                         "sensor.purge_entity",
                         "purgeme",
@@ -1312,7 +1288,7 @@ async def test_purge_entities(
                     )
                 timestamp = dt_util.utcnow() - timedelta(days=days)
                 for event_id in range(10000, 10020):
-                    _add_state_and_state_changed_event(
+                    _add_state_with_state_attributes(
                         session,
                         "purge_domain.entity",
                         "purgeme",
@@ -1321,7 +1297,7 @@ async def test_purge_entities(
                     )
                 timestamp = dt_util.utcnow() - timedelta(days=days)
                 for event_id in range(100000, 100020):
-                    _add_state_and_state_changed_event(
+                    _add_state_with_state_attributes(
                         session,
                         "binary_sensor.purge_glob",
                         "purgeme",
@@ -1329,13 +1305,14 @@ async def test_purge_entities(
                         event_id * days,
                     )
             convert_pending_states_to_meta(instance, session)
+            convert_pending_events_to_event_types(instance, session)
 
     def _add_keep_records(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
             # Add states and state_changed events that should be kept
             timestamp = dt_util.utcnow() - timedelta(days=2)
             for event_id in range(200, 210):
-                _add_state_and_state_changed_event(
+                _add_state_with_state_attributes(
                     session,
                     "sensor.keep",
                     "keep",
@@ -1343,6 +1320,7 @@ async def test_purge_entities(
                     event_id,
                 )
             convert_pending_states_to_meta(instance, session)
+            convert_pending_events_to_event_types(instance, session)
 
     _add_purge_records(hass)
     _add_keep_records(hass)
@@ -1600,7 +1578,7 @@ def _add_state_without_event_linkage(
     )
 
 
-def _add_state_and_state_changed_event(
+def _add_state_with_state_attributes(
     session: Session,
     entity_id: str,
     state: str,
@@ -1621,15 +1599,6 @@ def _add_state_and_state_changed_event(
             last_updated_ts=dt_util.utc_to_timestamp(timestamp),
             event_id=event_id,
             state_attributes=state_attrs,
-        )
-    )
-    session.add(
-        Events(
-            event_id=event_id,
-            event_type=EVENT_STATE_CHANGED,
-            event_data="{}",
-            origin="LOCAL",
-            time_fired_ts=dt_util.utc_to_timestamp(timestamp),
         )
     )
 
