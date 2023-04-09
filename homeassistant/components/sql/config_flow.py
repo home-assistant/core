@@ -125,6 +125,55 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_NAME,
+                            description={
+                                "suggested_value": user_input.get(
+                                    CONF_NAME, "Select SQL Query"
+                                )
+                            },
+                        ): selector.TextSelector(),
+                        vol.Optional(
+                            CONF_DB_URL,
+                            description={
+                                "suggested_value": user_input.get(CONF_DB_URL)
+                            },
+                        ): selector.TextSelector(),
+                        vol.Required(
+                            CONF_COLUMN_NAME,
+                            description={
+                                "suggested_value": user_input.get(CONF_COLUMN_NAME)
+                            },
+                        ): selector.TextSelector(),
+                        vol.Required(
+                            CONF_QUERY,
+                            description={"suggested_value": user_input.get(CONF_QUERY)},
+                        ): selector.TextSelector(
+                            selector.TextSelectorConfig(multiline=True)
+                        ),
+                        vol.Optional(
+                            CONF_UNIT_OF_MEASUREMENT,
+                            description={
+                                "suggested_value": user_input.get(
+                                    CONF_UNIT_OF_MEASUREMENT
+                                )
+                            },
+                        ): selector.TextSelector(),
+                        vol.Optional(
+                            CONF_VALUE_TEMPLATE,
+                            description={
+                                "suggested_value": user_input.get(CONF_VALUE_TEMPLATE)
+                            },
+                        ): selector.TemplateSelector(),
+                    }
+                ),
+                errors=errors,
+            )
+
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
@@ -172,6 +221,47 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                         **new_user_input,
                     },
                 )
+
+            return self.async_show_form(
+                step_id="init",
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_DB_URL,
+                            description={
+                                "suggested_value": user_input.get(CONF_DB_URL)
+                            },
+                        ): selector.TextSelector(),
+                        vol.Required(
+                            CONF_QUERY,
+                            description={"suggested_value": user_input.get(CONF_QUERY)},
+                        ): selector.TextSelector(
+                            selector.TextSelectorConfig(multiline=True)
+                        ),
+                        vol.Required(
+                            CONF_COLUMN_NAME,
+                            description={
+                                "suggested_value": user_input.get(CONF_COLUMN_NAME)
+                            },
+                        ): selector.TextSelector(),
+                        vol.Optional(
+                            CONF_UNIT_OF_MEASUREMENT,
+                            description={
+                                "suggested_value": user_input.get(
+                                    CONF_UNIT_OF_MEASUREMENT
+                                )
+                            },
+                        ): selector.TextSelector(),
+                        vol.Optional(
+                            CONF_VALUE_TEMPLATE,
+                            description={
+                                "suggested_value": user_input.get(CONF_VALUE_TEMPLATE)
+                            },
+                        ): selector.TemplateSelector(),
+                    }
+                ),
+                errors=errors,
+            )
 
         return self.async_show_form(
             step_id="init",
