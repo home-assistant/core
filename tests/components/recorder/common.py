@@ -332,6 +332,8 @@ def convert_pending_states_to_meta(instance: Recorder, session: Session) -> None
     for state in states:
         entity_id = state.entity_id
         state.entity_id = None
+        state.attributes = None
+        state.event_id = None
         if metadata_id := entity_id_to_metadata_ids.get(entity_id):
             state.metadata_id = metadata_id
             continue
@@ -357,6 +359,8 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
     for event in events:
         event_type = event.event_type
         event.event_type = None
+        event.event_data = None
+        event.origin = None
         if event_type_id := event_type_to_event_type_ids.get(event_type):
             event.event_type_id = event_type_id
             continue

@@ -10,7 +10,7 @@ from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import migration
+from homeassistant.components.recorder import purge, queries
 from homeassistant.components.recorder.const import (
     SQLITE_MAX_BIND_VARS,
     SupportedDialect,
@@ -795,6 +795,7 @@ async def test_purge_filtered_states(
                 )
             )
             convert_pending_states_to_meta(instance, session)
+            convert_pending_events_to_event_types(instance, session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)
@@ -802,11 +803,12 @@ async def test_purge_filtered_states(
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 74
-
         events_state_changed = session.query(Events).filter(
-            Events.event_type == EVENT_STATE_CHANGED
+            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
         )
-        events_keep = session.query(Events).filter(Events.event_type == "EVENT_KEEP")
+        events_keep = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
+        )
         assert events_state_changed.count() == 70
         assert events_keep.count() == 1
 
@@ -821,10 +823,12 @@ async def test_purge_filtered_states(
         states = session.query(States)
         assert states.count() == 74
         events_state_changed = session.query(Events).filter(
-            Events.event_type == EVENT_STATE_CHANGED
+            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
         )
         assert events_state_changed.count() == 70
-        events_keep = session.query(Events).filter(Events.event_type == "EVENT_KEEP")
+        events_keep = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
+        )
         assert events_keep.count() == 1
 
     # Test with 'apply_filter' = True
@@ -842,10 +846,12 @@ async def test_purge_filtered_states(
         states = session.query(States)
         assert states.count() == 13
         events_state_changed = session.query(Events).filter(
-            Events.event_type == EVENT_STATE_CHANGED
+            Events.event_type_id.in_(select_event_type_ids((EVENT_STATE_CHANGED,)))
         )
         assert events_state_changed.count() == 10
-        events_keep = session.query(Events).filter(Events.event_type == "EVENT_KEEP")
+        events_keep = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
+        )
         assert events_keep.count() == 1
 
         states_sensor_excluded = (
@@ -1632,155 +1638,54 @@ async def test_purge_many_old_events(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test deleting old events."""
-    instance = await async_setup_recorder_instance(hass)
+    old_events_count = 5
+    with patch.object(queries, "SQLITE_MAX_BIND_VARS", old_events_count), patch.object(
+        purge, "SQLITE_MAX_BIND_VARS", old_events_count
+    ):
+        instance = await async_setup_recorder_instance(hass)
 
-    await _add_test_events(hass, SQLITE_MAX_BIND_VARS)
+        await _add_test_events(hass, old_events_count)
 
-    with session_scope(hass=hass) as session:
-        events = session.query(Events).filter(
-            Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
-        )
-        assert events.count() == SQLITE_MAX_BIND_VARS * 6
-
-        purge_before = dt_util.utcnow() - timedelta(days=4)
-
-        # run purge_old_data()
-        finished = purge_old_data(
-            instance,
-            purge_before,
-            repack=False,
-            states_batch_size=3,
-            events_batch_size=3,
-        )
-        assert not finished
-        assert events.count() == SQLITE_MAX_BIND_VARS * 3
-
-        # we should only have 2 groups of events left
-        finished = purge_old_data(
-            instance,
-            purge_before,
-            repack=False,
-            states_batch_size=3,
-            events_batch_size=3,
-        )
-        assert finished
-        assert events.count() == SQLITE_MAX_BIND_VARS * 2
-
-        # we should now purge everything
-        finished = purge_old_data(
-            instance,
-            dt_util.utcnow(),
-            repack=False,
-            states_batch_size=20,
-            events_batch_size=20,
-        )
-        assert finished
-        assert events.count() == 0
-
-
-async def test_purge_can_mix_legacy_and_new_format(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
-) -> None:
-    """Test purging with legacy a new events."""
-    instance = await async_setup_recorder_instance(hass)
-    await async_wait_recording_done(hass)
-    # New databases are no longer created with the legacy events index
-    assert instance.use_legacy_events_index is False
-
-    def _recreate_legacy_events_index():
-        """Recreate the legacy events index since its no longer created on new instances."""
-        migration._create_index(instance.get_session, "states", "ix_states_event_id")
-        instance.use_legacy_events_index = True
-
-    await instance.async_add_executor_job(_recreate_legacy_events_index)
-    assert instance.use_legacy_events_index is True
-
-    utcnow = dt_util.utcnow()
-    eleven_days_ago = utcnow - timedelta(days=11)
-    with session_scope(hass=hass) as session:
-        broken_state_no_time = States(
-            event_id=None,
-            entity_id="orphened.state",
-            last_updated_ts=None,
-            last_changed_ts=None,
-        )
-        session.add(broken_state_no_time)
-        start_id = 50000
-        for event_id in range(start_id, start_id + 50):
-            _add_state_and_state_changed_event(
-                session,
-                "sensor.excluded",
-                "purgeme",
-                eleven_days_ago,
-                event_id,
+        with session_scope(hass=hass) as session:
+            events = session.query(Events).filter(
+                Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
             )
-    await _add_test_events(hass, 50)
-    await _add_events_with_event_data(hass, 50)
-    with session_scope(hass=hass) as session:
-        for _ in range(50):
-            _add_state_without_event_linkage(
-                session, "switch.random", "on", eleven_days_ago
+            assert events.count() == old_events_count * 6
+
+            purge_before = dt_util.utcnow() - timedelta(days=4)
+
+            # run purge_old_data()
+            finished = purge_old_data(
+                instance,
+                purge_before,
+                repack=False,
+                states_batch_size=3,
+                events_batch_size=3,
             )
-        states_with_event_id = session.query(States).filter(
-            States.event_id.is_not(None)
-        )
-        states_without_event_id = session.query(States).filter(
-            States.event_id.is_(None)
-        )
+            assert not finished
+            assert events.count() == old_events_count * 3
 
-        assert states_with_event_id.count() == 50
-        assert states_without_event_id.count() == 51
+            # we should only have 2 groups of events left
+            finished = purge_old_data(
+                instance,
+                purge_before,
+                repack=False,
+                states_batch_size=3,
+                events_batch_size=3,
+            )
+            assert finished
+            assert events.count() == old_events_count * 2
 
-        purge_before = dt_util.utcnow() - timedelta(days=4)
-        finished = purge_old_data(
-            instance,
-            purge_before,
-            repack=False,
-        )
-        assert not finished
-        assert states_with_event_id.count() == 0
-        assert states_without_event_id.count() == 51
-        # At this point all the legacy states are gone
-        # and we switch methods
-        purge_before = dt_util.utcnow() - timedelta(days=4)
-        finished = purge_old_data(
-            instance,
-            purge_before,
-            repack=False,
-            events_batch_size=1,
-            states_batch_size=1,
-        )
-        # Since we only allow one iteration, we won't
-        # check if we are finished this loop similar
-        # to the legacy method
-        assert not finished
-        assert states_with_event_id.count() == 0
-        assert states_without_event_id.count() == 1
-        finished = purge_old_data(
-            instance,
-            purge_before,
-            repack=False,
-            events_batch_size=100,
-            states_batch_size=100,
-        )
-        assert finished
-        assert states_with_event_id.count() == 0
-        assert states_without_event_id.count() == 1
-        _add_state_without_event_linkage(
-            session, "switch.random", "on", eleven_days_ago
-        )
-        assert states_with_event_id.count() == 0
-        assert states_without_event_id.count() == 2
-        finished = purge_old_data(
-            instance,
-            purge_before,
-            repack=False,
-        )
-        assert finished
-        # The broken state without a timestamp
-        # does not prevent future purges. Its ignored.
-        assert states_with_event_id.count() == 0
-        assert states_without_event_id.count() == 1
+            # we should now purge everything
+            finished = purge_old_data(
+                instance,
+                dt_util.utcnow(),
+                repack=False,
+                states_batch_size=20,
+                events_batch_size=20,
+            )
+            assert finished
+            assert events.count() == 0
 
 
 async def test_purge_old_events_purges_the_event_type_ids(
