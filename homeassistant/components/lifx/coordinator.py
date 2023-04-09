@@ -82,8 +82,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         self._update_rssi: bool = False
         self._rssi: int = 0
         self.last_used_theme: str = ""
-        self._timeouts = MAX_TIMEOUTS_TO_DECLARE_UPDATE_FAILED
-        self._updated: bool = False
         self._offline_time: float = 0.0
 
         super().__init__(
