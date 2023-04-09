@@ -16,7 +16,6 @@ from homeassistant.components.recorder.const import (
     SupportedDialect,
 )
 from homeassistant.components.recorder.db_schema import (
-    EventData,
     Events,
     EventTypes,
     RecorderRuns,
@@ -40,6 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 from .common import (
     async_recorder_block_till_done,
@@ -50,6 +50,15 @@ from .common import (
 )
 
 from tests.typing import RecorderInstanceGenerator
+
+TEST_EVENT_TYPES = (
+    "EVENT_TEST_AUTOPURGE",
+    "EVENT_TEST_PURGE",
+    "EVENT_TEST",
+    "EVENT_TEST_AUTOPURGE_WITH_EVENT_DATA",
+    "EVENT_TEST_PURGE_WITH_EVENT_DATA",
+    "EVENT_TEST_WITH_EVENT_DATA",
+)
 
 
 @pytest.fixture(name="use_sqlite")
@@ -255,7 +264,9 @@ async def test_purge_old_events(
     await _add_test_events(hass)
 
     with session_scope(hass=hass) as session:
-        events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
+        events = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
+        )
         assert events.count() == 6
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
@@ -269,7 +280,8 @@ async def test_purge_old_events(
             states_batch_size=1,
         )
         assert not finished
-        assert events.count() == 2
+        all_events = events.all()
+        assert events.count() == 2, f"Should have 2 events left: {all_events}"
 
         # we should only have 2 events left
         finished = purge_old_data(
@@ -379,7 +391,9 @@ async def test_purge_method(
         states = session.query(States)
         assert states.count() == 6
 
-        events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
+        events = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
+        )
         assert events.count() == 6
 
         statistics = session.query(StatisticsShortTerm)
@@ -410,7 +424,9 @@ async def test_purge_method(
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
-        events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
+        events = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
+        )
         statistics = session.query(StatisticsShortTerm)
 
         # only purged old states, events and statistics
@@ -427,7 +443,9 @@ async def test_purge_method(
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
-        events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
+        events = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
+        )
         statistics = session.query(StatisticsShortTerm)
         recorder_runs = session.query(RecorderRuns)
         statistics_runs = session.query(StatisticsRuns)
@@ -499,6 +517,9 @@ async def test_purge_edge_case(
                     attributes_id=1002,
                 )
             )
+            instance = recorder.get_instance(hass)
+            convert_pending_events_to_event_types(instance, session)
+            convert_pending_states_to_meta(instance, session)
 
     await async_setup_recorder_instance(hass, None)
     await async_wait_purge_done(hass)
@@ -514,7 +535,9 @@ async def test_purge_edge_case(
         state_attributes = session.query(StateAttributes)
         assert state_attributes.count() == 1
 
-        events = session.query(Events).filter(Events.event_type == "EVENT_TEST_PURGE")
+        events = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
+        )
         assert events.count() == 1
 
     await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, service_data)
@@ -526,7 +549,9 @@ async def test_purge_edge_case(
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 0
-        events = session.query(Events).filter(Events.event_type == "EVENT_TEST_PURGE")
+        events = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
+        )
         assert events.count() == 0
 
 
@@ -1375,7 +1400,7 @@ async def test_purge_entities(
 
     await _purge_entities(hass, [], [], [])
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = session.query(States)
         assert states.count() == 0
 
@@ -1420,31 +1445,21 @@ async def _add_test_events(hass: HomeAssistant, iterations: int = 1):
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
+    for _ in range(iterations):
+        for event_id in range(6):
+            if event_id < 2:
+                timestamp = eleven_days_ago
+                event_type = "EVENT_TEST_AUTOPURGE"
+            elif event_id < 4:
+                timestamp = five_days_ago
+                event_type = "EVENT_TEST_PURGE"
+            else:
+                timestamp = utcnow
+                event_type = "EVENT_TEST"
+            with freeze_time(timestamp):
+                hass.bus.async_fire(event_type, event_data)
 
-    await hass.async_block_till_done()
     await async_wait_recording_done(hass)
-
-    with session_scope(hass=hass) as session:
-        for _ in range(iterations):
-            for event_id in range(6):
-                if event_id < 2:
-                    timestamp = eleven_days_ago
-                    event_type = "EVENT_TEST_AUTOPURGE"
-                elif event_id < 4:
-                    timestamp = five_days_ago
-                    event_type = "EVENT_TEST_PURGE"
-                else:
-                    timestamp = utcnow
-                    event_type = "EVENT_TEST"
-
-                session.add(
-                    Events(
-                        event_type=event_type,
-                        event_data=json.dumps(event_data),
-                        origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp),
-                    )
-                )
 
 
 async def _add_events_with_event_data(hass: HomeAssistant, iterations: int = 1):
@@ -1452,37 +1467,27 @@ async def _add_events_with_event_data(hass: HomeAssistant, iterations: int = 1):
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
-    event_data = {"test_attr": 5, "test_attr_10": "nice"}
 
     await hass.async_block_till_done()
+    for _ in range(iterations):
+        for event_id in range(6):
+            if event_id < 2:
+                timestamp = eleven_days_ago
+                event_type = "EVENT_TEST_AUTOPURGE_WITH_EVENT_DATA"
+                shared_data = '{"type":{"EVENT_TEST_AUTOPURGE_WITH_EVENT_DATA"}'
+            elif event_id < 4:
+                timestamp = five_days_ago
+                event_type = "EVENT_TEST_PURGE_WITH_EVENT_DATA"
+                shared_data = '{"type":{"EVENT_TEST_PURGE_WITH_EVENT_DATA"}'
+            else:
+                timestamp = utcnow
+                event_type = "EVENT_TEST_WITH_EVENT_DATA"
+                shared_data = '{"type":{"EVENT_TEST_WITH_EVENT_DATA"}'
+
+            with freeze_time(timestamp):
+                hass.bus.async_fire(event_type, json_loads(shared_data))
+
     await async_wait_recording_done(hass)
-
-    with session_scope(hass=hass) as session:
-        for _ in range(iterations):
-            for event_id in range(6):
-                if event_id < 2:
-                    timestamp = eleven_days_ago
-                    event_type = "EVENT_TEST_AUTOPURGE_WITH_EVENT_DATA"
-                    shared_data = '{"type":{"EVENT_TEST_AUTOPURGE_WITH_EVENT_DATA"}'
-                elif event_id < 4:
-                    timestamp = five_days_ago
-                    event_type = "EVENT_TEST_PURGE_WITH_EVENT_DATA"
-                    shared_data = '{"type":{"EVENT_TEST_PURGE_WITH_EVENT_DATA"}'
-                else:
-                    timestamp = utcnow
-                    event_type = "EVENT_TEST_WITH_EVENT_DATA"
-                    shared_data = '{"type":{"EVENT_TEST_WITH_EVENT_DATA"}'
-
-                event_data = EventData(hash=1234, shared_data=shared_data)
-
-                session.add(
-                    Events(
-                        event_type=event_type,
-                        origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp),
-                        event_data_rel=event_data,
-                    )
-                )
 
 
 async def _add_test_statistics(hass: HomeAssistant):
@@ -1632,7 +1637,9 @@ async def test_purge_many_old_events(
     await _add_test_events(hass, SQLITE_MAX_BIND_VARS)
 
     with session_scope(hass=hass) as session:
-        events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
+        events = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
+        )
         assert events.count() == SQLITE_MAX_BIND_VARS * 6
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
