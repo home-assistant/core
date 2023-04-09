@@ -67,6 +67,13 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 # Don't support rrules more often than daily
 VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
+# Ensure events created in Home Assistant have a positive duration
+MIN_NEW_EVENT_DURATION = datetime.timedelta(seconds=1)
+
+# Events must have a non-negative duration e.g. Google Calendar can create zero
+# duration events in the UI.
+MIN_EVENT_DURATION = datetime.timedelta(seconds=0)
+
 
 def _has_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Assert that all datetime values have a timezone."""
@@ -116,17 +123,38 @@ def _as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]
     return validate
 
 
-def _has_duration(
-    start_key: str, end_key: str
+def _has_min_duration(
+    start_key: str, end_key: str, min_duration: datetime.timedelta
 ) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that the time span between start and end is positive."""
+    """Verify that the time span between start and end has a minimum duration."""
 
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys in the dict are in order."""
         if (start := obj.get(start_key)) and (end := obj.get(end_key)):
             duration = end - start
-            if duration.total_seconds() <= 0:
-                raise vol.Invalid(f"Expected positive event duration ({start}, {end})")
+            if duration < min_duration:
+                raise vol.Invalid(
+                    f"Expected minimum event duration of {min_duration} ({start}, {end})"
+                )
+        return obj
+
+    return validate
+
+
+def _has_all_day_event_duration(
+    start_key: str,
+    end_key: str,
+) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Modify all day events to have a duration of one day."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        if (
+            (start := obj.get(start_key))
+            and (end := obj.get(end_key))
+            and not isinstance(start, datetime.datetime)
+            and not isinstance(end, datetime.datetime)
+            and start == end
+        ):
+            obj[end_key] = start + datetime.timedelta(days=1)
         return obj
 
     return validate
@@ -204,8 +232,8 @@ CREATE_EVENT_SCHEMA = vol.All(
     ),
     _has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
     _as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
-    _has_duration(EVENT_START_DATE, EVENT_END_DATE),
-    _has_duration(EVENT_START_DATETIME, EVENT_END_DATETIME),
+    _has_min_duration(EVENT_START_DATE, EVENT_END_DATE, MIN_NEW_EVENT_DURATION),
+    _has_min_duration(EVENT_START_DATETIME, EVENT_END_DATETIME, MIN_NEW_EVENT_DURATION),
 )
 
 WEBSOCKET_EVENT_SCHEMA = vol.Schema(
@@ -221,7 +249,7 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
         _has_same_type(EVENT_START, EVENT_END),
         _has_consistent_timezone(EVENT_START, EVENT_END),
         _as_local_timezone(EVENT_START, EVENT_END),
-        _has_duration(EVENT_START, EVENT_END),
+        _has_min_duration(EVENT_START, EVENT_END, MIN_NEW_EVENT_DURATION),
     )
 )
 
@@ -238,7 +266,8 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
         _has_timezone("start", "end"),
         _has_consistent_timezone("start", "end"),
         _as_local_timezone("start", "end"),
-        _has_duration("start", "end"),
+        _has_min_duration("start", "end", MIN_EVENT_DURATION),
+        _has_all_day_event_duration("start", "end"),
     ),
     extra=vol.ALLOW_EXTRA,
 )
