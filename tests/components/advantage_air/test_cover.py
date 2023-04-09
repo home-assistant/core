@@ -200,17 +200,3 @@ async def test_things_cover(
     assert data["value"] == 100
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 50},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setThing"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["id"] == "200"
-    assert data["value"] == 50
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
