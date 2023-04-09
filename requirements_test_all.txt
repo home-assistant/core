@@ -702,7 +702,7 @@ home-assistant-intents==2023.3.29
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.13
+homematicip==1.0.14
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
