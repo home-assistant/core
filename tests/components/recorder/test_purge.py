@@ -1018,6 +1018,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
                 )
             )
             convert_pending_states_to_meta(instance, session)
+            convert_pending_events_to_event_types(instance, session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)
@@ -1082,6 +1083,7 @@ async def test_purge_filtered_events(
                     event_id,
                 )
             convert_pending_events_to_event_types(instance, session)
+            convert_pending_states_to_meta(instance, session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)
