@@ -26,8 +26,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -148,21 +152,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     webhook_url = webhook.async_generate_path(entry.entry_id)
-    hass_url = get_url(
-        hass, allow_cloud=False, allow_external=False, allow_ip=True, require_ssl=False
-    )
-    url = f"{hass_url}{webhook_url}"
+
     try:
-        async with async_timeout.timeout(10):
-            await hass.async_add_executor_job(
-                _register_webhook, bridge, entry.entry_id, url
-            )
-    except InvalidCredentialsException as err:
+        hass_url = get_url(
+            hass,
+            allow_cloud=False,
+            allow_external=False,
+            allow_ip=True,
+            require_ssl=False,
+        )
+    except NoURLAvailableError:
         webhook.async_unregister(hass, entry.entry_id)
-        raise ConfigEntryNotReady(f"Invalid credentials for Bridge: {err}") from err
-    except RequestException as err:
-        webhook.async_unregister(hass, entry.entry_id)
-        raise ConfigEntryNotReady(f"Error communicating with Bridge: {err}") from err
+        raise ConfigEntryNotReady(
+            f"Error registering URL for webhook {entry.entry_id}: "
+            "HomeAssistant URL is not available"
+        ) from None
+
+    url = f"{hass_url}{webhook_url}"
+
+    if hass_url.startswith("https"):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "https_webhook",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="https_webhook",
+            translation_placeholders={
+                "base_url": hass_url,
+                "network_link": "https://my.home-assistant.io/redirect/network/",
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, "https_webhook")
+
+        try:
+            async with async_timeout.timeout(10):
+                await hass.async_add_executor_job(
+                    _register_webhook, bridge, entry.entry_id, url
+                )
+        except InvalidCredentialsException as err:
+            webhook.async_unregister(hass, entry.entry_id)
+            raise ConfigEntryNotReady(f"Invalid credentials for Bridge: {err}") from err
+        except RequestException as err:
+            webhook.async_unregister(hass, entry.entry_id)
+            raise ConfigEntryNotReady(
+                f"Error communicating with Bridge: {err}"
+            ) from err
 
     async def _stop_nuki(_: Event):
         """Stop and remove the Nuki webhook."""

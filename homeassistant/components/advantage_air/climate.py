@@ -97,27 +97,11 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     ) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
-        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
         self._config_entry = config_entry
 
         # Set supported features and HVAC modes based on current operating mode
-        if self.preset_mode == ADVANTAGE_AIR_MYZONE:
-            self._attr_supported_features = (
-                ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
-            )
-            self._attr_hvac_modes = [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.FAN_ONLY,
-                HVACMode.DRY,
-            ]
-
-        elif self.preset_mode == ADVANTAGE_AIR_MYTEMP:
-            self._attr_supported_features = ClimateEntityFeature.FAN_MODE
-            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
-
-        elif self.preset_mode == ADVANTAGE_AIR_MYAUTO:
+        if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
+            # MyAuto
             self._attr_supported_features = (
                 ClimateEntityFeature.FAN_MODE
                 | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -130,6 +114,22 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 HVACMode.FAN_ONLY,
                 HVACMode.DRY,
                 HVACMode.HEAT_COOL,
+            ]
+        elif self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
+            # MyTemp
+            self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
+        else:
+            # MyZone
+            self._attr_supported_features = (
+                ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+            )
+            self._attr_hvac_modes = [
+                HVACMode.OFF,
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.FAN_ONLY,
+                HVACMode.DRY,
             ]
 
         # Add "MyTemp" preset if available
@@ -310,9 +310,6 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
-        )
 
     @property
     def hvac_mode(self) -> HVACMode:
