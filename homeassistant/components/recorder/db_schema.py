@@ -119,6 +119,7 @@ METADATA_ID_LAST_UPDATED_INDEX_TS = "ix_states_metadata_id_last_updated_ts"
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
 STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 LEGACY_STATES_EVENT_ID_INDEX = "ix_states_event_id"
+LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated_ts"
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
 MYSQL_COLLATE = "utf8mb4_unicode_ci"
@@ -284,7 +285,7 @@ class Events(Base):
         """Convert to a native HA Event."""
         context = Context(
             id=bytes_to_ulid_or_none(self.context_id_bin),
-            user_id=bytes_to_uuid_hex_or_none(self.context_user_id),
+            user_id=bytes_to_uuid_hex_or_none(self.context_user_id_bin),
             parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:
@@ -508,7 +509,7 @@ class States(Base):
         """Convert to an HA state object."""
         context = Context(
             id=bytes_to_ulid_or_none(self.context_id_bin),
-            user_id=bytes_to_uuid_hex_or_none(self.context_user_id),
+            user_id=bytes_to_uuid_hex_or_none(self.context_user_id_bin),
             parent_id=bytes_to_ulid_or_none(self.context_parent_id_bin),
         )
         try:

@@ -197,21 +197,6 @@ async def test_connected_device_registered(
 
         @property
         def mac_address(self) -> str:
-            return "aa:bb:cc:dd:ee:ff"
-
-        @property
-        def is_connected(self) -> bool:
-            return True
-
-        @property
-        def hostname(self) -> str:
-            return "connected"
-
-    class MockConnectedScannerEntity(MockScannerEntity):
-        """Mock a disconnected scanner entity."""
-
-        @property
-        def mac_address(self) -> str:
             return "aa:bb:cc:dd:ee:00"
 
         @property
@@ -222,10 +207,44 @@ async def test_connected_device_registered(
         def hostname(self) -> str:
             return "disconnected"
 
+    class MockConnectedScannerEntity(MockScannerEntity):
+        """Mock a disconnected scanner entity."""
+
+        @property
+        def mac_address(self) -> str:
+            return "aa:bb:cc:dd:ee:ff"
+
+        @property
+        def is_connected(self) -> bool:
+            return True
+
+        @property
+        def hostname(self) -> str:
+            return "connected"
+
+    class MockConnectedScannerEntityBadIPAddress(MockConnectedScannerEntity):
+        """Mock a disconnected scanner entity."""
+
+        @property
+        def mac_address(self) -> str:
+            return "aa:bb:cc:dd:ee:01"
+
+        @property
+        def ip_address(self) -> str:
+            return ""
+
+        @property
+        def hostname(self) -> str:
+            return "connected_bad_ip"
+
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
         async_add_entities(
-            [MockConnectedScannerEntity(), MockDisconnectedScannerEntity()]
+            [
+                MockConnectedScannerEntity(),
+                MockDisconnectedScannerEntity(),
+                MockConnectedScannerEntityBadIPAddress(),
+            ]
         )
         return True
 
@@ -240,7 +259,7 @@ async def test_connected_device_registered(
     full_name = f"{entity_platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 0  # should be disabled
-    assert len(entity_registry.entities) == 2
+    assert len(entity_registry.entities) == 3
     assert (
         entity_registry.entities["test_domain.test_aa_bb_cc_dd_ee_ff"].config_entry_id
         == "super-mock-id"

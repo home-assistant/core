@@ -119,7 +119,7 @@ aioairq==0.2.4
 aioairzone==0.5.2
 
 # homeassistant.components.ambient_station
-aioambient==2022.10.0
+aioambient==2023.04.0
 
 # homeassistant.components.aseko_pool_live
 aioaseko==0.0.2
@@ -661,7 +661,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.30
+env_canada==0.5.31
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -725,7 +725,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux_led==0.28.36
+flux_led==0.28.37
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -757,7 +757,7 @@ gTTS==2.2.4
 gassist-text==0.0.10
 
 # homeassistant.components.google
-gcal-sync==4.1.3
+gcal-sync==4.1.4
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.0
@@ -2258,7 +2258,7 @@ rocketchat-API==0.6.1
 rokuecp==0.17.1
 
 # homeassistant.components.roomba
-roombapy==1.6.6
+roombapy==1.6.8
 
 # homeassistant.components.roon
 roonapi==0.1.4
@@ -2428,7 +2428,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.5
+subarulink==0.7.6
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
@@ -2565,7 +2565,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==3.0.0
+vallox-websocket-api==3.2.1
 
 # homeassistant.components.rdw
 vehicle==1.0.0
@@ -2692,13 +2692,13 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.54.0
+zeroconf==0.56.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.95
+zha-quirks==0.0.96
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
