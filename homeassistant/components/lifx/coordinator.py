@@ -211,12 +211,10 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                 await asyncio.gather(*tasks)
 
                 events = []
-                # Make a copy of the bulb's message queue to avoid the dictionary changing
-                # size during iteration
-                for _response, event, _callb in list(self.device.message.values()):
+                for _response, event, _callb in self.device.message.values():
                     if isinstance(event, asyncio.Event):
                         events.append(event.wait())
-                if len(events) > 0:
+                if events:
                     async with asyncio_timeout(MESSAGE_TIMEOUT):
                         await asyncio.gather(*events)
 
