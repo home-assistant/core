@@ -218,7 +218,8 @@ async def async_start(  # noqa: C901
         discovery_hash = (component, discovery_id)
         if discovery_hash in mqtt_data.discovery_already_discovered or payload:
 
-            async def discovery_done(_: Any) -> None:
+            @callback
+            def discovery_done(_: Any) -> None:
                 pending = mqtt_data.discovery_pending_discovered[discovery_hash][
                     "pending"
                 ]
