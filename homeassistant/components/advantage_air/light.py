@@ -114,4 +114,9 @@ class AdvantageAirThingLightDimmable(AdvantageAirThingEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on by setting the brightness."""
-        await self.set_value(round(kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255))
+        await self.set(
+            {
+                "id": self._id,
+                "value": round(kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255),
+            }
+        )

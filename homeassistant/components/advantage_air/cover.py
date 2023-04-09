@@ -145,12 +145,12 @@ class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open zone vent."""
-        await self.set_value(100)
+        await self.set({"id": self._id, "value": 100})
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Fully close zone vent."""
-        await self.set_value(0)
+        await self.set({"id": self._id, "value": 0})
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Change cover position."""
-        await self.set_value(kwargs[ATTR_POSITION])
+        await self.set({"id": self._id, "value": kwargs[ATTR_POSITION]})
