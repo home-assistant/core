@@ -387,10 +387,10 @@ class ReolinkHost:
                 "Could not poll motion state after losing connection during receiving ONVIF event"
             )
             return
-
-        if not self._webhook_reachable.is_set():
-            self._webhook_reachable.set()
-            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+        finally:
+            if not self._webhook_reachable.is_set():
+                self._webhook_reachable.set()
+                ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
         if not data:
             _LOGGER.debug(
