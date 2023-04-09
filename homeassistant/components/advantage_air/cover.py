@@ -128,7 +128,12 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
 class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
     """Representation of Advantage Air Cover controlled by MyPlace."""
 
-    def __init__(self, instance, thing, device_class):
+    def __init__(
+        self,
+        instance: dict[str, Any],
+        thing: dict[str, Any],
+        device_class: CoverDeviceClass,
+    ) -> None:
         """Initialize an Advantage Air Things Cover."""
         super().__init__(instance, thing)
         self._attr_device_class = device_class

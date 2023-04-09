@@ -58,7 +58,7 @@ class AdvantageAirZoneEntity(AdvantageAirAcEntity):
 class AdvantageAirThingEntity(AdvantageAirEntity):
     """Parent class for Advantage Air Things Entities."""
 
-    def __init__(self, instance, thing) -> None:
+    def __init__(self, instance: dict[str, Any], thing: dict[str, Any]) -> None:
         """Initialize common aspects of an Advantage Air Things entity."""
         super().__init__(instance)
         self.set = instance["things"]
