@@ -187,7 +187,7 @@ async def test_shutdown_closes_connections(
     pool.shutdown = Mock()
 
     def _ensure_connected():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             list(session.query(States))
 
     await instance.async_add_executor_job(_ensure_connected)
@@ -221,7 +221,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
@@ -237,7 +237,7 @@ async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = []
         for db_state, db_state_attributes, states_meta in (
             session.query(States, StateAttributes, StatesMeta)
@@ -278,7 +278,7 @@ async def test_saving_state_with_nul(
         hass.states.async_set(entity_id, state, attributes)
         await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = []
         for db_state, db_state_attributes, states_meta in (
             session.query(States, StateAttributes, StatesMeta)
@@ -321,7 +321,7 @@ async def test_saving_many_states(
 
     assert expire_all.called
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 6
         assert db_states[0].event_id is None
@@ -345,7 +345,7 @@ async def test_saving_state_with_intermixed_time_changes(
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 2
         assert db_states[0].event_id is None
@@ -385,7 +385,7 @@ def test_saving_state_with_exception(
     hass.states.set(entity_id, state, attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) >= 1
 
@@ -426,7 +426,7 @@ def test_saving_state_with_sqlalchemy_exception(
     hass.states.set(entity_id, state, attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) >= 1
 
@@ -494,7 +494,7 @@ def test_saving_event(hass_recorder: Callable[..., HomeAssistant]) -> None:
     get_instance(hass).block_till_done()
     events: list[Event] = []
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         for select_event, event_data, event_types in (
             session.query(Events, EventData, EventTypes)
             .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
@@ -537,7 +537,7 @@ def test_saving_state_with_commit_interval_zero(
 
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
@@ -647,7 +647,7 @@ async def test_saving_event_exclude_event_type(
     await async_wait_recording_done(hass)
 
     def _get_events(hass: HomeAssistant, event_types: list[str]) -> list[Event]:
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             events = []
             for event, event_data, event_types in (
                 session.query(Events, EventData, EventTypes)
@@ -777,7 +777,7 @@ def test_saving_state_and_removing_entity(
 
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(StatesMeta.entity_id, States.state)
             .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
@@ -1355,7 +1355,7 @@ def test_saving_sets_old_state(hass_recorder: Callable[..., HomeAssistant]) -> N
     hass.states.set("test.two", "s4", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(
                 StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
@@ -1389,7 +1389,7 @@ def test_saving_state_with_serializable_data(
     hass.states.set("test.two", "s3", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(
                 StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
@@ -1447,7 +1447,7 @@ def test_service_disable_events_not_recording(
     assert len(events) == 1
     event = events[0]
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_events = list(
             session.query(Events)
             .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
@@ -1471,7 +1471,7 @@ def test_service_disable_events_not_recording(
     assert events[0].data != events[1].data
 
     db_events = []
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         for select_event, event_data, event_types in (
             session.query(Events, EventData, EventTypes)
             .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
@@ -1515,7 +1515,7 @@ def test_service_disable_states_not_recording(
     hass.states.set("test.one", "on", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         assert len(list(session.query(States))) == 0
 
     assert hass.services.call(
@@ -1528,7 +1528,7 @@ def test_service_disable_states_not_recording(
     hass.states.set("test.two", "off", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
@@ -1550,7 +1550,7 @@ def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None
     hass.start()
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_run_info = list(session.query(RecorderRuns))
         assert len(db_run_info) == 1
         assert db_run_info[0].start is not None
@@ -1572,7 +1572,7 @@ def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None
     hass.start()
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_run_info = list(session.query(RecorderRuns))
         assert len(db_run_info) == 2
         assert db_run_info[0].start is not None
@@ -1642,7 +1642,7 @@ async def test_database_corruption_while_running(
     await async_wait_recording_done(hass)
 
     def _get_last_state():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(States))
             assert len(db_states) == 1
             db_states[0].entity_id = "test.two"
@@ -1680,7 +1680,7 @@ def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
         hass.bus.fire("hello", data)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             db_events = list(
                 session.query(Events).filter(
                     Events.event_type_id.in_(select_event_type_ids(event_types))
@@ -1695,7 +1695,7 @@ def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
         hass.bus.fire("hello", data)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             db_events = list(
                 session.query(Events).filter(
                     Events.event_type_id.in_(select_event_type_ids(event_types))
@@ -1729,7 +1729,7 @@ async def test_database_lock_and_unlock(
     event_types = (event_type,)
 
     def _get_db_events():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             return list(
                 session.query(Events).filter(
                     Events.event_type_id.in_(select_event_type_ids(event_types))
@@ -1784,7 +1784,7 @@ async def test_database_lock_and_overflow(
     event_types = (event_type,)
 
     def _get_db_events():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             return list(
                 session.query(Events).filter(
                     Events.event_type_id.in_(select_event_type_ids(event_types))
@@ -1919,7 +1919,7 @@ def test_deduplication_event_data_inside_commit_interval(
         hass.bus.fire("this_event", {"de": "dupe"})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         event_types = ("this_event",)
         events = list(
             session.query(Events)
@@ -1960,7 +1960,7 @@ def test_deduplication_state_attributes_inside_commit_interval(
         hass.states.set(entity_id, "off", attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(States).outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
@@ -1986,7 +1986,7 @@ async def test_async_block_till_done(
     hass.states.async_set(entity_id, "off", attributes)
 
     def _fetch_states():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             return list(session.query(States))
 
     await async_block_recorder(hass, 0.1)
@@ -2194,7 +2194,7 @@ async def test_excluding_attributes_by_integration(
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = []
         for db_state, db_state_attributes, states_meta in (
             session.query(States, StateAttributes, StatesMeta)
