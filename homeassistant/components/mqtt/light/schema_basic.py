@@ -686,6 +686,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         """
         should_update = False
         on_command_type: str = self._config[CONF_ON_COMMAND_TYPE]
+        brightness_provided: bool = ATTR_BRIGHTNESS in kwargs
 
         async def publish(topic: str, payload: PublishPayloadType) -> None:
             """Publish an MQTT message."""
@@ -817,7 +818,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             # Make sure the brightness is not rounded down to 0
             device_brightness = max(device_brightness, 1)
             command_tpl = self._command_templates[CONF_BRIGHTNESS_COMMAND_TEMPLATE]
-            device_brightness_payload = command_tpl(device_brightness, None)
+            device_brightness_payload = command_tpl(
+                device_brightness, {"brightness_provided": brightness_provided}
+            )
             await publish(CONF_BRIGHTNESS_COMMAND_TOPIC, device_brightness_payload)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (

@@ -3264,6 +3264,56 @@ async def test_encoding_subscribable_topics_brightness(
                     "name": "test",
                     "command_topic": "test_light_brightness/set",
                     "brightness_command_topic": "test_light_brightness/brightness/set",
+                    "brightness_command_template": "{{ 255 if not brightness_provided and value > 0 else value }}",
+                    "brightness_scale": 99,
+                    "on_command_type": "brightness",
+                    "payload_on": "on",
+                    "payload_off": "off",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
+async def test_sending_mqtt_brightness_template_with_brightness_provided_var(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending of Brightness command with template using the brightness provided variable."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+
+    await common.async_turn_on(hass, "light.test")
+
+    mqtt_mock.async_publish.assert_called_with(
+        "test_light_brightness/brightness/set", "255", 0, False
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == 255
+
+    await common.async_turn_on(hass, "light.test", brightness=128)
+
+    mqtt_mock.async_publish.assert_called_with(
+        "test_light_brightness/brightness/set", "50", 0, False
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == 128
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "test_light_brightness/set",
+                    "brightness_command_topic": "test_light_brightness/brightness/set",
                     "brightness_command_template": "{{ (1000 / value) | round(0) }}",
                     "payload_on": "on",
                     "payload_off": "off",
