@@ -246,7 +246,7 @@ aiopvpc==4.1.0
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
-aiopyarr==22.11.0
+aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.3.2
