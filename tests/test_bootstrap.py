@@ -551,7 +551,6 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     assert "Waiting on integrations to complete setup" in caplog.text
 
 
-@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_setup_hass_invalid_yaml(
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
@@ -607,7 +606,6 @@ async def test_setup_hass_config_dir_nonexistent(
     )
 
 
-@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_setup_hass_safe_mode(
     mock_enable_logging: Mock,
     mock_is_virtual_env: Mock,
@@ -642,7 +640,6 @@ async def test_setup_hass_safe_mode(
 
 
 @pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
-@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_setup_hass_invalid_core_config(
     mock_hass_config: None,
     mock_enable_logging: Mock,
@@ -681,7 +678,6 @@ async def test_setup_hass_invalid_core_config(
         }
     ],
 )
-@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_setup_safe_mode_if_no_frontend(
     mock_hass_config: None,
     mock_enable_logging: Mock,
@@ -806,3 +802,26 @@ async def test_warning_logged_on_wrap_up_timeout(
         await hass.async_block_till_done()
 
     assert "Setup timed out for bootstrap - moving forward" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_is_cancellation_safe(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test cancellation during async_setup_component does not cancel bootstrap."""
+    with patch.object(
+        bootstrap, "async_setup_component", side_effect=asyncio.CancelledError
+    ):
+        await bootstrap._async_set_up_integrations(hass, {"cancel_integration": {}})
+        await hass.async_block_till_done()
+
+    assert "Error setting up integration cancel_integration" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_empty_integrations(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setting up an empty integrations does not raise."""
+    await bootstrap.async_setup_multi_components(hass, set(), {})
+    await hass.async_block_till_done()

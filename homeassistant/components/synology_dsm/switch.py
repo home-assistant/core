@@ -33,7 +33,7 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
     SynologyDSMSwitchEntityDescription(
         api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
         key="home_mode",
-        name="Home Mode",
+        translation_key="home_mode",
         icon="mdi:home-account",
     ),
 )
@@ -71,10 +71,6 @@ class SynoDSMSurveillanceHomeModeToggle(
         """Initialize a Synology Surveillance Station Home Mode."""
         super().__init__(api, coordinator, description)
         self._version = version
-
-        self._attr_name = (
-            f"{self._api.network.hostname} Surveillance Station {description.name}"
-        )
 
     @property
     def is_on(self) -> bool:
