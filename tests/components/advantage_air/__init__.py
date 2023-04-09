@@ -20,6 +20,9 @@ TEST_SET_URL = f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/se
 TEST_SET_LIGHT_URL = (
     f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/setLight"
 )
+TEST_SET_THING_URL = (
+    f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/setThing"
+)
 
 
 async def add_mock_config(hass):

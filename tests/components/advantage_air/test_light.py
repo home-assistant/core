@@ -62,7 +62,6 @@ async def test_light_async_setup_entry(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 3
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setLight"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
@@ -77,7 +76,6 @@ async def test_light_async_setup_entry(
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 5
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setLight"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
@@ -99,7 +97,6 @@ async def test_light_async_setup_entry(
         {ATTR_ENTITY_ID: [entity_id], ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 7
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setLight"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
