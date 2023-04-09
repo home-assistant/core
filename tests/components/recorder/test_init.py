@@ -804,7 +804,7 @@ def test_saving_state_with_oversized_attributes(
     wait_recording_done(hass)
     states = []
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         for db_state, db_state_attributes, states_meta in (
             session.query(States, StateAttributes, StatesMeta)
             .outerjoin(
@@ -838,7 +838,7 @@ def test_saving_event_with_oversized_data(
     wait_recording_done(hass)
     events = {}
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         for _, data, event_type in (
             session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
             .outerjoin(EventData, Events.data_id == EventData.data_id)
@@ -864,7 +864,7 @@ def test_saving_event_invalid_context_ulid(
     wait_recording_done(hass)
     events = {}
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         for _, data, event_type in (
             session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
             .outerjoin(EventData, Events.data_id == EventData.data_id)
@@ -1267,7 +1267,7 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             statistics_runs = list(session.query(StatisticsRuns))
             assert len(statistics_runs) == 1
             last_run = process_timestamp(statistics_runs[0].start)
@@ -1292,7 +1292,7 @@ def test_compile_missing_statistics(
     wait_recording_done(hass)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         statistics_runs = list(session.query(StatisticsRuns))
         assert len(statistics_runs) == 1
         last_run = process_timestamp(statistics_runs[0].start)
@@ -1330,7 +1330,7 @@ def test_compile_missing_statistics(
     wait_recording_done(hass)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         statistics_runs = list(session.query(StatisticsRuns))
         assert len(statistics_runs) == 13  # 12 5-minute runs
         last_run = process_timestamp(statistics_runs[1].start)
