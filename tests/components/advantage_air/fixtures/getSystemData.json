@@ -277,7 +277,7 @@
     "hasAircons": true,
     "hasLights": true,
     "hasSensors": false,
-    "hasThings": false,
+    "hasThings": true,
     "hasThingsBOG": false,
     "hasThingsLight": false,
     "needsUpdate": false,
