@@ -7,7 +7,6 @@ from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 from math import floor, log10
-from time import monotonic
 from typing import Any, cast
 
 from aiolifx.aiolifx import (
@@ -83,7 +82,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         self._update_rssi: bool = False
         self._rssi: int = 0
         self.last_used_theme: str = ""
-        self._timeouts = 0
+        self._timeouts = MAX_TIMEOUTS_TO_DECLARE_UPDATE_FAILED
+        self._updated: bool = False
         self._offline_time: float = 0.0
 
         super().__init__(
@@ -192,69 +192,60 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
 
-        try:
-            tasks: list[Awaitable] = [async_execute_lifx(self.device.get_color)]
+        for _ in range(MAX_TIMEOUTS_TO_DECLARE_UPDATE_FAILED - 1):
+            try:
+                tasks: list[Awaitable] = [async_execute_lifx(self.device.get_color)]
 
-            if self.device.host_firmware_version is None:
-                tasks.append(async_execute_lifx(self.device.get_hostfirmware))
-            if self.device.product is None:
-                tasks.append(async_execute_lifx(self.device.get_version))
-            if self.device.group is None:
-                tasks.append(async_execute_lifx(self.device.get_group))
+                if self.device.host_firmware_version is None:
+                    tasks.append(async_execute_lifx(self.device.get_hostfirmware))
+                if self.device.product is None:
+                    tasks.append(async_execute_lifx(self.device.get_version))
+                if self.device.group is None:
+                    tasks.append(async_execute_lifx(self.device.get_group))
 
-            await asyncio.gather(*tasks)
+                await asyncio.gather(*tasks)
 
-            while len(self.device.message) > 0:
-                # let the loop run until all messages have replies or aiolifx times out waiting for them
-                await asyncio.sleep(0)  # pragma: no cover
+                while len(self.device.message) > 0:
+                    # let the loop run until all messages have replies or aiolifx times out waiting for them
+                    await asyncio.sleep(0)  # pragma: no cover
 
-            if self._update_rssi is True:
-                await self.async_update_rssi()
+                if self._update_rssi is True:
+                    await self.async_update_rssi()
 
-            # Update extended multizone devices
-            if lifx_features(self.device)["extended_multizone"]:
-                await async_execute_lifx(self.device.get_extended_color_zones)
-                await self.async_get_multizone_effect()
-            # use legacy methods for older devices
-            elif lifx_features(self.device)["multizone"]:
-                await self.async_get_color_zones()
-                await self.async_get_multizone_effect()
+                # Update extended multizone devices
+                if lifx_features(self.device)["extended_multizone"]:
+                    await async_execute_lifx(self.device.get_extended_color_zones)
+                    await self.async_get_multizone_effect()
+                # use legacy methods for older devices
+                elif lifx_features(self.device)["multizone"]:
+                    await self.async_get_color_zones()
+                    await self.async_get_multizone_effect()
 
-            if lifx_features(self.device)["hev"]:
-                await self.async_get_hev_cycle()
+                if lifx_features(self.device)["hev"]:
+                    await self.async_get_hev_cycle()
 
-            if lifx_features(self.device)["infrared"]:
-                await async_execute_lifx(self.device.get_infrared)
+                if lifx_features(self.device)["infrared"]:
+                    await async_execute_lifx(self.device.get_infrared)
 
-        except asyncio.TimeoutError as ex:
-            if self._timeouts == 0:
-                self._offline_time = monotonic()
+                break
 
-            self._timeouts += 1
-
-            if self._timeouts >= MAX_TIMEOUTS_TO_DECLARE_UPDATE_FAILED:
-                raise UpdateFailed(
-                    f"The device failed to respond after {MAX_TIMEOUTS_TO_DECLARE_UPDATE_FAILED} attempts"
-                ) from ex
-
-            _LOGGER.debug(
-                "Incrementing timeout counter to %s after no reply from %s (%s)",
-                self._timeouts,
-                self.device.label,
-                self.device.ip_addr,
-            )
-
-            await self._async_update_data()
-
-        else:
-            if self._timeouts > 0:
+            except asyncio.TimeoutError:
                 _LOGGER.debug(
-                    "Resetting timeout to 0 for %s (%s) after being offline for %.2f seconds",
+                    "Time out updating %s (%s): retrying",
                     self.device.label or self.device.ip_addr,
                     self.device.mac_addr,
-                    monotonic() - self._offline_time,
                 )
-                self._timeouts = 0
+
+        else:
+            _LOGGER.debug(
+                "Marking %s (%s) as offline after three failed update attempts",
+                self.device.label or self.device.ip_addr,
+                self.device.mac_addr,
+            )
+
+            raise UpdateFailed(
+                f"The device failed to respond after {MAX_TIMEOUTS_TO_DECLARE_UPDATE_FAILED} attempts"
+            )
 
     async def async_get_color_zones(self) -> None:
         """Get updated color information for each zone."""

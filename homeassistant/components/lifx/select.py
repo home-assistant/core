@@ -59,7 +59,6 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
     """LIFX Nightvision infrared brightness configuration entity."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -86,7 +85,6 @@ class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
     """Theme entity for LIFX multizone devices."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
