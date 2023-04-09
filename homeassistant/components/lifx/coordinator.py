@@ -7,6 +7,7 @@ from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 from math import floor, log10
+import sys
 from typing import Any, cast
 
 from aiolifx.aiolifx import (
@@ -46,6 +47,12 @@ from .util import (
     infrared_brightness_value_to_option,
     lifx_features,
 )
+
+if sys.version_info[:2] < (3, 11):
+    from async_timeout import timeout as asyncio_timeout
+else:
+    from asyncio import timeout as asyncio_timeout
+
 
 LIGHT_UPDATE_INTERVAL = 10
 SENSOR_UPDATE_INTERVAL = 30
@@ -203,9 +210,15 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
                 await asyncio.gather(*tasks)
 
-                while len(self.device.message) > 0:
-                    # let the loop run until all messages have replies or aiolifx times out waiting for them
-                    await asyncio.sleep(0)  # pragma: no cover
+                events = []
+                # Make a copy of the bulb's message queue to avoid the dictionary changing
+                # size during iteration
+                for _response, event, _callb in list(self.device.message.values()):
+                    if isinstance(event, asyncio.Event):
+                        events.append(event.wait())
+                if len(events) > 0:
+                    async with asyncio_timeout(MESSAGE_TIMEOUT):
+                        await asyncio.gather(*events)
 
                 if self._update_rssi is True:
                     await self.async_update_rssi()
@@ -229,13 +242,13 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
             except asyncio.TimeoutError:
                 _LOGGER.debug(
-                    "Time out updating %s (%s): retrying",
+                    "Time out updating %s (%s): will retry update",
                     self.device.label or self.device.ip_addr,
                     self.device.mac_addr,
                 )
 
         else:
-            _LOGGER.debug(
+            _LOGGER.error(
                 "Marking %s (%s) as offline after three failed update attempts",
                 self.device.label or self.device.ip_addr,
                 self.device.mac_addr,

@@ -1,8 +1,9 @@
 """Tests for the lifx integration light platform."""
-
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
+from aiolifx.msgtypes import Acknowledgement, StateHostFirmware
 import aiolifx_effects
 import pytest
 
@@ -126,6 +127,32 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
+
+
+async def test_updates_wait_for_pending_messages(hass: HomeAssistant) -> None:
+    """Test updates wait for pending messages."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    mock_event = asyncio.Event()
+    bulb.message = {
+        0: (Acknowledgement, None, None),
+        1: (StateHostFirmware, mock_event, None),
+    }
+    entity_id = "light.my_bulb"
+
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        mock_event.set()
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(entity_id).unique_id == SERIAL
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_light_strip(hass: HomeAssistant) -> None:
