@@ -363,21 +363,34 @@ class ReolinkHost:
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ):
         """Shield the incoming webhook callback from cancellation."""
+        shielded_future =  = asyncio.shield(
+            self._handle_webhook(hass, webhook_id, request)
+        )
         _LOGGER.debug("Webhook '%s' called", webhook_id)
-        try:
-            data = await request.text()
-        except (ConnectionResetError, asyncio.CancelledError):
-            await asyncio.shield(self.handle_webhook_error_shielded(hass, webhook_id))
-            raise
+        await shielded_future
 
-        await asyncio.shield(self.handle_webhook_shielded(hass, webhook_id, data))
-
-    async def handle_webhook_shielded(
-        self, hass: HomeAssistant, webhook_id: str, data: str
+    async def _handle_webhook(
+        self, hass: HomeAssistant, webhook_id: str, request: Request
     ):
         """Handle incoming webhook from Reolink for inbound messages and calls."""
+        try:
+            data = await request.text()
+        except ConnectionResetError:
+            _LOGGER.debug(
+                "Webhook '%s' called, but lost connection before reading message, issuing poll",
+                webhook_id,
+            )
+            if await self._api.get_motion_state_all_ch():
+                async_dispatcher_send(hass, f"{webhook_id}_all", {})
+                return
+            _LOGGER.error(
+                "Could not poll motion state after losing connection during receiving ONVIF event"
+            )
+            return
+
         if not self._webhook_reachable.is_set():
             self._webhook_reachable.set()
+            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
         if not data:
             _LOGGER.debug(
@@ -385,28 +398,9 @@ class ReolinkHost:
             )
             return
 
-        channels = await self._api.ONVIF_event_callback(data)
-
-        if channels is None:
+        if (channels := await self._api.ONVIF_event_callback(data)) is None:
             async_dispatcher_send(hass, f"{webhook_id}_all", {})
-        else:
-            for channel in channels:
-                async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
-
-    async def handle_webhook_error_shielded(self, hass: HomeAssistant, webhook_id: str):
-        """Handle error from incoming webhook by polling the state."""
-        _LOGGER.debug(
-            "Webhook '%s' called, but lost connection before reading message, issuing poll",
-            webhook_id,
-        )
-        if not await self._api.get_motion_state_all_ch():
-            _LOGGER.error(
-                "Could not poll motion state after getting error during receiving ONVIF event"
-            )
             return
 
-        async_dispatcher_send(hass, f"{webhook_id}_all", {})
-
-        if not self._webhook_reachable.is_set():
-            self._webhook_reachable.set()
-            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+        for channel in channels:
+            async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
