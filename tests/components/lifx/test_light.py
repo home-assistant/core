@@ -1,9 +1,8 @@
 """Tests for the lifx integration light platform."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
-from aiolifx.msgtypes import Acknowledgement, StateHostFirmware
+from aiolifx.message import Message
 import aiolifx_effects
 import pytest
 
@@ -136,17 +135,29 @@ async def test_updates_wait_for_pending_messages(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    mock_event = asyncio.Event()
-    bulb.message = {
-        0: (Acknowledgement, None, None),
-        1: (StateHostFirmware, mock_event, None),
-    }
-    entity_id = "light.my_bulb"
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+    class MockMessages(dict):
+        """Mocked message dictionary."""
+
+        def __init__(self) -> None:
+            """Init a mock message queue."""
+            self.values: dict[int, tuple[Message, None, None]] = {
+                0: (Message, None, None),
+                1: (Message, None, None),
+            }
+
+        def __getitem__(self, __key: int) -> tuple[Message, None, None]:
+            """Remove a message when it is requested."""
+            item = self.values[__key]
+            del self.values[__key]
+            return item
+
+    entity_id = "light.my_bulb"
+    _mock_messages = MockMessages()
+
+    with patch.dict(bulb.message, _mock_messages, clear=True), _patch_discovery(
         device=bulb
-    ), _patch_device(device=bulb):
-        mock_event.set()
+    ), _patch_config_flow_try_connect(device=bulb), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 

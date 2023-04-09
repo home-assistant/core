@@ -210,13 +210,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
                 await asyncio.gather(*tasks)
 
-                events = []
-                for _response, event, _callb in self.device.message.values():
-                    if isinstance(event, asyncio.Event):
-                        events.append(event.wait())
-                if events:
-                    async with asyncio_timeout(MESSAGE_TIMEOUT):
-                        await asyncio.gather(*events)
+                async with asyncio_timeout(MESSAGE_TIMEOUT):
+                    while len(self.device.message) > 0:
+                        await asyncio.sleep(0)
 
                 if self._update_rssi is True:
                     await self.async_update_rssi()
