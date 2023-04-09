@@ -152,8 +152,8 @@ class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open zone vent."""
-        await self.async_turn_on()
+        return await self.async_turn_on()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Fully close zone vent."""
-        await self.async_turn_off()
+        return await self.async_turn_off()
