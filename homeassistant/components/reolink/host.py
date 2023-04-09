@@ -363,7 +363,7 @@ class ReolinkHost:
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ):
         """Shield the incoming webhook callback from cancellation."""
-        shielded_future =  = asyncio.shield(
+        shielded_future = asyncio.shield(
             self._handle_webhook(hass, webhook_id, request)
         )
         _LOGGER.debug("Webhook '%s' called", webhook_id)
