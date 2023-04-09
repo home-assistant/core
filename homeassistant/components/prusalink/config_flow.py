@@ -12,6 +12,7 @@ from pyprusalink import InvalidAuth, PrusaLink
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -24,8 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("api_key"): str,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_API_KEY): str,
     }
 )
 
@@ -35,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    api = PrusaLink(async_get_clientsession(hass), data["host"], data["api_key"])
+    api = PrusaLink(async_get_clientsession(hass), data[CONF_HOST], data[CONF_API_KEY])
 
     try:
         async with async_timeout.timeout(5):
@@ -51,7 +52,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     except AwesomeVersionException as err:
         raise NotSupported from err
 
-    return {"title": version["hostname"]}
+    return {"title": version["hostname"] or version["text"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -68,13 +69,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        host = user_input["host"].rstrip("/")
+        host = user_input[CONF_HOST].rstrip("/")
         if not host.startswith(("http://", "https://")):
             host = f"http://{host}"
 
         data = {
-            "host": host,
-            "api_key": user_input["api_key"],
+            CONF_HOST: host,
+            CONF_API_KEY: user_input[CONF_API_KEY],
         }
         errors = {}
 

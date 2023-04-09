@@ -226,6 +226,7 @@ omit =
     homeassistant/components/dublin_bus_transport/sensor.py
     homeassistant/components/dunehd/__init__.py
     homeassistant/components/dunehd/media_player.py
+    homeassistant/components/dwd_weather_warnings/const.py
     homeassistant/components/dwd_weather_warnings/sensor.py
     homeassistant/components/dweet/*
     homeassistant/components/ebox/sensor.py
@@ -1438,7 +1439,6 @@ omit =
     homeassistant/components/xbox/media_player.py
     homeassistant/components/xbox/remote.py
     homeassistant/components/xbox/sensor.py
-    homeassistant/components/xbox_live/sensor.py
     homeassistant/components/xeoma/camera.py
     homeassistant/components/xiaomi/camera.py
     homeassistant/components/xiaomi_aqara/__init__.py

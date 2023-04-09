@@ -63,8 +63,6 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_REPOSITORY,
     ATTR_SLUG,
-    ATTR_STARTED,
-    ATTR_STATE,
     ATTR_URL,
     ATTR_VERSION,
     DATA_KEY_ADDONS,
@@ -862,20 +860,18 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             self.hassio.get_os_info(),
         )
 
-        addons = [
-            addon
-            for addon in self.hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
-            if addon[ATTR_STATE] == ATTR_STARTED
-        ]
-
+        all_addons = self.hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
         self.hass.data[DATA_ADDONS_CHANGELOGS] = dict(
             await asyncio.gather(
-                *[self._update_addon_changelog(addon[ATTR_SLUG]) for addon in addons]
+                *[
+                    self._update_addon_changelog(addon[ATTR_SLUG])
+                    for addon in all_addons
+                ]
             )
         )
         self.hass.data[DATA_ADDONS_INFO] = dict(
             await asyncio.gather(
-                *[self._update_addon_info(addon[ATTR_SLUG]) for addon in addons]
+                *[self._update_addon_info(addon[ATTR_SLUG]) for addon in all_addons]
             )
         )
 
