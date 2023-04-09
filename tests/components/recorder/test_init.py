@@ -75,6 +75,7 @@ from homeassistant.util.json import json_loads
 from .common import (
     async_block_recorder,
     async_wait_recording_done,
+    convert_pending_states_to_meta,
     corrupt_db_file,
     run_information_with_session,
     wait_recording_done,
@@ -563,6 +564,7 @@ def _add_entities(hass, entity_ids):
             native_state = db_state.to_native()
             native_state.attributes = db_state_attributes.to_native()
             states.append(native_state)
+        convert_pending_states_to_meta(get_instance(hass), session)
         return states
 
 

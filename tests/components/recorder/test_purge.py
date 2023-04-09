@@ -10,7 +10,7 @@ from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, migration
+from homeassistant.components.recorder import migration
 from homeassistant.components.recorder.const import (
     SQLITE_MAX_BIND_VARS,
     SupportedDialect,
@@ -45,6 +45,8 @@ from .common import (
     async_recorder_block_till_done,
     async_wait_purge_done,
     async_wait_recording_done,
+    convert_pending_events_to_event_types,
+    convert_pending_states_to_meta,
 )
 
 from tests.typing import RecorderInstanceGenerator
@@ -675,58 +677,6 @@ async def test_purge_cutoff_date(
         assert state_attributes.count() == 0
 
 
-def _convert_pending_states_to_meta(instance: Recorder, session: Session) -> None:
-    """Convert pending states to use states_metadata."""
-    entity_ids: set[str] = set()
-    states: set[States] = set()
-    states_meta_objects: dict[str, StatesMeta] = {}
-    for object in session:
-        if isinstance(object, States):
-            entity_ids.add(object.entity_id)
-            states.add(object)
-
-    entity_id_to_metadata_ids = instance.states_meta_manager.get_many(
-        entity_ids, session, True
-    )
-
-    for state in states:
-        entity_id = state.entity_id
-        state.entity_id = None
-        if metadata_id := entity_id_to_metadata_ids.get(entity_id):
-            state.metadata_id = metadata_id
-            continue
-        if entity_id not in states_meta_objects:
-            states_meta_objects[entity_id] = StatesMeta(entity_id=entity_id)
-        state.states_meta_rel = states_meta_objects[entity_id]
-
-
-def _convert_pending_events_to_event_types(
-    instance: Recorder, session: Session
-) -> None:
-    """Convert pending events to use event_type_ids."""
-    event_types: set[str] = set()
-    events: set[Events] = set()
-    event_types_objects: dict[str, EventTypes] = {}
-    for object in session:
-        if isinstance(object, Events):
-            event_types.add(object.event_type)
-            events.add(object)
-
-    event_type_to_event_type_ids = instance.event_type_manager.get_many(
-        event_types, session
-    )
-
-    for event in events:
-        event_type = event.event_type
-        event.event_type = None
-        if event_type_id := event_type_to_event_type_ids.get(event_type):
-            event.event_type_id = event_type_id
-            continue
-        if event_type not in event_types_objects:
-            event_types_objects[event_type] = EventTypes(event_type=event_type)
-        event.event_type_rel = event_types_objects[event_type]
-
-
 @pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
 async def test_purge_filtered_states(
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -819,7 +769,7 @@ async def test_purge_filtered_states(
                     time_fired_ts=dt_util.utc_to_timestamp(timestamp),
                 )
             )
-            _convert_pending_states_to_meta(instance, session)
+            convert_pending_states_to_meta(instance, session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)
@@ -952,7 +902,7 @@ async def test_purge_filtered_states_to_empty(
                         timestamp,
                         event_id * days,
                     )
-            _convert_pending_states_to_meta(instance, session)
+            convert_pending_states_to_meta(instance, session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)
@@ -1028,7 +978,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
                     time_fired_ts=dt_util.utc_to_timestamp(timestamp),
                 )
             )
-            _convert_pending_states_to_meta(instance, session)
+            convert_pending_states_to_meta(instance, session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)
@@ -1092,7 +1042,7 @@ async def test_purge_filtered_events(
                     timestamp,
                     event_id,
                 )
-            _convert_pending_events_to_event_types(instance, session)
+            convert_pending_events_to_event_types(instance, session)
 
     service_data = {"keep_days": 10}
     _add_db_entries(hass)
@@ -1242,8 +1192,8 @@ async def test_purge_filtered_events_state_changed(
                     last_updated_ts=dt_util.utc_to_timestamp(timestamp),
                 )
             )
-            _convert_pending_events_to_event_types(instance, session)
-            _convert_pending_states_to_meta(instance, session)
+            convert_pending_events_to_event_types(instance, session)
+            convert_pending_states_to_meta(instance, session)
 
     service_data = {"keep_days": 10, "apply_filter": True}
     _add_db_entries(hass)
@@ -1347,7 +1297,7 @@ async def test_purge_entities(
                         timestamp,
                         event_id * days,
                     )
-            _convert_pending_states_to_meta(instance, session)
+            convert_pending_states_to_meta(instance, session)
 
     def _add_keep_records(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
@@ -1361,7 +1311,7 @@ async def test_purge_entities(
                     timestamp,
                     event_id,
                 )
-            _convert_pending_states_to_meta(instance, session)
+            convert_pending_states_to_meta(instance, session)
 
     _add_purge_records(hass)
     _add_keep_records(hass)

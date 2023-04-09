@@ -15,7 +15,13 @@ from sqlalchemy.orm.session import Session
 from homeassistant import core as ha
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, get_instance, statistics
-from homeassistant.components.recorder.db_schema import RecorderRuns
+from homeassistant.components.recorder.db_schema import (
+    Events,
+    EventTypes,
+    RecorderRuns,
+    States,
+    StatesMeta,
+)
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
@@ -307,3 +313,53 @@ def record_states(hass):
         states[sns4].append(set_state(sns4, "20", attributes=sns4_attr))
 
     return zero, four, states
+
+
+def convert_pending_states_to_meta(instance: Recorder, session: Session) -> None:
+    """Convert pending states to use states_metadata."""
+    entity_ids: set[str] = set()
+    states: set[States] = set()
+    states_meta_objects: dict[str, StatesMeta] = {}
+    for object in session:
+        if isinstance(object, States):
+            entity_ids.add(object.entity_id)
+            states.add(object)
+
+    entity_id_to_metadata_ids = instance.states_meta_manager.get_many(
+        entity_ids, session, True
+    )
+
+    for state in states:
+        entity_id = state.entity_id
+        state.entity_id = None
+        if metadata_id := entity_id_to_metadata_ids.get(entity_id):
+            state.metadata_id = metadata_id
+            continue
+        if entity_id not in states_meta_objects:
+            states_meta_objects[entity_id] = StatesMeta(entity_id=entity_id)
+        state.states_meta_rel = states_meta_objects[entity_id]
+
+
+def convert_pending_events_to_event_types(instance: Recorder, session: Session) -> None:
+    """Convert pending events to use event_type_ids."""
+    event_types: set[str] = set()
+    events: set[Events] = set()
+    event_types_objects: dict[str, EventTypes] = {}
+    for object in session:
+        if isinstance(object, Events):
+            event_types.add(object.event_type)
+            events.add(object)
+
+    event_type_to_event_type_ids = instance.event_type_manager.get_many(
+        event_types, session
+    )
+
+    for event in events:
+        event_type = event.event_type
+        event.event_type = None
+        if event_type_id := event_type_to_event_type_ids.get(event_type):
+            event.event_type_id = event_type_id
+            continue
+        if event_type not in event_types_objects:
+            event_types_objects[event_type] = EventTypes(event_type=event_type)
+        event.event_type_rel = event_types_objects[event_type]
