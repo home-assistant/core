@@ -81,6 +81,16 @@ YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID = {
     }
 }
 
+
+YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT value from view_sensor_db_unique_entity_ids;",
+        CONF_COLUMN_NAME: "value",
+    }
+}
+
+
 YAML_CONFIG_BINARY = {
     "sql": {
         CONF_DB_URL: "sqlite://",

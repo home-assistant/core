@@ -24,6 +24,7 @@ from . import (
     YAML_CONFIG_BINARY,
     YAML_CONFIG_FULL_TABLE_SCAN,
     YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID,
+    YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID,
     init_integration,
 )
 
@@ -374,3 +375,26 @@ async def test_issue_when_using_old_query_without_unique_id(
         DOMAIN, f"entity_id_query_does_full_table_scan_{query}"
     )
     assert issue.translation_placeholders == {"query": query}
+
+
+async def test_no_issue_when_view_has_the_text_entity_id_in_it(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we do not trigger the full table scan issue for a custom view."""
+
+    with patch(
+        "homeassistant.components.sql.sensor.scoped_session",
+    ):
+        await init_integration(
+            hass, YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID["sql"]
+        )
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done()
+
+    assert (
+        "Query contains entity_id but does not reference states_meta" not in caplog.text
+    )
+    assert hass.states.get("sensor.get_entity_id") is not None
