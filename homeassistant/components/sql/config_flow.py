@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from types import MappingProxyType
 from typing import Any
 
 import sqlalchemy
@@ -55,6 +56,74 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
     return True
 
 
+def _generate_schema_config(current_data: dict[str, Any]) -> vol.Schema:
+    """Generate schema for config flow."""
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_NAME,
+                description={
+                    "suggested_value": current_data.get(CONF_NAME, "Select SQL Query")
+                },
+            ): selector.TextSelector(),
+            vol.Optional(
+                CONF_DB_URL,
+                description={"suggested_value": current_data.get(CONF_DB_URL)},
+            ): selector.TextSelector(),
+            vol.Required(
+                CONF_COLUMN_NAME,
+                description={"suggested_value": current_data.get(CONF_COLUMN_NAME)},
+            ): selector.TextSelector(),
+            vol.Required(
+                CONF_QUERY,
+                description={"suggested_value": current_data.get(CONF_QUERY)},
+            ): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
+            vol.Optional(
+                CONF_UNIT_OF_MEASUREMENT,
+                description={
+                    "suggested_value": current_data.get(CONF_UNIT_OF_MEASUREMENT)
+                },
+            ): selector.TextSelector(),
+            vol.Optional(
+                CONF_VALUE_TEMPLATE,
+                description={"suggested_value": current_data.get(CONF_VALUE_TEMPLATE)},
+            ): selector.TemplateSelector(),
+        }
+    )
+
+
+def _generate_schema_options(
+    current_data: MappingProxyType[str, Any] | dict[str, Any]
+) -> vol.Schema:
+    """Generate schema for options flow."""
+    return vol.Schema(
+        {
+            vol.Optional(
+                CONF_DB_URL,
+                description={"suggested_value": current_data.get(CONF_DB_URL)},
+            ): selector.TextSelector(),
+            vol.Required(
+                CONF_COLUMN_NAME,
+                description={"suggested_value": current_data.get(CONF_COLUMN_NAME)},
+            ): selector.TextSelector(),
+            vol.Required(
+                CONF_QUERY,
+                description={"suggested_value": current_data.get(CONF_QUERY)},
+            ): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
+            vol.Optional(
+                CONF_UNIT_OF_MEASUREMENT,
+                description={
+                    "suggested_value": current_data.get(CONF_UNIT_OF_MEASUREMENT)
+                },
+            ): selector.TextSelector(),
+            vol.Optional(
+                CONF_VALUE_TEMPLATE,
+                description={"suggested_value": current_data.get(CONF_VALUE_TEMPLATE)},
+            ): selector.TemplateSelector(),
+        }
+    )
+
+
 class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SQL integration."""
 
@@ -74,12 +143,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the user step."""
         errors = {}
 
-        current_name: str = "Select SQL Query"
-        current_db_url: str | None = None
-        current_column_name: str | None = None
-        current_query: str | None = None
-        current_unit_of_measurement: str | None = None
-        current_value_template: str | None = None
+        current_data: dict[str, Any] = {}
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
@@ -118,45 +182,12 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_NAME: name,
                     },
                 )
-            current_name = user_input.get(CONF_NAME, "Select SQL Query")
-            current_db_url = user_input.get(CONF_DB_URL)
-            current_column_name = user_input.get(CONF_COLUMN_NAME)
-            current_query = user_input.get(CONF_QUERY)
-            current_unit_of_measurement = user_input.get(CONF_UNIT_OF_MEASUREMENT)
-            current_value_template = user_input.get(CONF_VALUE_TEMPLATE)
+
+            current_data = user_input
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_NAME,
-                        description={"suggested_value": current_name},
-                    ): selector.TextSelector(),
-                    vol.Optional(
-                        CONF_DB_URL,
-                        description={"suggested_value": current_db_url},
-                    ): selector.TextSelector(),
-                    vol.Required(
-                        CONF_COLUMN_NAME,
-                        description={"suggested_value": current_column_name},
-                    ): selector.TextSelector(),
-                    vol.Required(
-                        CONF_QUERY,
-                        description={"suggested_value": current_query},
-                    ): selector.TextSelector(
-                        selector.TextSelectorConfig(multiline=True)
-                    ),
-                    vol.Optional(
-                        CONF_UNIT_OF_MEASUREMENT,
-                        description={"suggested_value": current_unit_of_measurement},
-                    ): selector.TextSelector(),
-                    vol.Optional(
-                        CONF_VALUE_TEMPLATE,
-                        description={"suggested_value": current_value_template},
-                    ): selector.TemplateSelector(),
-                }
-            ),
+            data_schema=_generate_schema_config(current_data),
             errors=errors,
         )
 
@@ -174,13 +205,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage SQL options."""
         errors = {}
 
-        current_db_url: str | None = self.entry.options.get(CONF_DB_URL)
-        current_column_name: str | None = self.entry.options.get(CONF_COLUMN_NAME)
-        current_query: str | None = self.entry.options.get(CONF_QUERY)
-        current_unit_of_measurement: str | None = self.entry.options.get(
-            CONF_UNIT_OF_MEASUREMENT
-        )
-        current_value_template: str | None = self.entry.options.get(CONF_VALUE_TEMPLATE)
+        current_data: MappingProxyType[str, Any] | dict[str, Any] = self.entry.options
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
@@ -210,39 +235,10 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                     },
                 )
 
-            current_db_url = user_input.get(CONF_DB_URL)
-            current_column_name = user_input.get(CONF_COLUMN_NAME)
-            current_query = user_input.get(CONF_QUERY)
-            current_unit_of_measurement = user_input.get(CONF_UNIT_OF_MEASUREMENT)
-            current_value_template = user_input.get(CONF_VALUE_TEMPLATE)
+            current_data = user_input
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_DB_URL,
-                        description={"suggested_value": current_db_url},
-                    ): selector.TextSelector(),
-                    vol.Required(
-                        CONF_QUERY,
-                        description={"suggested_value": current_query},
-                    ): selector.TextSelector(
-                        selector.TextSelectorConfig(multiline=True)
-                    ),
-                    vol.Required(
-                        CONF_COLUMN_NAME,
-                        description={"suggested_value": current_column_name},
-                    ): selector.TextSelector(),
-                    vol.Optional(
-                        CONF_UNIT_OF_MEASUREMENT,
-                        description={"suggested_value": current_unit_of_measurement},
-                    ): selector.TextSelector(),
-                    vol.Optional(
-                        CONF_VALUE_TEMPLATE,
-                        description={"suggested_value": current_value_template},
-                    ): selector.TemplateSelector(),
-                }
-            ),
+            data_schema=_generate_schema_options(current_data),
             errors=errors,
         )
