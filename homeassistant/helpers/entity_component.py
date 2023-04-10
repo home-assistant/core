@@ -90,11 +90,11 @@ class EntityComponent(Generic[_EntityT]):
 
     @property
     def entities(self) -> Iterable[_EntityT]:
-        """
-        Return an iterable that returns all entities.
+        """Return an iterable that returns all entities.
 
-        As the underlying dicts may change when async context is lost, callers that
-        iterate over this asynchronously should make a copy using list() before iterating.
+        As the underlying dicts may change when async context is lost,
+        callers that iterate over this asynchronously should make a copy
+        using list() before iterating.
         """
         return chain.from_iterable(
             platform.entities.values()  # type: ignore[misc]
@@ -114,7 +114,9 @@ class EntityComponent(Generic[_EntityT]):
 
         This doesn't block the executor to protect from deadlocks.
         """
-        self.hass.add_job(self.async_setup(config))
+        self.hass.create_task(
+            self.async_setup(config), f"EntityComponent setup {self.domain}"
+        )
 
     async def async_setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
@@ -131,7 +133,10 @@ class EntityComponent(Generic[_EntityT]):
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in config_per_platform(config, self.domain):
             if p_type is not None:
-                self.hass.async_create_task(self.async_setup_platform(p_type, p_config))
+                self.hass.async_create_task(
+                    self.async_setup_platform(p_type, p_config),
+                    f"EntityComponent setup platform {p_type} {self.domain}",
+                )
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
@@ -200,7 +205,7 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str, Any] | vol.Schema,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
     ) -> None:

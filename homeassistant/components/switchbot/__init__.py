@@ -45,7 +45,16 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
-    SupportedModels.LOCK.value: [Platform.BINARY_SENSOR, Platform.LOCK],
+    SupportedModels.LOCK.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.BLIND_TILT.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -56,6 +65,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
     SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
     SupportedModels.LOCK.value: switchbot.SwitchbotLock,
+    SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
 }
 
 

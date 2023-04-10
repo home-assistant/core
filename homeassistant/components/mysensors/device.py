@@ -53,7 +53,8 @@ class MySensorsDevice(ABC):
         self.gateway: BaseAsyncGateway = gateway
         self.node_id: int = node_id
         self.child_id: int = child_id
-        self.value_type: int = value_type  # value_type as int. string variant can be looked up in gateway consts
+        # value_type as int. string variant can be looked up in gateway consts
+        self.value_type: int = value_type
         self.child_type = self._child.type
         self._values: dict[int, Any] = {}
         self._debouncer: Debouncer | None = None
@@ -201,11 +202,11 @@ class MySensorsDevice(ABC):
 
 def get_mysensors_devices(
     hass: HomeAssistant, domain: Platform
-) -> dict[DevId, MySensorsDevice]:
+) -> dict[DevId, MySensorsEntity]:
     """Return MySensors devices for a hass platform name."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:
         hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
-    devices: dict[DevId, MySensorsDevice] = hass.data[DOMAIN][
+    devices: dict[DevId, MySensorsEntity] = hass.data[DOMAIN][
         MYSENSORS_PLATFORM_DEVICES.format(domain)
     ]
     return devices

@@ -4,11 +4,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
-from functools import partial, wraps
+from enum import Enum
+from functools import cache, partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
+from types import ModuleType
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
 
-from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
@@ -43,6 +44,7 @@ from . import (
     entity_registry,
     template,
 )
+from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
@@ -57,6 +59,112 @@ CONF_SERVICE_ENTITY_ID = "entity_id"
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+
+
+@cache
+def _base_components() -> dict[str, ModuleType]:
+    """Return a cached lookup of base components."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components import (
+        alarm_control_panel,
+        calendar,
+        camera,
+        climate,
+        cover,
+        fan,
+        humidifier,
+        light,
+        lock,
+        media_player,
+        remote,
+        siren,
+        update,
+        vacuum,
+        water_heater,
+    )
+
+    return {
+        "alarm_control_panel": alarm_control_panel,
+        "calendar": calendar,
+        "camera": camera,
+        "climate": climate,
+        "cover": cover,
+        "fan": fan,
+        "humidifier": humidifier,
+        "light": light,
+        "lock": lock,
+        "media_player": media_player,
+        "remote": remote,
+        "siren": siren,
+        "update": update,
+        "vacuum": vacuum,
+        "water_heater": water_heater,
+    }
+
+
+def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
+    """Validate attribute option or supported feature."""
+    try:
+        domain, enum, option = option_or_feature.split(".", 2)
+    except ValueError as exc:
+        raise vol.Invalid(
+            f"Invalid {label} '{option_or_feature}', expected "
+            "<domain>.<enum>.<member>"
+        ) from exc
+
+    base_components = _base_components()
+    if not (base_component := base_components.get(domain)):
+        raise vol.Invalid(f"Unknown base component '{domain}'")
+
+    try:
+        attribute_enum = getattr(base_component, enum)
+    except AttributeError as exc:
+        raise vol.Invalid(f"Unknown {label} enum '{domain}.{enum}'") from exc
+
+    if not issubclass(attribute_enum, Enum):
+        raise vol.Invalid(f"Expected {label} '{domain}.{enum}' to be an enum")
+
+    try:
+        return getattr(attribute_enum, option).value
+    except AttributeError as exc:
+        raise vol.Invalid(f"Unknown {label} '{enum}.{option}'") from exc
+
+
+def validate_attribute_option(attribute_option: str) -> Any:
+    """Validate attribute option."""
+    return _validate_option_or_feature(attribute_option, "attribute option")
+
+
+def validate_supported_feature(supported_feature: str) -> Any:
+    """Validate supported feature."""
+    return _validate_option_or_feature(supported_feature, "supported feature")
+
+
+# Basic schemas which translate attribute and supported feature enum names
+# to their values. Full validation is done by hassfest.services
+_FIELD_SCHEMA = vol.Schema(
+    {
+        vol.Optional("filter"): {
+            vol.Optional("attribute"): {
+                vol.Required(str): [vol.All(str, validate_attribute_option)],
+            },
+            vol.Optional("supported_features"): [
+                vol.All(str, validate_supported_feature)
+            ],
+        },
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+_SERVICES_SCHEMA = vol.Schema({cv.slug: _SERVICE_SCHEMA})
 
 
 class ServiceParams(TypedDict):
@@ -371,7 +479,8 @@ def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        # Do not add entities which are hidden or which are config or diagnostic entities
+        # Do not add entities which are hidden or which are config
+        # or diagnostic entities.
         if ent_entry.entity_category is not None or ent_entry.hidden_by is not None:
             continue
 
@@ -421,13 +530,16 @@ async def async_extract_config_entry_ids(
 def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
     """Load services file for an integration."""
     try:
-        return load_yaml(str(integration.file_path / "services.yaml"))
+        return cast(
+            JSON_TYPE,
+            _SERVICES_SCHEMA(load_yaml(str(integration.file_path / "services.yaml"))),
+        )
     except FileNotFoundError:
         _LOGGER.warning(
             "Unable to find services.yaml for the %s integration", integration.domain
         )
         return {}
-    except HomeAssistantError:
+    except (HomeAssistantError, vol.Invalid):
         _LOGGER.warning(
             "Unable to parse services.yaml for the %s integration", integration.domain
         )
@@ -489,7 +601,10 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded[domain]
-                yaml_description = domain_yaml.get(service, {})  # type: ignore[union-attr]
+
+                yaml_description = domain_yaml.get(  # type: ignore[union-attr]
+                    service, {}
+                )
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
@@ -508,6 +623,16 @@ async def async_get_all_descriptions(
             descriptions[domain][service] = description
 
     return descriptions
+
+
+@callback
+def remove_entity_service_fields(call: ServiceCall) -> dict[Any, Any]:
+    """Remove entity service fields."""
+    return {
+        key: val
+        for key, val in call.data.items()
+        if key not in cv.ENTITY_SERVICE_FIELDS
+    }
 
 
 @callback
@@ -564,11 +689,7 @@ async def entity_service_call(  # noqa: C901
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data: dict | ServiceCall = {
-            key: val
-            for key, val in call.data.items()
-            if key not in cv.ENTITY_SERVICE_FIELDS
-        }
+        data: dict | ServiceCall = remove_entity_service_fields(call)
     # If the service function is not a string, we pass the service call
     else:
         data = call
@@ -610,7 +731,6 @@ async def entity_service_call(  # noqa: C901
         for platform in platforms:
             platform_entities = []
             for entity in platform.entities.values():
-
                 if entity.entity_id not in all_referenced:
                     continue
 
@@ -706,11 +826,14 @@ async def _handle_entity_call(
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
+        result = hass.async_run_job(
+            partial(getattr(entity, func), **data)  # type: ignore[arg-type]
+        )
     else:
         result = hass.async_run_job(func, entity, data)
 
-    # Guard because callback functions do not return a task when passed to async_run_job.
+    # Guard because callback functions do not return a task when passed to
+    # async_run_job.
     if result is not None:
         await result
 

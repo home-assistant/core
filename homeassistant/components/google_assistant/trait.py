@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -75,7 +75,6 @@ from homeassistant.util.percentage import (
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
-    CHALLENGE_ACK_NEEDED,
     CHALLENGE_FAILED_PIN_NEEDED,
     CHALLENGE_PIN_NEEDED,
     ERR_ALREADY_ARMED,
@@ -161,13 +160,15 @@ COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 
-TRAITS = []
+TRAITS: list[type[_Trait]] = []
 
 FAN_SPEED_MAX_SPEED_COUNT = 5
 
+_TraitT = TypeVar("_TraitT", bound="_Trait")
 
-def register_trait(trait):
-    """Decorate a function to register a trait."""
+
+def register_trait(trait: type[_TraitT]) -> type[_TraitT]:
+    """Decorate a class to register a trait."""
     TRAITS.append(trait)
     return trait
 
@@ -288,7 +289,7 @@ class CameraStreamTrait(_Trait):
     name = TRAIT_CAMERA_STREAM
     commands = [COMMAND_GET_CAMERA_STREAM]
 
-    stream_info = None
+    stream_info: dict[str, str] | None = None
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -830,7 +831,7 @@ class TemperatureControlTrait(_Trait):
             "temperatureUnitForUX": _google_temp_unit(
                 self.hass.config.units.temperature_unit
             ),
-            "queryOnlyTemperatureSetting": True,
+            "queryOnlyTemperatureControl": True,
             "temperatureRange": {
                 "minThresholdCelsius": -100,
                 "maxThresholdCelsius": 100,
@@ -1331,10 +1332,7 @@ class ArmDisArmTrait(_Trait):
 
     def query_attributes(self):
         """Return ArmDisarm query attributes."""
-        if "next_state" in self.state.attributes:
-            armed_state = self.state.attributes["next_state"]
-        else:
-            armed_state = self.state.state
+        armed_state = self.state.attributes.get("next_state", self.state.state)
         response = {"isArmed": armed_state in self.state_to_service}
         if response["isArmed"]:
             response.update({"currentArmLevel": armed_state})
@@ -2130,14 +2128,6 @@ def _verify_pin_challenge(data, state, challenge):
 
     if challenge.get("pin") != data.config.secure_devices_pin:
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
-
-
-def _verify_ack_challenge(data, state, challenge):
-    """Verify an ack challenge."""
-    if not data.config.should_2fa(state):
-        return
-    if not challenge or not challenge.get("ack"):
-        raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)
 
 
 MEDIA_COMMAND_SUPPORT_MAPPING = {

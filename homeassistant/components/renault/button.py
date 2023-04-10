@@ -1,8 +1,9 @@
 """Support for Renault button entities."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .renault_entities import RenaultEntity
+from .entity import RenaultEntity
 from .renault_hub import RenaultHub
 
 
@@ -18,7 +19,7 @@ from .renault_hub import RenaultHub
 class RenaultButtonRequiredKeysMixin:
     """Mixin for required keys."""
 
-    async_press: Callable[[RenaultButtonEntity], Awaitable]
+    async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
 
 
 @dataclass
@@ -56,28 +57,25 @@ class RenaultButtonEntity(RenaultEntity, ButtonEntity):
         await self.entity_description.async_press(self)
 
 
-async def _start_charge(entity: RenaultButtonEntity) -> None:
-    """Start charge on the vehicle."""
-    await entity.vehicle.vehicle.set_charge_start()
-
-
-async def _start_air_conditioner(entity: RenaultButtonEntity) -> None:
-    """Start air conditioner on the vehicle."""
-    await entity.vehicle.vehicle.set_ac_start(21, None)
-
-
 BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
     RenaultButtonEntityDescription(
-        async_press=_start_air_conditioner,
+        async_press=lambda x: x.vehicle.set_ac_start(21, None),
         key="start_air_conditioner",
         icon="mdi:air-conditioner",
-        name="Start air conditioner",
+        translation_key="start_air_conditioner",
     ),
     RenaultButtonEntityDescription(
-        async_press=_start_charge,
+        async_press=lambda x: x.vehicle.set_charge_start(),
         key="start_charge",
         icon="mdi:ev-station",
-        name="Start charge",
         requires_electricity=True,
+        translation_key="start_charge",
+    ),
+    RenaultButtonEntityDescription(
+        async_press=lambda x: x.vehicle.set_charge_stop(),
+        key="stop_charge",
+        icon="mdi:ev-station",
+        requires_electricity=True,
+        translation_key="stop_charge",
     ),
 )

@@ -102,7 +102,7 @@ class KonnectedSensor(SensorEntity):
         description: SensorEntityDescription,
         addr=None,
         initial_state=None,
-    ):
+    ) -> None:
         """Initialize the entity for a single sensor_type."""
         self.entity_description = description
         self._addr = addr

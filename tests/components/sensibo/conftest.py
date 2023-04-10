@@ -58,7 +58,7 @@ async def get_data_from_library(
     client = SensiboClient("123467890", aioclient_mock.create_session(hass.loop))
     with patch("pysensibo.SensiboClient.async_get_devices", return_value=load_json):
         output = await client.async_get_devices_data()
-    await client._session.close()  # pylint: disable=protected-access
+    await client._session.close()
     return output
 
 

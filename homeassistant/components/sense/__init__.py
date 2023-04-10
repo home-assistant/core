@@ -1,11 +1,9 @@
 """Support for monitoring a Sense energy sensor."""
-import asyncio
 from datetime import timedelta
 import logging
 
 from sense_energy import (
     ASyncSenseable,
-    SenseAPIException,
     SenseAuthenticationException,
     SenseMFARequiredException,
 )
@@ -27,13 +25,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     ACTIVE_UPDATE_RATE,
     DOMAIN,
+    SENSE_CONNECT_EXCEPTIONS,
     SENSE_DATA,
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
     SENSE_DISCOVERED_DEVICES_DATA,
-    SENSE_EXCEPTIONS,
     SENSE_TIMEOUT_EXCEPTIONS,
     SENSE_TRENDS_COORDINATOR,
+    SENSE_WEBSOCKET_EXCEPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             str(err) or "Timed out during authentication"
         ) from err
-    except SenseAPIException as err:
+    except SENSE_CONNECT_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err)) from err
 
     sense_devices_data = SenseDevicesData()
@@ -99,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             str(err) or "Timed out during realtime update"
         ) from err
-    except SENSE_EXCEPTIONS as err:
+    except SENSE_WEBSOCKET_EXCEPTIONS as err:
         raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
     async def _async_update_trend():
@@ -124,7 +123,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # This can take longer than 60s and we already know
     # sense is online since get_discovered_device_data was
     # successful so we do it later.
-    asyncio.create_task(trends_coordinator.async_request_refresh())
+    entry.async_create_background_task(
+        hass,
+        trends_coordinator.async_request_refresh(),
+        "sense.trends-coordinator-refresh",
+    )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         SENSE_DATA: gateway,
@@ -141,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await gateway.update_realtime()
         except SENSE_TIMEOUT_EXCEPTIONS as ex:
             _LOGGER.error("Timeout retrieving data: %s", ex)
-        except SENSE_EXCEPTIONS as ex:
+        except SENSE_WEBSOCKET_EXCEPTIONS as ex:
             _LOGGER.error("Failed to update data: %s", ex)
 
         data = gateway.get_realtime()

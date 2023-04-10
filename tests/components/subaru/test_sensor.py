@@ -10,6 +10,7 @@ from homeassistant.components.subaru.sensor import (
     EV_SENSORS,
     SAFETY_SENSORS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -30,7 +31,7 @@ from .conftest import (
 )
 
 
-async def test_sensors_ev_imperial(hass, ev_entry):
+async def test_sensors_ev_imperial(hass: HomeAssistant, ev_entry) -> None:
     """Test sensors supporting imperial units."""
     hass.config.units = US_CUSTOMARY_SYSTEM
 
@@ -43,12 +44,12 @@ async def test_sensors_ev_imperial(hass, ev_entry):
     _assert_data(hass, EXPECTED_STATE_EV_IMPERIAL)
 
 
-async def test_sensors_ev_metric(hass, ev_entry):
+async def test_sensors_ev_metric(hass: HomeAssistant, ev_entry) -> None:
     """Test sensors supporting metric units."""
     _assert_data(hass, EXPECTED_STATE_EV_METRIC)
 
 
-async def test_sensors_missing_vin_data(hass, ev_entry):
+async def test_sensors_missing_vin_data(hass: HomeAssistant, ev_entry) -> None:
     """Test for missing VIN dataset."""
     with patch(MOCK_API_FETCH), patch(MOCK_API_GET_DATA, return_value=None):
         advance_time_to_next_fetch(hass)
@@ -58,7 +59,7 @@ async def test_sensors_missing_vin_data(hass, ev_entry):
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {
@@ -72,7 +73,7 @@ async def test_sensors_missing_vin_data(hass, ev_entry):
     ],
 )
 async def test_sensor_migrate_unique_ids(
-    hass, entitydata, old_unique_id, new_unique_id, subaru_config_entry
+    hass: HomeAssistant, entitydata, old_unique_id, new_unique_id, subaru_config_entry
 ) -> None:
     """Test successful migration of entity unique_ids."""
     entity_registry = er.async_get(hass)
@@ -90,7 +91,7 @@ async def test_sensor_migrate_unique_ids(
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id",
+    ("entitydata", "old_unique_id", "new_unique_id"),
     [
         (
             {
@@ -104,7 +105,7 @@ async def test_sensor_migrate_unique_ids(
     ],
 )
 async def test_sensor_migrate_unique_ids_duplicate(
-    hass, entitydata, old_unique_id, new_unique_id, subaru_config_entry
+    hass: HomeAssistant, entitydata, old_unique_id, new_unique_id, subaru_config_entry
 ) -> None:
     """Test unsuccessful migration of entity unique_ids due to duplicate."""
     entity_registry = er.async_get(hass)

@@ -2,47 +2,39 @@
 import os
 from unittest.mock import patch
 
-from fnvhash import fnv1a_32
-import pytest
+from fnv_hash_fast import fnv1a_32
 
 from homeassistant.components.homekit.aidmanager import (
     AccessoryAidStorage,
     get_aid_storage_filename_for_entry_id,
     get_system_unique_id,
 )
-from homeassistant.helpers import device_registry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
-
-
-async def test_aid_generation(hass, device_reg, entity_reg):
+async def test_aid_generation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test generating aids."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    light_ent = entity_reg.async_get_or_create(
+    light_ent = entity_registry.async_get_or_create(
         "light", "device", "unique_id", device_id=device_entry.id
     )
-    light_ent2 = entity_reg.async_get_or_create(
+    light_ent2 = entity_registry.async_get_or_create(
         "light", "device", "other_unique_id", device_id=device_entry.id
     )
-    remote_ent = entity_reg.async_get_or_create(
+    remote_ent = entity_registry.async_get_or_create(
         "remote", "device", "unique_id", device_id=device_entry.id
     )
     hass.states.async_set(light_ent.entity_id, "on")
@@ -98,13 +90,17 @@ async def test_aid_generation(hass, device_reg, entity_reg):
         )
 
 
-async def test_no_aid_collision(hass, device_reg, entity_reg):
+async def test_no_aid_collision(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test generating aids."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     with patch(
@@ -116,7 +112,7 @@ async def test_no_aid_collision(hass, device_reg, entity_reg):
     seen_aids = set()
 
     for unique_id in range(0, 202):
-        ent = entity_reg.async_get_or_create(
+        ent = entity_registry.async_get_or_create(
             "light", "device", unique_id, device_id=device_entry.id
         )
         hass.states.async_set(ent.entity_id, "on")
@@ -126,17 +122,19 @@ async def test_no_aid_collision(hass, device_reg, entity_reg):
 
 
 async def test_aid_generation_no_unique_ids_handles_collision(
-    hass, device_reg, entity_reg
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test colliding aids is stable."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     aid_storage = AccessoryAidStorage(hass, config_entry)
     await aid_storage.async_initialize()
 
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     seen_aids = set()
@@ -153,7 +151,7 @@ async def test_aid_generation_no_unique_ids_handles_collision(
         assert aid not in seen_aids
         seen_aids.add(aid)
 
-    light_ent = entity_reg.async_get_or_create(
+    light_ent = entity_registry.async_get_or_create(
         "light", "device", "unique_id", device_id=device_entry.id
     )
     hass.states.async_set(light_ent.entity_id, "on")
@@ -388,7 +386,7 @@ async def test_aid_generation_no_unique_ids_handles_collision(
     await aid_storage.async_save()
     await hass.async_block_till_done()
 
-    with patch("fnvhash.fnv1a_32", side_effect=Exception):
+    with patch("fnv_hash_fast.fnv1a_32", side_effect=Exception):
         aid_storage = AccessoryAidStorage(hass, config_entry)
     await aid_storage.async_initialize()
 

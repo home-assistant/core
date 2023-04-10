@@ -77,7 +77,7 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class DhcpServiceInfo(BaseServiceInfo):
     """Prepared info from dhcp entries."""
 
@@ -260,7 +260,10 @@ class NetworkWatcher(WatcherBase):
         """Start scanning for new devices on the network."""
         self._discover_hosts = DiscoverHosts()
         self._unsub = async_track_time_interval(
-            self.hass, self.async_start_discover, SCAN_INTERVAL
+            self.hass,
+            self.async_start_discover,
+            SCAN_INTERVAL,
+            name="DHCP network watcher",
         )
         self.async_start_discover()
 

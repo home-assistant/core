@@ -8,7 +8,10 @@ import pytest
 
 from homeassistant.components import webhook
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -18,7 +21,7 @@ def mock_client(hass, hass_client):
     return hass.loop.run_until_complete(hass_client())
 
 
-async def test_unregistering_webhook(hass, mock_client):
+async def test_unregistering_webhook(hass: HomeAssistant, mock_client) -> None:
     """Test unregistering a webhook."""
     hooks = []
     webhook_id = webhook.async_generate_id()
@@ -40,7 +43,7 @@ async def test_unregistering_webhook(hass, mock_client):
     assert len(hooks) == 1
 
 
-async def test_generate_webhook_url(hass):
+async def test_generate_webhook_url(hass: HomeAssistant) -> None:
     """Test we generate a webhook url correctly."""
     await async_process_ha_core_config(
         hass,
@@ -51,26 +54,26 @@ async def test_generate_webhook_url(hass):
     assert url == "https://example.com/api/webhook/some_id"
 
 
-async def test_async_generate_path(hass):
+async def test_async_generate_path(hass: HomeAssistant) -> None:
     """Test generating just the path component of the url correctly."""
     path = webhook.async_generate_path("some_id")
     assert path == "/api/webhook/some_id"
 
 
-async def test_posting_webhook_nonexisting(hass, mock_client):
+async def test_posting_webhook_nonexisting(hass: HomeAssistant, mock_client) -> None:
     """Test posting to a nonexisting webhook."""
     resp = await mock_client.post("/api/webhook/non-existing")
     assert resp.status == HTTPStatus.OK
 
 
-async def test_posting_webhook_invalid_json(hass, mock_client):
+async def test_posting_webhook_invalid_json(hass: HomeAssistant, mock_client) -> None:
     """Test posting to a nonexisting webhook."""
     webhook.async_register(hass, "test", "Test hook", "hello", None)
     resp = await mock_client.post("/api/webhook/hello", data="not-json")
     assert resp.status == HTTPStatus.OK
 
 
-async def test_posting_webhook_json(hass, mock_client):
+async def test_posting_webhook_json(hass: HomeAssistant, mock_client) -> None:
     """Test posting a webhook with JSON data."""
     hooks = []
     webhook_id = webhook.async_generate_id()
@@ -89,7 +92,7 @@ async def test_posting_webhook_json(hass, mock_client):
     assert hooks[0][2] == '{"data": true}'
 
 
-async def test_posting_webhook_no_data(hass, mock_client):
+async def test_posting_webhook_no_data(hass: HomeAssistant, mock_client) -> None:
     """Test posting a webhook with no data."""
     hooks = []
     webhook_id = webhook.async_generate_id()
@@ -109,7 +112,7 @@ async def test_posting_webhook_no_data(hass, mock_client):
     assert await hooks[0][2].text() == ""
 
 
-async def test_webhook_put(hass, mock_client):
+async def test_webhook_put(hass: HomeAssistant, mock_client) -> None:
     """Test sending a put request to a webhook."""
     hooks = []
     webhook_id = webhook.async_generate_id()
@@ -128,7 +131,7 @@ async def test_webhook_put(hass, mock_client):
     assert hooks[0][2].method == "PUT"
 
 
-async def test_webhook_head(hass, mock_client):
+async def test_webhook_head(hass: HomeAssistant, mock_client) -> None:
     """Test sending a head request to a webhook."""
     hooks = []
     webhook_id = webhook.async_generate_id()
@@ -147,7 +150,7 @@ async def test_webhook_head(hass, mock_client):
     assert hooks[0][2].method == "HEAD"
 
 
-async def test_webhook_local_only(hass, mock_client):
+async def test_webhook_local_only(hass: HomeAssistant, mock_client) -> None:
     """Test posting a webhook with local only."""
     hooks = []
     webhook_id = webhook.async_generate_id()
@@ -179,8 +182,11 @@ async def test_webhook_local_only(hass, mock_client):
 
 
 async def test_listing_webhook(
-    hass, hass_ws_client, hass_access_token, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    enable_custom_integrations: None,
+) -> None:
     """Test unregistering a webhook."""
     assert await async_setup_component(hass, "webhook", {})
     client = await hass_ws_client(hass, hass_access_token)
@@ -209,7 +215,11 @@ async def test_listing_webhook(
     ]
 
 
-async def test_ws_webhook(hass, caplog, hass_ws_client):
+async def test_ws_webhook(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test sending webhook msg via WS API."""
     assert await async_setup_component(hass, "webhook", {})
 

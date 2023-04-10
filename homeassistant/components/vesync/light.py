@@ -121,7 +121,8 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
             brightness = max(1, min(brightness, 100))
             # call pyvesync library api method to set brightness
             self.device.set_brightness(brightness)
-            # flag attribute_adjustment_only, so it doesn't turn_on the device redundantly
+            # flag attribute_adjustment_only, so it doesn't
+            # turn_on the device redundantly
             attribute_adjustment_only = True
         # check flag if should skip sending the turn_on command
         if attribute_adjustment_only:

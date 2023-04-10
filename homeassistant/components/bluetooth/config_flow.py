@@ -108,7 +108,13 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             if details[ADAPTER_ADDRESS] not in configured_addresses
         ]
         if not unconfigured_adapters:
-            return self.async_abort(reason="no_adapters")
+            ignored_adapters = len(
+                self._async_current_entries(include_ignore=True)
+            ) - len(self._async_current_entries(include_ignore=False))
+            return self.async_abort(
+                reason="no_adapters",
+                description_placeholders={"ignored_adapters": str(ignored_adapters)},
+            )
         if len(unconfigured_adapters) == 1:
             self._adapter = list(self._adapters)[0]
             self._details = self._adapters[self._adapter]

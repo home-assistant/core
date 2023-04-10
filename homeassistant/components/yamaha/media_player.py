@@ -217,8 +217,10 @@ class YamahaDevice(MediaPlayerEntity):
             self._play_status = self.receiver.play_status()
         except requests.exceptions.ConnectionError:
             _LOGGER.info("Receiver is offline: %s", self._name)
+            self._attr_available = False
             return
 
+        self._attr_available = True
         if self.receiver.on:
             if self._play_status is None:
                 self._attr_state = MediaPlayerState.ON
@@ -345,7 +347,9 @@ class YamahaDevice(MediaPlayerEntity):
         """Select input source."""
         self.receiver.input = self._reverse_mapping.get(source, source)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from an ID.
 
         This exposes a pass through for various input sources in the

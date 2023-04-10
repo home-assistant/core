@@ -173,7 +173,9 @@ class DPCode(StrEnum):
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
+    DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
@@ -208,6 +210,7 @@ class DPCode(StrEnum):
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
+    HUMIDITY_INDOOR = "humidity_indoor"  # Indoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     IPC_WORK_MODE = "ipc_work_mode"
@@ -327,6 +330,7 @@ class DPCode(StrEnum):
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
@@ -354,6 +358,7 @@ class DPCode(StrEnum):
     VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
+    WATER = "water"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"

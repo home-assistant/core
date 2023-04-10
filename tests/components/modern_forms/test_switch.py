@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
+import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -101,7 +102,9 @@ async def test_switch_change_state(
 
 
 async def test_switch_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the Modern Forms switches."""
     await init_integration(hass, aioclient_mock)

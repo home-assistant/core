@@ -42,13 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 exc_info=api_error,
             )
             raise api_error
-        else:
-            # if the printer is offline, we raise an UpdateFailed
-            if printer.is_unknown_state():
-                raise UpdateFailed(
-                    f"Configured printer at {printer.url} does not respond."
-                )
-            return printer
+
+        # if the printer is offline, we raise an UpdateFailed
+        if printer.is_unknown_state():
+            raise UpdateFailed(f"Configured printer at {printer.url} does not respond.")
+        return printer
 
     coordinator = DataUpdateCoordinator[SyncThru](
         hass,

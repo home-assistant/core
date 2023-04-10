@@ -1,4 +1,4 @@
-"""Test zha cover."""
+"""Test ZHA cover."""
 import asyncio
 from unittest.mock import AsyncMock, patch
 
@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, HomeAssistant, State
 
 from .common import (
     async_enable_traffic,
@@ -41,7 +41,7 @@ from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
 @pytest.fixture(autouse=True)
 def cover_platform_only():
-    """Only setup the cover and required base platforms to speed up tests."""
+    """Only set up the cover and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -120,8 +120,10 @@ def zigpy_keen_vent(zigpy_device_mock):
     )
 
 
-async def test_cover(hass, zha_device_joined_restored, zigpy_cover_device):
-    """Test zha cover platform."""
+async def test_cover(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_cover_device
+) -> None:
+    """Test ZHA cover platform."""
 
     # load up cover domain
     cluster = zigpy_cover_device.endpoints.get(1).window_covering
@@ -211,8 +213,10 @@ async def test_cover(hass, zha_device_joined_restored, zigpy_cover_device):
     assert hass.states.get(entity_id).state == STATE_OPEN
 
 
-async def test_shade(hass, zha_device_joined_restored, zigpy_shade_device):
-    """Test zha cover platform for shade device type."""
+async def test_shade(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_shade_device
+) -> None:
+    """Test ZHA cover platform for shade device type."""
 
     # load up cover domain
     zha_device = await zha_device_joined_restored(zigpy_shade_device)
@@ -338,7 +342,9 @@ async def test_shade(hass, zha_device_joined_restored, zigpy_shade_device):
         assert cluster_level.request.call_args[0][1] in (0x0003, 0x0007)
 
 
-async def test_restore_state(hass, zha_device_restored, zigpy_shade_device):
+async def test_restore_state(
+    hass: HomeAssistant, zha_device_restored, zigpy_shade_device
+) -> None:
     """Ensure states are restored on startup."""
 
     mock_restore_cache(
@@ -363,7 +369,9 @@ async def test_restore_state(hass, zha_device_restored, zigpy_shade_device):
     assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 50
 
 
-async def test_keen_vent(hass, zha_device_joined_restored, zigpy_keen_vent):
+async def test_keen_vent(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_keen_vent
+) -> None:
     """Test keen vent."""
 
     # load up cover domain
@@ -417,8 +425,10 @@ async def test_keen_vent(hass, zha_device_joined_restored, zigpy_keen_vent):
         assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 100
 
 
-async def test_cover_remote(hass, zha_device_joined_restored, zigpy_cover_remote):
-    """Test zha cover remote."""
+async def test_cover_remote(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_cover_remote
+) -> None:
+    """Test ZHA cover remote."""
 
     # load up cover domain
     await zha_device_joined_restored(zigpy_cover_remote)

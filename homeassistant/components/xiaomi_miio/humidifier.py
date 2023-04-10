@@ -1,6 +1,7 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier with humidifier entity."""
 import logging
 import math
+from typing import Any
 
 from miio.integrations.humidifier.deerma.airhumidifier_mjjsq import (
     OperationMode as AirhumidifierMjjsqOperationMode,
@@ -71,7 +72,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Humidifier from a config entry."""
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
     entities: list[HumidifierEntity] = []
@@ -136,10 +137,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         """Get the current mode."""
         return self._mode
 
-    async def async_turn_on(
-        self,
-        **kwargs,
-    ) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         result = await self._try_command(
             "Turning the miio device on failed.", self._device.on
@@ -148,7 +146,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         result = await self._try_command(
             "Turning the miio device off failed.", self._device.off

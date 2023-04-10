@@ -18,7 +18,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.p1_monitor.config_flow.P1Monitor.smartmeter"

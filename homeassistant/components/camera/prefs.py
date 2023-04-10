@@ -1,8 +1,9 @@
 """Preference management for camera component."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
-from typing import Final, Union, cast
+from typing import Final, cast
 
 from homeassistant.components.stream import Orientation
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ class CameraPreferences:
         self._hass = hass
         # The orientation prefs are stored in in the entity registry options
         # The preload_stream prefs are stored in this Store
-        self._store = Store[dict[str, dict[str, Union[bool, Orientation]]]](
+        self._store = Store[dict[str, dict[str, bool | Orientation]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
         self._dynamic_stream_settings_by_entity_id: dict[
@@ -89,7 +90,7 @@ class CameraPreferences:
         # Get preload stream setting from prefs
         # Get orientation setting from entity registry
         reg_entry = er.async_get(self._hass).async_get(entity_id)
-        er_prefs = reg_entry.options.get(DOMAIN, {}) if reg_entry else {}
+        er_prefs: Mapping = reg_entry.options.get(DOMAIN, {}) if reg_entry else {}
         preload_prefs = await self._store.async_load() or {}
         settings = DynamicStreamSettings(
             preload_stream=cast(

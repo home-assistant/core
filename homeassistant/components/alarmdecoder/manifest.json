@@ -1,10 +1,10 @@
 {
   "domain": "alarmdecoder",
   "name": "AlarmDecoder",
-  "documentation": "https://www.home-assistant.io/integrations/alarmdecoder",
-  "requirements": ["adext==0.4.2"],
   "codeowners": [],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/alarmdecoder",
   "iot_class": "local_push",
-  "loggers": ["adext", "alarmdecoder"]
+  "loggers": ["adext", "alarmdecoder"],
+  "requirements": ["adext==0.4.2"]
 }

@@ -1,7 +1,6 @@
 """Support for esphome numbers."""
 from __future__ import annotations
 
-from contextlib import suppress
 import math
 
 from aioesphomeapi import NumberInfo, NumberMode as EsphomeNumberMode, NumberState
@@ -10,13 +9,10 @@ from homeassistant.components.number import NumberDeviceClass, NumberEntity, Num
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
-from . import (
-    EsphomeEntity,
-    EsphomeEnumMapper,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .enum_mapper import EsphomeEnumMapper
 
 
 async def async_setup_entry(
@@ -51,9 +47,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     @property
     def device_class(self) -> NumberDeviceClass | None:
         """Return the class of this entity."""
-        with suppress(ValueError):
-            return NumberDeviceClass(self._static_info.device_class)
-        return None
+        return try_parse_enum(NumberDeviceClass, self._static_info.device_class)
 
     @property
     def native_min_value(self) -> float:

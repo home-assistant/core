@@ -45,7 +45,7 @@ Device = namedtuple("Device", ["mac", "name"])
 
 
 class HitronCODADeviceScanner(DeviceScanner):
-    """This class scans for devices using the CODA's web interface."""
+    """Scanner for devices using the CODA's web interface."""
 
     def __init__(self, config):
         """Initialize the scanner."""

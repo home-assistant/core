@@ -172,5 +172,5 @@ class SyncthingClient:
             await self._client.system.ping()
         except aiosyncthing.exceptions.SyncthingError:
             return False
-        else:
-            return True
+
+        return True

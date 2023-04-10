@@ -134,7 +134,6 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._template is None:
-
             # restore state after startup
             await super().async_added_to_hass()
             if state := await self.async_get_last_state():

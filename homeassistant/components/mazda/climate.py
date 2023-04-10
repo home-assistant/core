@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import MazdaEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_REGION, DOMAIN
@@ -129,7 +129,7 @@ class MazdaClimateEntity(MazdaEntity, ClimateEntity):
             "interiorTemperatureCelsius"
         ]
         if self.data["hvacSetting"]["temperatureUnit"] == "F":
-            self._attr_current_temperature = convert_temperature(
+            self._attr_current_temperature = TemperatureConverter.convert(
                 current_temperature_celsius,
                 UnitOfTemperature.CELSIUS,
                 UnitOfTemperature.FAHRENHEIT,

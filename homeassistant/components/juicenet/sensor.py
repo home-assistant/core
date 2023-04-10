@@ -91,7 +91,9 @@ async def async_setup_entry(
 class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
     """Implementation of a JuiceNet sensor."""
 
-    def __init__(self, device, coordinator, description: SensorEntityDescription):
+    def __init__(
+        self, device, coordinator, description: SensorEntityDescription
+    ) -> None:
         """Initialise the sensor."""
         super().__init__(device, description.key, coordinator)
         self.entity_description = description

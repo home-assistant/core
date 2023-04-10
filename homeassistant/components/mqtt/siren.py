@@ -31,9 +31,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -67,7 +68,6 @@ from .util import get_mqtt_data
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
-DEFAULT_OPTIMISTIC = False
 
 ENTITY_ID_FORMAT = siren.DOMAIN + ".{}"
 
@@ -86,7 +86,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_OFF): cv.string,
@@ -130,7 +129,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT siren through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT siren through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -247,7 +246,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                 json_payload = {STATE: payload}
             else:
                 try:
-                    json_payload = json_loads(payload)
+                    json_payload = json_loads_object(payload)
                     _LOGGER.debug(
                         (
                             "JSON payload detected after processing payload '%s' on"
@@ -388,4 +387,6 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Update the extra siren state attributes."""
         for attribute, support in SUPPORTED_ATTRIBUTES.items():
             if self._attr_supported_features & support and attribute in data:
-                self._attr_extra_state_attributes[attribute] = data[attribute]  # type: ignore[literal-required]
+                self._attr_extra_state_attributes[attribute] = data[
+                    attribute  # type: ignore[literal-required]
+                ]

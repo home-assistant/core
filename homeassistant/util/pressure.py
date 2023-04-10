@@ -20,7 +20,7 @@ from homeassistant.helpers.frame import report
 from .unit_conversion import PressureConverter
 
 # pylint: disable-next=protected-access
-UNIT_CONVERSION: dict[str, float] = PressureConverter._UNIT_CONVERSION
+UNIT_CONVERSION: dict[str | None, float] = PressureConverter._UNIT_CONVERSION
 VALID_UNITS = PressureConverter.VALID_UNITS
 
 
