@@ -611,9 +611,7 @@ def _sorted_states_to_dict(
     axis correctly.
     """
     field_map = _FIELD_MAP
-    state_class: Callable[
-        [Row, dict[str, dict[str, Any]], datetime | None], State | dict[str, Any]
-    ]
+    state_class: Callable[[Row, dict[str, dict[str, Any]]], State | dict[str, Any]]
     if compressed_state_format:
         state_class = row_to_compressed_state
         attr_time = COMPRESSED_STATE_LAST_UPDATED
@@ -657,7 +655,7 @@ def _sorted_states_to_dict(
             or split_entity_id(entity_id)[0] in NEED_ATTRIBUTE_DOMAINS
         ):
             ent_results.extend(
-                state_class(db_state, attr_cache, None, entity_id=entity_id)  # type: ignore[call-arg]
+                state_class(db_state, attr_cache, entity_id=entity_id)  # type: ignore[call-arg]
                 for db_state in group
             )
             continue
@@ -671,7 +669,7 @@ def _sorted_states_to_dict(
                 continue
             prev_state = first_state.state
             ent_results.append(
-                state_class(first_state, attr_cache, None, entity_id=entity_id)  # type: ignore[call-arg]
+                state_class(first_state, attr_cache, entity_id=entity_id)  # type: ignore[call-arg]
             )
 
         state_idx = field_map["state"]
