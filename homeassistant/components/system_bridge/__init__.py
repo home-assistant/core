@@ -64,11 +64,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass),
     )
     try:
-        if not await version.check_supported():
-            raise ConfigEntryNotReady(
-                "You are not running a supported version of System Bridge. Please"
-                f" update to {SUPPORTED_VERSION} or higher."
-            )
+        async with async_timeout.timeout(10):
+            if not await version.check_supported():
+                raise ConfigEntryNotReady(
+                    "You are not running a supported version of System Bridge. Please"
+                    f" update to {SUPPORTED_VERSION} or higher."
+                )
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed from exception
