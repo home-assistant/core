@@ -6,7 +6,7 @@ from typing import Any
 
 import sqlalchemy
 from sqlalchemy.engine import Result
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import voluptuous as vol
 
@@ -60,7 +60,10 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
 
     for res in result.mappings():
         if column not in res:
-            raise KeyError(f"Column {column} is not returned by the query.")
+            _LOGGER.debug("Column `%s` is not returned by the query", column)
+            if sess:
+                sess.close()
+            raise NoSuchColumnError(f"Column {column} is not returned by the query.")
 
         data = res[column]
         _LOGGER.debug("Return value from query: %s", data)
@@ -105,12 +108,12 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
                 )
+            except NoSuchColumnError:
+                errors["column"] = "column_invalid"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
                 errors["query"] = "query_invalid"
-            except KeyError:
-                errors["column"] = "column_invalid"
 
             add_db_url = (
                 {CONF_DB_URL: db_url} if db_url == db_url_for_validation else {}
@@ -162,12 +165,12 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
                 )
+            except NoSuchColumnError:
+                errors["column"] = "column_invalid"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
                 errors["query"] = "query_invalid"
-            except KeyError:
-                errors["column"] = "column_invalid"
             else:
                 new_user_input = user_input
                 if new_user_input.get(CONF_DB_URL) and db_url == db_url_for_validation:
