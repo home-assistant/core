@@ -1,4 +1,6 @@
 """Tests for Steam integration."""
+import random
+import string
 from unittest.mock import patch
 
 import steam
@@ -11,8 +13,8 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 API_KEY = "abc123"
-ACCOUNT_1 = "1234567890"
-ACCOUNT_2 = "1234567891"
+ACCOUNT_1 = "12345678901234567"
+ACCOUNT_2 = "12345678912345678"
 ACCOUNT_NAME_1 = "testaccount1"
 ACCOUNT_NAME_2 = "testaccount2"
 
@@ -62,16 +64,32 @@ class MockedInterface(dict):
 
     def GetFriendList(self, steamid: str) -> dict:
         """Get friend list."""
-        return {"friendslist": {"friends": [{"steamid": ACCOUNT_2}]}}
+        fake_friends = []
+        for _i in range(0, 400):
+            fake_friends.append(
+                {"steamid": "".join(random.choices(string.digits, k=len(ACCOUNT_1)))}
+            )
+        return {"friendslist": {"friends": [{"steamid": ACCOUNT_2}, *fake_friends]}}
 
-    def GetPlayerSummaries(self, steamids: str) -> dict:
+    def GetPlayerSummaries(self, steamids: str | list[str]) -> dict:
         """Get player summaries."""
+        assert len(str(steamids).replace("'", "%27")) <= 8071
         return {
             "response": {
                 "players": {
                     "player": [
-                        {"steamid": ACCOUNT_1, "personaname": ACCOUNT_NAME_1},
-                        {"steamid": ACCOUNT_2, "personaname": ACCOUNT_NAME_2},
+                        {
+                            "steamid": ACCOUNT_1,
+                            "personaname": ACCOUNT_NAME_1,
+                            "personastate": 1,
+                            "avatarmedium": "",
+                        },
+                        {
+                            "steamid": ACCOUNT_2,
+                            "personaname": ACCOUNT_NAME_2,
+                            "personastate": 2,
+                            "avatarmedium": "",
+                        },
                     ]
                 }
             }
