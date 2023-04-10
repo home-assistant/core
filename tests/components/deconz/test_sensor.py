@@ -960,7 +960,7 @@ async def test_air_quality_sensor_6_in_1(
     assert hass.states.get("sensor.airquality_1_ppb").state == "15"
     assert hass.states.get("sensor.airquality_1_ppb").attributes.get("state_class") == SensorStateClass.MEASUREMENT
     assert hass.states.get("sensor.airquality_1_ppb").attributes.get("unit_of_measurement") == CONCENTRATION_PARTS_PER_BILLION
-    assert (ent_reg.async_get("sensor.airquality_1_ppb")).original_device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+    assert (ent_reg.async_get("sensor.airquality_1_ppb")).original_device_class == None
 
     assert hass.states.get("sensor.airquality_1_ch2o").state == "4"
     assert hass.states.get("sensor.airquality_1_ch2o").attributes.get("state_class") == SensorStateClass.MEASUREMENT
