@@ -70,6 +70,9 @@ async def test_audio_pipeline(
             "type": "voice_assistant/run",
             "start_stage": "stt",
             "end_stage": "tts",
+            "input": {
+                "sample_rate": 44100,
+            },
         }
     )
 
@@ -263,6 +266,9 @@ async def test_audio_pipeline_timeout(
                 "type": "voice_assistant/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
+                "input": {
+                    "sample_rate": 44100,
+                },
                 "timeout": 0.0001,
             }
         )
@@ -295,6 +301,9 @@ async def test_stt_provider_missing(
                 "type": "voice_assistant/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
+                "input": {
+                    "sample_rate": 44100,
+                },
             }
         )
 
@@ -322,6 +331,9 @@ async def test_stt_stream_failed(
                 "type": "voice_assistant/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
+                "input": {
+                    "sample_rate": 44100,
+                },
             }
         )
 
