@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         # Wait for initial data
-        async with async_timeout.timeout(30):
+        async with async_timeout.timeout(10):
             while not coordinator.is_ready:
                 _LOGGER.debug(
                     "Waiting for system data from %s (%s)",
