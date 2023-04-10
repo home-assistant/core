@@ -74,6 +74,7 @@ class Event:
     """Represents a ONVIF event."""
 
     uid: str
+    event_id: str
     name: str
     platform: str
     device_class: str | None = None

@@ -65,6 +65,7 @@ async def test_get_triggers(hass, device_reg):
     device.events._events = {
         f"{onvif_config_entry.unique_id}_tns1:RuleEngine/LineDetector/Crossed_0_0_0": Event(
             f"{onvif_config_entry.unique_id}_tns1:RuleEngine/LineDetector/Crossed_0_0_0",
+            "0_line_crossed",
             "0 Line Crossed",
             "event",
         )

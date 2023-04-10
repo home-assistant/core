@@ -52,6 +52,7 @@ async def async_parse_motion_alarm(uid: str, msg) -> Event | None:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
+            "motion_alarm",
             "Motion Alarm",
             "binary_sensor",
             "motion",
@@ -75,6 +76,7 @@ async def async_parse_image_too_blurry(uid: str, msg) -> Event | None:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
+            "image_too_blurry",
             "Image Too Blurry",
             "binary_sensor",
             "problem",
@@ -99,6 +101,7 @@ async def async_parse_image_too_dark(uid: str, msg) -> Event | None:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
+            "image_too_dark",
             "Image Too Dark",
             "binary_sensor",
             "problem",
@@ -123,6 +126,7 @@ async def async_parse_image_too_bright(uid: str, msg) -> Event | None:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
+            "image_too_bright",
             "Image Too Bright",
             "binary_sensor",
             "problem",
@@ -147,6 +151,7 @@ async def async_parse_scene_change(uid: str, msg) -> Event | None:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
+            "global_scene_change",
             "Global Scene Change",
             "binary_sensor",
             "problem",
@@ -178,6 +183,7 @@ async def async_parse_detected_sound(uid: str, msg) -> Event | None:
 
         return Event(
             f"{uid}_{msg.Topic._value_1}_{audio_source}_{audio_analytics}_{rule}",
+            "detected_sound",
             "Detected Sound",
             "binary_sensor",
             "sound",
@@ -209,6 +215,7 @@ async def async_parse_field_detector(uid: str, msg) -> Event | None:
 
         evt = Event(
             f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            "field_detection",
             "Field Detection",
             "binary_sensor",
             "motion",
@@ -241,6 +248,7 @@ async def async_parse_cell_motion_detector(uid: str, msg) -> Event | None:
 
         return Event(
             f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            "cell_motion_detection",
             "Cell Motion Detection",
             "binary_sensor",
             "motion",
@@ -272,6 +280,7 @@ async def async_parse_motion_region_detector(uid: str, msg) -> Event | None:
 
         return Event(
             f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            "motion_region_detection",
             "Motion Region Detection",
             "binary_sensor",
             "motion",
@@ -303,6 +312,7 @@ async def async_parse_line_crossed(uid: str, msg) -> Event | None:
 
         return Event(
             f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            f"{rule}_line_crossed",
             f"{rule} Line Crossed",
             "event",
             entity_enabled=msg.Message._value_1.PropertyOperation != "Initialized",
@@ -332,6 +342,7 @@ async def async_parse_tamper_detector(uid: str, msg) -> Event | None:
 
         return Event(
             f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            "tamper_detection",
             "Tamper Detection",
             "binary_sensor",
             "problem",
@@ -479,6 +490,7 @@ async def async_parse_digital_input(uid: str, msg) -> Event | None:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
+            "digital_input",
             "Digital Input",
             "binary_sensor",
             None,
@@ -500,6 +512,7 @@ async def async_parse_relay(uid: str, msg) -> Event | None:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
+            "relay_triggered",
             "Relay Triggered",
             "binary_sensor",
             None,
@@ -521,6 +534,7 @@ async def async_parse_storage_failure(uid: str, msg) -> Event | None:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
+            "storage_failure",
             "Storage Failure",
             "binary_sensor",
             "problem",
@@ -546,6 +560,7 @@ async def async_parse_processor_usage(uid: str, msg) -> Event | None:
 
         return Event(
             f"{uid}_{msg.Topic._value_1}",
+            "processor_usage",
             "Processor Usage",
             "sensor",
             None,
@@ -570,6 +585,7 @@ async def async_parse_last_reboot(uid: str, msg) -> Event | None:
         )
         return Event(
             f"{uid}_{msg.Topic._value_1}",
+            "last_reboot",
             "Last Reboot",
             "sensor",
             "timestamp",
@@ -594,6 +610,7 @@ async def async_parse_last_reset(uid: str, msg) -> Event | None:
         )
         return Event(
             f"{uid}_{msg.Topic._value_1}",
+            "last_reset",
             "Last Reset",
             "sensor",
             "timestamp",
@@ -620,6 +637,7 @@ async def async_parse_backup_last(uid: str, msg) -> Event | None:
         )
         return Event(
             f"{uid}_{msg.Topic._value_1}",
+            "last_backup",
             "Last Backup",
             "sensor",
             "timestamp",
@@ -645,6 +663,7 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event | None:
         )
         return Event(
             f"{uid}_{msg.Topic._value_1}",
+            "last_clock_synchronization",
             "Last Clock Synchronization",
             "sensor",
             "timestamp",
@@ -669,6 +688,7 @@ async def async_parse_jobstate(uid: str, msg) -> Event | None:
         source = msg.Message._value_1.Source.SimpleItem[0].Value
         return Event(
             f"{uid}_{msg.Topic._value_1}_{source}",
+            "recording_job_state",
             "Recording Job State",
             "binary_sensor",
             None,
