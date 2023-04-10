@@ -67,8 +67,8 @@ def _stmt_and_join_attributes(
     return _select
 
 
-def _stmt_and_join_attributes_for_epoch_time(
-    no_attributes: bool, include_last_changed: bool, epoch_time: float
+def _stmt_and_join_attributes_for_start_state(
+    no_attributes: bool, include_last_changed: bool
 ) -> Select:
     """Return the statement and if StateAttributes should be joined."""
     _select = select(States.metadata_id, States.state)
@@ -160,14 +160,12 @@ def _significant_states_stmt(
     stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if not include_start_time_state or not run_start_ts:
         return stmt
-    start_time_ts_str = str(start_time_ts)
     return _select_from_subquery(
         union_all(
             _select_from_subquery(
                 _get_start_time_state_stmt(
                     run_start_ts,
                     start_time_ts,
-                    start_time_ts_str,
                     single_metadata_id,
                     metadata_ids,
                     no_attributes,
@@ -301,7 +299,6 @@ def get_full_significant_states_with_session(
 
 def _state_changed_during_period_stmt(
     start_time_ts: float,
-    start_time_ts_str: str,
     end_time_ts: float | None,
     single_metadata_id: int,
     no_attributes: bool,
@@ -340,7 +337,6 @@ def _state_changed_during_period_stmt(
             _select_from_subquery(
                 _get_single_entity_start_time_stmt(
                     start_time_ts,
-                    start_time_ts_str,
                     single_metadata_id,
                     no_attributes,
                     False,
@@ -388,12 +384,10 @@ def state_changes_during_period(
         ):
             include_start_time_state = False
         start_time_ts = dt_util.utc_to_timestamp(start_time)
-        start_time_ts_str = str(start_time_ts)
         end_time_ts = datetime_to_timestamp_or_none(end_time)
         stmt = lambda_stmt(
             lambda: _state_changed_during_period_stmt(
                 start_time_ts,
-                start_time_ts_str,
                 end_time_ts,
                 single_metadata_id,
                 no_attributes,
@@ -501,7 +495,6 @@ def get_last_state_changes(
 def _get_start_time_state_for_entities_stmt(
     run_start_ts: float,
     epoch_time: float,
-    epoch_time_string: str,
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
@@ -509,8 +502,8 @@ def _get_start_time_state_for_entities_stmt(
     """Baked query to get states for specific entities."""
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
-    stmt = _stmt_and_join_attributes_for_epoch_time(
-        no_attributes, include_last_changed, epoch_time_string
+    stmt = _stmt_and_join_attributes_for_start_state(
+        no_attributes, include_last_changed
     ).join(
         (
             most_recent_states_for_entities_by_date := (
@@ -560,7 +553,6 @@ def _get_run_start_ts_for_utc_point_in_time(
 def _get_start_time_state_stmt(
     run_start_ts: float,
     epoch_time: float,
-    epoch_time_str: str,
     single_metadata_id: int | None,
     metadata_ids: list[int],
     no_attributes: bool,
@@ -572,7 +564,6 @@ def _get_start_time_state_stmt(
         # have a single entity id
         return _get_single_entity_start_time_stmt(
             epoch_time,
-            epoch_time_str,
             single_metadata_id,
             no_attributes,
             include_last_changed,
@@ -582,7 +573,6 @@ def _get_start_time_state_stmt(
     return _get_start_time_state_for_entities_stmt(
         run_start_ts,
         epoch_time,
-        epoch_time_str,
         metadata_ids,
         no_attributes,
         include_last_changed,
@@ -591,7 +581,6 @@ def _get_start_time_state_stmt(
 
 def _get_single_entity_start_time_stmt(
     epoch_time: float,
-    epoch_time_str: str,
     metadata_id: int,
     no_attributes: bool,
     include_last_changed: bool,
@@ -599,9 +588,7 @@ def _get_single_entity_start_time_stmt(
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
     stmt = (
-        _stmt_and_join_attributes_for_epoch_time(
-            no_attributes, include_last_changed, epoch_time_str
-        )
+        _stmt_and_join_attributes_for_start_state(no_attributes, include_last_changed)
         .filter(
             States.last_updated_ts < epoch_time,
             States.metadata_id == metadata_id,
@@ -670,6 +657,9 @@ def _sorted_states_to_dict(
         key_func = itemgetter(metadata_id_idx)
         states_iter = groupby(states, key_func)
 
+    state_idx = field_map["state"]
+    last_updated_ts_idx = field_map["last_updated_ts"]
+
     # Append all changes to it
     for metadata_id, group in states_iter:
         attr_cache: dict[str, dict[str, Any]] = {}
@@ -694,13 +684,10 @@ def _sorted_states_to_dict(
         if not ent_results:
             if (first_state := next(group, None)) is None:
                 continue
-            prev_state = first_state.state
+            prev_state = first_state[state_idx]
             ent_results.append(
                 state_class(first_state, attr_cache, start_time_ts, entity_id=entity_id)  # type: ignore[call-arg]
             )
-
-        state_idx = field_map["state"]
-        last_updated_ts_idx = field_map["last_updated_ts"]
 
         #
         # minimal_response only makes sense with last_updated == last_updated
