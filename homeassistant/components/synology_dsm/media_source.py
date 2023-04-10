@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import mimetypes
-from pathlib import Path
-import tempfile
 
 from aiohttp import web
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
@@ -213,7 +211,7 @@ class SynologyDsmMediaView(http.HomeAssistantView):
 
     async def get(
         self, request: web.Request, source_dir_id: str, location: str
-    ) -> web.FileResponse:
+    ) -> web.Response:
         """Start a GET request."""
         if not self.hass.data.get(DOMAIN):
             raise web.HTTPNotFound()
@@ -231,8 +229,4 @@ class SynologyDsmMediaView(http.HomeAssistantView):
             image = await diskstation.api.photos.download_item(item)
         except SynologyDSMException as exc:
             raise web.HTTPNotFound() from exc
-        with tempfile.NamedTemporaryFile(
-            mode="wb", suffix=f".{file_extension}", delete=False
-        ) as temp:
-            temp.write(image)
-        return web.FileResponse(Path(temp.name))
+        return web.Response(body=image, content_type=f"image/{file_extension}")
