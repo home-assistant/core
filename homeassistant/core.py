@@ -63,6 +63,7 @@ from .const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_STOP_PENDING,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -109,8 +110,9 @@ if TYPE_CHECKING:
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
-STAGE_2_SHUTDOWN_TIMEOUT = 60
-STAGE_3_SHUTDOWN_TIMEOUT = 30
+STAGE_2_SHUTDOWN_TIMEOUT = 100
+STAGE_3_SHUTDOWN_TIMEOUT = 60
+STAGE_4_SHUTDOWN_TIMEOUT = 30
 
 block_async_io.enable()
 restore_original_aiohttp_cancel_behavior()
@@ -820,7 +822,7 @@ class HomeAssistant:
 
         # stage 1
         self.state = CoreState.stopping
-        self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_STOP_PENDING)
         try:
             async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
@@ -832,8 +834,8 @@ class HomeAssistant:
             self._async_log_running_tasks(1)
 
         # stage 2
-        self.state = CoreState.final_write
-        self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        self.state = CoreState.stopping
+        self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STAGE_2_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
@@ -842,9 +844,22 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(2)
+            self._async_log_running_tasks(1)
 
         # stage 3
+        self.state = CoreState.final_write
+        self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        try:
+            async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):
+                await self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
+                " continue"
+            )
+            self._async_log_running_tasks(2)
+
+        # stage 4
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
@@ -858,7 +873,7 @@ class HomeAssistant:
                 # were awaiting another task
                 continue
             _LOGGER.warning(
-                "Task %s was still running after stage 2 shutdown; "
+                "Task %s was still running after stage 3 shutdown; "
                 "Integrations should cancel non-critical tasks when receiving "
                 "the stop event to prevent delaying shutdown",
                 task,
@@ -872,11 +887,11 @@ class HomeAssistant:
             except asyncio.TimeoutError:
                 # Task may be shielded from cancellation.
                 _LOGGER.exception(
-                    "Task %s could not be canceled during stage 3 shutdown", task
+                    "Task %s could not be canceled during stage 4 shutdown", task
                 )
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.exception(
-                    "Task %s error during stage 3 shutdown: %s", task, exc
+                    "Task %s error during stage 4 shutdown: %s", task, exc
                 )
 
         # Prevent run_callback_threadsafe from scheduling any additional
@@ -887,11 +902,11 @@ class HomeAssistant:
         shutdown_run_callback_threadsafe(self.loop)
 
         try:
-            async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):
+            async with self.timeout.async_timeout(STAGE_4_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
+                "Timed out waiting for shutdown stage 4 to complete, the shutdown will"
                 " continue"
             )
             self._async_log_running_tasks(3)
