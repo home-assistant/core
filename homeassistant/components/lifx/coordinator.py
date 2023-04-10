@@ -236,7 +236,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             methods.append(self.device.get_extended_color_zones)
             methods.append(self.device.get_multizone_effect)
         elif is_legacy_multizone:
-            methods.append(self.device.get_extended_color_zones)
             methods.extend(self._async_build_color_zones_update_requests())
             methods.extend(self.device.async_get_multizone_effect)
         if features["hev"]:
