@@ -265,9 +265,9 @@ def get_significant_states_with_session(
         track_on=[
             bool(single_metadata_id),
             bool(end_time_ts),
-            bool(significant_changes_only),
-            bool(no_attributes),
-            bool(include_start_time_state),
+            significant_changes_only,
+            no_attributes,
+            include_start_time_state,
         ],
     )
     states = execute_stmt_lambda_element(session, stmt, None, end_time)
@@ -416,7 +416,7 @@ def state_changes_during_period(
                 no_attributes,
                 descending,
                 bool(limit),
-                bool(include_start_time_state),
+                include_start_time_state,
             ],
         )
         states = execute_stmt_lambda_element(session, stmt, None, end_time)
