@@ -23,7 +23,7 @@ class AdvantageAirEntity(CoordinatorEntity):
     def update_handle_factory(self, func, *keys):
         """Return the provided API function wrapped.
 
-        Adds an error handler and coordinator refresh.
+        Adds an error handler and coordinator refresh, and presets keys.
         """
 
         async def update_handle(*values):
