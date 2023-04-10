@@ -256,7 +256,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         if is_extended_multizone or is_legacy_multizone:
             self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
-        elif is_legacy_multizone and num_zones != len(device.color_zones):
+        if is_legacy_multizone and num_zones != len(device.color_zones):
             # The number of zones has changed so we need
             # to update the zones again. This happen rarely.
             await self.async_get_color_zones()
