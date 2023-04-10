@@ -229,12 +229,15 @@ async def async_multi_execute_lifx_with_retries(
     failures: list[str] = []
     for idx, future in enumerate(futures):
         if not future.done() or not (result := future.result()):
-            name = getattr(methods[idx], "__name__", methods[idx])
-            failures.append(f"{name} timed out after {attempts} attempts")
+            method = methods[idx]
+            failures.append(str(getattr(method, "__name__", method)))
         else:
             results.append(result)
 
     if failures:
-        raise asyncio.TimeoutError(", ".join(failures))
+        failed_methods = ", ".join(failures)
+        raise asyncio.TimeoutError(
+            f"{failed_methods} timed out after {attempts} attempts"
+        )
 
     return results
