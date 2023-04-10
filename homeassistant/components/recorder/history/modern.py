@@ -494,7 +494,7 @@ def get_last_state_changes(
         )
 
 
-def _get_states_for_entities_stmt(
+def _get_start_time_state_for_entities_stmt(
     run_start_ts: float,
     epoch_time: float,
     metadata_ids: list[int],
@@ -567,7 +567,7 @@ def _get_start_time_state_stmt(
         )
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    return _get_states_for_entities_stmt(
+    return _get_start_time_state_for_entities_stmt(
         run_start_ts, epoch_time, metadata_ids, no_attributes
     )
 
