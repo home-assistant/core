@@ -50,4 +50,6 @@ INFRARED_BRIGHTNESS_VALUES_MAP = {
 }
 DATA_LIFX_MANAGER = "lifx_manager"
 
+DEFAULT_ATTEMPTS = 3
+
 _LOGGER = logging.getLogger(__package__)
