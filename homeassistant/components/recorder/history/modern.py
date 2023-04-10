@@ -8,19 +8,18 @@ from itertools import groupby
 from operator import itemgetter
 from typing import Any, cast
 
-from sqlalchemy import Column, and_, func, lambda_stmt, select
+from sqlalchemy import Column, CompoundSelect, Select, and_, func, select, union_all
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.properties import MappedColumn
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
-from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from ... import recorder
-from ..db_schema import RecorderRuns, StateAttributes, States
+from ..db_schema import StateAttributes, States
 from ..filters import Filters
 from ..models import (
     LazyState,
@@ -36,28 +35,26 @@ from .const import (
     STATE_KEY,
 )
 
-_BASE_STATES = (
+_QUERY_STATE_NO_ATTR = (
     States.metadata_id,
     States.state,
     States.last_changed_ts,
     States.last_updated_ts,
 )
-_BASE_STATES_NO_LAST_CHANGED = (  # type: ignore[var-annotated]
+_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = (  # type: ignore[var-annotated]
     States.metadata_id,
     States.state,
     literal(value=None).label("last_changed_ts"),
     States.last_updated_ts,
 )
-_QUERY_STATE_NO_ATTR = (*_BASE_STATES,)
-_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = (*_BASE_STATES_NO_LAST_CHANGED,)
 _QUERY_STATES = (
-    *_BASE_STATES,
+    *_QUERY_STATE_NO_ATTR,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
 )
 _QUERY_STATES_NO_LAST_CHANGED = (
-    *_BASE_STATES_NO_LAST_CHANGED,
+    *_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
@@ -68,25 +65,40 @@ _FIELD_MAP = {
 }
 
 
-def _lambda_stmt_and_join_attributes(
+def _stmt_and_join_attributes(
     no_attributes: bool, include_last_changed: bool = True
-) -> StatementLambdaElement:
-    """Return the lambda_stmt and if StateAttributes should be joined.
-
-    Because these are lambda_stmt the values inside the lambdas need
-    to be explicitly written out to avoid caching the wrong values.
-    """
+) -> Select:
+    """Return the statement and if StateAttributes should be joined."""
     # If no_attributes was requested we do the query
     # without the attributes fields and do not join the
     # state_attributes table
     if no_attributes:
         if include_last_changed:
-            return lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR))
-        return lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED))
+            return select(*_QUERY_STATE_NO_ATTR)
+        return select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED)
 
     if include_last_changed:
-        return lambda_stmt(lambda: select(*_QUERY_STATES))
-    return lambda_stmt(lambda: select(*_QUERY_STATES_NO_LAST_CHANGED))
+        return select(*_QUERY_STATES)
+    return select(*_QUERY_STATES_NO_LAST_CHANGED)
+
+
+def _select_from_union(union: CompoundSelect, no_attributes: bool) -> Select:
+    """Return the statement to select from the union."""
+    if no_attributes:
+        return select(
+            union.c.metadata_id,
+            union.c.state,
+            union.c.last_changed_ts,
+            union.c.last_updated_ts,
+        )
+    return select(
+        union.c.metadata_id,
+        union.c.state,
+        union.c.last_changed_ts,
+        union.c.last_updated_ts,
+        union.c.attributes,
+        union.c.shared_attrs,
+    )
 
 
 def get_significant_states(
@@ -119,38 +131,47 @@ def get_significant_states(
 
 
 def _significant_states_stmt(
+    hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int],
     metadata_ids_in_significant_domains: list[int],
     significant_changes_only: bool,
     no_attributes: bool,
-) -> StatementLambdaElement:
+    include_start_time_state: bool,
+) -> Select | CompoundSelect:
     """Query the database for significant state changes."""
-    stmt = _lambda_stmt_and_join_attributes(
+    stmt = _stmt_and_join_attributes(
         no_attributes, include_last_changed=not significant_changes_only
     )
     if significant_changes_only:
         # Since we are filtering on entity_id (metadata_id) we can avoid
         # the join of the states_meta table since we already know which
         # metadata_ids are in the significant domains.
-        stmt += lambda q: q.filter(
+        stmt = stmt.filter(
             States.metadata_id.in_(metadata_ids_in_significant_domains)
             | (States.last_changed_ts == States.last_updated_ts)
             | States.last_changed_ts.is_(None)
         )
-    stmt += lambda q: q.filter(States.metadata_id.in_(metadata_ids))
+    stmt = stmt.filter(States.metadata_id.in_(metadata_ids))
     start_time_ts = start_time.timestamp()
-    stmt += lambda q: q.filter(States.last_updated_ts > start_time_ts)
+    stmt = stmt.filter(States.last_updated_ts > start_time_ts)
     if end_time:
         end_time_ts = end_time.timestamp()
-        stmt += lambda q: q.filter(States.last_updated_ts < end_time_ts)
+        stmt = stmt.filter(States.last_updated_ts < end_time_ts)
     if not no_attributes:
-        stmt += lambda q: q.outerjoin(
+        stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    stmt += lambda q: q.order_by(States.metadata_id, States.last_updated_ts)
-    return stmt
+    if not include_start_time_state:
+        return stmt.order_by(States.metadata_id, States.last_updated_ts)
+    union = union_all(
+        _get_start_time_state_stmt(hass, start_time, metadata_ids, no_attributes),
+        stmt,
+    ).subquery()
+    outer_stmt = _select_from_union(union, no_attributes)
+    outer_stmt.order_by(union.c.metadata_id, union.c.last_updated_ts)
+    return outer_stmt
 
 
 def get_significant_states_with_session(
@@ -199,24 +220,21 @@ def get_significant_states_with_session(
             and split_entity_id(entity_id)[0] in SIGNIFICANT_DOMAINS
         ]
     stmt = _significant_states_stmt(
+        hass,
         start_time,
         end_time,
         metadata_ids,
         metadata_ids_in_significant_domains,
         significant_changes_only,
         no_attributes,
+        include_start_time_state,
     )
     states = execute_stmt_lambda_element(session, stmt, None, end_time)
     return _sorted_states_to_dict(
-        hass,
-        session,
         states,
-        start_time,
         entity_ids,
         entity_id_to_metadata_id,
-        include_start_time_state,
         minimal_response,
-        no_attributes,
         compressed_state_format,
     )
 
@@ -255,16 +273,18 @@ def get_full_significant_states_with_session(
 
 
 def _state_changed_during_period_stmt(
+    hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None,
-    metadata_id: int | None,
+    metadata_id: int,
     no_attributes: bool,
     descending: bool,
     limit: int | None,
-) -> StatementLambdaElement:
-    stmt = _lambda_stmt_and_join_attributes(no_attributes, include_last_changed=False)
+    include_start_time_state: bool | None = None,
+) -> Select | CompoundSelect:
+    stmt = _stmt_and_join_attributes(no_attributes, include_last_changed=False)
     start_time_ts = start_time.timestamp()
-    stmt += lambda q: q.filter(
+    stmt = stmt.filter(
         (
             (States.last_changed_ts == States.last_updated_ts)
             | States.last_changed_ts.is_(None)
@@ -273,20 +293,29 @@ def _state_changed_during_period_stmt(
     )
     if end_time:
         end_time_ts = end_time.timestamp()
-        stmt += lambda q: q.filter(States.last_updated_ts < end_time_ts)
-    if metadata_id:
-        stmt += lambda q: q.filter(States.metadata_id == metadata_id)
+        stmt = stmt.filter(States.last_updated_ts < end_time_ts)
+    stmt = stmt.filter(States.metadata_id == metadata_id)
     if not no_attributes:
-        stmt += lambda q: q.outerjoin(
+        stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
+    if not include_start_time_state:
+        if descending:
+            stmt = stmt.order_by(States.metadata_id, States.last_updated_ts.desc())
+        else:
+            stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
+        if limit:
+            stmt = stmt.limit(limit)
+        return stmt
+    union = union_all(
+        stmt, _get_start_time_state_stmt(hass, start_time, [metadata_id], no_attributes)
+    ).subquery()
+    outer_stmt = _select_from_union(union, no_attributes)
     if descending:
-        stmt += lambda q: q.order_by(States.metadata_id, States.last_updated_ts.desc())
-    else:
-        stmt += lambda q: q.order_by(States.metadata_id, States.last_updated_ts)
+        return outer_stmt.order_by(union.c.metadata_id, union.c.last_updated_ts.desc())
     if limit:
-        stmt += lambda q: q.limit(limit)
-    return stmt
+        outer_stmt = outer_stmt.limit(limit)
+    return outer_stmt.order_by(union.c.metadata_id, union.c.last_updated_ts)
 
 
 def state_changes_during_period(
@@ -313,34 +342,30 @@ def state_changes_during_period(
             return {}
         entity_id_to_metadata_id: dict[str, int | None] = {entity_id: metadata_id}
         stmt = _state_changed_during_period_stmt(
+            hass,
             start_time,
             end_time,
             metadata_id,
             no_attributes,
             descending,
             limit,
+            include_start_time_state,
         )
         states = execute_stmt_lambda_element(session, stmt, None, end_time)
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
-                hass,
-                session,
                 states,
-                start_time,
                 entity_ids,
                 entity_id_to_metadata_id,
-                include_start_time_state=include_start_time_state,
             ),
         )
 
 
-def _get_last_state_changes_stmt(
-    number_of_states: int, metadata_id: int
-) -> StatementLambdaElement:
-    stmt = _lambda_stmt_and_join_attributes(False, include_last_changed=False)
+def _get_last_state_changes_stmt(number_of_states: int, metadata_id: int) -> Select:
+    stmt = _stmt_and_join_attributes(False, include_last_changed=False)
     if number_of_states == 1:
-        stmt += lambda q: q.join(
+        stmt = stmt.join(
             (
                 lastest_state_for_metadata_id := (
                     select(
@@ -361,7 +386,7 @@ def _get_last_state_changes_stmt(
             ),
         )
     else:
-        stmt += lambda q: q.where(
+        stmt = stmt.where(
             States.state_id
             == (
                 select(States.state_id)
@@ -371,7 +396,7 @@ def _get_last_state_changes_stmt(
                 .subquery()
             ).c.state_id
         )
-    stmt += lambda q: q.outerjoin(
+    stmt = stmt.outerjoin(
         StateAttributes, States.attributes_id == StateAttributes.attributes_id
     ).order_by(States.state_id.desc())
     return stmt
@@ -400,13 +425,9 @@ def get_last_state_changes(
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
-                hass,
-                session,
                 reversed(states),
-                dt_util.utcnow(),
                 entity_ids,
                 entity_id_to_metadata_id,
-                include_start_time_state=False,
             ),
         )
 
@@ -416,14 +437,14 @@ def _get_states_for_entities_stmt(
     utc_point_in_time: datetime,
     metadata_ids: list[int],
     no_attributes: bool,
-) -> StatementLambdaElement:
+) -> Select:
     """Baked query to get states for specific entities."""
-    stmt = _lambda_stmt_and_join_attributes(no_attributes, include_last_changed=True)
+    stmt = _stmt_and_join_attributes(no_attributes, include_last_changed=True)
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
     run_start_ts = process_timestamp(run_start).timestamp()
     utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
-    stmt += lambda q: q.join(
+    stmt = stmt.join(
         (
             most_recent_states_for_entities_by_date := (
                 select(
@@ -449,87 +470,39 @@ def _get_states_for_entities_stmt(
         ),
     )
     if not no_attributes:
-        stmt += lambda q: q.outerjoin(
+        stmt = stmt.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     return stmt
 
 
-def _get_rows_with_session(
+def _get_start_time_state_stmt(
     hass: HomeAssistant,
-    session: Session,
     utc_point_in_time: datetime,
-    entity_ids: list[str],
-    entity_id_to_metadata_id: dict[str, int | None] | None = None,
-    run: RecorderRuns | None = None,
+    metadata_ids: list[int],
     no_attributes: bool = False,
-) -> Iterable[Row]:
+) -> Select:
     """Return the states at a specific point in time."""
-    if len(entity_ids) == 1:
-        if not entity_id_to_metadata_id or not (
-            metadata_id := entity_id_to_metadata_id.get(entity_ids[0])
-        ):
-            return []
-        return execute_stmt_lambda_element(
-            session,
-            _get_single_entity_states_stmt(
-                utc_point_in_time, metadata_id, no_attributes
-            ),
-        )
-
-    if run is None:
-        run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
-
-    if run is None or process_timestamp(run.start) > utc_point_in_time:
-        # History did not run before utc_point_in_time
-        return []
-
+    run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
+    start_time: datetime | None = None
+    if run is None or (start_time := process_timestamp(run.start)) > utc_point_in_time:
+        # History did not run before utc_point_in_time but we still
+        # need to generate the query so the cache key is correct.
+        metadata_ids = [-1]
+    if start_time is None:
+        start_time = dt_util.utcnow()
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    if not entity_id_to_metadata_id or not (
-        metadata_ids := extract_metadata_ids(entity_id_to_metadata_id)
-    ):
-        return []
-    stmt = _get_states_for_entities_stmt(
-        run.start, utc_point_in_time, metadata_ids, no_attributes
+    return _get_states_for_entities_stmt(
+        start_time, utc_point_in_time, metadata_ids, no_attributes
     )
-    return execute_stmt_lambda_element(session, stmt)
-
-
-def _get_single_entity_states_stmt(
-    utc_point_in_time: datetime,
-    metadata_id: int,
-    no_attributes: bool = False,
-) -> StatementLambdaElement:
-    # Use an entirely different (and extremely fast) query if we only
-    # have a single entity id
-    stmt = _lambda_stmt_and_join_attributes(no_attributes, include_last_changed=True)
-    utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
-    stmt += (
-        lambda q: q.filter(
-            States.last_updated_ts < utc_point_in_time_ts,
-            States.metadata_id == metadata_id,
-        )
-        .order_by(States.last_updated_ts.desc())
-        .limit(1)
-    )
-    if not no_attributes:
-        stmt += lambda q: q.outerjoin(
-            StateAttributes, States.attributes_id == StateAttributes.attributes_id
-        )
-    return stmt
 
 
 def _sorted_states_to_dict(
-    hass: HomeAssistant,
-    session: Session,
     states: Iterable[Row],
-    start_time: datetime,
     entity_ids: list[str],
     entity_id_to_metadata_id: dict[str, int | None],
-    include_start_time_state: bool = True,
     minimal_response: bool = False,
-    no_attributes: bool = False,
     compressed_state_format: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
@@ -568,20 +541,6 @@ def _sorted_states_to_dict(
         v: k for k, v in entity_id_to_metadata_id.items() if v is not None
     }
     # Get the states at the start time
-    initial_states: dict[int, Row] = {}
-    if include_start_time_state:
-        initial_states = {
-            row[metadata_id_idx]: row
-            for row in _get_rows_with_session(
-                hass,
-                session,
-                start_time,
-                entity_ids,
-                entity_id_to_metadata_id,
-                no_attributes=no_attributes,
-            )
-        }
-
     if len(entity_ids) == 1:
         metadata_id = entity_id_to_metadata_id[entity_ids[0]]
         assert metadata_id is not None  # should not be possible if we got here
@@ -599,10 +558,6 @@ def _sorted_states_to_dict(
         if not (entity_id := metadata_id_to_entity_id.get(metadata_id)):
             continue
         ent_results = result[entity_id]
-        if row := initial_states.pop(metadata_id, None):
-            prev_state = row.state
-            ent_results.append(state_class(row, attr_cache, start_time, entity_id=entity_id))  # type: ignore[call-arg]
-
         if (
             not minimal_response
             or split_entity_id(entity_id)[0] in NEED_ATTRIBUTE_DOMAINS
@@ -657,14 +612,6 @@ def _sorted_states_to_dict(
             for row in group
             if (state := row[state_idx]) != prev_state
         )
-
-    # If there are no states beyond the initial state,
-    # the state a was never popped from initial_states
-    for metadata_id, row in initial_states.items():
-        if entity_id := metadata_id_to_entity_id.get(metadata_id):
-            result[entity_id].append(
-                state_class(row, {}, start_time, entity_id=entity_id)  # type: ignore[call-arg]
-            )
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
