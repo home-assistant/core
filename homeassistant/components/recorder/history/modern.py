@@ -8,7 +8,16 @@ from itertools import groupby
 from operator import itemgetter
 from typing import Any, cast
 
-from sqlalchemy import Column, CompoundSelect, Select, and_, func, select, union_all
+from sqlalchemy import (
+    Column,
+    CompoundSelect,
+    Select,
+    Subquery,
+    and_,
+    func,
+    select,
+    union_all,
+)
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.properties import MappedColumn
 from sqlalchemy.orm.session import Session
@@ -82,23 +91,19 @@ def _stmt_and_join_attributes(
     return select(*_QUERY_STATES_NO_LAST_CHANGED)
 
 
-def _select_from_union(union: CompoundSelect, no_attributes: bool) -> Select:
+def _select_from_subquery(
+    subquery: Subquery | CompoundSelect, no_attributes: bool
+) -> Select:
     """Return the statement to select from the union."""
-    if no_attributes:
-        return select(
-            union.c.metadata_id,
-            union.c.state,
-            union.c.last_changed_ts,
-            union.c.last_updated_ts,
-        )
-    return select(
-        union.c.metadata_id,
-        union.c.state,
-        union.c.last_changed_ts,
-        union.c.last_updated_ts,
-        union.c.attributes,
-        union.c.shared_attrs,
+    base_select = select(
+        subquery.c.metadata_id,
+        subquery.c.state,
+        subquery.c.last_changed_ts,
+        subquery.c.last_updated_ts,
     )
+    if no_attributes:
+        return base_select
+    return base_select.add_columns(subquery.c.attributes, subquery.c.shared_attrs)
 
 
 def get_significant_states(
@@ -163,15 +168,21 @@ def _significant_states_stmt(
         stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
+    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if not include_start_time_state:
-        return stmt.order_by(States.metadata_id, States.last_updated_ts)
-    union = union_all(
-        _get_start_time_state_stmt(hass, start_time, metadata_ids, no_attributes),
-        stmt,
-    ).subquery()
-    outer_stmt = _select_from_union(union, no_attributes)
-    outer_stmt.order_by(union.c.metadata_id, union.c.last_updated_ts)
-    return outer_stmt
+        return stmt
+    return _select_from_subquery(
+        union_all(
+            _select_from_subquery(
+                _get_start_time_state_stmt(
+                    hass, start_time, metadata_ids, no_attributes
+                ).subquery(),
+                no_attributes,
+            ),
+            _select_from_subquery(stmt.subquery(), no_attributes),
+        ).subquery(),
+        no_attributes,
+    )
 
 
 def get_significant_states_with_session(
@@ -299,23 +310,26 @@ def _state_changed_during_period_stmt(
         stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    if not include_start_time_state:
-        if descending:
-            stmt = stmt.order_by(States.metadata_id, States.last_updated_ts.desc())
-        else:
-            stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
-        if limit:
-            stmt = stmt.limit(limit)
-        return stmt
-    union = union_all(
-        stmt, _get_start_time_state_stmt(hass, start_time, [metadata_id], no_attributes)
-    ).subquery()
-    outer_stmt = _select_from_union(union, no_attributes)
     if descending:
-        return outer_stmt.order_by(union.c.metadata_id, union.c.last_updated_ts.desc())
+        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts.desc())
+    else:
+        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if limit:
-        outer_stmt = outer_stmt.limit(limit)
-    return outer_stmt.order_by(union.c.metadata_id, union.c.last_updated_ts)
+        stmt = stmt.limit(limit)
+    if not include_start_time_state:
+        return stmt
+    return _select_from_subquery(
+        union_all(
+            _select_from_subquery(
+                _get_start_time_state_stmt(
+                    hass, start_time, [metadata_id], no_attributes
+                ).subquery(),
+                no_attributes,
+            ),
+            _select_from_subquery(stmt.subquery(), no_attributes),
+        ).subquery(),
+        no_attributes,
+    )
 
 
 def state_changes_during_period(
