@@ -101,6 +101,7 @@ async def test_things_switch(
 
     # Test Switch Entity
     entity_id = "switch.relay"
+    thing_id = "205"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
@@ -116,9 +117,9 @@ async def test_things_switch(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setThing"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["id"] == "205"
+    assert aioclient_mock.mock_calls[-2][1].path == "/setThings"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(thing_id)
+    assert data["id"] == thing_id
     assert data["value"] == 0
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
@@ -130,10 +131,9 @@ async def test_things_switch(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setThing"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["id"] == "205"
+    assert aioclient_mock.mock_calls[-2][1].path == "/setThings"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(thing_id)
+    assert data["id"] == thing_id
     assert data["value"] == 100
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"

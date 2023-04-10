@@ -85,8 +85,8 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the thing on."""
-        await self.set({"id": self._id, "value": 100})
+        await self.set({self._id: {"id": self._id, "value": 100}})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the thing off."""
-        await self.set({"id": self._id, "value": 0})
+        await self.set({self._id: {"id": self._id, "value": 0}})
