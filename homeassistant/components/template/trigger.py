@@ -98,6 +98,7 @@ async def async_attach_trigger(
             description = "time change or manual update via template"
 
         template_variables = {
+            **(trigger_info["variables"] or {}),
             "platform": platform_type,
             "entity_id": entity_id,
             "from_state": from_s,
