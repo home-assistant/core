@@ -1003,6 +1003,13 @@ omit =
     homeassistant/components/ripple/sensor.py
     homeassistant/components/roborock/coordinator.py
     homeassistant/components/rocketchat/notify.py
+    homeassistant/components/romy/__init__.py
+    homeassistant/components/romy/binary_sensor.py
+    homeassistant/components/romy/button.py
+    homeassistant/components/romy/const.py
+    homeassistant/components/romy/sensor.py
+    homeassistant/components/romy/utils.py
+    homeassistant/components/romy/vacuum.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
     homeassistant/components/roomba/braava.py
