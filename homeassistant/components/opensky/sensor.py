@@ -45,6 +45,7 @@ EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
 EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
 SCAN_INTERVAL = timedelta(seconds=25)  # opensky registered user limit is 4000 per day
 
+OPENSKY_URL = "https://opensky-network.org/"
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [
     ATTR_ICAO24,
@@ -167,8 +168,7 @@ class OpenSkySensor(SensorEntity):
         
         self._session.auth = (self._username, self._password)
         self._session.verify = False
-        auth = self._session.post("https://opensky-network.org/")
-        _LOGGER.debug("AUTH %s", auth.headers)
+        auth = self._session.post(OPENSKY_URL)
         states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
         _LOGGER.debug("STATE %s", states.headers)
         for state in states:
