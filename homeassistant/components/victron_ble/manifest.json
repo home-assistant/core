@@ -1,0 +1,21 @@
+{
+  "domain": "victron_ble",
+  "name": "Victron Bluetooth Low Energy",
+  "bluetooth": [
+    {
+      "connectable": false,
+      "manufacturer_id": 737,
+      "manufacturer_data_start": [16]
+    }
+  ],
+  "codeowners": ["@rajlaud"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/victron_ble",
+  "homekit": {},
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "requirements": ["victron-ble-ha-parser==0.4.2"],
+  "ssdp": [],
+  "zeroconf": []
+}
