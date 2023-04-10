@@ -461,19 +461,10 @@ async def test_history_stream_historical_only(
 ) -> None:
     """Test history stream."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -500,6 +491,7 @@ async def test_history_stream_historical_only(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two", "sensor.three", "sensor.four"],
             "start_time": now.isoformat(),
             "end_time": end_time.isoformat(),
             "include_start_time_state": True,
@@ -755,6 +747,7 @@ async def test_history_stream_bad_start_time(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["climate.test"],
             "start_time": "cats",
         }
     )
@@ -781,6 +774,7 @@ async def test_history_stream_end_time_before_start_time(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["climate.test"],
             "start_time": start_time.isoformat(),
             "end_time": end_time.isoformat(),
         }
@@ -807,6 +801,7 @@ async def test_history_stream_bad_end_time(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["climate.test"],
             "start_time": now.isoformat(),
             "end_time": "dogs",
         }
@@ -821,19 +816,10 @@ async def test_history_stream_live_no_attributes_minimal_response(
 ) -> None:
     """Test history stream with history and live data and no_attributes and minimal_response."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -853,6 +839,7 @@ async def test_history_stream_live_no_attributes_minimal_response(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two"],
             "start_time": now.isoformat(),
             "include_start_time_state": True,
             "significant_changes_only": False,
@@ -910,19 +897,10 @@ async def test_history_stream_live(
 ) -> None:
     """Test history stream with history and live data."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -942,6 +920,7 @@ async def test_history_stream_live(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two"],
             "start_time": now.isoformat(),
             "include_start_time_state": True,
             "significant_changes_only": False,
@@ -1021,19 +1000,10 @@ async def test_history_stream_live_minimal_response(
 ) -> None:
     """Test history stream with history and live data and minimal_response."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -1053,6 +1023,7 @@ async def test_history_stream_live_minimal_response(
         {
             "id": 1,
             "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two"],
             "start_time": now.isoformat(),
             "include_start_time_state": True,
             "significant_changes_only": False,
@@ -1126,19 +1097,10 @@ async def test_history_stream_live_no_attributes(
 ) -> None:
     """Test history stream with history and live data and no_attributes."""
     now = dt_util.utcnow()
-    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
         hass,
         "history",
-        {
-            history.DOMAIN: {
-                history.CONF_ORDER: True,
-                CONF_INCLUDE: {
-                    CONF_ENTITIES: sort_order,
-                    CONF_DOMAINS: ["sensor"],
-                },
-            }
-        },
+        {},
     )
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -1159,6 +1121,7 @@ async def test_history_stream_live_no_attributes(
             "id": 1,
             "type": "history/stream",
             "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensor.two"],
             "include_start_time_state": True,
             "significant_changes_only": False,
             "no_attributes": True,

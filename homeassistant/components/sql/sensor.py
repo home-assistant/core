@@ -162,7 +162,9 @@ async def async_setup_sensor(
         # If the query has a unique id and they fix it we can dismiss the issue
         # but if it doesn't have a unique id they have to ignore it instead
 
-        if "ENTITY_ID" in upper_query and "STATES_META" not in upper_query:
+        if (
+            "ENTITY_ID," in upper_query or "ENTITY_ID " in upper_query
+        ) and "STATES_META" not in upper_query:
             _LOGGER.error(
                 "The query `%s` contains the keyword `entity_id` but does not "
                 "reference the `states_meta` table. This will cause a full table "
