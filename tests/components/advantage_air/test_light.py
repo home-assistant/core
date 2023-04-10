@@ -45,13 +45,14 @@ async def test_light(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
     # Test Light Entity
     entity_id = "light.light_a"
+    light_id = "100"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
 
     entry = registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "uniqueid-100"
+    assert entry.unique_id == f"uniqueid-{light_id}"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -61,8 +62,8 @@ async def test_light(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     )
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get("100")
-    assert data["id"] == "100"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(light_id)
+    assert data["id"] == light_id
     assert data["state"] == ADVANTAGE_AIR_STATE_ON
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
@@ -75,18 +76,19 @@ async def test_light(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     )
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get("100")
-    assert data["id"] == "100"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(light_id)
+    assert data["id"] == light_id
     assert data["state"] == ADVANTAGE_AIR_STATE_OFF
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test Dimmable Light Entity
     entity_id = "light.light_b"
+    light_id = "101"
 
     entry = registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "uniqueid-101"
+    assert entry.unique_id == f"uniqueid-{light_id}"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -96,8 +98,8 @@ async def test_light(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     )
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get("101")
-    assert data["id"] == "101"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get(light_id)
+    assert data["id"] == light_id
     assert data["value"] == 50
     assert data["state"] == ADVANTAGE_AIR_STATE_ON
     assert aioclient_mock.mock_calls[-1][0] == "GET"
