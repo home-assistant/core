@@ -53,7 +53,10 @@ SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
     """Set up System Bridge from a config entry."""
 
     # Check version before initialising
@@ -109,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with async_timeout.timeout(10):
             while not coordinator.is_ready:
                 _LOGGER.debug(
-                    "Waiting for system data from %s (%s)",
+                    "Waiting for initial data from %s (%s)",
                     entry.title,
                     entry.data[CONF_HOST],
                 )
