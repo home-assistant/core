@@ -381,34 +381,38 @@ class ReolinkHost:
     ):
         """Handle incoming webhook from Reolink for inbound messages and calls."""
         try:
-            data = await request.text()
-        except ConnectionResetError:
-            _LOGGER.debug(
-                "Webhook '%s' called, but lost connection before reading message, issuing poll",
-                webhook_id,
-            )
-            if await self._api.get_motion_state_all_ch():
+            try:
+                data = await request.text()
+            except ConnectionResetError:
+                _LOGGER.debug(
+                    "Webhook '%s' called, but lost connection before reading message, issuing poll",
+                    webhook_id,
+                )
+                if await self._api.get_motion_state_all_ch():
+                    async_dispatcher_send(hass, f"{webhook_id}_all", {})
+                    return
+                _LOGGER.error(
+                    "Could not poll motion state after losing connection during receiving ONVIF event"
+                )
+                return
+            finally:
+                self._webhook_read_done.set()
+                if not self._webhook_reachable.is_set():
+                    self._webhook_reachable.set()
+                    ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+
+            if not data:
+                _LOGGER.debug(
+                    "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
+                )
+                return
+
+            if (channels := await self._api.ONVIF_event_callback(data)) is None:
                 async_dispatcher_send(hass, f"{webhook_id}_all", {})
                 return
-            _LOGGER.error(
-                "Could not poll motion state after losing connection during receiving ONVIF event"
-            )
-            return
-        finally:
-            self._webhook_read_done.set()
-            if not self._webhook_reachable.is_set():
-                self._webhook_reachable.set()
-                ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
-        if not data:
-            _LOGGER.debug(
-                "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
-            )
-            return
-
-        if (channels := await self._api.ONVIF_event_callback(data)) is None:
-            async_dispatcher_send(hass, f"{webhook_id}_all", {})
-            return
-
-        for channel in channels:
-            async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
+            for channel in channels:
+                async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
+        except Exception as err: # pylint: disable=broad-except
+            # In case handle_webhook was cancelled before the exception occured
+            _LOGGER.exception(err)
