@@ -281,7 +281,7 @@ def legacy_row_to_compressed_state(
         row_last_updated_ts: float = row.last_updated_ts
         comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
         if (
-            row_changed_changed_ts := row.last_changed_ts
-        ) and row_last_updated_ts != row_changed_changed_ts:
-            comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_changed_changed_ts
+            row_last_changed_ts := row.last_changed_ts
+        ) and row_last_updated_ts != row_last_changed_ts:
+            comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_last_changed_ts
     return comp_state
