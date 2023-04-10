@@ -14,11 +14,13 @@ from soco.core import (
     PLAY_MODES,
 )
 from soco.data_structures import DidlFavorite
+from sonos_websocket.exception import SonosWebsocketError
 import voluptuous as vol
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ENQUEUE,
     BrowseMedia,
     MediaPlayerDeviceClass,
@@ -505,6 +507,25 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
         """
+        if kwargs.get(ATTR_MEDIA_ANNOUNCE):
+            volume = kwargs.get("extra", {}).get("volume")
+            _LOGGER.debug("Playing %s using websocket audioclip", media_id)
+            try:
+                assert self.speaker.websocket
+                response, _ = run_coroutine_threadsafe(
+                    self.speaker.websocket.play_clip(
+                        media_id,
+                        volume=volume,
+                    ),
+                    self.hass.loop,
+                ).result()
+            except SonosWebsocketError as exc:
+                raise HomeAssistantError(
+                    f"Error when calling Sonos websocket: {exc}"
+                ) from exc
+            if response["success"]:
+                return
+
         # Use 'replace' as the default enqueue option
         enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
 
