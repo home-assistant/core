@@ -11,7 +11,6 @@ from homeassistant.const import Platform
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN: Final = "dwd_weather_warnings"
-ATTRIBUTION: Final = "Data provided by DWD"
 
 CONF_OLD_REGION_NAME: Final = "region_name"
 CONF_REGION_IDENTIFIER: Final = "region_identifier"

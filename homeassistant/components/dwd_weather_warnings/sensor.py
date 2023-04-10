@@ -43,7 +43,6 @@ from .const import (
     ATTR_REGION_ID,
     ATTR_REGION_NAME,
     ATTR_WARNING_COUNT,
-    ATTRIBUTION,
     CONF_OLD_REGION_NAME,
     CURRENT_WARNING_SENSOR,
     DEFAULT_MONITORED_CONDITIONS,
@@ -106,14 +105,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up entities from config entry."""
     name: str = entry.data[CONF_NAME]
-    monitored_conditions: list[str] = entry.data[CONF_MONITORED_CONDITIONS]
     api = WrappedDwDWWAPI(hass.data[DOMAIN][entry.entry_id])
 
     # Add sensor for every monitored condition.
     entities: list[DwdWeatherWarningsSensor] = []
     for description in SENSOR_TYPES:
-        if description.key in monitored_conditions:
-            entities.append(DwdWeatherWarningsSensor(api, name, description))
+        entities.append(
+            DwdWeatherWarningsSensor(api, name, entry.unique_id, description)
+        )
 
     async_add_entities(entities, True)
 
@@ -121,18 +120,20 @@ async def async_setup_entry(
 class DwdWeatherWarningsSensor(SensorEntity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
-    _attr_attribution = ATTRIBUTION
+    _attr_attribution = "Data provided by DWD"
 
     def __init__(
         self,
         api,
         name,
+        unique_id,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a DWD-Weather-Warnings sensor."""
         self._api = api
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
     @property
     def native_value(self):

@@ -4,17 +4,17 @@ from __future__ import annotations
 
 from typing import Any, Final
 
+from dwdwfsapi import DwdWeatherWarningsAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_OLD_REGION_NAME,
     CONF_REGION_IDENTIFIER,
-    DEFAULT_MONITORED_CONDITIONS,
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
@@ -36,22 +36,32 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        errors: dict = {}
+
         if user_input is not None:
-            # Set the unique ID for this config entry.
-            await self.async_set_unique_id(user_input[CONF_REGION_IDENTIFIER])
-            self._abort_if_unique_id_configured()
+            region_identifier = user_input[CONF_REGION_IDENTIFIER]
 
-            # Set the name for this config entry.
-            user_input[
-                CONF_NAME
-            ] = f"{DEFAULT_NAME} {user_input[CONF_REGION_IDENTIFIER]}"
+            # Validate region identifier using the API
+            if not await self.hass.async_add_executor_job(
+                DwdWeatherWarningsAPI, region_identifier
+            ):
+                errors["base"] = "invalid_identifier"
 
-            # Monitor all conditions by default.
-            user_input[CONF_MONITORED_CONDITIONS] = DEFAULT_MONITORED_CONDITIONS
+            if not errors:
+                # Set the unique ID for this config entry.
+                await self.async_set_unique_id(region_identifier)
+                self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+                # Set the name for this config entry.
+                user_input[CONF_NAME] = f"{DEFAULT_NAME} {region_identifier}"
 
-        return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
+
+        return self.async_show_form(
+            step_id="user", errors=errors, data_schema=CONFIG_SCHEMA
+        )
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""

@@ -1,6 +1,7 @@
 """Tests for Deutscher Wetterdienst (DWD) Weather Warnings config flow."""
 
 from typing import Final
+from unittest.mock import patch
 
 import pytest
 
@@ -9,7 +10,6 @@ from homeassistant.components.dwd_weather_warnings.const import (
     CONF_OLD_REGION_NAME,
     CONF_REGION_IDENTIFIER,
     CURRENT_WARNING_SENSOR,
-    DEFAULT_MONITORED_CONDITIONS,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -35,41 +35,48 @@ EXPECTED_NAME: Final = f"{DEFAULT_NAME} {DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIE
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_create_entry_with_region_identifier(hass: HomeAssistant) -> None:
+async def test_create_entry_valid_region_identifier(hass: HomeAssistant) -> None:
     """Test that the user step works with a region identifier set."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=DEMO_CONFIG_ENTRY
+        )
 
-    assert result["type"] == FlowResultType.FORM
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == EXPECTED_NAME
+        assert result["data"] == {
+            CONF_NAME: EXPECTED_NAME,
+            CONF_REGION_IDENTIFIER: DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER],
+        }
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], DEMO_CONFIG_ENTRY
-    )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == EXPECTED_NAME
-    assert result["data"] == {
-        CONF_NAME: EXPECTED_NAME,
-        CONF_REGION_IDENTIFIER: DEMO_CONFIG_ENTRY[CONF_REGION_IDENTIFIER],
-        CONF_MONITORED_CONDITIONS: DEFAULT_MONITORED_CONDITIONS,
-    }
+async def test_create_entry_invalid_region_identifier(hass: HomeAssistant) -> None:
+    """Test that the user step fails with a wrong region identifier."""
+    with patch(
+        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=DEMO_CONFIG_ENTRY
+        )
+
+        assert result["errors"] == {"base": "invalid_identifier"}
 
 
 async def test_import_flow_full_data(hass: HomeAssistant) -> None:
     """Test a successful import of a full YAML configuration."""
-    data = DEMO_YAML_CONFIGURATION.copy()
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=DEMO_YAML_CONFIGURATION.copy()
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == DEMO_YAML_CONFIGURATION[CONF_NAME]
 
     result_data = DEMO_YAML_CONFIGURATION.copy()
-    result_data[CONF_REGION_IDENTIFIER] = result_data[CONF_OLD_REGION_NAME]
-    result_data.pop(CONF_OLD_REGION_NAME)
+    result_data[CONF_REGION_IDENTIFIER] = result_data.pop(CONF_OLD_REGION_NAME)
 
     assert result["data"] == result_data
 
@@ -138,16 +145,13 @@ async def test_config_flow_device_already_configured(hass: HomeAssistant) -> Non
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
+    with patch(
+        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=DEMO_CONFIG_ENTRY
+        )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        DEMO_CONFIG_ENTRY,
-    )
-    await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"

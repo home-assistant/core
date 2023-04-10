@@ -20,21 +20,14 @@ DEMO_CONFIG_ENTRY: Final = {
 }
 
 
-async def test_config_entry_success(hass: HomeAssistant) -> None:
-    """Test setting up the integration from a config entry."""
-    entry = MockConfigEntry(domain=DOMAIN, data=DEMO_CONFIG_ENTRY)
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.state == ConfigEntryState.LOADED
-
-
-async def test_unload_entry(hass: HomeAssistant) -> None:
-    """Test unloading the integration."""
+async def test_load_unload_entry(hass: HomeAssistant) -> None:
+    """Test loading and unloading the integration."""
     entry = MockConfigEntry(domain=DOMAIN, data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
