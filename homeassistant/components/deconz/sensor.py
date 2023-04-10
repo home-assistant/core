@@ -149,7 +149,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
     DeconzSensorDescription[AirQuality](
-        key="pm2_5",
+        key="air_quality_pm2_5",
         supported_fn=lambda device: device.pm_2_5 is not None,
         update_key="pm2_5",
         value_fn=lambda device: device.pm_2_5,
