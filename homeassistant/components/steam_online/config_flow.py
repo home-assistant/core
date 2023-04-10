@@ -1,7 +1,7 @@
 """Config flow for Steam integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
 from typing import Any
 
 import steam
@@ -108,6 +108,11 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
+def _batch_ids(ids: list[str]) -> Generator:
+    for i in range(0, len(ids), 50):
+        yield ids[i : i + 50]
+
+
 class SteamOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Steam client options."""
 
@@ -168,7 +173,14 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         try:
             friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
             _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
+            id_batches = list(_batch_ids(_users_str))
+            names = []
+            for id_batch in id_batches:
+                names.extend(
+                    interface.GetPlayerSummaries(steamids=id_batch)["response"][
+                        "players"
+                    ]["player"]
+                )
+            return names
         except steam.api.HTTPError:
             return []
-        names = interface.GetPlayerSummaries(steamids=_users_str)
-        return names["response"]["players"]["player"]
