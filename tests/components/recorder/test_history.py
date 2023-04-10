@@ -24,7 +24,7 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.history import legacy
 from homeassistant.components.recorder.models import LazyState, process_timestamp
-from homeassistant.components.recorder.models.legacy import LazyStatePreSchema31
+from homeassistant.components.recorder.models.legacy import LegacyLazyStatePreSchema31
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
@@ -56,7 +56,7 @@ async def _async_get_states(
 
     def _get_states_with_session():
         if get_instance(hass).schema_version < 31:
-            klass = LazyStatePreSchema31
+            klass = LegacyLazyStatePreSchema31
         else:
             klass = LazyState
         with session_scope(hass=hass, read_only=True) as session:

@@ -24,13 +24,16 @@ from ... import recorder
 from ..db_schema import RecorderRuns, StateAttributes, States
 from ..filters import Filters
 from ..models import (
-    LazyState,
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
-    row_to_compressed_state,
 )
-from ..models.legacy import LazyStatePreSchema31, row_to_compressed_state_pre_schema_31
+from ..models.legacy import (
+    LegacyLazyState,
+    LegacyLazyStatePreSchema31,
+    legacy_row_to_compressed_state,
+    legacy_row_to_compressed_state_pre_schema_31,
+)
 from ..util import execute_stmt_lambda_element, session_scope
 from .common import _schema_version
 from .const import (
@@ -713,17 +716,17 @@ def _sorted_states_to_dict(
     ]
     if compressed_state_format:
         if schema_version >= 31:
-            state_class = row_to_compressed_state
+            state_class = legacy_row_to_compressed_state
         else:
-            state_class = row_to_compressed_state_pre_schema_31
+            state_class = legacy_row_to_compressed_state_pre_schema_31
         _process_timestamp = process_datetime_to_timestamp
         attr_time = COMPRESSED_STATE_LAST_UPDATED
         attr_state = COMPRESSED_STATE_STATE
     else:
         if schema_version >= 31:
-            state_class = LazyState
+            state_class = LegacyLazyState
         else:
-            state_class = LazyStatePreSchema31
+            state_class = LegacyLazyStatePreSchema31
         _process_timestamp = process_timestamp_to_utc_isoformat
         attr_time = LAST_CHANGED_KEY
         attr_state = STATE_KEY
