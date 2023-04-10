@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from ... import recorder
-from ..db_schema import RecorderRuns, StateAttributes, States
+from ..db_schema import StateAttributes, States
 from ..filters import Filters
 from ..models import (
     LazyState,
@@ -237,14 +237,10 @@ def get_significant_states_with_session(
             and split_entity_id(entity_id)[0] in SIGNIFICANT_DOMAINS
         ]
     run_start_ts: float | None = None
-    if include_start_time_state:
-        run = recorder.get_instance(hass).recorder_runs_manager.get(start_time)
-        if not (
-            run_start_ts := _get_run_start_ts_from_run_for_utc_point_in_time(
-                run, start_time
-            )
-        ):
-            include_start_time_state = False
+    if include_start_time_state and not (
+        run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
+    ):
+        include_start_time_state = False
     start_time_ts = dt_util.utc_to_timestamp(start_time)
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
@@ -268,9 +264,8 @@ def get_significant_states_with_session(
             include_start_time_state,
         ],
     )
-    states = execute_stmt_lambda_element(session, stmt, None, end_time)
     return _sorted_states_to_dict(
-        states,
+        execute_stmt_lambda_element(session, stmt, None, end_time),
         entity_ids,
         entity_id_to_metadata_id,
         minimal_response,
@@ -388,14 +383,10 @@ def state_changes_during_period(
             entity_id: single_metadata_id
         }
         run_start_ts: float | None = None
-        if include_start_time_state:
-            run = recorder.get_instance(hass).recorder_runs_manager.get(start_time)
-            if not (
-                run_start_ts := _get_run_start_ts_from_run_for_utc_point_in_time(
-                    run, start_time
-                )
-            ):
-                include_start_time_state = False
+        if include_start_time_state and not (
+            run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
+        ):
+            include_start_time_state = False
         start_time_ts = dt_util.utc_to_timestamp(start_time)
         end_time_ts = datetime_to_timestamp_or_none(end_time)
         stmt = lambda_stmt(
@@ -417,11 +408,10 @@ def state_changes_during_period(
                 include_start_time_state,
             ],
         )
-        states = execute_stmt_lambda_element(session, stmt, None, end_time)
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
-                states,
+                execute_stmt_lambda_element(session, stmt, None, end_time),
                 entity_ids,
                 entity_id_to_metadata_id,
             ),
@@ -545,10 +535,11 @@ def _get_states_for_entities_stmt(
     )
 
 
-def _get_run_start_ts_from_run_for_utc_point_in_time(
-    run: RecorderRuns | None, utc_point_in_time: datetime
+def _get_run_start_ts_for_utc_point_in_time(
+    hass: HomeAssistant, utc_point_in_time: datetime
 ) -> float | None:
     """Return the start time of a run."""
+    run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
     if (
         run is not None
         and (run_start := process_timestamp(run.start)) < utc_point_in_time
