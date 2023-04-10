@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory, UnitOfTemperature, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONCENTRATION_PARTS_PER_BILLION, CONCENTRATION_PARTS_PER_MILLION, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt
@@ -885,6 +885,107 @@ async def test_air_quality_sensor_without_ppb(
         await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 1
+
+
+async def test_air_quality_sensor_6_in_1(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test sensor with all data of 6 in 1 - without airquality."""
+    data = {
+        "sensors": {
+            "1": {
+                "config": {
+                    "on": True,
+                    "reachable": True
+                    },
+                "etag": "e1a406dbbe1438fa924007309ef46a01",
+                "lastseen": "2023-03-29T18:25Z",
+                "manufacturername": "_TZE200_dwcarsat",
+                "modelid": "TS0601",
+                "name": "AirQuality 1",
+                "state": {
+                    "airquality_co2_density": 359,
+                    "airquality_formaldehyde_density": 4,
+                    "airqualityppb": 15,
+                    "lastupdated": "2023-03-29T19:05:41.903",
+                    "pm2_5": 8,
+                },
+                "type": "ZHAAirQuality",
+                "uniqueid": "00:00:00:00:00:00:00:00-01-0111",
+            },
+            "2": {
+                "config": {
+                    "on": True,
+                    "reachable": True
+                },
+                "etag": "e1a406dbbe1438fa924007309ef46a02",
+                "lastseen": "2023-03-29T18:25Z",
+                "manufacturername": "_TZE200_dwcarsat",
+                "modelid": "TS0601",
+                "name": "Humidity 1",
+                "state": {
+                    "humidity": 5660,
+                    "lastupdated": "2023-03-29T19:05:41.507"
+                    },
+                "type": "ZHAHumidity",
+                "uniqueid": "00:00:00:00:00:00:00:00-02-0222",
+            },
+            "3": {
+                "config": {
+                    "on": True,
+                    "reachable": True
+                    },
+                "etag": "e1a406dbbe1438fa924007309ef46a03",
+                "lastseen": "2023-03-29T18:25Z",
+                "manufacturername": "_TZE200_dwcarsat",
+                "modelid": "TS0601",
+                "name": "Temperature 1",
+                "state": {
+                    "lastupdated": "2023-03-29T19:05:41.460",
+                    "temperature": 2180,
+                },
+                "type": "ZHATemperature",
+                "uniqueid": "00:00:00:00:00:00:00:00-03-0333",
+            },
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    ent_reg: er.EntityRegistry = er.async_get(hass)
+
+    assert len(hass.states.async_all()) == 6
+    assert not hass.states.get("sensor.airquality_1")
+
+    assert hass.states.get("sensor.airquality_1_ppb").state == "15"
+    assert hass.states.get("sensor.airquality_1_ppb").attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert hass.states.get("sensor.airquality_1_ppb").attributes.get("unit_of_measurement") == CONCENTRATION_PARTS_PER_BILLION
+    assert (ent_reg.async_get("sensor.airquality_1_ppb")).original_device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+
+    assert hass.states.get("sensor.airquality_1_ch2o").state == "4"
+    assert hass.states.get("sensor.airquality_1_ch2o").attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert hass.states.get("sensor.airquality_1_ch2o").attributes.get("unit_of_measurement") == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    assert (ent_reg.async_get("sensor.airquality_1_ch2o")).original_device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+
+    assert hass.states.get("sensor.airquality_1_co2").state == "359"
+    assert hass.states.get("sensor.airquality_1_co2").attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert hass.states.get("sensor.airquality_1_co2").attributes.get("unit_of_measurement") == CONCENTRATION_PARTS_PER_MILLION
+    assert (ent_reg.async_get("sensor.airquality_1_co2")).original_device_class == SensorDeviceClass.CO2
+
+    assert hass.states.get("sensor.airquality_1_pm25").state == "8"
+    assert hass.states.get("sensor.airquality_1_pm25").attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert hass.states.get("sensor.airquality_1_pm25").attributes.get("unit_of_measurement") == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    assert (ent_reg.async_get("sensor.airquality_1_pm25")).original_device_class == SensorDeviceClass.PM25
+
+    assert hass.states.get("sensor.humidity_1").state == "56.6"
+    assert hass.states.get("sensor.humidity_1").attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert hass.states.get("sensor.humidity_1").attributes.get("unit_of_measurement") == PERCENTAGE
+    assert (ent_reg.async_get("sensor.humidity_1")).original_device_class == SensorDeviceClass.HUMIDITY
+
+    assert hass.states.get("sensor.temperature_1").state == "21.8"
+    assert hass.states.get("sensor.temperature_1").attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert hass.states.get("sensor.temperature_1").attributes.get("unit_of_measurement") == UnitOfTemperature.CELSIUS
+    assert (ent_reg.async_get("sensor.temperature_1")).original_device_class == SensorDeviceClass.TEMPERATURE
 
 
 async def test_add_battery_later(
