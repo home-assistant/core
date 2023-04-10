@@ -513,10 +513,9 @@ def _get_states_for_entities_stmt(
     no_attributes: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
-    stmt = _stmt_and_join_attributes(no_attributes, True)
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
-    stmt = stmt.join(
+    stmt = _stmt_and_join_attributes(no_attributes, True).join(
         (
             most_recent_states_for_entities_by_date := (
                 select(
@@ -541,11 +540,11 @@ def _get_states_for_entities_stmt(
             == most_recent_states_for_entities_by_date.c.max_last_updated,
         ),
     )
-    if not no_attributes:
-        stmt = stmt.outerjoin(
-            StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
-        )
-    return stmt
+    if no_attributes:
+        return stmt
+    return stmt.outerjoin(
+        StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+    )
 
 
 def _get_run_start_ts_from_run_for_utc_point_in_time(
