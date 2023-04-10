@@ -109,8 +109,8 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 def _batch_ids(ids: list[str]) -> Generator:
-    for i in range(0, len(ids), 50):
-        yield ids[i : i + 50]
+    for i in range(0, len(ids), 275):
+        yield ids[i : i + 275]
 
 
 class SteamOptionsFlowHandler(config_entries.OptionsFlow):
