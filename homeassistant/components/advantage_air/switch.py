@@ -54,15 +54,11 @@ class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn fresh air on."""
-        await self.async_update_ac(
-            {self.ac_key: {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_ON}}}
-        )
+        await self.async_update_ac({"freshAirStatus": ADVANTAGE_AIR_STATE_ON})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn fresh air off."""
-        await self.async_update_ac(
-            {self.ac_key: {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_OFF}}}
-        )
+        await self.async_update_ac({"freshAirStatus": ADVANTAGE_AIR_STATE_OFF})
 
 
 class AdvantageAirRelay(AdvantageAirThingEntity, SwitchEntity):
