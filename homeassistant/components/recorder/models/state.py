@@ -63,7 +63,7 @@ class LazyState(State):
             dt_util.utc_to_timestamp(start_time) if start_time else None
         )
         self._last_changed_ts: float | None = (
-            self._row.last_changed_ts or self._last_updated_ts
+            getattr(self._row, "last_changed_ts", None) or self._last_updated_ts
         )
         self._context: Context | None = None
         self.attr_cache = attr_cache

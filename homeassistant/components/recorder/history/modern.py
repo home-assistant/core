@@ -22,7 +22,6 @@ from sqlalchemy import (
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.properties import MappedColumn
 from sqlalchemy.orm.session import Session
-from sqlalchemy.sql.expression import literal
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
@@ -46,29 +45,24 @@ from .const import (
     STATE_KEY,
 )
 
+_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = (
+    States.metadata_id,
+    States.state,
+    States.last_updated_ts,
+)
 _QUERY_STATE_NO_ATTR = (
-    States.metadata_id,
-    States.state,
+    *_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED,
     States.last_changed_ts,
-    States.last_updated_ts,
 )
-_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = (  # type: ignore[var-annotated]
-    States.metadata_id,
-    States.state,
-    literal(value=None).label("last_changed_ts"),
-    States.last_updated_ts,
-)
-_QUERY_STATES = (
-    *_QUERY_STATE_NO_ATTR,
+_QUERY_ATTRIBUTES = (
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
 )
+_QUERY_STATES = (*_QUERY_STATE_NO_ATTR, *_QUERY_ATTRIBUTES)
 _QUERY_STATES_NO_LAST_CHANGED = (
     *_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED,
-    # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
-    States.attributes,
-    StateAttributes.shared_attrs,
+    *_QUERY_ATTRIBUTES,
 )
 _FIELD_MAP = {
     cast(MappedColumn, field).name: idx
@@ -94,15 +88,16 @@ def _stmt_and_join_attributes(
 
 
 def _select_from_subquery(
-    subquery: Subquery | CompoundSelect, no_attributes: bool
+    subquery: Subquery | CompoundSelect, no_attributes: bool, include_last_changed: bool
 ) -> Select:
     """Return the statement to select from the union."""
     base_select = select(
         subquery.c.metadata_id,
         subquery.c.state,
-        subquery.c.last_changed_ts,
         subquery.c.last_updated_ts,
     )
+    if include_last_changed:
+        base_select = base_select.add_columns(subquery.c.last_changed_ts)
     if no_attributes:
         return base_select
     return base_select.add_columns(subquery.c.attributes, subquery.c.shared_attrs)
@@ -149,9 +144,8 @@ def _significant_states_stmt(
     run_start_ts: float | None,
 ) -> Select | CompoundSelect:
     """Query the database for significant state changes."""
-    stmt = _stmt_and_join_attributes(
-        no_attributes, include_last_changed=not significant_changes_only
-    )
+    include_last_changed = not significant_changes_only
+    stmt = _stmt_and_join_attributes(no_attributes, include_last_changed)
     if significant_changes_only:
         # Since we are filtering on entity_id (metadata_id) we can avoid
         # the join of the states_meta table since we already know which
@@ -182,12 +176,15 @@ def _significant_states_stmt(
                     single_metadata_id,
                     metadata_ids,
                     no_attributes,
+                    include_last_changed,
                 ).subquery(),
                 no_attributes,
+                include_last_changed,
             ),
-            _select_from_subquery(stmt.subquery(), no_attributes),
+            _select_from_subquery(stmt.subquery(), no_attributes, include_last_changed),
         ).subquery(),
         no_attributes,
+        include_last_changed,
     )
 
 
@@ -345,13 +342,15 @@ def _state_changed_during_period_stmt(
         union_all(
             _select_from_subquery(
                 _get_single_entity_start_time_stmt(
-                    start_time_ts, single_metadata_id, no_attributes
+                    start_time_ts, single_metadata_id, no_attributes, False
                 ).subquery(),
                 no_attributes,
+                False,
             ),
-            _select_from_subquery(stmt.subquery(), no_attributes),
+            _select_from_subquery(stmt.subquery(), no_attributes, False),
         ).subquery(),
         no_attributes,
+        False,
     )
 
 
@@ -499,11 +498,12 @@ def _get_start_time_state_for_entities_stmt(
     epoch_time: float,
     metadata_ids: list[int],
     no_attributes: bool,
+    include_last_changed: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
-    stmt = _stmt_and_join_attributes(no_attributes, True).join(
+    stmt = _stmt_and_join_attributes(no_attributes, include_last_changed).join(
         (
             most_recent_states_for_entities_by_date := (
                 select(
@@ -555,32 +555,29 @@ def _get_start_time_state_stmt(
     single_metadata_id: int | None,
     metadata_ids: list[int],
     no_attributes: bool,
+    include_last_changed: bool,
 ) -> Select:
     """Return the states at a specific point in time."""
     if single_metadata_id:
         # Use an entirely different (and extremely fast) query if we only
         # have a single entity id
         return _get_single_entity_start_time_stmt(
-            epoch_time,
-            single_metadata_id,
-            no_attributes,
+            epoch_time, single_metadata_id, no_attributes, include_last_changed
         )
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     return _get_start_time_state_for_entities_stmt(
-        run_start_ts, epoch_time, metadata_ids, no_attributes
+        run_start_ts, epoch_time, metadata_ids, no_attributes, include_last_changed
     )
 
 
 def _get_single_entity_start_time_stmt(
-    epoch_time: float,
-    metadata_id: int,
-    no_attributes: bool,
+    epoch_time: float, metadata_id: int, no_attributes: bool, include_last_changed: bool
 ) -> Select:
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
     stmt = (
-        _stmt_and_join_attributes(no_attributes, True)
+        _stmt_and_join_attributes(no_attributes, include_last_changed)
         .filter(
             States.last_updated_ts < epoch_time,
             States.metadata_id == metadata_id,
