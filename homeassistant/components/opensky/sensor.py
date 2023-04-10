@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import logging
 import requests
 import voluptuous as vol
 
@@ -25,6 +26,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import location as util_location
 from homeassistant.util.unit_conversion import DistanceConverter
 
+_LOGGER = logging.getLogger(__name__)
+
 CONF_ALTITUDE = "altitude"
 
 ATTR_ICAO24 = "icao24"
@@ -40,7 +43,7 @@ DEFAULT_ALTITUDE = 0
 
 EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
 EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
-SCAN_INTERVAL = timedelta(seconds=22)  # opensky public limit is 10 seconds
+SCAN_INTERVAL = timedelta(seconds=25)  # opensky registered user limit is 4000 per day
 
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [
@@ -64,6 +67,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RADIUS): vol.Coerce(float),
         vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
         vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
         vol.Optional(CONF_ALTITUDE, default=DEFAULT_ALTITUDE): vol.Coerce(float),
@@ -89,6 +94,8 @@ def setup_platform(
                 longitude,
                 config.get(CONF_RADIUS),
                 config.get(CONF_ALTITUDE),
+                config.get(CONF_USERNAME),
+                config.get(CONF_PASSWORD),
             )
         ],
         True,
@@ -157,7 +164,13 @@ class OpenSkySensor(SensorEntity):
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
-        states = self._session.get(OPENSKY_API_URL, auth=(self._username, self._password)).json().get(ATTR_STATES)
+        
+        self._session.auth = (self._username, self._password)
+        self._session.verify = False
+        auth = self._session.post("https://opensky-network.org/")
+        _LOGGER.debug("AUTH %s", auth.headers)
+        states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
+        _LOGGER.debug("STATE %s", states.headers)
         for state in states:
             flight = dict(zip(OPENSKY_API_FIELDS, state))
             callsign = flight[ATTR_CALLSIGN].strip()
