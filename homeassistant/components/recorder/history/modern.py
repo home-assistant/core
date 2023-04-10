@@ -140,6 +140,7 @@ def get_significant_states(
 def _significant_states_stmt(
     start_time_ts: float,
     end_time_ts: float | None,
+    single_metadata_id: int | None,
     metadata_ids: list[int],
     metadata_ids_in_significant_domains: list[int],
     significant_changes_only: bool,
@@ -176,7 +177,11 @@ def _significant_states_stmt(
         union_all(
             _select_from_subquery(
                 _get_start_time_state_stmt(
-                    run_start_ts, start_time_ts, metadata_ids, no_attributes
+                    run_start_ts,
+                    start_time_ts,
+                    single_metadata_id,
+                    metadata_ids,
+                    no_attributes,
                 ).subquery(),
                 no_attributes,
             ),
@@ -242,10 +247,14 @@ def get_significant_states_with_session(
             include_start_time_state = False
     start_time_ts = dt_util.utc_to_timestamp(start_time)
     end_time_ts = datetime_to_timestamp_or_none(end_time)
+    single_metadata_id: int | None = None
+    if len(metadata_ids) == 1:
+        single_metadata_id = metadata_ids[0]
     stmt = lambda_stmt(
         lambda: _significant_states_stmt(
             start_time_ts,
             end_time_ts,
+            single_metadata_id,
             metadata_ids,
             metadata_ids_in_significant_domains,
             significant_changes_only,
@@ -254,6 +263,7 @@ def get_significant_states_with_session(
             run_start_ts,
         ),
         track_on=[
+            bool(single_metadata_id),
             bool(end_time_ts),
             bool(significant_changes_only),
             bool(no_attributes),
@@ -306,8 +316,7 @@ def get_full_significant_states_with_session(
 def _state_changed_during_period_stmt(
     start_time_ts: float,
     end_time_ts: float | None,
-    metadata_id: int,
-    metadata_ids: list[int],
+    single_metadata_id: int,
     no_attributes: bool,
     descending: bool,
     limit: int | None,
@@ -323,7 +332,7 @@ def _state_changed_during_period_stmt(
             )
             & (States.last_updated_ts > start_time_ts)
         )
-        .filter(States.metadata_id == metadata_id)
+        .filter(States.metadata_id == single_metadata_id)
     )
     if end_time_ts:
         stmt = stmt.filter(States.last_updated_ts < end_time_ts)
@@ -342,8 +351,8 @@ def _state_changed_during_period_stmt(
     return _select_from_subquery(
         union_all(
             _select_from_subquery(
-                _get_start_time_state_stmt(
-                    run_start_ts, start_time_ts, metadata_ids, no_attributes
+                _get_single_entity_start_time_stmt(
+                    start_time_ts, single_metadata_id, no_attributes
                 ).subquery(),
                 no_attributes,
             ),
@@ -376,8 +385,10 @@ def state_changes_during_period(
             )
         ):
             return {}
-        metadata_id = possible_metadata_id
-        entity_id_to_metadata_id: dict[str, int | None] = {entity_id: metadata_id}
+        single_metadata_id = possible_metadata_id
+        entity_id_to_metadata_id: dict[str, int | None] = {
+            entity_id: single_metadata_id
+        }
         run_start_ts: float | None = None
         if include_start_time_state:
             run = recorder.get_instance(hass).recorder_runs_manager.get(start_time)
@@ -389,13 +400,11 @@ def state_changes_during_period(
                 include_start_time_state = False
         start_time_ts = dt_util.utc_to_timestamp(start_time)
         end_time_ts = datetime_to_timestamp_or_none(end_time)
-        metadata_ids = [metadata_id]
         stmt = lambda_stmt(
             lambda: _state_changed_during_period_stmt(
                 start_time_ts,
                 end_time_ts,
-                metadata_id,
-                metadata_ids,
+                single_metadata_id,
                 no_attributes,
                 descending,
                 limit,
@@ -555,15 +564,46 @@ def _get_run_start_ts_from_run_for_utc_point_in_time(
 def _get_start_time_state_stmt(
     run_start_ts: float,
     epoch_time: float,
+    single_metadata_id: int | None,
     metadata_ids: list[int],
     no_attributes: bool,
 ) -> Select:
     """Return the states at a specific point in time."""
-
+    if single_metadata_id:
+        # Use an entirely different (and extremely fast) query if we only
+        # have a single entity id
+        return _get_single_entity_start_time_stmt(
+            epoch_time,
+            single_metadata_id,
+            no_attributes,
+        )
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     return _get_states_for_entities_stmt(
         run_start_ts, epoch_time, metadata_ids, no_attributes
+    )
+
+
+def _get_single_entity_start_time_stmt(
+    epoch_time: float,
+    metadata_id: int,
+    no_attributes: bool,
+) -> Select:
+    # Use an entirely different (and extremely fast) query if we only
+    # have a single entity id
+    stmt = (
+        _stmt_and_join_attributes(no_attributes, True)
+        .filter(
+            States.last_updated_ts < epoch_time,
+            States.metadata_id == metadata_id,
+        )
+        .order_by(States.last_updated_ts.desc())
+        .limit(1)
+    )
+    if no_attributes:
+        return stmt
+    return stmt.outerjoin(
+        StateAttributes, States.attributes_id == StateAttributes.attributes_id
     )
 
 
