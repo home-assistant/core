@@ -89,14 +89,21 @@ async def test_async_poll_manual_hosts_warnings(
     ), patch.object(
         hass, "async_add_executor_job", new=AsyncMock()
     ) as mock_async_add_executor_job:
-        mock_async_add_executor_job.side_effect = [
-            OSError(),
-            OSError(),
-            [],
-            [],
-            OSError(),
-        ]
+        _should_raise = True
+
+        def executor_side_effect(_, arg):
+            if arg == "10.10.10.10":
+                # for socket.gethostbyaddr which is mocked by an autoused fixture
+                return arg
+            nonlocal _should_raise
+            if _should_raise:
+                raise OSError()
+            return []
+
+        mock_async_add_executor_job.side_effect = executor_side_effect
+
         # First call fails, it should be logged as a WARNING message
+        _should_raise = True
         caplog.clear()
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 1
@@ -105,6 +112,7 @@ async def test_async_poll_manual_hosts_warnings(
         assert "Could not get visible Sonos devices from" in record.message
 
         # Second call fails again, it should be logged as a DEBUG message
+        _should_raise = True
         caplog.clear()
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 1
@@ -113,6 +121,7 @@ async def test_async_poll_manual_hosts_warnings(
         assert "Could not get visible Sonos devices from" in record.message
 
         # Third call succeeds, it should log an info message
+        _should_raise = False
         caplog.clear()
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 1
@@ -121,11 +130,13 @@ async def test_async_poll_manual_hosts_warnings(
         assert "Connection restablished to Sonos device" in record.message
 
         # Fourth call succeeds again, no need to log
+        _should_raise = False
         caplog.clear()
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 0
 
         # Fifth call fail again again, should be logged as a WARNING message
+        _should_raise = True
         caplog.clear()
         await manager.async_poll_manual_hosts()
         assert len(caplog.messages) == 1
