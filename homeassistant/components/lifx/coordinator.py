@@ -258,8 +258,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
         elif is_legacy_multizone and num_zones != len(device.color_zones):
             # The number of zones has changed so we need
-            # to update the zones again. This should only
-            # happen once after a device is added.
+            # to update the zones again. This happen rarely.
             await self.async_get_color_zones()
 
     async def async_get_color_zones(self) -> None:
