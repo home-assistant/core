@@ -208,9 +208,9 @@ async def async_multi_execute_lifx_with_retries(
     futures: list[asyncio.Future] = [loop.create_future() for _ in methods]
 
     def _callback(
-        bulb: Light, message: Message, future: asyncio.Future[Message]
+        bulb: Light, message: Message | None, future: asyncio.Future[Message]
     ) -> None:
-        if not future.done():
+        if message and not future.done():
             future.set_result(message)
 
     timeout_per_attempt = overall_timeout / attempts
