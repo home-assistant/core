@@ -51,7 +51,9 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         """Initialize the entity."""
         desc = " ".join(["Program", program_name.split(".")[-1]])
         if device.appliance.type == "WasherDryer":
-            desc = " ".join(["Program", program_name.split(".")[-3], program_name.split(".")[-1]])
+            desc = " ".join(
+                ["Program", program_name.split(".")[-3], program_name.split(".")[-1]]
+            )
         super().__init__(device, desc)
         self.program_name = program_name
         self._state = None
