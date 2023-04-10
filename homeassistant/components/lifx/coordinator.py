@@ -226,7 +226,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         num_zones = len(device.color_zones) if device.color_zones is not None else 0
         features = lifx_features(self.device)
         is_extended_multizone = features["extended_multizone"]
-        is_legacy_multizone = not is_extended_multizone and features["multizone"] 
+        is_legacy_multizone = not is_extended_multizone and features["multizone"]
         update_rssi = self._update_rssi
         methods: list[Callable] = [self.device.get_color]
         if update_rssi:
