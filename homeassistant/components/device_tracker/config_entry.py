@@ -348,7 +348,7 @@ class ScannerEntity(BaseTrackerEntity):
                 self.mac_address,
                 self.unique_id,
             )
-            if self.is_connected:
+            if self.is_connected and self.ip_address:
                 _async_connected_device_registered(
                     hass,
                     self.mac_address,
@@ -405,7 +405,7 @@ class ScannerEntity(BaseTrackerEntity):
         """Return the device state attributes."""
         attr: dict[str, StateType] = {}
         attr.update(super().state_attributes)
-        if self.ip_address is not None:
+        if self.ip_address:
             attr[ATTR_IP] = self.ip_address
         if self.mac_address is not None:
             attr[ATTR_MAC] = self.mac_address

@@ -14,9 +14,11 @@ from homeassistant.components.recorder.db_schema import (
 )
 from homeassistant.components.recorder.models import (
     LazyState,
+    bytes_to_ulid_or_none,
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
+    ulid_to_bytes_or_none,
 )
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
@@ -27,7 +29,15 @@ from homeassistant.util import dt, dt as dt_util
 
 def test_from_event_to_db_event() -> None:
     """Test converting event to db event."""
-    event = ha.Event("test_event", {"some_data": 15})
+    event = ha.Event(
+        "test_event",
+        {"some_data": 15},
+        context=ha.Context(
+            id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            parent_id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            user_id="12345678901234567890123456789012",
+        ),
+    )
     db_event = Events.from_event(event)
     dialect = SupportedDialect.MYSQL
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
@@ -37,7 +47,15 @@ def test_from_event_to_db_event() -> None:
 
 def test_from_event_to_db_state() -> None:
     """Test converting event to db state."""
-    state = ha.State("sensor.temperature", "18")
+    state = ha.State(
+        "sensor.temperature",
+        "18",
+        context=ha.Context(
+            id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            parent_id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            user_id="12345678901234567890123456789012",
+        ),
+    )
     event = ha.Event(
         EVENT_STATE_CHANGED,
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
@@ -415,3 +433,27 @@ async def test_process_datetime_to_timestamp_mirrors_utc_isoformat_behavior(
         process_datetime_to_timestamp(datetime_hst_timezone)
         == dt_util.parse_datetime("2016-07-09T21:00:00+00:00").timestamp()
     )
+
+
+def test_ulid_to_bytes_or_none(caplog: pytest.LogCaptureFixture) -> None:
+    """Test ulid_to_bytes_or_none."""
+
+    assert (
+        ulid_to_bytes_or_none("01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1")
+        == b"\x01w\xaf\xf9w\xe5\xf8~\x1f\x87\xe1\xf8~\x1f\x87\xe1"
+    )
+    assert ulid_to_bytes_or_none("invalid") is None
+    assert "invalid" in caplog.text
+    assert ulid_to_bytes_or_none(None) is None
+
+
+def test_bytes_to_ulid_or_none(caplog: pytest.LogCaptureFixture) -> None:
+    """Test bytes_to_ulid_or_none."""
+
+    assert (
+        bytes_to_ulid_or_none(b"\x01w\xaf\xf9w\xe5\xf8~\x1f\x87\xe1\xf8~\x1f\x87\xe1")
+        == "01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1"
+    )
+    assert bytes_to_ulid_or_none(b"invalid") is None
+    assert "invalid" in caplog.text
+    assert bytes_to_ulid_or_none(None) is None
