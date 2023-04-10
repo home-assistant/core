@@ -6,17 +6,13 @@ from collections.abc import Callable
 # pylint: disable=invalid-name
 from copy import copy
 from datetime import datetime, timedelta
-import importlib
 import json
-import sys
 from unittest.mock import patch, sentinel
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import core, history, statistics
+from homeassistant.components.recorder import history
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.util import session_scope
@@ -29,58 +25,15 @@ from .common import (
     assert_multiple_states_equal_without_context,
     assert_multiple_states_equal_without_context_and_last_changed,
     assert_states_equal_without_context,
+    old_db_schema,
     wait_recording_done,
 )
-
-CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
-
-
-def _create_engine_test(*args, **kwargs):
-    """Test version of create_engine that initializes with old schema.
-
-    This simulates an existing db with the old schema.
-    """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
-    engine = create_engine(*args, **kwargs)
-    old_db_schema.Base.metadata.create_all(engine)
-    with Session(engine) as session:
-        session.add(
-            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
-        )
-        session.add(
-            recorder.db_schema.SchemaChanges(
-                schema_version=old_db_schema.SCHEMA_VERSION
-            )
-        )
-        session.commit()
-    return engine
 
 
 @pytest.fixture(autouse=True)
 def db_schema_32():
-    """Fixture to initialize the db with the old schema."""
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
-
-    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
-        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
-        core, "EventTypes", old_db_schema.EventTypes
-    ), patch.object(
-        core, "EventData", old_db_schema.EventData
-    ), patch.object(
-        core, "States", old_db_schema.States
-    ), patch.object(
-        core, "Events", old_db_schema.Events
-    ), patch.object(
-        core, "StateAttributes", old_db_schema.StateAttributes
-    ), patch.object(
-        core, "EntityIDMigrationTask", core.RecorderTask
-    ), patch(
-        CREATE_ENGINE_TARGET, new=_create_engine_test
-    ):
+    """Fixture to initialize the db with the old schema 32."""
+    with old_db_schema("32"):
         yield
 
 

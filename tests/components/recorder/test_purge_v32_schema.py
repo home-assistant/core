@@ -50,7 +50,7 @@ from tests.typing import RecorderInstanceGenerator
 
 @pytest.fixture(autouse=True)
 def db_schema_32():
-    """Fixture to initialize the db with the old schema."""
+    """Fixture to initialize the db with the old schema 32."""
     with old_db_schema("32"):
         yield
 
