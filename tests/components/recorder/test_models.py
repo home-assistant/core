@@ -29,7 +29,15 @@ from homeassistant.util import dt, dt as dt_util
 
 def test_from_event_to_db_event() -> None:
     """Test converting event to db event."""
-    event = ha.Event("test_event", {"some_data": 15})
+    event = ha.Event(
+        "test_event",
+        {"some_data": 15},
+        context=ha.Context(
+            id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            parent_id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            user_id="12345678901234567890123456789012",
+        ),
+    )
     db_event = Events.from_event(event)
     dialect = SupportedDialect.MYSQL
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
@@ -39,7 +47,15 @@ def test_from_event_to_db_event() -> None:
 
 def test_from_event_to_db_state() -> None:
     """Test converting event to db state."""
-    state = ha.State("sensor.temperature", "18")
+    state = ha.State(
+        "sensor.temperature",
+        "18",
+        context=ha.Context(
+            id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            parent_id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            user_id="12345678901234567890123456789012",
+        ),
+    )
     event = ha.Event(
         EVENT_STATE_CHANGED,
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},

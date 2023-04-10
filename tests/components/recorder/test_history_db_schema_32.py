@@ -33,7 +33,7 @@ from .common import (
 )
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE = "tests.components.recorder.db_schema_30"
+SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
 
 
 def _create_engine_test(*args, **kwargs):
@@ -59,7 +59,7 @@ def _create_engine_test(*args, **kwargs):
 
 
 @pytest.fixture(autouse=True)
-def db_schema_30():
+def db_schema_32():
     """Fixture to initialize the db with the old schema."""
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -433,8 +433,9 @@ def test_get_significant_states_minimal_response(
         )
 
 
+@pytest.mark.parametrize("time_zone", ["Europe/Berlin", "US/Hawaii", "UTC"])
 def test_get_significant_states_with_initial(
-    hass_recorder: Callable[..., HomeAssistant]
+    time_zone, hass_recorder: Callable[..., HomeAssistant]
 ) -> None:
     """Test that only significant states are returned.
 
@@ -443,31 +444,21 @@ def test_get_significant_states_with_initial(
     media player (attribute changes are not significant and not returned).
     """
     hass = hass_recorder()
-    instance = recorder.get_instance(hass)
-    with patch.object(instance.states_meta_manager, "active", False):
-        zero, four, states = record_states(hass)
-        one = zero + timedelta(seconds=1)
-        one_with_microsecond = zero + timedelta(seconds=1, microseconds=1)
-        one_and_half = zero + timedelta(seconds=1.5)
-        for entity_id in states:
-            if entity_id == "media_player.test":
-                states[entity_id] = states[entity_id][1:]
-            for state in states[entity_id]:
-                if (
-                    state.last_changed == one
-                    or state.last_changed == one_with_microsecond
-                ):
-                    state.last_changed = one_and_half
-                    state.last_updated = one_and_half
+    hass.config.set_time_zone(time_zone)
+    zero, four, states = record_states(hass)
+    one = zero + timedelta(seconds=1)
+    one_and_half = zero + timedelta(seconds=1.5)
+    for entity_id in states:
+        if entity_id == "media_player.test":
+            states[entity_id] = states[entity_id][1:]
+        for state in states[entity_id]:
+            if state.last_changed == one:
+                state.last_changed = one_and_half
 
-        hist = history.get_significant_states(
-            hass,
-            one_and_half,
-            four,
-            include_start_time_state=True,
-            entity_ids=list(states),
-        )
-        assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+    hist = history.get_significant_states(
+        hass, one_and_half, four, include_start_time_state=True, entity_ids=list(states)
+    )
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_without_initial(
