@@ -7,7 +7,11 @@ DOMAIN = "lifx"
 TARGET_ANY = "00:00:00:00:00:00"
 
 DISCOVERY_INTERVAL = 10
+# The number of seconds before we will no longer accept a response
+# to a message and consider it invalid
 MESSAGE_TIMEOUT = 18
+# Disable the retries in the library since they are not spaced out
+# enough to account for WiFi and UDP dropouts
 MESSAGE_RETRIES = 1
 OVERALL_TIMEOUT = 15
 UNAVAILABLE_GRACE = 90
