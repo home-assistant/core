@@ -35,7 +35,6 @@ def storage_collection(hass):
     id_manager = collection.IDManager()
     return person.PersonStorageCollection(
         person.PersonStore(hass, person.STORAGE_VERSION, person.STORAGE_KEY),
-        logging.getLogger(f"{person.__name__}.storage_collection"),
         id_manager,
         collection.YamlCollection(
             logging.getLogger(f"{person.__name__}.yaml_collection"), id_manager
