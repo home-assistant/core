@@ -59,7 +59,7 @@ async def _async_get_states(
             klass = LazyStatePreSchema31
         else:
             klass = LazyState
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             attr_cache = {}
             return [
                 klass(row, attr_cache, None)
@@ -157,7 +157,7 @@ def test_get_full_significant_states_with_session_entity_no_matches(
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         assert (
             history.get_full_significant_states_with_session(
                 hass, session, time_before_recorder_ran, now, entity_ids=["demo.id"]
@@ -183,7 +183,7 @@ def test_significant_states_with_session_entity_minimal_response_no_matches(
     hass = hass_recorder()
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         assert (
             history.get_significant_states_with_session(
                 hass,
@@ -217,7 +217,7 @@ def test_significant_states_with_session_single_entity(
     hass.states.set("demo.id", "any2", {"attr": True})
     wait_recording_done(hass)
     now = dt_util.utcnow()
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = history.get_significant_states_with_session(
             hass,
             session,
@@ -1031,7 +1031,7 @@ async def test_get_full_significant_states_handles_empty_last_changed(
     await async_wait_recording_done(hass)
 
     def _get_entries():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             return history.get_full_significant_states_with_session(
                 hass,
                 session,
@@ -1049,7 +1049,7 @@ async def test_get_full_significant_states_handles_empty_last_changed(
     assert sensor_one_states[0].last_updated != sensor_one_states[1].last_updated
 
     def _fetch_native_states() -> list[State]:
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             native_states = []
             db_state_attributes = {
                 state_attributes.attributes_id: state_attributes
@@ -1085,7 +1085,7 @@ async def test_get_full_significant_states_handles_empty_last_changed(
     )
 
     def _fetch_db_states() -> list[States]:
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             states = list(session.query(States))
             session.expunge_all()
             return states
@@ -1151,7 +1151,7 @@ async def test_get_full_significant_states_past_year_2038(
     await async_wait_recording_done(hass)
 
     def _get_entries():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             return history.get_full_significant_states_with_session(
                 hass,
                 session,

@@ -3,6 +3,8 @@
 The v23 schema used for these tests has been slightly modified to add the
 EventData table to allow the recorder to startup successfully.
 """
+from functools import partial
+
 # pylint: disable=invalid-name
 import importlib
 import json
@@ -11,46 +13,27 @@ from unittest.mock import patch
 
 import py
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import SQLITE_URL_PREFIX, statistics
+from homeassistant.components.recorder import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import wait_recording_done
+from .common import (
+    CREATE_ENGINE_TARGET,
+    create_engine_test_for_schema_version_postfix,
+    get_schema_module_path,
+    wait_recording_done,
+)
 
 from tests.common import get_test_home_assistant
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
-CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE = "tests.components.recorder.db_schema_23_with_newer_columns"
-
-
-def _create_engine_test(*args, **kwargs):
-    """Test version of create_engine that initializes with old schema.
-
-    This simulates an existing db with the old schema.
-    """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
-    engine = create_engine(*args, **kwargs)
-    old_db_schema.Base.metadata.create_all(engine)
-    with Session(engine) as session:
-        session.add(
-            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
-        )
-        session.add(
-            recorder.db_schema.SchemaChanges(
-                schema_version=old_db_schema.SCHEMA_VERSION
-            )
-        )
-        session.commit()
-    return engine
+SCHEMA_VERSION_POSTFIX = "23_with_newer_columns"
+SCHEMA_MODULE = get_schema_module_path(SCHEMA_VERSION_POSTFIX)
 
 
 def test_delete_duplicates(
@@ -182,7 +165,13 @@ def test_delete_duplicates(
     # Create some duplicated statistics with schema version 23
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
+    ), patch(
+        CREATE_ENGINE_TARGET,
+        new=partial(
+            create_engine_test_for_schema_version_postfix,
+            schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+        ),
+    ):
         hass = get_test_home_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
@@ -354,7 +343,13 @@ def test_delete_duplicates_many(
     # Create some duplicated statistics with schema version 23
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
+    ), patch(
+        CREATE_ENGINE_TARGET,
+        new=partial(
+            create_engine_test_for_schema_version_postfix,
+            schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+        ),
+    ):
         hass = get_test_home_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
@@ -503,7 +498,13 @@ def test_delete_duplicates_non_identical(
     # Create some duplicated statistics with schema version 23
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
+    ), patch(
+        CREATE_ENGINE_TARGET,
+        new=partial(
+            create_engine_test_for_schema_version_postfix,
+            schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+        ),
+    ):
         hass = get_test_home_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
@@ -607,7 +608,13 @@ def test_delete_duplicates_short_term(
     # Create some duplicated statistics with schema version 23
     with patch.object(recorder, "db_schema", old_db_schema), patch.object(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-    ), patch(CREATE_ENGINE_TARGET, new=_create_engine_test):
+    ), patch(
+        CREATE_ENGINE_TARGET,
+        new=partial(
+            create_engine_test_for_schema_version_postfix,
+            schema_version_postfix=SCHEMA_VERSION_POSTFIX,
+        ),
+    ):
         hass = get_test_home_assistant()
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})

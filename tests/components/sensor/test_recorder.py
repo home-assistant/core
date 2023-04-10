@@ -4657,7 +4657,7 @@ async def test_validate_statistics_unit_change_no_conversion(
         assert response["result"] == expected_result
 
     async def assert_statistic_ids(expected_result):
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(StatisticsMeta))
             assert len(db_states) == len(expected_result)
             for i in range(len(db_states)):
@@ -4792,7 +4792,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
         assert response["result"] == expected_result
 
     async def assert_statistic_ids(expected_result):
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(StatisticsMeta))
             assert len(db_states) == len(expected_result)
             for i in range(len(db_states)):
@@ -4878,7 +4878,7 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
         assert response["result"] == expected_result
 
     async def assert_statistic_ids(expected_result):
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(StatisticsMeta))
             assert len(db_states) == len(expected_result)
             for i in range(len(db_states)):
@@ -5143,7 +5143,7 @@ async def test_exclude_attributes(
     await async_wait_recording_done(hass)
 
     def _fetch_states() -> list[State]:
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             native_states = []
             for db_state, db_state_attributes, db_states_meta in (
                 session.query(States, StateAttributes, StatesMeta)

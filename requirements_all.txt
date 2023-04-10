@@ -86,7 +86,7 @@ adext==0.4.2
 adguardhome==0.6.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.4.1
+advantage_air==0.4.2
 
 # homeassistant.components.frontier_silicon
 afsapi==0.2.7
@@ -916,7 +916,7 @@ home-assistant-intents==2023.3.29
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.13
+homematicip==1.0.14
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -2392,7 +2392,7 @@ spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.8
+sqlalchemy==2.0.9
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6

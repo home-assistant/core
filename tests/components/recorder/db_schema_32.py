@@ -562,16 +562,19 @@ class StatisticsBase:
 
     id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    created_ts = Column(TIMESTAMP_TYPE, default=time.time)
     metadata_id = Column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
+    start_ts = Column(TIMESTAMP_TYPE, index=True)
     mean = Column(DOUBLE_TYPE)
     min = Column(DOUBLE_TYPE)
     max = Column(DOUBLE_TYPE)
     last_reset = Column(DATETIME_TYPE)
+    last_reset_ts = Column(TIMESTAMP_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
 
