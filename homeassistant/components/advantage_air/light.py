@@ -90,9 +90,11 @@ class AdvantageAirLightDimmable(AdvantageAirLight):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on and optionally set the brightness."""
-        data: dict[str, Any] = {"id": self._id, "state": ADVANTAGE_AIR_STATE_ON}
+        data: dict[str, Any] = {
+            self._id: {"id": self._id, "state": ADVANTAGE_AIR_STATE_ON}
+        }
         if ATTR_BRIGHTNESS in kwargs:
-            data["value"] = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
+            data[self._id]["value"] = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
         await self.set(data)
 
 

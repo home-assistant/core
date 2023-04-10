@@ -86,7 +86,7 @@ adext==0.4.2
 adguardhome==0.6.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.4.1
+advantage_air==0.4.2
 
 # homeassistant.components.frontier_silicon
 afsapi==0.2.7
@@ -246,7 +246,7 @@ aiopvpc==4.1.0
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
-aiopyarr==22.11.0
+aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.3.2
@@ -661,7 +661,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.31
+env_canada==0.5.32
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -916,7 +916,7 @@ home-assistant-intents==2023.3.29
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.13
+homematicip==1.0.14
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -2521,7 +2521,7 @@ tp-connected==0.0.4
 tplink-omada-client==1.1.4
 
 # homeassistant.components.transmission
-transmission-rpc==3.4.0
+transmission-rpc==4.1.5
 
 # homeassistant.components.twinkly
 ttls==1.5.1
