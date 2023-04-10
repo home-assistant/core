@@ -22,6 +22,7 @@ from homeassistant.components.elmax.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.core import HomeAssistant
 
 from . import (
     MOCK_DIRECT_CERT,
@@ -188,9 +189,11 @@ async def test_zeroconf_setup_show_form(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DISCOVERY_INFO,
     )
+
     result = await hass.config_entries.flow.async_configure(
-        show_form_result["flow_id"],
+        result["flow_id"],
     )
+
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "zeroconf_setup"
 
