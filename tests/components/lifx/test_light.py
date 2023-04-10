@@ -1185,15 +1185,12 @@ async def test_legacy_zoned_light_strip(hass: HomeAssistant) -> None:
         entity_registry = er.async_get(hass)
         assert entity_registry.async_get(entity_id).unique_id == SERIAL
         assert hass.states.get(entity_id).state == STATE_OFF
-        # 1 to get the number of zones
-        # 2 get populate the zones
-        assert get_color_zones_mock.call_count == 3
+        assert get_color_zones_mock.call_count == 1
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_OFF
-        # 2 get populate the zones
-        assert get_color_zones_mock.call_count == 5
+        assert get_color_zones_mock.call_count == 3
 
 
 async def test_white_light_fails(hass: HomeAssistant) -> None:
