@@ -60,7 +60,7 @@ class ReolinkHost:
         self._webhook_url: str = ""
         self._webhook_reachable: asyncio.Event = asyncio.Event()
         self._webhook_read_done: asyncio.Event = asyncio.Event()
-        self._webhook_tasks: set[asyncio.Future] = set()
+        self._webhook_tasks: set[asyncio.Task] = set()
         self._lost_subscription: bool = False
 
     @property
@@ -414,5 +414,5 @@ class ReolinkHost:
             for channel in channels:
                 async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
         except Exception as err:  # pylint: disable=broad-except
-            # In case handle_webhook was cancelled before the exception occured
+            # In case handle_webhook was cancelled before the exception occurred
             _LOGGER.exception(err)
