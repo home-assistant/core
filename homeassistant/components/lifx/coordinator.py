@@ -237,7 +237,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             methods.append(self.device.get_multizone_effect)
         elif is_legacy_multizone:
             methods.extend(self._async_build_color_zones_update_requests())
-            methods.extend(self.device.async_get_multizone_effect)
+            methods.extend(self.device.get_multizone_effect)
         if features["hev"]:
             methods.append(self.device.get_hev_cycle)
         if features["infrared"]:
