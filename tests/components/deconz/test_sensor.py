@@ -903,10 +903,7 @@ async def test_air_quality_sensor_6_in_1(
     data = {
         "sensors": {
             "1": {
-                "config": {
-                    "on": True,
-                    "reachable": True
-                    },
+                "config": {"on": True, "reachable": True},
                 "etag": "e1a406dbbe1438fa924007309ef46a01",
                 "lastseen": "2023-03-29T18:25Z",
                 "manufacturername": "_TZE200_dwcarsat",
@@ -923,27 +920,18 @@ async def test_air_quality_sensor_6_in_1(
                 "uniqueid": "00:00:00:00:00:00:00:00-01-0111",
             },
             "2": {
-                "config": {
-                    "on": True,
-                    "reachable": True
-                },
+                "config": {"on": True, "reachable": True},
                 "etag": "e1a406dbbe1438fa924007309ef46a02",
                 "lastseen": "2023-03-29T18:25Z",
                 "manufacturername": "_TZE200_dwcarsat",
                 "modelid": "TS0601",
                 "name": "Humidity 1",
-                "state": {
-                    "humidity": 5660,
-                    "lastupdated": "2023-03-29T19:05:41.507"
-                    },
+                "state": {"humidity": 5660, "lastupdated": "2023-03-29T19:05:41.507"},
                 "type": "ZHAHumidity",
                 "uniqueid": "00:00:00:00:00:00:00:00-02-0222",
             },
             "3": {
-                "config": {
-                    "on": True,
-                    "reachable": True
-                    },
+                "config": {"on": True, "reachable": True},
                 "etag": "e1a406dbbe1438fa924007309ef46a03",
                 "lastseen": "2023-03-29T18:25Z",
                 "manufacturername": "_TZE200_dwcarsat",
