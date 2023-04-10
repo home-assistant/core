@@ -1,6 +1,9 @@
 """Advantage Air parent entity class."""
 from typing import Any
 
+from advantage_air import ApiError
+
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -17,6 +20,21 @@ class AdvantageAirEntity(CoordinatorEntity):
         super().__init__(instance["coordinator"])
         self._attr_unique_id: str = self.coordinator.data["system"]["rid"]
 
+    def update_handle_factory(self, func):
+        """Return the provided API function wrapped.
+
+        Adds an error handler and coordinator refresh.
+        """
+
+        async def update_handle(*args):
+            try:
+                if await func(*args):
+                    await self.coordinator.async_refresh()
+            except ApiError as err:
+                raise HomeAssistantError(err) from err
+
+        return update_handle
+
 
 class AdvantageAirAcEntity(AdvantageAirEntity):
     """Parent class for Advantage Air AC Entities."""
@@ -24,7 +42,9 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
     def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
         """Initialize common aspects of an Advantage Air ac entity."""
         super().__init__(instance)
-        self.aircon = instance["aircon"]
+        self.async_update_ac = self.update_handle_factory(
+            instance["api"].aircon.async_update_ac
+        )
         self.ac_key: str = ac_key
         self._attr_unique_id += f"-{ac_key}"
 
@@ -47,6 +67,9 @@ class AdvantageAirZoneEntity(AdvantageAirAcEntity):
     def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize common aspects of an Advantage Air zone entity."""
         super().__init__(instance, ac_key)
+        self.async_update_zone = self.update_handle_factory(
+            instance["api"].aircon.async_update_zone
+        )
         self.zone_key: str = zone_key
         self._attr_unique_id += f"-{zone_key}"
 
@@ -61,7 +84,9 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
     def __init__(self, instance: dict[str, Any], thing: dict[str, Any]) -> None:
         """Initialize common aspects of an Advantage Air Things entity."""
         super().__init__(instance)
-        self.set = instance["things"]
+        self.async_update_value = self.update_handle_factory(
+            instance["api"].things.async_update_value
+        )
         self._id = thing["id"]
         self._attr_unique_id += f"-{self._id}"
 
@@ -85,8 +110,8 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the thing on."""
-        await self.set({self._id: {"id": self._id, "value": 100}})
+        await self.async_update_value(self._id, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the thing off."""
-        await self.set({self._id: {"id": self._id, "value": 0}})
+        await self.async_update_value(self._id, False)
