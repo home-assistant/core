@@ -235,6 +235,6 @@ async def async_multi_execute_lifx_with_retries(
             results.append(result)
 
     if failures:
-        raise asyncio.TimeoutError(" ,".join(failures))
+        raise asyncio.TimeoutError(", ".join(failures))
 
     return results
