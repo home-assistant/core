@@ -60,7 +60,7 @@ def create_async_httpx_client(
     hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
-    ssl_cipher_list: SslCipherList = SslCipherList.MODERN,
+    ssl_cipher_list: SslCipherList = SslCipherList.DEFAULT,
     **kwargs: Any,
 ) -> httpx.AsyncClient:
     """Create a new httpx.AsyncClient with kwargs, i.e. for cookies.

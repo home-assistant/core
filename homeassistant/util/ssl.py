@@ -12,6 +12,7 @@ from homeassistant.backports.enum import StrEnum
 class SslCipherList(StrEnum):
     """SSL cipher lists."""
 
+    DEFAULT = "default"
     INTERMEDIATE = "intermediate"
     MODERN = "modern"
 
@@ -62,7 +63,7 @@ SSL_CIPHER_LISTS = {
 
 @lru_cache
 def create_no_verify_ssl_context(
-    ssl_cipher_list: SslCipherList | None = None,
+    ssl_cipher_list: SslCipherList = SslCipherList.DEFAULT,
 ) -> ssl.SSLContext:
     """Return an SSL context that does not verify the server certificate.
 
@@ -80,7 +81,7 @@ def create_no_verify_ssl_context(
         # This only works for OpenSSL >= 1.0.0
         sslcontext.options |= ssl.OP_NO_COMPRESSION
     sslcontext.set_default_verify_paths()
-    if ssl_cipher_list is not None:
+    if ssl_cipher_list != SslCipherList.DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
 
     return sslcontext
@@ -88,7 +89,7 @@ def create_no_verify_ssl_context(
 
 @lru_cache
 def client_context(
-    ssl_cipher_list: SslCipherList | None = None,
+    ssl_cipher_list: SslCipherList = SslCipherList.DEFAULT,
 ) -> ssl.SSLContext:
     """Return an SSL context for making requests."""
 
@@ -100,21 +101,21 @@ def client_context(
     sslcontext = ssl.create_default_context(
         purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
     )
-    if ssl_cipher_list is not None:
+    if ssl_cipher_list != SslCipherList.DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
 
     return sslcontext
 
 
 def get_default_context(
-    ssl_cipher_list: SslCipherList | None = None,
+    ssl_cipher_list: SslCipherList = SslCipherList.DEFAULT,
 ) -> ssl.SSLContext:
     """Return the default SSL context."""
     return client_context(ssl_cipher_list)
 
 
 def get_default_no_verify_context(
-    ssl_cipher_list: SslCipherList | None = None,
+    ssl_cipher_list: SslCipherList = SslCipherList.DEFAULT,
 ) -> ssl.SSLContext:
     """Return the default SSL context that does not verify the server certificate."""
     return create_no_verify_ssl_context(ssl_cipher_list)
