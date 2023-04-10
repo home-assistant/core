@@ -1,5 +1,6 @@
 """Helper to create SSL contexts."""
 import contextlib
+from functools import lru_cache
 from os import environ
 import ssl
 
@@ -59,6 +60,7 @@ SSL_CIPHER_LISTS = {
 }
 
 
+@lru_cache
 def create_no_verify_ssl_context(
     ssl_cipher_list: SslCipherList = SslCipherList.MODERN,
 ) -> ssl.SSLContext:
@@ -83,6 +85,7 @@ def create_no_verify_ssl_context(
     return sslcontext
 
 
+@lru_cache
 def client_context(
     ssl_cipher_list: SslCipherList = SslCipherList.MODERN,
 ) -> ssl.SSLContext:
@@ -101,33 +104,18 @@ def client_context(
     return sslcontext
 
 
-# Create this only once and reuse it
-_DEFAULT_SSL_CONTEXT_MODERN = client_context(SslCipherList.MODERN)
-_DEFAULT_SSL_CONTEXT_INTERMEDIATE = client_context(SslCipherList.INTERMEDIATE)
-_DEFAULT_NO_VERIFY_SSL_CONTEXT_MODERN = create_no_verify_ssl_context(
-    SslCipherList.MODERN
-)
-_DEFAULT_NO_VERIFY_SSL_CONTEXT_INTERMEDIATE = create_no_verify_ssl_context(
-    SslCipherList.INTERMEDIATE
-)
-
-
 def get_default_context(
     ssl_cipher_list: SslCipherList = SslCipherList.MODERN,
 ) -> ssl.SSLContext:
     """Return the default SSL context."""
-    if ssl_cipher_list == SslCipherList.INTERMEDIATE:
-        return _DEFAULT_SSL_CONTEXT_INTERMEDIATE
-    return _DEFAULT_SSL_CONTEXT_MODERN
+    return client_context(ssl_cipher_list)
 
 
 def get_default_no_verify_context(
     ssl_cipher_list: SslCipherList = SslCipherList.MODERN,
 ) -> ssl.SSLContext:
     """Return the default SSL context that does not verify the server certificate."""
-    if ssl_cipher_list == SslCipherList.INTERMEDIATE:
-        return _DEFAULT_NO_VERIFY_SSL_CONTEXT_INTERMEDIATE
-    return _DEFAULT_NO_VERIFY_SSL_CONTEXT_MODERN
+    return create_no_verify_ssl_context(ssl_cipher_list)
 
 
 def server_context_modern() -> ssl.SSLContext:
