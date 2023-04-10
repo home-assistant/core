@@ -247,9 +247,7 @@ def get_significant_states_with_session(
             include_start_time_state = False
     start_time_ts = dt_util.utc_to_timestamp(start_time)
     end_time_ts = datetime_to_timestamp_or_none(end_time)
-    single_metadata_id: int | None = None
-    if len(metadata_ids) == 1:
-        single_metadata_id = metadata_ids[0]
+    single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
     stmt = lambda_stmt(
         lambda: _significant_states_stmt(
             start_time_ts,
