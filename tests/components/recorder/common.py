@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
+import importlib
+import sys
 import time
 from typing import Any, Literal, cast
 from unittest.mock import patch, sentinel
@@ -14,7 +18,7 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, get_instance, statistics
+from homeassistant.components.recorder import Recorder, core, get_instance, statistics
 from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
@@ -30,6 +34,7 @@ import homeassistant.util.dt as dt_util
 from . import db_schema_0
 
 DEFAULT_PURGE_TASKS = 3
+CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 
 
 @dataclass
@@ -367,3 +372,64 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
         if event_type not in event_types_objects:
             event_types_objects[event_type] = EventTypes(event_type=event_type)
         event.event_type_rel = event_types_objects[event_type]
+
+
+def create_engine_test_for_schema_version_postfix(
+    *args, schema_version_postfix: str, **kwargs
+):
+    """Test version of create_engine that initializes with old schema.
+
+    This simulates an existing db with the old schema.
+    """
+    schema_module = get_schema_module_path(schema_version_postfix)
+    importlib.import_module(schema_module)
+    old_db_schema = sys.modules[schema_module]
+    engine = create_engine(*args, **kwargs)
+    old_db_schema.Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        session.add(
+            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
+        )
+        session.add(
+            recorder.db_schema.SchemaChanges(
+                schema_version=old_db_schema.SCHEMA_VERSION
+            )
+        )
+        session.commit()
+    return engine
+
+
+def get_schema_module_path(schema_version_postfix: str) -> str:
+    """Return the path to the schema module."""
+    return f"tests.components.recorder.db_schema_{schema_version_postfix}"
+
+
+@contextmanager
+def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
+    """Fixture to initialize the db with the old schema."""
+    schema_module = get_schema_module_path(schema_version_postfix)
+    importlib.import_module(schema_module)
+    old_db_schema = sys.modules[schema_module]
+
+    with patch.object(recorder, "db_schema", old_db_schema), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+    ), patch.object(core, "StatesMeta", old_db_schema.StatesMeta), patch.object(
+        core, "EventTypes", old_db_schema.EventTypes
+    ), patch.object(
+        core, "EventData", old_db_schema.EventData
+    ), patch.object(
+        core, "States", old_db_schema.States
+    ), patch.object(
+        core, "Events", old_db_schema.Events
+    ), patch.object(
+        core, "StateAttributes", old_db_schema.StateAttributes
+    ), patch.object(
+        core, "EntityIDMigrationTask", core.RecorderTask
+    ), patch(
+        CREATE_ENGINE_TARGET,
+        new=partial(
+            create_engine_test_for_schema_version_postfix,
+            schema_version_postfix=schema_version_postfix,
+        ),
+    ):
+        yield
