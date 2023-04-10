@@ -28,10 +28,11 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from ... import recorder
-from ..db_schema import StateAttributes, States
+from ..db_schema import RecorderRuns, StateAttributes, States
 from ..filters import Filters
 from ..models import (
     LazyState,
+    datetime_to_timestamp_or_none,
     extract_metadata_ids,
     process_timestamp,
     row_to_compressed_state,
@@ -136,14 +137,14 @@ def get_significant_states(
 
 
 def _significant_states_stmt(
-    hass: HomeAssistant,
-    start_time: datetime,
-    end_time: datetime | None,
+    start_time_ts: float,
+    end_time_ts: float | None,
     metadata_ids: list[int],
     metadata_ids_in_significant_domains: list[int],
     significant_changes_only: bool,
     no_attributes: bool,
     include_start_time_state: bool,
+    run_start_ts: float | None,
 ) -> Select | CompoundSelect:
     """Query the database for significant state changes."""
     stmt = _stmt_and_join_attributes(
@@ -158,24 +159,23 @@ def _significant_states_stmt(
             | (States.last_changed_ts == States.last_updated_ts)
             | States.last_changed_ts.is_(None)
         )
-    stmt = stmt.filter(States.metadata_id.in_(metadata_ids))
-    start_time_ts = start_time.timestamp()
-    stmt = stmt.filter(States.last_updated_ts > start_time_ts)
-    if end_time:
-        end_time_ts = end_time.timestamp()
+    stmt = stmt.filter(States.metadata_id.in_(metadata_ids)).filter(
+        States.last_updated_ts > start_time_ts
+    )
+    if end_time_ts:
         stmt = stmt.filter(States.last_updated_ts < end_time_ts)
     if not no_attributes:
         stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
     stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
-    if not include_start_time_state:
+    if not include_start_time_state or not run_start_ts:
         return stmt
     return _select_from_subquery(
         union_all(
             _select_from_subquery(
                 _get_start_time_state_stmt(
-                    hass, start_time, metadata_ids, no_attributes
+                    run_start_ts, start_time_ts, metadata_ids, no_attributes
                 ).subquery(),
                 no_attributes,
             ),
@@ -230,15 +230,26 @@ def get_significant_states_with_session(
             if metadata_id is not None
             and split_entity_id(entity_id)[0] in SIGNIFICANT_DOMAINS
         ]
+    run_start_ts: float | None = None
+    if include_start_time_state:
+        run = recorder.get_instance(hass).recorder_runs_manager.get(start_time)
+        if not (
+            run_start_ts := _get_run_start_ts_from_run_for_utc_point_in_time(
+                run, start_time
+            )
+        ):
+            include_start_time_state = False
+    start_time_ts = dt_util.utc_to_timestamp(start_time)
+    end_time_ts = datetime_to_timestamp_or_none(end_time)
     stmt = _significant_states_stmt(
-        hass,
-        start_time,
-        end_time,
+        start_time_ts,
+        end_time_ts,
         metadata_ids,
         metadata_ids_in_significant_domains,
         significant_changes_only,
         no_attributes,
         include_start_time_state,
+        run_start_ts,
     )
     states = execute_stmt_lambda_element(session, stmt, None, end_time)
     return _sorted_states_to_dict(
@@ -284,28 +295,28 @@ def get_full_significant_states_with_session(
 
 
 def _state_changed_during_period_stmt(
-    hass: HomeAssistant,
-    start_time: datetime,
-    end_time: datetime | None,
+    start_time_ts: float,
+    end_time_ts: float | None,
     metadata_id: int,
     no_attributes: bool,
     descending: bool,
     limit: int | None,
-    include_start_time_state: bool | None = None,
+    include_start_time_state: bool,
+    run_start_ts: float | None,
 ) -> Select | CompoundSelect:
-    stmt = _stmt_and_join_attributes(no_attributes, include_last_changed=False)
-    start_time_ts = start_time.timestamp()
-    stmt = stmt.filter(
-        (
-            (States.last_changed_ts == States.last_updated_ts)
-            | States.last_changed_ts.is_(None)
+    stmt = (
+        _stmt_and_join_attributes(no_attributes, include_last_changed=False)
+        .filter(
+            (
+                (States.last_changed_ts == States.last_updated_ts)
+                | States.last_changed_ts.is_(None)
+            )
+            & (States.last_updated_ts > start_time_ts)
         )
-        & (States.last_updated_ts > start_time_ts)
+        .filter(States.metadata_id == metadata_id)
     )
-    if end_time:
-        end_time_ts = end_time.timestamp()
+    if end_time_ts:
         stmt = stmt.filter(States.last_updated_ts < end_time_ts)
-    stmt = stmt.filter(States.metadata_id == metadata_id)
     if not no_attributes:
         stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
@@ -316,13 +327,13 @@ def _state_changed_during_period_stmt(
         stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if limit:
         stmt = stmt.limit(limit)
-    if not include_start_time_state:
+    if not include_start_time_state or not run_start_ts:
         return stmt
     return _select_from_subquery(
         union_all(
             _select_from_subquery(
                 _get_start_time_state_stmt(
-                    hass, start_time, [metadata_id], no_attributes
+                    run_start_ts, start_time_ts, [metadata_id], no_attributes
                 ).subquery(),
                 no_attributes,
             ),
@@ -355,15 +366,26 @@ def state_changes_during_period(
         ):
             return {}
         entity_id_to_metadata_id: dict[str, int | None] = {entity_id: metadata_id}
+        run_start_ts: float | None = None
+        if include_start_time_state:
+            run = recorder.get_instance(hass).recorder_runs_manager.get(start_time)
+            if not (
+                run_start_ts := _get_run_start_ts_from_run_for_utc_point_in_time(
+                    run, start_time
+                )
+            ):
+                include_start_time_state = False
+        start_time_ts = dt_util.utc_to_timestamp(start_time)
+        end_time_ts = datetime_to_timestamp_or_none(end_time)
         stmt = _state_changed_during_period_stmt(
-            hass,
-            start_time,
-            end_time,
+            start_time_ts,
+            end_time_ts,
             metadata_id,
             no_attributes,
             descending,
             limit,
             include_start_time_state,
+            run_start_ts,
         )
         states = execute_stmt_lambda_element(session, stmt, None, end_time)
         return cast(
@@ -447,8 +469,8 @@ def get_last_state_changes(
 
 
 def _get_states_for_entities_stmt(
-    run_start: datetime,
-    utc_point_in_time: datetime,
+    run_start_ts: float,
+    epoch_time: float,
     metadata_ids: list[int],
     no_attributes: bool,
 ) -> Select:
@@ -456,8 +478,6 @@ def _get_states_for_entities_stmt(
     stmt = _stmt_and_join_attributes(no_attributes, include_last_changed=True)
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
-    run_start_ts = process_timestamp(run_start).timestamp()
-    utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
     stmt = stmt.join(
         (
             most_recent_states_for_entities_by_date := (
@@ -469,7 +489,7 @@ def _get_states_for_entities_stmt(
                 )
                 .filter(
                     (States.last_updated_ts >= run_start_ts)
-                    & (States.last_updated_ts < utc_point_in_time_ts)
+                    & (States.last_updated_ts < epoch_time)
                 )
                 .filter(States.metadata_id.in_(metadata_ids))
                 .group_by(States.metadata_id)
@@ -490,25 +510,31 @@ def _get_states_for_entities_stmt(
     return stmt
 
 
+def _get_run_start_ts_from_run_for_utc_point_in_time(
+    run: RecorderRuns | None, utc_point_in_time: datetime
+) -> float | None:
+    """Return the start time of a run."""
+    if (
+        run is not None
+        and (run_start := process_timestamp(run.start)) < utc_point_in_time
+    ):
+        return run_start.timestamp()
+    # History did not run before utc_point_in_time but we still
+    return None
+
+
 def _get_start_time_state_stmt(
-    hass: HomeAssistant,
-    utc_point_in_time: datetime,
+    run_start_ts: float,
+    epoch_time: float,
     metadata_ids: list[int],
     no_attributes: bool = False,
 ) -> Select:
     """Return the states at a specific point in time."""
-    run = recorder.get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
-    start_time: datetime | None = None
-    if run is None or (start_time := process_timestamp(run.start)) > utc_point_in_time:
-        # History did not run before utc_point_in_time but we still
-        # need to generate the query so the cache key is correct.
-        metadata_ids = [-1]
-    if start_time is None:
-        start_time = dt_util.utcnow()
+
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     return _get_states_for_entities_stmt(
-        start_time, utc_point_in_time, metadata_ids, no_attributes
+        run_start_ts, epoch_time, metadata_ids, no_attributes
     )
 
 
