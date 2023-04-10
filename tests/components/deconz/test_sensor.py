@@ -106,7 +106,7 @@ TEST_DATA = [
             "attributes": {
                 "friendly_name": "BOSCH Air quality sensor PPB",
                 "state_class": "measurement",
-                "unit_of_measurement": "ppb",
+                "unit_of_measurement": CONCENTRATION_PARTS_PER_BILLION,
             },
             "websocket_event": {"state": {"airqualityppb": 1000}},
             "next_state": "1000",
