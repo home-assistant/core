@@ -10,6 +10,7 @@ from typing import Any, cast
 import ciso8601
 from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
+    CHAR,
     JSON,
     BigInteger,
     Boolean,
@@ -28,13 +29,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.interfaces import Dialect
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
+from sqlalchemy.types import TypeDecorator
 from typing_extensions import Self
 
 from homeassistant.const import (
-    MAX_LENGTH_EVENT_CONTEXT_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
-    MAX_LENGTH_EVENT_ORIGIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
 )
@@ -135,6 +136,28 @@ _DEFAULT_TABLE_ARGS = {
 }
 
 
+class UnusedDateTime(DateTime):
+    """An unused column type that behaves like a datetime."""
+
+
+class Unused(CHAR):
+    """An unused column type that behaves like a string."""
+
+
+@compiles(UnusedDateTime, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
+@compiles(Unused, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
+def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
+    """Compile UnusedDateTime and Unused as CHAR(0) on mysql, mariadb, and sqlite."""
+    return "CHAR(0)"  # Uses 1 byte on MySQL (no change on sqlite)
+
+
+@compiles(UnusedDateTime, "postgresql")  # type: ignore[misc,no-untyped-call]
+@compiles(Unused, "postgresql")  # type: ignore[misc,no-untyped-call]
+def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
+    """Compile UnusedDateTime and Unused as CHAR(1) on postgresql."""
+    return "CHAR(1)"  # Uses 1 byte
+
+
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
@@ -165,6 +188,8 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
+UNUSED_LEGACY_COLUMN = Unused(0)
+UNUSED_LEGACY_DATETIME_COLUMN = UnusedDateTime(timezone=True)
 DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
@@ -206,29 +231,15 @@ class Events(Base):
     )
     __tablename__ = TABLE_EVENTS
     event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_EVENT_TYPE)
-    )  # no longer used
-    event_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
-    )
-    origin: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_ORIGIN)
-    )  # no longer used for new rows
+    event_type: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    event_data: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    origin: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     origin_idx: Mapped[int | None] = mapped_column(SmallInteger)
-    time_fired: Mapped[datetime | None] = mapped_column(
-        DATETIME_TYPE
-    )  # no longer used for new rows
+    time_fired: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     time_fired_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
-    context_id: Mapped[str | None] = mapped_column(  # no longer used
-        String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
-    )
-    context_user_id: Mapped[str | None] = mapped_column(  # no longer used
-        String(MAX_LENGTH_EVENT_CONTEXT_ID)
-    )
-    context_parent_id: Mapped[str | None] = mapped_column(  # no longer used
-        String(MAX_LENGTH_EVENT_CONTEXT_ID)
-    )
+    context_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    context_user_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    context_parent_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     data_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("event_data.data_id"), index=True
     )
@@ -400,21 +411,13 @@ class States(Base):
     )
     __tablename__ = TABLE_STATES
     state_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    entity_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_STATE_ENTITY_ID)
-    )  # no longer used for new rows
+    entity_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
-    attributes: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
-    )  # no longer used for new rows
-    event_id: Mapped[int | None] = mapped_column(Integer)  # no longer used for new rows
-    last_changed: Mapped[datetime | None] = mapped_column(
-        DATETIME_TYPE
-    )  # no longer used for new rows
+    attributes: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    event_id: Mapped[int | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    last_changed: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_changed_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
-    last_updated: Mapped[datetime | None] = mapped_column(
-        DATETIME_TYPE
-    )  # no longer used for new rows
+    last_updated: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_updated_ts: Mapped[float | None] = mapped_column(
         TIMESTAMP_TYPE, default=time.time, index=True
     )
@@ -424,15 +427,9 @@ class States(Base):
     attributes_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
     )
-    context_id: Mapped[str | None] = mapped_column(  # no longer used
-        String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
-    )
-    context_user_id: Mapped[str | None] = mapped_column(  # no longer used
-        String(MAX_LENGTH_EVENT_CONTEXT_ID)
-    )
-    context_parent_id: Mapped[str | None] = mapped_column(  # no longer used
-        String(MAX_LENGTH_EVENT_CONTEXT_ID)
-    )
+    context_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    context_user_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    context_parent_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     origin_idx: Mapped[int | None] = mapped_column(
         SmallInteger
     )  # 0 is local, 1 is remote
@@ -636,20 +633,18 @@ class StatisticsBase:
     """Statistics base class."""
 
     id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    created: Mapped[datetime | None] = mapped_column(DATETIME_TYPE)  # No longer used
+    created: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     created_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, default=time.time)
     metadata_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
     )
-    start: Mapped[datetime | None] = mapped_column(
-        DATETIME_TYPE, index=True
-    )  # No longer used
+    start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     start_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     min: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     max: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
-    last_reset: Mapped[datetime | None] = mapped_column(DATETIME_TYPE)
+    last_reset: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_reset_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
     state: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     sum: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
