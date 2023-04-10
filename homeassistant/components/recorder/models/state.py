@@ -51,6 +51,7 @@ class LazyState(State):
         self,
         row: Row,
         attr_cache: dict[str, dict[str, Any]],
+        start_time_ts: float | None,
         entity_id: str | None = None,
     ) -> None:
         """Init the lazy state."""
@@ -58,7 +59,7 @@ class LazyState(State):
         self.entity_id = entity_id or self._row.entity_id
         self.state = self._row.state or ""
         self._attributes: dict[str, Any] | None = None
-        self._last_updated_ts: float | None = self._row.last_updated_ts
+        self._last_updated_ts: float | None = self._row.last_updated_ts or start_time_ts
         self._last_changed_ts: float | None = (
             getattr(self._row, "last_changed_ts", None) or self._last_updated_ts
         )
@@ -135,6 +136,7 @@ class LazyState(State):
 def row_to_compressed_state(
     row: Row,
     attr_cache: dict[str, dict[str, Any]],
+    start_time_ts: float | None,
     entity_id: str | None = None,
 ) -> dict[str, Any]:
     """Convert a database row to a compressed state schema 31 and later."""
@@ -142,7 +144,7 @@ def row_to_compressed_state(
         COMPRESSED_STATE_STATE: row.state,
         COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
     }
-    row_last_updated_ts: float = row.last_updated_ts
+    row_last_updated_ts: float = row.last_updated_ts or start_time_ts
     comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
     if (
         (row_last_changed_ts := getattr(row, "last_changed_ts", None))
