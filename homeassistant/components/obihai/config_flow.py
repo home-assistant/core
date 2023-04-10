@@ -66,7 +66,9 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                ip = gethostbyname(user_input[CONF_HOST])
+                ip = await self.hass.async_add_executor_job(
+                    gethostbyname, user_input[CONF_HOST]
+                )
             except gaierror:
                 errors["base"] = "cannot_connect"
 
@@ -139,7 +141,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by importing a config."""
 
         try:
-            _ = gethostbyname(config[CONF_HOST])
+            _ = await self.hass.async_add_executor_job(gethostbyname, config[CONF_HOST])
         except gaierror:
             return self.async_abort(reason="cannot_connect")
 

@@ -346,7 +346,7 @@ class SonosDiscoveryManager:
             return soco.visible_zones
 
         for host in self.hosts:
-            ip_addr = socket.gethostbyname(host)
+            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
             soco = SoCo(ip_addr)
             try:
                 visible_zones = await self.hass.async_add_executor_job(
@@ -382,7 +382,7 @@ class SonosDiscoveryManager:
                 break
 
         for host in self.hosts.copy():
-            ip_addr = socket.gethostbyname(host)
+            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
             if self.is_device_invisible(ip_addr):
                 _LOGGER.debug("Discarding %s from manual hosts", ip_addr)
                 self.hosts.discard(ip_addr)
