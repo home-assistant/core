@@ -143,6 +143,11 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
 
+# For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
+# for sqlite and postgresql we use a bigint
+UINT_32_TYPE = BigInteger().with_variant(
+    mysql.INTEGER(unsigned=True), "mysql", "mariadb"  # type: ignore[no-untyped-call]
+)
 JSON_VARIANT_CAST = Text().with_variant(
     postgresql.JSON(none_as_null=True), "postgresql"  # type: ignore[no-untyped-call]
 )
@@ -309,7 +314,7 @@ class EventData(Base):
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_EVENT_DATA
     data_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
+    hash: Mapped[int | None] = mapped_column(UINT_32_TYPE, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_data: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
@@ -542,7 +547,7 @@ class StateAttributes(Base):
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_STATE_ATTRIBUTES
     attributes_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
+    hash: Mapped[int | None] = mapped_column(UINT_32_TYPE, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
     shared_attrs: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
