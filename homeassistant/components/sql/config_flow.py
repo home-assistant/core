@@ -23,6 +23,32 @@ from .util import resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
 
+OPTIONS_SCHEMA: vol.Schema = vol.Schema(
+    {
+        vol.Optional(
+            CONF_DB_URL,
+        ): selector.TextSelector(),
+        vol.Required(
+            CONF_COLUMN_NAME,
+        ): selector.TextSelector(),
+        vol.Required(
+            CONF_QUERY,
+        ): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
+        vol.Optional(
+            CONF_UNIT_OF_MEASUREMENT,
+        ): selector.TextSelector(),
+        vol.Optional(
+            CONF_VALUE_TEMPLATE,
+        ): selector.TemplateSelector(),
+    }
+)
+
+CONFIG_SCHEMA: vol.Schema = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default="Select SQL Query"): selector.TextSelector(),
+    }
+).extend(OPTIONS_SCHEMA.schema)
+
 
 def validate_sql_select(value: str) -> str | None:
     """Validate that value is a SQL SELECT query."""
@@ -54,53 +80,6 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
         sess.close()
 
     return True
-
-
-def _generate_schema_config(current_data: dict[str, Any]) -> vol.Schema:
-    """Generate schema for config flow."""
-    schema: vol.Schema = vol.Schema(
-        {
-            vol.Required(
-                CONF_NAME,
-                description={
-                    "suggested_value": current_data.get(CONF_NAME, "Select SQL Query")
-                },
-            ): selector.TextSelector(),
-        }
-    )
-    return schema.extend(_generate_schema_options(current_data).schema)
-
-
-def _generate_schema_options(
-    current_data: MappingProxyType[str, Any] | dict[str, Any]
-) -> vol.Schema:
-    """Generate schema for options flow."""
-    return vol.Schema(
-        {
-            vol.Optional(
-                CONF_DB_URL,
-                description={"suggested_value": current_data.get(CONF_DB_URL)},
-            ): selector.TextSelector(),
-            vol.Required(
-                CONF_COLUMN_NAME,
-                description={"suggested_value": current_data.get(CONF_COLUMN_NAME)},
-            ): selector.TextSelector(),
-            vol.Required(
-                CONF_QUERY,
-                description={"suggested_value": current_data.get(CONF_QUERY)},
-            ): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
-            vol.Optional(
-                CONF_UNIT_OF_MEASUREMENT,
-                description={
-                    "suggested_value": current_data.get(CONF_UNIT_OF_MEASUREMENT)
-                },
-            ): selector.TextSelector(),
-            vol.Optional(
-                CONF_VALUE_TEMPLATE,
-                description={"suggested_value": current_data.get(CONF_VALUE_TEMPLATE)},
-            ): selector.TemplateSelector(),
-        }
-    )
 
 
 class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -166,7 +145,9 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_generate_schema_config(current_data),
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, current_data
+            ),
             errors=errors,
         )
 
@@ -218,6 +199,8 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=_generate_schema_options(current_data),
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, current_data
+            ),
             errors=errors,
         )
