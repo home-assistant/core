@@ -98,7 +98,6 @@ async def async_attach_trigger(
             description = "time change or manual update via template"
 
         template_variables = {
-            **(trigger_info["variables"] or {}),
             "platform": platform_type,
             "entity_id": entity_id,
             "from_state": from_s,
@@ -126,7 +125,13 @@ async def async_attach_trigger(
 
         try:
             period = cv.positive_time_period(
-                template.render_complex(time_delta, {"trigger": template_variables})
+                template.render_complex(
+                    time_delta,
+                    {
+                        **(trigger_info["variables"] or {}),
+                        "trigger": template_variables,
+                    },
+                )
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
