@@ -73,6 +73,7 @@ class Event:
     """Represents a ONVIF event."""
 
     uid: str
+    event_id: str
     name: str
     platform: str
     device_class: str | None = None
@@ -80,6 +81,3 @@ class Event:
     value: Any = None
     entity_category: EntityCategory | None = None
     enabled: bool = True
-
-    def get_event_id(self) -> str:
-        return re.sub('\W+', '_', self.name.lower())
