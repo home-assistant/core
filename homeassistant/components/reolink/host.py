@@ -370,7 +370,7 @@ class ReolinkHost:
             self._handle_webhook(hass, webhook_id, request)
         )
         asyncio.shield(shielded_task)
-        # To protect agains garbage collection
+        # To protect against garbage collection
         self._webhook_tasks.add(shielded_task)
         shielded_task.add_done_callback(self._webhook_tasks.discard)
         _LOGGER.debug("Webhook '%s' called", webhook_id)
