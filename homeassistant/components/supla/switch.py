@@ -10,7 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaChannel
+from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS
+from .entity import SuplaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ async def async_setup_platform(
         server_name = device["server_name"]
 
         entities.append(
-            SuplaSwitch(
+            SuplaSwitchEntity(
                 device,
                 hass.data[DOMAIN][SUPLA_SERVERS][server_name],
                 hass.data[DOMAIN][SUPLA_COORDINATORS][server_name],
@@ -42,7 +43,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class SuplaSwitch(SuplaChannel, SwitchEntity):
+class SuplaSwitchEntity(SuplaEntity, SwitchEntity):
     """Representation of a Supla Switch."""
 
     async def async_turn_on(self, **kwargs: Any) -> None:

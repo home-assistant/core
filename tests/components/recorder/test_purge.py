@@ -10,7 +10,7 @@ from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import Recorder, migration
 from homeassistant.components.recorder.const import (
     SQLITE_MAX_BIND_VARS,
     SupportedDialect,
@@ -1726,6 +1726,18 @@ async def test_purge_can_mix_legacy_and_new_format(
 ) -> None:
     """Test purging with legacy a new events."""
     instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    # New databases are no longer created with the legacy events index
+    assert instance.use_legacy_events_index is False
+
+    def _recreate_legacy_events_index():
+        """Recreate the legacy events index since its no longer created on new instances."""
+        migration._create_index(instance.get_session, "states", "ix_states_event_id")
+        instance.use_legacy_events_index = True
+
+    await instance.async_add_executor_job(_recreate_legacy_events_index)
+    assert instance.use_legacy_events_index is True
+
     utcnow = dt_util.utcnow()
     eleven_days_ago = utcnow - timedelta(days=11)
     with session_scope(hass=hass) as session:
@@ -2053,7 +2065,11 @@ async def test_purge_entities_keep_days(
     await async_recorder_block_till_done(hass)
 
     states = await instance.async_add_executor_job(
-        get_significant_states, hass, one_month_ago
+        get_significant_states,
+        hass,
+        one_month_ago,
+        None,
+        ["sensor.keep", "sensor.purge"],
     )
     assert len(states["sensor.keep"]) == 2
     assert len(states["sensor.purge"]) == 3
@@ -2070,7 +2086,11 @@ async def test_purge_entities_keep_days(
     await async_wait_purge_done(hass)
 
     states = await instance.async_add_executor_job(
-        get_significant_states, hass, one_month_ago
+        get_significant_states,
+        hass,
+        one_month_ago,
+        None,
+        ["sensor.keep", "sensor.purge"],
     )
     assert len(states["sensor.keep"]) == 2
     assert len(states["sensor.purge"]) == 1
@@ -2086,7 +2106,11 @@ async def test_purge_entities_keep_days(
     await async_wait_purge_done(hass)
 
     states = await instance.async_add_executor_job(
-        get_significant_states, hass, one_month_ago
+        get_significant_states,
+        hass,
+        one_month_ago,
+        None,
+        ["sensor.keep", "sensor.purge"],
     )
     assert len(states["sensor.keep"]) == 2
     assert "sensor.purge" not in states

@@ -66,10 +66,11 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 from .common import (
     async_block_recorder,
@@ -825,6 +826,59 @@ def test_saving_state_with_oversized_attributes(
     assert states[1].attributes == {}
 
 
+def test_saving_event_with_oversized_data(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test saving events is limited to 32KiB of JSON encoded data."""
+    hass = hass_recorder()
+    massive_dict = {"a": "b" * 32768}
+    event_data = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.bus.fire("test_event", event_data)
+    hass.bus.fire("test_event_too_big", massive_dict)
+    wait_recording_done(hass)
+    events = {}
+
+    with session_scope(hass=hass) as session:
+        for _, data, event_type in (
+            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+            .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
+        ):
+            events[event_type] = data
+
+    assert "test_event_too_big" in caplog.text
+
+    assert len(events) == 2
+    assert json_loads(events["test_event"]) == event_data
+    assert json_loads(events["test_event_too_big"]) == {}
+
+
+def test_saving_event_invalid_context_ulid(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we handle invalid manually injected context ids."""
+    hass = hass_recorder()
+    event_data = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.bus.fire("test_event", event_data, context=Context(id="invalid"))
+    wait_recording_done(hass)
+    events = {}
+
+    with session_scope(hass=hass) as session:
+        for _, data, event_type in (
+            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+            .where(EventTypes.event_type.in_(["test_event"]))
+        ):
+            events[event_type] = data
+
+    assert "invalid" in caplog.text
+
+    assert len(events) == 1
+    assert json_loads(events["test_event"]) == event_data
+
+
 def test_recorder_setup_failure(hass: HomeAssistant) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
@@ -1551,7 +1605,7 @@ async def test_database_corruption_while_running(
     await hass.async_block_till_done()
     caplog.clear()
 
-    original_start_time = get_instance(hass).run_history.recording_start
+    original_start_time = get_instance(hass).recorder_runs_manager.recording_start
 
     hass.states.async_set("test.lost", "on", {})
 
@@ -1599,7 +1653,7 @@ async def test_database_corruption_while_running(
     assert state.entity_id == "test.two"
     assert state.state == "on"
 
-    new_start_time = get_instance(hass).run_history.recording_start
+    new_start_time = get_instance(hass).recorder_runs_manager.recording_start
     assert original_start_time < new_start_time
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -2112,10 +2166,15 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
     assert connect_params[0]["charset"] == "utf8mb4"
 
 
+@pytest.mark.parametrize("core_state", [CoreState.starting, CoreState.running])
 async def test_excluding_attributes_by_integration(
-    recorder_mock: Recorder, hass: HomeAssistant, entity_registry: er.EntityRegistry
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    core_state: CoreState,
 ) -> None:
     """Test that an integration's recorder platform can exclude attributes."""
+    hass.state = core_state
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "excluded": 10}
     mock_platform(
@@ -2131,6 +2190,7 @@ async def test_excluding_attributes_by_integration(
     platform = MockEntityPlatform(hass, platform_name="fake_integration")
     entity_platform = MockEntity(entity_id=entity_id, extra_state_attributes=attributes)
     await platform.async_add_entities([entity_platform])
+    await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
 

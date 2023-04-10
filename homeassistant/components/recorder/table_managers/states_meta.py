@@ -144,3 +144,20 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         """
         for entity_id in entity_ids:
             self._id_map.pop(entity_id, None)
+
+    def update_metadata(
+        self,
+        session: Session,
+        entity_id: str,
+        new_entity_id: str,
+    ) -> bool:
+        """Update states metadata for an entity_id."""
+        if self.get(new_entity_id, session, True) is not None:
+            # If the new entity id already exists we have
+            # a collision and should not update.
+            return False
+        session.query(StatesMeta).filter(StatesMeta.entity_id == entity_id).update(
+            {StatesMeta.entity_id: new_entity_id}
+        )
+        self._id_map.pop(entity_id, None)
+        return True

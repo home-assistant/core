@@ -1,7 +1,8 @@
 """Test STT component setup."""
-from asyncio import StreamReader
+from collections.abc import AsyncIterable
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock
+from pathlib import Path
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -20,7 +21,8 @@ from homeassistant.components.stt import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_platform
+from .common import mock_stt_platform
+
 from tests.typing import ClientSessionGenerator
 
 
@@ -31,7 +33,7 @@ class MockProvider(Provider):
 
     def __init__(self) -> None:
         """Init test provider."""
-        self.calls = []
+        self.calls: list[tuple[SpeechMetadata, AsyncIterable[bytes]]] = []
 
     @property
     def supported_languages(self) -> list[str]:
@@ -64,7 +66,7 @@ class MockProvider(Provider):
         return [AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream."""
         self.calls.append((metadata, stream))
@@ -81,10 +83,15 @@ def mock_provider() -> MockProvider:
 
 
 @pytest.fixture(autouse=True)
-async def mock_setup(hass: HomeAssistant, mock_provider: MockProvider) -> None:
+async def mock_setup(
+    hass: HomeAssistant, tmp_path: Path, mock_provider: MockProvider
+) -> None:
     """Set up a test provider."""
-    mock_platform(
-        hass, "test.stt", Mock(async_get_engine=AsyncMock(return_value=mock_provider))
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        "test",
+        async_get_engine=AsyncMock(return_value=mock_provider),
     )
     assert await async_setup_component(hass, "stt", {"stt": {"platform": "test"}})
 

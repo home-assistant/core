@@ -130,6 +130,11 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:fritzbox:1",
         },
     ],
+    "frontier_silicon": [
+        {
+            "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1",
+        },
+    ],
     "harmony": [
         {
             "deviceType": "urn:myharmony-com:device:harmony:1",
@@ -299,6 +304,12 @@ SSDP = {
         },
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
+        },
+        {
+            "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+        },
+        {
+            "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
         },
     ],
     "webostv": [

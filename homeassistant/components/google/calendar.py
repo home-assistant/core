@@ -24,6 +24,7 @@ from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
     EVENT_END,
+    EVENT_LOCATION,
     EVENT_RRULE,
     EVENT_START,
     EVENT_SUMMARY,
@@ -282,8 +283,8 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
                 "Unable to get events: Sync from server has not completed"
             )
         return self.data.overlapping(
-            dt_util.as_local(start_date),
-            dt_util.as_local(end_date),
+            start_date,
+            end_date,
         )
 
     @property
@@ -509,6 +510,8 @@ class GoogleCalendarEntity(
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
             }
         )
+        if location := kwargs.get(EVENT_LOCATION):
+            event.location = location
         if rrule := kwargs.get(EVENT_RRULE):
             event.recurrence = [f"{RRULE_PREFIX}{rrule}"]
 
@@ -595,17 +598,20 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
     if start is None or end is None:
         raise ValueError("Missing required fields to set start or end date/datetime")
 
+    event = Event(
+        summary=call.data[EVENT_SUMMARY],
+        description=call.data[EVENT_DESCRIPTION],
+        start=start,
+        end=end,
+    )
+    if location := call.data.get(EVENT_LOCATION):
+        event.location = location
     try:
         await cast(
             CalendarSyncUpdateCoordinator, entity.coordinator
         ).sync.api.async_create_event(
             entity.calendar_id,
-            Event(
-                summary=call.data[EVENT_SUMMARY],
-                description=call.data[EVENT_DESCRIPTION],
-                start=start,
-                end=end,
-            ),
+            event,
         )
     except ApiException as err:
         raise HomeAssistantError(str(err)) from err

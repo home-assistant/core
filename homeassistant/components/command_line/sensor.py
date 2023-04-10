@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -30,14 +29,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import (
-    TEMPLATE_SENSOR_BASE_SCHEMA,
-    TemplateSensor,
-)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import check_output_or_log
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .utils import check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,10 +67,6 @@ async def async_setup_platform(
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    sensor_config = vol.Schema(
-        TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
-    )(config)
-
     name: str = config[CONF_NAME]
     command: str = config[CONF_COMMAND]
     unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -90,8 +81,6 @@ async def async_setup_platform(
     async_add_entities(
         [
             CommandSensor(
-                hass,
-                sensor_config,
                 data,
                 name,
                 unit,
@@ -104,13 +93,11 @@ async def async_setup_platform(
     )
 
 
-class CommandSensor(TemplateSensor, SensorEntity):
+class CommandSensor(SensorEntity):
     """Representation of a sensor that is using shell commands."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        config: ConfigType,
         data: CommandSensorData,
         name: str,
         unit_of_measurement: str | None,
@@ -119,18 +106,14 @@ class CommandSensor(TemplateSensor, SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        TemplateSensor.__init__(
-            self,
-            hass,
-            config=config,
-            fallback_name=name,
-            unique_id=unique_id,
-        )
+        self._attr_name = name
         self.data = data
         self._attr_extra_state_attributes = {}
         self._json_attributes = json_attributes
         self._attr_native_value = None
         self._value_template = value_template
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_unique_id = unique_id
 
     async def async_update(self) -> None:
         """Get the latest data and updates the state."""
@@ -154,14 +137,16 @@ class CommandSensor(TemplateSensor, SensorEntity):
                     _LOGGER.warning("Unable to parse output as JSON: %s", value)
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
+            if self._value_template is None:
+                self._attr_native_value = None
+                return
 
-        if value is None:
-            value = STATE_UNKNOWN
-        elif self._value_template is not None:
-            self._attr_native_value = await self.hass.async_add_executor_job(
-                self._value_template.render_with_possible_json_value,
-                value,
-                STATE_UNKNOWN,
+        if self._value_template is not None:
+            self._attr_native_value = (
+                self._value_template.async_render_with_possible_json_value(
+                    value,
+                    None,
+                )
             )
         else:
             self._attr_native_value = value

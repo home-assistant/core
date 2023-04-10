@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from xml.etree.ElementTree import ParseError
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
@@ -44,14 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_CONNECTIONS: fritz,
     }
 
-    try:
-        await hass.async_add_executor_job(fritz.update_templates)
-    except ParseError:
-        LOGGER.debug("Disable smarthome templates")
-        has_templates = False
-    else:
-        LOGGER.debug("Enable smarthome templates")
-        has_templates = True
+    has_templates = await hass.async_add_executor_job(fritz.has_templates)
+    LOGGER.debug("enable smarthome templates: %s", has_templates)
 
     coordinator = FritzboxDataUpdateCoordinator(hass, entry, has_templates)
 
@@ -120,8 +113,8 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
 
         self.ain = ain
         if entity_description is not None:
+            self._attr_has_entity_name = True
             self.entity_description = entity_description
-            self._attr_name = f"{self.data.name} {entity_description.name}"
             self._attr_unique_id = f"{ain}_{entity_description.key}"
         else:
             self._attr_name = self.data.name

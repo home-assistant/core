@@ -26,17 +26,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    ATTR_EXTERNAL_ID,
+    DEFAULT_RADIUS_IN_KM,
+    DEFAULT_SCAN_INTERVAL,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_UPDATE_ENTITY,
+    SOURCE,
+)
 from .manager import GeoJsonFeedEntityManager
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_EXTERNAL_ID = "external_id"
-
-DEFAULT_RADIUS_IN_KM = 20.0
-
-SCAN_INTERVAL = timedelta(minutes=5)
-
-SOURCE = "geo_json_events"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -56,7 +56,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the GeoJSON Events platform."""
     url: str = config[CONF_URL]
-    scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinates: tuple[float, float] = (
         config.get(CONF_LATITUDE, hass.config.latitude),
         config.get(CONF_LONGITUDE, hass.config.longitude),
@@ -106,12 +106,12 @@ class GeoJsonLocationEvent(GeolocationEvent):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
-            f"geo_json_events_delete_{self._external_id}",
+            SIGNAL_DELETE_ENTITY.format(self._external_id),
             self._delete_callback,
         )
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
-            f"geo_json_events_update_{self._external_id}",
+            SIGNAL_UPDATE_ENTITY.format(self._external_id),
             self._update_callback,
         )
 

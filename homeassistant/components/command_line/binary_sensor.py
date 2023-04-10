@@ -25,10 +25,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import (
-    TEMPLATE_ENTITY_BASE_SCHEMA,
-    TemplateEntity,
-)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
@@ -65,10 +61,6 @@ async def async_setup_platform(
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    binary_sensor_config = vol.Schema(
-        TEMPLATE_ENTITY_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
-    )(config)
-
     name: str = config.get(CONF_NAME, DEFAULT_NAME)
     command: str = config[CONF_COMMAND]
     payload_off: str = config[CONF_PAYLOAD_OFF]
@@ -84,8 +76,6 @@ async def async_setup_platform(
     async_add_entities(
         [
             CommandBinarySensor(
-                hass,
-                binary_sensor_config,
                 data,
                 name,
                 device_class,
@@ -99,13 +89,11 @@ async def async_setup_platform(
     )
 
 
-class CommandBinarySensor(TemplateEntity, BinarySensorEntity):
+class CommandBinarySensor(BinarySensorEntity):
     """Representation of a command line binary sensor."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        config: ConfigType,
         data: CommandSensorData,
         name: str,
         device_class: BinarySensorDeviceClass | None,
@@ -115,19 +103,14 @@ class CommandBinarySensor(TemplateEntity, BinarySensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Command line binary sensor."""
-        TemplateEntity.__init__(
-            self,
-            hass,
-            config=config,
-            fallback_name=name,
-            unique_id=unique_id,
-        )
         self.data = data
+        self._attr_name = name
         self._attr_device_class = device_class
         self._attr_is_on = None
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
+        self._attr_unique_id = unique_id
 
     async def async_update(self) -> None:
         """Get the latest data and updates the state."""
@@ -135,9 +118,10 @@ class CommandBinarySensor(TemplateEntity, BinarySensorEntity):
         value = self.data.value
 
         if self._value_template is not None:
-            value = await self.hass.async_add_executor_job(
-                self._value_template.render_with_possible_json_value, value, False
+            value = self._value_template.async_render_with_possible_json_value(
+                value, None
             )
+        self._attr_is_on = None
         if value == self._payload_on:
             self._attr_is_on = True
         elif value == self._payload_off:
