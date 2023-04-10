@@ -36,6 +36,8 @@ from .const import (
     DEFAULT_ATTEMPTS,
     DOMAIN,
     IDENTIFY_WAVEFORM,
+    MAX_ATTEMPTS_PER_UPDATE_REQUEST_MESSAGE,
+    MAX_UPDATE_TIME,
     MESSAGE_RETRIES,
     MESSAGE_TIMEOUT,
     OVERALL_TIMEOUT,
@@ -52,7 +54,6 @@ from .util import (
 )
 
 LIGHT_UPDATE_INTERVAL = 10
-SENSOR_UPDATE_INTERVAL = 30
 REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
 RSSI_DBM_FW = AwesomeVersion("2.77")
@@ -243,7 +244,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             methods.append(self.device.get_infrared)
 
         responses = await async_multi_execute_lifx_with_retries(
-            methods, DEFAULT_ATTEMPTS, OVERALL_TIMEOUT
+            methods, MAX_ATTEMPTS_PER_UPDATE_REQUEST_MESSAGE, MAX_UPDATE_TIME
         )
         # device.mac_addr is not the mac_address, its the serial number
         if device.mac_addr == TARGET_ANY:
