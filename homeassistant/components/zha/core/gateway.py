@@ -64,6 +64,7 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
+    SIGNAL_ZHA_ENTITIES_INITIALIZED,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -292,6 +293,7 @@ class ZHAGateway:
                     if dev.is_mains_powered
                 )
             )
+            async_dispatcher_send(self._hass, SIGNAL_ZHA_ENTITIES_INITIALIZED)
 
         # background the fetching of state for mains powered devices
         self.config_entry.async_create_background_task(
@@ -666,7 +668,8 @@ class ZHAGateway:
             },
         )
         await zha_device.async_initialize(from_cache=False)
-        async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
+        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
+        async_dispatcher_send(self._hass, SIGNAL_ZHA_ENTITIES_INITIALIZED)
 
     async def _async_device_rejoined(self, zha_device: ZHADevice) -> None:
         _LOGGER.debug(

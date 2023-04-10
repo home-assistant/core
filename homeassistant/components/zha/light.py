@@ -50,6 +50,7 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
+    SIGNAL_ZHA_ENTITIES_INITIALIZED,
     ZHA_OPTIONS,
 )
 from .core.helpers import LogMixin, async_get_zha_config_value, get_zha_data
@@ -784,9 +785,11 @@ class Light(BaseLight, ZhaEntity):
             self.async_accept_signal(
                 self._level_cluster_handler, SIGNAL_SET_LEVEL, self.set_level
             )
-        refresh_interval = random.randint(*(x * 60 for x in self._REFRESH_INTERVAL))
-        self._cancel_refresh_handle = async_track_time_interval(
-            self.hass, self._refresh, timedelta(seconds=refresh_interval)
+        self.async_accept_signal(
+            None,
+            SIGNAL_ZHA_ENTITIES_INITIALIZED,
+            self.async_start_polling,
+            signal_override=True,
         )
         self.async_accept_signal(
             None,
@@ -832,6 +835,14 @@ class Light(BaseLight, ZhaEntity):
             SIGNAL_LIGHT_GROUP_ASSUME_GROUP_STATE,
             self._assume_group_state,
             signal_override=True,
+        )
+
+    @callback
+    def async_start_polling(self) -> None:
+        """Start polling this light at a randomized interval."""
+        refresh_interval = random.randint(*(x * 60 for x in self._REFRESH_INTERVAL))
+        self._cancel_refresh_handle = async_track_time_interval(
+            self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
 
     async def async_will_remove_from_hass(self) -> None:

@@ -1,9 +1,12 @@
 """Sensors on Zigbee Home Automation networks."""
 from __future__ import annotations
 
+from datetime import timedelta
 import enum
 import functools
 import numbers
+import random
+import sys
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
@@ -37,9 +40,10 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
 
 from .core import discovery
@@ -59,6 +63,7 @@ from .core.const import (
     CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
+    SIGNAL_ZHA_ENTITIES_INITIALIZED,
 )
 from .core.helpers import get_zha_data
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
@@ -185,6 +190,54 @@ class Sensor(ZhaEntity, SensorEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
+class PollableSensor(Sensor):
+    """Base ZHA sensor that polls for state."""
+
+    _use_custom_polling: bool = True
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._cancel_refresh_handle: CALLBACK_TYPE | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+
+        if self._use_custom_polling:
+            self.async_accept_signal(
+                None,
+                SIGNAL_ZHA_ENTITIES_INITIALIZED,
+                self.async_start_polling,
+                signal_override=True,
+            )
+
+    @callback
+    def async_start_polling(self) -> None:
+        """Start polling this entity at a randomized interval."""
+        refresh_interval = random.randint(30, 60)
+        self._cancel_refresh_handle = async_track_time_interval(
+            self.hass, self._refresh, timedelta(seconds=refresh_interval)
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+        assert self._cancel_refresh_handle
+        self._cancel_refresh_handle()
+        await super().async_will_remove_from_hass()
+
+    async def _refresh(self, time):
+        """Call async_update at a constrained random interval."""
+        await self.async_update()
+        self.async_write_ha_state()
+
+
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_ANALOG_INPUT,
     manufacturers="Digi",
@@ -258,7 +311,7 @@ class Battery(Sensor):
     models={"VZM31-SN", "SP 234", "outletv4"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ElectricalMeasurement(Sensor):
+class ElectricalMeasurement(PollableSensor):
     """Active power measurement."""
 
     _attribute_name = "active_power"
@@ -322,6 +375,7 @@ class ElectricalMeasurementApparentPower(ElectricalMeasurement):
 
     _attribute_name = "apparent_power"
     _unique_id_suffix = "apparent_power"
+    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
     _attr_native_unit_of_measurement = UnitOfApparentPower.VOLT_AMPERE
     _div_mul_prefix = "ac_power"
@@ -334,6 +388,7 @@ class ElectricalMeasurementRMSCurrent(ElectricalMeasurement):
 
     _attribute_name = "rms_current"
     _unique_id_suffix = "rms_current"
+    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
     _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
     _div_mul_prefix = "ac_current"
@@ -346,6 +401,7 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement):
 
     _attribute_name = "rms_voltage"
     _unique_id_suffix = "rms_voltage"
+    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _div_mul_prefix = "ac_voltage"
@@ -358,6 +414,7 @@ class ElectricalMeasurementFrequency(ElectricalMeasurement):
 
     _attribute_name = "ac_frequency"
     _unique_id_suffix = "ac_frequency"
+    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
     _attr_translation_key: str = "ac_frequency"
     _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
@@ -371,6 +428,7 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement):
 
     _attribute_name = "power_factor"
     _unique_id_suffix = "power_factor"
+    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -537,10 +595,8 @@ class SmartEnergySummation(SmartEnergyMetering):
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class PolledSmartEnergySummation(SmartEnergySummation):
+class PolledSmartEnergySummation(PollableSensor, SmartEnergySummation):
     """Polled Smart Energy Metering summation sensor."""
-
-    _attr_should_poll = True  # BaseZhaEntity defaults to False
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
