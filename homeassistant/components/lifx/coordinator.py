@@ -254,7 +254,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             # We always send the rssi request second
             self._rssi = int(floor(10 * log10(responses[1].signal) + 0.5))
 
-        if is_extended_multizone:
+        if is_extended_multizone or is_legacy_multizone:
             self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
         elif is_legacy_multizone and num_zones != len(device.color_zones):
             # The number of zones has changed so we need
