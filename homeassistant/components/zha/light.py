@@ -1,7 +1,6 @@
 """Lights on Zigbee Home Automation networks."""
 from __future__ import annotations
 
-import asyncio
 from collections import Counter
 from collections.abc import Callable
 from datetime import timedelta
@@ -613,7 +612,12 @@ class BaseLight(LogMixin, light.LightEntity):
             )
             if self._debounced_member_refresh is not None:
                 self.debug("transition complete - refreshing group member states")
-                asyncio.create_task(self._debounced_member_refresh.async_call())
+                assert self.platform and self.platform.config_entry
+                self.platform.config_entry.async_create_background_task(
+                    self.hass,
+                    self._debounced_member_refresh.async_call(),
+                    "zha.light-refresh-debounced-member",
+                )
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
@@ -623,7 +627,7 @@ class Light(BaseLight, ZhaEntity):
     _attr_supported_color_modes: set[ColorMode]
     _REFRESH_INTERVAL = (45, 75)
 
-    def __init__(self, unique_id, zha_device: ZHADevice, channels, **kwargs):
+    def __init__(self, unique_id, zha_device: ZHADevice, channels, **kwargs) -> None:
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]

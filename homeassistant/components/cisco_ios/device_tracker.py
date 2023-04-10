@@ -39,7 +39,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoDeviceScanner |
 
 
 class CiscoDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running Cisco IOS firmware."""
+    """Class which queries a wireless router running Cisco IOS firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""

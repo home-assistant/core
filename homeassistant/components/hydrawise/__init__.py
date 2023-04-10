@@ -89,7 +89,7 @@ class HydrawiseEntity(Entity):
 
     _attr_attribution = "Data provided by hydrawise.com"
 
-    def __init__(self, data, description: EntityDescription):
+    def __init__(self, data, description: EntityDescription) -> None:
         """Initialize the Hydrawise entity."""
         self.entity_description = description
         self.data = data

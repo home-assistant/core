@@ -1,14 +1,14 @@
 """Event parser and human readable log generator."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime as dt
 from typing import Any
 
+from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
-from sqlalchemy.orm.query import Query
 
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
@@ -70,7 +70,7 @@ class LogbookRun:
     event_cache: EventCache
     entity_name_cache: EntityNameCache
     include_entity_name: bool
-    format_time: Callable[[Row], Any]
+    format_time: Callable[[Row | EventAsRow], Any]
 
 
 class EventProcessor:
@@ -133,13 +133,13 @@ class EventProcessor:
     ) -> list[dict[str, Any]]:
         """Get events for a period of time."""
 
-        def yield_rows(query: Query) -> Generator[Row, None, None]:
+        def yield_rows(result: Result) -> Sequence[Row] | Result:
             """Yield rows from the database."""
             # end_day - start_day intentionally checks .days and not .total_seconds()
             # since we don't want to switch over to buffered if they go
             # over one day by a few hours since the UI makes it so easy to do that.
             if self.limited_select or (end_day - start_day).days <= 1:
-                return query.all()  # type: ignore[no-any-return]
+                return result.all()
             # Only buffer rows to reduce memory pressure
             # if we expect the result set is going to be very large.
             # What is considered very large is going to differ
@@ -149,7 +149,7 @@ class EventProcessor:
             # even and RPi3 that number seems higher in testing
             # so we don't switch over until we request > 1 day+ of data.
             #
-            return query.yield_per(1024)  # type: ignore[no-any-return]
+            return result.yield_per(1024)
 
         stmt = statement_for_request(
             start_day,
@@ -164,12 +164,12 @@ class EventProcessor:
             return self.humanify(yield_rows(session.execute(stmt)))
 
     def humanify(
-        self, row_generator: Generator[Row | EventAsRow, None, None]
+        self, rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result
     ) -> list[dict[str, str]]:
         """Humanify rows."""
         return list(
             _humanify(
-                row_generator,
+                rows,
                 self.ent_reg,
                 self.logbook_run,
                 self.context_augmenter,
@@ -178,7 +178,7 @@ class EventProcessor:
 
 
 def _humanify(
-    rows: Generator[Row | EventAsRow, None, None],
+    rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result,
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
@@ -263,7 +263,7 @@ class ContextLookup:
         self._memorize_new = True
         self._lookup: dict[str | None, Row | EventAsRow | None] = {None: None}
 
-    def memorize(self, row: Row) -> str | None:
+    def memorize(self, row: Row | EventAsRow) -> str | None:
         """Memorize a context from the database."""
         if self._memorize_new:
             context_id: str = row.context_id
@@ -276,7 +276,7 @@ class ContextLookup:
         self._lookup.clear()
         self._memorize_new = False
 
-    def get(self, context_id: str) -> Row | None:
+    def get(self, context_id: str) -> Row | EventAsRow | None:
         """Get the context origin."""
         return self._lookup.get(context_id)
 
@@ -294,7 +294,7 @@ class ContextAugmenter:
 
     def _get_context_row(
         self, context_id: str | None, row: Row | EventAsRow
-    ) -> Row | EventAsRow:
+    ) -> Row | EventAsRow | None:
         """Get the context row from the id or row context."""
         if context_id:
             return self.context_lookup.get(context_id)

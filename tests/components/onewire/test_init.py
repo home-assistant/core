@@ -33,7 +33,7 @@ async def remove_device(
 
 
 @pytest.mark.usefixtures("owproxy_with_connerror")
-async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Test connection failure raises ConfigEntryNotReady."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -45,7 +45,7 @@ async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def test_listing_failure(
     hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock
-):
+) -> None:
     """Test listing failure raises ConfigEntryNotReady."""
     owproxy.return_value.dir.side_effect = protocol.OwnetError()
 
@@ -58,7 +58,7 @@ async def test_listing_failure(
 
 
 @pytest.mark.usefixtures("owproxy")
-async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Test being able to unload an entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

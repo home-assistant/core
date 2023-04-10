@@ -6,6 +6,7 @@ from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 CONFIG_ENTRY_DATA = {
     "device": "bla_device",
@@ -27,7 +28,7 @@ CONFIG_ENTRY_DATA_2 = {
 
 
 async def test_hardware_info(
-    hass: HomeAssistant, hass_ws_client, addon_store_info
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, addon_store_info
 ) -> None:
     """Test we can get the board info."""
     assert await async_setup_component(hass, "usb", {})

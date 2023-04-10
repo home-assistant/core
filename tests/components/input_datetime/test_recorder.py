@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components.input_datetime import CONF_HAS_DATE, CONF_HAS_TIME, DOMAIN
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_EDITABLE
@@ -16,8 +17,8 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    recorder_mock, hass: HomeAssistant, enable_custom_integrations: None
-):
+    recorder_mock: Recorder, hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test attributes to be excluded."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test": {CONF_HAS_TIME: True}}}
@@ -37,7 +38,11 @@ async def test_exclude_attributes(
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:
             native_states = []
-            for db_state, db_state_attributes in session.query(States, StateAttributes):
+            for db_state, db_state_attributes in session.query(
+                States, StateAttributes
+            ).outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            ):
                 state = db_state.to_native()
                 state.attributes = db_state_attributes.to_native()
                 native_states.append(state)

@@ -107,7 +107,7 @@ async def test_name(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
 async def test_config_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
-):
+) -> None:
     """Test handling of advanced options in config flow."""
     manager.hass = hass
 
@@ -202,7 +202,7 @@ async def test_config_flow_advanced_option(
 @pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
 async def test_options_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
-):
+) -> None:
     """Test handling of advanced options in options flow."""
     manager.hass = hass
 

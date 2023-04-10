@@ -19,15 +19,16 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import setup_platform
 
 
-async def test_mapping_integrity():
+async def test_mapping_integrity() -> None:
     """Test ensures the map dicts have proper integrity."""
     for capability, maps in sensor.CAPABILITY_TO_SENSORS.items():
         assert capability in CAPABILITIES, capability
@@ -41,7 +42,7 @@ async def test_mapping_integrity():
                 assert sensor_map.state_class in STATE_CLASSES, sensor_map.state_class
 
 
-async def test_entity_state(hass, device_factory):
+async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
     """Tests the state attributes properly match the sensor types."""
     device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
@@ -51,7 +52,7 @@ async def test_entity_state(hass, device_factory):
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Battery"
 
 
-async def test_entity_three_axis_state(hass, device_factory):
+async def test_entity_three_axis_state(hass: HomeAssistant, device_factory) -> None:
     """Tests the state attributes properly match the three axis types."""
     device = device_factory(
         "Three Axis", [Capability.three_axis], {Attribute.three_axis: [100, 75, 25]}
@@ -68,7 +69,9 @@ async def test_entity_three_axis_state(hass, device_factory):
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Z Coordinate"
 
 
-async def test_entity_three_axis_invalid_state(hass, device_factory):
+async def test_entity_three_axis_invalid_state(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Tests the state attributes properly match the three axis types."""
     device = device_factory(
         "Three Axis", [Capability.three_axis], {Attribute.three_axis: []}
@@ -82,7 +85,9 @@ async def test_entity_three_axis_invalid_state(hass, device_factory):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_entity_and_device_attributes(hass, device_factory):
+async def test_entity_and_device_attributes(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
@@ -104,7 +109,9 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry.manufacturer == "Unavailable"
 
 
-async def test_energy_sensors_for_switch_device(hass, device_factory):
+async def test_energy_sensors_for_switch_device(
+    hass: HomeAssistant, device_factory
+) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
@@ -148,7 +155,7 @@ async def test_energy_sensors_for_switch_device(hass, device_factory):
     assert entry.manufacturer == "Unavailable"
 
 
-async def test_power_consumption_sensor(hass, device_factory):
+async def test_power_consumption_sensor(hass: HomeAssistant, device_factory) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
@@ -227,7 +234,7 @@ async def test_power_consumption_sensor(hass, device_factory):
     assert entry.manufacturer == "Unavailable"
 
 
-async def test_update_from_signal(hass, device_factory):
+async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
     """Test the binary_sensor updates when receiving a signal."""
     # Arrange
     device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
@@ -244,7 +251,7 @@ async def test_update_from_signal(hass, device_factory):
     assert state.state == "75"
 
 
-async def test_unload_config_entry(hass, device_factory):
+async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     """Test the binary_sensor is removed when the config entry is unloaded."""
     # Arrange
     device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})

@@ -27,6 +27,7 @@ from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
     device_registry,
+    entity,
     entity_registry,
     issue_registry,
     recorder,
@@ -236,6 +237,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         platform.uname().processor  # pylint: disable=expression-not-assigned
 
     # Load the registries and cache the result of platform.uname().processor
+    entity.async_setup(hass)
     await asyncio.gather(
         area_registry.async_load(hass),
         device_registry.async_load(hass),
@@ -506,7 +508,9 @@ async def async_setup_multi_components(
 ) -> None:
     """Set up multiple domains. Log on failure."""
     futures = {
-        domain: hass.async_create_task(async_setup_component(hass, domain, config))
+        domain: hass.async_create_task(
+            async_setup_component(hass, domain, config), f"setup component {domain}"
+        )
         for domain in domains
     }
     await asyncio.wait(futures.values())

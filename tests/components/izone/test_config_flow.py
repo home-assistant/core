@@ -1,11 +1,11 @@
 """Tests for iZone."""
-
 from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def _mock_start_discovery(hass, mock_disco):
     return do_disovered
 
 
-async def test_not_found(hass, mock_disco):
+async def test_not_found(hass: HomeAssistant, mock_disco) -> None:
     """Test not finding iZone controller."""
 
     with patch(
@@ -52,7 +52,7 @@ async def test_not_found(hass, mock_disco):
     stop_disco.assert_called_once()
 
 
-async def test_found(hass, mock_disco):
+async def test_found(hass: HomeAssistant, mock_disco) -> None:
     """Test not finding iZone controller."""
     mock_disco.pi_disco.controllers["blah"] = object()
 

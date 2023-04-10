@@ -14,6 +14,9 @@ from .entity import RokuEntity
 _RokuEntityT = TypeVar("_RokuEntityT", bound=RokuEntity)
 _P = ParamSpec("_P")
 
+_FuncType = Callable[Concatenate[_RokuEntityT, _P], Awaitable[Any]]
+_ReturnFuncType = Callable[Concatenate[_RokuEntityT, _P], Coroutine[Any, Any, None]]
+
 
 def format_channel_name(channel_number: str, channel_name: str | None = None) -> str:
     """Format a Roku Channel name."""
@@ -25,15 +28,12 @@ def format_channel_name(channel_number: str, channel_name: str | None = None) ->
 
 def roku_exception_handler(
     ignore_timeout: bool = False,
-) -> Callable[
-    [Callable[Concatenate[_RokuEntityT, _P], Awaitable[Any]]],
-    Callable[Concatenate[_RokuEntityT, _P], Coroutine[Any, Any, None]],
-]:
+) -> Callable[[_FuncType[_RokuEntityT, _P]], _ReturnFuncType[_RokuEntityT, _P]]:
     """Decorate Roku calls to handle Roku exceptions."""
 
     def decorator(
-        func: Callable[Concatenate[_RokuEntityT, _P], Awaitable[Any]],
-    ) -> Callable[Concatenate[_RokuEntityT, _P], Coroutine[Any, Any, None]]:
+        func: _FuncType[_RokuEntityT, _P]
+    ) -> _ReturnFuncType[_RokuEntityT, _P]:
         @wraps(func)
         async def wrapper(
             self: _RokuEntityT, *args: _P.args, **kwargs: _P.kwargs

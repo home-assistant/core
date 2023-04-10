@@ -7,7 +7,7 @@ from functools import wraps
 import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
-import aiohttp.client_exceptions
+import httpx
 from iaqualink.client import AqualinkClient
 from iaqualink.device import (
     AqualinkBinarySensor,
@@ -77,10 +77,7 @@ async def async_setup_entry(  # noqa: C901
         _LOGGER.error("Failed to login: %s", login_exception)
         await aqualink.close()
         return False
-    except (
-        asyncio.TimeoutError,
-        aiohttp.client_exceptions.ClientConnectorError,
-    ) as aio_exception:
+    except (asyncio.TimeoutError, httpx.HTTPError) as aio_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
             f"Error while attempting login: {aio_exception}"
@@ -149,7 +146,7 @@ async def async_setup_entry(  # noqa: C901
 
             try:
                 await system.update()
-            except AqualinkServiceException as svc_exception:
+            except (AqualinkServiceException, httpx.HTTPError) as svc_exception:
                 if prev is not None:
                     _LOGGER.warning(
                         "Failed to refresh system %s state: %s",

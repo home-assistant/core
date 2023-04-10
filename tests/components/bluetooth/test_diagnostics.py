@@ -1,13 +1,12 @@
 """Test bluetooth diagnostics."""
-
-
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BaseHaRemoteScanner, HaBluetoothConnector
+from homeassistant.core import HomeAssistant
 
 from . import (
     MockBleakClient,
@@ -18,11 +17,16 @@ from . import (
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
-    hass, hass_client, mock_bleak_scanner_start, enable_bluetooth, two_adapters
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_bleak_scanner_start: MagicMock,
+    enable_bluetooth: None,
+    two_adapters: None,
+) -> None:
     """Test we can setup and unsetup bluetooth with multiple adapters."""
     # Normally we do not want to patch our classes, but since bleak will import
     # a different scanner based on the operating system, we need to patch here
@@ -241,8 +245,12 @@ async def test_diagnostics(
 
 
 async def test_diagnostics_macos(
-    hass, hass_client, mock_bleak_scanner_start, mock_bluetooth_adapters, macos_adapter
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+    macos_adapter,
+) -> None:
     """Test diagnostics for macos."""
     # Normally we do not want to patch our classes, but since bleak will import
     # a different scanner based on the operating system, we need to patch here
@@ -413,13 +421,13 @@ async def test_diagnostics_macos(
 
 
 async def test_diagnostics_remote_adapter(
-    hass,
-    hass_client,
-    mock_bleak_scanner_start,
-    mock_bluetooth_adapters,
-    enable_bluetooth,
-    one_adapter,
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+    enable_bluetooth: None,
+    one_adapter: None,
+) -> None:
     """Test diagnostics for remote adapter."""
     manager = _get_manager()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")

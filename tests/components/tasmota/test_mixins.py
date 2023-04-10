@@ -7,15 +7,20 @@ from hatasmota.const import CONF_MAC
 from hatasmota.utils import config_get_state_online, get_topic_tele_will
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
+from homeassistant.core import HomeAssistant
 
 from .test_common import DEFAULT_CONFIG
 
 from tests.common import async_fire_mqtt_message
+from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_availability_poll_state_once(
-    hass, mqtt_client_mock, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test several entities send a single message to update state."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1

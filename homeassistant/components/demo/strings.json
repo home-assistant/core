@@ -51,7 +51,8 @@
           "constant": "Constant",
           "bool": "Optional boolean",
           "int": "Numeric input"
-        }
+        },
+        "submit": "Save!"
       },
       "options_2": {
         "data": {

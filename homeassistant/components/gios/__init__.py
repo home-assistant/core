@@ -7,7 +7,8 @@ from typing import Any, cast
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
-from gios import ApiError, Gios, InvalidSensorsData, NoStationError
+from gios import Gios
+from gios.exceptions import GiosError
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Using station_id: %d", station_id)
 
     # We used to use int as config_entry unique_id, convert this to str.
-    if isinstance(entry.unique_id, int):  # type: ignore[unreachable]
+    if isinstance(entry.unique_id, int):
         hass.config_entries.async_update_entry(entry, unique_id=str(station_id))  # type: ignore[unreachable]
 
     # We used to use int in device_entry identifiers, convert this to str.
@@ -89,10 +90,5 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             async with timeout(API_TIMEOUT):
                 return cast(dict[str, Any], await self.gios.async_update())
-        except (
-            ApiError,
-            NoStationError,
-            ClientConnectorError,
-            InvalidSensorsData,
-        ) as error:
+        except (GiosError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error

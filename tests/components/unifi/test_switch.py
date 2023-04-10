@@ -1,5 +1,4 @@
 """UniFi Network switch platform tests."""
-
 from copy import deepcopy
 from datetime import timedelta
 
@@ -27,10 +26,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt
 
@@ -42,6 +42,7 @@ from .test_controller import (
 )
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_1 = {
     "hostname": "client_1",
@@ -576,7 +577,9 @@ OUTLET_UP1 = {
 }
 
 
-async def test_no_clients(hass, aioclient_mock):
+async def test_no_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(
         hass,
@@ -592,7 +595,9 @@ async def test_no_clients(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_controller_not_client(hass, aioclient_mock):
+async def test_controller_not_client(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that the controller doesn't become a switch."""
     await setup_unifi_integration(
         hass,
@@ -607,7 +612,9 @@ async def test_controller_not_client(hass, aioclient_mock):
     assert cloudkey is None
 
 
-async def test_not_admin(hass, aioclient_mock):
+async def test_not_admin(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that switch platform only work on an admin account."""
     description = deepcopy(DESCRIPTION)
     description[0]["site_role"] = "not admin"
@@ -623,7 +630,9 @@ async def test_not_admin(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_switches(hass, aioclient_mock):
+async def test_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -716,7 +725,9 @@ async def test_switches(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 3
 
 
-async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_remove_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(
         hass,
@@ -747,7 +758,9 @@ async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_block_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -811,7 +824,9 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     }
 
 
-async def test_dpi_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_dpi_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(
         hass,
@@ -852,7 +867,9 @@ async def test_dpi_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_dpi_switches_add_second_app(hass, aioclient_mock, mock_unifi_websocket):
+async def test_dpi_switches_add_second_app(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(
         hass,
@@ -908,7 +925,9 @@ async def test_dpi_switches_add_second_app(hass, aioclient_mock, mock_unifi_webs
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
 
 
-async def test_outlet_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_outlet_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the outlet entities."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[OUTLET_UP1]
@@ -993,8 +1012,8 @@ async def test_outlet_switches(hass, aioclient_mock, mock_unifi_websocket):
 
 
 async def test_new_client_discovered_on_block_control(
-    hass, aioclient_mock, mock_unifi_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test if 2nd update has a new client."""
     await setup_unifi_integration(
         hass,
@@ -1017,7 +1036,9 @@ async def test_new_client_discovered_on_block_control(
     assert hass.states.get("switch.block_client_1") is not None
 
 
-async def test_option_block_clients(hass, aioclient_mock):
+async def test_option_block_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the changes to option reflects accordingly."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -1060,7 +1081,9 @@ async def test_option_block_clients(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_option_remove_switches(hass, aioclient_mock):
+async def test_option_remove_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test removal of DPI switch when options updated."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -1084,7 +1107,9 @@ async def test_option_remove_switches(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_poe_port_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[DEVICE_1]
@@ -1177,7 +1202,9 @@ async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
 
 
-async def test_remove_poe_client_switches(hass, aioclient_mock):
+async def test_remove_poe_client_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test old PoE client switches are removed."""
 
     config_entry = config_entries.ConfigEntry(

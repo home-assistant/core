@@ -11,10 +11,11 @@ from homeassistant.components.automation import (
     ATTR_MODE,
     CONF_ID,
 )
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -27,7 +28,9 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_exclude_attributes(recorder_mock, hass, calls):
+async def test_exclude_attributes(
+    recorder_mock: Recorder, hass: HomeAssistant, calls
+) -> None:
     """Test automation registered attributes to be excluded."""
     assert await async_setup_component(
         hass,
@@ -49,7 +52,11 @@ async def test_exclude_attributes(recorder_mock, hass, calls):
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:
             native_states = []
-            for db_state, db_state_attributes in session.query(States, StateAttributes):
+            for db_state, db_state_attributes in session.query(
+                States, StateAttributes
+            ).outerjoin(
+                StateAttributes, States.attributes_id == StateAttributes.attributes_id
+            ):
                 state = db_state.to_native()
                 state.attributes = db_state_attributes.to_native()
                 native_states.append(state)

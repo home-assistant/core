@@ -1,9 +1,12 @@
 """Test the thread dataset store."""
+from typing import Any
+
 import pytest
 from python_otbr_api.tlv_parser import TLVError
 
 from homeassistant.components.thread import dataset_store
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import DATASET_1, DATASET_2, DATASET_3
 
@@ -50,6 +53,43 @@ async def test_add_dataset_reordered(hass: HomeAssistant) -> None:
     await dataset_store.async_add_dataset(hass, "new_source", DATASET_1_REORDERED)
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].created == created
+
+
+async def test_delete_dataset_twice(hass: HomeAssistant) -> None:
+    """Test deleting dataset twice raises."""
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    await dataset_store.async_add_dataset(hass, "source", DATASET_2)
+
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[1].id
+
+    store.async_delete(dataset_id)
+    assert len(store.datasets) == 1
+
+    with pytest.raises(KeyError, match=f"'{dataset_id}'"):
+        store.async_delete(dataset_id)
+    assert len(store.datasets) == 1
+
+
+async def test_delete_preferred_dataset(hass: HomeAssistant) -> None:
+    """Test deleting preferred dataset raises."""
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[0].id
+
+    with pytest.raises(HomeAssistantError, match="attempt to remove preferred dataset"):
+        store.async_delete(dataset_id)
+    assert len(store.datasets) == 1
+
+
+async def test_get_preferred_dataset(hass: HomeAssistant) -> None:
+    """Test get the preferred dataset."""
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+
+    assert (await dataset_store.async_get_preferred_dataset(hass)) == DATASET_1
 
 
 async def test_dataset_properties(hass: HomeAssistant) -> None:
@@ -124,28 +164,33 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
 
     assert store1.preferred_dataset == dataset_1_store_1.id
 
+    with pytest.raises(HomeAssistantError):
+        store1.async_delete(dataset_1_store_1.id)
+    store1.async_delete(dataset_2_store_1.id)
+
+    assert len(store1.datasets) == 2
+
     store2 = dataset_store.DatasetStore(hass)
     await flush_store(store1._store)
     await store2.async_load()
 
-    assert len(store2.datasets) == 3
+    assert len(store2.datasets) == 2
 
     for dataset in store2.datasets.values():
         if dataset.source == "Google":
             dataset_1_store_2 = dataset
-        if dataset.source == "Multipan":
-            dataset_2_store_2 = dataset
         if dataset.source == "🎅":
             dataset_3_store_2 = dataset
 
     assert list(store1.datasets) == list(store2.datasets)
 
     assert dataset_1_store_1 == dataset_1_store_2
-    assert dataset_2_store_1 == dataset_2_store_2
     assert dataset_3_store_1 == dataset_3_store_2
 
 
-async def test_loading_datasets_from_storage(hass: HomeAssistant, hass_storage) -> None:
+async def test_loading_datasets_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading stored datasets on start."""
     hass_storage[dataset_store.STORAGE_KEY] = {
         "version": dataset_store.STORAGE_VERSION_MAJOR,

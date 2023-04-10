@@ -35,9 +35,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
-    Integration,
+    HomeKitDiscoveredIntegration,
     async_get_homekit,
-    async_get_integration,
     async_get_zeroconf,
     bind_hass,
 )
@@ -348,7 +347,7 @@ class ZeroconfDiscovery:
         hass: HomeAssistant,
         zeroconf: HaZeroconf,
         zeroconf_types: dict[str, list[dict[str, str | dict[str, str]]]],
-        homekit_models: dict[str, str],
+        homekit_models: dict[str, HomeKitDiscoveredIntegration],
         ipv6: bool,
     ) -> None:
         """Init discovery."""
@@ -379,6 +378,14 @@ class ZeroconfDiscovery:
         if self.async_service_browser:
             await self.async_service_browser.async_cancel()
 
+    def _async_dismiss_discoveries(self, name: str) -> None:
+        """Dismiss all discoveries for the given name."""
+        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+            ZeroconfServiceInfo,
+            lambda service_info: bool(service_info.name == name),
+        ):
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
+
     @callback
     def async_service_update(
         self,
@@ -396,14 +403,9 @@ class ZeroconfDiscovery:
         )
 
         if state_change == ServiceStateChange.Removed:
+            self._async_dismiss_discoveries(name)
             return
 
-        asyncio.create_task(self._process_service_update(zeroconf, service_type, name))
-
-    async def _process_service_update(
-        self, zeroconf: HaZeroconf, service_type: str, name: str
-    ) -> None:
-        """Process a zeroconf update."""
         try:
             async_service_info = AsyncServiceInfo(service_type, name)
         except BadTypeInNameException as ex:
@@ -411,24 +413,53 @@ class ZeroconfDiscovery:
             # This is a bug in the device firmware and we should ignore it
             _LOGGER.debug("Bad name in zeroconf record: %s: %s", name, ex)
             return
-        await async_service_info.async_request(zeroconf, 3000)
 
+        if async_service_info.load_from_cache(zeroconf):
+            self._async_process_service_update(async_service_info, service_type, name)
+        else:
+            self.hass.async_create_task(
+                self._async_lookup_and_process_service_update(
+                    zeroconf, async_service_info, service_type, name
+                )
+            )
+
+    async def _async_lookup_and_process_service_update(
+        self,
+        zeroconf: HaZeroconf,
+        async_service_info: AsyncServiceInfo,
+        service_type: str,
+        name: str,
+    ) -> None:
+        """Update and process a zeroconf update."""
+        await async_service_info.async_request(zeroconf, 3000)
+        self._async_process_service_update(async_service_info, service_type, name)
+
+    @callback
+    def _async_process_service_update(
+        self, async_service_info: AsyncServiceInfo, service_type: str, name: str
+    ) -> None:
+        """Process a zeroconf update."""
         info = info_from_service(async_service_info)
         if not info:
             # Prevent the browser thread from collapsing
             _LOGGER.debug("Failed to get addresses for device %s", name)
             return
-
         _LOGGER.debug("Discovered new device %s %s", name, info)
         props: dict[str, str] = info.properties
         domain = None
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES and (
-            domain := async_get_homekit_discovery_domain(self.homekit_models, props)
+            homekit_model := async_get_homekit_discovery_domain(
+                self.homekit_models, props
+            )
         ):
+            domain = homekit_model.domain
             discovery_flow.async_create_flow(
-                self.hass, domain, {"source": config_entries.SOURCE_HOMEKIT}, info
+                self.hass,
+                homekit_model.domain,
+                {"source": config_entries.SOURCE_HOMEKIT},
+                info,
             )
             # Continue on here as homekit_controller
             # still needs to get updates on devices
@@ -437,27 +468,15 @@ class ZeroconfDiscovery:
             # We only send updates to homekit_controller
             # if the device is already paired in order to avoid
             # offering a second discovery for the same device
-            if not is_homekit_paired(props):
-                integration: Integration = await async_get_integration(
-                    self.hass, domain
-                )
-                # Since we prefer local control, if the integration that is being
-                # discovered is cloud AND the homekit device is UNPAIRED we still
-                # want to discovery it.
+            if not is_homekit_paired(props) and not homekit_model.always_discover:
+                # If the device is paired with HomeKit we must send on
+                # the update to homekit_controller so it can see when
+                # the 'c#' field is updated. This is used to detect
+                # when the device has been reset or updated.
                 #
-                # Additionally if the integration is polling, HKC offers a local
-                # push experience for the user to control the device so we want
-                # to offer that as well.
-                #
-                # As soon as the device becomes paired, the config flow will be
-                # dismissed in the event the user does not want to pair
-                # with Home Assistant.
-                #
-                if not integration.iot_class or (
-                    not integration.iot_class.startswith("cloud")
-                    and "polling" not in integration.iot_class
-                ):
-                    return
+                # If the device is not paired and we should not always
+                # discover it, we can stop here.
+                return
 
         match_data: dict[str, str] = {}
         for key in LOWER_MATCH_ATTRS:
@@ -495,8 +514,8 @@ class ZeroconfDiscovery:
 
 
 def async_get_homekit_discovery_domain(
-    homekit_models: dict[str, str], props: dict[str, Any]
-) -> str | None:
+    homekit_models: dict[str, HomeKitDiscoveredIntegration], props: dict[str, Any]
+) -> HomeKitDiscoveredIntegration | None:
     """Handle a HomeKit discovery.
 
     Return the domain to forward the discovery data to

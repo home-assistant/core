@@ -23,7 +23,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as ent_reg
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -77,7 +77,7 @@ SUBSCRIPTION_SERVICES = {
     "renderingControl",
     "zoneGroupTopology",
 }
-SUPPORTED_VANISH_REASONS = ("sleeping", "switch to bluetooth", "upgrade")
+SUPPORTED_VANISH_REASONS = ("powered off", "sleeping", "switch to bluetooth", "upgrade")
 UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 
@@ -837,7 +837,7 @@ class SonosSpeaker:
                 # Skip updating existing single speakers in polling mode
                 return
 
-            entity_registry = ent_reg.async_get(self.hass)
+            entity_registry = er.async_get(self.hass)
             sonos_group = []
             sonos_group_entities = []
 

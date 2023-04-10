@@ -75,7 +75,7 @@ async def mock_aiopurpleair_fixture(api):
     with patch(
         "homeassistant.components.purpleair.config_flow.API", return_value=api
     ), patch("homeassistant.components.purpleair.coordinator.API", return_value=api):
-        yield
+        yield api
 
 
 @pytest.fixture(name="setup_config_entry")

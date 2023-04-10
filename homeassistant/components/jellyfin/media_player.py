@@ -19,7 +19,7 @@ from homeassistant.util.dt import parse_datetime
 
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
-from .const import CONTENT_TYPE_MAP, DOMAIN, USER_APP_NAME
+from .const import CONTENT_TYPE_MAP, DOMAIN, LOGGER
 from .coordinator import JellyfinDataUpdateCoordinator
 from .entity import JellyfinEntity
 from .models import JellyfinData
@@ -34,14 +34,23 @@ async def async_setup_entry(
     jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
     coordinator = jellyfin_data.coordinators["sessions"]
 
-    async_add_entities(
-        (
-            JellyfinMediaPlayer(coordinator, session_id, session_data)
-            for session_id, session_data in coordinator.data.items()
-            if session_data["DeviceId"] != jellyfin_data.client_device_id
-            and session_data["Client"] != USER_APP_NAME
-        ),
-    )
+    @callback
+    def handle_coordinator_update() -> None:
+        """Add media player per session."""
+        entities: list[MediaPlayerEntity] = []
+        for session_id, session_data in coordinator.data.items():
+            if session_id not in coordinator.session_ids:
+                entity: MediaPlayerEntity = JellyfinMediaPlayer(
+                    coordinator, session_id, session_data
+                )
+                LOGGER.debug("Creating media player for session: %s", session_id)
+                coordinator.session_ids.add(session_id)
+                entities.append(entity)
+        async_add_entities(entities)
+
+    handle_coordinator_update()
+
+    entry.async_on_unload(coordinator.async_add_listener(handle_coordinator_update))
 
 
 class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):

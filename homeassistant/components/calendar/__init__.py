@@ -66,6 +66,55 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 # Don't support rrules more often than daily
 VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
+
+def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that all datetime values have a consistent timezone."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys that are datetime values have the same timezone."""
+        tzinfos = []
+        for key in keys:
+            if not (value := obj.get(key)) or not isinstance(value, datetime.datetime):
+                return obj
+            tzinfos.append(value.tzinfo)
+        uniq_values = groupby(tzinfos)
+        if len(list(uniq_values)) > 1:
+            raise vol.Invalid("Expected all values to have the same timezone")
+        return obj
+
+    return validate
+
+
+def _as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Convert all datetime values to the local timezone."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys that are datetime values have the same timezone."""
+        for k in keys:
+            if (value := obj.get(k)) and isinstance(value, datetime.datetime):
+                obj[k] = dt.as_local(value)
+        return obj
+
+    return validate
+
+
+def _is_sorted(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that the specified values are sequential."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys in the dict are in order."""
+        values = []
+        for k in keys:
+            if not (value := obj.get(k)):
+                return obj
+            values.append(value)
+        if all(values) and values != sorted(values):
+            raise vol.Invalid(f"Values were not in order: {values}")
+        return obj
+
+    return validate
+
+
 CREATE_EVENT_SERVICE = "create_event"
 CREATE_EVENT_SCHEMA = vol.All(
     cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
@@ -98,6 +147,10 @@ CREATE_EVENT_SCHEMA = vol.All(
             ),
         },
     ),
+    _has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
+    _as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
+    _is_sorted(EVENT_START_DATE, EVENT_END_DATE),
+    _is_sorted(EVENT_START_DATETIME, EVENT_END_DATETIME),
 )
 
 
@@ -386,6 +439,8 @@ class CalendarEventView(http.HomeAssistantView):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
+        if start_date > end_date:
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         try:
             calendar_event_list = await entity.async_get_events(
@@ -439,36 +494,6 @@ def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
     return validate
 
 
-def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that all datetime values have a consistent timezone."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys that are datetime values have the same timezone."""
-        values = [obj[k] for k in keys]
-        if all(isinstance(value, datetime.datetime) for value in values):
-            uniq_values = groupby(value.tzinfo for value in values)
-            if len(list(uniq_values)) > 1:
-                raise vol.Invalid(
-                    f"Expected all values to have the same timezone: {values}"
-                )
-        return obj
-
-    return validate
-
-
-def _is_sorted(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that the specified values are sequential."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys in the dict are in order."""
-        values = [obj[k] for k in keys]
-        if values != sorted(values):
-            raise vol.Invalid(f"Values were not in order: {values}")
-        return obj
-
-    return validate
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "calendar/event/create",
@@ -484,6 +509,7 @@ def _is_sorted(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
                 },
                 _has_same_type(EVENT_START, EVENT_END),
                 _has_consistent_timezone(EVENT_START, EVENT_END),
+                _as_local_timezone(EVENT_START, EVENT_END),
                 _is_sorted(EVENT_START, EVENT_END),
             )
         ),
@@ -580,6 +606,7 @@ async def handle_calendar_event_delete(
                 },
                 _has_same_type(EVENT_START, EVENT_END),
                 _has_consistent_timezone(EVENT_START, EVENT_END),
+                _as_local_timezone(EVENT_START, EVENT_END),
                 _is_sorted(EVENT_START, EVENT_END),
             )
         ),

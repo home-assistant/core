@@ -6,15 +6,19 @@ from homeassistant.components.fronius.coordinator import (
     FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt
 
 from . import enable_all_entities, mock_responses, setup_fronius_integration
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_symo_inverter(hass, aioclient_mock):
+async def test_symo_inverter(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Symo inverter entities."""
 
     def assert_state(entity_id, expected_state):
@@ -70,7 +74,9 @@ async def test_symo_inverter(hass, aioclient_mock):
     assert_state("sensor.symo_20_voltage_ac", 227.90)
 
 
-async def test_symo_logger(hass, aioclient_mock):
+async def test_symo_logger(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Symo logger entities."""
 
     def assert_state(entity_id, expected_state):
@@ -87,7 +93,9 @@ async def test_symo_logger(hass, aioclient_mock):
     assert_state("sensor.solarnet_grid_import_tariff", 0.15)
 
 
-async def test_symo_meter(hass, aioclient_mock):
+async def test_symo_meter(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Symo meter entities."""
 
     def assert_state(entity_id, expected_state):
@@ -138,7 +146,9 @@ async def test_symo_meter(hass, aioclient_mock):
     assert_state("sensor.smart_meter_63a_voltage_ac_phase_3_1", 398)
 
 
-async def test_symo_power_flow(hass, aioclient_mock):
+async def test_symo_power_flow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Symo power flow entities."""
     async_fire_time_changed(hass, dt.utcnow())
 
@@ -181,7 +191,7 @@ async def test_symo_power_flow(hass, aioclient_mock):
     assert_state("sensor.solarnet_relative_self_consumption", 100)
 
 
-async def test_gen24(hass, aioclient_mock):
+async def test_gen24(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test Fronius Gen24 inverter entities."""
 
     def assert_state(entity_id, expected_state):
@@ -254,7 +264,9 @@ async def test_gen24(hass, aioclient_mock):
     assert_state("sensor.solarnet_energy_total", 1530193.42)
 
 
-async def test_gen24_storage(hass, aioclient_mock):
+async def test_gen24_storage(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Gen24 inverter with BYD battery and Ohmpilot entities."""
 
     def assert_state(entity_id, expected_state):
@@ -376,7 +388,9 @@ async def test_gen24_storage(hass, aioclient_mock):
     assert storage.name == "BYD Battery-Box Premium HV"
 
 
-async def test_primo_s0(hass, aioclient_mock):
+async def test_primo_s0(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Fronius Primo dual inverter with S0 meter entities."""
 
     def assert_state(entity_id, expected_state):

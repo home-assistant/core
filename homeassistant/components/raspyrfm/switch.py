@@ -98,7 +98,7 @@ class RaspyRFMSwitch(SwitchEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, raspyrfm_client, name: str, gateway, controlunit):
+    def __init__(self, raspyrfm_client, name: str, gateway, controlunit) -> None:
         """Initialize the switch."""
         self._raspyrfm_client = raspyrfm_client
 

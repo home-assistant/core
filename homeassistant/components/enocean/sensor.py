@@ -154,7 +154,9 @@ def setup_platform(
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
-    def __init__(self, dev_id, dev_name, description: EnOceanSensorEntityDescription):
+    def __init__(
+        self, dev_id, dev_name, description: EnOceanSensorEntityDescription
+    ) -> None:
         """Initialize the EnOcean sensor device."""
         super().__init__(dev_id, dev_name)
         self.entity_description = description
@@ -223,7 +225,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         scale_max,
         range_from,
         range_to,
-    ):
+    ) -> None:
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(dev_id, dev_name, description)
         self._scale_min = scale_min

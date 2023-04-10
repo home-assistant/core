@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, ResponseStatus
-from pyinsteon.device_types import (
+from pyinsteon.device_types.ipdb import (
     AccessControl_Morningstar,
     DimmableLightingControl_KeypadLinc_8,
     GeneralController_RemoteLinc,

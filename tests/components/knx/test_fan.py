@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import KNXTestKit
 
 
-async def test_fan_percent(hass: HomeAssistant, knx: KNXTestKit):
+async def test_fan_percent(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX fan with percentage speed."""
     await knx.setup_integration(
         {
@@ -52,7 +52,7 @@ async def test_fan_percent(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_fan_step(hass: HomeAssistant, knx: KNXTestKit):
+async def test_fan_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX fan with speed steps."""
     await knx.setup_integration(
         {
@@ -105,7 +105,7 @@ async def test_fan_step(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit):
+async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX fan oscillation."""
     await knx.setup_integration(
         {

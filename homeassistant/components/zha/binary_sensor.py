@@ -203,3 +203,13 @@ class AqaraPetFeederErrorDetected(BinarySensor, id_suffix="error_detected"):
     SENSOR_ATTR = "error_detected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
     _attr_name: str = "Error detected"
+
+
+@MULTI_MATCH(
+    channel_names="opple_cluster", models={"lumi.plug.mmeu01", "lumi.plug.maeu01"}
+)
+class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
+    """ZHA Xiaomi plug consumer connected binary sensor."""
+
+    SENSOR_ATTR = "consumer_connected"
+    _attr_name: str = "Consumer connected"

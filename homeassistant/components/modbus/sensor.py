@@ -5,7 +5,11 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    RestoreSensor,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
@@ -14,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -53,7 +56,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
+class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
@@ -90,8 +93,9 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
-        if state := await self.async_get_last_state():
-            self._attr_native_value = state.state
+        state = await self.async_get_last_sensor_data()
+        if state:
+            self._attr_native_value = state.native_value
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
@@ -135,7 +139,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
 
 class SlaveSensor(
     CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
-    RestoreEntity,
+    RestoreSensor,
     SensorEntity,
 ):
     """Modbus slave register sensor."""

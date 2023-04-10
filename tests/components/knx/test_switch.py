@@ -13,7 +13,7 @@ from .conftest import KNXTestKit
 from tests.common import mock_restore_cache
 
 
-async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit):
+async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test simple KNX switch."""
     await knx.setup_integration(
         {
@@ -52,7 +52,7 @@ async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit):
+async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX switch with state_address."""
     _ADDRESS = "1/1/1"
     _STATE_ADDRESS = "2/2/2"
@@ -111,7 +111,7 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_switch_restore_and_respond(hass, knx):
+async def test_switch_restore_and_respond(hass: HomeAssistant, knx) -> None:
     """Test restoring KNX switch state and respond to read."""
     _ADDRESS = "1/1/1"
     fake_state = State("switch.test", "on")

@@ -13,6 +13,7 @@ import homeassistant.components.zha.core.channels as zha_channels
 import homeassistant.components.zha.core.channels.base as base_channels
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.registries as registries
+from homeassistant.core import HomeAssistant
 
 from .common import get_zha_gateway, make_zcl_header
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -104,7 +105,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
 
 
 @pytest.mark.parametrize(
-    "cluster_id, bind_count, attrs",
+    ("cluster_id", "bind_count", "attrs"),
     [
         (zigpy.zcl.clusters.general.Basic.cluster_id, 0, {}),
         (
@@ -234,7 +235,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
 )
 async def test_in_channel_config(
     cluster_id, bind_count, attrs, channel_pool, zigpy_device_mock, zha_gateway
-):
+) -> None:
     """Test ZHA core channel configuration for input clusters."""
     zigpy_dev = zigpy_device_mock(
         {1: {SIG_EP_INPUT: [cluster_id], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
@@ -264,7 +265,7 @@ async def test_in_channel_config(
 
 
 @pytest.mark.parametrize(
-    "cluster_id, bind_count",
+    ("cluster_id", "bind_count"),
     [
         (0x0000, 0),
         (0x0001, 1),
@@ -297,7 +298,7 @@ async def test_in_channel_config(
 )
 async def test_out_channel_config(
     cluster_id, bind_count, channel_pool, zigpy_device_mock, zha_gateway
-):
+) -> None:
     """Test ZHA core channel configuration for output clusters."""
     zigpy_dev = zigpy_device_mock(
         {1: {SIG_EP_OUTPUT: [cluster_id], SIG_EP_INPUT: [], SIG_EP_TYPE: 0x1234}},
@@ -319,7 +320,7 @@ async def test_out_channel_config(
     assert cluster.configure_reporting.call_count == 0
 
 
-def test_channel_registry():
+def test_channel_registry() -> None:
     """Test ZIGBEE Channel Registry."""
     for cluster_id, channel in registries.ZIGBEE_CHANNEL_REGISTRY.items():
         assert isinstance(cluster_id, int)
@@ -327,7 +328,7 @@ def test_channel_registry():
         assert issubclass(channel, base_channels.ZigbeeChannel)
 
 
-def test_epch_unclaimed_channels(channel):
+def test_epch_unclaimed_channels(channel) -> None:
     """Test unclaimed channels."""
 
     ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
@@ -363,7 +364,7 @@ def test_epch_unclaimed_channels(channel):
         assert ch_3 not in available
 
 
-def test_epch_claim_channels(channel):
+def test_epch_claim_channels(channel) -> None:
     """Test channel claiming."""
 
     ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
@@ -402,7 +403,7 @@ def test_epch_claim_channels(channel):
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-def test_ep_channels_all_channels(m1, zha_device_mock):
+def test_ep_channels_all_channels(m1, zha_device_mock) -> None:
     """Test EndpointChannels adding all channels."""
     zha_device = zha_device_mock(
         {
@@ -453,7 +454,7 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-def test_channel_power_config(m1, zha_device_mock):
+def test_channel_power_config(m1, zha_device_mock) -> None:
     """Test that channels only get a single power channel."""
     in_clusters = [0, 1, 6, 8]
     zha_device = zha_device_mock(
@@ -498,7 +499,7 @@ def test_channel_power_config(m1, zha_device_mock):
     assert "2:0x0001" in pools[2].all_channels
 
 
-async def test_ep_channels_configure(channel):
+async def test_ep_channels_configure(channel) -> None:
     """Test unclaimed channels."""
 
     ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
@@ -535,7 +536,7 @@ async def test_ep_channels_configure(channel):
     assert ch_5.warning.call_count == 2
 
 
-async def test_poll_control_configure(poll_control_ch):
+async def test_poll_control_configure(poll_control_ch) -> None:
     """Test poll control channel configuration."""
     await poll_control_ch.async_configure()
     assert poll_control_ch.cluster.write_attributes.call_count == 1
@@ -544,7 +545,7 @@ async def test_poll_control_configure(poll_control_ch):
     }
 
 
-async def test_poll_control_checkin_response(poll_control_ch):
+async def test_poll_control_checkin_response(poll_control_ch) -> None:
     """Test poll control channel checkin response."""
     rsp_mock = AsyncMock()
     set_interval_mock = AsyncMock()
@@ -569,7 +570,9 @@ async def test_poll_control_checkin_response(poll_control_ch):
     assert cluster.endpoint.request.call_args_list[1][0][0] == 0x0020
 
 
-async def test_poll_control_cluster_command(hass, poll_control_device):
+async def test_poll_control_cluster_command(
+    hass: HomeAssistant, poll_control_device
+) -> None:
     """Test poll control channel response to cluster command."""
     checkin_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
@@ -598,7 +601,9 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     assert data["device_id"] == poll_control_device.device_id
 
 
-async def test_poll_control_ignore_list(hass, poll_control_device):
+async def test_poll_control_ignore_list(
+    hass: HomeAssistant, poll_control_device
+) -> None:
     """Test poll control channel ignore list."""
     set_long_poll_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
@@ -617,7 +622,7 @@ async def test_poll_control_ignore_list(hass, poll_control_device):
     assert set_long_poll_mock.call_count == 0
 
 
-async def test_poll_control_ikea(hass, poll_control_device):
+async def test_poll_control_ikea(hass: HomeAssistant, poll_control_device) -> None:
     """Test poll control channel ignore list for ikea."""
     set_long_poll_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
@@ -644,7 +649,7 @@ def zigpy_zll_device(zigpy_device_mock):
 
 async def test_zll_device_groups(
     zigpy_zll_device, channel_pool, zigpy_coordinator_device
-):
+) -> None:
     """Test adding coordinator to ZLL groups."""
 
     cluster = zigpy_zll_device.endpoints[1].lightlink
@@ -710,7 +715,7 @@ async def test_zll_device_groups(
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-async def test_cluster_no_ep_attribute(m1, zha_device_mock):
+async def test_cluster_no_ep_attribute(m1, zha_device_mock) -> None:
     """Test channels for clusters without ep_attribute."""
 
     zha_device = zha_device_mock(

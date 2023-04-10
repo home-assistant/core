@@ -135,6 +135,7 @@ def gen_data_entry_schema(
                 vol.Optional("data"): {str: cv.string_with_no_html},
                 vol.Optional("data_description"): {str: cv.string_with_no_html},
                 vol.Optional("menu_options"): {str: cv.string_with_no_html},
+                vol.Optional("submit"): cv.string_with_no_html,
             }
         },
         vol.Optional("error"): {str: cv.string_with_no_html},

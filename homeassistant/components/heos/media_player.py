@@ -88,14 +88,14 @@ async def async_setup_entry(
     async_add_entities(devices, True)
 
 
-def log_command_error(
-    command: str,
-) -> Callable[[Callable[_P, Awaitable[Any]]], Callable[_P, Coroutine[Any, Any, None]]]:
+_FuncType = Callable[_P, Awaitable[Any]]
+_ReturnFuncType = Callable[_P, Coroutine[Any, Any, None]]
+
+
+def log_command_error(command: str) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
     """Return decorator that logs command failure."""
 
-    def decorator(
-        func: Callable[_P, Awaitable[Any]]
-    ) -> Callable[_P, Coroutine[Any, Any, None]]:
+    def decorator(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
         @wraps(func)
         async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
             try:

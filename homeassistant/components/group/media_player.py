@@ -1,4 +1,4 @@
-"""This platform allows several media players to be grouped into one media player."""
+"""Platform allowing several media players to be grouped into one media player."""
 from __future__ import annotations
 
 from contextlib import suppress

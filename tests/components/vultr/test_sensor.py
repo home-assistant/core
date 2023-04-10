@@ -33,7 +33,7 @@ CONFIGS = [
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_sensor(hass: HomeAssistant):
+def test_sensor(hass: HomeAssistant) -> None:
     """Test the Vultr sensor class and methods."""
     hass_devices = []
 
@@ -93,7 +93,7 @@ def test_sensor(hass: HomeAssistant):
     assert tested == 5
 
 
-def test_invalid_sensor_config():
+def test_invalid_sensor_config() -> None:
     """Test config type failures."""
     with pytest.raises(vol.Invalid):  # No subscription
         vultr.PLATFORM_SCHEMA(
@@ -113,7 +113,7 @@ def test_invalid_sensor_config():
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_invalid_sensors(hass: HomeAssistant):
+def test_invalid_sensors(hass: HomeAssistant) -> None:
     """Test the VultrSensor fails."""
     hass_devices = []
 

@@ -1,7 +1,7 @@
 """Fixtures for Samsung TV."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime
 from socket import AddressFamily
 from typing import Any
@@ -23,6 +23,15 @@ from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
 import homeassistant.util.dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.samsungtv.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(autouse=True)

@@ -634,77 +634,87 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
             # Remove the now stale cached entry.
             config.cached_states.pop(entity.entity_id)
 
+    if cached_state is None:
+        return _build_entity_state_dict(entity)
+
+    data: dict[str, Any] = cached_state
+    # Make sure brightness is valid
+    if data[STATE_BRIGHTNESS] is None:
+        data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX if data[STATE_ON] else 0
+
+    # Make sure hue/saturation are valid
+    if (data[STATE_HUE] is None) or (data[STATE_SATURATION] is None):
+        data[STATE_HUE] = 0
+        data[STATE_SATURATION] = 0
+
+    # If the light is off, set the color to off
+    if data[STATE_BRIGHTNESS] == 0:
+        data[STATE_HUE] = 0
+        data[STATE_SATURATION] = 0
+
+    _clamp_values(data)
+    return data
+
+
+@lru_cache(maxsize=512)
+def _build_entity_state_dict(entity: State) -> dict[str, Any]:
+    """Build a state dict for an entity."""
     data: dict[str, Any] = {
-        STATE_ON: False,
+        STATE_ON: entity.state != STATE_OFF,
         STATE_BRIGHTNESS: None,
         STATE_HUE: None,
         STATE_SATURATION: None,
         STATE_COLOR_TEMP: None,
     }
-
-    if cached_state is None:
-        data[STATE_ON] = entity.state != STATE_OFF
-
-        if data[STATE_ON]:
-            data[STATE_BRIGHTNESS] = hass_to_hue_brightness(
-                entity.attributes.get(ATTR_BRIGHTNESS, 0)
-            )
-            hue_sat = entity.attributes.get(ATTR_HS_COLOR)
-            if hue_sat is not None:
-                hue = hue_sat[0]
-                sat = hue_sat[1]
-                # Convert hass hs values back to hue hs values
-                data[STATE_HUE] = int((hue / 360.0) * HUE_API_STATE_HUE_MAX)
-                data[STATE_SATURATION] = int((sat / 100.0) * HUE_API_STATE_SAT_MAX)
-            else:
-                data[STATE_HUE] = HUE_API_STATE_HUE_MIN
-                data[STATE_SATURATION] = HUE_API_STATE_SAT_MIN
-            data[STATE_COLOR_TEMP] = entity.attributes.get(ATTR_COLOR_TEMP, 0)
-
+    if data[STATE_ON]:
+        data[STATE_BRIGHTNESS] = hass_to_hue_brightness(
+            entity.attributes.get(ATTR_BRIGHTNESS, 0)
+        )
+        hue_sat = entity.attributes.get(ATTR_HS_COLOR)
+        if hue_sat is not None:
+            hue = hue_sat[0]
+            sat = hue_sat[1]
+            # Convert hass hs values back to hue hs values
+            data[STATE_HUE] = int((hue / 360.0) * HUE_API_STATE_HUE_MAX)
+            data[STATE_SATURATION] = int((sat / 100.0) * HUE_API_STATE_SAT_MAX)
         else:
-            data[STATE_BRIGHTNESS] = 0
-            data[STATE_HUE] = 0
-            data[STATE_SATURATION] = 0
-            data[STATE_COLOR_TEMP] = 0
+            data[STATE_HUE] = HUE_API_STATE_HUE_MIN
+            data[STATE_SATURATION] = HUE_API_STATE_SAT_MIN
+        data[STATE_COLOR_TEMP] = entity.attributes.get(ATTR_COLOR_TEMP, 0)
 
-        if entity.domain == climate.DOMAIN:
-            temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
-            # Convert 0-100 to 0-254
-            data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
-        elif entity.domain == humidifier.DOMAIN:
-            humidity = entity.attributes.get(ATTR_HUMIDITY, 0)
-            # Convert 0-100 to 0-254
-            data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
-        elif entity.domain == media_player.DOMAIN:
-            level = entity.attributes.get(
-                ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0
-            )
-            # Convert 0.0-1.0 to 0-254
-            data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
-        elif entity.domain == fan.DOMAIN:
-            percentage = entity.attributes.get(ATTR_PERCENTAGE) or 0
-            # Convert 0-100 to 0-254
-            data[STATE_BRIGHTNESS] = round(percentage * HUE_API_STATE_BRI_MAX / 100)
-        elif entity.domain == cover.DOMAIN:
-            level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
-            data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     else:
-        data = cached_state
-        # Make sure brightness is valid
-        if data[STATE_BRIGHTNESS] is None:
-            data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX if data[STATE_ON] else 0
+        data[STATE_BRIGHTNESS] = 0
+        data[STATE_HUE] = 0
+        data[STATE_SATURATION] = 0
+        data[STATE_COLOR_TEMP] = 0
 
-        # Make sure hue/saturation are valid
-        if (data[STATE_HUE] is None) or (data[STATE_SATURATION] is None):
-            data[STATE_HUE] = 0
-            data[STATE_SATURATION] = 0
+    if entity.domain == climate.DOMAIN:
+        temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
+        # Convert 0-100 to 0-254
+        data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
+    elif entity.domain == humidifier.DOMAIN:
+        humidity = entity.attributes.get(ATTR_HUMIDITY, 0)
+        # Convert 0-100 to 0-254
+        data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
+    elif entity.domain == media_player.DOMAIN:
+        level = entity.attributes.get(
+            ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0
+        )
+        # Convert 0.0-1.0 to 0-254
+        data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
+    elif entity.domain == fan.DOMAIN:
+        percentage = entity.attributes.get(ATTR_PERCENTAGE) or 0
+        # Convert 0-100 to 0-254
+        data[STATE_BRIGHTNESS] = round(percentage * HUE_API_STATE_BRI_MAX / 100)
+    elif entity.domain == cover.DOMAIN:
+        level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
+        data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
+    _clamp_values(data)
+    return data
 
-        # If the light is off, set the color to off
-        if data[STATE_BRIGHTNESS] == 0:
-            data[STATE_HUE] = 0
-            data[STATE_SATURATION] = 0
 
-    # Clamp brightness, hue, saturation, and color temp to valid values
+def _clamp_values(data: dict[str, Any]) -> None:
+    """Clamp brightness, hue, saturation, and color temp to valid values."""
     for key, v_min, v_max in (
         (STATE_BRIGHTNESS, HUE_API_STATE_BRI_MIN, HUE_API_STATE_BRI_MAX),
         (STATE_HUE, HUE_API_STATE_HUE_MIN, HUE_API_STATE_HUE_MAX),
@@ -713,8 +723,6 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
     ):
         if data[key] is not None:
             data[key] = max(v_min, min(data[key], v_max))
-
-    return data
 
 
 @lru_cache(maxsize=1024)
@@ -831,6 +839,7 @@ def create_hue_success_response(
 def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a config resource."""
     return {
+        "name": "HASS BRIDGE",
         "mac": "00:00:00:00:00:00",
         "swversion": "01003542",
         "apiversion": "1.17.0",
@@ -842,10 +851,18 @@ def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
 
 def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a list of all entities."""
-    json_response: dict[str, Any] = {
-        config.entity_id_to_number(state.entity_id): state_to_json(config, state)
-        for state in config.get_exposed_states()
-    }
+    hass: core.HomeAssistant = request.app["hass"]
+
+    json_response: dict[str, Any] = {}
+    for cached_state in config.get_exposed_states():
+        entity_id = cached_state.entity_id
+        state = hass.states.get(entity_id)
+        assert state is not None
+
+        json_response[config.entity_id_to_number(entity_id)] = state_to_json(
+            config, state
+        )
+
     return json_response
 
 

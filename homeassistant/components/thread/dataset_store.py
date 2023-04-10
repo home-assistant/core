@@ -9,6 +9,7 @@ from typing import Any, cast
 from python_otbr_api import tlv_parser
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
@@ -18,6 +19,10 @@ STORAGE_KEY = "thread.datasets"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 1
 SAVE_DELAY = 10
+
+
+class DatasetPreferredError(HomeAssistantError):
+    """Raised when attempting to delete the preferred dataset."""
 
 
 @dataclasses.dataclass(frozen=True)
@@ -93,6 +98,14 @@ class DatasetStore:
         self.async_schedule_save()
 
     @callback
+    def async_delete(self, dataset_id: str) -> None:
+        """Delete dataset."""
+        if self.preferred_dataset == dataset_id:
+            raise DatasetPreferredError("attempt to remove preferred dataset")
+        del self.datasets[dataset_id]
+        self.async_schedule_save()
+
+    @callback
     def async_get(self, dataset_id: str) -> DatasetEntry | None:
         """Get dataset by id."""
         return self.datasets.get(dataset_id)
@@ -144,3 +157,13 @@ async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
     """Add a dataset."""
     store = await async_get_store(hass)
     store.async_add(source, tlv)
+
+
+async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:
+    """Get the preferred dataset."""
+    store = await async_get_store(hass)
+    if (preferred_dataset := store.preferred_dataset) is None or (
+        entry := store.async_get(preferred_dataset)
+    ) is None:
+        return None
+    return entry.tlv

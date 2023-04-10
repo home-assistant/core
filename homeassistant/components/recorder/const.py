@@ -27,7 +27,7 @@ MAX_QUEUE_BACKLOG = 65000
 # in https://github.com/sqlite/sqlite/commit/efdba1a8b3c6c967e7fae9c1989c40d420ce64cc
 # We can increase this back to 1000 once most
 # have upgraded their sqlite version
-MAX_ROWS_TO_PURGE = 998
+SQLITE_MAX_BIND_VARS = 998
 
 DB_WORKER_PREFIX = "DbWorker"
 

@@ -1,11 +1,11 @@
 {
   "domain": "person",
   "name": "Person",
-  "documentation": "https://www.home-assistant.io/integrations/person",
-  "dependencies": ["image_upload"],
   "after_dependencies": ["device_tracker"],
   "codeowners": [],
-  "quality_scale": "internal",
+  "dependencies": ["image_upload"],
+  "documentation": "https://www.home-assistant.io/integrations/person",
+  "integration_type": "system",
   "iot_class": "calculated",
-  "integration_type": "system"
+  "quality_scale": "internal"
 }

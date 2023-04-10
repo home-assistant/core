@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("unit,temp", [("C", "5"), ("F", "-15")])
+@pytest.mark.parametrize(("unit", "temp"), [("C", "5"), ("F", "-15")])
 async def test_outdoor_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -16,7 +16,7 @@ async def test_outdoor_sensor(
     device_with_outdoor_sensor: Device,
     unit,
     temp,
-):
+) -> None:
     """Test outdoor temperature sensor."""
     device_with_outdoor_sensor.temperature_unit = unit
     location.devices_by_id[

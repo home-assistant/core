@@ -6,6 +6,7 @@ import logging
 import pytest
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     collection,
     entity_component,
@@ -15,6 +16,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from tests.common import flush_store
+from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +101,7 @@ class MockStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-def test_id_manager():
+def test_id_manager() -> None:
     """Test the ID manager."""
     id_manager = collection.IDManager()
     assert not id_manager.has_id("some_id")
@@ -112,7 +114,7 @@ def test_id_manager():
     assert id_manager.generate_id("bla") == "bla"
 
 
-async def test_observable_collection():
+async def test_observable_collection() -> None:
     """Test observerable collection."""
     coll = collection.ObservableCollection(_LOGGER)
     assert coll.async_items() == []
@@ -127,7 +129,7 @@ async def test_observable_collection():
     assert changes[0] == ("mock_type", "mock_id", {"mock": "item"})
 
 
-async def test_yaml_collection():
+async def test_yaml_collection() -> None:
     """Test a YAML collection."""
     id_manager = collection.IDManager()
     coll = collection.YamlCollection(_LOGGER, id_manager)
@@ -171,7 +173,7 @@ async def test_yaml_collection():
     )
 
 
-async def test_yaml_collection_skipping_duplicate_ids():
+async def test_yaml_collection_skipping_duplicate_ids() -> None:
     """Test YAML collection skipping duplicate IDs."""
     id_manager = collection.IDManager()
     id_manager.add_collection({"existing": True})
@@ -188,7 +190,7 @@ async def test_yaml_collection_skipping_duplicate_ids():
     )
 
 
-async def test_storage_collection(hass):
+async def test_storage_collection(hass: HomeAssistant) -> None:
     """Test storage collection."""
     store = storage.Store(hass, 1, "test-data")
     await store.async_save(
@@ -251,7 +253,7 @@ async def test_storage_collection(hass):
     }
 
 
-async def test_attach_entity_component_collection(hass):
+async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
     """Test attaching collection to entity component."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     coll = MockObservableCollection(_LOGGER)
@@ -290,7 +292,7 @@ async def test_attach_entity_component_collection(hass):
     assert hass.states.get("test.mock_1") is None
 
 
-async def test_entity_component_collection_abort(hass):
+async def test_entity_component_collection_abort(hass: HomeAssistant) -> None:
     """Test aborted entity adding is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     coll = MockObservableCollection(_LOGGER)
@@ -356,7 +358,7 @@ async def test_entity_component_collection_abort(hass):
     assert len(async_remove_calls) == 0
 
 
-async def test_entity_component_collection_entity_removed(hass):
+async def test_entity_component_collection_entity_removed(hass: HomeAssistant) -> None:
     """Test entity removal is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     coll = MockObservableCollection(_LOGGER)
@@ -424,7 +426,9 @@ async def test_entity_component_collection_entity_removed(hass):
     assert len(async_remove_calls) == 1
 
 
-async def test_storage_collection_websocket(hass, hass_ws_client):
+async def test_storage_collection_websocket(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test exposing a storage collection via websockets."""
     store = storage.Store(hass, 1, "test-data")
     coll = MockStorageCollection(store, _LOGGER)

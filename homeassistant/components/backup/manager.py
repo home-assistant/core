@@ -17,7 +17,8 @@ from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
-from homeassistant.util import dt, json as json_util
+from homeassistant.helpers.json import save_json
+from homeassistant.util import dt
 
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 
@@ -229,7 +230,7 @@ class BackupManager:
             tar_file_path, "w", gzip=False
         ) as tar_file:
             tmp_dir_path = Path(tmp_dir)
-            json_util.save_json(
+            save_json(
                 tmp_dir_path.joinpath("./backup.json").as_posix(),
                 backup_data,
             )

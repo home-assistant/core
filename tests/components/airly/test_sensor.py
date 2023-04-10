@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -29,9 +30,10 @@ from homeassistant.util.dt import utcnow
 from . import API_POINT_URL, init_integration
 
 from tests.common import async_fire_time_changed, load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_sensor(hass, aioclient_mock):
+async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test states of the sensor."""
     await init_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
@@ -199,7 +201,9 @@ async def test_sensor(hass, aioclient_mock):
     assert entry.options["sensor"] == {"suggested_display_precision": 1}
 
 
-async def test_availability(hass, aioclient_mock):
+async def test_availability(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Ensure that we mark the entities unavailable correctly when service is offline."""
     await init_integration(hass, aioclient_mock)
 
@@ -232,7 +236,9 @@ async def test_availability(hass, aioclient_mock):
     assert state.state == "68.35"
 
 
-async def test_manual_update_entity(hass, aioclient_mock):
+async def test_manual_update_entity(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, aioclient_mock)
 

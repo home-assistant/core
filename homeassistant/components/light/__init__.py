@@ -10,6 +10,7 @@ import logging
 import os
 from typing import Any, cast, final
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -679,7 +680,7 @@ class Profile:
         )
 
     @classmethod
-    def from_csv_row(cls, csv_row: list[str]) -> Profile:
+    def from_csv_row(cls, csv_row: list[str]) -> Self:
         """Create profile from a CSV row tuple."""
         return cls(*cls.SCHEMA(csv_row))
 
