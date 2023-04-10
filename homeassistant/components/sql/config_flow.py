@@ -58,7 +58,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
 
 def _generate_schema_config(current_data: dict[str, Any]) -> vol.Schema:
     """Generate schema for config flow."""
-    return vol.Schema(
+    schema: vol.Schema = vol.Schema(
         {
             vol.Required(
                 CONF_NAME,
@@ -66,30 +66,9 @@ def _generate_schema_config(current_data: dict[str, Any]) -> vol.Schema:
                     "suggested_value": current_data.get(CONF_NAME, "Select SQL Query")
                 },
             ): selector.TextSelector(),
-            vol.Optional(
-                CONF_DB_URL,
-                description={"suggested_value": current_data.get(CONF_DB_URL)},
-            ): selector.TextSelector(),
-            vol.Required(
-                CONF_COLUMN_NAME,
-                description={"suggested_value": current_data.get(CONF_COLUMN_NAME)},
-            ): selector.TextSelector(),
-            vol.Required(
-                CONF_QUERY,
-                description={"suggested_value": current_data.get(CONF_QUERY)},
-            ): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
-            vol.Optional(
-                CONF_UNIT_OF_MEASUREMENT,
-                description={
-                    "suggested_value": current_data.get(CONF_UNIT_OF_MEASUREMENT)
-                },
-            ): selector.TextSelector(),
-            vol.Optional(
-                CONF_VALUE_TEMPLATE,
-                description={"suggested_value": current_data.get(CONF_VALUE_TEMPLATE)},
-            ): selector.TemplateSelector(),
         }
     )
+    return schema.extend(_generate_schema_options(current_data).schema)
 
 
 def _generate_schema_options(
