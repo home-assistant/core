@@ -304,29 +304,29 @@ async def test_voc(hass: HomeAssistant, hk_driver) -> None:
     assert acc.char_density.value == 0
     assert acc.char_quality.value == 0
 
-    hass.states.async_set(entity_id, "24")
+    hass.states.async_set(entity_id, "250")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 24
+    assert acc.char_density.value == 250
     assert acc.char_quality.value == 1
 
-    hass.states.async_set(entity_id, "48")
+    hass.states.async_set(entity_id, "500")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 48
+    assert acc.char_density.value == 500
     assert acc.char_quality.value == 2
 
-    hass.states.async_set(entity_id, "64")
+    hass.states.async_set(entity_id, "1000")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 64
+    assert acc.char_density.value == 1000
     assert acc.char_quality.value == 3
 
-    hass.states.async_set(entity_id, "96")
+    hass.states.async_set(entity_id, "3000")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 96
+    assert acc.char_density.value == 3000
     assert acc.char_quality.value == 4
 
-    hass.states.async_set(entity_id, "128")
+    hass.states.async_set(entity_id, "5000")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 128
+    assert acc.char_density.value == 5000
     assert acc.char_quality.value == 5
 
 

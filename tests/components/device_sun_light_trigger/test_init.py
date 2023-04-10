@@ -28,9 +28,11 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
-def scanner(hass, enable_custom_integrations):
+async def scanner(hass, enable_custom_integrations):
     """Initialize components."""
-    scanner = getattr(hass.components, "test.device_tracker").get_scanner(None, None)
+    scanner = await getattr(hass.components, "test.device_tracker").async_get_scanner(
+        None, None
+    )
 
     scanner.reset()
     scanner.come_home("DEV1")
@@ -56,19 +58,16 @@ def scanner(hass, enable_custom_integrations):
             },
         },
     ):
-        assert hass.loop.run_until_complete(
-            async_setup_component(
-                hass,
-                device_tracker.DOMAIN,
-                {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}},
-            )
+        assert await async_setup_component(
+            hass,
+            device_tracker.DOMAIN,
+            {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}},
         )
 
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-        )
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
+    await hass.async_block_till_done()
 
     return scanner
 

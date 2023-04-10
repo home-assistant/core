@@ -83,38 +83,28 @@ def json_bytes(data: Any) -> bytes:
     )
 
 
+def _strip_null(obj: Any) -> Any:
+    """Strip NUL from an object."""
+    if isinstance(obj, str):
+        return obj.split("\0", 1)[0]
+    if isinstance(obj, dict):
+        return {key: _strip_null(o) for key, o in obj.items()}
+    if isinstance(obj, list):
+        return [_strip_null(o) for o in obj]
+    return obj
+
+
 def json_bytes_strip_null(data: Any) -> bytes:
     """Dump json bytes after terminating strings at the first NUL."""
-
-    def process_dict(_dict: dict[Any, Any]) -> dict[Any, Any]:
-        """Strip NUL from items in a dict."""
-        return {key: strip_null(o) for key, o in _dict.items()}
-
-    def process_list(_list: list[Any]) -> list[Any]:
-        """Strip NUL from items in a list."""
-        return [strip_null(o) for o in _list]
-
-    def strip_null(obj: Any) -> Any:
-        """Strip NUL from an object."""
-        if isinstance(obj, str):
-            return obj.split("\0", 1)[0]
-        if isinstance(obj, dict):
-            return process_dict(obj)
-        if isinstance(obj, list):
-            return process_list(obj)
-        return obj
-
     # We expect null-characters to be very rare, hence try encoding first and look
     # for an escaped null-character in the output.
     result = json_bytes(data)
-    if b"\\u0000" in result:
-        # We work on the processed result so we don't need to worry about
-        # Home Assistant extensions which allows encoding sets, tuples, etc.
-        data_processed = orjson.loads(result)
-        data_processed = strip_null(data_processed)
-        result = json_bytes(data_processed)
+    if b"\\u0000" not in result:
+        return result
 
-    return result
+    # We work on the processed result so we don't need to worry about
+    # Home Assistant extensions which allows encoding sets, tuples, etc.
+    return json_bytes(_strip_null(orjson.loads(result)))
 
 
 def json_dumps(data: Any) -> str:

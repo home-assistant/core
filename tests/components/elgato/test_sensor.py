@@ -31,14 +31,14 @@ async def test_sensors(
 ) -> None:
     """Test the Elgato sensors."""
 
-    state = hass.states.get(entity_id)
+    assert (state := hass.states.get(entity_id))
     assert state == snapshot
 
-    entry = entity_registry.async_get(entity_id)
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry == snapshot
 
     assert entry.device_id
-    device_entry = device_registry.async_get(entry.device_id)
+    assert (device_entry := device_registry.async_get(entry.device_id))
     assert device_entry == snapshot
 
 
@@ -55,10 +55,8 @@ async def test_disabled_by_default_sensors(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_id: str
 ) -> None:
     """Test the disabled by default Elgato sensors."""
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert not hass.states.get(entity_id)
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

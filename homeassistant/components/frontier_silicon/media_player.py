@@ -21,15 +21,17 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .browse_media import browse_node, browse_top_level
-from .const import DEFAULT_PIN, DEFAULT_PORT, DOMAIN, MEDIA_CONTENT_ID_PRESET
+from .const import CONF_PIN, DEFAULT_PIN, DEFAULT_PORT, DOMAIN, MEDIA_CONTENT_ID_PRESET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,36 +51,43 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Frontier Silicon platform."""
-    if discovery_info is not None:
-        webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
-            discovery_info["ssdp_description"]
-        )
-        afsapi = AFSAPI(webfsapi_url, DEFAULT_PIN)
+    """Set up the Frontier Silicon platform.
 
-        name = await afsapi.get_friendly_name()
-        async_add_entities(
-            [AFSAPIDevice(name, afsapi)],
-            True,
-        )
-        return
+    YAML is deprecated, and imported automatically.
+    """
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    password = config.get(CONF_PASSWORD)
-    name = config.get(CONF_NAME)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "remove_yaml",
+        breaks_in_ha_version="2023.6.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="removed_yaml",
+    )
 
-    try:
-        webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
-            f"http://{host}:{port}/device"
-        )
-    except FSConnectionError:
-        _LOGGER.error(
-            "Could not add the FSAPI device at %s:%s -> %s", host, port, password
-        )
-        return
-    afsapi = AFSAPI(webfsapi_url, password)
-    async_add_entities([AFSAPIDevice(name, afsapi)], True)
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_NAME: config.get(CONF_NAME),
+            CONF_HOST: config.get(CONF_HOST),
+            CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
+            CONF_PIN: config.get(CONF_PASSWORD, DEFAULT_PIN),
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Frontier Silicon entity."""
+
+    afsapi: AFSAPI = hass.data[DOMAIN][config_entry.entry_id]
+
+    async_add_entities([AFSAPIDevice(config_entry.title, afsapi)], True)
 
 
 class AFSAPIDevice(MediaPlayerEntity):
@@ -305,7 +314,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             await self.fs_device.set_eq_preset(mode)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse media library and preset stations."""
         if not media_content_id:

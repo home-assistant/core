@@ -30,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 
 async def test_generic_fan(
@@ -538,23 +538,26 @@ async def test_leviton_zw4sf_fan(
 
 
 async def test_thermostat_fan(
-    hass: HomeAssistant, client, climate_adc_t3000, integration
+    hass: HomeAssistant,
+    client,
+    climate_adc_t3000,
+    integration,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the fan entity for a z-wave fan."""
     node = climate_adc_t3000
     entity_id = "fan.adc_t3000"
 
-    registry = entity_registry.async_get(hass)
     state = hass.states.get(entity_id)
     assert state is None
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
-    updated_entry = registry.async_update_entity(entity_id, disabled_by=None)
+    updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 
@@ -769,22 +772,25 @@ async def test_thermostat_fan(
 
 
 async def test_thermostat_fan_without_off(
-    hass: HomeAssistant, client, climate_radio_thermostat_ct100_plus, integration
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus,
+    integration,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the fan entity for a z-wave fan without "off" property."""
     entity_id = "fan.z_wave_thermostat"
 
-    registry = entity_registry.async_get(hass)
     state = hass.states.get(entity_id)
     assert state is None
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
-    updated_entry = registry.async_update_entity(entity_id, disabled_by=None)
+    updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 
@@ -827,22 +833,25 @@ async def test_thermostat_fan_without_off(
 
 
 async def test_thermostat_fan_without_preset_modes(
-    hass: HomeAssistant, client, climate_adc_t3000_missing_fan_mode_states, integration
+    hass: HomeAssistant,
+    client,
+    climate_adc_t3000_missing_fan_mode_states,
+    integration,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the fan entity for a z-wave fan without "states" metadata."""
     entity_id = "fan.adc_t3000_missing_fan_mode_states"
 
-    registry = entity_registry.async_get(hass)
     state = hass.states.get(entity_id)
     assert state is None
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
-    updated_entry = registry.async_update_entity(entity_id, disabled_by=None)
+    updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 

@@ -98,7 +98,10 @@ class BaseHaScanner(ABC):
         self._start_time = self._last_detection = MONOTONIC_TIME()
         if not self._cancel_watchdog:
             self._cancel_watchdog = async_track_time_interval(
-                self.hass, self._async_scanner_watchdog, SCANNER_WATCHDOG_INTERVAL
+                self.hass,
+                self._async_scanner_watchdog,
+                SCANNER_WATCHDOG_INTERVAL,
+                name=f"{self.name} Bluetooth scanner watchdog",
             )
 
     @hass_callback
@@ -165,13 +168,13 @@ class BaseHaScanner(ABC):
             "monotonic_time": MONOTONIC_TIME(),
             "discovered_devices_and_advertisement_data": [
                 {
-                    "name": device_adv[0].name,
-                    "address": device_adv[0].address,
-                    "rssi": device_adv[0].rssi,
-                    "advertisement_data": device_adv[1],
-                    "details": device_adv[0].details,
+                    "name": device.name,
+                    "address": device.address,
+                    "rssi": advertisement_data.rssi,
+                    "advertisement_data": advertisement_data,
+                    "details": device.details,
                 }
-                for device_adv in device_adv_datas
+                for device, advertisement_data in device_adv_datas
             ],
         }
 
@@ -224,23 +227,27 @@ class BaseHaRemoteScanner(BaseHaScanner):
             self._async_expire_devices(dt_util.utcnow())
 
         cancel_track = async_track_time_interval(
-            self.hass, self._async_expire_devices, timedelta(seconds=30)
+            self.hass,
+            self._async_expire_devices,
+            timedelta(seconds=30),
+            name=f"{self.name} Bluetooth scanner device expire",
         )
         cancel_stop = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._save_history
+            EVENT_HOMEASSISTANT_STOP, self._async_save_history
         )
         self._async_setup_scanner_watchdog()
 
         @hass_callback
         def _cancel() -> None:
-            self._save_history()
+            self._async_save_history()
             self._async_stop_scanner_watchdog()
             cancel_track()
             cancel_stop()
 
         return _cancel
 
-    def _save_history(self, event: Event | None = None) -> None:
+    @hass_callback
+    def _async_save_history(self, event: Event | None = None) -> None:
         """Save the history."""
         self._storage.async_set_advertisement_history(
             self.source,
@@ -252,6 +259,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             ),
         )
 
+    @hass_callback
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
         """Expire old devices."""
         now = MONOTONIC_TIME()
@@ -337,12 +345,27 @@ class BaseHaRemoteScanner(BaseHaScanner):
             tx_power=NO_RSSI_VALUE if tx_power is None else tx_power,
             platform_data=(),
         )
-        device = BLEDevice(  # type: ignore[no-untyped-call]
-            address=address,
-            name=local_name,
-            details=self._details | details,
-            rssi=rssi,  # deprecated, will be removed in newer bleak
-        )
+        if prev_discovery:
+            #
+            # Bleak updates the BLEDevice via create_or_update_device.
+            # We need to do the same to ensure integrations that already
+            # have the BLEDevice object get the updated details when they
+            # change.
+            #
+            # https://github.com/hbldh/bleak/blob/222618b7747f0467dbb32bd3679f8cfaa19b1668/bleak/backends/scanner.py#L203
+            #
+            device = prev_device
+            device.name = local_name
+            device.details = self._details | details
+            # pylint: disable-next=protected-access
+            device._rssi = rssi  # deprecated, will be removed in newer bleak
+        else:
+            device = BLEDevice(
+                address=address,
+                name=local_name,
+                details=self._details | details,
+                rssi=rssi,  # deprecated, will be removed in newer bleak
+            )
         self._discovered_device_advertisement_datas[address] = (
             device,
             advertisement_data,

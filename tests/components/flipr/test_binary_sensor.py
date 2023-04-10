@@ -5,7 +5,7 @@ from unittest.mock import patch
 from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as entity_reg
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -23,7 +23,7 @@ MOCK_FLIPR_MEASURE = {
 }
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the creation and values of the Flipr binary sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -37,8 +37,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     entry.add_to_hass(hass)
 
-    registry = entity_reg.async_get(hass)
-
     with patch(
         "flipr_api.FliprAPIRestClient.get_pool_measure_latest",
         return_value=MOCK_FLIPR_MEASURE,
@@ -47,7 +45,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     # Check entity unique_id value that is generated in FliprEntity base class.
-    entity = registry.async_get("binary_sensor.flipr_myfliprid_ph_status")
+    entity = entity_registry.async_get("binary_sensor.flipr_myfliprid_ph_status")
     assert entity.unique_id == "myfliprid-ph_status"
 
     state = hass.states.get("binary_sensor.flipr_myfliprid_ph_status")

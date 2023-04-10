@@ -40,14 +40,14 @@ class ElgatoButtonEntityDescription(
 BUTTONS = [
     ElgatoButtonEntityDescription(
         key="identify",
-        name="Identify",
+        translation_key="identify",
         icon="mdi:help",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda client: client.identify(),
     ),
     ElgatoButtonEntityDescription(
         key="restart",
-        name="Restart",
+        translation_key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda client: client.restart(),
@@ -94,5 +94,5 @@ class ElgatoButtonEntity(ElgatoEntity, ButtonEntity):
             await self.entity_description.press_fn(self.coordinator.client)
         except ElgatoError as error:
             raise HomeAssistantError(
-                "An error occurred while identifying the Elgato Light"
+                "An error occurred while communicating with the Elgato Light"
             ) from error

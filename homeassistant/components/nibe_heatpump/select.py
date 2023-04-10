@@ -1,7 +1,7 @@
 """The Nibe Heat Pump select."""
 from __future__ import annotations
 
-from nibe.coil import Coil
+from nibe.coil import Coil, CoilData
 
 from homeassistant.components.select import ENTITY_ID_FORMAT, SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -40,12 +40,12 @@ class Select(CoilEntity, SelectEntity):
         self._attr_options = list(coil.mappings.values())
         self._attr_current_option = None
 
-    def _async_read_coil(self, coil: Coil) -> None:
-        if not isinstance(coil.value, str):
+    def _async_read_coil(self, data: CoilData) -> None:
+        if not isinstance(data.value, str):
             self._attr_current_option = None
             return
 
-        self._attr_current_option = coil.value
+        self._attr_current_option = data.value
 
     async def async_select_option(self, option: str) -> None:
         """Support writing value."""

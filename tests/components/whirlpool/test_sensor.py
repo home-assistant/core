@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from whirlpool.washerdryer import MachineState
 
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import as_timestamp, utc_from_timestamp
 
 from . import init_integration
@@ -44,6 +44,7 @@ async def test_dryer_sensor_values(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
     mock_sensor2_api: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the sensor value callbacks."""
     hass.state = CoreState.not_running
@@ -69,8 +70,7 @@ async def test_dryer_sensor_values(
 
     entity_id = "sensor.dryer_state"
     mock_instance = mock_sensor2_api
-    registry = entity_registry.async_get(hass)
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     state = hass.states.get(entity_id)
     assert state is not None
@@ -108,6 +108,7 @@ async def test_washer_sensor_values(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
     mock_sensor1_api: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the sensor value callbacks."""
     hass.state = CoreState.not_running
@@ -133,8 +134,7 @@ async def test_washer_sensor_values(
 
     entity_id = "sensor.washer_state"
     mock_instance = mock_sensor1_api
-    registry = entity_registry.async_get(hass)
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     state = hass.states.get(entity_id)
     assert state is not None
@@ -147,13 +147,14 @@ async def test_washer_sensor_values(
     assert state.state == thetimestamp.isoformat()
 
     state_id = f"{entity_id.split('_')[0]}_detergent_level"
-    registry = entity_registry.async_get(hass)
-    entry = registry.async_get(state_id)
+    entry = entity_registry.async_get(state_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-    update_entry = registry.async_update_entity(entry.entity_id, disabled_by=None)
+    update_entry = entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=None
+    )
     await hass.async_block_till_done()
 
     assert update_entry != entry

@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import device_tracker, mqtt
-from homeassistant.components.device_tracker import legacy
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -12,12 +11,16 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_test_reloadable,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_setup_manual_entity_from_yaml,
 )
 
 from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
+from tests.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -589,18 +592,31 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
     )
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                device_tracker.DOMAIN: {"name": "jan", "state_topic": "/location/jan"}
+            }
+        }
+    ],
+)
 async def test_setup_with_modern_schema(
-    hass: HomeAssistant, mock_device_tracker_conf: list[legacy.Device]
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
 ) -> None:
     """Test setup using the modern schema."""
+    await mqtt_mock_entry_no_yaml_config()
     dev_id = "jan"
     entity_id = f"{device_tracker.DOMAIN}.{dev_id}"
-    topic = "/location/jan"
-
-    config = {
-        mqtt.DOMAIN: {device_tracker.DOMAIN: {"name": dev_id, "state_topic": topic}}
-    }
-
-    await help_test_setup_manual_entity_from_yaml(hass, config)
-
     assert hass.states.get(entity_id) is not None
+
+
+async def test_reloadable(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test reloading the MQTT platform."""
+    domain = device_tracker.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)

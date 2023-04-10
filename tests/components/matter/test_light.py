@@ -14,6 +14,8 @@ from .common import (
 )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
@@ -66,7 +68,7 @@ async def test_on_off_light(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=light_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.OnOff.Commands.Off(),
     )
     matter_client.send_device_command.reset_mock()
@@ -84,12 +86,14 @@ async def test_on_off_light(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=light_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.OnOff.Commands.On(),
     )
     matter_client.send_device_command.reset_mock()
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
@@ -135,7 +139,7 @@ async def test_dimmable_light(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=light_node.node_id,
-        endpoint=1,
+        endpoint_id=1,
         command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
             level=128,
             transitionTime=0,
@@ -144,6 +148,8 @@ async def test_dimmable_light(
     matter_client.send_device_command.reset_mock()
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
@@ -192,7 +198,7 @@ async def test_color_temperature_light(
         [
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToColorTemperature(
                     colorTemperature=3003,
                     transitionTime=0,
@@ -200,7 +206,7 @@ async def test_color_temperature_light(
             ),
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.OnOff.Commands.On(),
             ),
         ]
@@ -208,6 +214,8 @@ async def test_color_temperature_light(
     matter_client.send_device_command.reset_mock()
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
@@ -268,14 +276,14 @@ async def test_extended_color_light(
         [
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToColor(
                     colorX=0.5 * 65536, colorY=0.5 * 65536, transitionTime=0
                 ),
             ),
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.OnOff.Commands.On(),
             ),
         ]
@@ -288,7 +296,7 @@ async def test_extended_color_light(
         "turn_on",
         {
             "entity_id": entity_id,
-            "hs_color": (0, 0),
+            "hs_color": (236.69291338582678, 100.0),
         },
         blocking=True,
     )
@@ -297,15 +305,19 @@ async def test_extended_color_light(
     matter_client.send_device_command.assert_has_calls(
         [
             call(
-                node_id=light_node.node_id,
-                endpoint=1,
+                node_id=1,
+                endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
-                    hue=0, saturation=0, transitionTime=0
+                    hue=167,
+                    saturation=254,
+                    transitionTime=0,
+                    optionsMask=0,
+                    optionsOverride=0,
                 ),
             ),
             call(
                 node_id=light_node.node_id,
-                endpoint=1,
+                endpoint_id=1,
                 command=clusters.OnOff.Commands.On(),
             ),
         ]

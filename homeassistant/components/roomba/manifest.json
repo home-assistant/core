@@ -24,5 +24,5 @@
   "documentation": "https://www.home-assistant.io/integrations/roomba",
   "iot_class": "local_push",
   "loggers": ["paho_mqtt", "roombapy"],
-  "requirements": ["roombapy==1.6.5"]
+  "requirements": ["roombapy==1.6.8"]
 }

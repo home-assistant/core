@@ -9,6 +9,7 @@ from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import time
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -32,7 +33,7 @@ def setup_comp(hass):
     mock_component(hass, "group")
 
 
-async def test_if_fires_using_at(hass, calls):
+async def test_if_fires_using_at(hass: HomeAssistant, calls) -> None:
     """Test for firing at."""
     now = dt_util.now()
 
@@ -72,7 +73,9 @@ async def test_if_fires_using_at(hass, calls):
 @pytest.mark.parametrize(
     ("has_date", "has_time"), [(True, True), (True, False), (False, True)]
 )
-async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time):
+async def test_if_fires_using_at_input_datetime(
+    hass: HomeAssistant, calls, has_date, has_time
+) -> None:
     """Test for firing at input_datetime."""
     await async_setup_component(
         hass,
@@ -151,7 +154,7 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
     )
 
 
-async def test_if_fires_using_multiple_at(hass, calls):
+async def test_if_fires_using_multiple_at(hass: HomeAssistant, calls) -> None:
     """Test for firing at."""
 
     now = dt_util.now()
@@ -193,7 +196,7 @@ async def test_if_fires_using_multiple_at(hass, calls):
     assert calls[1].data["some"] == "time - 6"
 
 
-async def test_if_not_fires_using_wrong_at(hass, calls):
+async def test_if_not_fires_using_wrong_at(hass: HomeAssistant, calls) -> None:
     """YAML translates time values to total seconds.
 
     This should break the before rule.
@@ -232,7 +235,7 @@ async def test_if_not_fires_using_wrong_at(hass, calls):
     assert len(calls) == 0
 
 
-async def test_if_action_before(hass, calls):
+async def test_if_action_before(hass: HomeAssistant, calls) -> None:
     """Test for if action before."""
     assert await async_setup_component(
         hass,
@@ -263,7 +266,7 @@ async def test_if_action_before(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_action_after(hass, calls):
+async def test_if_action_after(hass: HomeAssistant, calls) -> None:
     """Test for if action after."""
     assert await async_setup_component(
         hass,
@@ -294,7 +297,7 @@ async def test_if_action_after(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_action_one_weekday(hass, calls):
+async def test_if_action_one_weekday(hass: HomeAssistant, calls) -> None:
     """Test for if action with one weekday."""
     assert await async_setup_component(
         hass,
@@ -326,7 +329,7 @@ async def test_if_action_one_weekday(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_action_list_weekday(hass, calls):
+async def test_if_action_list_weekday(hass: HomeAssistant, calls) -> None:
     """Test for action with a list of weekdays."""
     assert await async_setup_component(
         hass,
@@ -365,7 +368,7 @@ async def test_if_action_list_weekday(hass, calls):
     assert len(calls) == 2
 
 
-async def test_untrack_time_change(hass):
+async def test_untrack_time_change(hass: HomeAssistant) -> None:
     """Test for removing tracked time changes."""
     mock_track_time_change = Mock()
     with patch(
@@ -398,7 +401,7 @@ async def test_untrack_time_change(hass):
     assert len(mock_track_time_change.mock_calls) == 3
 
 
-async def test_if_fires_using_at_sensor(hass, calls):
+async def test_if_fires_using_at_sensor(hass: HomeAssistant, calls) -> None:
     """Test for firing at sensor time."""
     now = dt_util.now()
 
@@ -507,7 +510,7 @@ async def test_if_fires_using_at_sensor(hass, calls):
         {"platform": "time", "at": "12:34"},
     ],
 )
-def test_schema_valid(conf):
+def test_schema_valid(conf) -> None:
     """Make sure we don't accept number for 'at' value."""
     time.TRIGGER_SCHEMA(conf)
 
@@ -520,13 +523,13 @@ def test_schema_valid(conf):
         {"platform": "time", "at": "25:00"},
     ],
 )
-def test_schema_invalid(conf):
+def test_schema_invalid(conf) -> None:
     """Make sure we don't accept number for 'at' value."""
     with pytest.raises(vol.Invalid):
         time.TRIGGER_SCHEMA(conf)
 
 
-async def test_datetime_in_past_on_load(hass, calls):
+async def test_datetime_in_past_on_load(hass: HomeAssistant, calls) -> None:
     """Test time trigger works if input_datetime is in past."""
     await async_setup_component(
         hass,

@@ -1,6 +1,8 @@
 """Preference management for cloud."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
@@ -18,10 +20,9 @@ from .const import (
     PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_ENTITY_CONFIGS,
     PREF_ALEXA_REPORT_STATE,
-    PREF_ALIASES,
+    PREF_ALEXA_SETTINGS_VERSION,
     PREF_CLOUD_USER,
     PREF_CLOUDHOOKS,
-    PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
     PREF_ENABLE_REMOTE,
@@ -30,15 +31,33 @@ from .const import (
     PREF_GOOGLE_LOCAL_WEBHOOK_ID,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
-    PREF_OVERRIDE_NAME,
+    PREF_GOOGLE_SETTINGS_VERSION,
     PREF_REMOTE_DOMAIN,
-    PREF_SHOULD_EXPOSE,
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
 )
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
+
+ALEXA_SETTINGS_VERSION = 2
+GOOGLE_SETTINGS_VERSION = 2
+
+
+class CloudPreferencesStore(Store):
+    """Store entity registry data."""
+
+    async def _async_migrate_func(
+        self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        if old_major_version == 1:
+            if old_minor_version < 2:
+                old_data.setdefault(PREF_ALEXA_SETTINGS_VERSION, 1)
+                old_data.setdefault(PREF_GOOGLE_SETTINGS_VERSION, 1)
+
+        return old_data
 
 
 class CloudPreferences:
@@ -47,7 +66,9 @@ class CloudPreferences:
     def __init__(self, hass):
         """Initialize cloud prefs."""
         self._hass = hass
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = CloudPreferencesStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        )
         self._prefs = None
         self._listeners = []
         self.last_updated: set[str] = set()
@@ -81,14 +102,12 @@ class CloudPreferences:
         google_secure_devices_pin=UNDEFINED,
         cloudhooks=UNDEFINED,
         cloud_user=UNDEFINED,
-        google_entity_configs=UNDEFINED,
-        alexa_entity_configs=UNDEFINED,
         alexa_report_state=UNDEFINED,
         google_report_state=UNDEFINED,
-        alexa_default_expose=UNDEFINED,
-        google_default_expose=UNDEFINED,
         tts_default_voice=UNDEFINED,
         remote_domain=UNDEFINED,
+        alexa_settings_version=UNDEFINED,
+        google_settings_version=UNDEFINED,
     ):
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -100,12 +119,10 @@ class CloudPreferences:
             (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
             (PREF_CLOUDHOOKS, cloudhooks),
             (PREF_CLOUD_USER, cloud_user),
-            (PREF_GOOGLE_ENTITY_CONFIGS, google_entity_configs),
-            (PREF_ALEXA_ENTITY_CONFIGS, alexa_entity_configs),
             (PREF_ALEXA_REPORT_STATE, alexa_report_state),
             (PREF_GOOGLE_REPORT_STATE, google_report_state),
-            (PREF_ALEXA_DEFAULT_EXPOSE, alexa_default_expose),
-            (PREF_GOOGLE_DEFAULT_EXPOSE, google_default_expose),
+            (PREF_ALEXA_SETTINGS_VERSION, alexa_settings_version),
+            (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
             (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
             (PREF_REMOTE_DOMAIN, remote_domain),
         ):
@@ -113,57 +130,6 @@ class CloudPreferences:
                 prefs[key] = value
 
         await self._save_prefs(prefs)
-
-    async def async_update_google_entity_config(
-        self,
-        *,
-        entity_id,
-        override_name=UNDEFINED,
-        disable_2fa=UNDEFINED,
-        aliases=UNDEFINED,
-        should_expose=UNDEFINED,
-    ):
-        """Update config for a Google entity."""
-        entities = self.google_entity_configs
-        entity = entities.get(entity_id, {})
-
-        changes = {}
-        for key, value in (
-            (PREF_OVERRIDE_NAME, override_name),
-            (PREF_DISABLE_2FA, disable_2fa),
-            (PREF_ALIASES, aliases),
-            (PREF_SHOULD_EXPOSE, should_expose),
-        ):
-            if value is not UNDEFINED:
-                changes[key] = value
-
-        if not changes:
-            return
-
-        updated_entity = {**entity, **changes}
-
-        updated_entities = {**entities, entity_id: updated_entity}
-        await self.async_update(google_entity_configs=updated_entities)
-
-    async def async_update_alexa_entity_config(
-        self, *, entity_id, should_expose=UNDEFINED
-    ):
-        """Update config for an Alexa entity."""
-        entities = self.alexa_entity_configs
-        entity = entities.get(entity_id, {})
-
-        changes = {}
-        for key, value in ((PREF_SHOULD_EXPOSE, should_expose),):
-            if value is not UNDEFINED:
-                changes[key] = value
-
-        if not changes:
-            return
-
-        updated_entity = {**entity, **changes}
-
-        updated_entities = {**entities, entity_id: updated_entity}
-        await self.async_update(alexa_entity_configs=updated_entities)
 
     async def async_set_username(self, username) -> bool:
         """Set the username that is logged in."""
@@ -192,14 +158,12 @@ class CloudPreferences:
         """Return dictionary version."""
         return {
             PREF_ALEXA_DEFAULT_EXPOSE: self.alexa_default_expose,
-            PREF_ALEXA_ENTITY_CONFIGS: self.alexa_entity_configs,
             PREF_ALEXA_REPORT_STATE: self.alexa_report_state,
             PREF_CLOUDHOOKS: self.cloudhooks,
             PREF_ENABLE_ALEXA: self.alexa_enabled,
             PREF_ENABLE_GOOGLE: self.google_enabled,
             PREF_ENABLE_REMOTE: self.remote_enabled,
             PREF_GOOGLE_DEFAULT_EXPOSE: self.google_default_expose,
-            PREF_GOOGLE_ENTITY_CONFIGS: self.google_entity_configs,
             PREF_GOOGLE_REPORT_STATE: self.google_report_state,
             PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
             PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
@@ -242,6 +206,11 @@ class CloudPreferences:
         return self._prefs.get(PREF_ALEXA_ENTITY_CONFIGS, {})
 
     @property
+    def alexa_settings_version(self):
+        """Return version of Alexa settings."""
+        return self._prefs[PREF_ALEXA_SETTINGS_VERSION]
+
+    @property
     def google_enabled(self):
         """Return if Google is enabled."""
         return self._prefs[PREF_ENABLE_GOOGLE]
@@ -260,6 +229,11 @@ class CloudPreferences:
     def google_entity_configs(self):
         """Return Google Entity configurations."""
         return self._prefs.get(PREF_GOOGLE_ENTITY_CONFIGS, {})
+
+    @property
+    def google_settings_version(self):
+        """Return version of Google settings."""
+        return self._prefs[PREF_GOOGLE_SETTINGS_VERSION]
 
     @property
     def google_local_webhook_id(self):
@@ -325,6 +299,7 @@ class CloudPreferences:
         return {
             PREF_ALEXA_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
             PREF_ALEXA_ENTITY_CONFIGS: {},
+            PREF_ALEXA_SETTINGS_VERSION: ALEXA_SETTINGS_VERSION,
             PREF_CLOUD_USER: None,
             PREF_CLOUDHOOKS: {},
             PREF_ENABLE_ALEXA: True,
@@ -332,6 +307,7 @@ class CloudPreferences:
             PREF_ENABLE_REMOTE: False,
             PREF_GOOGLE_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
             PREF_GOOGLE_ENTITY_CONFIGS: {},
+            PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION,
             PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
             PREF_REMOTE_DOMAIN: None,

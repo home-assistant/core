@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from homeassistant.components import huisbaasje
-from homeassistant.components.huisbaasje.const import FLOW_CUBIC_METERS_PER_HOUR
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -18,6 +17,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 
@@ -292,7 +292,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert (
             current_gas.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == FLOW_CUBIC_METERS_PER_HOUR
+            == UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
         )
 
         gas_today = hass.states.get("sensor.huisbaasje_gas_today")
