@@ -59,6 +59,7 @@ class ReolinkHost:
         self._base_url: str = ""
         self._webhook_url: str = ""
         self._webhook_reachable: asyncio.Event = asyncio.Event()
+        self._webhook_read_done: asyncio.Event = asyncio.Event()
         self._lost_subscription: bool = False
 
     @property
@@ -363,11 +364,10 @@ class ReolinkHost:
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ):
         """Shield the incoming webhook callback from cancellation."""
-        shielded_future = asyncio.shield(
-            self._handle_webhook(hass, webhook_id, request)
-        )
+        self._webhook_read_done.clear()
+        asyncio.shield(self._handle_webhook(hass, webhook_id, request))
         _LOGGER.debug("Webhook '%s' called", webhook_id)
-        await shielded_future
+        await self._webhook_read_done.wait()
 
     async def _handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
@@ -388,6 +388,7 @@ class ReolinkHost:
             )
             return
         finally:
+            self._webhook_read_done.set()
             if not self._webhook_reachable.is_set():
                 self._webhook_reachable.set()
                 ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
