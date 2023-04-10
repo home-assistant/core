@@ -60,7 +60,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
 
     for res in result.mappings():
         if column not in res:
-            raise IndexError(f"Column {column} is not returned by the query.")
+            raise KeyError(f"Column {column} is not returned by the query.")
 
         data = res[column]
         _LOGGER.debug("Return value from query: %s", data)
@@ -109,7 +109,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
                 errors["query"] = "query_invalid"
-            except IndexError:
+            except KeyError:
                 errors["column"] = "column_invalid"
 
             add_db_url = (
@@ -166,7 +166,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
                 errors["query"] = "query_invalid"
-            except IndexError:
+            except KeyError:
                 errors["column"] = "column_invalid"
             else:
                 new_user_input = user_input
