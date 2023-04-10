@@ -1,0 +1,112 @@
+"""Config flow for Victron Bluetooth Low Energy integration."""
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
+from homeassistant.data_entry_flow import FlowResult
+
+from . import VictronBluetoothDeviceData
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+STEP_ACCESS_TOKEN_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ACCESS_TOKEN): str,
+    }
+)
+
+
+class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Victron Bluetooth Low Energy."""
+
+    VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovered_device: str | None = None
+        self._discovered_devices: dict[str, str] = {}
+        self._discovered_devices_info: dict[str, BluetoothServiceInfoBleak] = {}
+
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> FlowResult:
+        """Handle the bluetooth discovery step."""
+        _LOGGER.debug("async_step_bluetooth: %s", discovery_info)
+        await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
+        device = VictronBluetoothDeviceData()
+        if not device.supported(discovery_info):
+            return self.async_abort(reason="not_supported")
+        self._discovered_device = discovery_info.address
+        self._discovered_devices_info[discovery_info.address] = discovery_info
+        self._discovered_devices[discovery_info.address] = (
+            device.title or device.get_device_name() or discovery_info.name
+        )
+        return await self.async_step_access_token()
+
+    async def async_step_access_token(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle advertisement key input."""
+        assert self._discovered_device is not None
+        if user_input is not None:
+            # see if we can create a device with the access token
+            device = VictronBluetoothDeviceData(user_input[CONF_ACCESS_TOKEN])
+            if device.validate_advertisement_key(
+                self._discovered_devices_info[
+                    self._discovered_device
+                ].manufacturer_data[0x02E1]
+            ):
+                return self.async_create_entry(
+                    title=self._discovered_devices[self._discovered_device],
+                    data=user_input,
+                )
+            return self.async_abort(reason="invalid_access_token")
+
+        return self.async_show_form(
+            step_id="access_token", data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle select a device to set up."""
+        if user_input is not None:
+            address = user_input[CONF_ADDRESS]
+            await self.async_set_unique_id(address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+            self._discovered_device = address
+            return self.async_show_form(
+                step_id="access_token", data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA
+            )
+
+        current_addresses = self._async_current_ids()
+        for discovery_info in async_discovered_service_info(self.hass, False):
+            address = discovery_info.address
+            if address in current_addresses or address in self._discovered_devices:
+                continue
+            device = VictronBluetoothDeviceData()
+            if device.supported(discovery_info):
+                self._discovered_devices_info[address] = discovery_info
+                self._discovered_devices[address] = (
+                    device.title or device.get_device_name() or discovery_info.name
+                )
+        if not self._discovered_devices:
+            return self.async_abort(reason="no_devices_found")
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
+            ),
+        )
