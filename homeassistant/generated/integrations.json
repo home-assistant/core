@@ -7305,6 +7305,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "victron_ble": {
+      "name": "Victron Bluetooth Low Energy",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "victron_remote_monitoring": {
       "name": "Victron Remote Monitoring",
       "integration_type": "service",
