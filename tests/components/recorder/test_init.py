@@ -66,7 +66,7 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
@@ -852,6 +852,31 @@ def test_saving_event_with_oversized_data(
     assert len(events) == 2
     assert json_loads(events["test_event"]) == event_data
     assert json_loads(events["test_event_too_big"]) == {}
+
+
+def test_saving_event_invalid_context_ulid(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we handle invalid manually injected context ids."""
+    hass = hass_recorder()
+    event_data = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.bus.fire("test_event", event_data, context=Context(id="invalid"))
+    wait_recording_done(hass)
+    events = {}
+
+    with session_scope(hass=hass) as session:
+        for _, data, event_type in (
+            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+            .where(EventTypes.event_type.in_(["test_event"]))
+        ):
+            events[event_type] = data
+
+    assert "invalid" in caplog.text
+
+    assert len(events) == 1
+    assert json_loads(events["test_event"]) == event_data
 
 
 def test_recorder_setup_failure(hass: HomeAssistant) -> None:
