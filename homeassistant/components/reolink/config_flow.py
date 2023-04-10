@@ -178,7 +178,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema = data_schema.extend(
                 {
                     vol.Optional(CONF_PORT): cv.positive_int,
-                    vol.Optional(CONF_USE_HTTPS): bool,
+                    vol.Required(CONF_USE_HTTPS, default=False): bool,
                 }
             )
 
