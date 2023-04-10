@@ -47,6 +47,15 @@ async def async_setup_scanner(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the MQTT JSON tracker."""
+    # Make sure MQTT is available and the entry is loaded
+    if not hass.config_entries.async_entries(
+        mqtt.DOMAIN
+    ) or not await hass.config_entries.async_wait_component(
+        hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    ):
+        _LOGGER.error("MQTT integration is not available")
+        return False
+
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
 
