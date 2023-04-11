@@ -192,7 +192,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, current_data
+                OPTIONS_SCHEMA, user_input if user_input else self.entry.options
             ),
             errors=errors,
         )
