@@ -441,10 +441,10 @@ def state_changes_during_period(
         )
 
 
-def _get_last_state_changes_stmt(number_of_states: int, metadata_id: int) -> Select:
-    stmt = _stmt_and_join_attributes(False, False)
-    if number_of_states == 1:
-        stmt = stmt.join(
+def _get_last_state_changes_single_stmt(metadata_id: int) -> Select:
+    return (
+        _stmt_and_join_attributes(False, False)
+        .join(
             (
                 lastest_state_for_metadata_id := (
                     select(
@@ -464,8 +464,19 @@ def _get_last_state_changes_stmt(number_of_states: int, metadata_id: int) -> Sel
                 == lastest_state_for_metadata_id.c.max_last_updated,
             ),
         )
-    else:
-        stmt = stmt.where(
+        .outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
+        .order_by(States.state_id.desc())
+    )
+
+
+def _get_last_state_changes_multiple_stmt(
+    number_of_states: int, metadata_id: int
+) -> Select:
+    return (
+        _stmt_and_join_attributes(False, False)
+        .where(
             States.state_id
             == (
                 select(States.state_id)
@@ -475,10 +486,11 @@ def _get_last_state_changes_stmt(number_of_states: int, metadata_id: int) -> Sel
                 .subquery()
             ).c.state_id
         )
-    stmt = stmt.outerjoin(
-        StateAttributes, States.attributes_id == StateAttributes.attributes_id
-    ).order_by(States.state_id.desc())
-    return stmt
+        .outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        )
+        .order_by(States.state_id.desc())
+    )
 
 
 def get_last_state_changes(
@@ -502,10 +514,16 @@ def get_last_state_changes(
             return {}
         metadata_id = possible_metadata_id
         entity_id_to_metadata_id: dict[str, int | None] = {entity_id_lower: metadata_id}
-        stmt = lambda_stmt(
-            lambda: _get_last_state_changes_stmt(number_of_states, metadata_id),
-            track_on=[number_of_states == 1],
-        )
+        if number_of_states == 1:
+            stmt = lambda_stmt(
+                lambda: _get_last_state_changes_single_stmt(metadata_id),
+            )
+        else:
+            stmt = lambda_stmt(
+                lambda: _get_last_state_changes_multiple_stmt(
+                    number_of_states, metadata_id
+                ),
+            )
         states = list(execute_stmt_lambda_element(session, stmt))
         return cast(
             MutableMapping[str, list[State]],

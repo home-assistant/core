@@ -41,7 +41,6 @@ from .common import (
     wait_recording_done,
 )
 
-from tests.common import mock_state_change_event
 from tests.typing import RecorderInstanceGenerator
 
 
@@ -116,44 +115,6 @@ def _add_db_entries(
                     attributes_id=1002 + idx,
                 )
             )
-
-
-def _setup_get_states(hass):
-    """Set up for testing get_states."""
-    states = []
-    now = dt_util.utcnow()
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
-    ):
-        for i in range(5):
-            state = ha.State(
-                f"test.point_in_time_{i % 5}",
-                f"State {i}",
-                {"attribute_test": i},
-            )
-
-            mock_state_change_event(hass, state)
-
-            states.append(state)
-
-        wait_recording_done(hass)
-
-    future = now + timedelta(seconds=1)
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=future
-    ):
-        for i in range(5):
-            state = ha.State(
-                f"test.point_in_time_{i % 5}",
-                f"State {i}",
-                {"attribute_test": i},
-            )
-
-            mock_state_change_event(hass, state)
-
-        wait_recording_done(hass)
-
-    return now, future, states
 
 
 def test_get_full_significant_states_with_session_entity_no_matches(
