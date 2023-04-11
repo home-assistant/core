@@ -123,7 +123,7 @@ class USBMatcher(USBMatcherRequired, USBMatcherOptional):
     """Matcher for the bluetooth integration."""
 
 
-@dataclass
+@dataclass(slots=True)
 class HomeKitDiscoveredIntegration:
     """HomeKit model."""
 

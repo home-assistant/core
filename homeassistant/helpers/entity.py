@@ -205,7 +205,7 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-@dataclass
+@dataclass(slots=True)
 class EntityDescription:
     """A class that describes Home Assistant entities."""
 
@@ -981,7 +981,7 @@ class Entity(ABC):
         return report_issue
 
 
-@dataclass
+@dataclass(slots=True)
 class ToggleEntityDescription(EntityDescription):
     """A class that describes toggle entities."""
 

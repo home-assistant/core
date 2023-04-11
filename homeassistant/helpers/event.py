@@ -66,7 +66,7 @@ RANDOM_MICROSECOND_MAX = 500000
 _P = ParamSpec("_P")
 
 
-@dataclass
+@dataclass(slots=True)
 class TrackStates:
     """Class for keeping track of states being tracked.
 
@@ -80,7 +80,7 @@ class TrackStates:
     domains: set[str]
 
 
-@dataclass
+@dataclass(slots=True)
 class TrackTemplate:
     """Class for keeping track of a template with variables.
 
@@ -94,7 +94,7 @@ class TrackTemplate:
     rate_limit: timedelta | None = None
 
 
-@dataclass
+@dataclass(slots=True)
 class TrackTemplateResult:
     """Class for result of template tracking.
 
