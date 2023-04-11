@@ -54,7 +54,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
@@ -97,7 +97,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {CONF_ID: "invalid_system_id"}
 
         mock_hvac.return_value = HVAC_MOCK[API_SYSTEMS][0]
