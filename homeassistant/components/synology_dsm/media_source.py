@@ -218,7 +218,6 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         # location: {cache_key}/{filename}
         cache_key, file_name = location.split("/")
         image_id = cache_key.split("_")[0]
-        file_extension = file_name.split(".")[-1]
         mime_type, _ = mimetypes.guess_type(file_name)
         if not isinstance(mime_type, str):
             raise web.HTTPNotFound()
