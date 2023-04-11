@@ -139,8 +139,6 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-            current_data = user_input
-
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
