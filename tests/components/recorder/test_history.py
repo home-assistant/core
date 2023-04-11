@@ -333,6 +333,25 @@ def test_state_changes_during_period_descending(
         > hist_states[2].last_updated
     )
 
+    hist = history.state_changes_during_period(
+        hass,
+        start_time,  # Pick a point where we will generate a start time state
+        end,
+        entity_id,
+        no_attributes=False,
+        descending=False,
+        include_start_time_state=True,
+    )
+    hist_states = list(hist[entity_id])
+    assert hist_states[0].last_updated == start_time
+    assert len(hist_states) == 3
+    # Make sure they are in ascending order
+    assert (
+        hist_states[0].last_updated
+        < hist_states[1].last_updated
+        < hist_states[2].last_updated
+    )
+
 
 def test_get_last_state_changes(hass_recorder: Callable[..., HomeAssistant]) -> None:
     """Test number of state changes."""
