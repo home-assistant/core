@@ -12,6 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from .fixtures import (
     NOT_VICTRON_SERVICE_INFO,
     VICTRON_DC_DC_CONVERTER_SERVICE_INFO,
+    VICTRON_INVERTER_SERVICE_INFO,
     VICTRON_TEST_WRONG_TOKEN,
     VICTRON_VEBUS_SERVICE_INFO,
     VICTRON_VEBUS_TOKEN,
@@ -69,6 +70,17 @@ async def test_async_step_bluetooth_unsupported_victron(hass: HomeAssistant) -> 
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=VICTRON_DC_DC_CONVERTER_SERVICE_INFO,
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "not_supported"
+
+
+async def test_async_step_bluetooth_unsupported_by_library(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth of a victron device unsupported by the underlying library."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=VICTRON_INVERTER_SERVICE_INFO,
     )
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "not_supported"

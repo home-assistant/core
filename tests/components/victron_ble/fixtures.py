@@ -39,7 +39,7 @@ VICTRON_BATTERY_MONITOR_SENSORS = {
     "battery_monitor_midpoint_voltage": "unknown",
 }
 
-# DC/DC converter (unsupported - for testing)
+# DC/DC converter (unsupported by this integration - for testing)
 
 VICTRON_DC_DC_CONVERTER_SERVICE_INFO = BluetoothServiceInfo(
     name="DC/DC Converter",
@@ -78,6 +78,20 @@ VICTRON_DC_ENERGY_METER_SENSORS = {
     "dc_energy_meter_alarm": "no alarm",
     "dc_energy_meter_temperature": "unknown",
 }
+
+# Inverter - unsupported by victron-ble library - for testing
+
+VICTRON_INVERTER_SERVICE_INFO = BluetoothServiceInfo(
+    name="Inverter",
+    address="01:02:03:04:05:10",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("1003a2a2031252dad26f0b8eb39162074d140df410"),
+    },  # not a valid advertisement, but model id mangled to match inverter
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
 
 # Solar charger
 
