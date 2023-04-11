@@ -17,7 +17,10 @@ from home_assistant_intents import get_intents
 import yaml
 
 from homeassistant import core, setup
-from homeassistant.components.homeassistant.exposed_entities import async_should_expose
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_listen_entity_updates,
+    async_should_expose,
+)
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.helpers import (
     area_registry as ar,
@@ -101,6 +104,9 @@ class DefaultAgent(AbstractConversationAgent):
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._async_handle_entity_registry_changed,
             run_immediately=True,
+        )
+        async_listen_entity_updates(
+            self.hass, DOMAIN, self._async_exposed_entities_updated
         )
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
@@ -448,6 +454,11 @@ class DefaultAgent(AbstractConversationAgent):
             field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         ):
             return
+        self._slot_lists = None
+
+    @core.callback
+    def _async_exposed_entities_updated(self) -> None:
+        """Handle updated preferences."""
         self._slot_lists = None
 
     def _make_slot_lists(self) -> dict[str, SlotList]:
