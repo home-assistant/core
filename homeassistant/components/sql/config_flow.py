@@ -161,8 +161,6 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage SQL options."""
         errors = {}
 
-        current_data: MappingProxyType[str, Any] | dict[str, Any] = self.entry.options
-
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
             query = user_input[CONF_QUERY]
