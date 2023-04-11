@@ -59,7 +59,10 @@ async def mock_entry_fixture(hass, filter_schema, mock_create_batch, mock_send_b
         utcnow() + timedelta(seconds=entry.options[CONF_SEND_INTERVAL]),
     )
     await hass.async_block_till_done()
-    return entry
+
+    yield entry
+
+    await entry.async_unload(hass)
 
 
 # fixtures for init tests
