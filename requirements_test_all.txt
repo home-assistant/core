@@ -1526,7 +1526,7 @@ python-telegram-bot==13.1
 python_awair==0.2.4
 
 # homeassistant.components.tile
-pytile==2022.02.0
+pytile==2023.04.0
 
 # homeassistant.components.tomorrowio
 pytomorrowio==0.3.5
