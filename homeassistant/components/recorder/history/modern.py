@@ -143,11 +143,17 @@ def _significant_states_stmt(
         # Since we are filtering on entity_id (metadata_id) we can avoid
         # the join of the states_meta table since we already know which
         # metadata_ids are in the significant domains.
-        stmt = stmt.filter(
-            States.metadata_id.in_(metadata_ids_in_significant_domains)
-            | (States.last_changed_ts == States.last_updated_ts)
-            | States.last_changed_ts.is_(None)
-        )
+        if metadata_ids_in_significant_domains:
+            stmt = stmt.filter(
+                States.metadata_id.in_(metadata_ids_in_significant_domains)
+                | (States.last_changed_ts == States.last_updated_ts)
+                | States.last_changed_ts.is_(None)
+            )
+        else:
+            stmt = stmt.filter(
+                (States.last_changed_ts == States.last_updated_ts)
+                | States.last_changed_ts.is_(None)
+            )
     stmt = stmt.filter(States.metadata_id.in_(metadata_ids)).filter(
         States.last_updated_ts > start_time_ts
     )
@@ -248,6 +254,7 @@ def get_significant_states_with_session(
         ),
         track_on=[
             bool(single_metadata_id),
+            bool(metadata_ids_in_significant_domains),
             bool(end_time_ts),
             significant_changes_only,
             no_attributes,
