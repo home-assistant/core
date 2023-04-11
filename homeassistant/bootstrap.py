@@ -239,13 +239,14 @@ async def load_registries(hass: core.HomeAssistant) -> None:
 
     # Load the registries and cache the result of platform.uname().processor
     entity.async_setup(hass)
+    template.async_setup(hass)
     await asyncio.gather(
         area_registry.async_load(hass),
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
-        template.async_load_custom_jinja(hass),
+        template.async_load_custom_templates(hass),
     )
 
 

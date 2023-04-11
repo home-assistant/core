@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
 import logging
 from typing import Any
 
@@ -186,14 +186,23 @@ def _parse_event(event: dict[str, Any]) -> Event:
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
+    start: datetime | date
+    end: datetime | date
+    if isinstance(event.start, datetime) and isinstance(event.end, datetime):
+        start = dt_util.as_local(event.start)
+        end = dt_util.as_local(event.end)
+        if (end - start) <= timedelta(seconds=0):
+            end = start + timedelta(minutes=30)
+    else:
+        start = event.start
+        end = event.end
+        if (end - start) < timedelta(days=0):
+            end = start + timedelta(days=1)
+
     return CalendarEvent(
         summary=event.summary,
-        start=dt_util.as_local(event.start)
-        if isinstance(event.start, datetime)
-        else event.start,
-        end=dt_util.as_local(event.end)
-        if isinstance(event.end, datetime)
-        else event.end,
+        start=start,
+        end=end,
         description=event.description,
         uid=event.uid,
         rrule=event.rrule.as_rrule_str() if event.rrule else None,

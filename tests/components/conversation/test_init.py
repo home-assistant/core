@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -147,7 +148,7 @@ async def test_http_processing_intent_target_ha_agent(
     }
 
 
-async def test_http_processing_intent_entity_added(
+async def test_http_processing_intent_entity_added_removed(
     hass: HomeAssistant,
     init_components,
     hass_client: ClientSessionGenerator,
@@ -197,7 +198,7 @@ async def test_http_processing_intent_entity_added(
         "conversation_id": None,
     }
 
-    # Add an alias
+    # Add an entity
     entity_registry.async_get_or_create(
         "light", "demo", "5678", suggested_object_id="late"
     )
@@ -272,6 +273,288 @@ async def test_http_processing_intent_entity_added(
     client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on late added light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+
+async def test_http_processing_intent_alias_added_removed(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test processing intent via HTTP API with aliases added later.
+
+    We want to ensure that adding an alias later busts the cache
+    so that the new alias is available.
+    """
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    hass.states.async_set("light.kitchen", "off", {"friendly_name": "kitchen light"})
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    # Add an alias
+    entity_registry.async_update_entity("light.kitchen", aliases={"late added alias"})
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on late added alias"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    # Now remove the alieas
+    entity_registry.async_update_entity("light.kitchen", aliases={})
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on late added alias"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+
+async def test_http_processing_intent_entity_renamed(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test processing intent via HTTP API with entities renamed later.
+
+    We want to ensure that renaming an entity later busts the cache
+    so that the new name is used.
+    """
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    entity = platform.MockLight("kitchen light", "on")
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    platform.ENTITIES.append(entity)
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    # Rename the entity
+    entity_registry.async_update_entity("light.kitchen", name="renamed light")
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on renamed light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "renamed light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+    # Now clear the custom name
+    entity_registry.async_update_entity("light.kitchen", name=None)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on renamed light"}
     )
 
     assert resp.status == HTTPStatus.OK
@@ -929,7 +1212,11 @@ async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:
 
 
 async def test_get_agent_list(
-    hass: HomeAssistant, init_components, mock_agent, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    init_components,
+    mock_agent,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test getting agent info."""
     client = await hass_ws_client(hass)
@@ -940,10 +1227,17 @@ async def test_get_agent_list(
     assert msg["id"] == 5
     assert msg["type"] == "result"
     assert msg["success"]
-    assert msg["result"] == {
-        "agents": [
-            {"id": "homeassistant", "name": "Home Assistant"},
-            {"id": "mock-entry", "name": "Mock Title"},
-        ],
-        "default_agent": "mock-entry",
-    }
+    assert msg["result"] == snapshot
+
+
+async def test_get_agent_info(
+    hass: HomeAssistant, init_components, mock_agent, snapshot: SnapshotAssertion
+) -> None:
+    """Test get agent info."""
+    agent_info = conversation.async_get_agent_info(hass)
+    # Test it's the default
+    assert agent_info["id"] == mock_agent.agent_id
+    assert agent_info == snapshot
+    assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
+    assert conversation.async_get_agent_info(hass, mock_agent.agent_id) == snapshot
+    assert conversation.async_get_agent_info(hass, "not exist") is None

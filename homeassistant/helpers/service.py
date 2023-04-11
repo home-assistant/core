@@ -199,7 +199,7 @@ class ServiceTargetSelector:
         return bool(self.entity_ids or self.device_ids or self.area_ids)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class SelectedEntities:
     """Class to hold the selected entities."""
 

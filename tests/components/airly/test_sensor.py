@@ -38,14 +38,14 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     await init_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.home_caqi")
+    state = hass.states.get("sensor.home_common_air_quality_index")
     assert state
     assert state.state == "7.29"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
-    entry = registry.async_get("sensor.home_caqi")
+    entry = registry.async_get("sensor.home_common_air_quality_index")
     assert entry
     assert entry.unique_id == "123-456-caqi"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
@@ -63,7 +63,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert entry.unique_id == "123-456-humidity"
     assert entry.options["sensor"] == {"suggested_display_precision": 1}
 
-    state = hass.states.get("sensor.home_pm1_0")
+    state = hass.states.get("sensor.home_particulate_matter_1_mm")
     assert state
     assert state.state == "2.83"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -74,12 +74,12 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm1_0")
+    entry = registry.async_get("sensor.home_particulate_matter_1_mm")
     assert entry
     assert entry.unique_id == "123-456-pm1"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
 
-    state = hass.states.get("sensor.home_pm2_5")
+    state = hass.states.get("sensor.home_particulate_matter_2_5_mm")
     assert state
     assert state.state == "4.37"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -90,12 +90,12 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm2_5")
+    entry = registry.async_get("sensor.home_particulate_matter_2_5_mm")
     assert entry
     assert entry.unique_id == "123-456-pm25"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
 
-    state = hass.states.get("sensor.home_pm10")
+    state = hass.states.get("sensor.home_particulate_matter_10_mm")
     assert state
     assert state.state == "6.06"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -106,7 +106,7 @@ async def test_sensor(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm10")
+    entry = registry.async_get("sensor.home_particulate_matter_10_mm")
     assert entry
     assert entry.unique_id == "123-456-pm10"
     assert entry.options["sensor"] == {"suggested_display_precision": 0}
