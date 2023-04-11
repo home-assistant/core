@@ -568,7 +568,7 @@ class IntentResponseTargetType(str, Enum):
     CUSTOM = "custom"
 
 
-@dataclass
+@dataclass(slots=True)
 class IntentResponseTarget:
     """Target of the intent response."""
 

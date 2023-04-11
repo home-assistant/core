@@ -24,7 +24,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryError, TemplateError, Unauthorized
+from homeassistant.exceptions import TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,7 +45,7 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
-from .config_integration import CONFIG_SCHEMA_ENTRY, PLATFORM_CONFIG_SCHEMA_BASE
+from .config_integration import PLATFORM_CONFIG_SCHEMA_BASE
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -68,7 +68,9 @@ from .const import (  # noqa: F401
     CONF_WS_HEADERS,
     CONF_WS_PATH,
     DATA_MQTT,
+    DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
+    DEFAULT_PREFIX,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
@@ -178,7 +180,9 @@ async def _async_setup_discovery(
 
     This method is a coroutine.
     """
-    await discovery.async_start(hass, conf[CONF_DISCOVERY_PREFIX], config_entry)
+    await discovery.async_start(
+        hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), config_entry
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -198,15 +202,8 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    # validate entry config
-    try:
-        conf = CONFIG_SCHEMA_ENTRY(dict(entry.data))
-    except vol.MultipleInvalid as ex:
-        raise ConfigEntryError(
-            f"The MQTT config entry is invalid, please correct it: {ex}"
-        ) from ex
-
-    # Fetch configuration and add default values
+    conf = dict(entry.data)
+    # Fetch configuration
     hass_config = await conf_util.async_hass_config_yaml(hass)
     mqtt_yaml = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
     client = MQTT(hass, entry, conf)
@@ -390,7 +387,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
         # Setup discovery
-        if conf.get(CONF_DISCOVERY):
+        if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
             await _async_setup_discovery(hass, conf, entry)
         # Setup reload service after all platforms have loaded
         await async_setup_reload_service()

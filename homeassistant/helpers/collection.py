@@ -35,7 +35,7 @@ CHANGE_REMOVED = "removed"
 _T = TypeVar("_T")
 
 
-@dataclass
+@dataclass(slots=True)
 class CollectionChangeSet:
     """Class to represent a change set.
 
