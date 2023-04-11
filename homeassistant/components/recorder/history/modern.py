@@ -9,7 +9,6 @@ from operator import itemgetter
 from typing import Any, cast
 
 from sqlalchemy import (
-    Column,
     CompoundSelect,
     Integer,
     Select,
@@ -690,10 +689,9 @@ def _sorted_states_to_dict(
 
     # Append all changes to it
     for metadata_id, group in states_iter:
-        attr_cache: dict[str, dict[str, Any]] = {}
-        prev_state: Column | str | None = None
         if not (entity_id := metadata_id_to_entity_id.get(metadata_id)):
             continue
+        attr_cache: dict[str, dict[str, Any]] = {}
         ent_results = result[entity_id]
         if (
             not minimal_response
@@ -712,6 +710,7 @@ def _sorted_states_to_dict(
             )
             continue
 
+        prev_state: str | None = None
         # With minimal response we only provide a native
         # State for the first and last response. All the states
         # in-between only provide the "state" and the
