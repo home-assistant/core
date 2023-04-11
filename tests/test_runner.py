@@ -21,9 +21,10 @@ TIMEOUT_SAFETY_MARGIN = 10
 async def test_cumulative_shutdown_timeout_less_than_supervisor() -> None:
     """Verify the cumulative shutdown timeout is at least 10s less than the supervisor."""
     assert (
-        core.STAGE_1_SHUTDOWN_TIMEOUT
-        + core.STAGE_2_SHUTDOWN_TIMEOUT
-        + core.STAGE_3_SHUTDOWN_TIMEOUT
+        core.AUTOMATION_STAGE_SHUTDOWN_TIMEOUT
+        + core.STOP_STAGE_SHUTDOWN_TIMEOUT
+        + core.FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT
+        + core.CLOSE_STAGE_SHUTDOWN_TIMEOUT
         + executor.EXECUTOR_SHUTDOWN_TIMEOUT
         + thread.THREADING_SHUTDOWN_TIMEOUT
         + TIMEOUT_SAFETY_MARGIN
