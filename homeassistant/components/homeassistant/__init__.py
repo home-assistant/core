@@ -33,10 +33,12 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DATA_EXPOSED_ENTITIES, DOMAIN
+from .exposed_entities import ExposedEntities
+
 ATTR_ENTRY_ID = "entry_id"
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
 SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
 SERVICE_RELOAD_CUSTOM_TEMPLATES = "reload_custom_templates"
@@ -339,5 +341,9 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_RELOAD_ALL, async_handle_reload_all
     )
+
+    exposed_entities = ExposedEntities(hass)
+    await exposed_entities.async_initialize()
+    hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
 
     return True

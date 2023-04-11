@@ -137,6 +137,7 @@ homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
+homeassistant.components.homeassistant.exposed_entities
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.homeassistant_alerts.*
 homeassistant.components.homeassistant_hardware.*

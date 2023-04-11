@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -153,10 +154,46 @@ async def async_setup_sensor(
     ):
         return
 
+    upper_query = query_str.upper()
+    if use_database_executor:
+        redacted_query = redact_credentials(query_str)
+
+        issue_key = unique_id if unique_id else redacted_query
+        # If the query has a unique id and they fix it we can dismiss the issue
+        # but if it doesn't have a unique id they have to ignore it instead
+
+        if (
+            "ENTITY_ID," in upper_query or "ENTITY_ID " in upper_query
+        ) and "STATES_META" not in upper_query:
+            _LOGGER.error(
+                "The query `%s` contains the keyword `entity_id` but does not "
+                "reference the `states_meta` table. This will cause a full table "
+                "scan and database instability. Please check the documentation and use "
+                "`states_meta.entity_id` instead",
+                redacted_query,
+            )
+
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"entity_id_query_does_full_table_scan_{issue_key}",
+                translation_key="entity_id_query_does_full_table_scan",
+                translation_placeholders={"query": redacted_query},
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+            )
+            raise ValueError(
+                "Query contains entity_id but does not reference states_meta"
+            )
+
+        ir.async_delete_issue(
+            hass, DOMAIN, f"entity_id_query_does_full_table_scan_{issue_key}"
+        )
+
     # MSSQL uses TOP and not LIMIT
-    if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
+    if not ("LIMIT" in upper_query or "SELECT TOP" in upper_query):
         if "mssql" in db_url:
-            query_str = query_str.upper().replace("SELECT", "SELECT TOP 1")
+            query_str = upper_query.replace("SELECT", "SELECT TOP 1")
         else:
             query_str = query_str.replace(";", "") + " LIMIT 1;"
 

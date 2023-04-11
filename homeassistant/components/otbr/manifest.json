@@ -1,7 +1,7 @@
 {
   "domain": "otbr",
   "name": "Open Thread Border Router",
-  "after_dependencies": ["hassio", "zha"],
+  "after_dependencies": ["hassio", "homeassistant_yellow", "zha"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
   "dependencies": ["homeassistant_hardware", "thread"],

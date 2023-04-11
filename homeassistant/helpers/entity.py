@@ -698,7 +698,10 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.add_job(self.async_update_ha_state(force_refresh))
+        self.hass.create_task(
+            self.async_update_ha_state(force_refresh),
+            f"Entity {self.entity_id} schedule update ha state",
+        )
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:
@@ -720,6 +723,15 @@ class Entity(ABC):
         else:
             self.async_write_ha_state()
 
+    @callback
+    def _async_slow_update_warning(self) -> None:
+        """Log a warning if update is taking too long."""
+        _LOGGER.warning(
+            "Update of %s is taking over %s seconds",
+            self.entity_id,
+            SLOW_UPDATE_WARNING,
+        )
+
     async def async_device_update(self, warning: bool = True) -> None:
         """Process 'update' or 'async_update' from entity.
 
@@ -727,42 +739,33 @@ class Entity(ABC):
         """
         if self._update_staged:
             return
+
+        hass = self.hass
+        assert hass is not None
+
+        if hasattr(self, "async_update"):
+            coro: asyncio.Future[None] = self.async_update()
+        elif hasattr(self, "update"):
+            coro = hass.async_add_executor_job(self.update)
+        else:
+            return
+
         self._update_staged = True
 
         # Process update sequential
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
-        try:
-            task: asyncio.Future[None]
-            if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(
-                    self.async_update(), f"Entity async update {self.entity_id}"
-                )
-            elif hasattr(self, "update"):
-                task = self.hass.async_add_executor_job(self.update)
-            else:
-                return
-
-            if not warning:
-                await task
-                return
-
-            finished, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
-
-            for done in finished:
-                if exc := done.exception():
-                    raise exc
-                return
-
-            _LOGGER.warning(
-                "Update of %s is taking over %s seconds",
-                self.entity_id,
-                SLOW_UPDATE_WARNING,
+        if warning:
+            update_warn = hass.loop.call_later(
+                SLOW_UPDATE_WARNING, self._async_slow_update_warning
             )
-            await task
+        try:
+            await coro
         finally:
             self._update_staged = False
+            if warning:
+                update_warn.cancel()
             if self.parallel_updates:
                 self.parallel_updates.release()
 
@@ -944,25 +947,6 @@ class Entity(ABC):
         assert self.platform is not None
         self.entity_id = self.registry_entry.entity_id
         await self.platform.async_add_entities([self])
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        if not isinstance(other, self.__class__):
-            return False
-
-        # Can only decide equality if both have a unique id
-        if self.unique_id is None or other.unique_id is None:
-            return False
-
-        # Ensure they belong to the same platform
-        if self.platform is not None or other.platform is not None:
-            if self.platform is None or other.platform is None:
-                return False
-
-            if self.platform.platform != other.platform.platform:
-                return False
-
-        return self.unique_id == other.unique_id
 
     def __repr__(self) -> str:
         """Return the representation."""

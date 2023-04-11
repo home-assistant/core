@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, IDENTIFY, RESTART
-from .coordinator import LIFXSensorUpdateCoordinator, LIFXUpdateCoordinator
-from .entity import LIFXSensorEntity
+from .coordinator import LIFXUpdateCoordinator
+from .entity import LIFXEntity
 
 RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key=RESTART,
@@ -38,22 +38,21 @@ async def async_setup_entry(
     domain_data = hass.data[DOMAIN]
     coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
     async_add_entities(
-        cls(coordinator.sensor_coordinator)
-        for cls in (LIFXRestartButton, LIFXIdentifyButton)
+        [LIFXRestartButton(coordinator), LIFXIdentifyButton(coordinator)]
     )
 
 
-class LIFXButton(LIFXSensorEntity, ButtonEntity):
+class LIFXButton(LIFXEntity, ButtonEntity):
     """Base LIFX button."""
 
     _attr_has_entity_name: bool = True
     _attr_should_poll: bool = False
 
-    def __init__(self, coordinator: LIFXSensorUpdateCoordinator) -> None:
+    def __init__(self, coordinator: LIFXUpdateCoordinator) -> None:
         """Initialise a LIFX button."""
         super().__init__(coordinator)
         self._attr_unique_id = (
-            f"{coordinator.parent.serial_number}_{self.entity_description.key}"
+            f"{coordinator.serial_number}_{self.entity_description.key}"
         )
 
 
