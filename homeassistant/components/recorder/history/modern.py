@@ -703,8 +703,7 @@ def _sorted_states_to_dict(
 
     # Append all changes to it
     for metadata_id, group in states_iter:
-        if not (entity_id := metadata_id_to_entity_id.get(metadata_id)):
-            continue
+        entity_id = metadata_id_to_entity_id[metadata_id]
         attr_cache: dict[str, dict[str, Any]] = {}
         ent_results = result[entity_id]
         if (
