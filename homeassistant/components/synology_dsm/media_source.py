@@ -196,7 +196,7 @@ class SynologyPhotosMediaSource(MediaSource):
             thumbnail = await diskstation.api.photos.get_item_thumbnail_url(item)
         except SynologyDSMException:
             return None
-        return thumbnail
+        return str(thumbnail)
 
 
 class SynologyDsmMediaView(http.HomeAssistantView):
