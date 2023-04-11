@@ -321,6 +321,7 @@ def _state_changed_during_period_stmt(
     end_time_ts: float | None,
     single_metadata_id: int,
     no_attributes: bool,
+    descending: bool,
     limit: int | None,
     include_start_time_state: bool,
     run_start_ts: float | None,
@@ -347,28 +348,32 @@ def _state_changed_during_period_stmt(
     if not include_start_time_state or not run_start_ts:
         return stmt.order_by(
             States.metadata_id,
-            States.last_updated_ts,
+            States.last_updated_ts.desc() if descending else States.last_updated_ts,
         )
-    return _select_from_subquery(
-        union_all(
-            _select_from_subquery(
-                _get_single_entity_start_time_stmt(
-                    start_time_ts,
-                    single_metadata_id,
-                    no_attributes,
-                    False,
-                ).subquery(),
+
+    union_subquery = union_all(
+        _select_from_subquery(
+            _get_single_entity_start_time_stmt(
+                start_time_ts,
+                single_metadata_id,
                 no_attributes,
                 False,
-            ),
-            _select_from_subquery(
-                stmt.subquery(),
-                no_attributes,
-                False,
-            ),
-        ).subquery(),
-        no_attributes,
-        False,
+            ).subquery(),
+            no_attributes,
+            False,
+        ),
+        _select_from_subquery(
+            stmt.order_by(States.metadata_id, States.last_updated_ts).subquery(),
+            no_attributes,
+            False,
+        ),
+    ).subquery()
+    stmt = _select_from_subquery(union_subquery, no_attributes, False)
+    if not descending:
+        return stmt
+    # If descending, we need to reverse the results
+    return stmt.order_by(
+        union_subquery.c.metadata_id, union_subquery.c.last_updated_ts.desc()
     )
 
 
@@ -412,6 +417,7 @@ def state_changes_during_period(
                 end_time_ts,
                 single_metadata_id,
                 no_attributes,
+                descending,
                 limit,
                 include_start_time_state,
                 run_start_ts,
@@ -419,6 +425,7 @@ def state_changes_during_period(
             track_on=[
                 bool(end_time_ts),
                 no_attributes,
+                descending,
                 bool(limit),
                 include_start_time_state,
             ],
@@ -430,7 +437,6 @@ def state_changes_during_period(
                 start_time_ts if include_start_time_state else None,
                 entity_ids,
                 entity_id_to_metadata_id,
-                descending=descending,
             ),
         )
 
@@ -648,7 +654,6 @@ def _sorted_states_to_dict(
     entity_id_to_metadata_id: dict[str, int | None],
     minimal_response: bool = False,
     compressed_state_format: bool = False,
-    descending: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -772,10 +777,6 @@ def _sorted_states_to_dict(
             for row in group
             if (state := row[state_idx]) != prev_state
         )
-
-    if descending:
-        for ent_results in result.values():
-            ent_results.reverse()
 
     # Filter out the empty lists if some states had 0 results.
     return {key: val for key, val in result.items() if val}
