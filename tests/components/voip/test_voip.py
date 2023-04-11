@@ -1,4 +1,4 @@
-"""Test Voice Assistant init."""
+"""Test VoIP protocol."""
 import asyncio
 from unittest.mock import Mock, patch
 
