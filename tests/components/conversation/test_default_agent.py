@@ -14,7 +14,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import expose_entity, expose_new
+from . import expose_entity
 
 from tests.common import async_mock_service
 
@@ -79,9 +79,6 @@ async def test_exposed_areas(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that only expose areas with an exposed entity/device."""
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     area_kitchen = area_registry.async_get_or_create("kitchen")
     area_bedroom = area_registry.async_get_or_create("bedroom")
 

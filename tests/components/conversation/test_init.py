@@ -59,9 +59,6 @@ async def test_http_processing_intent(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test processing intent via HTTP API."""
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     # Add an alias
     entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="kitchen"
@@ -112,9 +109,6 @@ async def test_http_processing_intent_target_ha_agent(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test processing intent can be processed via HTTP API with picking agent."""
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     # Add an alias
     entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="kitchen"
@@ -168,9 +162,6 @@ async def test_http_processing_intent_entity_added_removed(
     We want to ensure that adding an entity later busts the cache
     so that the new entity is available as well as any aliases.
     """
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="kitchen"
     )
@@ -321,9 +312,6 @@ async def test_http_processing_intent_alias_added_removed(
     We want to ensure that adding an alias later busts the cache
     so that the new alias is available.
     """
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     entity_registry.async_get_or_create(
         "light",
         "demo",
@@ -438,9 +426,6 @@ async def test_http_processing_intent_entity_renamed(
     We want to ensure that renaming an entity later busts the cache
     so that the new name is used.
     """
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
 
@@ -615,9 +600,6 @@ async def test_http_processing_intent_entity_exposed(
     We want to ensure that manually exposing an entity later busts the cache
     so that the new setting is used.
     """
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     platform = getattr(hass.components, "test.light")
     platform.init(empty=True)
 
@@ -811,6 +793,92 @@ async def test_http_processing_intent_entity_exposed(
     }
 
 
+async def test_http_processing_intent_conversion_not_expose_new(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test processing intent via HTTP API when not exposing new entities."""
+    # Disable exposing new entities to the default agent
+    expose_new(hass, False)
+
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    entity = platform.MockLight("kitchen light", "on")
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    platform.ENTITIES.append(entity)
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+    # Expose the entity
+    expose_entity(hass, "light.kitchen", True)
+    await hass.async_block_till_done()
+
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
 async def test_turn_on_intent(
@@ -821,9 +889,6 @@ async def test_turn_on_intent(
     agent_id,
 ) -> None:
     """Test calling the turn on intent."""
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     entity_registry.async_get_or_create(
         "light",
         "demo",
@@ -852,9 +917,6 @@ async def test_turn_off_intent(
     hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry, sentence
 ) -> None:
     """Test calling the turn on intent."""
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     entity_registry.async_get_or_create(
         "light",
         "demo",
@@ -915,9 +977,6 @@ async def test_http_api_handle_failure(
     """Test the HTTP conversation API with an error during handling."""
     client = await hass_client()
 
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     entity_registry.async_get_or_create(
         "light",
         "demo",
@@ -966,9 +1025,6 @@ async def test_http_api_unexpected_failure(
 ) -> None:
     """Test the HTTP conversation API with an unexpected error during handling."""
     client = await hass_client()
-
-    # Expose new entities to the default agent
-    expose_new(hass, True)
 
     entity_registry.async_get_or_create(
         "light",
@@ -1299,9 +1355,6 @@ async def test_language_region(
     hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry
 ) -> None:
     """Test calling the turn on intent."""
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     entity_registry.async_get_or_create(
         "light",
         "demo",
@@ -1360,9 +1413,6 @@ async def test_non_default_response(
     hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry
 ) -> None:
     """Test intent response that is not the default."""
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     entity_registry.async_get_or_create(
         "cover",
         "demo",
@@ -1396,9 +1446,6 @@ async def test_turn_on_area(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test turning on an area."""
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     entry = MockConfigEntry(domain="test")
 
     device = device_registry.async_get_or_create(
@@ -1470,9 +1517,6 @@ async def test_light_area_same_name(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test turning on a light with the same name as an area."""
-    # Expose new entities to the default agent
-    expose_new(hass, True)
-
     entry = MockConfigEntry(domain="test")
 
     device = device_registry.async_get_or_create(
