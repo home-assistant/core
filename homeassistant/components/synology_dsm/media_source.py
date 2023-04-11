@@ -229,4 +229,4 @@ class SynologyDsmMediaView(http.HomeAssistantView):
             image = await diskstation.api.photos.download_item(item)
         except SynologyDSMException as exc:
             raise web.HTTPNotFound() from exc
-        return web.Response(body=image, content_type=f"image/{file_extension}")
+        return web.Response(body=image, content_type=mime_type)
