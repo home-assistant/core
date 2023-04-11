@@ -63,7 +63,7 @@ class LazyState(State):
         self._attributes: dict[str, Any] | None = None
         self._last_updated_ts: float | None = last_updated_ts or start_time_ts
         self._last_changed_ts: float | None = (
-            getattr(self._row, "last_changed_ts", None) or last_updated_ts
+            getattr(row, "last_changed_ts", None) or self._last_updated_ts
         )
         self._context: Context | None = None
         self.attr_cache = attr_cache
