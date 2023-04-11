@@ -264,12 +264,12 @@ def test_state_changes_during_period_descending(
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
-    start = dt_util.utcnow()
+    start = dt_util.utcnow().replace(microsecond=0)
     point = start + timedelta(seconds=1)
-    point2 = start + timedelta(seconds=1, microseconds=10)
-    point3 = start + timedelta(seconds=1, microseconds=20)
-    point4 = start + timedelta(seconds=1, microseconds=30)
-    end = point + timedelta(seconds=1, microseconds=40)
+    point2 = start + timedelta(seconds=1, microseconds=100)
+    point3 = start + timedelta(seconds=1, microseconds=200)
+    point4 = start + timedelta(seconds=1, microseconds=300)
+    end = point + timedelta(seconds=1, microseconds=400)
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
@@ -313,7 +313,7 @@ def test_state_changes_during_period_descending(
         states, list(reversed(list(hist[entity_id])))
     )
 
-    start_time = point2 + timedelta(microseconds=1)
+    start_time = point2 + timedelta(microseconds=10)
     hist = history.state_changes_during_period(
         hass,
         start_time,  # Pick a point where we will generate a start time state
