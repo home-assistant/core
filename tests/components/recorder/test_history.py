@@ -325,12 +325,18 @@ def test_state_changes_during_period_descending(
     )
     hist_states = list(hist[entity_id])
     assert hist_states[-1].last_updated == start_time
+    assert hist_states[-1].last_changed == start_time
     assert len(hist_states) == 3
     # Make sure they are in descending order
     assert (
         hist_states[0].last_updated
         > hist_states[1].last_updated
         > hist_states[2].last_updated
+    )
+    assert (
+        hist_states[0].last_changed
+        > hist_states[1].last_changed
+        > hist_states[2].last_changed
     )
 
     hist = history.state_changes_during_period(
@@ -344,12 +350,18 @@ def test_state_changes_during_period_descending(
     )
     hist_states = list(hist[entity_id])
     assert hist_states[0].last_updated == start_time
+    assert hist_states[0].last_changed == start_time
     assert len(hist_states) == 3
     # Make sure they are in ascending order
     assert (
         hist_states[0].last_updated
         < hist_states[1].last_updated
         < hist_states[2].last_updated
+    )
+    assert (
+        hist_states[0].last_changed
+        < hist_states[1].last_changed
+        < hist_states[2].last_changed
     )
 
 
