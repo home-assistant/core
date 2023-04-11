@@ -391,18 +391,6 @@ class InovelliDoubleTapDownEnabled(
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names=CHANNEL_INOVELLI,
 )
-class InovelliLedScalingMode(
-    ZHASwitchConfigurationEntity, id_suffix="led_scaling_mode"
-):
-    """Inovelli scale light strip based on VZM or LZW series."""
-
-    _zcl_attribute: str = "led_scaling_mode"
-    _attr_name: str = "LED scaling mode"
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    channel_names=CHANNEL_INOVELLI,
-)
 class InovelliAuxSwitchScenes(
     ZHASwitchConfigurationEntity, id_suffix="aux_switch_scenes"
 ):
