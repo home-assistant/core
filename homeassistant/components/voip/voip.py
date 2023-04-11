@@ -71,10 +71,6 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     def connection_made(self, transport):
         """Server is ready."""
         self.transport = transport
-        _LOGGER.debug(
-            "Started pipeline server on %s",
-            self.transport.get_extra_info("sockname"),
-        )
 
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
