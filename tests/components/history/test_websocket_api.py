@@ -24,19 +24,8 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
-    old_db_schema,
 )
 from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture(autouse=True, params=["30", None])
-def init_schema(request):
-    """Fixture to initialize the db with the old schema."""
-    if request.param:
-        with old_db_schema(request.param):
-            yield
-    else:
-        yield
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:

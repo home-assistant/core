@@ -23,20 +23,9 @@ from tests.components.recorder.common import (
     assert_multiple_states_equal_without_context_and_last_changed,
     assert_states_equal_without_context,
     async_wait_recording_done,
-    old_db_schema,
     wait_recording_done,
 )
 from tests.typing import ClientSessionGenerator
-
-
-@pytest.fixture(autouse=True, params=["30", None])
-def init_schema(request):
-    """Fixture to initialize the db with the old schema."""
-    if request.param:
-        with old_db_schema(request.param):
-            yield
-    else:
-        yield
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
