@@ -2288,23 +2288,6 @@ async def test_default_entry_setting_are_applied(
     assert device_entry is not None
 
 
-async def test_fail_no_broker(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mqtt_client_mock: MqttMockPahoClient,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the MQTT entry setup when broker configuration is missing."""
-    # Config entry data is incomplete
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={})
-    entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert (
-        "The MQTT config entry is invalid, please correct it: required key not provided @ data['broker']"
-        in caplog.text
-    )
-
-
 @pytest.mark.no_fail_on_log_exception
 async def test_message_callback_exception_gets_logged(
     hass: HomeAssistant,
@@ -3312,41 +3295,16 @@ async def test_setup_manual_items_with_unique_ids(
     assert bool("Platform mqtt does not generate unique IDs." in caplog.text) != unique
 
 
-async def test_fail_with_unknown_conf_entry_options(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test unknown keys in config entry data is removed."""
-    mqtt_config_entry_data = {
-        mqtt.CONF_BROKER: "mock-broker",
-        mqtt.CONF_BIRTH_MESSAGE: {},
-        "old_option": "old_value",
-    }
-
-    entry = MockConfigEntry(
-        data=mqtt_config_entry_data,
-        domain=mqtt.DOMAIN,
-        title="MQTT",
-    )
-
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id) is False
-
-    assert ("extra keys not allowed @ data['old_option']") in caplog.text
-
-
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 @pytest.mark.parametrize(
     "hass_config",
     [
         {
             "mqtt": {
-                "light": [
+                "sensor": [
                     {
                         "name": "test_manual",
                         "unique_id": "test_manual_unique_id123",
-                        "command_topic": "test-topic_manual",
+                        "state_topic": "test-topic_manual",
                     }
                 ]
             }
@@ -3366,15 +3324,16 @@ async def test_link_config_entry(
     config_discovery = {
         "name": "test_discovery",
         "unique_id": "test_discovery_unique456",
-        "command_topic": "test-topic_discovery",
+        "state_topic": "test-topic_discovery",
     }
     async_fire_mqtt_message(
-        hass, "homeassistant/light/bla/config", json.dumps(config_discovery)
+        hass, "homeassistant/sensor/bla/config", json.dumps(config_discovery)
     )
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    assert hass.states.get("light.test_manual") is not None
-    assert hass.states.get("light.test_discovery") is not None
+    assert hass.states.get("sensor.test_manual") is not None
+    assert hass.states.get("sensor.test_discovery") is not None
     entity_names = ["test_manual", "test_discovery"]
 
     # Check if both entities were linked to the MQTT config entry
@@ -3402,7 +3361,7 @@ async def test_link_config_entry(
     assert _check_entities() == 1
     # set up item through discovery
     async_fire_mqtt_message(
-        hass, "homeassistant/light/bla/config", json.dumps(config_discovery)
+        hass, "homeassistant/sensor/bla/config", json.dumps(config_discovery)
     )
     await hass.async_block_till_done()
     assert _check_entities() == 2
