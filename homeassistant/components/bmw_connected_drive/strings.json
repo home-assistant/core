@@ -26,5 +26,98 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "lids": {
+        "name": "Lids"
+      },
+      "windows": {
+        "name": "Windows"
+      },
+      "door_lock_state": {
+        "name": "Door lock state"
+      },
+      "condition_based_services": {
+        "name": "Condition based services"
+      },
+      "check_control_messages": {
+        "name": "Check control messages"
+      },
+      "charging_status": {
+        "name": "[%key:component::binary_sensor::entity_component::battery_charging::name%]"
+      },
+      "charging_connection": {
+        "name": "Charger Connection"
+      }
+    },
+    "button": {
+      "light_flash": {
+        "name": "Flash lights"
+      },
+      "sound_horn": {
+        "name": "Sound horn"
+      },
+      "activate_air_conditioning": {
+        "name": "Activate air conditioning"
+      },
+      "deactivate_air_conditioning": {
+        "name": "Deactivate air conditioning"
+      },
+      "find_vehicle": {
+        "name": "Find vehicle"
+      },
+      "refresh": {
+        "name": "Refresh from cloud"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "select": {
+      "target_soc": {
+        "name": "Target SoC"
+      },
+      "ac_limit": {
+        "name": "AC Charging Limit"
+      },
+      "charging_mode": {
+        "name": "Charging Mode"
+      }
+    },
+    "sensor": {
+      "charging_start_time": {
+        "name": "Charging Start Time"
+      },
+      "charging_end_time": {
+        "name": "Charging End Time"
+      },
+      "charging_status": {
+        "name": "Charging Status"
+      },
+      "remaining_battery_percent": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]"
+      },
+      "mileage": {
+        "name": "Mileage"
+      },
+      "remaining_range_total": {
+        "name": "Remaining Range Total"
+      },
+      "remaining_range_electric": {
+        "name": "Remaining Range Electric"
+      },
+      "remaining_range_fuel": {
+        "name": "Remaining Range Fuel"
+      },
+      "remaining_fuel": {
+        "name": "Fuel quantity"
+      },
+      "remaining_fuel_percent": {
+        "name": "Fuel percentage"
+      }
+    }
   }
 }

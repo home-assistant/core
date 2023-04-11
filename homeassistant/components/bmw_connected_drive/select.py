@@ -40,7 +40,6 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
     # --- Generic ---
     "target_soc": BMWSelectEntityDescription(
         key="target_soc",
-        name="Target SoC",
         is_available=lambda v: v.is_remote_set_target_soc_enabled,
         options=[str(i * 5 + 20) for i in range(17)],
         current_option=lambda v: str(v.fuel_and_battery.charging_target),
@@ -49,10 +48,10 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
         ),
         icon="mdi:battery-charging-medium",
         unit_of_measurement=PERCENTAGE,
+        translation_key="target_soc",
     ),
     "ac_limit": BMWSelectEntityDescription(
         key="ac_limit",
-        name="AC Charging Limit",
         is_available=lambda v: v.is_remote_set_ac_limit_enabled,
         dynamic_options=lambda v: [
             str(lim) for lim in v.charging_profile.ac_available_limits  # type: ignore[union-attr]
@@ -63,10 +62,10 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
         ),
         icon="mdi:current-ac",
         unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        translation_key="ac_limit",
     ),
     "charging_mode": BMWSelectEntityDescription(
         key="charging_mode",
-        name="Charging Mode",
         is_available=lambda v: v.is_charging_plan_supported,
         options=[c.value for c in ChargingMode if c != ChargingMode.UNKNOWN],
         current_option=lambda v: str(v.charging_profile.charging_mode.value),  # type: ignore[union-attr]
@@ -74,6 +73,7 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
             charging_mode=ChargingMode(o)
         ),
         icon="mdi:vector-point-select",
+        translation_key="charging_mode",
     ),
 }
 
