@@ -77,7 +77,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
                     device_mac = await self.hass.async_add_executor_job(
                         pyobihai.get_device_mac
                     )
-                    await self.async_set_unique_id(device_mac)
+                    await self.async_set_unique_id(device_mac.lower())
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
@@ -104,7 +104,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Attempt to confirm."""
         assert self._dhcp_discovery_info
-        await self.async_set_unique_id(self._dhcp_discovery_info.macaddress)
+        await self.async_set_unique_id(self._dhcp_discovery_info.macaddress.lower())
         self._abort_if_unique_id_configured()
 
         if user_input is None:
@@ -135,3 +135,4 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return await self.async_step_user(user_input=user_input)
+

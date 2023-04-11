@@ -32,7 +32,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_unique_id = await hass.async_add_executor_job(
             requester.pyobihai.get_device_mac
         )
-        hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
+        hass.config_entries.async_update_entry(entry, unique_id=new_unique_id.lower())
 
         entry.version = 2
 
