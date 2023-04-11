@@ -11,6 +11,7 @@ from typing import Any, cast
 from sqlalchemy import (
     Column,
     CompoundSelect,
+    Integer,
     Select,
     Subquery,
     and_,
@@ -20,6 +21,7 @@ from sqlalchemy import (
     select,
     union_all,
 )
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
 
@@ -28,7 +30,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from ... import recorder
-from ..db_schema import DOUBLE_TYPE, StateAttributes, States
+from ..db_schema import StateAttributes, States
 from ..filters import Filters
 from ..models import (
     LazyState,
@@ -55,6 +57,14 @@ _FIELD_MAP = {
 }
 
 
+CASTABLE_DOUBLE_TYPE = (
+    # sqlalchemy.exc.SAWarning: Datatype DOUBLE does not support CAST on MySQL/MariaDb; the CAST will be skipped.
+    # MySQL/MariaDB < 10.4+ does not support casting to DOUBLE so we have to use Integer instead but it doesn't
+    # matter because we don't use the value as its always set to NULL
+    Integer().with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
+)
+
+
 def _stmt_and_join_attributes(
     no_attributes: bool, include_last_changed: bool
 ) -> Select:
@@ -73,11 +83,11 @@ def _stmt_and_join_attributes_for_start_state(
     """Return the statement and if StateAttributes should be joined."""
     _select = select(States.metadata_id, States.state)
     _select = _select.add_columns(
-        literal(value=None).label("last_updated_ts").cast(DOUBLE_TYPE)
+        literal(value=None).label("last_updated_ts").cast(CASTABLE_DOUBLE_TYPE)
     )
     if include_last_changed:
         _select = _select.add_columns(
-            literal(value=None).label("last_changed_ts").cast(DOUBLE_TYPE)
+            literal(value=None).label("last_changed_ts").cast(CASTABLE_DOUBLE_TYPE)
         )
     if not no_attributes:
         _select = _select.add_columns(States.attributes, StateAttributes.shared_attrs)
