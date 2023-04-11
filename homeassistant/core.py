@@ -843,7 +843,7 @@ class HomeAssistant:
                 "Timed out waiting for integrations to stop, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(1)
+            self._async_log_running_tasks(2)
 
         # stage 3
         self.state = CoreState.final_write
@@ -856,7 +856,7 @@ class HomeAssistant:
                 "Timed out waiting for final writes to complete, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(2)
+            self._async_log_running_tasks(3)
 
         # stage 4
         self.state = CoreState.not_running
@@ -908,7 +908,7 @@ class HomeAssistant:
                 "Timed out waiting for Home Assistant core integrations to stop, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(3)
+            self._async_log_running_tasks(4)
 
         self.state = CoreState.stopped
 
