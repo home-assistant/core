@@ -303,6 +303,7 @@ def test_state_changes_during_period_descending(
     hist = history.state_changes_during_period(
         hass, start, end, entity_id, no_attributes=False, descending=False
     )
+
     assert_multiple_states_equal_without_context(states, hist[entity_id])
 
     hist = history.state_changes_during_period(
@@ -310,6 +311,24 @@ def test_state_changes_during_period_descending(
     )
     assert_multiple_states_equal_without_context(
         states, list(reversed(list(hist[entity_id])))
+    )
+
+    hist = history.state_changes_during_period(
+        hass,
+        point2,  # Pick a point where we will generate a start time state
+        end,
+        entity_id,
+        no_attributes=False,
+        descending=True,
+        include_start_time_state=True,
+    )
+    hist_states = list(hist[entity_id])
+    assert len(hist_states) == 3
+    # Make sure they are in descending order
+    assert (
+        hist_states[0].last_updated
+        > hist_states[1].last_updated
+        > hist_states[2].last_updated
     )
 
 
