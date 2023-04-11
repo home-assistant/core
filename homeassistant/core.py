@@ -1876,7 +1876,10 @@ class ServiceRegistry:
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error executing service: %s", service_call)
 
-        self._hass.async_create_task(catch_exceptions())
+        self._hass.async_create_task(
+            catch_exceptions(),
+            f"service call background {service_call.domain}.{service_call.service}",
+        )
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
