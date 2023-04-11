@@ -335,33 +335,37 @@ def _state_changed_during_period_stmt(
         stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    if descending:
-        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts.desc())
-    else:
-        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if limit:
         stmt = stmt.limit(limit)
     if not include_start_time_state or not run_start_ts:
-        return stmt
-    start_time_subquery = _select_from_subquery(
-        _get_single_entity_start_time_stmt(
-            start_time_ts,
-            single_metadata_id,
+        return stmt.order_by(
+            States.metadata_id,
+            States.last_updated_ts.desc() if descending else States.last_updated_ts,
+        )
+
+    union_subquery = union_all(
+        _select_from_subquery(
+            _get_single_entity_start_time_stmt(
+                start_time_ts,
+                single_metadata_id,
+                no_attributes,
+                False,
+            ).subquery(),
             no_attributes,
             False,
-        ).subquery(),
-        no_attributes,
-        False,
-    )
-    main_subquery = _select_from_subquery(stmt.subquery(), no_attributes, False)
-    if descending:
-        inner_queries = [main_subquery, start_time_subquery]
-    else:
-        inner_queries = [start_time_subquery, main_subquery]
-    return _select_from_subquery(
-        union_all(*inner_queries).subquery(),
-        no_attributes,
-        False,
+        ),
+        _select_from_subquery(
+            stmt.order_by(States.metadata_id, States.last_updated_ts).subquery(),
+            no_attributes,
+            False,
+        ),
+    ).subquery()
+    stmt = _select_from_subquery(union_subquery, no_attributes, False)
+    if not descending:
+        return stmt
+    # If descending, we need to reverse the results
+    return stmt.order_by(
+        union_subquery.c.metadata_id, union_subquery.c.last_updated_ts.desc()
     )
 
 
