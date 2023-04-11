@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from ... import recorder
-from ..db_schema import StateAttributes, States
+from ..db_schema import DOUBLE_TYPE, StateAttributes, States
 from ..filters import Filters
 from ..models import (
     LazyState,
@@ -72,9 +72,13 @@ def _stmt_and_join_attributes_for_start_state(
 ) -> Select:
     """Return the statement and if StateAttributes should be joined."""
     _select = select(States.metadata_id, States.state)
-    _select = _select.add_columns(literal(value=None).label("last_updated_ts"))
+    _select = _select.add_columns(
+        literal(value=None).label("last_updated_ts").cast(DOUBLE_TYPE)
+    )
     if include_last_changed:
-        _select = _select.add_columns(literal(value=None).label("last_changed_ts"))
+        _select = _select.add_columns(
+            literal(value=None).label("last_changed_ts").cast(DOUBLE_TYPE)
+        )
     if not no_attributes:
         _select = _select.add_columns(States.attributes, StateAttributes.shared_attrs)
     return _select
@@ -339,20 +343,23 @@ def _state_changed_during_period_stmt(
         stmt = stmt.limit(limit)
     if not include_start_time_state or not run_start_ts:
         return stmt
-    return _select_from_subquery(
-        union_all(
-            _select_from_subquery(
-                _get_single_entity_start_time_stmt(
-                    start_time_ts,
-                    single_metadata_id,
-                    no_attributes,
-                    False,
-                ).subquery(),
-                no_attributes,
-                False,
-            ),
-            _select_from_subquery(stmt.subquery(), no_attributes, False),
+    start_time_subquery = _select_from_subquery(
+        _get_single_entity_start_time_stmt(
+            start_time_ts,
+            single_metadata_id,
+            no_attributes,
+            False,
         ).subquery(),
+        no_attributes,
+        False,
+    )
+    main_subquery = _select_from_subquery(stmt.subquery(), no_attributes, False)
+    if descending:
+        inner_queries = [main_subquery, start_time_subquery]
+    else:
+        inner_queries = [start_time_subquery, main_subquery]
+    return _select_from_subquery(
+        union_all(*inner_queries).subquery(),
         no_attributes,
         False,
     )
