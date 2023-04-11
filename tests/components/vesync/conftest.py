@@ -16,7 +16,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")
@@ -102,46 +102,3 @@ def outlet_fixture():
     """Create a mock VeSync outlet fixture."""
     mock_fixture = Mock(VeSyncOutlet)
     return mock_fixture
-
-
-@pytest.fixture(autouse=True)
-def requests_mock_fixture(requests_mock):
-    """Fixture to build the various responses for the Helpers.call_api method."""
-    # This fixture provides a variety of handlers for the various vesync API calls
-    # However, the "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices" URL
-    # must be explicitly added by the test case to ensure that the correct devices
-    # are loaded.
-    #
-    # For example:
-    # requests_mock.post(
-    #     "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
-    #     json=load_json_object_fixture("vesync-devices.json", DOMAIN),
-    # )
-    requests_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/user/login",
-        json=load_json_object_fixture("vesync-login.json", DOMAIN),
-    )
-    requests_mock.get(
-        "https://smartapi.vesync.com/v1/device/outlet/detail",
-        json=load_json_object_fixture("outlet-detail.json", DOMAIN),
-    )
-    requests_mock.post(
-        "https://smartapi.vesync.com/dimmer/v1/device/devicedetail",
-        json=load_json_object_fixture("dimmer-detail.json", DOMAIN),
-    )
-    requests_mock.post(
-        "https://smartapi.vesync.com/SmartBulb/v1/device/devicedetail",
-        json=load_json_object_fixture("device-detail.json", DOMAIN),
-    )
-    requests_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/deviceManaged/bypass",
-        json=load_json_object_fixture("device-detail.json", DOMAIN),
-    )
-    requests_mock.post(
-        "https://smartapi.vesync.com/cloud/v2/deviceManaged/bypassV2",
-        json=load_json_object_fixture("device-detail.json", DOMAIN),
-    )
-    requests_mock.post(
-        "https://smartapi.vesync.com/131airPurifier/v1/device/deviceDetail",
-        json=load_json_object_fixture("purifier-detail.json", DOMAIN),
-    )
