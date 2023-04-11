@@ -28,7 +28,7 @@ async def test_full_user_flow(hass: HomeAssistant, tmp_path: Path) -> None:
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -67,7 +67,7 @@ async def test_flow_fails_on_validation(hass: HomeAssistant, tmp_path: Path) -> 
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
