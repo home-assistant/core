@@ -63,7 +63,9 @@ class VictronBluetoothDeviceData(BluetoothData):
 
         if not self._parser:
             parser = detect_device_type(raw_data)
-            if parser is None:
+            if not issubclass(
+                parser, (BatteryMonitor, DcEnergyMeter, SolarCharger, VEBus)
+            ):
                 _LOGGER.debug("Unsupported device type")
                 return
             self.set_device_manufacturer(data.manufacturer or "Victron")
@@ -82,15 +84,12 @@ class VictronBluetoothDeviceData(BluetoothData):
             self._update_solar_charger(data)
         elif isinstance(self._parser, VEBus):
             self._update_vebus(data)
-        else:
-            _LOGGER.debug("Unsupported device type")
-            return
 
     def _update_battery_monitor(self, data: DeviceData) -> None:
         self.update_sensor(
             "Remaining Minutes",
             Units.TIME_MINUTES,
-            data.get_remaining_minutes(),
+            data.get_remaining_mins(),
             DeviceClass.DURATION,
         )
         self.update_sensor(
@@ -129,7 +128,7 @@ class VictronBluetoothDeviceData(BluetoothData):
         self.update_sensor(
             "Battery Temperature",
             Units.TEMP_CELSIUS,
-            data.get_battery_temperature(),
+            data.get_temperature(),
             DeviceClass.TEMPERATURE,
         )
         self.update_sensor(
@@ -207,7 +206,7 @@ class VictronBluetoothDeviceData(BluetoothData):
         self.update_sensor(
             "Charging Current",
             Units.ELECTRIC_CURRENT_AMPERE,
-            data.get_charging_current(),
+            data.get_battery_charging_current(),
             DeviceClass.CURRENT,
         )
         self.update_sensor(
@@ -273,7 +272,7 @@ class VictronBluetoothDeviceData(BluetoothData):
         self.update_sensor(
             "Battery State of Charge",
             Units.PERCENTAGE,
-            data.get_battery_soc(),
+            data.get_soc(),
             DeviceClass.BATTERY,
         )
 
