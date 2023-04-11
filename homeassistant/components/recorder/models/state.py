@@ -144,7 +144,7 @@ def row_to_compressed_state(
         COMPRESSED_STATE_STATE: row.state,
         COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
     }
-    row_last_updated_ts: float = row.last_updated_ts or start_time_ts
+    row_last_updated_ts: float = row.last_updated_ts or start_time_ts  # type: ignore[assignment]
     comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
     if (
         (row_last_changed_ts := getattr(row, "last_changed_ts", None))
