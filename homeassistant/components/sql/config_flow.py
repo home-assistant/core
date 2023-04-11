@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from types import MappingProxyType
 from typing import Any
 
 import sqlalchemy
@@ -141,9 +140,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                CONFIG_SCHEMA, user_input
-            ),
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
             errors=errors,
         )
 
