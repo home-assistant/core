@@ -46,9 +46,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         user_license_number = user_input[CONF_DRIVING_LICENSE]
 
         # If this person (EGN) is already configured, abort
-        for entry in self._async_current_entries():
-            if entry.data[CONF_PERSON_EGN] == user_egn:
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(user_egn)
+        self._abort_if_unique_id_configured()
 
         # Verify user creds
         verify = await KatApi().async_verify_credentials(user_egn, user_license_number)

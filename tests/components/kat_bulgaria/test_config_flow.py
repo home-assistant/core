@@ -19,6 +19,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import KAT_API_VERIFY_CREDENTIALS
 
+EGN_SAMPLE = "0011223344"
+EGN_SAMPLE_TWO = "1111119999"
+
+LICENSE_SAMPLE = "123456789"
+LICENSE_SAMPLE_TWO = "987654321"
+
 
 @pytest.fixture(autouse=True, name="mock_setup_entry")
 def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
@@ -45,8 +51,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             result["flow_id"],
             {
                 CONF_PERSON_NAME: "Nikola",
-                CONF_PERSON_EGN: "0011223344",
-                CONF_DRIVING_LICENSE: "123456879",
+                CONF_PERSON_EGN: EGN_SAMPLE,
+                CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
             },
         )
         await hass.async_block_till_done()
@@ -55,8 +61,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["title"] == generate_entity_name("Nikola")
     assert result2["data"] == {
         CONF_PERSON_NAME: "Nikola",
-        CONF_PERSON_EGN: "0011223344",
-        CONF_DRIVING_LICENSE: "123456879",
+        CONF_PERSON_EGN: EGN_SAMPLE,
+        CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -78,7 +84,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             {
                 CONF_PERSON_NAME: "Nikola",
                 CONF_PERSON_EGN: "000",
-                CONF_DRIVING_LICENSE: "123",
+                CONF_DRIVING_LICENSE: "999",
             },
         )
         await hass.async_block_till_done()
@@ -103,8 +109,8 @@ async def test_form_cannot_connect_website_down(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_PERSON_NAME: "Nikola",
-                CONF_PERSON_EGN: "0011223344",
-                CONF_DRIVING_LICENSE: "123456879",
+                CONF_PERSON_EGN: EGN_SAMPLE,
+                CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
             },
         )
         await hass.async_block_till_done()
@@ -127,8 +133,8 @@ async def test_form_cannot_connect_timeout(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_PERSON_NAME: "Nikola",
-                CONF_PERSON_EGN: "0011223344",
-                CONF_DRIVING_LICENSE: "123456879",
+                CONF_PERSON_EGN: EGN_SAMPLE,
+                CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
             },
         )
         await hass.async_block_till_done()
@@ -151,8 +157,8 @@ async def test_form_unknown_error_type(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_PERSON_NAME: "Nikola",
-                CONF_PERSON_EGN: "0011223344",
-                CONF_DRIVING_LICENSE: "123456879",
+                CONF_PERSON_EGN: EGN_SAMPLE,
+                CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
             },
         )
         await hass.async_block_till_done()
@@ -161,7 +167,7 @@ async def test_form_unknown_error_type(hass: HomeAssistant) -> None:
     assert result2["reason"] == "unknown"
 
 
-async def test_form_already_configured_check_existing(hass: HomeAssistant) -> None:
+async def test_form_already_configured_with_existing(hass: HomeAssistant) -> None:
     """Test adding an entity when it's already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -170,21 +176,23 @@ async def test_form_already_configured_check_existing(hass: HomeAssistant) -> No
     with patch(
         "homeassistant.config_entries.ConfigFlow._async_current_entries",
         return_value=[
-            namedtuple("Mock", ["data"])(
+            namedtuple("Mock", ["data", "unique_id", "source"])(
                 data={
                     CONF_PERSON_NAME: "Nikola",
-                    CONF_PERSON_EGN: "0011223344",
-                    CONF_DRIVING_LICENSE: "123456879",
-                }
-            )
+                    CONF_PERSON_EGN: EGN_SAMPLE,
+                    CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
+                },
+                unique_id=EGN_SAMPLE,
+                source=config_entries.SOURCE_USER,
+            ),
         ],
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_PERSON_NAME: "Nikola",
-                CONF_PERSON_EGN: "0011223344",
-                CONF_DRIVING_LICENSE: "123456879",
+                CONF_PERSON_EGN: EGN_SAMPLE,
+                CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
             },
         )
         await hass.async_block_till_done()
@@ -193,7 +201,7 @@ async def test_form_already_configured_check_existing(hass: HomeAssistant) -> No
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_already_configured_check_not_existing(
+async def test_form_already_configured_without_existing(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test adding an entity when another one was configured, no conflicts."""
@@ -206,21 +214,23 @@ async def test_form_already_configured_check_not_existing(
     ), patch(
         "homeassistant.config_entries.ConfigFlow._async_current_entries",
         return_value=[
-            namedtuple("Mock", ["data"])(
+            namedtuple("Mock", ["data", "unique_id", "source"])(
                 data={
                     CONF_PERSON_NAME: "Nikola",
-                    CONF_PERSON_EGN: "9988776655",
-                    CONF_DRIVING_LICENSE: "987654321",
-                }
-            )
+                    CONF_PERSON_EGN: EGN_SAMPLE_TWO,
+                    CONF_DRIVING_LICENSE: LICENSE_SAMPLE_TWO,
+                },
+                unique_id=EGN_SAMPLE_TWO,
+                source=config_entries.SOURCE_USER,
+            ),
         ],
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_PERSON_NAME: "Nikola",
-                CONF_PERSON_EGN: "0011223344",
-                CONF_DRIVING_LICENSE: "123456879",
+                CONF_PERSON_EGN: EGN_SAMPLE,
+                CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
             },
         )
         await hass.async_block_till_done()
@@ -229,7 +239,7 @@ async def test_form_already_configured_check_not_existing(
         assert result2["title"] == generate_entity_name("Nikola")
         assert result2["data"] == {
             CONF_PERSON_NAME: "Nikola",
-            CONF_PERSON_EGN: "0011223344",
-            CONF_DRIVING_LICENSE: "123456879",
+            CONF_PERSON_EGN: EGN_SAMPLE,
+            CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
         }
         assert len(mock_setup_entry.mock_calls) == 1

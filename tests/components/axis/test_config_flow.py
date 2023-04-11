@@ -56,7 +56,7 @@ async def test_flow_manual_configuration(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -91,7 +91,7 @@ async def test_manual_configuration_update_configuration(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     mock_vapix_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
@@ -117,7 +117,7 @@ async def test_flow_fails_faulty_credentials(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.axis.config_flow.get_axis_device",
@@ -143,7 +143,7 @@ async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.axis.config_flow.get_axis_device",
@@ -182,7 +182,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -223,7 +223,7 @@ async def test_reauth_flow_update_configuration(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     mock_vapix_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
@@ -321,7 +321,7 @@ async def test_discovery_flow(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

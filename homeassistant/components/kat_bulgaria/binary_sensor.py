@@ -1,6 +1,6 @@
 """Binary sensor platform."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from kat_bulgaria.obligations import KatApi, KatApiResponse
@@ -11,14 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import generate_entity_name
-from .const import (
-    ATTR_LAST_UPDATED,
-    BINARY_SENSOR_ENTITY_PREFIX,
-    CONF_DRIVING_LICENSE,
-    CONF_PERSON_EGN,
-    CONF_PERSON_NAME,
-    DOMAIN,
-)
+from .const import CONF_DRIVING_LICENSE, CONF_PERSON_EGN, CONF_PERSON_NAME, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=20)
 _LOGGER = logging.getLogger(__name__)
@@ -45,28 +38,30 @@ async def async_setup_entry(
 class KatObligationsSensor(BinarySensorEntity):
     """A simple sensor."""
 
+    _attr_has_entity_name = True
+
+    @property
+    def name(self) -> str | None:
+        """Name of the entity."""
+        return generate_entity_name(self.user_name)
+
     def __init__(self, api: KatApi, name: str, egn: str, license_number: str) -> None:
         """Initialize the sensor."""
 
         self.api = api
 
-        self._attr_name = generate_entity_name(name)
-        self._attr_unique_id = f"{BINARY_SENSOR_ENTITY_PREFIX}{name}"
-
-        self.egn = egn
-        self.license_number = license_number
+        self.user_egn = egn
+        self.user_license_number = license_number
+        self.user_name = name
 
     async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
 
         resp: KatApiResponse[bool] = await self.api.async_check_obligations(
-            self.egn, self.license_number
+            self.user_egn, self.user_license_number
         )
 
         if resp.success:
             self._attr_is_on = resp.data
-            self._attr_extra_state_attributes = {
-                ATTR_LAST_UPDATED: datetime.now().isoformat()
-            }
         else:
             _LOGGER.info(resp.error_message)
