@@ -269,7 +269,7 @@ async def test_lazy_state_handles_include_json(
         entity_id="sensor.invalid",
         shared_attrs="{INVALID_JSON}",
     )
-    assert LazyState(row, {}, None).attributes == {}
+    assert LazyState(row, {}, None, row.entity_id, "", 1).attributes == {}
     assert "Error converting row to state attributes" in caplog.text
 
 
@@ -282,7 +282,7 @@ async def test_lazy_state_prefers_shared_attrs_over_attrs(
         shared_attrs='{"shared":true}',
         attributes='{"shared":false}',
     )
-    assert LazyState(row, {}, None).attributes == {"shared": True}
+    assert LazyState(row, {}, None, row.entity_id, "", 1).attributes == {"shared": True}
 
 
 async def test_lazy_state_handles_different_last_updated_and_last_changed(
@@ -297,7 +297,7 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
         last_updated_ts=now.timestamp(),
         last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
     )
-    lstate = LazyState(row, {}, None)
+    lstate = LazyState(row, {}, None, row.entity_id, row.state, row.last_updated_ts)
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -328,7 +328,7 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         last_updated_ts=now.timestamp(),
         last_changed_ts=now.timestamp(),
     )
-    lstate = LazyState(row, {}, None)
+    lstate = LazyState(row, {}, None, row.entity_id, row.state, row.last_updated_ts)
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
