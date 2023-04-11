@@ -88,8 +88,6 @@ class EntityComponent(Generic[_EntityT]):
 
         hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
-
     @property
     def entities(self) -> Iterable[_EntityT]:
         """Return an iterable that returns all entities.
@@ -111,7 +109,7 @@ class EntityComponent(Generic[_EntityT]):
                 return entity_obj  # type: ignore[return-value]
         return None
 
-    def setup(self, config: ConfigType) -> None:
+    def setup(self, config: ConfigType | None = None) -> None:
         """Set up a full entity component.
 
         This doesn't block the executor to protect from deadlocks.
@@ -120,14 +118,18 @@ class EntityComponent(Generic[_EntityT]):
             self.async_setup(config), f"EntityComponent setup {self.domain}"
         )
 
-    async def async_setup(self, config: ConfigType) -> None:
+    async def async_setup(self, config: ConfigType | None = None) -> None:
         """Set up a full entity component.
 
-        Loads the platforms from the config and will listen for supported
-        discovered platforms.
+        If `config` is not `None`, also loads the platforms from the config and will listen
+        for supported discovered platforms.
 
         This method must be run in the event loop.
         """
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+
+        if config is None:
+            return
 
         self.config = config
 
