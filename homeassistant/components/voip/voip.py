@@ -150,6 +150,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                     stt_stream=stt_stream(),
                     language=self.language,
                     conversation_id=self._conversation_id,
+                    tts_options={tts.ATTR_AUDIO_OUTPUT: "raw"},
                 )
 
         except asyncio.TimeoutError:

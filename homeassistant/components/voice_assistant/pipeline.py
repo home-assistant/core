@@ -174,6 +174,7 @@ class PipelineRun:
     stt_provider: stt.Provider | None = None
     intent_agent: str | None = None
     tts_engine: str | None = None
+    tts_options: dict | None = None
 
     def __post_init__(self):
         """Set language for pipeline."""
@@ -361,13 +362,13 @@ class PipelineRun:
             self.hass,
             engine,
             self.language,
-            {tts.ATTR_AUDIO_OUTPUT: "raw"},
+            self.tts_options,
         ):
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=(
                     f"Text to speech engine {engine} "
-                    f"does not support language {self.language} or raw audio"
+                    f"does not support language {self.language} or options {self.tts_options}"
                 ),
             )
 
@@ -395,7 +396,7 @@ class PipelineRun:
                 tts_input,
                 engine=self.tts_engine,
                 language=self.language,
-                options={tts.ATTR_AUDIO_OUTPUT: "raw"},
+                options=self.tts_options,
             )
             tts_media = await media_source.async_resolve_media(
                 self.hass,
