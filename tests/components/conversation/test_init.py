@@ -20,7 +20,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import expose_new
+from . import expose_entity, expose_new
 
 from tests.common import MockConfigEntry, MockUser, async_mock_service
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -453,6 +453,7 @@ async def test_http_processing_intent_entity_renamed(
         LIGHT_DOMAIN,
         {LIGHT_DOMAIN: [{"platform": "test"}]},
     )
+    await hass.async_block_till_done()
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
@@ -598,6 +599,215 @@ async def test_http_processing_intent_entity_renamed(
                 }
             },
         },
+    }
+
+
+async def test_http_processing_intent_entity_exposed(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test processing intent via HTTP API with manual expose.
+
+    We want to ensure that manually exposing an entity later busts the cache
+    so that the new setting is used.
+    """
+    # Expose new entities to the default agent
+    expose_new(hass, True)
+
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    entity = platform.MockLight("kitchen light", "on")
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    platform.ENTITIES.append(entity)
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on my cool light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    # Unexpose the entity
+    expose_entity(hass, "light.kitchen", False)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on my cool light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+    # Now expose the entity
+    expose_entity(hass, "light.kitchen", True)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on my cool light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
     }
 
 
