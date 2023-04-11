@@ -1,8 +1,8 @@
 """Support to interface with Sonos players."""
 from __future__ import annotations
 
-from asyncio import run_coroutine_threadsafe
 import datetime
+from functools import partial
 import logging
 from typing import Any
 
@@ -493,8 +493,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Clear players playlist."""
         self.coordinator.soco.clear_queue()
 
-    @soco_error()
-    def play_media(  # noqa: C901
+    async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player.
@@ -512,22 +511,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
                 assert self.speaker.websocket
-                response, _ = run_coroutine_threadsafe(
-                    self.speaker.websocket.play_clip(
-                        media_id,
-                        volume=volume,
-                    ),
-                    self.hass.loop,
-                ).result()
+                response, _ = await self.speaker.websocket.play_clip(
+                    media_id,
+                    volume=volume,
+                )
             except SonosWebsocketError as exc:
                 raise HomeAssistantError(
                     f"Error when calling Sonos websocket: {exc}"
                 ) from exc
             if response["success"]:
                 return
-
-        # Use 'replace' as the default enqueue option
-        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
 
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
@@ -538,16 +531,21 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if media_source.is_media_source_id(media_id):
             is_radio = media_id.startswith("media-source://radio_browser/")
             media_type = MediaType.MUSIC
-            media_id = (
-                run_coroutine_threadsafe(
-                    media_source.async_resolve_media(
-                        self.hass, media_id, self.entity_id
-                    ),
-                    self.hass.loop,
-                )
-                .result()
-                .url
+            media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
             )
+            media_id = media.url
+
+        await self.hass.async_add_executor_job(
+            partial(self._play_media, media_type, media_id, is_radio, **kwargs)
+        )
+
+    @soco_error()
+    def _play_media(
+        self, media_type: MediaType | str, media_id: str, is_radio: bool, **kwargs: Any
+    ) -> None:
+        """Wrap sync calls to async_play_media."""
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
 
         if media_type == "favorite_item_id":
             favorite = self.speaker.favorites.lookup_by_item_id(media_id)
