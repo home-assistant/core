@@ -19,7 +19,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
 
-KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant")
+KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
 
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
@@ -59,6 +59,10 @@ DEFAULT_EXPOSED_SENSOR_DEVICE_CLASSES = {
     SensorDeviceClass.PM25,
     SensorDeviceClass.TEMPERATURE,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+}
+
+DEFAULT_EXPOSED_ASSISTANT = {
+    "conversation": True,
 }
 
 
@@ -130,7 +134,7 @@ class ExposedEntities:
         """Check if new entities are exposed to an assistant."""
         if prefs := self._assistants.get(assistant):
             return prefs.expose_new
-        return False
+        return DEFAULT_EXPOSED_ASSISTANT.get(assistant, False)
 
     @callback
     def async_set_expose_new_entities(self, assistant: str, expose_new: bool) -> None:
@@ -170,7 +174,7 @@ class ExposedEntities:
                 should_expose = registry_entry.options[assistant]["should_expose"]
                 return should_expose
 
-        if (prefs := self._assistants.get(assistant)) and prefs.expose_new:
+        if self.async_get_expose_new_entities(assistant):
             should_expose = self._is_default_exposed(entity_id, registry_entry)
         else:
             should_expose = False
