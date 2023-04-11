@@ -105,7 +105,7 @@ class MqttButton(MqttEntity, ButtonEntity):
         self._command_template = MqttCommandTemplate(
             config.get(CONF_COMMAND_TEMPLATE), entity=self
         ).async_render
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

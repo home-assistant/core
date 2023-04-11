@@ -186,8 +186,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         self._attr_native_max_value = config[CONF_MAX]
         self._attr_native_min_value = config[CONF_MIN]
         self._attr_native_step = config[CONF_STEP]
-        if unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT):
-            self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
