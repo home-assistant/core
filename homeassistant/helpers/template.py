@@ -2029,9 +2029,11 @@ def from_json(value):
     return json_loads(value)
 
 
-def to_json(value, ensure_ascii=True):
+def to_json(value, ensure_ascii=True, indent=None, sort_keys=False):
     """Convert an object to a JSON string."""
-    return json.dumps(value, ensure_ascii=ensure_ascii)
+    return json.dumps(
+        value, ensure_ascii=ensure_ascii, indent=indent, sort_keys=sort_keys
+    )
 
 
 @pass_context

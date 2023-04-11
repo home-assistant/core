@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+import json
 import logging
 import math
 import random
@@ -1045,6 +1046,18 @@ def test_to_json(hass: HomeAssistant) -> None:
     actual_result = template.Template(
         "{{ {'Foo': 'Bar'} | to_json }}", hass
     ).async_render()
+    assert actual_result == expected_result
+
+    expected_result = json.dumps({"Foo": "Bar"}, indent=2)
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json(indent=2) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
+
+    expected_result = json.dumps({"Z": 26, "A": 1, "M": 13}, sort_keys=True)
+    actual_result = template.Template(
+        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True) }}", hass
+    ).async_render(parse_result=False)
     assert actual_result == expected_result
 
 
