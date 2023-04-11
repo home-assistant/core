@@ -2,11 +2,11 @@
 from datetime import timedelta
 from functools import lru_cache
 import os
+from pathlib import Path
 import sys
 from unittest.mock import patch
 
 from lru import LRU  # pylint: disable=no-name-in-module
-import py
 import pytest
 
 from homeassistant.components.profiler import (
@@ -33,9 +33,10 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_basic_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we can setup and the service is registered."""
-    test_dir = tmpdir.mkdir("profiles")
+    test_dir = tmp_path.joinpath("profiles")
+    test_dir.mkdir()
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -66,9 +67,10 @@ async def test_basic_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
 @pytest.mark.skipif(
     sys.version_info >= (3, 11), reason="not yet available on python 3.11"
 )
-async def test_memory_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we can setup and the service is registered."""
-    test_dir = tmpdir.mkdir("profiles")
+    test_dir = tmp_path.joinpath("profiles")
+    test_dir.mkdir()
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -97,7 +99,7 @@ async def test_memory_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
 
 
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="still works on python 3.10")
-async def test_memory_usage_py311(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+async def test_memory_usage_py311(hass: HomeAssistant) -> None:
     """Test raise an error on python3.11."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
