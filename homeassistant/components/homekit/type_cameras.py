@@ -40,6 +40,7 @@ from .const import (
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    CONF_VIDEO_PROFILE_NAMES,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -51,6 +52,7 @@ from .const import (
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
+    DEFAULT_VIDEO_PROFILE_NAMES,
     SERV_DOORBELL,
     SERV_MOTION_SENSOR,
     SERV_SPEAKER,
@@ -111,8 +113,6 @@ RESOLUTIONS = [
     (1600, 1200),
 ]
 
-VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]
-
 FFMPEG_WATCH_INTERVAL = timedelta(seconds=5)
 FFMPEG_LOGGER = "ffmpeg_logger"
 FFMPEG_WATCHER = "ffmpeg_watcher"
@@ -128,6 +128,7 @@ CONFIG_DEFAULTS = {
     CONF_AUDIO_MAP: DEFAULT_AUDIO_MAP,
     CONF_VIDEO_MAP: DEFAULT_VIDEO_MAP,
     CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
+    CONF_VIDEO_PROFILE_NAMES: DEFAULT_VIDEO_PROFILE_NAMES,
     CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
     CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
     CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
@@ -346,7 +347,7 @@ class Camera(HomeAccessory, PyhapCamera):
         if self.config[CONF_VIDEO_CODEC] != "copy":
             video_profile = (
                 "-profile:v "
-                + VIDEO_PROFILE_NAMES[
+                + self.config[CONF_VIDEO_PROFILE_NAMES][
                     int.from_bytes(stream_config["v_profile_id"], byteorder="big")
                 ]
                 + " "
