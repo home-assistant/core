@@ -62,9 +62,7 @@ class LazyState(State):
         self.state = state or ""
         self._attributes: dict[str, Any] | None = None
         self._last_updated_ts: float | None = last_updated_ts or start_time_ts
-        self._last_changed_ts: float | None = (
-            getattr(row, "last_changed_ts", None) or self._last_updated_ts
-        )
+        self._last_changed_ts: float | None = None
         self._context: Context | None = None
         self.attr_cache = attr_cache
 
@@ -95,7 +93,10 @@ class LazyState(State):
     @property
     def last_changed(self) -> datetime:
         """Last changed datetime."""
-        assert self._last_changed_ts is not None
+        if self._last_changed_ts is None:
+            self._last_changed_ts = (
+                getattr(self._row, "last_changed_ts", None) or self._last_updated_ts
+            )
         return dt_util.utc_from_timestamp(self._last_changed_ts)
 
     @last_changed.setter
