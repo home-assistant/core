@@ -25,6 +25,14 @@ from homeassistant.util import dt
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.fixture(autouse=True)
+def set_time_zone(hass: HomeAssistant):
+    """Set the time zone for the tests."""
+    # Set our timezone to CST/Regina so we can check calculations
+    # This keeps UTC-6 all year round
+    hass.config.set_time_zone("America/Regina")
+
+
 @pytest.fixture(name="task")
 def mock_task() -> Task:
     """Mock a todoist Task instance."""
@@ -129,6 +137,52 @@ async def test_update_entity_for_custom_project_with_labels_on(
     await async_update_entity(hass, "calendar.all_projects")
     state = hass.states.get("calendar.all_projects")
     assert state.attributes["labels"] == ["Label1"]
+    assert state.state == "on"
+
+
+@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+async def test_update_entity_for_custom_project_no_due_date_on(
+    todoist_api, hass: HomeAssistant, api
+) -> None:
+    """Test that a task without an explicit due date is considered to be in an on state."""
+    task_wo_due_date = Task(
+        assignee_id=None,
+        assigner_id=None,
+        comment_count=0,
+        is_completed=False,
+        content="No due date task",
+        created_at="2023-04-11T00:25:25.589971Z",
+        creator_id="1",
+        description="",
+        due=None,
+        id="123",
+        labels=["Label1"],
+        order=10,
+        parent_id=None,
+        priority=1,
+        project_id="12345",
+        section_id=None,
+        url="https://todoist.com/showTask?id=123",
+        sync_id=None,
+    )
+    api.get_tasks.return_value = [task_wo_due_date]
+    todoist_api.return_value = api
+
+    assert await setup.async_setup_component(
+        hass,
+        "calendar",
+        {
+            "calendar": {
+                "platform": DOMAIN,
+                CONF_TOKEN: "token",
+                "custom_projects": [{"name": "All projects", "labels": ["Label1"]}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await async_update_entity(hass, "calendar.all_projects")
+    state = hass.states.get("calendar.all_projects")
     assert state.state == "on"
 
 

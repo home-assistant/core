@@ -446,7 +446,7 @@ class TodoistProjectData:
             LABELS: [],
             OVERDUE: False,
             PRIORITY: data.priority,
-            START: dt.utcnow(),
+            START: dt.now(),
             SUMMARY: data.content,
         }
 
