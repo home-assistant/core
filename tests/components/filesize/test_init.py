@@ -1,5 +1,4 @@
 """Tests for the Filesize integration."""
-import os
 from pathlib import Path
 
 from homeassistant.components.filesize.const import DOMAIN
@@ -16,7 +15,7 @@ async def test_load_unload_config_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
 ) -> None:
     """Test the Filesize configuration entry loading/unloading."""
-    testfile = os.path.join(tmp_path, "file.txt")
+    testfile = str(tmp_path.joinpath("file.txt"))
     await async_create_file(hass, testfile)
     hass.config.allowlist_external_dirs = {tmp_path}
     mock_config_entry.add_to_hass(hass)
@@ -40,7 +39,7 @@ async def test_cannot_access_file(
 ) -> None:
     """Test that an file not exist is caught."""
     mock_config_entry.add_to_hass(hass)
-    testfile = os.path.join(tmp_path, "file_not_exist.txt")
+    testfile = str(tmp_path.joinpath("file_not_exist.txt"))
     hass.config.allowlist_external_dirs = {tmp_path}
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id=testfile, data={CONF_FILE_PATH: testfile}
@@ -56,7 +55,7 @@ async def test_not_valid_path_to_file(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
 ) -> None:
     """Test that an invalid path is caught."""
-    testfile = os.path.join(tmp_path, "file.txt")
+    testfile = str(tmp_path.joinpath("file.txt"))
     await async_create_file(hass, testfile)
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(

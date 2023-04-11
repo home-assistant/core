@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-import os
 from pathlib import Path
 from unittest.mock import patch
 
@@ -19,7 +18,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_config_entry(tmp_path: Path) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    test_file = os.path.join(tmp_path, TEST_FILE_NAME)
+    test_file = str(tmp_path.joinpath(TEST_FILE_NAME))
     return MockConfigEntry(
         title=TEST_FILE_NAME,
         domain=DOMAIN,

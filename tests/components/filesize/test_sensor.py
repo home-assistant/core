@@ -15,7 +15,7 @@ async def test_invalid_path(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
 ) -> None:
     """Test that an invalid path is caught."""
-    test_file = os.path.join(tmp_path, TEST_FILE_NAME)
+    test_file = str(tmp_path.joinpath(TEST_FILE_NAME))
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry, unique_id=test_file, data={CONF_FILE_PATH: test_file}
@@ -29,7 +29,7 @@ async def test_valid_path(
     hass: HomeAssistant, tmp_path: Path, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test for a valid path."""
-    testfile = os.path.join(tmp_path, "file.txt")
+    testfile = str(tmp_path.joinpath("file.txt"))
     await async_create_file(hass, testfile)
     hass.config.allowlist_external_dirs = {tmp_path}
     mock_config_entry.add_to_hass(hass)
@@ -51,7 +51,7 @@ async def test_state_unavailable(
     hass: HomeAssistant, tmp_path: Path, mock_config_entry: MockConfigEntry
 ) -> None:
     """Verify we handle state unavailable."""
-    testfile = os.path.join(tmp_path, "file.txt")
+    testfile = str(tmp_path.joinpath("file.txt"))
     await async_create_file(hass, testfile)
     hass.config.allowlist_external_dirs = {tmp_path}
     mock_config_entry.add_to_hass(hass)

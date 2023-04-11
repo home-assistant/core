@@ -1,5 +1,4 @@
 """Tests for the Filesize config flow."""
-import os
 from pathlib import Path
 from unittest.mock import patch
 
@@ -20,7 +19,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def test_full_user_flow(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test the full user configuration flow."""
-    test_file = os.path.join(tmp_path, TEST_FILE_NAME)
+    test_file = str(tmp_path.joinpath(TEST_FILE_NAME))
     await async_create_file(hass, test_file)
     hass.config.allowlist_external_dirs = {tmp_path}
     result = await hass.config_entries.flow.async_init(
@@ -44,7 +43,7 @@ async def test_unique_path(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
 ) -> None:
     """Test we abort if already setup."""
-    test_file = os.path.join(tmp_path, TEST_FILE_NAME)
+    test_file = str(tmp_path.joinpath(TEST_FILE_NAME))
     await async_create_file(hass, test_file)
     hass.config.allowlist_external_dirs = {tmp_path}
     mock_config_entry.add_to_hass(hass)
@@ -59,7 +58,7 @@ async def test_unique_path(
 
 async def test_flow_fails_on_validation(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test config flow errors."""
-    test_file = os.path.join(tmp_path, TEST_FILE_NAME)
+    test_file = str(tmp_path.joinpath(TEST_FILE_NAME))
     hass.config.allowlist_external_dirs = {}
 
     result = await hass.config_entries.flow.async_init(
