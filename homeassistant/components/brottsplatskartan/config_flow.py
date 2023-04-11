@@ -64,13 +64,13 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if area:
                 name = f"{DEFAULT_NAME} {area}"
-            else:
-                latitude = user_input.get(CONF_LOCATION, {}).get(CONF_LATITUDE)
-                longitude = user_input.get(CONF_LOCATION, {}).get(CONF_LONGITUDE)
-
-            if latitude and longitude:
+            elif location := user_input.get(CONF_LOCATION):
+                lat: float = location[CONF_LATITUDE]
+                long: float = location[CONF_LONGITUDE]
+                latitude = lat
+                longitude = long
                 name = f"{DEFAULT_NAME} {round(latitude, 2)}, {round(longitude, 2)}"
-            if not latitude and not longitude and not area:
+            else:
                 latitude = self.hass.config.latitude
                 longitude = self.hass.config.longitude
                 name = f"{DEFAULT_NAME} HOME"

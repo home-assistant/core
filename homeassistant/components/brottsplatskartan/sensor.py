@@ -84,13 +84,13 @@ class BrottsplatskartanSensor(SensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
-    def __init__(self, bpk: BrottsplatsKartan, name: str, unique_id: str) -> None:
+    def __init__(self, bpk: BrottsplatsKartan, name: str, entry_id: str) -> None:
         """Initialize the Brottsplatskartan sensor."""
         self._brottsplatskartan = bpk
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, entry_id)},
             manufacturer="Brottsplatskartan",
             name=name,
         )
