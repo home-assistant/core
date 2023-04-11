@@ -101,8 +101,6 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the user step."""
         errors = {}
 
-        current_data: dict[str, Any] = {}
-
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
             query = user_input[CONF_QUERY]
