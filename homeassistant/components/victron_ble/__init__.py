@@ -8,10 +8,14 @@ from home_assistant_bluetooth import BluetoothServiceInfo
 from sensor_state_data import DeviceClass, Units
 from victron_ble.devices import (
     BatteryMonitor,
+    BatteryMonitorData,
     DcEnergyMeter,
-    DeviceData,
+    DcEnergyMeterData,
+    Device,
     SolarCharger,
+    SolarChargerData,
     VEBus,
+    VEBusData,
     detect_device_type,
 )
 
@@ -20,12 +24,10 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_API_KEY, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, VICTRON_IDENTIFIER
-
-PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ class VictronBluetoothDeviceData(BluetoothData):
         """Initialize the Victron Bluetooth device data with an encryption key."""
         super().__init__()
         self._advertisement_key: str | None = advertisement_key
-        self._parser: DeviceData | None = None
+        self._parser: Device | None = None
 
     def validate_advertisement_key(self, data: bytes) -> bool:
         """Validate the advertisement key."""
@@ -45,7 +47,17 @@ class VictronBluetoothDeviceData(BluetoothData):
             _LOGGER.debug("Advertisement key not set")
             return False
 
-        encrypted_data = detect_device_type(data).PARSER.parse(data).encrypted_data
+        parser = detect_device_type(data)
+        if parser is None:
+            _LOGGER.error("Unable to detect device type")
+            return False
+
+        parsed_data = parser.PARSER.parse(data)
+        if parsed_data is None:
+            _LOGGER.error("Unable to parse data")
+            return False
+
+        encrypted_data = parsed_data.encrypted_data
 
         if encrypted_data[0] != bytes.fromhex(self._advertisement_key)[0]:
             # only possible check is whether the first byte matches
@@ -63,6 +75,9 @@ class VictronBluetoothDeviceData(BluetoothData):
 
         if not self._parser:
             parser = detect_device_type(raw_data)
+            if parser is None:
+                _LOGGER.debug("Unsupported device type")
+                return
             if not issubclass(
                 parser, (BatteryMonitor, DcEnergyMeter, SolarCharger, VEBus)
             ):
@@ -73,19 +88,23 @@ class VictronBluetoothDeviceData(BluetoothData):
             self.set_device_type(parser.__name__)
             if not self.validate_advertisement_key(raw_data):
                 return
+            assert self._advertisement_key is not None  # keep pylance happy
             self._parser = parser(self._advertisement_key)
 
-        data = self._parser.parse(raw_data)
-        if isinstance(self._parser, BatteryMonitor):
-            self._update_battery_monitor(data)
-        elif isinstance(self._parser, DcEnergyMeter):
-            self._update_dc_energy_meter(data)
-        elif isinstance(self._parser, SolarCharger):
-            self._update_solar_charger(data)
-        elif isinstance(self._parser, VEBus):
-            self._update_vebus(data)
+        parsed_data = self._parser.parse(raw_data)
+        if parsed_data is None:
+            _LOGGER.debug("Unable to parse data")
+            return
+        if isinstance(parsed_data, BatteryMonitorData):
+            self._update_battery_monitor(parsed_data)
+        elif isinstance(parsed_data, DcEnergyMeterData):
+            self._update_dc_energy_meter(parsed_data)
+        elif isinstance(parsed_data, SolarChargerData):
+            self._update_solar_charger(parsed_data)
+        elif isinstance(parsed_data, VEBusData):
+            self._update_vebus(parsed_data)
 
-    def _update_battery_monitor(self, data: DeviceData) -> None:
+    def _update_battery_monitor(self, data: BatteryMonitorData) -> None:
         self.update_sensor(
             "Remaining Minutes",
             Units.TIME_MINUTES,
@@ -93,40 +112,46 @@ class VictronBluetoothDeviceData(BluetoothData):
             DeviceClass.DURATION,
         )
         self.update_sensor(
-            "Battery Current",
+            "Current",
             Units.ELECTRIC_CURRENT_AMPERE,
             data.get_current(),
             DeviceClass.CURRENT,
         )
         self.update_sensor(
-            "Battery Voltage",
+            "Voltage",
             Units.ELECTRIC_POTENTIAL_VOLT,
             data.get_voltage(),
             DeviceClass.VOLTAGE,
         )
         self.update_sensor(
-            "Battery State of Charge",
+            "State of Charge",
             Units.PERCENTAGE,
             data.get_soc(),
             DeviceClass.BATTERY,
         )
         self.update_sensor(
             "Consumed Amp Hours",
-            None,
+            Units.ELECTRIC_CURRENT_FLOW_AMPERE_HOURS,
             data.get_consumed_ah(),
+            DeviceClass.CURRENT_FLOW,
         )
+        alarm = data.get_alarm()
+        if alarm is not None:
+            alarm = alarm.name
+        else:
+            alarm = "no alarm"
         self.update_sensor(
-            "Battery Monitor Alarm",
+            "Alarm",
             None,
-            data.get_alarm(),
+            alarm,
         )
         self.update_sensor(
             "Aux Mode",
             None,
-            data.get_aux_mode(),
+            data.get_aux_mode().name,
         )
         self.update_sensor(
-            "Battery Temperature",
+            "Temperature",
             Units.TEMP_CELSIUS,
             data.get_temperature(),
             DeviceClass.TEMPERATURE,
@@ -144,67 +169,78 @@ class VictronBluetoothDeviceData(BluetoothData):
             DeviceClass.VOLTAGE,
         )
 
-    def _update_dc_energy_meter(self, data: DeviceData) -> None:
+    def _update_dc_energy_meter(self, data: DcEnergyMeterData) -> None:
+        meter_type = data.get_meter_type()
+        if meter_type is not None:
+            meter_type = meter_type.name
         self.update_sensor(
-            "Meter Type",
+            "Type",
             None,
-            data.get_meter_type(),
+            meter_type,
         )
         self.update_sensor(
-            "Meter Current",
+            "Current",
             Units.ELECTRIC_CURRENT_AMPERE,
             data.get_current(),
             DeviceClass.CURRENT,
         )
         self.update_sensor(
-            "Meter Voltage",
+            "Voltage",
             Units.ELECTRIC_POTENTIAL_VOLT,
             data.get_voltage(),
             DeviceClass.VOLTAGE,
         )
+        alarm = data.get_alarm()
+        if alarm is not None:
+            alarm = alarm.name
+        else:
+            alarm = "no alarm"
         self.update_sensor(
-            "Meter Alarm",
+            "Alarm",
             None,
-            data.get_alarm(),
+            alarm,
         )
         self.update_sensor(
-            "Meter Temperature",
+            "Temperature",
             Units.TEMP_CELSIUS,
             data.get_temperature(),
             DeviceClass.TEMPERATURE,
         )
         self.update_sensor(
-            "Meter Aux Mode",
+            "Aux Mode",
             None,
-            data.get_aux_mode(),
+            data.get_aux_mode().name,
         )
         self.update_sensor(
-            "Meter Temperature",
+            "Temperature",
             Units.TEMP_CELSIUS,
             data.get_temperature(),
             DeviceClass.TEMPERATURE,
         )
         self.update_sensor(
-            "Meter Secondary Voltage",
+            "Secondary Voltage",
             Units.ELECTRIC_POTENTIAL_VOLT,
             data.get_starter_voltage(),
             DeviceClass.VOLTAGE,
         )
 
-    def _update_solar_charger(self, data: DeviceData) -> None:
+    def _update_solar_charger(self, data: SolarChargerData) -> None:
+        charge_state = data.get_charge_state()
+        if charge_state is not None:
+            charge_state = charge_state.name
         self.update_sensor(
-            "Charge State",
+            "State",
             None,
-            data.get_charge_state(),
+            charge_state,
         )
         self.update_sensor(
             "Battery Voltage",
-            Units.POWER_WATT,
+            Units.ELECTRIC_POTENTIAL_VOLT,
             data.get_battery_voltage(),
-            DeviceClass.BATTERY,
+            DeviceClass.VOLTAGE,
         )
         self.update_sensor(
-            "Charging Current",
+            "Battery Current",
             Units.ELECTRIC_CURRENT_AMPERE,
             data.get_battery_charging_current(),
             DeviceClass.CURRENT,
@@ -216,7 +252,7 @@ class VictronBluetoothDeviceData(BluetoothData):
             DeviceClass.ENERGY,
         )
         self.update_sensor(
-            "Solar Power",
+            "Power",
             Units.POWER_WATT,
             data.get_solar_power(),
             DeviceClass.POWER,
@@ -228,16 +264,22 @@ class VictronBluetoothDeviceData(BluetoothData):
             DeviceClass.CURRENT,
         )
 
-    def _update_vebus(self, data: DeviceData) -> None:
+    def _update_vebus(self, data: VEBusData) -> None:
+        device_state = data.get_device_state()
+        if device_state is not None:
+            device_state = device_state.name
         self.update_sensor(
             "Device State",
             None,
-            data.get_device_state(),
+            device_state,
         )
+        ac_in_state = data.get_ac_in_state()
+        if ac_in_state is not None:
+            ac_in_state = ac_in_state.name
         self.update_sensor(
             "AC In State",
             None,
-            data.get_ac_in_state(),
+            ac_in_state,
         )
         self.update_sensor(
             "AC In Power",
@@ -270,7 +312,7 @@ class VictronBluetoothDeviceData(BluetoothData):
             DeviceClass.TEMPERATURE,
         )
         self.update_sensor(
-            "Battery State of Charge",
+            "State of Charge",
             Units.PERCENTAGE,
             data.get_soc(),
             DeviceClass.BATTERY,
@@ -281,7 +323,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Victron BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
-    key = entry.data[CONF_API_KEY]
+    key = entry.data[CONF_ACCESS_TOKEN]
     data = VictronBluetoothDeviceData(key)
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
@@ -293,7 +335,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=data.update,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
     entry.async_on_unload(coordinator.async_start())
 
     return True
@@ -301,11 +343,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # remove this device from the scanner
-        address: str = entry.data[CONF_ADDRESS]
-        hass.data[DOMAIN].scanner.remove_device(address)
+    unload_ok = False
 
+    unload_ok = await hass.config_entries.async_forward_entry_unload(
+        entry, Platform.SENSOR
+    )
+
+    if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

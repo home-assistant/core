@@ -2,7 +2,7 @@
 
 import logging
 
-from sensor_state_data import DeviceKey, SensorUpdate
+from sensor_state_data import DeviceKey
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -29,12 +29,15 @@ LOGGER = logging.getLogger(__name__)
 
 def _victron_state_class(device_key: DeviceKey):
     """Return the state class for a sensor."""
-    if "yield" in device_key.key:
+    key = device_key.key.lower()
+    if "yield" in key:
         return SensorStateClass.TOTAL_INCREASING
+    if "alarm" in key or "state" in key or "mode" in key:
+        return None
     return SensorStateClass.MEASUREMENT
 
 
-def sensor_update_to_bluetooth_data_update(sensor_update: SensorUpdate):
+def sensor_update_to_bluetooth_data_update(sensor_update):
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -46,9 +49,9 @@ def sensor_update_to_bluetooth_data_update(sensor_update: SensorUpdate):
                 device_key.key, device_key.device_id
             ): SensorEntityDescription(
                 key=device_key.key,
-                device_class=SensorDeviceClass(description.device_class.name)
+                device_class=SensorDeviceClass(description.device_class.value)
                 if description.device_class
-                else None,
+                else SensorDeviceClass.ENUM,
                 native_unit_of_measurement=description.native_unit_of_measurement,
                 state_class=_victron_state_class(device_key),
             )

@@ -132,6 +132,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `A`, `mA`
     """
 
+    CURRENT_FLOW = "current_flow"
+    """Current flow.
+
+    Unit of measurement: 'Ah', 'mAh'
+    """
+
     DATA_RATE = "data_rate"
     """Data rate.
 

@@ -1,5 +1,5 @@
 """Fixtures for testing victron_ble."""
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from home_assistant_bluetooth import BluetoothServiceInfo
 
 NOT_VICTRON_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",
@@ -11,24 +11,11 @@ NOT_VICTRON_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-VICTRON_VEBUS_SERVICE_INFO = BluetoothServiceInfo(
-    name="Inverter/charger",
-    address="01:02:03:04:05:06",
-    rssi=-60,
-    manufacturer_data={
-        0x02E1: bytes.fromhex("100380270c1252dad26f0b8eb39162074d140df410")
-    },
-    service_data={},
-    service_uuids=[],
-    source="local",
-)
-
-VICTRON_VEBUS_TOKEN = "DA3F5FA2860CB1CF86BA7A6D1D16B9DD"
-
 VICTRON_TEST_WRONG_TOKEN = "00000000000000000000000000000000"
 
+# battery monitor
 VICTRON_BATTERY_MONITOR_SERVICE_INFO = BluetoothServiceInfo(
-    name="Battery monitor",
+    name="Battery Monitor",
     address="01:02:03:04:05:07",
     rssi=-60,
     manufacturer_data={
@@ -38,25 +25,38 @@ VICTRON_BATTERY_MONITOR_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
-
 VICTRON_BATTERY_MONITOR_TOKEN = "aff4d0995b7d1e176c0c33ecb9e70dcd"
+VICTRON_BATTERY_MONITOR_SENSORS = {
+    "battery_monitor_aux_mode": "DISABLED",
+    "battery_monitor_consumed_amp_hours": "50.0",
+    "battery_monitor_current": "0.0",
+    "battery_monitor_remaining_minutes": "65535",
+    "battery_monitor_state_of_charge": "50.0",
+    "battery_monitor_voltage": "12.53",
+    "battery_monitor_alarm": "no alarm",
+    "battery_monitor_temperature": "unknown",
+    "battery_monitor_secondary_voltage": "unknown",
+    "battery_monitor_midpoint_voltage": "unknown",
+}
 
-VICTRON_BATTERY_SENSE_SERVICE_INFO = BluetoothServiceInfo(
-    name="Battery sense",
+# DC/DC converter (unsupported - for testing)
+
+VICTRON_DC_DC_CONVERTER_SERVICE_INFO = BluetoothServiceInfo(
+    name="DC/DC Converter",
     address="01:02:03:04:05:08",
     rssi=-60,
     manufacturer_data={
-        0x02E1: bytes.fromhex("1000a4a3025f150d8dcbff517f30eb65e76b22a04ac4e1"),
+        0x02E1: bytes.fromhex("1000c0a304121d64ca8d442b90bbdf6a8cba"),
     },
     service_data={},
     service_uuids=[],
     source="local",
 )
 
-VICTRON_BATTERY_SENSE_TOKEN = "0da694539597f9cf6c613cde60d7bf05"
+# DC energy meter
 
 VICTRON_DC_ENERGY_METER_SERVICE_INFO = BluetoothServiceInfo(
-    name="DC energy meter",
+    name="DC Energy Meter",
     address="01:02:03:04:05:09",
     rssi=-60,
     manufacturer_data={
@@ -67,22 +67,22 @@ VICTRON_DC_ENERGY_METER_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-VICTRON_DC_ENERGY_METER_TOKEN = "100289a30d787fafde83ccec982199fd815286"
+VICTRON_DC_ENERGY_METER_TOKEN = "aff4d0995b7d1e176c0c33ecb9e70dcd"
 
-VICTRON_DC_DC_CONVERTER_SERVICE_INFO = BluetoothServiceInfo(
-    name="DC/DC converter",
-    address="01:02:03:04:05:10",
-    rssi=-60,
-    manufacturer_data={
-        0x02E1: bytes.fromhex("1000c0a304121d64ca8d442b90bbdf6a8cba"),
-    },
-    service_data={},
-    service_uuids=[],
-    source="local",
-)
+VICTRON_DC_ENERGY_METER_SENSORS = {
+    "dc_energy_meter_type": "FUEL_CELL",
+    "dc_energy_meter_aux_mode": "STARTER_VOLTAGE",
+    "dc_energy_meter_current": "0.0",
+    "dc_energy_meter_voltage": "12.52",
+    "dc_energy_meter_secondary_voltage": "-0.01",
+    "dc_energy_meter_alarm": "no alarm",
+    "dc_energy_meter_temperature": "unknown",
+}
+
+# Solar charger
 
 VICTRON_SOLAR_CHARGER_SERVICE_INFO = BluetoothServiceInfo(
-    name="Solar charger",
+    name="Solar Charger",
     address="01:02:03:04:05:11",
     rssi=-60,
     manufacturer_data={
@@ -94,3 +94,39 @@ VICTRON_SOLAR_CHARGER_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 VICTRON_SOLAR_CHARGER_TOKEN = "adeccb947395801a4dd45a2eaa44bf17"
+
+VICTRON_SOLAR_CHARGER_SENSORS = {
+    "solar_charger_state": "ABSORPTION",
+    "solar_charger_battery_voltage": "13.88",
+    "solar_charger_battery_current": "1.4",
+    "solar_charger_yield_today": "30",
+    "solar_charger_power": "19",
+    "solar_charger_external_device_load": "0.0",
+}
+
+# ve.bus
+
+VICTRON_VEBUS_SERVICE_INFO = BluetoothServiceInfo(
+    name="Inverter Charger",
+    address="01:02:03:04:05:06",
+    rssi=-60,
+    manufacturer_data={
+        0x02E1: bytes.fromhex("100380270c1252dad26f0b8eb39162074d140df410")
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+VICTRON_VEBUS_TOKEN = "da3f5fa2860cb1cf86ba7a6d1d16b9dd"
+
+VICTRON_VEBUS_SENSORS = {
+    "inverter_charger_device_state": "FLOAT",
+    "inverter_charger_battery_voltage": "14.45",
+    "inverter_charger_battery_current": "23.2",
+    "inverter_charger_ac_in_state": "AC_IN_1",
+    "inverter_charger_ac_in_power": "1459",
+    "inverter_charger_ac_out_power": "1046",
+    "inverter_charger_battery_temperature": "24",
+    "inverter_charger_state_of_charge": "unknown",
+}
