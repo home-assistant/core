@@ -729,7 +729,7 @@ def _sorted_states_to_dict(
             ent_results.extend(
                 {
                     attr_state: (prev_state := state),
-                    attr_time: row[last_updated_ts_idx] or start_time_ts,
+                    attr_time: row[last_updated_ts_idx],
                 }
                 for row in group
                 if (state := row[state_idx]) != prev_state
@@ -741,9 +741,7 @@ def _sorted_states_to_dict(
         ent_results.extend(
             {
                 attr_state: (prev_state := state),  # noqa: F841
-                attr_time: _utc_from_timestamp(
-                    row[last_updated_ts_idx] or start_time_ts
-                ).isoformat(),
+                attr_time: _utc_from_timestamp(row[last_updated_ts_idx]).isoformat(),
             }
             for row in group
             if (state := row[state_idx]) != prev_state
