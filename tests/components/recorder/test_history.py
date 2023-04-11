@@ -548,13 +548,16 @@ def test_get_significant_states_with_initial(
     hass = hass_recorder()
     hass.config.set_time_zone(time_zone)
     zero, four, states = record_states(hass)
-    one = zero + timedelta(seconds=1)
     one_and_half = zero + timedelta(seconds=1.5)
     for entity_id in states:
         if entity_id == "media_player.test":
             states[entity_id] = states[entity_id][1:]
         for state in states[entity_id]:
-            if state.last_changed == one:
+            # If the state is recorded before the start time
+            # start it will have its last_updated and last_changed
+            # set to the start time.
+            if state.last_updated < one_and_half:
+                state.last_updated = one_and_half
                 state.last_changed = one_and_half
 
     hist = history.get_significant_states(
