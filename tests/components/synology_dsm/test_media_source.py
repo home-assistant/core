@@ -242,7 +242,7 @@ async def test_browse_media_get_items_thumbnail_error(
     assert len(result.children) == 1
     item = result.children[0]
     assert isinstance(item, BrowseMedia)
-    assert item.thumbnail == ""
+    assert item.thumbnail == None
 
 
 @pytest.mark.usefixtures("setup_media_source")
