@@ -190,13 +190,13 @@ class SynologyPhotosMediaSource(MediaSource):
 
     async def async_get_thumbnail(
         self, item: SynoPhotosItem, diskstation: SynologyDSMData
-    ) -> str:
+    ) -> str | None:
         """Get thumbnail."""
         try:
             thumbnail = await diskstation.api.photos.get_item_thumbnail_url(item)
         except SynologyDSMException:
-            return ""
-        return str(thumbnail)
+            return None
+        return thumbnail
 
 
 class SynologyDsmMediaView(http.HomeAssistantView):
