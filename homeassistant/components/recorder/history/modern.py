@@ -51,16 +51,15 @@ _FIELD_MAP = {
     "metadata_id": 0,
     "state": 1,
     "last_updated_ts": 2,
-    "last_changed_ts": 3,
-    "attributes": 4,
-    "shared_attrs": 5,
 }
 
 
 CASTABLE_DOUBLE_TYPE = (
-    # sqlalchemy.exc.SAWarning: Datatype DOUBLE does not support CAST on MySQL/MariaDb; the CAST will be skipped.
     # MySQL/MariaDB < 10.4+ does not support casting to DOUBLE so we have to use Integer instead but it doesn't
     # matter because we don't use the value as its always set to NULL
+    #
+    # sqlalchemy.exc.SAWarning: Datatype DOUBLE does not support CAST on MySQL/MariaDb; the CAST will be skipped.
+    #
     Integer().with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
