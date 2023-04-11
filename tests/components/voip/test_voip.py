@@ -22,12 +22,24 @@ async def test_pipeline(hass: HomeAssistant) -> None:
 
     done = asyncio.Event()
 
+    # Used to test that audio queue is cleared before pipeline starts
+    bad_chunk = bytes([1, 2, 3, 4])
+
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
         async for _chunk in stt_stream:
             # Stream will end when VAD detects end of "speech"
+            assert _chunk != bad_chunk
             pass
+
+        # Test empty data
+        event_callback(
+            voice_assistant.PipelineEvent(
+                type="not-used",
+                data={},
+            )
+        )
 
         # Fake intent result
         event_callback(
@@ -72,6 +84,9 @@ async def test_pipeline(hass: HomeAssistant) -> None:
             hass.config.language,
         )
         rtp_protocol.transport = Mock()
+
+        # Ensure audio queue is cleared before pipeline starts
+        rtp_protocol._audio_queue.put_nowait(bad_chunk)
 
         async def send_audio(*args, **kwargs):
             # Test finished successfully

@@ -72,4 +72,12 @@ async def test_load_unload_entry(
         new=unused_udp_port_factory(),
     ):
         assert await voip.async_setup_entry(hass, entry)
+
+        # Verify single instance
+        result = await hass.config_entries.flow.async_init(
+            voip.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "single_instance_allowed"
+
         assert await voip.async_unload_entry(hass, entry)
