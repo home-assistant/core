@@ -344,11 +344,12 @@ def _state_changed_during_period_stmt(
         )
     if limit:
         stmt = stmt.limit(limit)
+    stmt = stmt.order_by(
+        States.metadata_id,
+        States.last_updated_ts,
+    )
     if not include_start_time_state or not run_start_ts:
-        return stmt.order_by(
-            States.metadata_id,
-            States.last_updated_ts,
-        )
+        return stmt
     return _select_from_subquery(
         union_all(
             _select_from_subquery(
