@@ -26,7 +26,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
 
 async def test_api_key_too_short(hass: HomeAssistant) -> None:
