@@ -427,12 +427,8 @@ class HoneywellUSThermostat(ClimateEntity):
             try:
                 await self._data.client.login()
 
-            except aiosomecomfort.AuthError:
-                self._attr_available = False
-                await self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._data.entry_id)
-                )
             except (
+                aiosomecomfort.AuthError,
                 aiosomecomfort.SomeComfortError,
                 ClientConnectionError,
                 asyncio.TimeoutError,
