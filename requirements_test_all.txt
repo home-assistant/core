@@ -263,7 +263,7 @@ aiosomecomfort==0.0.14
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.2.1
+aioswitcher==3.3.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
