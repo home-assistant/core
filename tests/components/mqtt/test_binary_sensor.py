@@ -505,27 +505,44 @@ async def test_setting_sensor_value_via_mqtt_message_empty_template(
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "device_class"),
     [
-        {
-            mqtt.DOMAIN: {
-                binary_sensor.DOMAIN: {
-                    "name": "test",
-                    "device_class": "motion",
-                    "state_topic": "test-topic",
+        (
+            {
+                mqtt.DOMAIN: {
+                    binary_sensor.DOMAIN: {
+                        "name": "test",
+                        "device_class": "motion",
+                        "state_topic": "test-topic",
+                    }
                 }
-            }
-        }
+            },
+            "motion",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    binary_sensor.DOMAIN: {
+                        "name": "test",
+                        "device_class": None,
+                        "state_topic": "test-topic",
+                    }
+                }
+            },
+            None,
+        ),
     ],
 )
 async def test_valid_device_class(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_class: str | None,
 ) -> None:
-    """Test the setting of a valid sensor class."""
+    """Test the setting of a valid sensor class and ignoring an empty device_class."""
     await mqtt_mock_entry()
 
     state = hass.states.get("binary_sensor.test")
-    assert state.attributes.get("device_class") == "motion"
+    assert state.attributes.get("device_class") == device_class
 
 
 @pytest.mark.parametrize(

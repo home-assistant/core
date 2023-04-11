@@ -97,7 +97,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
             vol.Coerce(float), vol.Range(min=1e-3)
         ),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -186,7 +186,8 @@ class MqttNumber(MqttEntity, RestoreNumber):
         self._attr_native_max_value = config[CONF_MAX]
         self._attr_native_min_value = config[CONF_MIN]
         self._attr_native_step = config[CONF_STEP]
-        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        if unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT):
+            self._attr_native_unit_of_measurement = unit_of_measurement
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

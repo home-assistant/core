@@ -851,16 +851,17 @@ async def test_invalid_device_class(
                         "name": "Test 3",
                         "state_topic": "test-topic",
                         "device_class": None,
+                        "unit_of_measurement": None,
                     },
                 ]
             }
         }
     ],
 )
-async def test_valid_device_class(
+async def test_valid_device_class_and_uom(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test device_class option with valid values."""
+    """Test device_class option with valid values and test with an empty unit of measurement."""
     await mqtt_mock_entry()
 
     state = hass.states.get("sensor.test_1")
