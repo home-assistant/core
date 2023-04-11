@@ -109,7 +109,7 @@ if TYPE_CHECKING:
     from .helpers.entity import StateInfo
 
 
-AUTOMATION_STAGE_SHUTDOWN_TIMEOUT = 20
+STOP_PENDING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 80
 FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
@@ -824,7 +824,7 @@ class HomeAssistant:
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP_PENDING)
         try:
-            async with self.timeout.async_timeout(AUTOMATION_STAGE_SHUTDOWN_TIMEOUT):
+            async with self.timeout.async_timeout(STOP_PENDING_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
