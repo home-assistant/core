@@ -834,7 +834,6 @@ class HomeAssistant:
             self._async_log_running_tasks(1)
 
         # stage 2
-        self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STAGE_2_SHUTDOWN_TIMEOUT):
