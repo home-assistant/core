@@ -7,8 +7,8 @@ import pytest
 
 from homeassistant.components.dwd_weather_warnings.const import (
     ADVANCE_WARNING_SENSOR,
-    CONF_OLD_REGION_NAME,
     CONF_REGION_IDENTIFIER,
+    CONF_REGION_NAME,
     CURRENT_WARNING_SENSOR,
     DEFAULT_NAME,
     DOMAIN,
@@ -26,7 +26,7 @@ DEMO_CONFIG_ENTRY: Final = {
 
 DEMO_YAML_CONFIGURATION: Final = {
     CONF_NAME: "Unit Test",
-    CONF_OLD_REGION_NAME: "807111000",
+    CONF_REGION_NAME: "807111000",
     CONF_MONITORED_CONDITIONS: [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR],
 }
 
@@ -76,7 +76,7 @@ async def test_import_flow_full_data(hass: HomeAssistant) -> None:
     assert result["title"] == DEMO_YAML_CONFIGURATION[CONF_NAME]
 
     result_data = DEMO_YAML_CONFIGURATION.copy()
-    result_data[CONF_REGION_IDENTIFIER] = result_data.pop(CONF_OLD_REGION_NAME)
+    result_data[CONF_REGION_IDENTIFIER] = result_data.pop(CONF_REGION_NAME)
 
     assert result["data"] == result_data
 
@@ -95,7 +95,7 @@ async def test_import_flow_no_name(hass: HomeAssistant) -> None:
 
     result_data = DEMO_YAML_CONFIGURATION.copy()
     result_data[CONF_NAME] = EXPECTED_NAME
-    result_data[CONF_REGION_IDENTIFIER] = result_data.pop(CONF_OLD_REGION_NAME)
+    result_data[CONF_REGION_IDENTIFIER] = result_data.pop(CONF_REGION_NAME)
 
     assert result["data"] == result_data
 
@@ -114,7 +114,7 @@ async def test_import_flow_only_required(hass: HomeAssistant) -> None:
 
     result_data = DEMO_YAML_CONFIGURATION.copy()
     result_data[CONF_NAME] = EXPECTED_NAME
-    result_data[CONF_REGION_IDENTIFIER] = result_data.pop(CONF_OLD_REGION_NAME)
+    result_data[CONF_REGION_IDENTIFIER] = result_data.pop(CONF_REGION_NAME)
 
     assert result["data"] == result_data
 

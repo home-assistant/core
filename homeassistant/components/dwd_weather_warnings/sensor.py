@@ -43,7 +43,7 @@ from .const import (
     ATTR_REGION_ID,
     ATTR_REGION_NAME,
     ATTR_WARNING_COUNT,
-    CONF_OLD_REGION_NAME,
+    CONF_REGION_NAME,
     CURRENT_WARNING_SENSOR,
     DEFAULT_MONITORED_CONDITIONS,
     DEFAULT_SCAN_INTERVAL,
@@ -66,7 +66,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_OLD_REGION_NAME): cv.string,
+        vol.Required(CONF_REGION_NAME): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(
             CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED_CONDITIONS

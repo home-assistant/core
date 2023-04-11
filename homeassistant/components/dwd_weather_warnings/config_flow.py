@@ -13,8 +13,8 @@ from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    CONF_OLD_REGION_NAME,
     CONF_REGION_IDENTIFIER,
+    CONF_REGION_NAME,
     DEFAULT_NAME,
     DOMAIN,
     LOGGER,
@@ -70,7 +70,7 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         # Adjust data to new format.
-        region_identifier = import_config.pop(CONF_OLD_REGION_NAME)
+        region_identifier = import_config.pop(CONF_REGION_NAME)
         import_config[CONF_REGION_IDENTIFIER] = region_identifier
 
         if CONF_NAME not in import_config:

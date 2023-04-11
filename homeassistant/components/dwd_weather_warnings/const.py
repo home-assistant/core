@@ -12,7 +12,7 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN: Final = "dwd_weather_warnings"
 
-CONF_OLD_REGION_NAME: Final = "region_name"
+CONF_REGION_NAME: Final = "region_name"
 CONF_REGION_IDENTIFIER: Final = "region_identifier"
 
 ATTR_REGION_NAME: Final = "region_name"
