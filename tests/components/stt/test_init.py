@@ -345,3 +345,11 @@ async def test_config_entry_unload(
     assert config_entry.state == ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+def test_entity_name_raises_before_addition(
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+) -> None:
+    """Test entity name raises before addition to Home Assistant."""
+    with pytest.raises(RuntimeError):
+        mock_provider_entity.name  # pylint: disable=pointless-statement
