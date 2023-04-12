@@ -906,11 +906,11 @@ async def mqtt_mock(
     mock_hass_config: None,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> AsyncGenerator[MqttMockHAClient, None]:
     """Fixture to mock MQTT component."""
     with patch("homeassistant.components.mqtt.PLATFORMS", []):
-        return await mqtt_mock_entry_no_yaml_config()
+        return await mqtt_mock_entry()
 
 
 @asynccontextmanager
@@ -1043,12 +1043,12 @@ def mock_hass_config_yaml(
 
 
 @pytest.fixture
-async def mqtt_mock_entry_no_yaml_config(
+async def mqtt_mock_entry(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator, None]:
-    """Set up an MQTT config entry without MQTT yaml config."""
+    """Set up an MQTT config entry."""
 
     async def _async_setup_config_entry(
         hass: HomeAssistant, entry: ConfigEntry
@@ -1061,30 +1061,6 @@ async def mqtt_mock_entry_no_yaml_config(
     async def _setup_mqtt_entry() -> MqttMockHAClient:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_setup_config_entry)
-
-    async with _mqtt_mock_entry(
-        hass, mqtt_client_mock, mqtt_config_entry_data
-    ) as mqtt_mock_entry:
-        yield _setup_mqtt_entry
-
-
-@pytest.fixture
-async def mqtt_mock_entry_with_yaml_config(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
-    mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[MqttMockHAClientGenerator, None]:
-    """Set up an MQTT config entry with MQTT yaml config."""
-
-    async def _async_do_not_setup_config_entry(
-        hass: HomeAssistant, entry: ConfigEntry
-    ) -> bool:
-        """Do nothing."""
-        return True
-
-    async def _setup_mqtt_entry() -> MqttMockHAClient:
-        """Set up the MQTT config entry."""
-        return await mqtt_mock_entry(_async_do_not_setup_config_entry)
 
     async with _mqtt_mock_entry(
         hass, mqtt_client_mock, mqtt_config_entry_data

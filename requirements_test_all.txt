@@ -401,6 +401,9 @@ broadlink==0.18.3
 # homeassistant.components.brother
 brother==2.3.0
 
+# homeassistant.components.brottsplatskartan
+brottsplatskartan==0.0.1
+
 # homeassistant.components.brunt
 brunt==1.2.0
 
@@ -666,7 +669,7 @@ ha-philipsjs==3.0.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.63.1
+hass-nabucasa==0.64.1
 
 # homeassistant.components.conversation
 hassil==1.0.6
@@ -1852,6 +1855,9 @@ venstarcolortouch==0.19
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
 
+# homeassistant.components.voip
+voip-utils==0.0.2
+
 # homeassistant.components.volvooncall
 volvooncall==0.10.2
 
@@ -1962,4 +1968,4 @@ zigpy==0.54.0
 zwave-js-server-python==0.47.3
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.3.6
+zwave_me_ws==0.4.2
