@@ -51,7 +51,7 @@ def async_register(
 
     if allowed_methods is None:
         allowed_methods = DEFAULT_METHODS
-    allowed_methods = frozenset(method.upper() for method in allowed_methods)
+    allowed_methods = frozenset(method for method in allowed_methods)
 
     if not allowed_methods.issubset(SUPPORTED_METHODS):
         raise ValueError(
