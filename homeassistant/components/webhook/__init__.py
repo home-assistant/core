@@ -137,7 +137,6 @@ async def async_handle_webhook(
         )
         if method_name == METH_HEAD:
             # Allow websites to verify that the URL exists.
-            # See https://github.com/home-assistant/core/pull/26299
             return Response(status=HTTPStatus.OK)
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
