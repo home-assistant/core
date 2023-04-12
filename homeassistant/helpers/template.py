@@ -2042,12 +2042,12 @@ def to_json(value, ensure_ascii=True):
     return json.dumps(value, ensure_ascii=ensure_ascii)
 
 
-def _as_json_default(obj):
+def _as_json_default(obj: Any) -> None:
     """Disable custom types in json serialization."""
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
-def as_json(value, pretty_print=False, sort_keys=False):
+def as_json(value: Any, pretty_print: bool=False, sort_keys: bool=False) -> str:
     """Convert an object to a JSON string."""
 
     option = (
