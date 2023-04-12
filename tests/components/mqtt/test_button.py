@@ -477,6 +477,11 @@ async def test_invalid_device_class(
                         "name": "Test 3",
                         "command_topic": "test-topic",
                     },
+                    {
+                        "name": "Test 4",
+                        "command_topic": "test-topic",
+                        "device_class": None,
+                    },
                 ]
             }
         }

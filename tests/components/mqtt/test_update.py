@@ -63,25 +63,48 @@ def update_platform_only():
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "device_class"),
     [
-        {
-            mqtt.DOMAIN: {
-                update.DOMAIN: {
-                    "state_topic": "test/installed-version",
-                    "latest_version_topic": "test/latest-version",
-                    "name": "Test Update",
-                    "release_summary": "Test release summary",
-                    "release_url": "https://example.com/release",
-                    "title": "Test Update Title",
-                    "entity_picture": "https://example.com/icon.png",
+        (
+            {
+                mqtt.DOMAIN: {
+                    update.DOMAIN: {
+                        "state_topic": "test/installed-version",
+                        "latest_version_topic": "test/latest-version",
+                        "name": "Test Update",
+                        "release_summary": "Test release summary",
+                        "release_url": "https://example.com/release",
+                        "title": "Test Update Title",
+                        "entity_picture": "https://example.com/icon.png",
+                        "device_class": "firmware",
+                    }
                 }
-            }
-        }
+            },
+            "firmware",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    update.DOMAIN: {
+                        "state_topic": "test/installed-version",
+                        "latest_version_topic": "test/latest-version",
+                        "name": "Test Update",
+                        "release_summary": "Test release summary",
+                        "release_url": "https://example.com/release",
+                        "title": "Test Update Title",
+                        "entity_picture": "https://example.com/icon.png",
+                        "device_class": None,
+                    }
+                }
+            },
+            None,
+        ),
     ],
 )
 async def test_run_update_setup(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_class: str | None,
 ) -> None:
     """Test that it fetches the given payload."""
     installed_version_topic = "test/installed-version"
@@ -101,6 +124,7 @@ async def test_run_update_setup(
     assert state.attributes.get("release_url") == "https://example.com/release"
     assert state.attributes.get("title") == "Test Update Title"
     assert state.attributes.get("entity_picture") == "https://example.com/icon.png"
+    assert state.attributes.get("device_class") == device_class
 
     async_fire_mqtt_message(hass, latest_version_topic, "2.0.0")
 
