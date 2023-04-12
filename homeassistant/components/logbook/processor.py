@@ -61,7 +61,7 @@ from .queries import statement_for_request
 from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 
 
-@dataclass
+@dataclass(slots=True)
 class LogbookRun:
     """A logbook run which may be a long running event stream or single request."""
 

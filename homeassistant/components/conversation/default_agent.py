@@ -47,7 +47,7 @@ def json_load(fp: IO[str]) -> JsonObjectType:
     return json_loads_object(fp.read())
 
 
-@dataclass
+@dataclass(slots=True)
 class LanguageIntents:
     """Loaded intents for a language."""
 
