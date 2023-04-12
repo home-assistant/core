@@ -182,7 +182,9 @@ class TriggerBaseEntity(Entity):
             self._rendered = self._static_rendered
 
 
-class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]):
+class CoordinatorTriggerEntity(
+    TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]
+):
     """Template Base entity based on trigger data."""
 
     def __init__(

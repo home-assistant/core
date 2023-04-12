@@ -31,7 +31,7 @@ from .template_entity import (
     TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
 )
-from .trigger_entity import TriggerEntity
+from .trigger_entity import CoordinatorTriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,7 +166,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         )
 
 
-class TriggerNumberEntity(TriggerEntity, NumberEntity):
+class TriggerNumberEntity(CoordinatorTriggerEntity, NumberEntity):
     """Number entity based on trigger data."""
 
     domain = NUMBER_DOMAIN
