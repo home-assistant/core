@@ -49,7 +49,7 @@ from .legacy import (
 
 __all__ = [
     "async_get_provider",
-    "async_get_provider_entity",
+    "async_get_speech_to_text_entity",
     "AudioBitRates",
     "AudioChannels",
     "AudioCodecs",
@@ -67,10 +67,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_get_provider_entity(
+def async_get_speech_to_text_entity(
     hass: HomeAssistant, entity_id: str
 ) -> SpeechToTextEntity | None:
-    """Return provider entity."""
+    """Return stt entity."""
     component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
 
     return component.get_entity(entity_id)
@@ -228,7 +228,7 @@ class SpeechToTextView(HomeAssistantView):
         provider_entity: SpeechToTextEntity | None = None
         if (
             not (
-                provider_entity := async_get_provider_entity(
+                provider_entity := async_get_speech_to_text_entity(
                     hass, f"{DOMAIN}.{provider}"
                 )
             )
@@ -271,7 +271,7 @@ class SpeechToTextView(HomeAssistantView):
         hass: HomeAssistant = request.app["hass"]
         if (
             not (
-                provider_entity := async_get_provider_entity(
+                provider_entity := async_get_speech_to_text_entity(
                     hass, f"{DOMAIN}.{provider}"
                 )
             )
