@@ -1077,7 +1077,7 @@ def test_to_json_string(hass: HomeAssistant) -> None:
     # Note that we're not testing the actual json.loads and json.dumps methods,
     # only the filters, so we don't need to be exhaustive with our sample JSON.
     actual_value_ascii = template.Template(
-        "{{ 'Bar ҝ éèà' | to_json }}", hass
+        "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=True) }}", hass
     ).async_render()
     assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
     actual_value = template.Template(
