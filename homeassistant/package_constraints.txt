@@ -25,7 +25,7 @@ ha-av==10.0.0
 hass-nabucasa==0.63.1
 hassil==1.0.6
 home-assistant-bluetooth==1.9.3
-home-assistant-frontend==20230406.1
+home-assistant-frontend==20230411.0
 home-assistant-intents==2023.3.29
 httpx==0.23.3
 ifaddr==0.1.7
@@ -34,7 +34,7 @@ jinja2==3.1.2
 lru-dict==1.1.8
 orjson==3.8.10
 paho-mqtt==1.6.1
-pillow==9.4.0
+pillow==9.5.0
 pip>=21.0,<23.1
 psutil-home-assistant==0.0.1
 pyOpenSSL==23.1.0
