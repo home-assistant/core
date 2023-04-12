@@ -247,8 +247,9 @@ async def async_setup_entry(
 
     for mac in controller.option_block_clients:
         if mac not in controller.api.clients and mac in controller.api.clients_all:
-            client = controller.api.clients_all[mac]
-            controller.api.clients.process_raw([client.raw])
+            controller.api.clients.process_raw(
+                [dict(controller.api.clients_all[mac].raw)]
+            )
 
     controller.register_platform_add_entities(
         UnifiSwitchEntity, ENTITY_DESCRIPTIONS, async_add_entities

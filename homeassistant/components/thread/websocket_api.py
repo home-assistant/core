@@ -144,6 +144,7 @@ async def ws_list_datasets(
     for dataset in store.datasets.values():
         result.append(
             {
+                "channel": dataset.channel,
                 "created": dataset.created,
                 "dataset_id": dataset.id,
                 "extended_pan_id": dataset.extended_pan_id,

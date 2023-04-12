@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
 
         # Send every day
         async_track_time_interval(
-            hass, analytics.send_analytics, INTERVAL, "analytics daily"
+            hass, analytics.send_analytics, INTERVAL, name="analytics daily"
         )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)

@@ -39,8 +39,47 @@
     }
   },
   "entity": {
+    "button": {
+      "restart": {
+        "name": "[%key:component::button::entity_component::restart::name%]"
+      }
+    },
     "sensor": {
-      "caqi_level": {
+      "bme280_humidity": {
+        "name": "BME280 humidity"
+      },
+      "bme280_pressure": {
+        "name": "BME280 pressure"
+      },
+      "bme280_temperature": {
+        "name": "BME280 temperature"
+      },
+      "bmp180_pressure": {
+        "name": "BMP180 pressure"
+      },
+      "bmp180_temperature": {
+        "name": "BMP180 temperature"
+      },
+      "bmp280_pressure": {
+        "name": "BMP280 pressure"
+      },
+      "bmp280_temperature": {
+        "name": "BMP280 temperature"
+      },
+      "heca_humidity": {
+        "name": "HECA humidity"
+      },
+      "heca_temperature": {
+        "name": "HECA temperature"
+      },
+      "mhz14a_carbon_dioxide": {
+        "name": "MH-Z14A carbon dioxide"
+      },
+      "pmsx003_caqi": {
+        "name": "PMSx003 common air quality index"
+      },
+      "pmsx003_caqi_level": {
+        "name": "PMSx003 common air quality index level",
         "state": {
           "very_low": "Very low",
           "low": "Low",
@@ -48,6 +87,77 @@
           "high": "High",
           "very_high": "Very high"
         }
+      },
+      "pmsx003_pm1": {
+        "name": "PMSx003 particulate matter 1 μm"
+      },
+      "pmsx003_pm10": {
+        "name": "PMSx003 particulate matter 10 μm"
+      },
+      "pmsx003_pm25": {
+        "name": "PMSx003 particulate matter 2.5 μm"
+      },
+      "sds011_caqi": {
+        "name": "SDS011 common air quality index"
+      },
+      "sds011_caqi_level": {
+        "name": "SDS011 common air quality index level",
+        "state": {
+          "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
+          "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
+          "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
+          "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
+          "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+        }
+      },
+      "sds011_pm10": {
+        "name": "SDS011 particulate matter 10 μm"
+      },
+      "sds011_pm25": {
+        "name": "SDS011 particulate matter 2.5 μm"
+      },
+      "sht3x_humidity": {
+        "name": "SHT3X humidity"
+      },
+      "sht3x_temperature": {
+        "name": "SHT3X temperature"
+      },
+      "sps30_caqi": {
+        "name": "SPS30 common air quality index"
+      },
+      "sps30_caqi_level": {
+        "name": "SPS30 common air quality index level",
+        "state": {
+          "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
+          "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
+          "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
+          "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
+          "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+        }
+      },
+      "sps30_pm1": {
+        "name": "SPS30 particulate matter 1 μm"
+      },
+      "sps30_pm10": {
+        "name": "SPS30 particulate matter 10 μm"
+      },
+      "sps30_pm25": {
+        "name": "SPS30 particulate matter 2.5 μm"
+      },
+      "sps30_pm4": {
+        "name": "SPS30 Particulate matter 4 μm"
+      },
+      "dht22_humidity": {
+        "name": "DHT22 humidity"
+      },
+      "dht22_temperature": {
+        "name": "DHT22 temperature"
+      },
+      "signal_strength": {
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      },
+      "last_restart": {
+        "name": "Last restart"
       }
     }
   }

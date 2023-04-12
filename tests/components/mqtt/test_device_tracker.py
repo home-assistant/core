@@ -10,10 +10,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .test_common import help_test_setting_blocked_attribute_via_mqtt_json_message
+from .test_common import (
+    help_test_reloadable,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
+)
 
 from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
+from tests.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -603,3 +610,13 @@ async def test_setup_with_modern_schema(
     dev_id = "jan"
     entity_id = f"{device_tracker.DOMAIN}.{dev_id}"
     assert hass.states.get(entity_id) is not None
+
+
+async def test_reloadable(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test reloading the MQTT platform."""
+    domain = device_tracker.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_reloadable(hass, mqtt_client_mock, domain, config)

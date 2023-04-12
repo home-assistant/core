@@ -34,16 +34,11 @@ def statement_for_request(
     # limited by the context_id and the yaml configured filter
     if not entity_ids and not device_ids:
         context_id_bin = ulid_to_bytes_or_none(context_id)
-        states_entity_filter = (
-            filters.states_metadata_entity_filter() if filters else None
-        )
-        events_entity_filter = filters.events_entity_filter() if filters else None
         return all_stmt(
             start_day,
             end_day,
             event_types,
-            states_entity_filter,
-            events_entity_filter,
+            filters,
             context_id_bin,
         )
 

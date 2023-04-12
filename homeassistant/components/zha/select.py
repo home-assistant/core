@@ -503,3 +503,20 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
     _enum = AqaraFeedingMode
     _attr_name = "Mode"
     _attr_icon: str = "mdi:wrench-clock"
+
+
+class AqaraThermostatPresetMode(types.enum8):
+    """Thermostat preset mode."""
+
+    Manual = 0x00
+    Auto = 0x01
+    Away = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatPreset(ZCLEnumSelectEntity, id_suffix="preset"):
+    """Representation of an Aqara thermostat preset configuration entity."""
+
+    _select_attr = "preset"
+    _enum = AqaraThermostatPresetMode
+    _attr_name = "Preset"

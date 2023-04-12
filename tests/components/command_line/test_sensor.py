@@ -88,7 +88,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     """Ensure command with templates and quotes get rendered properly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"Works\n",
     ) as check_output:
         await setup_test_entities(
@@ -169,6 +169,28 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     )
     entity_state = hass.states.get("sensor.test")
     assert entity_state
+    assert entity_state.state == "unknown"
+    assert entity_state.attributes["key"] == "some_json_value"
+    assert entity_state.attributes["another_key"] == "another_json_value"
+    assert entity_state.attributes["key_three"] == "value_three"
+
+
+async def test_update_with_json_attrs_and_value_template(hass: HomeAssistant) -> None:
+    """Test json_attributes can be used together with value_template."""
+    await setup_test_entities(
+        hass,
+        {
+            "command": (
+                'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
+                '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+            ),
+            "json_attributes": ["key", "another_key", "key_three"],
+            "value_template": '{{ value_json["key"] }}',
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "some_json_value"
     assert entity_state.attributes["key"] == "some_json_value"
     assert entity_state.attributes["another_key"] == "another_json_value"
     assert entity_state.attributes["key_three"] == "value_three"

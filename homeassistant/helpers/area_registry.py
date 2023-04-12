@@ -216,7 +216,7 @@ class AreaRegistry:
         if not new_values:
             return old
 
-        new = self.areas[area_id] = attr.evolve(old, **new_values)
+        new = self.areas[area_id] = attr.evolve(old, **new_values)  # type: ignore[arg-type]
         if normalized_name is not None:
             self._normalized_name_area_idx[
                 normalized_name

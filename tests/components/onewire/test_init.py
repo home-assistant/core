@@ -1,4 +1,5 @@
 """Tests for 1-Wire config flow."""
+from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 import aiohttp
@@ -72,6 +73,27 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_update_options(
+    hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock
+) -> None:
+    """Test update options triggers reload."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert owproxy.call_count == 1
+
+    new_options = deepcopy(dict(config_entry.options))
+    new_options["device_options"].clear()
+    hass.config_entries.async_update_entry(config_entry, options=new_options)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert owproxy.call_count == 2
 
 
 @patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR])

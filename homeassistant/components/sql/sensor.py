@@ -6,9 +6,12 @@ import decimal
 import logging
 
 import sqlalchemy
+from sqlalchemy import lambda_stmt
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.util import LRUCache
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import (
@@ -27,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,6 +41,8 @@ from .const import CONF_COLUMN_NAME, CONF_QUERY, DB_URL_RE, DOMAIN
 from .util import resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
+
+_SQL_LAMBDA_CACHE: LRUCache = LRUCache(1000)
 
 
 def redact_credentials(data: str) -> str:
@@ -136,33 +142,60 @@ async def async_setup_sensor(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
-    try:
-        engine = sqlalchemy.create_engine(db_url, future=True)
-        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
-
-        # Run a dummy query just to test the db_url
-        sess: Session = sessmaker()
-        sess.execute(sqlalchemy.text("SELECT 1;"))
-
-    except SQLAlchemyError as err:
-        _LOGGER.error(
-            "Couldn't connect using %s DB_URL: %s",
-            redact_credentials(db_url),
-            redact_credentials(str(err)),
+    instance = get_instance(hass)
+    sessmaker: scoped_session | None
+    if use_database_executor := (db_url == instance.db_url):
+        assert instance.engine is not None
+        sessmaker = scoped_session(sessionmaker(bind=instance.engine, future=True))
+    elif not (
+        sessmaker := await hass.async_add_executor_job(
+            _validate_and_get_session_maker_for_db_url, db_url
         )
+    ):
         return
-    finally:
-        if sess:
-            sess.close()
+
+    upper_query = query_str.upper()
+    if use_database_executor:
+        redacted_query = redact_credentials(query_str)
+
+        issue_key = unique_id if unique_id else redacted_query
+        # If the query has a unique id and they fix it we can dismiss the issue
+        # but if it doesn't have a unique id they have to ignore it instead
+
+        if (
+            "ENTITY_ID," in upper_query or "ENTITY_ID " in upper_query
+        ) and "STATES_META" not in upper_query:
+            _LOGGER.error(
+                "The query `%s` contains the keyword `entity_id` but does not "
+                "reference the `states_meta` table. This will cause a full table "
+                "scan and database instability. Please check the documentation and use "
+                "`states_meta.entity_id` instead",
+                redacted_query,
+            )
+
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"entity_id_query_does_full_table_scan_{issue_key}",
+                translation_key="entity_id_query_does_full_table_scan",
+                translation_placeholders={"query": redacted_query},
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+            )
+            raise ValueError(
+                "Query contains entity_id but does not reference states_meta"
+            )
+
+        ir.async_delete_issue(
+            hass, DOMAIN, f"entity_id_query_does_full_table_scan_{issue_key}"
+        )
 
     # MSSQL uses TOP and not LIMIT
-    if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
+    if not ("LIMIT" in upper_query or "SELECT TOP" in upper_query):
         if "mssql" in db_url:
-            query_str = query_str.upper().replace("SELECT", "SELECT TOP 1")
+            query_str = upper_query.replace("SELECT", "SELECT TOP 1")
         else:
             query_str = query_str.replace(";", "") + " LIMIT 1;"
-
-    use_database_executor = db_url == get_instance(hass).db_url
 
     async_add_entities(
         [
@@ -182,6 +215,39 @@ async def async_setup_sensor(
         ],
         True,
     )
+
+
+def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | None:
+    """Validate the db_url and return a session maker.
+
+    This does I/O and should be run in the executor.
+    """
+    sess: Session | None = None
+    try:
+        engine = sqlalchemy.create_engine(db_url, future=True)
+        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
+        # Run a dummy query just to test the db_url
+        sess = sessmaker()
+        sess.execute(sqlalchemy.text("SELECT 1;"))
+
+    except SQLAlchemyError as err:
+        _LOGGER.error(
+            "Couldn't connect using %s DB_URL: %s",
+            redact_credentials(db_url),
+            redact_credentials(str(err)),
+        )
+        return None
+    else:
+        return sessmaker
+    finally:
+        if sess:
+            sess.close()
+
+
+def _generate_lambda_stmt(query: str) -> StatementLambdaElement:
+    """Generate the lambda statement."""
+    text = sqlalchemy.text(query)
+    return lambda_stmt(lambda: text, lambda_cache=_SQL_LAMBDA_CACHE)
 
 
 class SQLSensor(SensorEntity):
@@ -216,6 +282,7 @@ class SQLSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = unique_id
         self._use_database_executor = use_database_executor
+        self._lambda_stmt = _generate_lambda_stmt(query)
         if not yaml and unique_id:
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
@@ -237,7 +304,7 @@ class SQLSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         sess: scoped_session = self.sessionmaker()
         try:
-            result: Result = sess.execute(sqlalchemy.text(self._query))
+            result: Result = sess.execute(self._lambda_stmt)
         except SQLAlchemyError as err:
             _LOGGER.error(
                 "Error executing query %s: %s",

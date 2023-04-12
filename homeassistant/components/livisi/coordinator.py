@@ -6,6 +6,7 @@ from typing import Any
 
 from aiohttp import ClientConnectorError
 from aiolivisi import AioLivisi, LivisiEvent, Websocket
+from aiolivisi.errors import TokenExpiredException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -55,8 +56,11 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Get device configuration from LIVISI."""
         try:
             return await self.async_get_devices()
+        except TokenExpiredException:
+            await self.aiolivisi.async_set_token(self.aiolivisi.livisi_connection_data)
+            return await self.async_get_devices()
         except ClientConnectorError as exc:
-            raise UpdateFailed("Failed to get LIVISI the devices") from exc
+            raise UpdateFailed("Failed to get livisi devices from controller") from exc
 
     def _async_dispatcher_send(self, event: str, source: str, data: Any) -> None:
         if data is not None:

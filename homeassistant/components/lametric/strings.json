@@ -45,12 +45,37 @@
     }
   },
   "entity": {
+    "button": {
+      "app_next": {
+        "name": "Next app"
+      },
+      "app_previous": {
+        "name": "Previous app"
+      },
+      "dismiss_current": {
+        "name": "Dismiss current notification"
+      },
+      "dismiss_all": {
+        "name": "Dismiss all notifications"
+      }
+    },
+    "sensor": {
+      "rssi": {
+        "name": "Wi-Fi signal"
+      }
+    },
     "select": {
       "brightness_mode": {
+        "name": "Brightness mode",
         "state": {
           "auto": "Automatic",
           "manual": "Manual"
         }
+      }
+    },
+    "switch": {
+      "bluetooth": {
+        "name": "Bluetooth"
       }
     }
   }

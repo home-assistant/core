@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+import zigpy.backups
 import zigpy.state
 
 from homeassistant.components import zha
@@ -36,7 +37,9 @@ async def test_async_get_network_settings_inactive(
     gateway = api._get_gateway(hass)
     await zha.async_unload_entry(hass, gateway.config_entry)
 
-    zigpy_app_controller.state.network_info.channel = 20
+    backup = zigpy.backups.NetworkBackup()
+    backup.network_info.channel = 20
+    zigpy_app_controller.backups.backups.append(backup)
 
     with patch(
         "bellows.zigbee.application.ControllerApplication.__new__",

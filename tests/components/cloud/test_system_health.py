@@ -36,11 +36,12 @@ async def test_cloud_system_health(
         expiration_date=now,
         is_connected=True,
         client=Mock(
+            relayer_region="xx-earth-616",
             prefs=Mock(
                 remote_enabled=True,
                 alexa_enabled=True,
                 google_enabled=False,
-            )
+            ),
         ),
     )
 
@@ -54,6 +55,7 @@ async def test_cloud_system_health(
         "logged_in": True,
         "subscription_expiration": now,
         "relayer_connected": True,
+        "relayer_region": "xx-earth-616",
         "remote_enabled": True,
         "remote_connected": False,
         "remote_server": "us-west-1",

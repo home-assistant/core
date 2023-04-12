@@ -63,6 +63,41 @@ YAML_CONFIG = {
     }
 }
 
+YAML_CONFIG_FULL_TABLE_SCAN = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT entity_id from states",
+        CONF_COLUMN_NAME: "entity_id",
+        CONF_UNIQUE_ID: "entity_id_12345",
+    }
+}
+
+
+YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT entity_id from states",
+        CONF_COLUMN_NAME: "entity_id",
+    }
+}
+
+YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT entity_id,state_id from states",
+        CONF_COLUMN_NAME: "entity_id",
+    }
+}
+
+YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT value from view_sensor_db_unique_entity_ids;",
+        CONF_COLUMN_NAME: "value",
+    }
+}
+
+
 YAML_CONFIG_BINARY = {
     "sql": {
         CONF_DB_URL: "sqlite://",

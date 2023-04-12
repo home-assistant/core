@@ -26,7 +26,6 @@ STATE_NOT_SCROBBLING = "Not Scrobbling"
 
 CONF_USERS = "users"
 
-ICON = "mdi:radio-fm"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -64,6 +63,7 @@ class LastfmSensor(SensorEntity):
     """A class for the Last.fm account."""
 
     _attr_attribution = "Data provided by Last.fm"
+    _attr_icon = "mdi:radio-fm"
 
     def __init__(self, user, lastfm_api):
         """Initialize the sensor."""
@@ -127,8 +127,3 @@ class LastfmSensor(SensorEntity):
     def entity_picture(self):
         """Avatar of the user."""
         return self._cover
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON

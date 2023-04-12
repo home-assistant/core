@@ -591,13 +591,20 @@ class SonosSpeaker:
             self.async_write_entity_states()
             self.hass.async_create_task(self.async_subscribe())
 
-    async def async_check_activity(self, now: datetime.datetime) -> None:
+    @callback
+    def async_check_activity(self, now: datetime.datetime) -> None:
         """Validate availability of the speaker based on recent activity."""
         if not self.available:
             return
         if time.monotonic() - self._last_activity < AVAILABILITY_TIMEOUT:
             return
+        # Ensure the ping is canceled at shutdown
+        self.hass.async_create_background_task(
+            self._async_check_activity(), f"sonos {self.uid} {self.zone_name} ping"
+        )
 
+    async def _async_check_activity(self) -> None:
+        """Validate availability of the speaker based on recent activity."""
         try:
             await self.hass.async_add_executor_job(self.ping)
         except SonosUpdateError:

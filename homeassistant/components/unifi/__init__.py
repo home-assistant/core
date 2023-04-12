@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    controller = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
+    controller: UniFiController = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
 
     if not hass.data[UNIFI_DOMAIN]:
         async_unload_services(hass)

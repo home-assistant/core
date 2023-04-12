@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.const import WEEKDAYS
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 
 ALLOWED_DAYS = WEEKDAYS + ["holiday"]
 

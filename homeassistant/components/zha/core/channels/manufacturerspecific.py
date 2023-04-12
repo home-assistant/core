@@ -138,6 +138,29 @@ class OppleRemote(ZigbeeChannel):
                 "serving_size": True,
                 "portion_weight": True,
             }
+        elif self.cluster.endpoint.model == "lumi.airrtc.agl001":
+            self.ZCL_INIT_ATTRS = {
+                "system_mode": True,
+                "preset": True,
+                "window_detection": True,
+                "valve_detection": True,
+                "valve_alarm": True,
+                "child_lock": True,
+                "away_preset_temperature": True,
+                "window_open": True,
+                "calibrated": True,
+                "schedule": True,
+                "sensor": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.sensor_smoke.acn03":
+            self.ZCL_INIT_ATTRS = {
+                "buzzer_manual_mute": True,
+                "smoke_density": True,
+                "heartbeat_indicator": True,
+                "buzzer_manual_alarm": True,
+                "buzzer": True,
+                "linkage_alarm": True,
+            }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel specific."""
@@ -164,11 +187,16 @@ class SmartThingsAcceleration(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
+        try:
+            attr_name = self._cluster.attributes[attrid].name
+        except KeyError:
+            attr_name = UNKNOWN
+
         if attrid == self.value_attribute:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
                 attrid,
-                self._cluster.attributes.get(attrid, [UNKNOWN])[0],
+                attr_name,
                 value,
             )
             return
@@ -177,7 +205,7 @@ class SmartThingsAcceleration(ZigbeeChannel):
             SIGNAL_ATTR_UPDATED,
             {
                 ATTR_ATTRIBUTE_ID: attrid,
-                ATTR_ATTRIBUTE_NAME: self._cluster.attributes.get(attrid, [UNKNOWN])[0],
+                ATTR_ATTRIBUTE_NAME: attr_name,
                 ATTR_VALUE: value,
             },
         )
@@ -324,3 +352,11 @@ class IkeaAirPurifierChannel(ZigbeeChannel):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(0xFC80)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFC80)
+class IkeaRemote(ZigbeeChannel):
+    """Ikea Matter remote channel."""
+
+    REPORT_CONFIG = ()
