@@ -144,7 +144,7 @@ class TriggerBaseEntity(Entity):
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
     @callback
-    def _process_data(self, value: str | None = None) -> None:
+    def _process_manual_data(self, value: str | None = None) -> None:
         """Process new data."""
 
         this = None
@@ -219,7 +219,7 @@ class CoordinatorTriggerEntity(
             self._unique_id = unique_id
 
     @callback
-    def _process_data(self, value: str | None = None) -> None:
+    def _process_data(self) -> None:
         """Process new data."""
 
         this = None
