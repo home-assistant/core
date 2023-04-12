@@ -367,7 +367,7 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
     for entry in data:
         key, _, value = entry.strip().partition("=")
         if key not in fields:
-            raise ValueError(f"Invalid field {key}")
+            raise ValueError(f"Invalid field: {key}")
         args[key] = value
 
     for field in fields:
@@ -383,5 +383,5 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
             sample_rate=args["sample_rate"],
             channel=args["channel"],
         )
-    except TypeError as err:
+    except ValueError as err:
         raise ValueError(f"Wrong format of X-Speech-Content: {err}") from err

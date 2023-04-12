@@ -256,10 +256,26 @@ async def test_stream_audio(
         (
             (
                 "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=100;"
+                " language=en; unknown=1"
+            ),
+            400,
+            "Invalid field: unknown",
+        ),
+        (
+            (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=100;"
                 " language=en"
             ),
             400,
-            "100 is not a valid AudioChannels",
+            "Wrong format of X-Speech-Content: 100 is not a valid AudioChannels",
+        ),
+        (
+            (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=bad channel;"
+                " language=en"
+            ),
+            400,
+            "Wrong format of X-Speech-Content: invalid literal for int() with base 10: 'bad channel'",
         ),
         (
             "format=wav; codec=pcm; sample_rate=16000",
