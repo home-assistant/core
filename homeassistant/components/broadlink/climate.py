@@ -1,19 +1,28 @@
 """Support for Broadlink climate devices."""
+from typing import Any
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
+from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Broadlink climate entities."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
@@ -30,7 +39,7 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
     _attr_target_temperature_step = 0.5
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, device):
+    def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the climate entity."""
         super().__init__(device)
         self._attr_hvac_action = None
@@ -39,7 +48,7 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
         self._attr_target_temperature = None
         self._attr_unique_id = device.unique_id
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self._device.async_request(self._device.api.set_temp, temperature)
@@ -47,7 +56,7 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def _update_state(self, data):
+    def _update_state(self, data: Any) -> None:
         """Update data."""
         if data["power"]:
             if data["auto_mode"]:
@@ -66,7 +75,7 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
         self._attr_current_temperature = data["room_temp"]
         self._attr_target_temperature = data["thermostat_temp"]
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
             await self._device.async_request(self._device.api.set_power, 0)
