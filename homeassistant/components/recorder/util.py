@@ -673,6 +673,7 @@ def periodic_db_cleanups(instance: Recorder) -> None:
         _LOGGER.debug("WAL checkpoint")
         with instance.engine.connect() as connection:
             connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE);"))
+            connection.execute(text("PRAGMA OPTIMIZE;"))
 
 
 @contextmanager

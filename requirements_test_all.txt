@@ -263,7 +263,7 @@ aiosomecomfort==0.0.14
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.2.1
+aioswitcher==3.3.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -400,6 +400,9 @@ broadlink==0.18.3
 
 # homeassistant.components.brother
 brother==2.3.0
+
+# homeassistant.components.brottsplatskartan
+brottsplatskartan==0.0.1
 
 # homeassistant.components.brunt
 brunt==1.2.0
@@ -666,7 +669,7 @@ ha-philipsjs==3.0.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.63.1
+hass-nabucasa==0.64.1
 
 # homeassistant.components.conversation
 hassil==1.0.6
@@ -693,7 +696,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230406.1
+home-assistant-frontend==20230411.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
@@ -997,7 +1000,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.4.0
+pillow==9.5.0
 
 # homeassistant.components.plex
 plexapi==4.13.2
@@ -1523,7 +1526,7 @@ python-telegram-bot==13.1
 python_awair==0.2.4
 
 # homeassistant.components.tile
-pytile==2022.02.0
+pytile==2023.04.0
 
 # homeassistant.components.tomorrowio
 pytomorrowio==0.3.5
@@ -1709,7 +1712,7 @@ speedtest-cli==2.1.3
 spiderpy==1.6.1
 
 # homeassistant.components.spotify
-spotipy==2.22.1
+spotipy==2.23.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
@@ -1852,6 +1855,9 @@ venstarcolortouch==0.19
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
 
+# homeassistant.components.voip
+voip-utils==0.0.2
+
 # homeassistant.components.volvooncall
 volvooncall==0.10.2
 
@@ -1962,4 +1968,4 @@ zigpy==0.54.0
 zwave-js-server-python==0.47.3
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.3.6
+zwave_me_ws==0.4.2

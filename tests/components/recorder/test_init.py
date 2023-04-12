@@ -11,7 +11,6 @@ from typing import cast
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-import py
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
@@ -1280,11 +1279,13 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
 def test_compile_missing_statistics(
-    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+    tmp_path: Path, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     hass = get_test_home_assistant()
@@ -1541,9 +1542,11 @@ def test_service_disable_states_not_recording(
         )
 
 
-def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None:
+def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
     """Test that runs are still recorded when recorder is disabled."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     hass = get_test_home_assistant()
@@ -1590,12 +1593,14 @@ class CannotSerializeMe:
 
 
 async def test_database_corruption_while_running(
-    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
 
-    def _create_tmpdir_for_test_db():
-        return tmpdir.mkdir("sqlite").join("test.db")
+    def _create_tmpdir_for_test_db() -> Path:
+        test_dir = tmp_path.joinpath("sqlite")
+        test_dir.mkdir()
+        return test_dir.joinpath("test.db")
 
     test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
