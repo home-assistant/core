@@ -16,7 +16,6 @@ async def test_loading_sensors(hass: HomeAssistant, init_integration) -> None:
     """Test the srp energy sensors."""
     # Validate the Config Entry was initialized
     assert init_integration.state == ConfigEntryState.LOADED
-    assert hass.data[DOMAIN][init_integration.entry_id]
 
     # Check sensors were loaded
     assert len(hass.states.async_all()) == 1

@@ -13,7 +13,6 @@ async def test_unload_entry(hass: HomeAssistant, init_integration) -> None:
     """Test being able to unload an entry."""
     assert init_integration.state == ConfigEntryState.LOADED
 
-    await hass.config_entries.async_unload(init_integration.entry_id)
+    assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert init_integration.entry_id not in hass.data[DOMAIN]

@@ -99,7 +99,6 @@ async def async_setup_entry(
 class SrpEntity(SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
-    _attr_name = SENSOR_NAME
     _attr_attribution = "Powered by SRP Energy"
     _attr_icon = "mdi:flash"
     _attr_should_poll = False
@@ -111,8 +110,6 @@ class SrpEntity(SensorEntity):
         self.coordinator = coordinator
         self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._state = None
-
-        self._attr_native_value = self.coordinator.data
 
     @property
     def name(self) -> str:
