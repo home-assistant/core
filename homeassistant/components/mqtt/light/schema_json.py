@@ -385,7 +385,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                             * 255
                         )
                     else:
-                        raise ValueError("Brightness cannot be zero")
+                        _LOGGER.debug(
+                            "Ignoring zero brightness value for entity %s",
+                            self.entity_id,
+                        )
 
                 except KeyError:
                     pass

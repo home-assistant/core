@@ -241,7 +241,10 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     ):
                         self._attr_brightness = brightness
                     else:
-                        raise ValueError("Brightness cannot be zero")
+                        _LOGGER.debug(
+                            "Ignoring zero brightness value for entity %s",
+                            self.entity_id,
+                        )
 
                 except ValueError:
                     _LOGGER.warning(
