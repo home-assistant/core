@@ -2036,7 +2036,7 @@ def from_json(value):
 
 def to_json(value, ensure_ascii=True):
     """Convert an object to a JSON string."""
-    _LOGGER.warning("Template warning: 'to_json' is deprecated, use 'as_json' instead")
+    _LOGGER.warning("Template warning: 'to_json' is deprecated and will be removed in Home Assistant 2023.8, use 'as_json' instead")
     return json.dumps(value, ensure_ascii=ensure_ascii)
 
 
@@ -2286,7 +2286,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
-        self.filters["to_json"] = to_json  # deprecated
+        self.filters["to_json"] = to_json  # deprecated, remove in 2023.8
         self.filters["as_json"] = as_json
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined

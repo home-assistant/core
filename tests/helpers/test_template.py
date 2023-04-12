@@ -1052,7 +1052,7 @@ def test_to_json(hass: HomeAssistant) -> None:
 def test_as_json(hass: HomeAssistant) -> None:
     """Test the object to JSON string filter."""
 
-    # Note that we're not testing the actua orjson.dumps methods,
+    # Note that we're not testing the actual orjson.dumps methods,
     # only the filters, so we don't need to be exhaustive with our sample JSON.
     expected_result = {"Foo": "Bar"}
     actual_result = template.Template(
