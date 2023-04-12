@@ -2047,7 +2047,7 @@ def _as_json_default(obj: Any) -> None:
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
-def as_json(value: Any, pretty_print: bool=False, sort_keys: bool=False) -> str:
+def as_json(value: Any, pretty_print: bool = False, sort_keys: bool = False) -> str:
     """Convert an object to a JSON string."""
 
     option = (
