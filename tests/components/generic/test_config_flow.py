@@ -1,4 +1,5 @@
 """Test The generic (IP Camera) config flow."""
+import contextlib
 import errno
 from http import HTTPStatus
 import os.path
@@ -308,7 +309,7 @@ async def test_form_only_still_sample(
         ),
         (
             "invalid1://invalid:4\\1",
-            "invalid1://invalid:41",
+            "invalid1://invalid:4%5c1",
             "user",
             {"still_image_url": "malformed_url"},
         ),
@@ -330,7 +331,8 @@ async def test_still_template(
     expected_errors,
 ) -> None:
     """Test we can handle various templates."""
-    respx.get(url).respond(stream=fakeimgbytes_png)
+    with contextlib.suppress(httpx.InvalidURL):
+        respx.get(url).respond(stream=fakeimgbytes_png)
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
     data[CONF_STILL_IMAGE_URL] = template
