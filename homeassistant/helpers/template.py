@@ -2041,12 +2041,12 @@ def _to_json_default(obj: Any) -> None:
 
 def to_json(
     value: Any,
-    ensure_ascii: bool | None = None,
+    ensure_ascii: bool = False,
     pretty_print: bool = False,
     sort_keys: bool = False,
 ) -> str:
     """Convert an object to a JSON string."""
-    if ensure_ascii is not None:
+    if ensure_ascii:
         # For those who need ascii, we can't use orjson, so we fall back to the json library.
         return json.dumps(
             value,
