@@ -52,6 +52,8 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices_info[discovery_info.address] = discovery_info
         self._discovered_devices[discovery_info.address] = discovery_info.name
 
+        self.context["title_placeholders"] = {"title": discovery_info.name}
+
         return await self.async_step_access_token()
 
     async def async_step_access_token(

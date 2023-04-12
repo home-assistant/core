@@ -19,7 +19,10 @@ from victron_ble.devices import (
     detect_device_type,
 )
 
-from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    async_rediscover_address,
+)
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
 )
@@ -352,6 +355,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if unload_ok:
+        async_rediscover_address(hass, entry.entry_id)
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

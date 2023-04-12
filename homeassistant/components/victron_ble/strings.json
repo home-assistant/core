@@ -1,8 +1,8 @@
 {
   "config": {
+    "flow_title": "{title}",
     "step": {
       "user": {
-        "title": "[%key:common::config_flow::data::device%]",
         "data": {
           "address": "[%key:common::config_flow::data::device%]"
         }
