@@ -48,9 +48,9 @@ async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:
 
     last_filename = None
 
-    def _mock_path(filename):
+    def _mock_path(filename: str) -> str:
         nonlocal last_filename
-        last_filename = f"{test_dir}/{filename}"
+        last_filename = str(test_dir / filename)
         return last_filename
 
     with patch("cProfile.Profile"), patch.object(hass.config, "path", _mock_path):
@@ -82,9 +82,9 @@ async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
 
     last_filename = None
 
-    def _mock_path(filename):
+    def _mock_path(filename: str) -> str:
         nonlocal last_filename
-        last_filename = f"{test_dir}/{filename}"
+        last_filename = str(test_dir / filename)
         return last_filename
 
     with patch("guppy.hpy") as mock_hpy, patch.object(hass.config, "path", _mock_path):
