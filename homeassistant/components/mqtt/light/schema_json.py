@@ -378,11 +378,15 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             if brightness_supported(self.supported_color_modes):
                 try:
-                    self._attr_brightness = int(
-                        values["brightness"]  # type: ignore[operator]
-                        / float(self._config[CONF_BRIGHTNESS_SCALE])
-                        * 255
-                    )
+                    if brightness := values["brightness"]:
+                        self._attr_brightness = int(
+                            brightness  # type: ignore[operator]
+                            / float(self._config[CONF_BRIGHTNESS_SCALE])
+                            * 255
+                        )
+                    else:
+                        raise ValueError("Brightness cannot be zero")
+
                 except KeyError:
                     pass
                 except (TypeError, ValueError):
