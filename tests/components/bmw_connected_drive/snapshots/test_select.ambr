@@ -36,7 +36,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 AC Charging Limit',
+        'friendly_name': 'i4 eDrive40 AC charging limit',
         'icon': 'mdi:current-ac',
         'options': list([
           '6',
@@ -64,7 +64,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Charging Mode',
+        'friendly_name': 'i4 eDrive40 Charging mode',
         'icon': 'mdi:vector-point-select',
         'options': list([
           'IMMEDIATE_CHARGING',
@@ -80,7 +80,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Charging Mode',
+        'friendly_name': 'i3 (+ REX) Charging mode',
         'icon': 'mdi:vector-point-select',
         'options': list([
           'IMMEDIATE_CHARGING',
