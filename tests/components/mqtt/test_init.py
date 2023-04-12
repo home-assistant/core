@@ -1324,7 +1324,7 @@ async def test_subscribe_same_topic(
 async def test_replaying_payload_same_topic(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test replaying retained messages.
 
@@ -1333,7 +1333,7 @@ async def test_replaying_payload_same_topic(
     Retained messages must only be replayed for new subscriptions, except
     when the MQTT client is reconnection.
     """
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     # Fake that the client is connected
     mqtt_mock().connected = True
@@ -1411,7 +1411,7 @@ async def test_replaying_payload_same_topic(
 async def test_replaying_payload_after_resubscribing(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test replaying and filtering retained messages after resubscribing.
 
@@ -1420,7 +1420,7 @@ async def test_replaying_payload_after_resubscribing(
     Retained messages must only be replayed for new subscriptions, except
     when the MQTT client is reconnection.
     """
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     # Fake that the client is connected
     mqtt_mock().connected = True
@@ -1473,7 +1473,7 @@ async def test_replaying_payload_after_resubscribing(
 async def test_replaying_payload_wildcard_topic(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test replaying retained messages.
 
@@ -1483,7 +1483,7 @@ async def test_replaying_payload_wildcard_topic(
     Retained messages should only be replayed for new subscriptions, except
     when the MQTT client is reconnection.
     """
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
 
     # Fake that the client is connected
     mqtt_mock().connected = True
