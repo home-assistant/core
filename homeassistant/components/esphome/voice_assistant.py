@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterable, Callable
+import logging
 import socket
 from typing import Any, cast
 
@@ -13,6 +14,8 @@ from homeassistant.core import HomeAssistant, callback
 
 from .entry_data import RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
+
+_LOGGER = logging.getLogger(__name__)
 
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
     VoiceAssistantEventType, voice_assistant.PipelineEventType
@@ -84,8 +87,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         (Other than BlockingIOError or InterruptedError.)
         """
-        # TODO error handling
-        print(exc)
+        _LOGGER.error("ESPHome Voice Assistant UDP server error received: %s", exc)
 
     @callback
     def stop(self) -> None:
