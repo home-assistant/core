@@ -139,18 +139,23 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
     if DOMAIN in hass.data:
         sql_data: SQLData = hass.data[DOMAIN]
         return sql_data
-    # Ensure we close all sessions when we shutdown
+
     session_makers_by_db_url: dict[str, scoped_session] = {}
 
+    #
+    # Ensure we dispose of all engines at shutdown
+    # to avoid unclean disconnects
+    #
     # Shutdown all sessions in the executor since they will
     # do blocking I/O
-    def _shutdown_db_sessions(event: Event) -> None:
+    #
+    def _shutdown_db_engines(event: Event) -> None:
         """Shutdown all database engines."""
         for sessmaker in session_makers_by_db_url.values():
             sessmaker.connection().engine.dispose()
 
     cancel_shutdown = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _shutdown_db_sessions
+        EVENT_HOMEASSISTANT_STOP, _shutdown_db_engines
     )
 
     sql_data = SQLData(cancel_shutdown, session_makers_by_db_url)
