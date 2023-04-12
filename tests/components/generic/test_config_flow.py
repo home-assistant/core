@@ -332,6 +332,8 @@ async def test_still_template(
 ) -> None:
     """Test we can handle various templates."""
     with contextlib.suppress(httpx.InvalidURL):
+        # There is no need to mock the request if its an
+        # invalid url because we will never make the request
         respx.get(url).respond(stream=fakeimgbytes_png)
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
