@@ -139,11 +139,11 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        hass,
         object_id,
         config,
         unique_id,
-    ) -> None:
+    ):
         """Initialize the Template cover."""
         super().__init__(
             hass, config=config, fallback_name=object_id, unique_id=unique_id
@@ -151,24 +151,24 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        friendly_name = self._attr_name or ""
+        friendly_name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._position_template = config.get(CONF_POSITION_TEMPLATE)
         self._tilt_template = config.get(CONF_TILT_TEMPLATE)
         self._device_class: CoverDeviceClass | None = config.get(CONF_DEVICE_CLASS)
-        self._open_script: Script | None = None
+        self._open_script = None
         if (open_action := config.get(OPEN_ACTION)) is not None:
             self._open_script = Script(hass, open_action, friendly_name, DOMAIN)
-        self._close_script: Script | None = None
+        self._close_script = None
         if (close_action := config.get(CLOSE_ACTION)) is not None:
             self._close_script = Script(hass, close_action, friendly_name, DOMAIN)
-        self._stop_script: Script | None = None
+        self._stop_script = None
         if (stop_action := config.get(STOP_ACTION)) is not None:
             self._stop_script = Script(hass, stop_action, friendly_name, DOMAIN)
-        self._position_script: Script | None = None
+        self._position_script = None
         if (position_action := config.get(POSITION_ACTION)) is not None:
             self._position_script = Script(hass, position_action, friendly_name, DOMAIN)
-        self._tilt_script: Script | None = None
+        self._tilt_script = None
         if (tilt_action := config.get(TILT_ACTION)) is not None:
             self._tilt_script = Script(hass, tilt_action, friendly_name, DOMAIN)
         optimistic = config.get(CONF_OPTIMISTIC)
@@ -177,10 +177,10 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         )
         tilt_optimistic = config.get(CONF_TILT_OPTIMISTIC)
         self._tilt_optimistic = tilt_optimistic or not self._tilt_template
-        self._position: int | None = None
+        self._position = None
         self._is_opening = False
         self._is_closing = False
-        self._tilt_value: int | None = None
+        self._tilt_value = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -207,7 +207,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         await super().async_added_to_hass()
 
     @callback
-    def _update_state(self, result: Any | TemplateError) -> None:
+    def _update_state(self, result):
         super()._update_state(result)
         if isinstance(result, TemplateError):
             self._position = None
@@ -238,7 +238,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._is_closing = False
 
     @callback
-    def _update_position(self, result: Any) -> None:
+    def _update_position(self, result):
         if result is None:
             self._position = None
             return
@@ -257,10 +257,10 @@ class CoverTemplate(TemplateEntity, CoverEntity):
                 state,
             )
         else:
-            self._position = round(state)
+            self._position = state
 
     @callback
-    def _update_tilt(self, result: Any) -> None:
+    def _update_tilt(self, result):
         if result is None:
             self._tilt_value = None
             return
@@ -279,7 +279,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
                 state,
             )
         else:
-            self._tilt_value = round(state)
+            self._tilt_value = state
 
     @property
     def is_closed(self) -> bool | None:
@@ -374,7 +374,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
         self._position = kwargs[ATTR_POSITION]
-        assert self._position_script is not None
         await self.async_run_script(
             self._position_script,
             run_variables={"position": self._position},
@@ -386,7 +385,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover open."""
         self._tilt_value = 100
-        assert self._tilt_script is not None
         await self.async_run_script(
             self._tilt_script,
             run_variables={"tilt": self._tilt_value},
@@ -398,7 +396,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
         self._tilt_value = 0
-        assert self._tilt_script is not None
         await self.async_run_script(
             self._tilt_script,
             run_variables={"tilt": self._tilt_value},
@@ -410,7 +407,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         self._tilt_value = kwargs[ATTR_TILT_POSITION]
-        assert self._tilt_script is not None
         await self.async_run_script(
             self._tilt_script,
             run_variables={"tilt": self._tilt_value},
