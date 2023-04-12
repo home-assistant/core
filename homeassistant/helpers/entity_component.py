@@ -112,7 +112,8 @@ class EntityComponent(Generic[_EntityT]):
     def register_shutdown(self) -> None:
         """Register shutdown on Home Assistant STOP event.
 
-        Note: this is only required when setup/async_setup is never called.
+        Note: this is only required if the integration never calls
+        `setup` or `async_setup`.
         """
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
