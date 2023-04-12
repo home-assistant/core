@@ -42,6 +42,7 @@ from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU  # pylint: disable=no-name-in-module
+import orjson
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -2029,11 +2030,32 @@ def from_json(value):
     return json_loads(value)
 
 
-def to_json(value, ensure_ascii=True, indent=None, sort_keys=False):
+def to_json(value, ensure_ascii=True):
     """Convert an object to a JSON string."""
-    return json.dumps(
-        value, ensure_ascii=ensure_ascii, indent=indent, sort_keys=sort_keys
+    _LOGGER.warning("Template warning: 'to_json' is deprecated, use 'as_json' instead")
+    return json.dumps(value, ensure_ascii=ensure_ascii)
+
+
+def as_json(value, pretty_print=False, sort_keys=False):
+    """Convert an object to a JSON string."""
+
+    def default(obj):
+        """Disable custom types."""
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+    option = (
+        orjson.OPT_PASSTHROUGH_DATACLASS
+        | orjson.OPT_PASSTHROUGH_DATETIME
+        | orjson.OPT_PASSTHROUGH_SUBCLASS
+        | (orjson.OPT_INDENT_2 if pretty_print else 0)
+        | (orjson.OPT_SORT_KEYS if sort_keys else 0)
     )
+
+    return orjson.dumps(
+        value,
+        option=option,
+        default=default,
+    ).decode("utf-8")
 
 
 @pass_context
@@ -2261,7 +2283,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
-        self.filters["to_json"] = to_json
+        self.filters["to_json"] = to_json  # deprecated
+        self.filters["as_json"] = as_json
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
