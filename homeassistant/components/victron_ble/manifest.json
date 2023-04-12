@@ -1,6 +1,7 @@
 {
   "domain": "victron_ble",
   "name": "Victron Bluetooth Low Energy",
+  "bluetooth": [{ "connectable": false, "manufacturer_id": 737 }],
   "codeowners": ["@rajlaud"],
   "config_flow": true,
   "dependencies": ["bluetooth"],
