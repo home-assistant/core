@@ -1048,21 +1048,9 @@ def test_to_json(hass: HomeAssistant) -> None:
     ).async_render()
     assert actual_result == expected_result
 
-
-def test_as_json(hass: HomeAssistant) -> None:
-    """Test the object to JSON string filter."""
-
-    # Note that we're not testing the actual orjson.dumps methods,
-    # only the filters, so we don't need to be exhaustive with our sample JSON.
-    expected_result = {"Foo": "Bar"}
-    actual_result = template.Template(
-        "{{ {'Foo': 'Bar'} | as_json }}", hass
-    ).async_render()
-    assert actual_result == expected_result
-
     expected_result = orjson.dumps({"Foo": "Bar"}, option=orjson.OPT_INDENT_2).decode()
     actual_result = template.Template(
-        "{{ {'Foo': 'Bar'} | as_json(pretty_print=True) }}", hass
+        "{{ {'Foo': 'Bar'} | to_json(pretty_print=True) }}", hass
     ).async_render(parse_result=False)
     assert actual_result == expected_result
 
@@ -1070,12 +1058,17 @@ def test_as_json(hass: HomeAssistant) -> None:
         {"Z": 26, "A": 1, "M": 13}, option=orjson.OPT_SORT_KEYS
     ).decode()
     actual_result = template.Template(
-        "{{ {'Z': 26, 'A': 1, 'M': 13} | as_json(sort_keys=True) }}", hass
+        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True) }}", hass
     ).async_render(parse_result=False)
     assert actual_result == expected_result
 
     with pytest.raises(TemplateError):
-        template.Template("{{ {'Foo': now()} | as_json }}", hass).async_render()
+        template.Template("{{ {'Foo': now()} | to_json }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            "{{ {'Foo': 'Bar'} | to_json(ensure_ascii=True, pretty_print=True) }}", hass
+        ).async_render()
 
 
 def test_to_json_string(hass: HomeAssistant) -> None:

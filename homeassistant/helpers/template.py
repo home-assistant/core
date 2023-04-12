@@ -2034,21 +2034,29 @@ def from_json(value):
     return json_loads(value)
 
 
-def to_json(value, ensure_ascii=True):
-    """Convert an object to a JSON string."""
-    _LOGGER.warning(
-        "Template warning: 'to_json' is deprecated and will be removed in Home Assistant 2023.8, use 'as_json' instead"
-    )
-    return json.dumps(value, ensure_ascii=ensure_ascii)
-
-
-def _as_json_default(obj: Any) -> None:
+def _to_json_default(obj: Any) -> None:
     """Disable custom types in json serialization."""
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
-def as_json(value: Any, pretty_print: bool = False, sort_keys: bool = False) -> str:
+def to_json(
+    value: Any,
+    ensure_ascii: bool | None = None,  # deprecated - remove in 2023.8
+    pretty_print: bool = False,
+    sort_keys: bool = False,
+) -> str:
     """Convert an object to a JSON string."""
+    if ensure_ascii is not None:
+        if pretty_print or sort_keys:
+            raise TemplateError(
+                "Template warning: 'to_json' does not support pretty_print or sort_keys when ensure_ascii is specified"
+            )
+        _LOGGER.warning(
+            "Template warning: 'ensure_ascii' is deprecated and will be removed in Home Assistant 2023.8"
+        )
+        return json.dumps(
+            value, ensure_ascii=ensure_ascii
+        )  # deprecated - remove in 2023.8
 
     option = (
         ORJSON_PASSTHROUGH_OPTIONS
@@ -2059,7 +2067,7 @@ def as_json(value: Any, pretty_print: bool = False, sort_keys: bool = False) -> 
     return orjson.dumps(
         value,
         option=option,
-        default=_as_json_default,
+        default=_to_json_default,
     ).decode("utf-8")
 
 
@@ -2288,8 +2296,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
-        self.filters["to_json"] = to_json  # deprecated, remove in 2023.8
-        self.filters["as_json"] = as_json
+        self.filters["to_json"] = to_json
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
