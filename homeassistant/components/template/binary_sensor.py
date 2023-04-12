@@ -61,7 +61,7 @@ from .template_entity import (
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
-from .trigger_entity import CoordinatorTriggerEntity
+from .trigger_entity import TriggerEntity
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
@@ -300,9 +300,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
         return self._device_class
 
 
-class TriggerBinarySensorEntity(
-    CoordinatorTriggerEntity, BinarySensorEntity, RestoreEntity
-):
+class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity):
     """Sensor entity based on trigger data."""
 
     domain = BINARY_SENSOR_DOMAIN
