@@ -69,7 +69,7 @@ class VictronBluetoothDeviceData(BluetoothData):
         try:
             raw_data = data.manufacturer_data[VICTRON_IDENTIFIER]
         except (KeyError, IndexError):
-            _LOGGER.debug("No manufacturer data for Victron")
+            # ignore - not a Victron device
             return
 
         try:
@@ -78,7 +78,7 @@ class VictronBluetoothDeviceData(BluetoothData):
             _LOGGER.debug("Malformed advertisement %s", raw_data.hex())
             return
         if parser is None:
-            _LOGGER.debug("Unsupported device type")
+            _LOGGER.debug("Ignoring unsupported advertisement %s", raw_data.hex())
             return
         if not issubclass(parser, (BatteryMonitor, DcEnergyMeter, SolarCharger, VEBus)):
             _LOGGER.debug("Unsupported device type")

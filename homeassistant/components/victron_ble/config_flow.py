@@ -49,23 +49,25 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_supported")
         self._discovered_device = discovery_info.address
         self._discovered_devices_info[discovery_info.address] = discovery_info
-        self._discovered_devices[discovery_info.address] = (
-            device.title or device.get_device_name() or discovery_info.name
-        )
+        self._discovered_devices[discovery_info.address] = discovery_info.name
+
         return await self.async_step_access_token()
 
     async def async_step_access_token(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle advertisement key input."""
+        # should only be called if there are discovered devices
         assert self._discovered_device is not None
+        assert self._discovered_devices_info is not None
+        discovery_info = self._discovered_devices_info[self._discovered_device]
+        assert discovery_info is not None
+
         if user_input is not None:
             # see if we can create a device with the access token
             device = VictronBluetoothDeviceData(user_input[CONF_ACCESS_TOKEN])
             if device.validate_advertisement_key(
-                self._discovered_devices_info[
-                    self._discovered_device
-                ].manufacturer_data[0x02E1]
+                discovery_info.manufacturer_data[0x02E1]
             ):
                 return self.async_create_entry(
                     title=self._discovered_devices[self._discovered_device],
@@ -74,7 +76,11 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_access_token")
 
         return self.async_show_form(
-            step_id="access_token", data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA
+            step_id="access_token",
+            description_placeholders={
+                CONF_ACCESS_TOKEN: "Token for {discovery_info.name or discovery_info.address}"
+            },
+            data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA,
         )
 
     async def async_step_user(
