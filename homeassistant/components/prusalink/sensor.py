@@ -83,7 +83,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.temp-bed.target",
-            name="Target heatbed temperature",
+            translation_key="heatbed_target_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -92,7 +92,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.temp-nozzle.target",
-            name="Target nozzle temperature",
+            translation_key="nozzle_target_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -101,7 +101,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.z-height",
-            name="Z-Height",
+            translation_key="z_height",
             native_unit_of_measurement=UnitOfLength.MILLIMETERS,
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -110,13 +110,13 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.print-speed",
-            name="Print speed",
+            translation_key="print_speed",
             native_unit_of_measurement=PERCENTAGE,
             value_fn=lambda data: cast(float, data["telemetry"]["print-speed"]),
         ),
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.material",
-            name="Material",
+            translation_key="material",
             icon="mdi:palette-swatch-variant",
             value_fn=lambda data: cast(str, data["telemetry"]["material"]),
         ),
