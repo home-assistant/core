@@ -77,11 +77,10 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             return self.async_abort(reason="invalid_access_token")
 
-        self.context.update({"title_placeholders": {"title": title}})
-
         return self.async_show_form(
             step_id="access_token",
             data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA,
+            description_placeholders={"title": title},
         )
 
     async def async_step_user(
@@ -93,8 +92,11 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             self._discovered_device = address
+            title = self._discovered_devices_info[address].name
             return self.async_show_form(
-                step_id="access_token", data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA
+                step_id="access_token",
+                data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA,
+                description_placeholders={"title": title},
             )
 
         current_addresses = self._async_current_ids()
