@@ -36,10 +36,10 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     hass_client: ClientSessionGenerator,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test config entry diagnostics."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     mqtt_mock.connected = True
 
@@ -160,10 +160,10 @@ async def test_redact_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     hass_client: ClientSessionGenerator,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test redacting diagnostics."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     expected_config = dict(default_config)
     expected_config["password"] = "**REDACTED**"
     expected_config["username"] = "**REDACTED**"
