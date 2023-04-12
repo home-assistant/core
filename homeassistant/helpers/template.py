@@ -151,6 +151,10 @@ CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
 )
 ENTITY_COUNT_GROWTH_FACTOR = 1.2
 
+ORJSON_PASSTHROUGH_OPTIONS = (
+    orjson.OPT_PASSTHROUGH_DATACLASS | orjson.OPT_PASSTHROUGH_DATETIME
+)
+
 
 def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
     """Return a TemplateState for a state without collecting."""
@@ -2036,17 +2040,16 @@ def to_json(value, ensure_ascii=True):
     return json.dumps(value, ensure_ascii=ensure_ascii)
 
 
+def _as_json_default(obj):
+    """Disable custom types in json serialization."""
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
 def as_json(value, pretty_print=False, sort_keys=False):
     """Convert an object to a JSON string."""
 
-    def default(obj):
-        """Disable custom types."""
-        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
-
     option = (
-        orjson.OPT_PASSTHROUGH_DATACLASS
-        | orjson.OPT_PASSTHROUGH_DATETIME
-        | orjson.OPT_PASSTHROUGH_SUBCLASS
+        ORJSON_PASSTHROUGH_OPTIONS
         | (orjson.OPT_INDENT_2 if pretty_print else 0)
         | (orjson.OPT_SORT_KEYS if sort_keys else 0)
     )
@@ -2054,7 +2057,7 @@ def as_json(value, pretty_print=False, sort_keys=False):
     return orjson.dumps(
         value,
         option=option,
-        default=default,
+        default=_as_json_default,
     ).decode("utf-8")
 
 
