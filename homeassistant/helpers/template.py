@@ -2041,22 +2041,19 @@ def _to_json_default(obj: Any) -> None:
 
 def to_json(
     value: Any,
-    ensure_ascii: bool | None = None,  # deprecated - remove in 2023.8
+    ensure_ascii: bool | None = None,
     pretty_print: bool = False,
     sort_keys: bool = False,
 ) -> str:
     """Convert an object to a JSON string."""
     if ensure_ascii is not None:
-        if pretty_print or sort_keys:
-            raise TemplateError(
-                "Template warning: 'to_json' does not support pretty_print or sort_keys when ensure_ascii is specified"
-            )
-        _LOGGER.warning(
-            "Template warning: 'ensure_ascii' is deprecated and will be removed in Home Assistant 2023.8"
-        )
+        # For those who need ascii, we can't use orjson, so we fall back to the json library.
         return json.dumps(
-            value, ensure_ascii=ensure_ascii
-        )  # deprecated - remove in 2023.8
+            value,
+            ensure_ascii=ensure_ascii,
+            indent=2 if pretty_print else None,
+            sort_keys=sort_keys,
+        )
 
     option = (
         ORJSON_PASSTHROUGH_OPTIONS
