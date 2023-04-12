@@ -187,7 +187,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PLUG,
         icon="mdi:car-electric",
         value_fn=lambda v: v.fuel_and_battery.is_charger_connected,
-        translation_key="charging_connection",
+        translation_key="connection_status",
     ),
 )
 
