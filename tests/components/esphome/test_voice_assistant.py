@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 from homeassistant.components import esphome, voice_assistant
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 _TEST_INPUT_TEXT = "This is an input test"
 _TEST_OUTPUT_TEXT = "This is an output test"
