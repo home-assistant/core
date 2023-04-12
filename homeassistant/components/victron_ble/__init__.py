@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from bluetooth_sensor_state_data import BluetoothData
+from construct.core import StreamError
 from home_assistant_bluetooth import BluetoothServiceInfo
 from sensor_state_data import DeviceClass, Units
 from victron_ble.devices import (
@@ -74,7 +75,11 @@ class VictronBluetoothDeviceData(BluetoothData):
             return
 
         if not self._parser:
-            parser = detect_device_type(raw_data)
+            try:
+                parser = detect_device_type(raw_data)
+            except StreamError:
+                _LOGGER.debug("Malformed advertisement %s", raw_data.hex())
+                return
             if parser is None:
                 _LOGGER.debug("Unsupported device type")
                 return
