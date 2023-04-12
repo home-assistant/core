@@ -79,7 +79,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
         if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
 
-        run_variables: dict[str, Any] = {"value": self._variable}
+        run_variables: dict[str, Any] = {"value": value}
         with suppress(*JSON_DECODE_EXCEPTIONS):
             run_variables["value_json"] = json_loads(run_variables["value"])
         variables = {"this": this, **(run_variables or {})}
