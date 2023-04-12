@@ -41,9 +41,7 @@ class KaiterraApiData:
             preferred_units=[Units.from_str(unit) for unit in units],
         )
         self._devices_ids = [device[CONF_DEVICE_ID] for device in devices]
-        self._devices = [
-            f"/{device[CONF_TYPE]}s/{device[CONF_DEVICE_ID]}" for device in devices
-        ]
+        self._devices = [f"/devices/{device[CONF_DEVICE_ID]}/top" for device in devices]
         self._scale = AQI_SCALE[aqi_standard]
         self._level = AQI_LEVEL[aqi_standard]
         self._update_listeners = []

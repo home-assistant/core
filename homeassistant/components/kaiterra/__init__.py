@@ -30,10 +30,12 @@ from .const import (
     PLATFORMS,
 )
 
+DEFAULT_NAME = "Kaiterra Device"
+
 KAITERRA_DEVICE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Required(CONF_TYPE): vol.In(AVAILABLE_DEVICE_TYPES),
+        vol.Optional(CONF_TYPE): vol.In(AVAILABLE_DEVICE_TYPES),
         vol.Optional(CONF_NAME): cv.string,
     }
 )
@@ -75,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Load platforms for each device
     for device in devices:
         device_name, device_id = (
-            device.get(CONF_NAME) or device[CONF_TYPE],
+            device.get(CONF_NAME) or device[CONF_TYPE] or DEFAULT_NAME,
             device[CONF_DEVICE_ID],
         )
         for platform in PLATFORMS:
