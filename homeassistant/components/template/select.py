@@ -26,7 +26,7 @@ from .template_entity import (
     TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
 )
-from .trigger_entity import CoordinatorTriggerEntity
+from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +142,7 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         )
 
 
-class TriggerSelectEntity(CoordinatorTriggerEntity, SelectEntity):
+class TriggerSelectEntity(TriggerEntity, SelectEntity):
     """Select entity based on trigger data."""
 
     domain = SELECT_DOMAIN

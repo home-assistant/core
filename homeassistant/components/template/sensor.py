@@ -53,7 +53,7 @@ from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA,
     rewrite_common_legacy_to_modern_conf,
 )
-from .trigger_entity import CoordinatorTriggerEntity
+from .trigger_entity import TriggerEntity
 
 LEGACY_FIELDS = {
     CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
@@ -242,7 +242,7 @@ class SensorTemplate(TemplateSensor):
         )
 
 
-class TriggerSensorEntity(CoordinatorTriggerEntity, RestoreSensor):
+class TriggerSensorEntity(TriggerEntity, RestoreSensor):
     """Sensor entity based on trigger data."""
 
     domain = SENSOR_DOMAIN
