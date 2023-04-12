@@ -20,7 +20,7 @@ from homeassistant.components.stt import (
     SpeechToTextEntity,
     async_get_provider,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
@@ -113,7 +113,7 @@ class STTFlow(ConfigFlow):
     """Test flow."""
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -127,7 +127,6 @@ async def setup_fixture(
     hass: HomeAssistant,
     tmp_path: Path,
     request: pytest.FixtureRequest,
-    config_flow_fixture: None,
 ) -> None:
     """Set up the test environment."""
     if request.param == "mock_setup":
@@ -156,7 +155,7 @@ async def mock_setup(
 
 async def mock_config_entry_setup(
     hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
-) -> None:
+) -> MockConfigEntry:
     """Set up a test provider via config entry."""
 
     async def async_setup_entry_init(
@@ -166,9 +165,20 @@ async def mock_config_entry_setup(
         await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
         return True
 
+    async def async_unload_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Unload up test config entry."""
+        await hass.config_entries.async_forward_entry_unload(config_entry, DOMAIN)
+        return True
+
     mock_integration(
         hass,
-        MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry_init),
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+            async_unload_entry=async_unload_entry_init,
+        ),
     )
 
     async def async_setup_entry_platform(
@@ -185,6 +195,8 @@ async def mock_config_entry_setup(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    return config_entry
 
 
 @pytest.mark.parametrize(
@@ -311,3 +323,13 @@ async def test_get_provider(
     """Test we can get STT providers."""
     await mock_setup(hass, tmp_path, mock_provider)
     assert mock_provider == async_get_provider(hass, TEST_DOMAIN)
+
+
+async def test_config_entry_unload(
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+) -> None:
+    """Test we can unload config entry."""
+    config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+    assert config_entry.state == ConfigEntryState.LOADED
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
