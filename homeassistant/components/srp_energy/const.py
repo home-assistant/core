@@ -9,7 +9,6 @@ DEFAULT_NAME = "Home"
 
 CONF_IS_TOU = "is_tou"
 
-ATTRIBUTION = "Powered by SRP Energy"
 PHOENIX_TIME_ZONE = "America/Phoenix"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1440)
 

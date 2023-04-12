@@ -1,6 +1,6 @@
 """Tests for the srp_energy sensor platform."""
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.srp_energy.const import ATTRIBUTION, DOMAIN, ICON
+from homeassistant.components.srp_energy.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -9,7 +9,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     UnitOfEnergy,
 )
-
 from homeassistant.core import HomeAssistant
 
 
@@ -32,11 +31,11 @@ async def test_srp_entity(hass: HomeAssistant, init_integration) -> None:
     assert (
         usage_state.attributes.get("state_class") is SensorStateClass.TOTAL_INCREASING
     )
-    assert usage_state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert usage_state.attributes.get(ATTR_ATTRIBUTION) == "Powered by SRP Energy"
     assert (
         usage_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == UnitOfEnergy.KILO_WATT_HOUR
     )
 
     assert usage_state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert usage_state.attributes.get(ATTR_ICON) == ICON
+    assert usage_state.attributes.get(ATTR_ICON) == "mdi:flash"

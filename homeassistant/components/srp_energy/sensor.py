@@ -20,11 +20,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTRIBUTION,
     CONF_IS_TOU,
     DEFAULT_NAME,
     DOMAIN,
-    ICON,
     LOGGER,
     MIN_TIME_BETWEEN_UPDATES,
     PHOENIX_TIME_ZONE,
@@ -102,7 +100,8 @@ class SrpEntity(SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
     _attr_name = SENSOR_NAME
-    _attr_attribution = ATTRIBUTION
+    _attr_attribution = "Powered by SRP Energy"
+    _attr_icon = "mdi:flash"
     _attr_should_poll = False
 
     def __init__(self, coordinator) -> None:
@@ -129,11 +128,6 @@ class SrpEntity(SensorEntity):
     def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self) -> str:
-        """Return icon."""
-        return ICON
 
     @property
     def available(self) -> bool:
