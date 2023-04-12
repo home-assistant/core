@@ -47,6 +47,7 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device = VictronBluetoothDeviceData()
         if not device.supported(discovery_info):
             return self.async_abort(reason="not_supported")
+
         self._discovered_device = discovery_info.address
         self._discovered_devices_info[discovery_info.address] = discovery_info
         self._discovered_devices[discovery_info.address] = discovery_info.name
@@ -104,9 +105,8 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device = VictronBluetoothDeviceData()
             if device.supported(discovery_info):
                 self._discovered_devices_info[address] = discovery_info
-                self._discovered_devices[address] = (
-                    device.title or device.get_device_name() or discovery_info.name
-                )
+                self._discovered_devices[address] = discovery_info.name
+
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
