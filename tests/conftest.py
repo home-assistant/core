@@ -484,23 +484,23 @@ def hass_fixture_setup() -> list[bool]:
 
 
 @pytest.fixture
-def hass(async_hass: HomeAssistant) -> HomeAssistant:
+def hass(_hass: HomeAssistant) -> HomeAssistant:
     """Fixture to provide a test instance of Home Assistant."""
-    # This cannot be a coroutine, to avoid issues with ContextVar
-    # See https://github.com/pytest-dev/pytest-asyncio/issues/127
-    ha._cv_hass.set(async_hass)
-    return async_hass
+    # This wraps the async _hass fixture inside a sync fixture, to avoid issues with
+    # ContextVar, see https://github.com/pytest-dev/pytest-asyncio/issues/127
+    ha._cv_hass.set(_hass)
+    return _hass
 
 
 @pytest.fixture
-async def async_hass(
+async def _hass(
     hass_fixture_setup: list[bool],
     event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[HomeAssistant, None]:
-    """Fixture to provide a test instance of Home Assistant."""
+    """Create a test instance of Home Assistant."""
 
     loop = event_loop
     hass_fixture_setup.append(True)
