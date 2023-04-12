@@ -115,8 +115,8 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         def handle_pipeline_event(event: voice_assistant.PipelineEvent) -> None:
             """Handle pipeline events."""
 
-            type = _VOICE_ASSISTANT_EVENT_TYPES.from_hass(event.type)
-            handle_event(type, event.data)
+            event_type = _VOICE_ASSISTANT_EVENT_TYPES.from_hass(event.type)
+            handle_event(event_type, event.data)
 
         await voice_assistant.async_pipeline_from_audio_stream(
             self.hass,
