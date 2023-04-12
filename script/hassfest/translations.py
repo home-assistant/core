@@ -22,6 +22,7 @@ REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
 RE_TRANSLATION_KEY = re.compile(r"^(?!.+[_-]{2})(?![_-])[a-z0-9-_]+(?<![_-])$")
+RE_STATE_TRANSLATION_KEY = re.compile(r"^(?!.+[_-]{2})(?![_-])[a-zA-Z0-9-_]+(?<![_-])$")
 
 # Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
@@ -110,6 +111,17 @@ def translation_key_validator(value: str) -> str:
     if RE_TRANSLATION_KEY.match(value) is None:
         raise vol.Invalid(
             f"Invalid translation key '{value}', need to be [a-z0-9-_]+ and"
+            " cannot start or end with a hyphen or underscore."
+        )
+
+    return value
+
+
+def state_translation_key_validator(value: str) -> str:
+    """Validate value is valid translation key."""
+    if RE_STATE_TRANSLATION_KEY.match(value) is None:
+        raise vol.Invalid(
+            f"Invalid translation key '{value}', need to be [a-zA-Z0-9-_]+ and"
             " cannot start or end with a hyphen or underscore."
         )
 
@@ -269,14 +281,14 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("name"): str,
                     vol.Optional("state"): cv.schema_with_slug_keys(
                         cv.string_with_no_html,
-                        slug_validator=translation_key_validator,
+                        slug_validator=state_translation_key_validator,
                     ),
                     vol.Optional("state_attributes"): cv.schema_with_slug_keys(
                         {
                             vol.Optional("name"): str,
                             vol.Optional("state"): cv.schema_with_slug_keys(
                                 cv.string_with_no_html,
-                                slug_validator=translation_key_validator,
+                                slug_validator=state_translation_key_validator,
                             ),
                         },
                         slug_validator=translation_key_validator,
@@ -290,14 +302,14 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         vol.Optional("name"): cv.string_with_no_html,
                         vol.Optional("state"): cv.schema_with_slug_keys(
                             cv.string_with_no_html,
-                            slug_validator=translation_key_validator,
+                            slug_validator=state_translation_key_validator,
                         ),
                         vol.Optional("state_attributes"): cv.schema_with_slug_keys(
                             {
                                 vol.Optional("name"): cv.string_with_no_html,
                                 vol.Optional("state"): cv.schema_with_slug_keys(
                                     cv.string_with_no_html,
-                                    slug_validator=translation_key_validator,
+                                    slug_validator=state_translation_key_validator,
                                 ),
                             },
                             slug_validator=translation_key_validator,
