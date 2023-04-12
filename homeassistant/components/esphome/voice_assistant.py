@@ -82,7 +82,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         if self.queue is not None:
             self.queue.put_nowait(data)
 
-    def error_received(self, exc) -> None:
+    def error_received(self, exc: Exception) -> None:
         """Handle when a send or receive operation raises an OSError.
 
         (Other than BlockingIOError or InterruptedError.)
@@ -107,7 +107,8 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             yield data
 
     async def run_pipeline(
-        self, handle_event: Callable[[VoiceAssistantEventType, dict[str, Any]], None]
+        self,
+        handle_event: Callable[[VoiceAssistantEventType, dict[str, Any] | None], None],
     ) -> None:
         """Run the Voice Assistant pipeline."""
 

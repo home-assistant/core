@@ -294,12 +294,16 @@ async def async_setup_entry(  # noqa: C901
         """Handle a voice assistant pipeline event."""
         data_to_send = None
         if type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
+            assert data is not None
             data_to_send = {"text": data["stt_output"]["text"]}
         elif type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
+            assert data is not None
             data_to_send = {"text": data["tts_input"]}
         elif type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
+            assert data is not None
             data_to_send = {"url": data["tts_output"]["url"]}
         elif type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
+            assert data is not None
             data_to_send = {"code": data["code"], "message": data["message"]}
 
         cli.send_voice_assistant_event(type, data_to_send)
