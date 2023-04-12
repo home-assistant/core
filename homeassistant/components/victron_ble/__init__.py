@@ -72,7 +72,7 @@ class VictronBluetoothDeviceData(BluetoothData):
         try:
             raw_data = data.manufacturer_data[VICTRON_IDENTIFIER]
         except (KeyError, IndexError):
-            _LOGGER.debug("Ignoring advertisement for non-Victron device")
+            # not a Victron device
             return
 
         if not raw_data.startswith(b"\x10"):
