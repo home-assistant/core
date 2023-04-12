@@ -52,20 +52,21 @@ def add_province_to_schema(
     year: int = dt.now().year
     obj_holidays: HolidayBase = getattr(holidays, options[CONF_COUNTRY])(years=year)
     new_schema = schema
+    div_list = ["none"]
 
     if hasattr(obj_holidays, "subdivisions"):
-        div_list = obj_holidays.subdivisions
-        div_list.insert(0, "")
-        add_schema = {
-            vol.Optional(CONF_PROVINCE): SelectSelector(
-                SelectSelectorConfig(
-                    options=div_list,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            ),
-        }
+        div_list.extend(obj_holidays.subdivisions)
+    add_schema = {
+        vol.Optional(CONF_PROVINCE, default="none"): SelectSelector(
+            SelectSelectorConfig(
+                options=div_list,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_PROVINCE,
+            )
+        ),
+    }
 
-        new_schema = vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
+    new_schema = vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
     return new_schema
 
 
@@ -161,12 +162,13 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_WORKDAYS: config[CONF_WORKDAYS],
             CONF_ADD_HOLIDAYS: config[CONF_ADD_HOLIDAYS],
             CONF_REMOVE_HOLIDAYS: config[CONF_REMOVE_HOLIDAYS],
+            CONF_PROVINCE: config.get(CONF_PROVINCE),
         }
-        if province := config.get(CONF_PROVINCE):
-            abort_match[CONF_PROVINCE] = province
+        new_config = config.copy()
+        new_config[CONF_PROVINCE] = config.get(CONF_PROVINCE)
 
         self._async_abort_entries_match(abort_match)
-        return await self.async_step_options(user_input=config)
+        return await self.async_step_options(user_input=new_config)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -190,6 +192,9 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
+            if combined_input[CONF_PROVINCE] == "none":
+                combined_input[CONF_PROVINCE] = None
+
             try:
                 await self.hass.async_add_executor_job(
                     validate_custom_dates, combined_input
@@ -208,9 +213,8 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
                 CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
                 CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
+                CONF_PROVINCE: combined_input[CONF_PROVINCE],
             }
-            if province := combined_input.get(CONF_PROVINCE):
-                abort_match[CONF_PROVINCE] = province
 
             self._async_abort_entries_match(abort_match)
             if not errors:
@@ -241,9 +245,13 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            combined_input: dict[str, Any] = {**self.options, **user_input}
+            if combined_input[CONF_PROVINCE] == "none":
+                combined_input[CONF_PROVINCE] = None
+
             try:
                 await self.hass.async_add_executor_job(
-                    validate_custom_dates, {**self.options, **user_input}
+                    validate_custom_dates, combined_input
                 )
             except AddDatesError:
                 errors["add_holidays"] = "add_holiday_error"
@@ -254,11 +262,12 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     self._async_abort_entries_match(
                         {
                             CONF_COUNTRY: self._config_entry.options[CONF_COUNTRY],
-                            CONF_EXCLUDES: user_input[CONF_EXCLUDES],
-                            CONF_OFFSET: user_input[CONF_OFFSET],
-                            CONF_WORKDAYS: user_input[CONF_WORKDAYS],
-                            CONF_ADD_HOLIDAYS: user_input[CONF_ADD_HOLIDAYS],
-                            CONF_REMOVE_HOLIDAYS: user_input[CONF_REMOVE_HOLIDAYS],
+                            CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
+                            CONF_OFFSET: combined_input[CONF_OFFSET],
+                            CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
+                            CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
+                            CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
+                            CONF_PROVINCE: combined_input[CONF_PROVINCE],
                         }
                     )
                 except AbortFlow as err:
@@ -266,12 +275,12 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 else:
                     return self.async_create_entry(
                         title="",
-                        data={
-                            **self.options,
-                            **user_input,
-                        },
+                        data=combined_input,
                     )
 
+        saved_options = self.options.copy()
+        if saved_options[CONF_PROVINCE] is None:
+            saved_options[CONF_PROVINCE] = "none"
         schema: vol.Schema = await self.hass.async_add_executor_job(
             add_province_to_schema, DATA_SCHEMA_OPT, self.options
         )

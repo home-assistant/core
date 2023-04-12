@@ -53,7 +53,7 @@ async def test_form(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: [],
             CONF_REMOVE_HOLIDAYS: [],
-            CONF_PROVINCE: "",
+            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -68,7 +68,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
-        "province": "",
+        "province": None,
     }
 
 
@@ -100,6 +100,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
+        "province": None,
     }
 
     result2 = await hass.config_entries.flow.async_init(
@@ -146,6 +147,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
+            "province": None,
         },
     )
     entry.add_to_hass(hass)
@@ -219,6 +221,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
+            "province": None,
         },
     )
 
@@ -273,7 +276,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-xx-12"],
             CONF_REMOVE_HOLIDAYS: [],
-            CONF_PROVINCE: "",
+            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -287,7 +290,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
             CONF_REMOVE_HOLIDAYS: ["Does not exist"],
-            CONF_PROVINCE: "",
+            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -302,7 +305,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
             CONF_REMOVE_HOLIDAYS: ["Weihnachtstag"],
-            CONF_PROVINCE: "",
+            CONF_PROVINCE: "none",
         },
     )
     await hass.async_block_till_done()
@@ -317,7 +320,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12"],
         "remove_holidays": ["Weihnachtstag"],
-        "province": "",
+        "province": None,
     }
 
 
@@ -334,6 +337,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
+            "province": None,
         },
     )
 
@@ -405,6 +409,7 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
+            "province": None,
         },
         entry_id="1",
     )
@@ -418,6 +423,7 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": ["2023-03-28"],
             "remove_holidays": [],
+            "province": None,
         },
         entry_id="2",
     )
@@ -432,6 +438,7 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": [],
             "remove_holidays": [],
+            "province": "none",
         },
     )
 
