@@ -905,7 +905,7 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for Home Assistant core integrations to stop, the shutdown will"
+                "Timed out waiting for close event to be processed, the shutdown will"
                 " continue"
             )
             self._async_log_running_tasks(4)
