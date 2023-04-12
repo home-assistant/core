@@ -289,24 +289,10 @@ async def async_setup_entry(  # noqa: C901
     voice_assistant_udp_server: VoiceAssistantUDPServer | None = None
 
     def handle_pipeline_event(
-        event_type: VoiceAssistantEventType, data: dict[str, Any] | None
+        event_type: VoiceAssistantEventType, data: dict[str, str] | None
     ) -> None:
         """Handle a voice assistant pipeline event."""
-        data_to_send = None
-        if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
-            assert data is not None
-            data_to_send = {"text": data["stt_output"]["text"]}
-        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
-            assert data is not None
-            data_to_send = {"text": data["tts_input"]}
-        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
-            assert data is not None
-            data_to_send = {"url": data["tts_output"]["url"]}
-        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
-            assert data is not None
-            data_to_send = {"code": data["code"], "message": data["message"]}
-
-        cli.send_voice_assistant_event(event_type, data_to_send)
+        cli.send_voice_assistant_event(event_type, data)
 
     async def handle_pipeline_start() -> int | None:
         """Start a voice assistant pipeline."""
@@ -315,7 +301,7 @@ async def async_setup_entry(  # noqa: C901
         if voice_assistant_udp_server is not None:
             return None
 
-        voice_assistant_udp_server = VoiceAssistantUDPServer(hass, entry_data)
+        voice_assistant_udp_server = VoiceAssistantUDPServer(hass)
         port = await voice_assistant_udp_server.start_server()
 
         hass.async_create_background_task(

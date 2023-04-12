@@ -5,31 +5,36 @@ import asyncio
 from collections.abc import AsyncIterable, Callable
 import logging
 import socket
-from typing import Any, cast
+from typing import cast
 
 from aioesphomeapi import VoiceAssistantEventType
 
-from homeassistant.components import stt, voice_assistant
+from homeassistant.components import stt
+from homeassistant.components.media_player import async_process_play_media_url
+from homeassistant.components.voice_assistant import (
+    PipelineEvent,
+    PipelineEventType,
+    async_pipeline_from_audio_stream,
+)
 from homeassistant.core import HomeAssistant, callback
 
-from .entry_data import RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
 
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
-    VoiceAssistantEventType, voice_assistant.PipelineEventType
+    VoiceAssistantEventType, PipelineEventType
 ] = EsphomeEnumMapper(
     {
-        VoiceAssistantEventType.VOICE_ASSISTANT_ERROR: voice_assistant.PipelineEventType.ERROR,
-        VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START: voice_assistant.PipelineEventType.RUN_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END: voice_assistant.PipelineEventType.RUN_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_STT_START: voice_assistant.PipelineEventType.STT_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_STT_END: voice_assistant.PipelineEventType.STT_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START: voice_assistant.PipelineEventType.INTENT_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: voice_assistant.PipelineEventType.INTENT_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: voice_assistant.PipelineEventType.TTS_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: voice_assistant.PipelineEventType.TTS_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_ERROR: PipelineEventType.ERROR,
+        VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START: PipelineEventType.RUN_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END: PipelineEventType.RUN_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_START: PipelineEventType.STT_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_END: PipelineEventType.STT_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START: PipelineEventType.INTENT_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: PipelineEventType.INTENT_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: PipelineEventType.TTS_START,
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: PipelineEventType.TTS_END,
     }
 )
 
@@ -41,10 +46,9 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     queue: asyncio.Queue[bytes] | None = None
     transport: asyncio.DatagramTransport | None = None
 
-    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize UDP receiver."""
         self.hass = hass
-        self.entry_data = entry_data
         self.queue = asyncio.Queue()
 
     async def start_server(self) -> int:
@@ -108,21 +112,45 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     async def run_pipeline(
         self,
-        handle_event: Callable[[VoiceAssistantEventType, dict[str, Any] | None], None],
+        handle_event: Callable[[VoiceAssistantEventType, dict[str, str] | None], None],
     ) -> None:
         """Run the Voice Assistant pipeline."""
 
         @callback
-        def handle_pipeline_event(event: voice_assistant.PipelineEvent) -> None:
+        def handle_pipeline_event(event: PipelineEvent) -> None:
             """Handle pipeline events."""
 
-            event_type = _VOICE_ASSISTANT_EVENT_TYPES.from_hass(event.type)
-            handle_event(event_type, event.data)
+            try:
+                event_type = _VOICE_ASSISTANT_EVENT_TYPES.from_hass(event.type)
+            except KeyError:
+                _LOGGER.warning("Received unknown pipeline event type: %s", event.type)
+                return
 
-        await voice_assistant.async_pipeline_from_audio_stream(
+            data_to_send = None
+            if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
+                assert event.data is not None
+                data_to_send = {"text": event.data["stt_output"]["text"]}
+            elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
+                assert event.data is not None
+                data_to_send = {"text": event.data["tts_input"]}
+            elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
+                assert event.data is not None
+                path = event.data["tts_output"]["url"]
+                url = async_process_play_media_url(self.hass, path)
+                data_to_send = {"url": url}
+            elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
+                assert event.data is not None
+                data_to_send = {
+                    "code": event.data["code"],
+                    "message": event.data["message"],
+                }
+
+            handle_event(event_type, data_to_send)
+
+        await async_pipeline_from_audio_stream(
             self.hass,
-            handle_pipeline_event,
-            stt.SpeechMetadata(
+            event_callback=handle_pipeline_event,
+            stt_metadata=stt.SpeechMetadata(
                 language="",
                 format=stt.AudioFormats.WAV,
                 codec=stt.AudioCodecs.PCM,
@@ -130,5 +158,5 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
-            self._iterate_packets(),
+            stt_stream=self._iterate_packets(),
         )
