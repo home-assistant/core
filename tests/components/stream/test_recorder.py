@@ -42,7 +42,7 @@ async def stream_component(hass):
 @pytest.fixture
 def filename(tmp_path: Path) -> str:
     """Use this filename for the tests."""
-    return f"{tmp_path}/test.mp4"
+    return str(tmp_path.joinpath("test.mp4"))
 
 
 async def test_record_stream(hass: HomeAssistant, filename, h264_video) -> None:
