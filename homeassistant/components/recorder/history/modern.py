@@ -1,7 +1,6 @@
 """Provide pre-made queries on top of the recorder component."""
 from __future__ import annotations
 
-from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, MutableMapping
 from datetime import datetime
 from itertools import groupby
@@ -676,14 +675,11 @@ def _sorted_states_to_dict(
         attr_time = LAST_CHANGED_KEY
         attr_state = STATE_KEY
 
-    result: dict[str, list[State | dict[str, Any]]] = defaultdict(list)
-    metadata_id_to_entity_id: dict[int, str] = {}
-    metadata_id_idx = field_map["metadata_id"]
-
     # Set all entity IDs to empty lists in result set to maintain the order
-    for ent_id in entity_ids:
-        result[ent_id] = []
-
+    result: dict[str, list[State | dict[str, Any]]] = {
+        entity_id: [] for entity_id in entity_ids
+    }
+    metadata_id_to_entity_id: dict[int, str] = {}
     metadata_id_to_entity_id = {
         v: k for k, v in entity_id_to_metadata_id.items() if v is not None
     }
@@ -695,7 +691,7 @@ def _sorted_states_to_dict(
             (metadata_id, iter(states)),
         )
     else:
-        key_func = itemgetter(metadata_id_idx)
+        key_func = itemgetter(field_map["metadata_id"])
         states_iter = groupby(states, key_func)
 
     state_idx = field_map["state"]
