@@ -6,7 +6,7 @@ from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
 import async_timeout
 from kaiterra_async_client import AQIStandard, KaiterraAPIClient, Units
 
-from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_DEVICES, CONF_TYPE
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_DEVICES
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
