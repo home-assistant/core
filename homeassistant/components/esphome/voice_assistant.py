@@ -72,9 +72,9 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         return cast(int, sock.getsockname()[1])
 
     @callback
-    def connection_made(self, transport: asyncio.DatagramTransport) -> None:
+    def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Store transport for later use."""
-        self.transport = transport
+        self.transport = cast(asyncio.DatagramTransport, transport)
 
     @callback
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
