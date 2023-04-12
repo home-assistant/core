@@ -523,6 +523,9 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "connectable": False,
         "domain": "victron_ble",
+        "manufacturer_data_start": [
+            16,
+        ],
         "manufacturer_id": 737,
     },
     {
