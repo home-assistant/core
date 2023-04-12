@@ -693,7 +693,6 @@ class Recorder(threading.Thread):
                 self.migration_in_progress = False
                 # Make sure we cleanly close the run if
                 # we restart before startup finishes
-                self._shutdown()
                 return
 
         if not schema_status.valid:
@@ -712,7 +711,6 @@ class Recorder(threading.Thread):
                     "recorder_database_migration",
                 )
                 self.hass.add_job(self.async_set_db_ready)
-                self._shutdown()
                 return
 
         if not database_was_ready:
