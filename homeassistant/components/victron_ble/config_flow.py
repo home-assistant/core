@@ -62,6 +62,7 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_devices_info is not None
         discovery_info = self._discovered_devices_info[self._discovered_device]
         assert discovery_info is not None
+        title = discovery_info.name
 
         if user_input is not None:
             # see if we can create a device with the access token
@@ -70,10 +71,12 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 discovery_info.manufacturer_data[0x02E1]
             ):
                 return self.async_create_entry(
-                    title=self._discovered_devices[self._discovered_device],
+                    title=title,
                     data=user_input,
                 )
             return self.async_abort(reason="invalid_access_token")
+
+        self.context.update({"title_placeholders": {"title": title}})
 
         return self.async_show_form(
             step_id="access_token",
