@@ -144,7 +144,7 @@ class TriggerBaseEntity(Entity):
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
     @callback
-    def _process_data(self) -> None:
+    def _process_data(self, value: str | None = None) -> None:
         """Process new data."""
 
         this = None
@@ -156,6 +156,10 @@ class TriggerBaseEntity(Entity):
             run_variables["value_json"] = json_loads(run_variables["value"])
         variables = {"this": this, **(run_variables or {})}
 
+        self._render_templates(variables)
+
+    def _render_templates(self, variables: dict[str, Any]) -> None:
+        """Render templates."""
         try:
             rendered = dict(self._static_rendered)
 
@@ -215,7 +219,7 @@ class CoordinatorTriggerEntity(
             self._unique_id = unique_id
 
     @callback
-    def _process_data(self) -> None:
+    def _process_data(self, value: str | None = None) -> None:
         """Process new data."""
 
         this = None
@@ -224,33 +228,7 @@ class CoordinatorTriggerEntity(
         run_variables = self.coordinator.data["run_variables"]
         variables = {"this": this, **(run_variables or {})}
 
-        try:
-            rendered = dict(self._static_rendered)
-
-            for key in self._to_render_simple:
-                rendered[key] = self._config[key].async_render(
-                    variables,
-                    parse_result=key in self._parse_result,
-                )
-
-            for key in self._to_render_complex:
-                rendered[key] = template.render_complex(
-                    self._config[key],
-                    variables,
-                )
-
-            if CONF_ATTRIBUTES in self._config:
-                rendered[CONF_ATTRIBUTES] = template.render_complex(
-                    self._config[CONF_ATTRIBUTES],
-                    variables,
-                )
-
-            self._rendered = rendered
-        except TemplateError as err:
-            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
-                "Error rendering %s template for %s: %s", key, self.entity_id, err
-            )
-            self._rendered = self._static_rendered
+        self._render_templates(variables)
 
         self.async_set_context(self.coordinator.data["context"])
 
