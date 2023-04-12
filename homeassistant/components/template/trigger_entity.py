@@ -36,7 +36,7 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
             self._unique_id = unique_id
 
     @callback
-    def _process_data(self) -> None:
+    def _process_data(self, value: str | None = None) -> None:
         """Process new data."""
 
         this = None
