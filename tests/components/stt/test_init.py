@@ -21,7 +21,7 @@ from homeassistant.components.stt import (
     async_get_provider,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 
@@ -33,6 +33,7 @@ from tests.common import (
     mock_config_flow,
     mock_integration,
     mock_platform,
+    mock_restore_cache,
 )
 from tests.typing import ClientSessionGenerator
 
@@ -348,8 +349,29 @@ async def test_config_entry_unload(
 
 
 def test_entity_name_raises_before_addition(
-    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_entity: MockProviderEntity,
 ) -> None:
     """Test entity name raises before addition to Home Assistant."""
     with pytest.raises(RuntimeError):
         mock_provider_entity.name  # pylint: disable=pointless-statement
+
+
+async def test_restore_state(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_entity: MockProviderEntity,
+) -> None:
+    """Test we restore state in the integration."""
+    entity_id = f"{DOMAIN}.{TEST_DOMAIN}"
+    timestamp = "2023-01-01T23:59:59+00:00"
+    mock_restore_cache(hass, (State(entity_id, timestamp),))
+
+    config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.LOADED
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == timestamp
