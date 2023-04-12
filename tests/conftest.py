@@ -486,8 +486,9 @@ def hass_fixture_setup() -> list[bool]:
 @pytest.fixture
 def hass(_hass: HomeAssistant) -> HomeAssistant:
     """Fixture to provide a test instance of Home Assistant."""
-    # This wraps the async _hass fixture inside a sync fixture, to avoid issues with
-    # ContextVar, see https://github.com/pytest-dev/pytest-asyncio/issues/127
+    # This wraps the async _hass fixture inside a sync fixture, to ensure
+    # the `hass` context variable is set in the execution context in which
+    # the test itself is executed
     ha._cv_hass.set(_hass)
     return _hass
 
