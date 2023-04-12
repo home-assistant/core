@@ -484,13 +484,13 @@ def hass_fixture_setup() -> list[bool]:
 
 
 @pytest.fixture
-def hass(
+async def hass(
     hass_fixture_setup: list[bool],
     event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
-) -> Generator[HomeAssistant, None, None]:
+) -> AsyncGenerator[HomeAssistant, None]:
     """Fixture to provide a test instance of Home Assistant."""
 
     loop = event_loop
@@ -515,7 +515,7 @@ def hass(
         orig_exception_handler(loop, context)
 
     exceptions: list[Exception] = []
-    hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
+    hass = await async_test_home_assistant(loop, load_registries)
     ha._cv_hass.set(hass)
 
     orig_exception_handler = loop.get_exception_handler()
@@ -523,7 +523,7 @@ def hass(
 
     yield hass
 
-    loop.run_until_complete(hass.async_stop(force=True))
+    await hass.async_stop(force=True)
 
     # Restore timezone, it is set when creating the hass object
     dt_util.DEFAULT_TIME_ZONE = orig_tz
