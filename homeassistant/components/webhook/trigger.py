@@ -95,7 +95,6 @@ async def async_attach_trigger(
             issue_id,
             breaks_in_ha_version="2023.7.0",
             is_fixable=False,
-            learn_more_url="https://github.com/home-assistant/core/pull/66494",
             severity=IssueSeverity.WARNING,
             translation_key="trigger_missing_local_only",
             translation_placeholders={
