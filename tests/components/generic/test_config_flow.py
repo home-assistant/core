@@ -308,7 +308,7 @@ async def test_form_only_still_sample(
         ),
         (
             "invalid1://invalid:4\\1",
-            "invalid1://invalid:4%5c1",
+            "invalid1://invalid:41",
             "user",
             {"still_image_url": "malformed_url"},
         ),
