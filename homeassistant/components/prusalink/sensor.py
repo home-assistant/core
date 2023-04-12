@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH_MILLIMETERS, PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -102,7 +102,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.z-height",
             name="Z-Height",
-            native_unit_of_measurement=LENGTH_MILLIMETERS,
+            native_unit_of_measurement=UnitOfLength.MILLIMETERS,
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["telemetry"]["z-height"]),
