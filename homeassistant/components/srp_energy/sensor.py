@@ -22,6 +22,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTRIBUTION,
     CONF_IS_TOU,
+    DEFAULT_NAME,
     DOMAIN,
     ICON,
     LOGGER,
@@ -92,7 +93,7 @@ async def async_setup_entry(
     )
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
 
     async_add_entities([SrpEntity(coordinator)])
 
@@ -100,19 +101,24 @@ async def async_setup_entry(
 class SrpEntity(SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
-    _attr_has_entity_name = True
     _attr_name = SENSOR_NAME
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
 
     def __init__(self, coordinator) -> None:
         """Initialize the SrpEntity class."""
+        self._name = SENSOR_NAME
         self.type = SENSOR_TYPE
         self.coordinator = coordinator
         self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._state = None
 
         self._attr_native_value = self.coordinator.data
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return f"{DEFAULT_NAME} {self._name}"
 
     @property
     def native_value(self) -> StateType:
