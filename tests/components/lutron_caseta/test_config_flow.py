@@ -195,7 +195,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
 
 async def test_form_user(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we get the form and can pair."""
-    config_dir = tmp_path.joinpath("tls_assets")
+    config_dir = tmp_path / "tls_assets"
     await hass.async_add_executor_job(config_dir.mkdir)
     hass.config.config_dir = str(config_dir)
 
@@ -245,7 +245,7 @@ async def test_form_user(hass: HomeAssistant, tmp_path: Path) -> None:
 
 async def test_form_user_pairing_fails(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we get the form and we handle pairing failure."""
-    config_dir = tmp_path.joinpath("tls_assets")
+    config_dir = tmp_path / "tls_assets"
     await hass.async_add_executor_job(config_dir.mkdir)
     hass.config.config_dir = str(config_dir)
 
@@ -291,7 +291,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
     """Test the tls assets saved on disk are reused when pairing again."""
-    config_dir = tmp_path.joinpath("tls_assets")
+    config_dir = tmp_path / "tls_assets"
     await hass.async_add_executor_job(config_dir.mkdir)
     hass.config.config_dir = str(config_dir)
 
@@ -392,7 +392,7 @@ async def test_zeroconf_host_already_configured(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
     """Test starting a flow from discovery when the host is already configured."""
-    config_dir = tmp_path.joinpath("tls_assets")
+    config_dir = tmp_path / "tls_assets"
     await hass.async_add_executor_job(config_dir.mkdir)
     hass.config.config_dir = str(config_dir)
 
@@ -475,7 +475,7 @@ async def test_zeroconf_not_lutron_device(hass: HomeAssistant) -> None:
 )
 async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
     """Test starting a flow from discovery."""
-    config_dir = tmp_path.joinpath("tls_assets")
+    config_dir = tmp_path / "tls_assets"
     await hass.async_add_executor_job(config_dir.mkdir)
     hass.config.config_dir = str(config_dir)
 

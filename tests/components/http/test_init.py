@@ -26,23 +26,23 @@ from tests.typing import ClientSessionGenerator
 
 
 def _setup_broken_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path]:
-    test_dir = tmp_path.joinpath("test_broken_ssl")
+    test_dir = tmp_path / "test_broken_ssl"
     test_dir.mkdir()
-    cert_path = test_dir.joinpath("cert.pem")
+    cert_path = test_dir / "cert.pem"
     cert_path.write_text("garbage")
-    key_path = test_dir.joinpath("key.pem")
+    key_path = test_dir / "key.pem"
     key_path.write_text("garbage")
     return cert_path, key_path
 
 
 def _setup_empty_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path, Path]:
-    test_dir = tmp_path.joinpath("test_empty_ssl")
+    test_dir = tmp_path / "test_empty_ssl"
     test_dir.mkdir()
-    cert_path = test_dir.joinpath("cert.pem")
+    cert_path = test_dir / "cert.pem"
     cert_path.write_text("-")
-    peer_cert_path = test_dir.joinpath("peer_cert.pem")
+    peer_cert_path = test_dir / "peer_cert.pem"
     peer_cert_path.write_text("-")
-    key_path = test_dir.joinpath("key.pem")
+    key_path = test_dir / "key.pem"
     key_path.write_text("-")
     return cert_path, key_path, peer_cert_path
 

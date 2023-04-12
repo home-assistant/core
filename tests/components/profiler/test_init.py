@@ -35,7 +35,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we can setup and the service is registered."""
-    test_dir = tmp_path.joinpath("profiles")
+    test_dir = tmp_path / "profiles"
     test_dir.mkdir()
 
     entry = MockConfigEntry(domain=DOMAIN)
@@ -69,7 +69,7 @@ async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:
 )
 async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we can setup and the service is registered."""
-    test_dir = tmp_path.joinpath("profiles")
+    test_dir = tmp_path / "profiles"
     test_dir.mkdir()
 
     entry = MockConfigEntry(domain=DOMAIN)

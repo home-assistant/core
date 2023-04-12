@@ -78,7 +78,7 @@ TIMEOUT = 15
 @pytest.fixture
 def filename(tmp_path: Path) -> str:
     """Use this filename for the tests."""
-    return str(tmp_path.joinpath("test.mp4"))
+    return str(tmp_path / "test.mp4")
 
 
 @pytest.fixture(autouse=True)
