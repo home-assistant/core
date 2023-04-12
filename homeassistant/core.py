@@ -828,7 +828,7 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown automations to run, the shutdown will"
+                "Timed out waiting for stop pending stage to complete, the shutdown will"
                 " continue"
             )
             self._async_log_running_tasks(1)
