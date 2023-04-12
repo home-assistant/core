@@ -154,13 +154,15 @@ async def async_handle_webhook(
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)
             if webhook["local_only"]:
                 return Response(status=HTTPStatus.OK)
-            _LOGGER.warning(
-                "Deprecation warning: "
-                "Webhook '%s' does not provide a value for local_only. "
-                "This webhook will be blocked after the 2023.7.0 release. "
-                "Use `local_only: false` to keep this webhook operating as-is",
-                webhook_id,
-            )
+            if not webhook.get("warned_about_deprecation"):
+                webhook["warned_about_deprecation"] = True
+                _LOGGER.warning(
+                    "Deprecation warning: "
+                    "Webhook '%s' does not provide a value for local_only. "
+                    "This webhook will be blocked after the 2023.7.0 release. "
+                    "Use `local_only: false` to keep this webhook operating as-is",
+                    webhook_id,
+                )
 
     try:
         response = await webhook["handler"](hass, webhook_id, request)
