@@ -10,10 +10,10 @@ from homeassistant.components.stt import (
     AudioFormats,
     AudioSampleRates,
     Provider,
-    ProviderEntity,
     SpeechMetadata,
     SpeechResult,
     SpeechResultState,
+    SpeechToTextEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -41,7 +41,7 @@ async def async_setup_entry(
     async_add_entities([DemoProviderEntity()])
 
 
-class DemoProviderEntity(ProviderEntity):
+class DemoProviderEntity(SpeechToTextEntity):
     """Demo speech API provider entity."""
 
     @property

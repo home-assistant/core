@@ -57,7 +57,7 @@ __all__ = [
     "AudioSampleRates",
     "DOMAIN",
     "Provider",
-    "ProviderEntity",
+    "SpeechToTextEntity",
     "SpeechMetadata",
     "SpeechResult",
     "SpeechResultState",
@@ -69,16 +69,16 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_get_provider_entity(
     hass: HomeAssistant, entity_id: str
-) -> ProviderEntity | None:
+) -> SpeechToTextEntity | None:
     """Return provider entity."""
-    component: EntityComponent[ProviderEntity] = hass.data[DOMAIN]
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
 
     return component.get_entity(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
-    component = hass.data[DOMAIN] = EntityComponent[ProviderEntity](
+    component = hass.data[DOMAIN] = EntityComponent[SpeechToTextEntity](
         _LOGGER, DOMAIN, hass
     )
 
@@ -99,17 +99,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[ProviderEntity] = hass.data[DOMAIN]
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[ProviderEntity] = hass.data[DOMAIN]
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
-class ProviderEntity(RestoreEntity):
+class SpeechToTextEntity(RestoreEntity):
     """Represent a single STT provider."""
 
     _attr_should_poll = False
@@ -225,7 +225,7 @@ class SpeechToTextView(HomeAssistantView):
     async def post(self, request: web.Request, provider: str) -> web.Response:
         """Convert Speech (audio) to text."""
         hass: HomeAssistant = request.app["hass"]
-        provider_entity: ProviderEntity | None = None
+        provider_entity: SpeechToTextEntity | None = None
         if (
             not (provider_entity := async_get_provider_entity(hass, f"stt.{provider}"))
             and provider not in self.providers
@@ -239,7 +239,7 @@ class SpeechToTextView(HomeAssistantView):
             raise HTTPBadRequest(text=str(err)) from err
 
         if not provider_entity:
-            stt_provider: Provider | ProviderEntity = self.providers[provider]
+            stt_provider: Provider | SpeechToTextEntity = self.providers[provider]
 
             if not self._legacy_provider_reported:
                 self._legacy_provider_reported = True
@@ -247,7 +247,7 @@ class SpeechToTextView(HomeAssistantView):
                 # This should raise in Home Assistant Core 2022.5
                 _LOGGER.warning(
                     "Provider %s (%s) is using a legacy implementation, "
-                    "and should be updated to use the ProviderEntity. Please "
+                    "and should be updated to use the SpeechToTextEntity. Please "
                     "%s",
                     provider,
                     type(stt_provider),
