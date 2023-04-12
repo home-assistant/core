@@ -1,5 +1,4 @@
 """Test for the default agent."""
-from unittest.mock import patch
 
 import pytest
 
@@ -14,6 +13,8 @@ from homeassistant.helpers import (
     intent,
 )
 from homeassistant.setup import async_setup_component
+
+from . import expose_entity
 
 from tests.common import async_mock_service
 
@@ -86,43 +87,37 @@ async def test_exposed_areas(
     )
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
-    kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    kitchen_light = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="kitchen light"
+    )
     entity_registry.async_update_entity(
         kitchen_light.entity_id, device_id=kitchen_device.id
     )
-    hass.states.async_set(
-        kitchen_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
-    )
+    hass.states.async_set(kitchen_light.entity_id, "on")
 
-    bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
+    bedroom_light = entity_registry.async_get_or_create(
+        "light", "demo", "5678", original_name="bedroom light"
+    )
     entity_registry.async_update_entity(
         bedroom_light.entity_id, area_id=area_bedroom.id
     )
-    hass.states.async_set(
-        bedroom_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
+    hass.states.async_set(bedroom_light.entity_id, "on")
+
+    # Hide the bedroom light
+    expose_entity(hass, bedroom_light.entity_id, False)
+
+    result = await conversation.async_converse(
+        hass, "turn on lights in the kitchen", None, Context(), None
     )
 
-    def is_entity_exposed(state):
-        return state.entity_id != bedroom_light.entity_id
+    # All is well for the exposed kitchen light
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
 
-    with patch(
-        "homeassistant.components.conversation.default_agent.is_entity_exposed",
-        is_entity_exposed,
-    ):
-        result = await conversation.async_converse(
-            hass, "turn on lights in the kitchen", None, Context(), None
-        )
+    # Bedroom is not exposed because it has no exposed entities
+    result = await conversation.async_converse(
+        hass, "turn on lights in the bedroom", None, Context(), None
+    )
 
-        # All is well for the exposed kitchen light
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-
-        # Bedroom is not exposed because it has no exposed entities
-        result = await conversation.async_converse(
-            hass, "turn on lights in the bedroom", None, Context(), None
-        )
-
-        # This should be an intent match failure because the area isn't in the slot list
-        assert result.response.response_type == intent.IntentResponseType.ERROR
-        assert (
-            result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
-        )
+    # This should be an intent match failure because the area isn't in the slot list
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
