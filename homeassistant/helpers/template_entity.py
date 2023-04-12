@@ -171,7 +171,7 @@ class _TemplateAttribute:
 class TemplateEntity(Entity):
     """Entity that uses templates to calculate attributes."""
 
-    _attr_name: str
+    _attr_name: str | None
 
     _attr_available = True
     _attr_entity_picture = None
@@ -224,8 +224,7 @@ class TemplateEntity(Entity):
         variables = {"this": DummyState()}
 
         # Try to render the name as it can influence the entity ID
-        if fallback_name is not None:
-            self._attr_name = fallback_name
+        self._attr_name = fallback_name
         if self._friendly_name_template:
             self._friendly_name_template.hass = hass
             with contextlib.suppress(TemplateError):
