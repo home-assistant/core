@@ -227,8 +227,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        if device_class := config.get(CONF_DEVICE_CLASS):
-            self._attr_device_class = device_class
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_min_humidity = config[CONF_TARGET_HUMIDITY_MIN]
         self._attr_max_humidity = config[CONF_TARGET_HUMIDITY_MAX]
 
