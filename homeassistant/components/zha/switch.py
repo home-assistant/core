@@ -367,25 +367,49 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity, id_suffix="smart_bulb_
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names=CHANNEL_INOVELLI,
 )
-class InovelliDoubleTapForFullBrightness(
-    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_for_max_brightness"
+class InovelliDoubleTapUpEnabled(
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_enabled"
 ):
-    """Inovelli double tap for full brightness control."""
+    """Inovelli double tap up enabled."""
 
-    _zcl_attribute: str = "double_tap_up_for_max_brightness"
-    _attr_name: str = "Double tap full brightness"
+    _zcl_attribute: str = "double_tap_up_enabled"
+    _attr_name: str = "Double tap up enabled"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names=CHANNEL_INOVELLI,
 )
-class InovelliDoubleTapForMinBrightness(
-    ZHASwitchConfigurationEntity, id_suffix="double_tap_down_for_min_brightness"
+class InovelliDoubleTapDownEnabled(
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_down_enabled"
 ):
-    """Inovelli double tap down for minimum brightness control."""
+    """Inovelli double tap down enabled."""
 
-    _zcl_attribute: str = "double_tap_down_for_min_brightness"
-    _attr_name: str = "Double tap minimum brightness"
+    _zcl_attribute: str = "double_tap_down_enabled"
+    _attr_name: str = "Double tap down enabled"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliAuxSwitchScenes(
+    ZHASwitchConfigurationEntity, id_suffix="aux_switch_scenes"
+):
+    """Inovelli unique aux switch scenes."""
+
+    _zcl_attribute: str = "aux_switch_scenes"
+    _attr_name: str = "Aux switch scenes"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliBindingOffToOnSyncLevel(
+    ZHASwitchConfigurationEntity, id_suffix="binding_off_to_on_sync_level"
+):
+    """Inovelli send move to level with on/off to bound devices."""
+
+    _zcl_attribute: str = "binding_off_to_on_sync_level"
+    _attr_name: str = "Binding off to on sync level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
