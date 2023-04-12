@@ -18,7 +18,6 @@ from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
-    NumberDeviceClass,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -76,45 +75,80 @@ def number_platform_only():
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "device_class", "unit_of_measurement", "values"),
     [
-        {
-            mqtt.DOMAIN: {
-                number.DOMAIN: {
-                    "state_topic": "test/state_number",
-                    "command_topic": "test/cmd_number",
-                    "name": "Test Number",
-                    "device_class": "temperature",
-                    "unit_of_measurement": UnitOfTemperature.FAHRENHEIT.value,
-                    "payload_reset": "reset!",
+        (
+            {
+                mqtt.DOMAIN: {
+                    number.DOMAIN: {
+                        "state_topic": "test/state_number",
+                        "command_topic": "test/cmd_number",
+                        "name": "Test Number",
+                        "device_class": "temperature",
+                        "unit_of_measurement": UnitOfTemperature.FAHRENHEIT.value,
+                        "payload_reset": "reset!",
+                    }
                 }
-            }
-        }
+            },
+            "temperature",
+            UnitOfTemperature.CELSIUS.value,
+            [("10", "-12.0"), ("20.5", "-6.4")],  # 10 °F -> -12 °C
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    number.DOMAIN: {
+                        "state_topic": "test/state_number",
+                        "command_topic": "test/cmd_number",
+                        "name": "Test Number",
+                        "device_class": "temperature",
+                        "unit_of_measurement": UnitOfTemperature.CELSIUS.value,
+                        "payload_reset": "reset!",
+                    }
+                }
+            },
+            "temperature",
+            UnitOfTemperature.CELSIUS.value,
+            [("10", "10"), ("15", "15")],
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    number.DOMAIN: {
+                        "state_topic": "test/state_number",
+                        "command_topic": "test/cmd_number",
+                        "name": "Test Number",
+                        "device_class": None,
+                        "unit_of_measurement": None,
+                        "payload_reset": "reset!",
+                    }
+                }
+            },
+            None,
+            None,
+            [("10", "10"), ("20", "20")],
+        ),
     ],
 )
 async def test_run_number_setup(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_class: str | None,
+    unit_of_measurement: UnitOfTemperature | None,
+    values: list[tuple[str, str]],
 ) -> None:
     """Test that it fetches the given payload."""
     await mqtt_mock_entry()
 
-    async_fire_mqtt_message(hass, "test/state_number", "10")
+    for payload, value in values:
+        async_fire_mqtt_message(hass, "test/state_number", payload)
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    state = hass.states.get("number.test_number")
-    assert state.state == "-12.0"  # 10 °F -> -12 °C
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == NumberDeviceClass.TEMPERATURE
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
-
-    async_fire_mqtt_message(hass, "test/state_number", "20.5")
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get("number.test_number")
-    assert state.state == "-6.4"  # 20.5 °F -> -6.4 °C
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == NumberDeviceClass.TEMPERATURE
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
+        state = hass.states.get("number.test_number")
+        assert state.state == value
+        assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == unit_of_measurement
 
     async_fire_mqtt_message(hass, "test/state_number", "reset!")
 
@@ -122,8 +156,8 @@ async def test_run_number_setup(
 
     state = hass.states.get("number.test_number")
     assert state.state == "unknown"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == NumberDeviceClass.TEMPERATURE
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == unit_of_measurement
 
 
 @pytest.mark.parametrize(
