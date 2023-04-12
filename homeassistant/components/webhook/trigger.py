@@ -38,7 +38,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): "webhook",
         vol.Required(CONF_WEBHOOK_ID): cv.string,
         vol.Optional(CONF_ALLOWED_METHODS): vol.All(
-            cv.ensure_list, [vol.In(SUPPORTED_METHODS)], vol.Unique()
+            cv.ensure_list, [vol.All(vol.Upper, vol.In(SUPPORTED_METHODS))], vol.Unique()
         ),
         vol.Optional(CONF_LOCAL_ONLY): bool,
     }
