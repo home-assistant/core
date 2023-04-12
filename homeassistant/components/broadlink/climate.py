@@ -18,8 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
     if device.api.type in {"HYS"}:
-        climate_entities = [BroadlinkThermostat(device)]
-        async_add_entities(climate_entities)
+        async_add_entities([BroadlinkThermostat(device)])
 
 
 class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
