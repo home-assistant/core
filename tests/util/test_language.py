@@ -12,6 +12,25 @@ def test_region_match() -> None:
     ]
 
 
+def test_no_match() -> None:
+    """Test that an empty list is returned when there is no match."""
+    assert (
+        language.matches(
+            "en-US",
+            ["de-DE", "fr-FR", "zh"],
+        )
+        == []
+    )
+
+    assert (
+        language.matches(
+            "en",
+            ["de-DE", "fr-FR", "zh"],
+        )
+        == []
+    )
+
+
 def test_prefer_us_english() -> None:
     """Test that U.S. English is preferred when no region is provided."""
     assert language.matches("en", ["en-GB", "en-US", "fr-FR"]) == [

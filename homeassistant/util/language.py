@@ -79,6 +79,7 @@ class Dialect:
             # Language + region match
             return 1
 
+        pref_regions: set[str | None] = set()
         if (self.region is None) or (dialect.region is None):
             # Generate a set of preferred regions
             pref_regions = set(
