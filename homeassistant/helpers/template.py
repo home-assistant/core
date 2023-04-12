@@ -2036,7 +2036,9 @@ def from_json(value):
 
 def to_json(value, ensure_ascii=True):
     """Convert an object to a JSON string."""
-    _LOGGER.warning("Template warning: 'to_json' is deprecated and will be removed in Home Assistant 2023.8, use 'as_json' instead")
+    _LOGGER.warning(
+        "Template warning: 'to_json' is deprecated and will be removed in Home Assistant 2023.8, use 'as_json' instead"
+    )
     return json.dumps(value, ensure_ascii=ensure_ascii)
 
 
