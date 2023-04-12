@@ -107,6 +107,9 @@ def sensor_update_to_bluetooth_data_update(
     """Convert a sensor update to a Bluetooth data update."""
     entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
     for key, desc in SENSOR_DESCRIPTIONS.items():
+        # PassiveBluetoothDataUpdate does not support DEVICE_CLASS_NAME
+        # the assert satisfies the type checker and will catch attempts
+        # to use DEVICE_CLASS_NAME in the entity descriptions.
         assert desc.name is not DEVICE_CLASS_NAME
         entity_names[_device_key_to_bluetooth_entity_key(adv.device, key)] = desc.name
     return PassiveBluetoothDataUpdate(

@@ -286,6 +286,9 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
 
         self._hostname = coordinator.data.system.hostname
         self._key = f"{self._hostname}_{key}"
+        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
+        # the assert satisfies the type checker and will catch attempts
+        # to use DEVICE_CLASS_NAME as name.
         assert name is not DEVICE_CLASS_NAME
         self._name = f"{self._hostname} {name}"
         self._configuration_url = (

@@ -136,6 +136,9 @@ class ZWaveBaseEntity(Entity):
             and self.entity_description
             and self.entity_description.name
         ):
+            # It's not possible to do string manipulations on DEVICE_CLASS_NAME
+            # the assert satisfies the type checker and will catch attempts
+            # to use DEVICE_CLASS_NAME in the entity descriptions.
             assert self.entity_description.name is not DEVICE_CLASS_NAME
             name = self.entity_description.name
 

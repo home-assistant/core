@@ -350,6 +350,9 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         """Initialize Tomorrow.io Sensor Entity."""
         super().__init__(config_entry, coordinator, api_version)
         self.entity_description = description
+        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
+        # the assert satisfies the type checker and will catch attempts
+        # to use DEVICE_CLASS_NAME in the entity descriptions.
         assert description.name is not DEVICE_CLASS_NAME
         self._attr_name = f"{self._config_entry.data[CONF_NAME]} - {description.name}"
         self._attr_unique_id = (

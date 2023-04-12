@@ -204,6 +204,9 @@ class ProtectDeviceEntity(Entity):
             self.entity_description = description
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
             name = description.name or ""
+            # It's not possible to do string manipulations on DEVICE_CLASS_NAME
+            # the assert satisfies the type checker and will catch attempts
+            # to use DEVICE_CLASS_NAME in the entity descriptions.
             assert name is not DEVICE_CLASS_NAME
             self._attr_name = f"{self.device.display_name} {name.title()}"
 
