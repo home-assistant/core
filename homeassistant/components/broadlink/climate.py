@@ -27,6 +27,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
     """Representation of a Broadlink Hysen climate entity."""
 
+    _attr_has_entity_name = True
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF, HVACMode.AUTO]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_target_temperature_step = 0.5
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
     def __init__(self, device):
         """Initialize the climate entity."""
         super().__init__(device)
@@ -36,18 +42,7 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
         self._attr_hvac_mode = None
         self._attr_current_temperature = None
         self._attr_target_temperature = None
-        self._attr_target_temperature_step = 0.5
         self._attr_unique_id = device.unique_id
-
-    @property
-    def name(self):
-        """Return the name of the thermostat."""
-        return f"{self._device.name} Thermostat"
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return ClimateEntityFeature.TARGET_TEMPERATURE
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -56,44 +51,6 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
         self._attr_target_temperature = temperature
         self.async_write_ha_state()
         await device.async_request(device.api.set_temp, temperature)
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return self._attr_target_temperature_step
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._attr_current_temperature
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement that is used."""
-        return UnitOfTemperature.CELSIUS
-
-    @property
-    def target_temperature(self):
-        """Return the target temperature."""
-        return self._attr_target_temperature
-
-    @property
-    def hvac_mode(self):
-        """Return the current HVAC mode."""
-        return self._attr_hvac_mode
-
-    @property
-    def hvac_action(self):
-        """Return the current HVAC action."""
-        return self._attr_hvac_action
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return [HVACMode.HEAT, HVACMode.OFF, HVACMode.AUTO]
 
     @callback
     def update_data(self):
@@ -129,10 +86,6 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
             self._attr_target_temperature = state.attributes[ATTR_TEMPERATURE]
         self.async_write_ha_state()
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
-
-    async def async_update(self):
-        """Update the climate entity."""
-        await self._coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
