@@ -77,9 +77,6 @@ class VictronBLEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="access_token",
-            description_placeholders={
-                CONF_ACCESS_TOKEN: "Token for {discovery_info.name or discovery_info.address}"
-            },
             data_schema=STEP_ACCESS_TOKEN_DATA_SCHEMA,
         )
 
