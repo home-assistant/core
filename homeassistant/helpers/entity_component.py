@@ -109,7 +109,14 @@ class EntityComponent(Generic[_EntityT]):
                 return entity_obj  # type: ignore[return-value]
         return None
 
-    def setup(self, config: ConfigType | None = None) -> None:
+    def register_shutdown(self) -> None:
+        """Register shutdown on Home Assistant STOP event.
+
+        Note: this is only required when setup/async_setup is never called.
+        """
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+
+    def setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
 
         This doesn't block the executor to protect from deadlocks.
@@ -118,18 +125,15 @@ class EntityComponent(Generic[_EntityT]):
             self.async_setup(config), f"EntityComponent setup {self.domain}"
         )
 
-    async def async_setup(self, config: ConfigType | None = None) -> None:
+    async def async_setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
 
-        If `config` is not `None`, also loads the platforms from the config and will listen
-        for supported discovered platforms.
+        Loads the platforms from the config and will listen for supported
+        discovered platforms.
 
         This method must be run in the event loop.
         """
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
-
-        if config is None:
-            return
+        self.register_shutdown()
 
         self.config = config
 
