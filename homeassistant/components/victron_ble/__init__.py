@@ -12,7 +12,6 @@ from victron_ble.devices import (
     BatteryMonitorData,
     DcEnergyMeter,
     DcEnergyMeterData,
-    Device,
     SolarCharger,
     SolarChargerData,
     VEBus,
@@ -40,7 +39,6 @@ class VictronBluetoothDeviceData(BluetoothData):
         """Initialize the Victron Bluetooth device data with an encryption key."""
         super().__init__()
         self._advertisement_key: str | None = advertisement_key
-        self._parser: Device | None = None
 
     def validate_advertisement_key(self, data: bytes) -> bool:
         """Validate the advertisement key."""
@@ -74,29 +72,28 @@ class VictronBluetoothDeviceData(BluetoothData):
             _LOGGER.debug("No manufacturer data for Victron")
             return
 
-        if not self._parser:
-            try:
-                parser = detect_device_type(raw_data)
-            except StreamError:
-                _LOGGER.debug("Malformed advertisement %s", raw_data.hex())
-                return
-            if parser is None:
-                _LOGGER.debug("Unsupported device type")
-                return
-            if not issubclass(
-                parser, (BatteryMonitor, DcEnergyMeter, SolarCharger, VEBus)
-            ):
-                _LOGGER.debug("Unsupported device type")
-                return
-            self.set_device_manufacturer(data.manufacturer or "Victron")
-            self.set_device_name(data.name)
-            self.set_device_type(parser.__name__)
-            if not self.validate_advertisement_key(raw_data):
-                return
-            assert self._advertisement_key is not None  # keep pylance happy
-            self._parser = parser(self._advertisement_key)
+        try:
+            parser = detect_device_type(raw_data)
+        except StreamError:
+            _LOGGER.debug("Malformed advertisement %s", raw_data.hex())
+            return
+        if parser is None:
+            _LOGGER.debug("Unsupported device type")
+            return
+        if not issubclass(parser, (BatteryMonitor, DcEnergyMeter, SolarCharger, VEBus)):
+            _LOGGER.debug("Unsupported device type")
+            return
+        self.set_device_manufacturer(data.manufacturer or "Victron")
+        self.set_device_name(data.name)
+        self.set_device_type(parser.__name__)
+        if not self.validate_advertisement_key(raw_data):
+            return
+        assert self._advertisement_key is not None  # keep pylance happy
 
-        parsed_data = self._parser.parse(raw_data)
+        try:
+            parsed_data = parser(self._advertisement_key).parse(raw_data)
+        except ValueError:
+            parsed_data = None
         if parsed_data is None:
             _LOGGER.debug("Unable to parse data")
             return
