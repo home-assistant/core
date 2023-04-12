@@ -78,7 +78,6 @@ class TriggerBaseEntity(Entity):
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
         self._parse_result = {CONF_AVAILABILITY}
-        self._variable: str = ""
 
     @property
     def name(self):
@@ -245,7 +244,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
         if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
 
-        run_variables: dict[str, Any] = {"value": self._variable}
+        run_variables: dict[str, Any] = {"value": value}
         with suppress(*JSON_DECODE_EXCEPTIONS):
             run_variables["value_json"] = json_loads(run_variables["value"])
         variables = {"this": this, **(run_variables or {})}
