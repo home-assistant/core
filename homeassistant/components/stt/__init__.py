@@ -227,7 +227,11 @@ class SpeechToTextView(HomeAssistantView):
         hass: HomeAssistant = request.app["hass"]
         provider_entity: SpeechToTextEntity | None = None
         if (
-            not (provider_entity := async_get_provider_entity(hass, f"stt.{provider}"))
+            not (
+                provider_entity := async_get_provider_entity(
+                    hass, f"{DOMAIN}.{provider}"
+                )
+            )
             and provider not in self.providers
         ):
             raise HTTPNotFound()
@@ -239,20 +243,7 @@ class SpeechToTextView(HomeAssistantView):
             raise HTTPBadRequest(text=str(err)) from err
 
         if not provider_entity:
-            stt_provider: Provider | SpeechToTextEntity = self.providers[provider]
-
-            if not self._legacy_provider_reported:
-                self._legacy_provider_reported = True
-                report_issue = self._suggest_report_issue(provider, stt_provider)
-                # This should raise in Home Assistant Core 2022.5
-                _LOGGER.warning(
-                    "Provider %s (%s) is using a legacy implementation, "
-                    "and should be updated to use the SpeechToTextEntity. Please "
-                    "%s",
-                    provider,
-                    type(stt_provider),
-                    report_issue,
-                )
+            stt_provider = self._get_provider(provider)
 
             # Check format
             if not stt_provider.check_metadata(metadata):
@@ -275,6 +266,67 @@ class SpeechToTextView(HomeAssistantView):
         # Return result
         return self.json(asdict(result))
 
+    async def get(self, request: web.Request, provider: str) -> web.Response:
+        """Return provider specific audio information."""
+        hass: HomeAssistant = request.app["hass"]
+        if (
+            not (
+                provider_entity := async_get_provider_entity(
+                    hass, f"{DOMAIN}.{provider}"
+                )
+            )
+            and provider not in self.providers
+        ):
+            raise HTTPNotFound()
+
+        if not provider_entity:
+            stt_provider = self._get_provider(provider)
+
+            return self.json(
+                {
+                    "languages": stt_provider.supported_languages,
+                    "formats": stt_provider.supported_formats,
+                    "codecs": stt_provider.supported_codecs,
+                    "sample_rates": stt_provider.supported_sample_rates,
+                    "bit_rates": stt_provider.supported_bit_rates,
+                    "channels": stt_provider.supported_channels,
+                }
+            )
+
+        return self.json(
+            {
+                "languages": provider_entity.supported_languages,
+                "formats": provider_entity.supported_formats,
+                "codecs": provider_entity.supported_codecs,
+                "sample_rates": provider_entity.supported_sample_rates,
+                "bit_rates": provider_entity.supported_bit_rates,
+                "channels": provider_entity.supported_channels,
+            }
+        )
+
+    def _get_provider(self, provider: str) -> Provider:
+        """Get provider.
+
+        Method for legacy providers.
+        This can be removed when we remove the legacy provider support.
+        """
+        stt_provider = self.providers[provider]
+
+        if not self._legacy_provider_reported:
+            self._legacy_provider_reported = True
+            report_issue = self._suggest_report_issue(provider, stt_provider)
+            # This should raise in Home Assistant Core 2022.5
+            _LOGGER.warning(
+                "Provider %s (%s) is using a legacy implementation, "
+                "and should be updated to use the SpeechToTextEntity. Please "
+                "%s",
+                provider,
+                type(stt_provider),
+                report_issue,
+            )
+
+        return stt_provider
+
     def _suggest_report_issue(self, provider: str, provider_instance: object) -> str:
         """Suggest to report an issue."""
         report_issue = ""
@@ -288,23 +340,6 @@ class SpeechToTextView(HomeAssistantView):
             report_issue += f"+label%3A%22integration%3A+{provider}%22"
 
         return report_issue
-
-    async def get(self, request: web.Request, provider: str) -> web.Response:
-        """Return provider specific audio information."""
-        if provider not in self.providers:
-            raise HTTPNotFound()
-        stt_provider: Provider = self.providers[provider]
-
-        return self.json(
-            {
-                "languages": stt_provider.supported_languages,
-                "formats": stt_provider.supported_formats,
-                "codecs": stt_provider.supported_codecs,
-                "sample_rates": stt_provider.supported_sample_rates,
-                "bit_rates": stt_provider.supported_bit_rates,
-                "channels": stt_provider.supported_channels,
-            }
-        )
 
 
 def _metadata_from_header(request: web.Request) -> SpeechMetadata:
