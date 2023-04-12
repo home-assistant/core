@@ -871,6 +871,19 @@ async def test_attributes(
             {
                 mqtt.DOMAIN: {
                     humidifier.DOMAIN: {
+                        "name": "test_valid_4",
+                        "command_topic": "command-topic",
+                        "target_humidity_command_topic": "humidity-command-topic",
+                        "device_class": None,
+                    }
+                }
+            },
+            True,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    humidifier.DOMAIN: {
                         "name": "test_invalid_device_class",
                         "command_topic": "command-topic",
                         "target_humidity_command_topic": "humidity-command-topic",

@@ -62,31 +62,51 @@ def switch_platform_only():
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "device_class"),
     [
-        {
-            mqtt.DOMAIN: {
-                switch.DOMAIN: {
-                    "name": "test",
-                    "state_topic": "state-topic",
-                    "command_topic": "command-topic",
-                    "payload_on": 1,
-                    "payload_off": 0,
-                    "device_class": "switch",
+        (
+            {
+                mqtt.DOMAIN: {
+                    switch.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "command_topic": "command-topic",
+                        "payload_on": 1,
+                        "payload_off": 0,
+                        "device_class": "switch",
+                    }
                 }
-            }
-        }
+            },
+            "switch",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    switch.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "command_topic": "command-topic",
+                        "payload_on": 1,
+                        "payload_off": 0,
+                        "device_class": None,
+                    }
+                }
+            },
+            None,
+        ),
     ],
 )
 async def test_controlling_state_via_topic(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_class: str | None,
 ) -> None:
     """Test the controlling state via topic."""
     await mqtt_mock_entry()
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "switch"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "1")
