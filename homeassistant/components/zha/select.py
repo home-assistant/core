@@ -517,7 +517,9 @@ class InovelliNonNeutralOutput(types.enum1):
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names=CHANNEL_INOVELLI,
 )
-class InovelliNonNeutralOutputEntity(ZCLEnumSelectEntity, id_suffix="increased_non_neutral_output"):
+class InovelliNonNeutralOutputEntity(
+    ZCLEnumSelectEntity, id_suffix="increased_non_neutral_output"
+):
     """Inovelli non neutral output control."""
 
     _select_attr = "increased_non_neutral_output"
