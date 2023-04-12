@@ -24,8 +24,8 @@ from sqlalchemy.orm.session import Session
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
 )
@@ -404,9 +404,8 @@ class Recorder(threading.Thread):
         # Unknown what it is.
         return True
 
-    @callback
-    def _async_empty_queue(self, event: Event) -> None:
-        """Empty the queue if its still present at final write."""
+    async def _async_close(self, event: Event) -> None:
+        """Empty the queue if its still present at close."""
 
         # If the queue is full of events to be processed because
         # the database is so broken that every event results in a retry
@@ -421,9 +420,10 @@ class Recorder(threading.Thread):
             except queue.Empty:
                 break
         self.queue_task(StopTask())
+        await self.hass.async_add_executor_job(self.join)
 
     async def _async_shutdown(self, event: Event) -> None:
-        """Shut down the Recorder."""
+        """Shut down the Recorder at final write."""
         if not self._hass_started.done():
             self._hass_started.set_result(SHUTDOWN_TASK)
         self.queue_task(StopTask())
@@ -439,8 +439,8 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_empty_queue)
-        bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, self._async_close)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown)
         async_at_started(self.hass, self._async_hass_started)
 
     @callback
