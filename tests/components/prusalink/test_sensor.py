@@ -66,7 +66,7 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
-    state = hass.states.get("sensor.mock_title_target_bed_temperature")
+    state = hass.states.get("sensor.mock_title_target_heatbed_temperature")
     assert state is not None
     assert state.state == "60.5"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
@@ -80,7 +80,7 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
-    state = hass.states.get("sensor.mock_title_z-height")
+    state = hass.states.get("sensor.mock_title_z_height")
     assert state is not None
     assert state.state == "1.8"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LENGTH_MILLIMETERS
