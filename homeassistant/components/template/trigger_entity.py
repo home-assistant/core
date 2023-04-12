@@ -37,6 +37,7 @@ class TriggerBaseEntity(Entity):
     domain: str
     extra_template_keys: tuple | None = None
     extra_template_keys_complex: tuple | None = None
+    _unique_id: str | None
 
     def __init__(
         self,
@@ -46,9 +47,7 @@ class TriggerBaseEntity(Entity):
         """Initialize the entity."""
         self.hass = hass
 
-        entity_unique_id = config.get(CONF_UNIQUE_ID)
-
-        self._unique_id: str | None = entity_unique_id
+        self._set_unique_id(config.get(CONF_UNIQUE_ID))
 
         self._config = config
 
@@ -125,6 +124,10 @@ class TriggerBaseEntity(Entity):
         """Handle being added to Home Assistant."""
         template.attach(self.hass, self._config)
 
+    def _set_unique_id(self, unique_id: str | None) -> None:
+        """Set unique id."""
+        self._unique_id = unique_id
+
     def restore_attributes(self, last_state: State) -> None:
         """Restore attributes."""
         for conf_key, attr in CONF_TO_ATTRIBUTE.items():
@@ -197,20 +200,19 @@ class CoordinatorTriggerEntity(
         CoordinatorEntity.__init__(self, coordinator)
         TriggerBaseEntity.__init__(self, hass, config)
 
-        entity_unique_id = config.get(CONF_UNIQUE_ID)
-
-        self._unique_id: str | None
-        if entity_unique_id and coordinator.unique_id:
-            self._unique_id = f"{coordinator.unique_id}-{entity_unique_id}"
-        else:
-            self._unique_id = entity_unique_id
-
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await TriggerBaseEntity.async_added_to_hass(self)
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
             self._process_data()
+
+    def _set_unique_id(self, unique_id: str | None) -> None:
+        """Set unique id."""
+        if unique_id and self.coordinator.unique_id:
+            self._unique_id = f"{self.coordinator.unique_id}-{unique_id}"
+        else:
+            self._unique_id = unique_id
 
     @callback
     def _process_data(self) -> None:
