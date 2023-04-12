@@ -194,10 +194,10 @@ class WebhookView(HomeAssistantView):
         hass = request.app["hass"]
         return await async_handle_webhook(hass, webhook_id, request)
 
-
-for method in SUPPORTED_METHODS:
-    # pylint: disable=protected-access
-    setattr(WebhookView, method.lower(), WebhookView._handle)
+    get = _handle
+    head = _handle
+    post = _handle
+    put = _handle
 
 
 @websocket_api.websocket_command(
