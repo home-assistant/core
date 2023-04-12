@@ -224,14 +224,26 @@ async def test_get_provider_info(
 @pytest.mark.parametrize(
     "setup", ["mock_setup", "mock_config_entry_setup"], indirect=True
 )
-async def test_get_non_existing_provider_info(
+async def test_non_existing_provider(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     setup: str,
 ) -> None:
     """Test streaming to engine that doesn't exist."""
     client = await hass_client()
+
     response = await client.get("/api/stt/not_exist")
+    assert response.status == HTTPStatus.NOT_FOUND
+
+    response = await client.post(
+        "/api/stt/not_exist",
+        headers={
+            "X-Speech-Content": (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
+                " language=en"
+            )
+        },
+    )
     assert response.status == HTTPStatus.NOT_FOUND
 
 
