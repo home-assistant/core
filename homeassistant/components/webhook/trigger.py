@@ -102,12 +102,6 @@ async def async_attach_trigger(
                 "automation_name": trigger_info.get("name", "[unknown]"),
             },
         )
-        _LOGGER.warning(
-            "Deprecation warning: "
-            "Webhook '%s' does not provide a value for local_only. "
-            "The default value will be 'true' in the 2023.7.0 release",
-            webhook_id,
-        )
     allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)
     job = HassJob(action)
 
