@@ -1,6 +1,5 @@
 """Tests for the srp_energy sensor platform."""
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.srp_energy.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ATTRIBUTION,

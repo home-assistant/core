@@ -1,5 +1,4 @@
 """Tests for Srp Energy component Init."""
-from homeassistant.components.srp_energy import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -15,4 +14,3 @@ async def test_unload_entry(hass: HomeAssistant, init_integration) -> None:
 
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
-
