@@ -407,3 +407,53 @@ async def test_no_issue_when_view_has_the_text_entity_id_in_it(
         "Query contains entity_id but does not reference states_meta" not in caplog.text
     )
     assert hass.states.get("sensor.get_entity_id") is not None
+
+
+async def test_multiple_sensors_using_same_db(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test multiple sensors using the same db."""
+    config = {
+        "db_url": "sqlite:///",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "name": "Select value SQL query",
+    }
+    config2 = {
+        "db_url": "sqlite:///",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "name": "Select value SQL query 2",
+    }
+    await init_integration(hass, config)
+    await init_integration(hass, config2, entry_id="2")
+
+    state = hass.states.get("sensor.select_value_sql_query")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+
+    state = hass.states.get("sensor.select_value_sql_query_2")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+
+
+async def test_engine_is_disposed_at_stop(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test we dispose of the engine at stop."""
+    config = {
+        "db_url": "sqlite:///",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "name": "Select value SQL query",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.select_value_sql_query")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+
+    with patch("sqlalchemy.engine.base.Engine.dispose") as mock_engine_dispose:
+        await hass.async_stop()
+
+    assert mock_engine_dispose.call_count == 2
