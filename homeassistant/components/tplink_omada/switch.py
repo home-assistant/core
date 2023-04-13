@@ -1,12 +1,11 @@
 """Support for TPLink Omada device toggle options."""
 from __future__ import annotations
 
-from functools import partial
 from typing import Any
 
 from tplink_omada_client.definitions import PoEMode
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
-from tplink_omada_client.omadasiteclient import OmadaSiteClient, SwitchPortOverrides
+from tplink_omada_client.omadasiteclient import SwitchPortOverrides
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,18 +14,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import OmadaCoordinator
-from .entity import OmadaSwitchDeviceEntity
+from .controller import OmadaSiteController, OmadaSwitchPortCoordinator
+from .entity import OmadaDeviceEntity
 
 POE_SWITCH_ICON = "mdi:ethernet"
-
-
-async def poll_switch_state(
-    client: OmadaSiteClient, network_switch: OmadaSwitch
-) -> dict[str, OmadaSwitchPortDetails]:
-    """Poll a switch's current state."""
-    ports = await client.get_switch_ports(network_switch)
-    return {p.port_id: p for p in ports}
 
 
 async def async_setup_entry(
@@ -35,7 +26,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    omada_client: OmadaSiteClient = hass.data[DOMAIN][config_entry.entry_id]
+    controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
+    omada_client = controller.omada_client
 
     # Naming fun. Omada switches, as in the network hardware
     network_switches = await omada_client.get_switches()
@@ -44,10 +36,7 @@ async def async_setup_entry(
     for switch in [
         ns for ns in network_switches if ns.device_capabilities.supports_poe
     ]:
-        coordinator = OmadaCoordinator[OmadaSwitchPortDetails](
-            hass, omada_client, partial(poll_switch_state, network_switch=switch)
-        )
-
+        coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_request_refresh()
 
         for idx, port_id in enumerate(coordinator.data):
@@ -67,7 +56,9 @@ def get_port_base_name(port: OmadaSwitchPortDetails) -> str:
     return f"Port {port.port} ({port.name})"
 
 
-class OmadaNetworkSwitchPortPoEControl(OmadaSwitchDeviceEntity, SwitchEntity):
+class OmadaNetworkSwitchPortPoEControl(
+    OmadaDeviceEntity[OmadaSwitchPortDetails], SwitchEntity
+):
     """Representation of a PoE control toggle on a single network port on a switch."""
 
     _attr_has_entity_name = True
@@ -76,7 +67,7 @@ class OmadaNetworkSwitchPortPoEControl(OmadaSwitchDeviceEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: OmadaCoordinator[OmadaSwitchPortDetails],
+        coordinator: OmadaSwitchPortCoordinator,
         device: OmadaSwitch,
         port_id: str,
     ) -> None:

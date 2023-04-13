@@ -9,8 +9,7 @@ import voluptuous as vol
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -38,7 +37,7 @@ def _migrate_to_new_unique_id(hass: HomeAssistant, dev_id, channel) -> None:
     """Migrate old unique ids to new unique ids."""
     old_unique_id = f"{combine_hex(dev_id)}"
 
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     entity_id = ent_reg.async_get_entity_id(Platform.SWITCH, DOMAIN, old_unique_id)
 
     if entity_id is not None:

@@ -793,6 +793,8 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
 
             return OptionsFlowHandler()
 
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
     MockConfigEntry(
         domain="test",
         entry_id="test1",
@@ -824,6 +826,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
+    mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
@@ -889,6 +892,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
+    mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
@@ -1446,8 +1450,8 @@ async def test_get_entries_ws(
 
     # Verify we skip broken integrations
     with patch(
-        "homeassistant.components.config.config_entries.async_get_integration",
-        side_effect=IntegrationNotFound("any"),
+        "homeassistant.components.config.config_entries.async_get_integrations",
+        return_value={"any": IntegrationNotFound("any")},
     ):
         await ws_client.send_json(
             {
@@ -1534,8 +1538,8 @@ async def test_get_entries_ws(
 
     # Verify we don't send config entries when only helpers are requested
     with patch(
-        "homeassistant.components.config.config_entries.async_get_integration",
-        side_effect=IntegrationNotFound("any"),
+        "homeassistant.components.config.config_entries.async_get_integrations",
+        return_value={"any": IntegrationNotFound("any")},
     ):
         await ws_client.send_json(
             {
@@ -1552,8 +1556,8 @@ async def test_get_entries_ws(
     # Verify we raise if something really goes wrong
 
     with patch(
-        "homeassistant.components.config.config_entries.async_get_integration",
-        side_effect=Exception,
+        "homeassistant.components.config.config_entries.async_get_integrations",
+        return_value={"any": Exception()},
     ):
         await ws_client.send_json(
             {

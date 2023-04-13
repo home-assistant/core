@@ -15,7 +15,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockConsumption, HomeControlMockSensor
@@ -43,10 +43,11 @@ async def test_temperature_sensor(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
 
 
-async def test_battery_sensor(hass: HomeAssistant) -> None:
+async def test_battery_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test setup and state change of a battery sensor device."""
     entry = configure_integration(hass)
-    er = entity_registry.async_get(hass)
     test_gateway = HomeControlMockSensor()
     test_gateway.devices["Test"].battery_level = 25
     with patch(
@@ -63,7 +64,7 @@ async def test_battery_sensor(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
     assert (
-        er.async_get(f"{DOMAIN}.test_battery_level").entity_category
+        entity_registry.async_get(f"{DOMAIN}.test_battery_level").entity_category
         is EntityCategory.DIAGNOSTIC
     )
 

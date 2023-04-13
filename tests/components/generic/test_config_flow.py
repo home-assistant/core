@@ -34,7 +34,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -809,10 +809,10 @@ async def test_reload_on_title_change(hass: HomeAssistant) -> None:
     assert hass.states.get("camera.my_title").attributes["friendly_name"] == "New Title"
 
 
-async def test_migrate_existing_ids(hass: HomeAssistant) -> None:
+async def test_migrate_existing_ids(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that existing ids are migrated for issue #70568."""
-
-    registry = entity_registry.async_get(hass)
 
     test_data = TESTDATA_OPTIONS.copy()
     test_data[CONF_CONTENT_TYPE] = "image/png"
@@ -825,7 +825,7 @@ async def test_migrate_existing_ids(hass: HomeAssistant) -> None:
     new_unique_id = mock_entry.entry_id
     mock_entry.add_to_hass(hass)
 
-    entity_entry = registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "camera",
         DOMAIN,
         old_unique_id,
@@ -838,7 +838,7 @@ async def test_migrate_existing_ids(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = registry.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.unique_id == new_unique_id
 
 

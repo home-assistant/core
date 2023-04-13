@@ -1,0 +1,103 @@
+# serializer version: 1
+# name: test_api_calendar
+  list([
+    dict({
+      'entity_id': 'calendar.twente_milieu',
+      'name': 'Twente Milieu',
+    }),
+  ])
+# ---
+# name: test_api_events
+  list([
+    dict({
+      'description': None,
+      'end': dict({
+        'date': '2022-01-07',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2022-01-06',
+      }),
+      'summary': 'Christmas tree pickup',
+      'uid': None,
+    }),
+  ])
+# ---
+# name: test_waste_pickup_calendar
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': True,
+      'description': '',
+      'end_time': '2022-01-07 00:00:00',
+      'friendly_name': 'Twente Milieu',
+      'icon': 'mdi:delete-empty',
+      'location': '',
+      'message': 'Christmas tree pickup',
+      'start_time': '2022-01-06 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.twente_milieu',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_waste_pickup_calendar.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.twente_milieu',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:delete-empty',
+    'original_name': None,
+    'platform': 'twentemilieu',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_waste_pickup_calendar.2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'https://www.twentemilieu.nl',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'twentemilieu',
+        '12345',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Twente Milieu',
+    'model': None,
+    'name': 'Twente Milieu',
+    'name_by_user': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

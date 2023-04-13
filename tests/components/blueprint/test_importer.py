@@ -18,74 +18,6 @@ def community_post():
     return load_fixture("blueprint/community_post.json")
 
 
-COMMUNITY_POST_INPUTS = {
-    "remote": {
-        "name": "Remote",
-        "description": "IKEA remote to use",
-        "selector": {
-            "device": {
-                "integration": "zha",
-                "manufacturer": "IKEA of Sweden",
-                "model": "TRADFRI remote control",
-                "multiple": False,
-            }
-        },
-    },
-    "light": {
-        "name": "Light(s)",
-        "description": "The light(s) to control",
-        "selector": {"target": {"entity": {"domain": "light"}}},
-    },
-    "force_brightness": {
-        "name": "Force turn on brightness",
-        "description": (
-            'Force the brightness to the set level below, when the "on" button on the'
-            " remote is pushed and lights turn on.\n"
-        ),
-        "default": False,
-        "selector": {"boolean": {}},
-    },
-    "brightness": {
-        "name": "Brightness",
-        "description": "Brightness of the light(s) when turning on",
-        "default": 50,
-        "selector": {
-            "number": {
-                "min": 0.0,
-                "max": 100.0,
-                "mode": "slider",
-                "step": 1.0,
-                "unit_of_measurement": "%",
-            }
-        },
-    },
-    "button_left_short": {
-        "name": "Left button - short press",
-        "description": "Action to run on short left button press",
-        "default": [],
-        "selector": {"action": {}},
-    },
-    "button_left_long": {
-        "name": "Left button - long press",
-        "description": "Action to run on long left button press",
-        "default": [],
-        "selector": {"action": {}},
-    },
-    "button_right_short": {
-        "name": "Right button - short press",
-        "description": "Action to run on short right button press",
-        "default": [],
-        "selector": {"action": {}},
-    },
-    "button_right_long": {
-        "name": "Right button - long press",
-        "description": "Action to run on long right button press",
-        "default": [],
-        "selector": {"action": {}},
-    },
-}
-
-
 def test_get_community_post_import_url() -> None:
     """Test variations of generating import forum url."""
     assert (
@@ -120,14 +52,14 @@ def test_get_github_import_url() -> None:
     )
 
 
-def test_extract_blueprint_from_community_topic(community_post) -> None:
+def test_extract_blueprint_from_community_topic(community_post, snapshot) -> None:
     """Test extracting blueprint."""
     imported_blueprint = importer._extract_blueprint_from_community_topic(
         "http://example.com", json.loads(community_post)
     )
     assert imported_blueprint is not None
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.inputs == COMMUNITY_POST_INPUTS
+    assert imported_blueprint.blueprint.inputs == snapshot
 
 
 def test_extract_blueprint_from_community_topic_invalid_yaml() -> None:
@@ -161,7 +93,7 @@ def test_extract_blueprint_from_community_topic_wrong_lang() -> None:
 
 
 async def test_fetch_blueprint_from_community_url(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, community_post
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, community_post, snapshot
 ) -> None:
     """Test fetching blueprint from url."""
     aioclient_mock.get(
@@ -172,7 +104,7 @@ async def test_fetch_blueprint_from_community_url(
     )
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.inputs == COMMUNITY_POST_INPUTS
+    assert imported_blueprint.blueprint.inputs == snapshot
     assert (
         imported_blueprint.suggested_filename
         == "frenck/zha-ikea-five-button-remote-for-lights"
@@ -215,7 +147,7 @@ async def test_fetch_blueprint_from_github_url(
 
 
 async def test_fetch_blueprint_from_github_gist_url(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, snapshot
 ) -> None:
     """Test fetching blueprint from url."""
     aioclient_mock.get(
@@ -227,21 +159,6 @@ async def test_fetch_blueprint_from_github_gist_url(
     imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
     assert isinstance(imported_blueprint, importer.ImportedBlueprint)
     assert imported_blueprint.blueprint.domain == "automation"
-    assert imported_blueprint.blueprint.inputs == {
-        "motion_entity": {
-            "name": "Motion Sensor",
-            "selector": {
-                "entity": {
-                    "domain": "binary_sensor",
-                    "device_class": "motion",
-                    "multiple": False,
-                }
-            },
-        },
-        "light_entity": {
-            "name": "Light",
-            "selector": {"entity": {"domain": "light", "multiple": False}},
-        },
-    }
+    assert imported_blueprint.blueprint.inputs == snapshot
     assert imported_blueprint.suggested_filename == "balloob/motion_light"
     assert imported_blueprint.blueprint.metadata["source_url"] == url

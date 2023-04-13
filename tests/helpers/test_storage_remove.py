@@ -4,13 +4,15 @@ from datetime import timedelta
 import os
 from unittest.mock import patch
 
+import py
+
 from homeassistant.helpers import storage
 from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed, async_test_home_assistant
 
 
-async def test_removing_while_delay_in_progress(tmpdir) -> None:
+async def test_removing_while_delay_in_progress(tmpdir: py.path.local) -> None:
     """Test removing while delay in progress."""
 
     loop = asyncio.get_event_loop()

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import functools as ft
 import hashlib
 from http import HTTPStatus
@@ -58,6 +59,7 @@ ATTR_LANGUAGE = "language"
 ATTR_MESSAGE = "message"
 ATTR_OPTIONS = "options"
 ATTR_PLATFORM = "platform"
+ATTR_AUDIO_OUTPUT = "audio_output"
 
 BASE_URL_KEY = "tts_base_url"
 
@@ -133,6 +135,45 @@ class TTSCache(TypedDict):
 
     filename: str
     voice: bytes
+    pending: asyncio.Task | None
+
+
+@callback
+def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
+    """Resolve engine.
+
+    Returns None if no engines found or invalid engine passed in.
+    """
+    manager: SpeechManager = hass.data[DOMAIN]
+
+    if engine is not None:
+        if engine not in manager.providers:
+            return None
+        return engine
+
+    if not manager.providers:
+        return None
+
+    if "cloud" in manager.providers:
+        return "cloud"
+
+    return next(iter(manager.providers))
+
+
+async def async_support_options(
+    hass: HomeAssistant,
+    engine: str,
+    language: str | None = None,
+    options: dict | None = None,
+) -> bool:
+    """Return if an engine supports options."""
+    manager: SpeechManager = hass.data[DOMAIN]
+    try:
+        manager.process_options(engine, language, options)
+    except HomeAssistantError:
+        return False
+
+    return True
 
 
 async def async_get_media_source_audio(
@@ -380,11 +421,12 @@ class SpeechManager:
             raise HomeAssistantError(f"Not supported language {language}")
 
         # Options
-        if provider.default_options and options:
-            merged_options = provider.default_options.copy()
+        if (default_options := provider.default_options) and options:
+            merged_options = dict(default_options)
             merged_options.update(options)
             options = merged_options
-        options = options or provider.default_options
+        if not options:
+            options = None if default_options is None else dict(default_options)
 
         if options is not None:
             supported_options = provider.supported_options or []
@@ -455,8 +497,11 @@ class SpeechManager:
                 )
 
         extension = os.path.splitext(self.mem_cache[cache_key]["filename"])[1][1:]
-        data = self.mem_cache[cache_key]["voice"]
-        return extension, data
+        cached = self.mem_cache[cache_key]
+        if pending := cached.get("pending"):
+            await pending
+            cached = self.mem_cache[cache_key]
+        return extension, cached["voice"]
 
     @callback
     def _generate_cache_key(
@@ -487,29 +532,62 @@ class SpeechManager:
         This method is a coroutine.
         """
         provider = self.providers[engine]
-        extension, data = await provider.async_get_tts_audio(message, language, options)
 
-        if data is None or extension is None:
-            raise HomeAssistantError(f"No TTS from {engine} for '{message}'")
+        if options is not None and ATTR_AUDIO_OUTPUT in options:
+            expected_extension = options[ATTR_AUDIO_OUTPUT]
+        else:
+            expected_extension = None
 
-        # Create file infos
-        filename = f"{cache_key}.{extension}".lower()
-
-        # Validate filename
-        if not _RE_VOICE_FILE.match(filename):
-            raise HomeAssistantError(
-                f"TTS filename '{filename}' from {engine} is invalid!"
+        async def get_tts_data() -> str:
+            """Handle data available."""
+            extension, data = await provider.async_get_tts_audio(
+                message, language, options
             )
 
-        # Save to memory
-        data = self.write_tags(filename, data, provider, message, language, options)
-        self._async_store_to_memcache(cache_key, filename, data)
+            if data is None or extension is None:
+                raise HomeAssistantError(f"No TTS from {engine} for '{message}'")
 
-        if cache:
-            self.hass.async_create_task(
-                self._async_save_tts_audio(cache_key, filename, data)
-            )
+            # Create file infos
+            filename = f"{cache_key}.{extension}".lower()
 
+            # Validate filename
+            if not _RE_VOICE_FILE.match(filename):
+                raise HomeAssistantError(
+                    f"TTS filename '{filename}' from {engine} is invalid!"
+                )
+
+            # Save to memory
+            if extension == "mp3":
+                data = self.write_tags(
+                    filename, data, provider, message, language, options
+                )
+            self._async_store_to_memcache(cache_key, filename, data)
+
+            if cache:
+                self.hass.async_create_task(
+                    self._async_save_tts_audio(cache_key, filename, data)
+                )
+
+            return filename
+
+        audio_task = self.hass.async_create_task(get_tts_data())
+
+        if expected_extension is None:
+            return await audio_task
+
+        def handle_error(_future: asyncio.Future) -> None:
+            """Handle error."""
+            if audio_task.exception():
+                self.mem_cache.pop(cache_key, None)
+
+        audio_task.add_done_callback(handle_error)
+
+        filename = f"{cache_key}.{expected_extension}".lower()
+        self.mem_cache[cache_key] = {
+            "filename": filename,
+            "voice": b"",
+            "pending": audio_task,
+        }
         return filename
 
     async def _async_save_tts_audio(
@@ -560,7 +638,11 @@ class SpeechManager:
         self, cache_key: str, filename: str, data: bytes
     ) -> None:
         """Store data to memcache and set timer to remove it."""
-        self.mem_cache[cache_key] = {"filename": filename, "voice": data}
+        self.mem_cache[cache_key] = {
+            "filename": filename,
+            "voice": data,
+            "pending": None,
+        }
 
         @callback
         def async_remove_from_mem() -> None:
@@ -587,7 +669,11 @@ class SpeechManager:
             await self._async_file_to_mem(cache_key)
 
         content, _ = mimetypes.guess_type(filename)
-        return content, self.mem_cache[cache_key]["voice"]
+        cached = self.mem_cache[cache_key]
+        if pending := cached.get("pending"):
+            await pending
+            cached = self.mem_cache[cache_key]
+        return content, cached["voice"]
 
     @staticmethod
     def write_tags(
@@ -664,8 +750,8 @@ class Provider:
         return None
 
     @property
-    def default_options(self) -> dict[str, Any] | None:
-        """Return a dict include default options."""
+    def default_options(self) -> Mapping[str, Any] | None:
+        """Return a mapping with the default options."""
         return None
 
     def get_tts_audio(

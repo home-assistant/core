@@ -1,6 +1,7 @@
 """Persistently store thread datasets."""
 from __future__ import annotations
 
+from contextlib import suppress
 import dataclasses
 from datetime import datetime
 from functools import cached_property
@@ -34,6 +35,15 @@ class DatasetEntry:
 
     created: datetime = dataclasses.field(default_factory=dt_util.utcnow)
     id: str = dataclasses.field(default_factory=ulid_util.ulid)
+
+    @property
+    def channel(self) -> int | None:
+        """Return channel as an integer."""
+        if (channel := self.dataset.get(tlv_parser.MeshcopTLVType.CHANNEL)) is None:
+            return None
+        with suppress(ValueError):
+            return int(channel, 16)
+        return None
 
     @cached_property
     def dataset(self) -> dict[tlv_parser.MeshcopTLVType, str]:
@@ -157,6 +167,14 @@ async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
     """Add a dataset."""
     store = await async_get_store(hass)
     store.async_add(source, tlv)
+
+
+async def async_get_dataset(hass: HomeAssistant, dataset_id: str) -> str | None:
+    """Get a dataset."""
+    store = await async_get_store(hass)
+    if (entry := store.async_get(dataset_id)) is None:
+        return None
+    return entry.tlv
 
 
 async def async_get_preferred_dataset(hass: HomeAssistant) -> str | None:
