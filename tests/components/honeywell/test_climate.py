@@ -1031,7 +1031,6 @@ async def test_async_update_errors(
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
 
-    # "reload integration" test
     device.refresh.side_effect = ClientConnectionError
     async_fire_time_changed(
         hass,
