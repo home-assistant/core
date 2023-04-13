@@ -25,10 +25,8 @@ def preferred_regions(
     elif language == "zh":
         if code == "Hant":
             yield "HK"
-        elif code == "Hans":
             yield "TW"
         else:
-            # Prefer China if no matching code
             yield "CN"
 
     # fr -> fr-FR
