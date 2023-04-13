@@ -1,7 +1,10 @@
 """Voice over IP (VoIP) implementation."""
+from __future__ import annotations
+
 import asyncio
 import logging
 import time
+from typing import TYPE_CHECKING
 
 import async_timeout
 from voip_utils import CallInfo, RtpDatagramProtocol, SdpInfo, VoipDatagramProtocol
@@ -17,13 +20,16 @@ from homeassistant.components.voice_assistant.vad import VoiceCommandSegmenter
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 
+if TYPE_CHECKING:
+    from .devices import VoIPDevices
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class HassVoipDatagramProtocol(VoipDatagramProtocol):
     """HA UDP server for Voice over IP (VoIP)."""
 
-    def __init__(self, hass: HomeAssistant, allow_ips: set[str]) -> None:
+    def __init__(self, hass: HomeAssistant, devices: VoIPDevices) -> None:
         """Set up VoIP call handler."""
         super().__init__(
             sdp_info=SdpInfo(
@@ -37,11 +43,11 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
                 hass.config.language,
             ),
         )
-        self.allow_ips = allow_ips
+        self.devices = devices
 
     def is_valid_call(self, call_info: CallInfo) -> bool:
         """Filter calls."""
-        return call_info.caller_ip in self.allow_ips
+        return self.devices.async_allow_call(call_info)
 
 
 class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
@@ -64,7 +70,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self.pipeline_timeout = pipeline_timeout
         self.audio_timeout = audio_timeout
 
-        self._audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
+        self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self._pipeline_task: asyncio.Task | None = None
         self._conversation_id: str | None = None
 
