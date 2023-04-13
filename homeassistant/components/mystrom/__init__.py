@@ -41,25 +41,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device = None
     try:
         info = await get_device_info(host)
-        device_type = info["type"]
-        if device_type in [101, 106, 107]:
-            device = MyStromSwitch(host)
-            await device.get_state()
-        elif device_type == 102:
-            mac = info["mac"]
-            device = MyStromBulb(host, mac)
-            await device.get_state()
-            if device.bulb_type not in ["rgblamp", "strip"]:
-                _LOGGER.error(
-                    "Device %s (%s) is not a myStrom bulb nor myStrom LED Strip",
-                    host,
-                    mac,
-                )
-                device = None
-
     except MyStromConnectionError as err:
         _LOGGER.error("No route to myStrom plug: %s", host)
         raise ConfigEntryNotReady() from err
+
+    device_type = info["type"]
+    if device_type in [101, 106, 107]:
+        device = MyStromSwitch(host)
+    elif device_type == 102:
+        mac = info["mac"]
+        device = MyStromBulb(host, mac)
+        if device.bulb_type not in ["rgblamp", "strip"]:
+            _LOGGER.error(
+                "Device %s (%s) is not a myStrom bulb nor myStrom LED Strip",
+                host,
+                mac,
+            )
+            device = None
 
     if device:
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {

@@ -12,7 +12,7 @@ from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity import DeviceInfo
@@ -42,6 +42,11 @@ async def async_setup_entry(
 
     if device_type in [101, 106, 107]:
         device = hass.data[DOMAIN][entry.entry_id]["device"]
+        try:
+            await device.get_state()
+        except MyStromConnectionError as err:
+            _LOGGER.error("No route to myStrom plug: %s", info["ip"])
+            raise ConfigEntryNotReady() from err
         async_add_entities([MyStromSwitch(device)])
 
 
