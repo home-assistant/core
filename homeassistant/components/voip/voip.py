@@ -41,6 +41,7 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
 
     def is_valid_call(self, call_info: CallInfo) -> bool:
         """Filter calls."""
+        return False
         return call_info.caller_ip in self.allow_ips
 
 
