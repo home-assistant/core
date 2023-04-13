@@ -22,6 +22,8 @@ from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
 
+UDP_PORT = 0  # Set to 0 to let the OS pick a free random port
+
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
     VoiceAssistantEventType, PipelineEventType
 ] = EsphomeEnumMapper(
@@ -67,7 +69,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setblocking(False)
 
-        sock.bind(("", 0))
+        sock.bind(("", UDP_PORT))
 
         await asyncio.get_running_loop().create_datagram_endpoint(
             accept_connection, sock=sock
