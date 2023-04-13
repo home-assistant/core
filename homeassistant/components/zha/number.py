@@ -835,6 +835,34 @@ class InovelliDefaultAllLEDOffIntensity(
     _attr_name: str = "Default all LED off intensity"
 
 
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliDoubleTapUpLevel(
+    ZHANumberConfigurationEntity, id_suffix="double_tap_up_level"
+):
+    """Inovelli double tap up level configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[16]
+    _attr_native_min_value: float = 2
+    _attr_native_max_value: float = 254
+    _zcl_attribute: str = "double_tap_up_level"
+    _attr_name: str = "Double tap up level"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliDoubleTapDownLevel(
+    ZHANumberConfigurationEntity, id_suffix="double_tap_down_level"
+):
+    """Inovelli double tap down level configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[16]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 254
+    _zcl_attribute: str = "double_tap_down_level"
+    _attr_name: str = "Double tap down level"
+
+
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving_size"):
     """Aqara pet feeder serving size configuration entity."""
