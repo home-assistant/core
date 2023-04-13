@@ -30,6 +30,8 @@ def test_no_match() -> None:
         == []
     )
 
+    assert language.matches("en", []) == []
+
 
 def test_prefer_us_english() -> None:
     """Test that U.S. English is preferred when no region is provided."""
