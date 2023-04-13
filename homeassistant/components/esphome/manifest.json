@@ -1,7 +1,7 @@
 {
   "domain": "esphome",
   "name": "ESPHome",
-  "after_dependencies": ["zeroconf", "tag"],
+  "after_dependencies": ["zeroconf", "tag", "assist_pipeline"],
   "codeowners": ["@OttoWinter", "@jesserockz"],
   "config_flow": true,
   "dependencies": ["bluetooth"],
