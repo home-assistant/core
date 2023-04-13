@@ -1,5 +1,4 @@
 """Support for HomeWizard buttons."""
-from homewizard_energy.const import SUPPORTS_IDENTIFY
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -18,7 +17,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Identify button."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.data.device.product_type in SUPPORTS_IDENTIFY:
+    if coordinator.supports_identify():
         async_add_entities([HomeWizardIdentifyButton(coordinator, entry)])
 
 

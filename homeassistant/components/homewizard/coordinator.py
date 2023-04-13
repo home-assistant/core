@@ -4,8 +4,9 @@ from __future__ import annotations
 import logging
 
 from homewizard_energy import HomeWizardEnergy
-from homewizard_energy.const import SUPPORTS_STATE, SUPPORTS_SYSTEM
+from homewizard_energy.const import SUPPORTS_IDENTIFY, SUPPORTS_STATE, SUPPORTS_SYSTEM
 from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.models import Device
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -42,10 +43,10 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 data=await self.api.data(),
             )
 
-            if data.device.product_type in SUPPORTS_STATE:
+            if self.supports_state(data.device):
                 data.state = await self.api.state()
 
-            if data.device.product_type in SUPPORTS_SYSTEM:
+            if self.supports_system(data.device):
                 data.system = await self.api.system()
 
         except RequestError as ex:
@@ -63,4 +64,27 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
         self.api_disabled = False
 
+        self.data = data
         return data
+
+    def supports_state(self, device: Device | None = None) -> bool:
+        """Return True if the device supports state."""
+
+        if device is None:
+            device = self.data.device
+
+        return device.product_type in SUPPORTS_STATE
+
+    def supports_system(self, device: Device | None = None) -> bool:
+        """Return True if the device supports system."""
+        if device is None:
+            device = self.data.device
+
+        return device.product_type in SUPPORTS_SYSTEM
+
+    def supports_identify(self, device: Device | None = None) -> bool:
+        """Return True if the device supports identify."""
+        if device is None:
+            device = self.data.device
+
+        return device.product_type in SUPPORTS_IDENTIFY
