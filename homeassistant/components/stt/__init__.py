@@ -18,11 +18,7 @@ from aiohttp.web_exceptions import (
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -82,12 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass
     )
 
-    # Cancel the retry setup timer on shutdown (temporary workaround)
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        component._async_shutdown,  # pylint: disable=protected-access
-    )
-
+    component.register_shutdown()
     platform_setups = async_setup_legacy(hass, config)
 
     if platform_setups:
