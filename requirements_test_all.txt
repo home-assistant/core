@@ -1508,7 +1508,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.2
 
 # homeassistant.components.roborock
-python-roborock==0.5.9
+python-roborock==0.6.5
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
