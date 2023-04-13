@@ -87,7 +87,7 @@ class MockTTSProvider(tts.Provider):
     @property
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotions."""
-        return ["voice", "age"]
+        return ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
 
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any] | None = None
@@ -117,7 +117,7 @@ async def mock_stt_provider(hass) -> MockSttProvider:
     return MockSttProvider(hass, _TRANSCRIPT)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 async def init_components(
     hass: HomeAssistant,
     mock_stt_provider: MockSttProvider,

@@ -10,6 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
+    Pipeline,
     PipelineEvent,
     PipelineEventCallback,
     PipelineEventType,
@@ -17,6 +18,7 @@ from .pipeline import (
     PipelineRun,
     PipelineStage,
     async_get_pipeline,
+    async_setup_pipeline_store,
 )
 from .websocket_api import async_register_websocket_api
 
@@ -24,6 +26,7 @@ __all__ = (
     "DOMAIN",
     "async_setup",
     "async_pipeline_from_audio_stream",
+    "Pipeline",
     "PipelineEvent",
     "PipelineEventType",
 )
@@ -31,7 +34,7 @@ __all__ = (
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Voice Assistant integration."""
-    hass.data[DOMAIN] = {}
+    await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)
 
     return True
@@ -46,6 +49,7 @@ async def async_pipeline_from_audio_stream(
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     context: Context | None = None,
+    tts_options: dict | None = None,
 ) -> None:
     """Create an audio pipeline from an audio stream."""
     if language is None:
@@ -61,7 +65,7 @@ async def async_pipeline_from_audio_stream(
     if context is None:
         context = Context()
 
-    pipeline = async_get_pipeline(
+    pipeline = await async_get_pipeline(
         hass,
         pipeline_id=pipeline_id,
         language=language,
@@ -82,6 +86,7 @@ async def async_pipeline_from_audio_stream(
             start_stage=PipelineStage.STT,
             end_stage=PipelineStage.TTS,
             event_callback=event_callback,
+            tts_options=tts_options,
         ),
     )
 

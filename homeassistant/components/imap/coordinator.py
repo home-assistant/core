@@ -194,7 +194,11 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
             if count
             else None
         )
-        if count and last_message_id is not None:
+        if (
+            count
+            and last_message_id is not None
+            and self._last_message_id != last_message_id
+        ):
             self._last_message_id = last_message_id
             await self._async_process_event(last_message_id)
 
@@ -235,18 +239,18 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
             UpdateFailed,
             asyncio.TimeoutError,
         ) as ex:
-            self.async_set_update_error(ex)
             await self._cleanup()
+            self.async_set_update_error(ex)
             raise UpdateFailed() from ex
         except InvalidFolder as ex:
             _LOGGER.warning("Selected mailbox folder is invalid")
-            self.async_set_update_error(ex)
             await self._cleanup()
+            self.async_set_update_error(ex)
             raise ConfigEntryError("Selected mailbox folder is invalid.") from ex
         except InvalidAuth as ex:
             _LOGGER.warning("Username or password incorrect, starting reauthentication")
-            self.async_set_update_error(ex)
             await self._cleanup()
+            self.async_set_update_error(ex)
             raise ConfigEntryAuthFailed() from ex
 
 
@@ -316,6 +320,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                     self.config_entry.data[CONF_SERVER],
                     BACKOFF_TIME,
                 )
+                await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
 
     async def shutdown(self, *_) -> None:
