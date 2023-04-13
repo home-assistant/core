@@ -74,6 +74,21 @@ NUMBER_SETTINGS_DATA = [
         fmt_from="format_round",
         fmt_to="format_round_back",
     ),
+    PlenticoreNumberEntityDescription(
+        key="battery_dcpowerabs",
+        device_class=NumberDeviceClass.POWER,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        name="Battery DC Dis-/Charge",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_max_value=99999,
+        native_min_value=-99999,
+        native_step=1,
+        module_id="devices:local",
+        data_id="Battery:ExternControl:DcPowerAbs",
+        fmt_from="format_round",
+        fmt_to="format_round_back",
+    ),
 ]
 
 
