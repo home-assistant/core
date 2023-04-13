@@ -6,9 +6,8 @@ from pathlib import Path
 import sqlite3
 from unittest.mock import MagicMock, Mock, patch
 
-import py
 import pytest
-from sqlalchemy import text
+from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
@@ -19,7 +18,7 @@ from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.history.modern import (
-    _get_single_entity_states_stmt,
+    _get_single_entity_start_time_stmt,
 )
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
@@ -73,11 +72,11 @@ def test_recorder_bad_execute(hass_recorder: Callable[..., HomeAssistant]) -> No
 
 
 def test_validate_or_move_away_sqlite_database(
-    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure a malformed sqlite database is moved away."""
-
-    test_dir = tmpdir.mkdir("test_validate_or_move_away_sqlite_database")
+    test_dir = tmp_path.joinpath("test_validate_or_move_away_sqlite_database")
+    test_dir.mkdir()
     test_db_file = f"{test_dir}/broken.db"
     dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
 
@@ -909,7 +908,12 @@ def test_execute_stmt_lambda_element(
     with session_scope(hass=hass) as session:
         # No time window, we always get a list
         metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
-        stmt = _get_single_entity_states_stmt(dt_util.utcnow(), metadata_id, False)
+        start_time_ts = dt_util.utcnow().timestamp()
+        stmt = lambda_stmt(
+            lambda: _get_single_entity_start_time_stmt(
+                start_time_ts, metadata_id, False, False
+            )
+        )
         rows = util.execute_stmt_lambda_element(session, stmt)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state

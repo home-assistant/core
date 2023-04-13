@@ -331,6 +331,10 @@ DHCP: list[dict[str, str | bool]] = [
         "hostname": "nuki_bridge_*",
     },
     {
+        "domain": "obihai",
+        "macaddress": "9CADEF*",
+    },
+    {
         "domain": "oncue",
         "hostname": "kohlergen*",
         "macaddress": "00146F*",
