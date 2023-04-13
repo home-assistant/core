@@ -17,6 +17,7 @@ import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
@@ -134,6 +135,9 @@ async def async_get_media_source_audio(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TTS."""
+    websocket_api.async_register_command(hass, websocket_list_engines)
+    websocket_api.async_register_command(hass, websocket_list_engine_voices)
+
     # Legacy config options
     conf = config[DOMAIN][0] if config.get(DOMAIN) else {}
     use_cache: bool = conf.get(CONF_CACHE, DEFAULT_CACHE)
@@ -685,3 +689,60 @@ class TextToSpeechView(HomeAssistantView):
 def get_base_url(hass: HomeAssistant) -> str:
     """Get base URL."""
     return hass.data[BASE_URL_KEY] or get_url(hass)
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "tts/engine/list",
+        vol.Optional("language"): str,
+    }
+)
+@callback
+def websocket_list_engines(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """List text to speech engines and, optionally, if they support a given language."""
+    manager: SpeechManager = hass.data[DOMAIN]
+
+    providers = {
+        "providers": [
+            {
+                # entity_id in preparation for migration of tts engines to entities
+                "entity_id": provider,
+                # placeholder until we have a way to handle languages
+                "language_supported": True,
+            }
+            for provider in manager.providers
+        ]
+    }
+
+    connection.send_message(websocket_api.result_message(msg["id"], providers))
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "tts/engine/voices",
+        vol.Required("entity_id"): str,
+        vol.Required("language"): str,
+    }
+)
+@callback
+def websocket_list_engine_voices(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """List voices for a given language."""
+    voices = {
+        "voices": [
+            # placeholder until TTS refactoring
+            {
+                "voice_id": "voice_1",
+                "name": "James Earl Jones",
+            },
+            {
+                "voice_id": "voice_2",
+                "name": "Fran Drescher",
+            },
+        ]
+    }
+
+    connection.send_message(websocket_api.result_message(msg["id"], voices))
