@@ -420,7 +420,6 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self._data.client.login()
 
             except (
-                aiosomecomfort.AuthError,
                 aiosomecomfort.SomeComfortError,
                 ClientConnectionError,
                 asyncio.TimeoutError,
