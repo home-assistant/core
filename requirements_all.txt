@@ -1290,7 +1290,7 @@ opensensemap-api==0.2.0
 openwebifpy==3.2.7
 
 # homeassistant.components.luci
-openwrt-luci-rpc==1.1.11
+openwrt-luci-rpc==1.1.16
 
 # homeassistant.components.ubus
 openwrt-ubus-rpc==0.0.2
