@@ -1026,12 +1026,34 @@ async def test_ws_list_engines(
     """Test streaming audio and getting response."""
     client = await hass_ws_client()
 
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"providers": [{"engine_id": "test"}]}
+
     await client.send_json_auto_id({"type": "tts/engine/list", "language": "smurfish"})
 
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"entity_id": "test", "language_supported": True}]
+        "providers": [{"engine_id": "test", "language_supported": False}]
+    }
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "en"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "language_supported": True}]
+    }
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "en-UK"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "language_supported": True}]
     }
 
 
@@ -1044,7 +1066,7 @@ async def test_ws_list_voices(
     await client.send_json_auto_id(
         {
             "type": "tts/engine/voices",
-            "entity_id": "smurf",
+            "engine_id": "smurf",
             "language": "smurfish",
         }
     )

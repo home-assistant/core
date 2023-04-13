@@ -25,6 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import language as language_util
 
 from .const import (
     ATTR_CACHE,
@@ -704,25 +705,25 @@ def websocket_list_engines(
     """List text to speech engines and, optionally, if they support a given language."""
     manager: SpeechManager = hass.data[DOMAIN]
 
-    providers = {
-        "providers": [
-            {
-                # entity_id in preparation for migration of tts engines to entities
-                "entity_id": provider,
-                # placeholder until we have a way to handle languages
-                "language_supported": True,
-            }
-            for provider in manager.providers
-        ]
-    }
+    language = msg.get("language")
+    providers = []
+    for engine_id, provider in manager.providers.items():
+        provider_info: dict[str, Any] = {"engine_id": engine_id}
+        if language:
+            provider_info["language_supported"] = bool(
+                language_util.matches(language, provider.supported_languages)  # type: ignore[arg-type]
+            )
+        providers.append(provider_info)
 
-    connection.send_message(websocket_api.result_message(msg["id"], providers))
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"providers": providers})
+    )
 
 
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/voices",
-        vol.Required("entity_id"): str,
+        vol.Required("engine_id"): str,
         vol.Required("language"): str,
     }
 )
