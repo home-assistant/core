@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers import device_registry as dr, entity
 
 from .const import DOMAIN
@@ -12,6 +13,7 @@ class VoIPEntity(entity.Entity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, device: dr.DeviceEntry) -> None:
         """Initialize VoIP entity."""
