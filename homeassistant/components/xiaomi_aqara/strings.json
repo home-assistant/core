@@ -6,7 +6,7 @@
         "description": "If the IP and MAC addresses are left empty, auto-discovery is used",
         "data": {
           "interface": "The network interface to use",
-          "host": "IP Address (optional)",
+          "host": "IP address (optional)",
           "mac": "Mac Address (optional)"
         }
       },
