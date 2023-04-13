@@ -75,12 +75,11 @@ class HistoryPeriodView(HomeAssistantView):
 
         hass = request.app["hass"]
 
-        if entity_ids:
-            for entity_id in entity_ids:
-                if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
-                    return self.json_message(
-                        "Invalid filter_entity_id", HTTPStatus.BAD_REQUEST
-                    )
+        for entity_id in entity_ids:
+            if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
+                return self.json_message(
+                    "Invalid filter_entity_id", HTTPStatus.BAD_REQUEST
+                )
 
         now = dt_util.utcnow()
         if datetime_:
