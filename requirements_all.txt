@@ -193,7 +193,7 @@ aiokafka==0.7.2
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.8.9
+aiolifx==0.8.10
 
 # homeassistant.components.lifx
 aiolifx_effects==0.3.2
@@ -907,7 +907,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230411.0
+home-assistant-frontend==20230411.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.3.29
@@ -2054,7 +2054,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.8.0
+python-homewizard-energy==2.0.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
