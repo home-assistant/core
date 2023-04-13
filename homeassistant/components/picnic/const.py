@@ -71,12 +71,14 @@ class PicnicSensorEntityDescription(SensorEntityDescription, PicnicRequiredKeysM
 SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     PicnicSensorEntityDescription(
         key=SENSOR_CART_ITEMS_COUNT,
+        translation_key=SENSOR_CART_ITEMS_COUNT,
         icon="mdi:format-list-numbered",
         data_type="cart_data",
         value_fn=lambda cart: cart.get("total_count", 0),
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_CART_TOTAL_PRICE,
+        translation_key=SENSOR_CART_TOTAL_PRICE,
         native_unit_of_measurement=CURRENCY_EURO,
         icon="mdi:currency-eur",
         entity_registry_enabled_default=True,
@@ -85,6 +87,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_SELECTED_SLOT_START,
+        translation_key=SENSOR_SELECTED_SLOT_START,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-start",
         entity_registry_enabled_default=True,
@@ -93,6 +96,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_SELECTED_SLOT_END,
+        translation_key=SENSOR_SELECTED_SLOT_END,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-end",
         entity_registry_enabled_default=True,
@@ -101,6 +105,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
+        translation_key=SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-alert-outline",
         entity_registry_enabled_default=True,
@@ -109,6 +114,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
+        translation_key=SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
         native_unit_of_measurement=CURRENCY_EURO,
         icon="mdi:currency-eur",
         entity_registry_enabled_default=True,
@@ -121,6 +127,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_SLOT_START,
+        translation_key=SENSOR_LAST_ORDER_SLOT_START,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-start",
         data_type="last_order_data",
@@ -130,6 +137,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_SLOT_END,
+        translation_key=SENSOR_LAST_ORDER_SLOT_END,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-end",
         data_type="last_order_data",
@@ -139,12 +147,14 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_STATUS,
+        translation_key=SENSOR_LAST_ORDER_STATUS,
         icon="mdi:list-status",
         data_type="last_order_data",
         value_fn=lambda last_order: last_order.get("status"),
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_MAX_ORDER_TIME,
+        translation_key=SENSOR_LAST_ORDER_MAX_ORDER_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-alert-outline",
         entity_registry_enabled_default=True,
@@ -155,6 +165,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_DELIVERY_TIME,
+        translation_key=SENSOR_LAST_ORDER_DELIVERY_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:timeline-clock",
         entity_registry_enabled_default=True,
@@ -165,6 +176,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_TOTAL_PRICE,
+        translation_key=SENSOR_LAST_ORDER_TOTAL_PRICE,
         native_unit_of_measurement=CURRENCY_EURO,
         icon="mdi:cash-marker",
         data_type="last_order_data",
@@ -172,6 +184,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_NEXT_DELIVERY_ETA_START,
+        translation_key=SENSOR_NEXT_DELIVERY_ETA_START,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-start",
         entity_registry_enabled_default=True,
@@ -182,6 +195,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_NEXT_DELIVERY_ETA_END,
+        translation_key=SENSOR_NEXT_DELIVERY_ETA_END,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-end",
         entity_registry_enabled_default=True,
@@ -192,6 +206,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_NEXT_DELIVERY_SLOT_START,
+        translation_key=SENSOR_NEXT_DELIVERY_SLOT_START,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-start",
         data_type="next_delivery_data",
@@ -201,6 +216,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_NEXT_DELIVERY_SLOT_END,
+        translation_key=SENSOR_NEXT_DELIVERY_SLOT_END,
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-end",
         data_type="next_delivery_data",

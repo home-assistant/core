@@ -44,6 +44,7 @@ async def async_setup_entry(
 class PicnicSensor(SensorEntity, CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""
 
+    _attr_has_entity_name = True
     _attr_attribution = ATTRIBUTION
     entity_description: PicnicSensorEntityDescription
 
@@ -60,7 +61,6 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         self.entity_id = f"sensor.picnic_{description.key}"
         self._service_unique_id = config_entry.unique_id
 
-        self._attr_name = self._to_capitalized_name(description.key)
         self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
 
     @property
@@ -88,7 +88,3 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
             model=self._service_unique_id,
             name=f"Picnic: {self.coordinator.data[ADDRESS]}",
         )
-
-    @staticmethod
-    def _to_capitalized_name(name: str) -> str:
-        return name.replace("_", " ").capitalize()
