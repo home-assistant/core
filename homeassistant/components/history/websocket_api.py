@@ -96,7 +96,7 @@ def _ws_get_significant_states(
         vol.Required("type"): "history/history_during_period",
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
-        vol.Optional("entity_ids"): [str],
+        vol.Required("entity_ids"): [str],
         vol.Optional("include_start_time_state", default=True): bool,
         vol.Optional("significant_changes_only", default=True): bool,
         vol.Optional("minimal_response", default=False): bool,
@@ -130,14 +130,11 @@ async def ws_get_history_during_period(
         connection.send_result(msg["id"], {})
         return
 
-    entity_ids = msg.get("entity_ids")
-    if entity_ids is not None:
-        for entity_id in entity_ids:
-            if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
-                connection.send_error(
-                    msg["id"], "invalid_entity_ids", "Invalid entity_ids"
-                )
-                return
+    entity_ids: list[str] = msg["entity_ids"]
+    for entity_id in entity_ids:
+        if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
+            connection.send_error(msg["id"], "invalid_entity_ids", "Invalid entity_ids")
+            return
 
     include_start_time_state = msg["include_start_time_state"]
     no_attributes = msg["no_attributes"]
