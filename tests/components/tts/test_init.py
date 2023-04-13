@@ -765,6 +765,7 @@ async def test_setup_component_test_with_cache_dir(
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
         == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
     )
+    await hass.async_block_till_done()
 
 
 async def test_setup_component_test_with_error_on_get_tts(hass: HomeAssistant) -> None:
