@@ -1820,31 +1820,29 @@ def _statistics_at_time(
 
 def _fast_build_sum_list(
     stats_list: list[Row],
-    target: list[StatisticsRow],
     table_duration_seconds: float,
     convert: Callable | None,
     start_ts_idx: int,
     sum_idx: int,
-) -> None:
+) -> list[StatisticsRow]:
     """Build a list of sum statistics."""
     if convert:
-        target.extend(
+        return [
             {
                 "start": (start_ts := db_state[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
                 "sum": convert(db_state[sum_idx]),
             }
             for db_state in stats_list
-        )
-        return
-    target.extend(
+        ]
+    return [
         {
             "start": (start_ts := db_state[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
             "sum": db_state[sum_idx],
         }
         for db_state in stats_list
-    )
+    ]
 
 
 def _sorted_statistics_to_dict(  # noqa: C901
@@ -1906,6 +1904,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
     last_reset_ts_idx = field_map["last_reset_ts"] if "last_reset" in types else None
     state_idx = field_map["state"] if "state" in types else None
     sum_idx = field_map["sum"] if "sum" in types else None
+    only_one_type = len(types) == 1
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
@@ -1919,14 +1918,12 @@ def _sorted_statistics_to_dict(  # noqa: C901
         else:
             convert = None
 
-        target = result[statistic_id]
-        if len(types) == 1 and sum_idx is not None:
+        if only_one_type and sum_idx is not None:
             # This is a special case where we only need to sum the values
             # and we can do it much faster than the generic code below
             # This is mostly used by the energy integration
-            _fast_build_sum_list(
+            result[statistic_id] = _fast_build_sum_list(
                 stats_list,
-                target,
                 table_duration_seconds,
                 convert,
                 start_ts_idx,
@@ -1934,7 +1931,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
             )
             continue
 
-        ent_results_append = target.append
+        ent_results_append = result[statistic_id].append
         #
         # The below loop is a red hot path for energy, and every
         # optimization counts in here.
