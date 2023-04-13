@@ -10,12 +10,12 @@ from typing import cast
 from aioesphomeapi import VoiceAssistantEventType
 
 from homeassistant.components import stt
-from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.components.voice_assistant import (
+from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
     async_pipeline_from_audio_stream,
 )
+from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import HomeAssistant, callback
 
 from .enum_mapper import EsphomeEnumMapper
