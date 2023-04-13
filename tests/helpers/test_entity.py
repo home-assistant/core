@@ -986,3 +986,20 @@ async def test_repr_using_stringify_state() -> None:
 
     entity = MyEntity(entity_id="test.test", available=False)
     assert str(entity) == "<entity test.test=unavailable>"
+
+
+async def test_warn_using_async_update_ha_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we warn once when using async_update_ha_state without force_update."""
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "hello.world"
+
+    caplog.clear()
+    await ent.async_update_ha_state()
+    assert "is using self.async_update_ha_state()" in caplog.text
+
+    caplog.clear()
+    await ent.async_update_ha_state()
+    assert "is using self.async_update_ha_state()" not in caplog.text
