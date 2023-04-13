@@ -149,6 +149,7 @@ class OralBBluetoothSensorEntity(
 
     async def async_added_to_hass(self) -> None:
         """Add subscription when added to hass."""
+        await super().async_added_to_hass()
         if self.entity_description.requires_active_connection:
             self.async_on_remove(
                 self.processor.coordinator.register_active(self.entity_key)
