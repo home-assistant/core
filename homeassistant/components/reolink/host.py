@@ -410,5 +410,7 @@ class ReolinkHost:
             for channel in channels:
                 async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
         except Exception as err:  # pylint: disable=broad-except
-            # In case the parent function "handle_webhook" was cancelled or finishes before the exception occurred
+            # Make sure unexpected error in "_handle_webhook" are logged,
+            # in case the parent function "handle_webhook" was cancelled
+            # or finishes before the exception occurred
             _LOGGER.exception(err)
