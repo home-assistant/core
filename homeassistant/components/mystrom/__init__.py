@@ -57,14 +57,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 host,
                 mac,
             )
-            device = None
+            return False
+    else:
+        _LOGGER.error("Unsupported myStrom device type: %s", device_type)
+        return False
 
-    if device:
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-            "device": device,
-            "info": info,
-        }
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "device": device,
+        "info": info,
+    }
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
