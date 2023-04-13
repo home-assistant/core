@@ -89,6 +89,11 @@ async def async_attach_trigger(
     issue_id: str | None = None
     if local_only is None:
         issue_id = f"trigger_missing_local_only_{webhook_id}"
+        variables = trigger_info["variables"] or {}
+        automation_info = variables.get("this", {})
+        automation_id = automation_info.get("attributes", {}).get("id")
+        automation_entity_id = automation_info.get("entity_id")
+        automation_name = trigger_info.get("name") or automation_entity_id
         async_create_issue(
             hass,
             DOMAIN,
@@ -96,10 +101,13 @@ async def async_attach_trigger(
             breaks_in_ha_version="2023.7.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
+            learn_more_url="https://www.home-assistant.io/docs/automation/trigger/#webhook-trigger",
             translation_key="trigger_missing_local_only",
             translation_placeholders={
                 "webhook_id": webhook_id,
-                "automation_name": trigger_info.get("name", "[unknown]"),
+                "automation_name": automation_name,
+                "entity_id": automation_entity_id,
+                "edit": f"/config/automation/edit/{automation_id}",
             },
         )
     allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)
