@@ -1264,7 +1264,7 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE events SET "
                         "time_fired_ts= "
-                        "(case when time_fired is NULL then 0 else EXTRACT(EPOCH FROM time_fired) end) "
+                        "(case when time_fired is NULL then 0 else EXTRACT(EPOCH FROM time_fired::timestamptz) end) "
                         "WHERE event_id IN ( "
                         "SELECT event_id FROM events where time_fired_ts is NULL LIMIT 250000 "
                         " );"
@@ -1276,8 +1276,8 @@ def _migrate_columns_to_timestamp(
                 result = session.connection().execute(
                     text(
                         "UPDATE states set last_updated_ts="
-                        "(case when last_updated is NULL then 0 else EXTRACT(EPOCH FROM last_updated) end), "
-                        "last_changed_ts=EXTRACT(EPOCH FROM last_changed) "
+                        "(case when last_updated is NULL then 0 else EXTRACT(EPOCH FROM last_updated::timestamptz) end), "
+                        "last_changed_ts=EXTRACT(EPOCH FROM last_changed::timestamptz) "
                         "where state_id IN ( "
                         "SELECT state_id FROM states where last_updated_ts is NULL LIMIT 250000 "
                         " );"
@@ -1344,12 +1344,12 @@ def _migrate_statistics_columns_to_timestamp(
                     result = session.connection().execute(
                         text(
                             f"UPDATE {table} set start_ts="  # nosec
-                            "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start) end), "
-                            "created_ts=EXTRACT(EPOCH FROM created), "
-                            "last_reset_ts=EXTRACT(EPOCH FROM last_reset) "
-                            "where id IN ( "
-                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000 "
-                            " );"
+                            "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start::timestamptz) end), "
+                            "created_ts=EXTRACT(EPOCH FROM created::timestamptz), "
+                            "last_reset_ts=EXTRACT(EPOCH FROM last_reset::timestamptz) "
+                            "where id IN ("
+                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000"
+                            ");"
                         )
                     )
 

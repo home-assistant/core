@@ -22,19 +22,19 @@ cryptography==40.0.1
 dbus-fast==1.84.2
 fnv-hash-fast==0.3.1
 ha-av==10.0.0
-hass-nabucasa==0.63.1
+hass-nabucasa==0.64.1
 hassil==1.0.6
 home-assistant-bluetooth==1.9.3
-home-assistant-frontend==20230406.1
+home-assistant-frontend==20230411.1
 home-assistant-intents==2023.3.29
-httpx==0.23.3
+httpx==0.24.0
 ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
-orjson==3.8.9
+orjson==3.8.10
 paho-mqtt==1.6.1
-pillow==9.4.0
+pillow==9.5.0
 pip>=21.0,<23.1
 psutil-home-assistant==0.0.1
 pyOpenSSL==23.1.0
@@ -44,9 +44,9 @@ pyudev==0.23.2
 pyyaml==6.0
 requests==2.28.2
 scapy==2.5.0
-sqlalchemy==2.0.8
+sqlalchemy==2.0.9
 typing-extensions>=4.5.0,<5.0
-ulid-transform==0.6.0
+ulid-transform==0.6.3
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 yarl==1.8.1
@@ -100,7 +100,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.6.2
 h11==0.14.0
-httpcore==0.16.3
+httpcore==0.17.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
