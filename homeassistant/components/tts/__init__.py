@@ -1,6 +1,7 @@
 """Provide functionality for TTS."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Mapping
 import functools as ft
@@ -728,7 +729,7 @@ class SpeechManager:
         return data_bytes.getvalue()
 
 
-class Provider:
+class Provider(ABC):
     """Represent a single TTS provider."""
 
     hass: HomeAssistant | None = None
@@ -740,9 +741,9 @@ class Provider:
         return None
 
     @property
-    def supported_languages(self) -> list[str] | None:
+    @abstractmethod
+    def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return None
 
     @property
     def supported_options(self) -> list[str] | None:
