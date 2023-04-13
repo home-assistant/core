@@ -1,6 +1,6 @@
 """Helper to create SSL contexts."""
 import contextlib
-from functools import lru_cache
+from functools import cache
 from os import environ
 import ssl
 
@@ -12,13 +12,13 @@ from homeassistant.backports.enum import StrEnum
 class SslCipherList(StrEnum):
     """SSL cipher lists."""
 
-    DEFAULT = "default"
+    PYTHON_DEFAULT = "python_default"
     INTERMEDIATE = "intermediate"
     MODERN = "modern"
 
 
 SSL_CIPHER_LISTS = {
-    "intermediate": (
+    SslCipherList.INTERMEDIATE: (
         "ECDHE-ECDSA-CHACHA20-POLY1305:"
         "ECDHE-RSA-CHACHA20-POLY1305:"
         "ECDHE-ECDSA-AES128-GCM-SHA256:"
@@ -51,7 +51,7 @@ SSL_CIPHER_LISTS = {
         "DES-CBC3-SHA:"
         "!DSS"
     ),
-    "modern": (
+    SslCipherList.MODERN: (
         "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:"
         "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:"
         "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:"
@@ -61,9 +61,9 @@ SSL_CIPHER_LISTS = {
 }
 
 
-@lru_cache
+@cache
 def create_no_verify_ssl_context(
-    ssl_cipher_list: SslCipherList = SslCipherList.DEFAULT,
+    ssl_cipher_list: SslCipherList = SslCipherList.PYTHON_DEFAULT,
 ) -> ssl.SSLContext:
     """Return an SSL context that does not verify the server certificate.
 
@@ -81,15 +81,15 @@ def create_no_verify_ssl_context(
         # This only works for OpenSSL >= 1.0.0
         sslcontext.options |= ssl.OP_NO_COMPRESSION
     sslcontext.set_default_verify_paths()
-    if ssl_cipher_list != SslCipherList.DEFAULT:
+    if ssl_cipher_list != SslCipherList.PYTHON_DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
 
     return sslcontext
 
 
-@lru_cache
+@cache
 def client_context(
-    ssl_cipher_list: SslCipherList = SslCipherList.DEFAULT,
+    ssl_cipher_list: SslCipherList = SslCipherList.PYTHON_DEFAULT,
 ) -> ssl.SSLContext:
     """Return an SSL context for making requests."""
 
@@ -101,24 +101,20 @@ def client_context(
     sslcontext = ssl.create_default_context(
         purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
     )
-    if ssl_cipher_list != SslCipherList.DEFAULT:
+    if ssl_cipher_list != SslCipherList.PYTHON_DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
 
     return sslcontext
 
 
-def get_default_context(
-    ssl_cipher_list: SslCipherList = SslCipherList.DEFAULT,
-) -> ssl.SSLContext:
+def get_default_context() -> ssl.SSLContext:
     """Return the default SSL context."""
-    return client_context(ssl_cipher_list)
+    return client_context(SslCipherList.PYTHON_DEFAULT)
 
 
-def get_default_no_verify_context(
-    ssl_cipher_list: SslCipherList = SslCipherList.DEFAULT,
-) -> ssl.SSLContext:
+def get_default_no_verify_context() -> ssl.SSLContext:
     """Return the default SSL context that does not verify the server certificate."""
-    return create_no_verify_ssl_context(ssl_cipher_list)
+    return create_no_verify_ssl_context(SslCipherList.PYTHON_DEFAULT)
 
 
 def server_context_modern() -> ssl.SSLContext:

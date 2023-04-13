@@ -1,10 +1,12 @@
 """The rest component constants."""
 
+from homeassistant.util.ssl import SslCipherList
+
 DOMAIN = "rest"
 
 DEFAULT_METHOD = "GET"
 DEFAULT_VERIFY_SSL = True
-DEFAULT_SSL_CIPHER_LIST = "default"
+DEFAULT_SSL_CIPHER_LIST = SslCipherList.PYTHON_DEFAULT
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_ENCODING = "UTF-8"
 CONF_ENCODING = "encoding"
