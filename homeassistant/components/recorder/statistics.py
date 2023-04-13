@@ -1932,6 +1932,9 @@ def _sorted_statistics_to_dict(  # noqa: C901
 
         target = result[statistic_id]
         if len(types) == 1 and sum_idx is not None:
+            # This is a special case where we only need to sum the values
+            # and we can do it much faster than the generic code below
+            # This is mostly used by the energy integration
             _fast_build_sum_list(
                 stats_list,
                 target,
