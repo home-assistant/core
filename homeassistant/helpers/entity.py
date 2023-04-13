@@ -249,6 +249,10 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
+    # If we reported this entity is using async_update_ha_state, while
+    # it should be using async_write_ha_state.
+    _async_update_ha_state_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -551,6 +555,19 @@ class Entity(ABC):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
+        elif not self._async_update_ha_state_reported:
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                (
+                    "Entity %s (%s) is using self.async_update_ha_state(), without"
+                    " enabling force_update. Instead it should use"
+                    " self.async_write_ha_state(), please %s"
+                ),
+                self.entity_id,
+                type(self),
+                report_issue,
+            )
+            self._async_update_ha_state_reported = True
 
         self._async_write_ha_state()
 
