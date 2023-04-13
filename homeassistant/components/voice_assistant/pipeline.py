@@ -401,6 +401,7 @@ class PipelineRun:
             tts_media = await media_source.async_resolve_media(
                 self.hass,
                 tts_media_id,
+                None,
             )
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during text to speech")
