@@ -395,17 +395,16 @@ def websocket_list_engines(
     """List speech to text engines and, optionally, if they support a given language."""
     legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
 
-    language = msg["language"]
-    providers = {
-        "providers": [
-            {
-                "engine_id": engine_id,
-                "language_supported": bool(
-                    language_util.matches(language, provider.supported_languages)
-                ),
-            }
-            for engine_id, provider in legacy_providers.items()
-        ]
-    }
+    language = msg.get("language")
+    providers = []
+    for engine_id, provider in legacy_providers.items():
+        provider_info: dict[str, Any] = {"engine_id": engine_id}
+        if language:
+            provider_info["language_supported"] = bool(
+                language_util.matches(language, provider.supported_languages)
+            )
+        providers.append(provider_info)
 
-    connection.send_message(websocket_api.result_message(msg["id"], providers))
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"providers": providers})
+    )

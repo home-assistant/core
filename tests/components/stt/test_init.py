@@ -384,6 +384,12 @@ async def test_ws_list_engines(
     await mock_setup(hass, tmp_path, MockProvider())
     client = await hass_ws_client()
 
+    await client.send_json_auto_id({"type": "stt/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"providers": [{"engine_id": "test"}]}
+
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "smurfish"})
 
     msg = await client.receive_json()
