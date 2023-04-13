@@ -60,7 +60,6 @@ class ReolinkHost:
         self._webhook_url: str = ""
         self._webhook_reachable: asyncio.Event = asyncio.Event()
         self._webhook_read_done: asyncio.Event = asyncio.Event()
-        self._webhook_tasks: set[asyncio.Task] = set()
         self._lost_subscription: bool = False
 
     @property
@@ -366,13 +365,10 @@ class ReolinkHost:
     ):
         """Shield the incoming webhook callback from cancellation."""
         self._webhook_read_done.clear()
-        shielded_task = asyncio.create_task(
+        shielded_task = hass.async_create_task(
             self._handle_webhook(hass, webhook_id, request)
         )
         asyncio.shield(shielded_task)
-        # To protect against garbage collection
-        self._webhook_tasks.add(shielded_task)
-        shielded_task.add_done_callback(self._webhook_tasks.discard)
         _LOGGER.debug("Webhook '%s' called", webhook_id)
         await self._webhook_read_done.wait()
 
