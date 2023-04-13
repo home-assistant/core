@@ -24,7 +24,7 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.history import legacy
 from homeassistant.components.recorder.models import LazyState, process_timestamp
-from homeassistant.components.recorder.models.legacy import LazyStatePreSchema31
+from homeassistant.components.recorder.models.legacy import LegacyLazyStatePreSchema31
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
@@ -41,7 +41,6 @@ from .common import (
     wait_recording_done,
 )
 
-from tests.common import mock_state_change_event
 from tests.typing import RecorderInstanceGenerator
 
 
@@ -55,14 +54,20 @@ async def _async_get_states(
     """Get states from the database."""
 
     def _get_states_with_session():
-        if get_instance(hass).schema_version < 31:
-            klass = LazyStatePreSchema31
-        else:
-            klass = LazyState
         with session_scope(hass=hass, read_only=True) as session:
             attr_cache = {}
+            pre_31_schema = get_instance(hass).schema_version < 31
             return [
-                klass(row, attr_cache, None)
+                LegacyLazyStatePreSchema31(row, attr_cache, None)
+                if pre_31_schema
+                else LazyState(
+                    row,
+                    attr_cache,
+                    None,
+                    row.entity_id,
+                    row.state,
+                    getattr(row, "last_updated_ts", None),
+                )
                 for row in legacy._get_rows_with_session(
                     hass,
                     session,
@@ -110,44 +115,6 @@ def _add_db_entries(
                     attributes_id=1002 + idx,
                 )
             )
-
-
-def _setup_get_states(hass):
-    """Set up for testing get_states."""
-    states = []
-    now = dt_util.utcnow()
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
-    ):
-        for i in range(5):
-            state = ha.State(
-                f"test.point_in_time_{i % 5}",
-                f"State {i}",
-                {"attribute_test": i},
-            )
-
-            mock_state_change_event(hass, state)
-
-            states.append(state)
-
-        wait_recording_done(hass)
-
-    future = now + timedelta(seconds=1)
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=future
-    ):
-        for i in range(5):
-            state = ha.State(
-                f"test.point_in_time_{i % 5}",
-                f"State {i}",
-                {"attribute_test": i},
-            )
-
-            mock_state_change_event(hass, state)
-
-        wait_recording_done(hass)
-
-    return now, future, states
 
 
 def test_get_full_significant_states_with_session_entity_no_matches(
@@ -297,12 +264,12 @@ def test_state_changes_during_period_descending(
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
-    start = dt_util.utcnow()
+    start = dt_util.utcnow().replace(microsecond=0)
     point = start + timedelta(seconds=1)
-    point2 = start + timedelta(seconds=1, microseconds=2)
-    point3 = start + timedelta(seconds=1, microseconds=3)
-    point4 = start + timedelta(seconds=1, microseconds=4)
-    end = point + timedelta(seconds=1)
+    point2 = start + timedelta(seconds=1, microseconds=100)
+    point3 = start + timedelta(seconds=1, microseconds=200)
+    point4 = start + timedelta(seconds=1, microseconds=300)
+    end = point + timedelta(seconds=1, microseconds=400)
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
@@ -336,6 +303,7 @@ def test_state_changes_during_period_descending(
     hist = history.state_changes_during_period(
         hass, start, end, entity_id, no_attributes=False, descending=False
     )
+
     assert_multiple_states_equal_without_context(states, hist[entity_id])
 
     hist = history.state_changes_during_period(
@@ -343,6 +311,57 @@ def test_state_changes_during_period_descending(
     )
     assert_multiple_states_equal_without_context(
         states, list(reversed(list(hist[entity_id])))
+    )
+
+    start_time = point2 + timedelta(microseconds=10)
+    hist = history.state_changes_during_period(
+        hass,
+        start_time,  # Pick a point where we will generate a start time state
+        end,
+        entity_id,
+        no_attributes=False,
+        descending=True,
+        include_start_time_state=True,
+    )
+    hist_states = list(hist[entity_id])
+    assert hist_states[-1].last_updated == start_time
+    assert hist_states[-1].last_changed == start_time
+    assert len(hist_states) == 3
+    # Make sure they are in descending order
+    assert (
+        hist_states[0].last_updated
+        > hist_states[1].last_updated
+        > hist_states[2].last_updated
+    )
+    assert (
+        hist_states[0].last_changed
+        > hist_states[1].last_changed
+        > hist_states[2].last_changed
+    )
+
+    hist = history.state_changes_during_period(
+        hass,
+        start_time,  # Pick a point where we will generate a start time state
+        end,
+        entity_id,
+        no_attributes=False,
+        descending=False,
+        include_start_time_state=True,
+    )
+    hist_states = list(hist[entity_id])
+    assert hist_states[0].last_updated == start_time
+    assert hist_states[0].last_changed == start_time
+    assert len(hist_states) == 3
+    # Make sure they are in ascending order
+    assert (
+        hist_states[0].last_updated
+        < hist_states[1].last_updated
+        < hist_states[2].last_updated
+    )
+    assert (
+        hist_states[0].last_changed
+        < hist_states[1].last_changed
+        < hist_states[2].last_changed
     )
 
 
@@ -548,13 +567,16 @@ def test_get_significant_states_with_initial(
     hass = hass_recorder()
     hass.config.set_time_zone(time_zone)
     zero, four, states = record_states(hass)
-    one = zero + timedelta(seconds=1)
     one_and_half = zero + timedelta(seconds=1.5)
     for entity_id in states:
         if entity_id == "media_player.test":
             states[entity_id] = states[entity_id][1:]
         for state in states[entity_id]:
-            if state.last_changed == one:
+            # If the state is recorded before the start time
+            # start it will have its last_updated and last_changed
+            # set to the start time.
+            if state.last_updated < one_and_half:
+                state.last_updated = one_and_half
                 state.last_changed = one_and_half
 
     hist = history.get_significant_states(

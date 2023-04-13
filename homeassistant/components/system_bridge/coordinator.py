@@ -82,6 +82,7 @@ class SystemBridgeDataUpdateCoordinator(
             hass, LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
         )
 
+    @property
     def is_ready(self) -> bool:
         """Return if the data is ready."""
         if self.data is None:
@@ -157,7 +158,7 @@ class SystemBridgeDataUpdateCoordinator(
             self.last_update_success = False
             self.async_update_listeners()
         except (ConnectionClosedException, ConnectionResetError) as exception:
-            self.logger.info(
+            self.logger.debug(
                 "Websocket connection closed for %s. Will retry: %s",
                 self.title,
                 exception,
@@ -168,7 +169,7 @@ class SystemBridgeDataUpdateCoordinator(
             self.last_update_success = False
             self.async_update_listeners()
         except ConnectionErrorException as exception:
-            self.logger.warning(
+            self.logger.debug(
                 "Connection error occurred for %s. Will retry: %s",
                 self.title,
                 exception,
