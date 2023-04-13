@@ -409,6 +409,26 @@ class Entity(ABC):
         )
 
     @property
+    def suggested_object_id_input(self) -> str | None:
+        """Return input for object id."""
+        if hasattr(self, "_attr_name"):
+            return self._attr_name
+        if self.translation_key is not None and self.has_entity_name:
+            assert self.platform
+            name_translation_key = (
+                f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
+                f".{self.translation_key}.name"
+            )
+            if name_translation_key in self.platform.object_id_platform_translations:
+                name: str = self.platform.object_id_platform_translations[
+                    name_translation_key
+                ]
+                return name
+        if hasattr(self, "entity_description"):
+            return self.entity_description.name
+        return None
+
+    @property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
