@@ -1904,7 +1904,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
     last_reset_ts_idx = field_map["last_reset_ts"] if "last_reset" in types else None
     state_idx = field_map["state"] if "state" in types else None
     sum_idx = field_map["sum"] if "sum" in types else None
-    only_one_type = len(types) == 1
+    sum_only = len(types) == 1 and sum_idx is not None
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, stats_list in stats_by_meta_id.items():
@@ -1918,10 +1918,11 @@ def _sorted_statistics_to_dict(  # noqa: C901
         else:
             convert = None
 
-        if only_one_type and sum_idx is not None:
+        if sum_only:
             # This is a special case where we only need to sum the values
             # and we can do it much faster than the generic code below
             # This is mostly used by the energy integration
+            assert sum_idx is not None
             result[statistic_id] = _fast_build_sum_list(
                 stats_list,
                 table_duration_seconds,
