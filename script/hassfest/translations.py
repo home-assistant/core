@@ -120,7 +120,8 @@ def translation_value_validator(value: Any) -> str:
     """Validate that the value is a valid translation.
 
     - prevents string with HTML
-    - prevents combined translations"""
+    - prevents combined translations
+    """
     value = cv.string_with_no_html(value)
     regex = re.compile(r"(.+\[%)|(%\].+)")
     if regex.search(value):
