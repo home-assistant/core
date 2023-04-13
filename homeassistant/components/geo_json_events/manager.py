@@ -36,7 +36,7 @@ class GeoJsonFeedEntityManager:
     ) -> None:
         """Initialize the GeoJSON Feed Manager."""
         self._hass: HomeAssistant = hass
-        self._config_entry: ConfigEntry = config_entry
+        self.entry_id: str = config_entry.entry_id
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager: GenericFeedManager = GenericFeedManager(
             websession,
@@ -98,7 +98,6 @@ class GeoJsonFeedEntityManager:
             self._hass,
             self.signal_new_entity,
             self,
-            self._config_entry.unique_id,
             external_id,
         )
 

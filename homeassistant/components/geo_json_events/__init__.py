@@ -24,19 +24,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     manager = GeoJsonFeedEntityManager(hass, config_entry)
     feeds[config_entry.entry_id] = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
-    # Remove orphaned geo_location entities.
+    await remove_orphaned_entities(hass, config_entry.entry_id)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await manager.async_init()
+    return True
+
+
+async def remove_orphaned_entities(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove orphaned geo_location entities."""
     entity_registry = async_get(hass)
-    orphaned_entries = async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
+    orphaned_entries = async_entries_for_config_entry(entity_registry, entry_id)
     if orphaned_entries is not None:
         for entry in orphaned_entries:
             if entry.domain == Platform.GEO_LOCATION:
                 _LOGGER.debug("Removing orphaned entry %s", entry.entity_id)
                 entity_registry.async_remove(entry.entity_id)
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    await manager.async_init()
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

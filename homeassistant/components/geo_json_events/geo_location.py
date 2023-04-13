@@ -56,11 +56,10 @@ async def async_setup_entry(
     @callback
     def async_add_geolocation(
         feed_manager: GeoJsonFeedEntityManager,
-        integration_id: str,
         external_id: str,
     ) -> None:
         """Add geolocation entity from feed."""
-        new_entity = GeoJsonLocationEvent(feed_manager, integration_id, external_id)
+        new_entity = GeoJsonLocationEvent(feed_manager, external_id)
         _LOGGER.debug("Adding geolocation %s", new_entity)
         async_add_entities([new_entity], True)
 
@@ -106,13 +105,12 @@ class GeoJsonLocationEvent(GeolocationEvent):
     def __init__(
         self,
         feed_manager: GeoJsonFeedEntityManager,
-        integration_id: str,
         external_id: str,
     ) -> None:
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
         self._external_id = external_id
-        self._attr_unique_id = f"{integration_id}_{external_id}"
+        self._attr_unique_id = f"{feed_manager.entry_id}_{external_id}"
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
