@@ -98,7 +98,9 @@ class OralbActiveBluetoothProcessorCoordinator(ActiveBluetoothProcessorCoordinat
         return self._active_subscriptions is None or bool(self._active_subscriptions)
 
 
-class OralbPassiveBluetoothDataProcessor(PassiveBluetoothDataProcessor):
+class OralbPassiveBluetoothDataProcessor(
+    PassiveBluetoothDataProcessor[str | int | None]
+):
     """PassiveBluetoothDataProcessor for Oralb integration."""
 
     coordinator: OralbActiveBluetoothProcessorCoordinator
