@@ -1,4 +1,5 @@
 """Test deCONZ component setup process."""
+import asyncio
 from unittest.mock import patch
 
 from homeassistant.components.deconz import (
@@ -96,6 +97,10 @@ async def test_setup_entry_multiple_gateways(
     assert len(hass.data[DECONZ_DOMAIN]) == 2
     assert hass.data[DECONZ_DOMAIN][config_entry.entry_id].master
     assert not hass.data[DECONZ_DOMAIN][config_entry2.entry_id].master
+
+    await asyncio.gather(
+        config_entry.async_unload(hass), config_entry2.async_unload(hass)
+    )
 
 
 async def test_unload_entry(
