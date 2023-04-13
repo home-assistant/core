@@ -28,8 +28,6 @@ async def test_device_registry_info(
     # Test we update the device if the fw updates
     call_info.headers["user-agent"] = "Grandstream HT801 2.0.0.0"
 
-    # call_info.headers["user-agent"] = "Unknown"
-
     assert not voip_devices.async_allow_call(call_info)
 
     device = device_registry.async_get_device({(DOMAIN, call_info.caller_ip)})
