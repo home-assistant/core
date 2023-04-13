@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 
 from homewizard_energy import HomeWizardEnergy
-from homewizard_energy.const import SUPPORTS_STATE
+from homewizard_energy.const import SUPPORTS_STATE, SUPPORTS_SYSTEM
 from homewizard_energy.errors import DisabledError, RequestError
 
 from homeassistant.config_entries import ConfigEntry
@@ -45,7 +45,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             if data.device.product_type in SUPPORTS_STATE:
                 data.state = await self.api.state()
 
-            if data.device.product_type in SUPPORTS_STATE:
+            if data.device.product_type in SUPPORTS_SYSTEM:
                 data.system = await self.api.system()
 
         except RequestError as ex:
