@@ -484,14 +484,24 @@ def hass_fixture_setup() -> list[bool]:
 
 
 @pytest.fixture
-def hass(
+def hass(_hass: HomeAssistant) -> HomeAssistant:
+    """Fixture to provide a test instance of Home Assistant."""
+    # This wraps the async _hass fixture inside a sync fixture, to ensure
+    # the `hass` context variable is set in the execution context in which
+    # the test itself is executed
+    ha._cv_hass.set(_hass)
+    return _hass
+
+
+@pytest.fixture
+async def _hass(
     hass_fixture_setup: list[bool],
     event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
-) -> Generator[HomeAssistant, None, None]:
-    """Fixture to provide a test instance of Home Assistant."""
+) -> AsyncGenerator[HomeAssistant, None]:
+    """Create a test instance of Home Assistant."""
 
     loop = event_loop
     hass_fixture_setup.append(True)
@@ -515,15 +525,14 @@ def hass(
         orig_exception_handler(loop, context)
 
     exceptions: list[Exception] = []
-    hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
-    ha._cv_hass.set(hass)
+    hass = await async_test_home_assistant(loop, load_registries)
 
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
     yield hass
 
-    loop.run_until_complete(hass.async_stop(force=True))
+    await hass.async_stop(force=True)
 
     # Restore timezone, it is set when creating the hass object
     dt_util.DEFAULT_TIME_ZONE = orig_tz
@@ -635,29 +644,25 @@ def hass_owner_user(
 
 
 @pytest.fixture
-def hass_admin_user(
+async def hass_admin_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
     """Return a Home Assistant admin user."""
-    admin_group = hass.loop.run_until_complete(
-        hass.auth.async_get_group(GROUP_ID_ADMIN)
-    )
+    admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
     return MockUser(groups=[admin_group]).add_to_hass(hass)
 
 
 @pytest.fixture
-def hass_read_only_user(
+async def hass_read_only_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
     """Return a Home Assistant read only user."""
-    read_only_group = hass.loop.run_until_complete(
-        hass.auth.async_get_group(GROUP_ID_READ_ONLY)
-    )
+    read_only_group = await hass.auth.async_get_group(GROUP_ID_READ_ONLY)
     return MockUser(groups=[read_only_group]).add_to_hass(hass)
 
 
 @pytest.fixture
-def hass_read_only_access_token(
+async def hass_read_only_access_token(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
     local_auth: homeassistant.HassAuthProvider,
@@ -672,37 +677,31 @@ def hass_read_only_access_token(
     )
     hass_read_only_user.credentials.append(credential)
 
-    refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(
-            hass_read_only_user, CLIENT_ID, credential=credential
-        )
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_read_only_user, CLIENT_ID, credential=credential
     )
     return hass.auth.async_create_access_token(refresh_token)
 
 
 @pytest.fixture
-def hass_supervisor_user(
+async def hass_supervisor_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
     """Return the Home Assistant Supervisor user."""
-    admin_group = hass.loop.run_until_complete(
-        hass.auth.async_get_group(GROUP_ID_ADMIN)
-    )
+    admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
     return MockUser(
         name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
     ).add_to_hass(hass)
 
 
 @pytest.fixture
-def hass_supervisor_access_token(
+async def hass_supervisor_access_token(
     hass: HomeAssistant,
     hass_supervisor_user,
     local_auth: homeassistant.HassAuthProvider,
 ) -> str:
     """Return a Home Assistant Supervisor access token."""
-    refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(hass_supervisor_user)
-    )
+    refresh_token = await hass.auth.async_create_refresh_token(hass_supervisor_user)
     return hass.auth.async_create_access_token(refresh_token)
 
 
@@ -721,12 +720,12 @@ def legacy_auth(
 
 
 @pytest.fixture
-def local_auth(hass: HomeAssistant) -> homeassistant.HassAuthProvider:
+async def local_auth(hass: HomeAssistant) -> homeassistant.HassAuthProvider:
     """Load local auth provider."""
     prv = homeassistant.HassAuthProvider(
         hass, hass.auth._store, {"type": "homeassistant"}
     )
-    hass.loop.run_until_complete(prv.async_initialize())
+    await prv.async_initialize()
     hass.auth._providers[(prv.type, prv.id)] = prv
     return prv
 
