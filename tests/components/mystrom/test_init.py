@@ -66,9 +66,36 @@ async def test_init_bulb(hass: HomeAssistant) -> None:
 
 async def test_init_of_unknown_bulb(hass: HomeAssistant) -> None:
     """Test the initialization of a unknown myStrom bulb."""
-    await init_integration(hass, Platform.LIGHT, 102, "new_type")
-    state = hass.states.get("light.test")
-    assert state is None
+    # await init_integration(hass, Platform.LIGHT, 102, "new_type")
+    with patch("homeassistant.components.mystrom.PLATFORMS", [Platform.LIGHT]), patch(
+        "homeassistant.components.mystrom.get_device_info",
+        return_value={"type": 102, "mac": DEVICE_MAC},
+    ), patch("pymystrom.switch.MyStromSwitch.get_state", return_value={}), patch(
+        "pymystrom.bulb.MyStromBulb.get_state", return_value={}
+    ), patch(
+        "pymystrom.bulb.MyStromBulb.bulb_type", "new_type"
+    ), patch(
+        "pymystrom.switch.MyStromSwitch.mac",
+        new_callable=PropertyMock,
+        return_value=DEVICE_MAC,
+    ), patch(
+        "pymystrom.bulb.MyStromBulb.mac",
+        new_callable=PropertyMock,
+        return_value=DEVICE_MAC,
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            entry_id=ENTRY_ID,
+            unique_id="uuid",
+            data={CONF_HOST: "1.1.1.1"},
+            title="myStrom",
+        )
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload(hass: HomeAssistant) -> None:
