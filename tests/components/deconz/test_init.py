@@ -97,6 +97,12 @@ async def test_setup_entry_multiple_gateways(
     assert hass.data[DECONZ_DOMAIN][config_entry.entry_id].master
     assert not hass.data[DECONZ_DOMAIN][config_entry2.entry_id].master
 
+    await config_entry.async_unload(hass)
+    await hass.async_block_till_done()
+
+    assert config_entry.entry_id not in hass.data[DECONZ_DOMAIN]
+    assert hass.data[DECONZ_DOMAIN][config_entry2.entry_id].master
+
 
 async def test_unload_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
