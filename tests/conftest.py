@@ -47,7 +47,7 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry
 from homeassistant.const import HASSIO_USER_NAME
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HassJob, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     config_entry_oauth2_flow,
@@ -345,6 +345,8 @@ def verify_cleanup(
         if not handle.cancelled():
             if expected_lingering_timers:
                 _LOGGER.warning("Lingering timer after test %r", handle)
+            elif handle._args and isinstance(job := handle._args[0], HassJob):
+                pytest.fail(f"Lingering timer after job {repr(job)}")
             else:
                 pytest.fail(f"Lingering timer after test {repr(handle)}")
             handle.cancel()
