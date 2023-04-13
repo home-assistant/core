@@ -184,6 +184,10 @@ omit =
     homeassistant/components/comfoconnect/fan.py
     homeassistant/components/concord232/alarm_control_panel.py
     homeassistant/components/concord232/binary_sensor.py
+    homeassistant/components/contact_energy_nz/__init__.py
+    homeassistant/components/contact_energy_nz/const.py
+    homeassistant/components/contact_energy_nz/exceptions.py
+    homeassistant/components/contact_energy_nz/sensor.py
     homeassistant/components/control4/__init__.py
     homeassistant/components/control4/director_utils.py
     homeassistant/components/control4/light.py
