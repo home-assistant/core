@@ -1,4 +1,4 @@
-"""Voice Assistant Websocket API."""
+"""Assist pipeline Websocket API."""
 import asyncio
 import audioop  # pylint: disable=deprecated-module
 from collections.abc import Callable
@@ -33,12 +33,12 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
     websocket_api.async_register_command(
         hass,
-        "voice_assistant/run",
+        "assist_pipeline/run",
         websocket_run,
         vol.All(
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {
-                    vol.Required("type"): "voice_assistant/run",
+                    vol.Required("type"): "assist_pipeline/run",
                     # pylint: disable-next=unnecessary-lambda
                     vol.Required("start_stage"): lambda val: PipelineStage(val),
                     # pylint: disable-next=unnecessary-lambda
