@@ -77,6 +77,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
 
     if sess:
         sess.close()
+        engine.dispose()
 
     return True
 
