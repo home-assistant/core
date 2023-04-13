@@ -37,7 +37,7 @@ USER_DATA = UserData.from_dict(
             "r": {
                 "r": "US",
                 "a": "https://api-us.roborock.com",
-                "m": "mqtt-us.roborock.com:8883",
+                "m": "ssl://mqtt-us-2.roborock.com:8883",
                 "l": "https://wood-us.roborock.com",
             },
         },
