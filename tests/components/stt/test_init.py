@@ -35,7 +35,7 @@ from tests.common import (
     mock_platform,
     mock_restore_cache,
 )
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_DOMAIN = "test"
 
@@ -375,3 +375,19 @@ async def test_restore_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
+
+
+async def test_ws_list_engines(
+    hass: HomeAssistant, tmp_path: Path, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test listing speech to text engines."""
+    await mock_setup(hass, tmp_path, MockProvider())
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "stt/engine/list", "language": "smurfish"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"entity_id": "test", "language_supported": True}]
+    }
