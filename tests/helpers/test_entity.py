@@ -536,7 +536,7 @@ async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
-    await ent.async_update_ha_state()
+    ent.async_write_ha_state()
     assert len(hass.states.async_entity_ids()) == 1
     await ent.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
@@ -577,7 +577,7 @@ async def test_set_context(hass: HomeAssistant) -> None:
     ent.hass = hass
     ent.entity_id = "hello.world"
     ent.async_set_context(context)
-    await ent.async_update_ha_state()
+    ent.async_write_ha_state()
     assert hass.states.get("hello.world").context == context
 
 
@@ -593,7 +593,7 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
         ent.hass = hass
         ent.entity_id = "hello.world"
         ent.async_set_context(context)
-        await ent.async_update_ha_state()
+        ent.async_write_ha_state()
 
     assert hass.states.get("hello.world").context != context
     assert ent._context is None
