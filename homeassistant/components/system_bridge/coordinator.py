@@ -11,7 +11,6 @@ import async_timeout
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from systembridgeconnector.exceptions import (
     AuthenticationException,
-    ConnectionClosedException,
     ConnectionErrorException,
 )
 from systembridgeconnector.models.battery import Battery
@@ -145,44 +144,6 @@ class SystemBridgeDataUpdateCoordinator(
         setattr(self.systembridge_data, module_name, module)
         self.async_set_updated_data(self.systembridge_data)
 
-    def _listen_for_data(self) -> None:
-        """Listen for events from the WebSocket."""
-        try:
-            self.hass.async_create_background_task(
-                self.websocket_client.listen(callback=self.async_handle_module),
-                name="System Bridge WebSocket Listener",
-            )
-        except AuthenticationException as exception:
-            self.last_update_success = False
-            self.logger.error("Authentication failed for %s: %s", self.title, exception)
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
-            self.last_update_success = False
-            self.async_update_listeners()
-        except (ConnectionClosedException, ConnectionResetError) as exception:
-            self.logger.debug(
-                "Websocket connection closed for %s. Will retry: %s",
-                self.title,
-                exception,
-            )
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
-            self.last_update_success = False
-            self.async_update_listeners()
-        except ConnectionErrorException as exception:
-            self.logger.debug(
-                "Connection error occurred for %s. Will retry: %s",
-                self.title,
-                exception,
-            )
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
-            self.last_update_success = False
-            self.async_update_listeners()
-
     async def _setup_websocket(self) -> None:
         """Use WebSocket for updates."""
         try:
@@ -191,7 +152,10 @@ class SystemBridgeDataUpdateCoordinator(
                     session=async_get_clientsession(self.hass),
                 )
 
-            self._listen_for_data()
+            self.hass.async_create_background_task(
+                self.websocket_client.listen(callback=self.async_handle_module),
+                name="System Bridge WebSocket Listener",
+            )
 
             await self.websocket_client.register_data_listener(
                 RegisterDataListener(modules=MODULES)
