@@ -857,10 +857,13 @@ def _reduce_statistics(
                 }
                 if _want_mean:
                     row["mean"] = mean(mean_values) if mean_values else None
+                    mean_values.clear()
                 if _want_min:
                     row["min"] = min(min_values) if min_values else None
+                    min_values.clear()
                 if _want_max:
                     row["max"] = max(max_values) if max_values else None
+                    max_values.clear()
                 if _want_last_reset:
                     row["last_reset"] = prev_stat.get("last_reset")
                 if _want_state:
@@ -868,10 +871,6 @@ def _reduce_statistics(
                 if _want_sum:
                     row["sum"] = prev_stat["sum"]
                 result[statistic_id].append(row)
-
-                max_values = []
-                mean_values = []
-                min_values = []
             if _want_max and (_max := statistic.get("max")) is not None:
                 max_values.append(_max)
             if _want_mean and (_mean := statistic.get("mean")) is not None:
@@ -1560,20 +1559,6 @@ def _statistics_during_period_with_session(
 
     if not stats:
         return {}
-    # Return statistics combined with metadata
-    if period not in ("day", "week", "month"):
-        return _sorted_statistics_to_dict(
-            hass,
-            session,
-            stats,
-            statistic_ids,
-            metadata,
-            True,
-            table,
-            start_time,
-            units,
-            types,
-        )
 
     result = _sorted_statistics_to_dict(
         hass,
@@ -1587,6 +1572,10 @@ def _statistics_during_period_with_session(
         units,
         types,
     )
+
+    # Return statistics combined with metadata
+    if period not in ("day", "week", "month"):
+        return result
 
     if period == "day":
         return _reduce_statistics_per_day(result, types)
