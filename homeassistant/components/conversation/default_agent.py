@@ -32,6 +32,7 @@ from .const import DEFAULT_EXPOSED_ATTRIBUTES, DEFAULT_EXPOSED_DOMAINS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
+_ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
 
@@ -450,8 +451,10 @@ class DefaultAgent(AbstractConversationAgent):
 
     @core.callback
     def _async_handle_entity_registry_changed(self, event: core.Event) -> None:
-        """Clear names list cache when an entity changes aliases."""
-        if event.data["action"] == "update" and "aliases" not in event.data["changes"]:
+        """Clear names list cache when an entity registry entry has changed."""
+        if event.data["action"] == "update" and not any(
+            field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
+        ):
             return
         self._slot_lists = None
 
