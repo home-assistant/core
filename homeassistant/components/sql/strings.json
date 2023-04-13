@@ -6,7 +6,7 @@
     "error": {
       "db_url_invalid": "Database URL invalid",
       "query_invalid": "SQL Query invalid",
-      "column_invalid": "The column is not returned by the query"
+      "column_invalid": "The column `{column}` is not returned by the query"
     },
     "step": {
       "user": {
