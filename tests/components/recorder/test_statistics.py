@@ -68,7 +68,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     instance = recorder.get_instance(hass)
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Should not fail if there is nothing there yet
@@ -329,7 +329,7 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
@@ -418,7 +418,7 @@ def test_rename_entity_collision(
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
@@ -485,7 +485,7 @@ def test_statistics_duplicated(
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     wait_recording_done(hass)
