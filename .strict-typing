@@ -85,6 +85,7 @@ homeassistant.components.canary.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
 homeassistant.components.configurator.*
+homeassistant.components.contact_energy_nz.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
