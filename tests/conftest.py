@@ -532,10 +532,11 @@ async def _hass(
 
     yield hass
 
-    asyncio.gather(
+    unload_coros = (
         config_entry.async_unload(hass)
         for config_entry in hass.config_entries.async_entries()
     )
+    asyncio.gather(*unload_coros)
 
     await hass.async_stop(force=True)
 
