@@ -9,7 +9,6 @@ import functools
 import gc
 import itertools
 import logging
-import os
 import sqlite3
 import ssl
 import threading
@@ -58,7 +57,7 @@ from homeassistant.helpers import (
     recorder as recorder_helper,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import BASE_PLATFORMS, async_setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 from homeassistant.util.json import json_loads
 
@@ -272,14 +271,6 @@ def expected_lingering_timers() -> bool:
 
     This should be removed when all lingering timers have been cleaned up.
     """
-    current_test = os.getenv("PYTEST_CURRENT_TEST")
-    if (
-        current_test
-        and current_test.startswith("tests/components/")
-        and current_test.split("/")[2] not in BASE_PLATFORMS
-    ):
-        # As a starting point, we ignore non-platform components
-        return True
     return False
 
 
