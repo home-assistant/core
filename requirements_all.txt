@@ -640,6 +640,9 @@ connect-box==0.2.8
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
 
+# homeassistant.components.contact_energy_nz
+contact-energy-nz==0.1.4684953769
+
 # homeassistant.components.utility_meter
 croniter==1.0.6
 
