@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import async_timeout
 import pytest
 
-from homeassistant.components import esphome, voice_assistant
+from homeassistant.components import assist_pipeline, esphome
 from homeassistant.core import HomeAssistant
 
 _TEST_INPUT_TEXT = "This is an input test"
@@ -23,29 +23,29 @@ async def test_pipeline_events(hass: HomeAssistant) -> None:
 
         # Fake events
         event_callback(
-            voice_assistant.PipelineEvent(
-                type=voice_assistant.PipelineEventType.STT_START,
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.STT_START,
                 data={},
             )
         )
 
         event_callback(
-            voice_assistant.PipelineEvent(
-                type=voice_assistant.PipelineEventType.STT_END,
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.STT_END,
                 data={"stt_output": {"text": _TEST_INPUT_TEXT}},
             )
         )
 
         event_callback(
-            voice_assistant.PipelineEvent(
-                type=voice_assistant.PipelineEventType.TTS_START,
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.TTS_START,
                 data={"tts_input": _TEST_OUTPUT_TEXT},
             )
         )
 
         event_callback(
-            voice_assistant.PipelineEvent(
-                type=voice_assistant.PipelineEventType.TTS_END,
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.TTS_END,
                 data={"tts_output": {"url": _TEST_OUTPUT_URL}},
             )
         )
@@ -64,7 +64,7 @@ async def test_pipeline_events(hass: HomeAssistant) -> None:
             assert data["url"] == _TEST_OUTPUT_URL
 
     with patch(
-        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+        "homeassistant.components.esphome.voice_assistantgs.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
     ):
         server = esphome.voice_assistant.VoiceAssistantUDPServer(hass)
@@ -83,7 +83,7 @@ async def test_udp_server(
 
     server = esphome.voice_assistant.VoiceAssistantUDPServer(hass)
     with patch(
-        "homeassistant.components.esphome.voice_assistant.UDP_PORT", new=port_to_use
+        "homeassistant.components.esphome.voice_assistantgs.UDP_PORT", new=port_to_use
     ):
         port = await server.start_server()
         assert port == port_to_use
@@ -113,13 +113,13 @@ async def test_udp_server_multiple(
     """Test that the UDP server raises an error if started twice."""
     server = esphome.voice_assistant.VoiceAssistantUDPServer(hass)
     with patch(
-        "homeassistant.components.esphome.voice_assistant.UDP_PORT",
+        "homeassistant.components.esphome.voice_assistantgs.UDP_PORT",
         new=unused_udp_port_factory(),
     ):
         await server.start_server()
 
     with patch(
-        "homeassistant.components.esphome.voice_assistant.UDP_PORT",
+        "homeassistant.components.esphome.voice_assistantgs.UDP_PORT",
         new=unused_udp_port_factory(),
     ), pytest.raises(RuntimeError):
         pass
@@ -135,7 +135,7 @@ async def test_udp_server_after_stopped(
     server = esphome.voice_assistant.VoiceAssistantUDPServer(hass)
     server.stop()
     with patch(
-        "homeassistant.components.esphome.voice_assistant.UDP_PORT",
+        "homeassistant.components.esphome.voice_assistantgs.UDP_PORT",
         new=unused_udp_port_factory(),
     ), pytest.raises(RuntimeError):
         await server.start_server()
