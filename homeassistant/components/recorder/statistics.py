@@ -1919,9 +1919,11 @@ def _sorted_statistics_to_dict(  # noqa: C901
             convert = None
 
         if sum_only:
-            # This is a special case where we only need to sum the values
-            # and we can do it much faster than the generic code below
-            # This is mostly used by the energy integration
+            # This function is extremely flexible and can handle all types of
+            # statistics, but in practice we only ever use a few combinations.
+            #
+            # For energy, we only need sum statistics, so we can optimize
+            # this path to avoid the overhead of the more generic function.
             assert sum_idx is not None
             result[statistic_id] = _fast_build_sum_list(
                 stats_list,
