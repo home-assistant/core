@@ -8,10 +8,10 @@ from functools import partial
 # pylint: disable=invalid-name
 import importlib
 import json
+from pathlib import Path
 import sys
 from unittest.mock import patch
 
-import py
 import pytest
 
 from homeassistant.components import recorder
@@ -36,11 +36,11 @@ SCHEMA_VERSION_POSTFIX = "23_with_newer_columns"
 SCHEMA_MODULE = get_schema_module_path(SCHEMA_VERSION_POSTFIX)
 
 
-def test_delete_duplicates(
-    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
-) -> None:
+def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> None:
     """Test removal of duplicated statistics."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
@@ -215,10 +215,12 @@ def test_delete_duplicates(
 
 
 def test_delete_duplicates_many(
-    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+    caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     """Test removal of duplicated statistics."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
@@ -400,10 +402,12 @@ def test_delete_duplicates_many(
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 def test_delete_duplicates_non_identical(
-    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+    caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     """Test removal of duplicated statistics."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
@@ -529,7 +533,7 @@ def test_delete_duplicates_non_identical(
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
-    hass.config.config_dir = tmpdir
+    hass.config.config_dir = tmp_path
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
@@ -579,10 +583,12 @@ def test_delete_duplicates_non_identical(
 
 
 def test_delete_duplicates_short_term(
-    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+    caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     """Test removal of duplicated statistics."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     importlib.import_module(SCHEMA_MODULE)
@@ -638,7 +644,7 @@ def test_delete_duplicates_short_term(
 
     # Test that the duplicates are removed during migration from schema 23
     hass = get_test_home_assistant()
-    hass.config.config_dir = tmpdir
+    hass.config.config_dir = tmp_path
     recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()

@@ -10,6 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
+    Pipeline,
     PipelineEvent,
     PipelineEventCallback,
     PipelineEventType,
@@ -25,6 +26,7 @@ __all__ = (
     "DOMAIN",
     "async_setup",
     "async_pipeline_from_audio_stream",
+    "Pipeline",
     "PipelineEvent",
     "PipelineEventType",
 )
@@ -47,6 +49,7 @@ async def async_pipeline_from_audio_stream(
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     context: Context | None = None,
+    tts_options: dict | None = None,
 ) -> None:
     """Create an audio pipeline from an audio stream."""
     if language is None:
@@ -83,6 +86,7 @@ async def async_pipeline_from_audio_stream(
             start_stage=PipelineStage.STT,
             end_stage=PipelineStage.TTS,
             event_callback=event_callback,
+            tts_options=tts_options,
         ),
     )
 
