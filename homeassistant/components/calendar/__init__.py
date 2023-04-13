@@ -140,26 +140,6 @@ def _has_min_duration(
     return validate
 
 
-def _has_all_day_event_duration(
-    start_key: str,
-    end_key: str,
-) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Modify all day events to have a duration of one day."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        if (
-            (start := obj.get(start_key))
-            and (end := obj.get(end_key))
-            and not isinstance(start, datetime.datetime)
-            and not isinstance(end, datetime.datetime)
-            and start == end
-        ):
-            obj[end_key] = start + datetime.timedelta(days=1)
-        return obj
-
-    return validate
-
-
 def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Verify that all values are of the same type."""
 
@@ -267,7 +247,6 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
         _has_consistent_timezone("start", "end"),
         _as_local_timezone("start", "end"),
         _has_min_duration("start", "end", MIN_EVENT_DURATION),
-        _has_all_day_event_duration("start", "end"),
     ),
     extra=vol.ALLOW_EXTRA,
 )
@@ -374,6 +353,16 @@ class CalendarEvent:
             raise HomeAssistantError(
                 f"Failed to validate CalendarEvent: {err}"
             ) from err
+
+        # It is common to set a start an end date to be the same thing for
+        # an all day event, but that is not a valid duration. Fix to have a
+        # duration of one day.
+        if (
+            not isinstance(self.start, datetime.datetime)
+            and not isinstance(self.end, datetime.datetime)
+            and self.start == self.end
+        ):
+            self.end = self.start + datetime.timedelta(days=1)
 
 
 def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:

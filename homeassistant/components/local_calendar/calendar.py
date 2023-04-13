@@ -196,7 +196,7 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
     else:
         start = event.start
         end = event.end
-        if (end - start) <= timedelta(days=0):
+        if (end - start) < timedelta(days=0):
             end = start + timedelta(days=1)
 
     return CalendarEvent(

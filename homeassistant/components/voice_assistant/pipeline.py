@@ -174,6 +174,7 @@ class PipelineRun:
     stt_provider: stt.Provider | None = None
     intent_agent: str | None = None
     tts_engine: str | None = None
+    tts_options: dict | None = None
 
     def __post_init__(self):
         """Set language for pipeline."""
@@ -288,7 +289,10 @@ class PipelineRun:
     async def prepare_recognize_intent(self) -> None:
         """Prepare recognizing an intent."""
         agent_info = conversation.async_get_agent_info(
-            self.hass, self.pipeline.conversation_engine
+            self.hass,
+            # If no conversation engine is set, use the Home Assistant agent
+            # (the conversation integration default is currently the last one set)
+            self.pipeline.conversation_engine or conversation.HOME_ASSISTANT_AGENT,
         )
 
         if agent_info is None:
@@ -357,12 +361,17 @@ class PipelineRun:
                 message=f"Text to speech engine '{engine}' not found",
             )
 
-        if not await tts.async_support_options(self.hass, engine, self.language):
+        if not await tts.async_support_options(
+            self.hass,
+            engine,
+            self.language,
+            self.tts_options,
+        ):
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=(
                     f"Text to speech engine {engine} "
-                    f"does not support language {self.language}"
+                    f"does not support language {self.language} or options {self.tts_options}"
                 ),
             )
 
@@ -385,14 +394,17 @@ class PipelineRun:
 
         try:
             # Synthesize audio and get URL
+            tts_media_id = tts_generate_media_source_id(
+                self.hass,
+                tts_input,
+                engine=self.tts_engine,
+                language=self.language,
+                options=self.tts_options,
+            )
             tts_media = await media_source.async_resolve_media(
                 self.hass,
-                tts_generate_media_source_id(
-                    self.hass,
-                    tts_input,
-                    engine=self.tts_engine,
-                    language=self.language,
-                ),
+                tts_media_id,
+                None,
             )
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during text to speech")
@@ -406,7 +418,12 @@ class PipelineRun:
         self.event_callback(
             PipelineEvent(
                 PipelineEventType.TTS_END,
-                {"tts_output": asdict(tts_media)},
+                {
+                    "tts_output": {
+                        "media_id": tts_media_id,
+                        **asdict(tts_media),
+                    }
+                },
             )
         )
 
