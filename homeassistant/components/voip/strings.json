@@ -13,5 +13,12 @@
     "error": {
       "invalid_ip_address": "Invalid IPv4 address."
     }
+  },
+  "entity": {
+    "switch": {
+      "allow_call": {
+        "name": "Allow Calls"
+      }
+    }
   }
 }

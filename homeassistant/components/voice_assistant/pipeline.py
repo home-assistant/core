@@ -289,7 +289,10 @@ class PipelineRun:
     async def prepare_recognize_intent(self) -> None:
         """Prepare recognizing an intent."""
         agent_info = conversation.async_get_agent_info(
-            self.hass, self.pipeline.conversation_engine
+            self.hass,
+            # If no conversation engine is set, use the Home Assistant agent
+            # (the conversation integration default is currently the last one set)
+            self.pipeline.conversation_engine or conversation.HOME_ASSISTANT_AGENT,
         )
 
         if agent_info is None:
@@ -401,6 +404,7 @@ class PipelineRun:
             tts_media = await media_source.async_resolve_media(
                 self.hass,
                 tts_media_id,
+                None,
             )
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during text to speech")
