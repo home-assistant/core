@@ -145,10 +145,13 @@ class SystemBridgeDataUpdateCoordinator(
         setattr(self.systembridge_data, module_name, module)
         self.async_set_updated_data(self.systembridge_data)
 
-    async def _listen_for_data(self) -> None:
+    def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
         try:
-            await self.websocket_client.listen(callback=self.async_handle_module)
+            self.hass.async_create_background_task(
+                self.websocket_client.listen(callback=self.async_handle_module),
+                name="System Bridge WebSocket Listener",
+            )
         except AuthenticationException as exception:
             self.last_update_success = False
             self.logger.error("Authentication failed for %s: %s", self.title, exception)
@@ -188,7 +191,7 @@ class SystemBridgeDataUpdateCoordinator(
                     session=async_get_clientsession(self.hass),
                 )
 
-            self.hass.async_create_task(self._listen_for_data())
+            self._listen_for_data()
 
             await self.websocket_client.register_data_listener(
                 RegisterDataListener(modules=MODULES)
