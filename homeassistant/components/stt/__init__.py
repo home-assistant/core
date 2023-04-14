@@ -393,12 +393,23 @@ def websocket_list_engines(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List speech to text engines and, optionally, if they support a given language."""
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
     legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
 
     language = msg.get("language")
     providers = []
+    provider_info: dict[str, Any]
+
+    for entity in component.entities:
+        provider_info = {"engine_id": entity.entity_id}
+        if language:
+            provider_info["language_supported"] = bool(
+                language_util.matches(language, entity.supported_languages)
+            )
+        providers.append(provider_info)
+
     for engine_id, provider in legacy_providers.items():
-        provider_info: dict[str, Any] = {"engine_id": engine_id}
+        provider_info = {"engine_id": engine_id}
         if language:
             provider_info["language_supported"] = bool(
                 language_util.matches(language, provider.supported_languages)
