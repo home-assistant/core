@@ -332,6 +332,7 @@ async def test_options_basic(hass: HomeAssistant) -> None:
     assert updated["data"] == {
         CONF_ACCOUNTS: {BASIC_CONFIG[CONF_ACCOUNT]: BASIC_OPTIONS}
     }
+    await hass.async_block_till_done()
 
 
 async def test_options_additional(hass: HomeAssistant) -> None:
