@@ -1,4 +1,5 @@
 """Tests for debounce."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -174,3 +175,58 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._execute_at_end_of_timer is False
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
+
+
+async def test_cancel_avoid_cooldown(hass: HomeAssistant) -> None:
+    """Test that cancellation during run avoids cooldown."""
+    calls = []
+    future = asyncio.Future()
+
+    async def _func() -> None:
+        nonlocal future
+        await future
+        future = asyncio.Future()
+        calls.append(None)
+
+    import logging
+
+    debouncer = debounce.Debouncer(
+        hass,
+        logging.Logger(__name__),
+        cooldown=0.01,
+        immediate=True,
+        function=_func,
+    )
+
+    # Cancel during initial run doesn't create a cooldown timer
+    hass.async_add_job(debouncer.async_call())
+    await asyncio.sleep(0.01)
+    debouncer.async_cancel()
+    future.set_result(True)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert debouncer._timer_task is None
+
+    # Second run should create a cooldown timer
+    hass.async_add_job(debouncer.async_call())
+    await asyncio.sleep(0.01)
+    future.set_result(True)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert debouncer._timer_task is not None
+
+    # Third run during cooldown timer gets scheduled
+    hass.async_add_job(debouncer.async_call())
+    await hass.async_block_till_done()
+    assert debouncer._timer_task is not None
+    await asyncio.sleep(0.01)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    assert len(calls) == 2  # still pending
+    assert debouncer._timer_task is None  # run in progress
+
+    # Cancel during third run doesn't create a cooldown timer
+    debouncer.async_cancel()
+    future.set_result(True)
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert debouncer._timer_task is None
