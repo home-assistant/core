@@ -5,7 +5,8 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "region": "ConnectedDrive Region"
+          "region": "ConnectedDrive Region",
+          "refresh_token": "Refresh token (optional)"
         }
       }
     },

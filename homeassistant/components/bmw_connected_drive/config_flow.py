@@ -22,6 +22,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_REGION): vol.In(CONF_ALLOWED_REGIONS),
+        vol.Optional(CONF_REFRESH_TOKEN): str,
     }
 )
 
@@ -37,6 +38,7 @@ async def validate_input(
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
         get_region_from_name(data[CONF_REGION]),
+        refresh_token=data.get(CONF_REFRESH_TOKEN),
     )
 
     try:
