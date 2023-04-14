@@ -978,6 +978,7 @@ async def test_history_during_period_bad_start_time(
             {
                 "id": 1,
                 "type": "history/history_during_period",
+                "entity_ids": ["sensor.pet"],
                 "start_time": "cats",
             }
         )
@@ -1004,6 +1005,7 @@ async def test_history_during_period_bad_end_time(
             {
                 "id": 1,
                 "type": "history/history_during_period",
+                "entity_ids": ["sensor.pet"],
                 "start_time": now.isoformat(),
                 "end_time": "dogs",
             }
