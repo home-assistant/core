@@ -444,11 +444,11 @@ class Recorder(threading.Thread):
         async_at_started(self.hass, self._async_hass_started)
 
     @callback
-    def async_connection_failed(self) -> None:
-        """Connect failed tasks."""
+    def _async_startup_failed(self) -> None:
+        """Report startup failure."""
         # If a live migration failed, we were able to connect (async_db_connected
-        # was marked True), the database was marked ready (async_db_ready was marked
-        # True), but the data in the queue cannot be written to the database because
+        # marked True), the database was marked ready (async_db_ready marked
+        # True), the data in the queue cannot be written to the database because
         # the schema not in the correct format so we must stop listeners and report
         # failure.
         if not self.async_db_connected.done():
@@ -1404,7 +1404,7 @@ class Recorder(threading.Thread):
             # connection to the database or the database connection was
             # never setup. In either case, we want to mark the connection
             # as failed so we report the correct state.
-            self.hass.add_job(self.async_connection_failed)
+            self.hass.add_job(self._async_startup_failed)
         else:
             self.hass.add_job(self._async_stop_listeners)
 
