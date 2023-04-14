@@ -6,7 +6,8 @@ from collections.abc import Callable
 from logging import Logger
 from typing import Generic, TypeVar
 
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
 
 _R_co = TypeVar("_R_co", covariant=True)
 
@@ -22,6 +23,7 @@ class Debouncer(Generic[_R_co]):
         cooldown: float,
         immediate: bool,
         function: Callable[[], _R_co] | None = None,
+        cancel_on_shutdown: bool | None = None,
     ) -> None:
         """Initialize debounce.
 
@@ -44,6 +46,10 @@ class Debouncer(Generic[_R_co]):
                 function, f"debouncer cooldown={cooldown}, immediate={immediate}"
             )
         )
+        if cancel_on_shutdown:
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._cancel_on_hass_stop
+            )
 
     @property
     def function(self) -> Callable[[], _R_co] | None:
@@ -114,6 +120,11 @@ class Debouncer(Generic[_R_co]):
 
             # Schedule a new timer to prevent new runs during cooldown
             self._schedule_timer()
+
+    @callback
+    def _cancel_on_hass_stop(self, _: Event) -> None:
+        """Cancel on shutdown."""
+        self.async_cancel()
 
     @callback
     def async_cancel(self) -> None:
