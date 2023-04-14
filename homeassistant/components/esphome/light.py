@@ -8,6 +8,7 @@ from aioesphomeapi import APIVersion, LightColorCapability, LightInfo, LightStat
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_RGB_COLOR,
@@ -24,6 +25,9 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin as mired_to_kelvin,
+)
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
@@ -212,8 +216,14 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
             data["transition_length"] = transition
 
-        if (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None:
+        if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
+            # Do not use kelvin_to_mired here to prevent precision loss
+            data["color_temperature"] = 1000000.0 / color_temp_k
+        elif (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None:
             data["color_temperature"] = color_temp
+        if (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None or (
+            color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+        ) is not None:
             if _filter_color_modes(color_modes, LightColorCapability.COLOR_TEMPERATURE):
                 color_modes = _filter_color_modes(
                     color_modes, LightColorCapability.COLOR_TEMPERATURE
@@ -391,3 +401,13 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         return round(self._static_info.max_mireds)
+
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp that this light supports, in Kelvin."""
+        return mired_to_kelvin(self._static_info.max_mireds)
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp that this light supports, in Kelvin."""
+        return mired_to_kelvin(self._static_info.min_mireds)
