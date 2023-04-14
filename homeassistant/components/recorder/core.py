@@ -446,10 +446,11 @@ class Recorder(threading.Thread):
     @callback
     def async_connection_failed(self) -> None:
         """Connect failed tasks."""
-        # If a live migration failed we were able to connect but
-        # and the database was marked ready but the data in the queue
-        # cannot be written to the database because its not in the
-        # correct format so we must stop listeners and report failure.
+        # If a live migration failed, we were able to connect (async_db_connected
+        # was marked True), the database was marked ready (async_db_ready was marked
+        # True), but the data in the queue cannot be written to the database because
+        # the schema not in the correct format so we must stop listeners and report
+        # failure.
         if not self.async_db_connected.done():
             self.async_db_connected.set_result(False)
         if not self.async_db_ready.done():
