@@ -12,7 +12,7 @@ from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __v
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.ssl import (
-    SslCipherList,
+    SSLCipherList,
     client_context,
     create_no_verify_ssl_context,
 )
@@ -60,7 +60,7 @@ def create_async_httpx_client(
     hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
-    ssl_cipher_list: SslCipherList = SslCipherList.PYTHON_DEFAULT,
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
     **kwargs: Any,
 ) -> httpx.AsyncClient:
     """Create a new httpx.AsyncClient with kwargs, i.e. for cookies.
