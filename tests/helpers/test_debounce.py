@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.util.dt import utcnow
@@ -174,3 +175,73 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._execute_at_end_of_timer is False
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
+
+
+async def test_cancel_on_shutdown(hass: HomeAssistant) -> None:
+    """Test cancel on shutdown works."""
+    calls = []
+    debouncer = debounce.Debouncer(
+        hass,
+        None,
+        cooldown=0.01,
+        immediate=True,
+        function=AsyncMock(side_effect=lambda: calls.append(None)),
+        cancel_on_shutdown=True,
+    )
+
+    # Call when nothing happening
+    await debouncer.async_call()
+    assert len(calls) == 1
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._job.target == debouncer.function
+
+    # Call when cooldown active setting execute at end to True
+    await debouncer.async_call()
+    assert len(calls) == 1
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
+    assert debouncer._job.target == debouncer.function
+
+    # Fire STOP event
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert debouncer._timer_task is None
+    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._job.target == debouncer.function
+
+
+async def test_stop_event_ignored(hass: HomeAssistant) -> None:
+    """Test STOP event is ignored and timer isn't cancelled."""
+    calls = []
+    debouncer = debounce.Debouncer(
+        hass,
+        None,
+        cooldown=0.01,
+        immediate=True,
+        function=AsyncMock(side_effect=lambda: calls.append(None)),
+    )
+
+    # Call when nothing happening
+    await debouncer.async_call()
+    assert len(calls) == 1
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._job.target == debouncer.function
+
+    # Call when cooldown active setting execute at end to True
+    await debouncer.async_call()
+    assert len(calls) == 1
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
+    assert debouncer._job.target == debouncer.function
+
+    # Fire STOP event
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
+    assert debouncer._job.target == debouncer.function
+
+    # Cleanup
+    debouncer.async_cancel()
