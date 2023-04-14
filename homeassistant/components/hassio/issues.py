@@ -259,11 +259,7 @@ class SupervisorIssues:
         self._issues[issue.uuid] = issue
 
     async def add_issue_from_data(self, data: IssueDataType) -> None:
-        """Add issue from data to list after getting suggestions (if necessary)."""
-        if ATTR_SUGGESTIONS in data:
-            self.add_issue(Issue.from_dict(data))
-            return
-
+        """Add issue from data to list after getting latest suggestions."""
         try:
             suggestions = (await self._client.get_suggestions_for_issue(data["uuid"]))[
                 ATTR_SUGGESTIONS

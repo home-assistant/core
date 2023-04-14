@@ -682,3 +682,36 @@ async def test_supervisor_issues_suggestions_fail(
     msg = await client.receive_json()
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 0
+
+
+async def test_supervisor_remove_missing_issue_without_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test HA skips message to remove issue that it didn't know about (sync issue)."""
+    mock_resolution_info(aioclient_mock)
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_removed",
+                "data": {
+                    "uuid": "1234",
+                    "type": "reboot_required",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()

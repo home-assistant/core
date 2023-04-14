@@ -252,7 +252,7 @@ async def async_update_core(
 
 @bind_hass
 @_api_bool
-async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
+async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> bool:
     """Apply a suggestion from supervisor's resolution center.
 
     The caller of the function should handle HassioAPIError.
