@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeAssistEntity, EsphomeEntity, platform_async_setup_entry
+from .domain_data import DomainData
 
 
 async def async_setup_entry(
@@ -28,6 +29,11 @@ async def async_setup_entry(
         entity_type=EsphomeBinarySensor,
         state_type=BinarySensorState,
     )
+
+    entry_data = DomainData.get(hass).get_entry_data(entry)
+    assert entry_data.device_info is not None
+    if entry_data.device_info.voice_assistant_version:
+        async_add_entities([EsphomeAssistActiveBinarySensor(entry_data)])
 
 
 class EsphomeBinarySensor(
@@ -59,3 +65,20 @@ class EsphomeBinarySensor(
         if self._static_info.is_status_binary_sensor:
             return True
         return super().available
+
+
+class EsphomeAssistActiveBinarySensor(EsphomeAssistEntity, BinarySensorEntity):
+    """A binary sensor implementation for ESPHome for use with assist_pipeline."""
+
+    _attr_name = "Pipeline Active"
+    _attr_has_entity_name = True
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        return self._entry_data.assist_pipeline_state
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique id identifying the entity."""
+        return f"{self._device_info.mac_address}_assist_pipeline_active"
