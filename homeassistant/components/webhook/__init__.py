@@ -128,6 +128,10 @@ async def async_handle_webhook(
         return Response(status=HTTPStatus.OK)
 
     if method_name not in webhook["allowed_methods"]:
+        if method_name == METH_HEAD:
+            # Allow websites to verify that the URL exists.
+            return Response(status=HTTPStatus.OK)
+
         _LOGGER.warning(
             "Webhook %s only supports %s methods but %s was received from %s",
             webhook_id,
