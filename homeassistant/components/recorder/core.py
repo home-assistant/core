@@ -446,8 +446,14 @@ class Recorder(threading.Thread):
     @callback
     def async_connection_failed(self) -> None:
         """Connect failed tasks."""
-        self.async_db_connected.set_result(False)
-        self.async_db_ready.set_result(False)
+        # If a live migration failed we were able to connect but
+        # and the database was marked ready but the data in the queue
+        # cannot be written to the database because its not in the
+        # correct format so we must stop listeners and report failure.
+        if not self.async_db_connected.done():
+            self.async_db_connected.set_result(False)
+        if not self.async_db_ready.done():
+            self.async_db_ready.set_result(False)
         persistent_notification.async_create(
             self.hass,
             "The recorder could not start, check [the logs](/config/logs)",
@@ -708,7 +714,6 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self.hass.add_job(self.async_set_db_ready)
                 return
 
         if not database_was_ready:
@@ -1399,8 +1404,11 @@ class Recorder(threading.Thread):
             # never setup. In either case, we want to mark the connection
             # as failed so we report the correct state.
             self.hass.add_job(self.async_connection_failed)
-        self.hass.add_job(self._async_stop_listeners)
+        else:
+            self.hass.add_job(self._async_stop_listeners)
+
         self._stop_executor()
+
         try:
             self._end_session()
         finally:
