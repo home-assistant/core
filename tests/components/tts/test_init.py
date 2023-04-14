@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.media_source import Unresolvable
+from homeassistant.components.tts.legacy import _valid_base_url
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -904,9 +905,9 @@ async def test_tags_with_wave(hass: HomeAssistant, test_provider) -> None:
 )
 def test_valid_base_url(value) -> None:
     """Test we validate base urls."""
-    assert tts.valid_base_url(value) == normalize_url(value)
+    assert _valid_base_url(value) == normalize_url(value)
     # Test we strip trailing `/`
-    assert tts.valid_base_url(value + "/") == normalize_url(value)
+    assert _valid_base_url(value + "/") == normalize_url(value)
 
 
 @pytest.mark.parametrize(
@@ -926,7 +927,7 @@ def test_valid_base_url(value) -> None:
 def test_invalid_base_url(value) -> None:
     """Test we catch bad base urls."""
     with pytest.raises(vol.Invalid):
-        tts.valid_base_url(value)
+        _valid_base_url(value)
 
 
 @pytest.mark.parametrize(
