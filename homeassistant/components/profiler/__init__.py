@@ -164,11 +164,12 @@ async def async_setup_entry(  # noqa: C901
 
         obj_type = call.data[CONF_TYPE]
 
-        _LOGGER.critical(
-            "%s objects in memory: %s",
-            obj_type,
-            [_safe_repr(obj) for obj in objgraph.by_type(obj_type)],
-        )
+        for obj in objgraph.by_type(obj_type):
+            _LOGGER.critical(
+                "%s object in memory: %s",
+                obj_type,
+                _safe_repr(obj),
+            )
 
         persistent_notification.create(
             hass,

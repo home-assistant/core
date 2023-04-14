@@ -187,11 +187,16 @@ class SmartThingsAcceleration(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
+        try:
+            attr_name = self._cluster.attributes[attrid].name
+        except KeyError:
+            attr_name = UNKNOWN
+
         if attrid == self.value_attribute:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
                 attrid,
-                self._cluster.attributes.get(attrid, [UNKNOWN])[0],
+                attr_name,
                 value,
             )
             return
@@ -200,7 +205,7 @@ class SmartThingsAcceleration(ZigbeeChannel):
             SIGNAL_ATTR_UPDATED,
             {
                 ATTR_ATTRIBUTE_ID: attrid,
-                ATTR_ATTRIBUTE_NAME: self._cluster.attributes.get(attrid, [UNKNOWN])[0],
+                ATTR_ATTRIBUTE_NAME: attr_name,
                 ATTR_VALUE: value,
             },
         )
@@ -246,14 +251,20 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         "active_energy_reports": True,
         "power_type": False,
         "switch_type": False,
+        "increased_non_neutral_output": True,
         "button_delay": False,
         "smart_bulb_mode": False,
-        "double_tap_up_for_max_brightness": True,
-        "double_tap_down_for_min_brightness": True,
+        "double_tap_up_enabled": True,
+        "double_tap_down_enabled": True,
+        "double_tap_up_level": True,
+        "double_tap_down_level": True,
         "led_color_when_on": True,
         "led_color_when_off": True,
         "led_intensity_when_on": True,
         "led_intensity_when_off": True,
+        "led_scaling_mode": True,
+        "aux_switch_scenes": True,
+        "binding_off_to_on_sync_level": True,
         "local_protection": False,
         "output_mode": False,
         "on_off_led_mode": True,

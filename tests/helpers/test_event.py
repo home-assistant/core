@@ -3452,7 +3452,7 @@ async def test_track_time_interval_name(hass: HomeAssistant) -> None:
         hass,
         callback(lambda x: specific_runs.append(x)),
         timedelta(seconds=10),
-        unique_string,
+        name=unique_string,
     )
     scheduled = getattr(hass.loop, "_scheduled")
     assert any(handle for handle in scheduled if unique_string in str(handle))

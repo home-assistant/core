@@ -25,10 +25,11 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_per_platform,
@@ -216,7 +217,7 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
     discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     # Clean up stale devices
-    async_track_utc_time_change(
+    cancel_update_stale = async_track_utc_time_change(
         hass, tracker.async_update_stale, second=range(0, 60, 5)
     )
 
@@ -234,6 +235,16 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
 
     # restore
     await tracker.async_setup_tracked_device()
+
+    @callback
+    def _on_hass_stop(_: Event) -> None:
+        """Cleanup when Home Assistant stops.
+
+        Cancel the async_update_stale schedule.
+        """
+        cancel_update_stale()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
 
 @attr.s
@@ -471,13 +482,23 @@ def async_setup_scanner_platform(
 
             hass.async_create_task(async_see_device(**kwargs))
 
-    async_track_time_interval(
+    cancel_legacy_scan = async_track_time_interval(
         hass,
         async_device_tracker_scan,
         interval,
-        f"device_tracker {platform} legacy scan",
+        name=f"device_tracker {platform} legacy scan",
     )
     hass.async_create_task(async_device_tracker_scan(None))
+
+    @callback
+    def _on_hass_stop(_: Event) -> None:
+        """Cleanup when Home Assistant stops.
+
+        Cancel the legacy scan.
+        """
+        cancel_legacy_scan()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
 
 async def get_tracker(hass: HomeAssistant, config: ConfigType) -> DeviceTracker:

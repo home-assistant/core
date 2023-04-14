@@ -117,9 +117,9 @@ class TransmissionSpeedSensor(TransmissionSensor):
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
             b_spd = (
-                float(data.downloadSpeed)
+                float(data.download_speed)
                 if self._sub_type == "download"
-                else float(data.uploadSpeed)
+                else float(data.upload_speed)
             )
             self._state = b_spd
 
@@ -134,8 +134,8 @@ class TransmissionStatusSensor(TransmissionSensor):
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
-            upload = data.uploadSpeed
-            download = data.downloadSpeed
+            upload = data.upload_speed
+            download = data.download_speed
             if upload > 0 and download > 0:
                 self._state = STATE_UP_DOWN
             elif upload > 0 and download == 0:
@@ -199,8 +199,8 @@ def _torrents_info(torrents, order, limit, statuses=None):
     torrents = SUPPORTED_ORDER_MODES[order](torrents)
     for torrent in torrents[:limit]:
         info = infos[torrent.name] = {
-            "added_date": torrent.addedDate,
-            "percent_done": f"{torrent.percentDone * 100:.2f}",
+            "added_date": torrent.date_added,
+            "percent_done": f"{torrent.percent_done * 100:.2f}",
             "status": torrent.status,
             "id": torrent.id,
         }
