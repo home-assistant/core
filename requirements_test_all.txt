@@ -875,6 +875,9 @@ libsoundtouch==0.8
 # homeassistant.components.life360
 life360==6.0.0
 
+# homeassistant.components.linear_garage_door
+linear-garage-door==0.2.5
+
 # homeassistant.components.logi_circle
 logi-circle==0.2.3
 

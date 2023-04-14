@@ -1,0 +1,13 @@
+{
+  "domain": "linear_garage_door",
+  "name": "Linear Garage Door",
+  "codeowners": ["@IceBotYT"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/linear_garage_door",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["linear-garage-door==0.2.5"],
+  "ssdp": [],
+  "zeroconf": []
+}
