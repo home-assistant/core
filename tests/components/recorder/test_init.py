@@ -2312,4 +2312,7 @@ async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -
                 }
             },
         )
+
+    instance = recorder.get_instance(hass)
+    await hass.async_add_executor_job(instance.join)
     assert mock_engine_dispose.called
