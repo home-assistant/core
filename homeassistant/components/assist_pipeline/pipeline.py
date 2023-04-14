@@ -60,7 +60,7 @@ async def async_get_pipeline(
 
     # Construct a pipeline for the required/configured language
     language = language or hass.config.language
-    pipeline = await pipeline_store.async_create_item(
+    return await pipeline_store.async_create_item(
         {
             "name": language,
             "language": language,
@@ -69,7 +69,6 @@ async def async_get_pipeline(
             "tts_engine": None,  # first engine
         }
     )
-    return pipeline
 
 
 class PipelineEventType(StrEnum):
