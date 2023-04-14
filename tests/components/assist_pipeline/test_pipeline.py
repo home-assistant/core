@@ -1,8 +1,8 @@
 """Websocket tests for Voice Assistant integration."""
 from typing import Any
 
-from homeassistant.components.voice_assistant.const import DOMAIN
-from homeassistant.components.voice_assistant.pipeline import (
+from homeassistant.components.assist_pipeline.const import DOMAIN
+from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
     PipelineStorageCollection,
@@ -67,7 +67,7 @@ async def test_loading_datasets_from_storage(
     hass_storage[STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
-        "key": "voice_assistant.pipelines",
+        "key": "assist_pipeline.pipelines",
         "data": {
             "items": [
                 {
@@ -98,7 +98,7 @@ async def test_loading_datasets_from_storage(
         },
     }
 
-    assert await async_setup_component(hass, "voice_assistant", {})
+    assert await async_setup_component(hass, "assist_pipeline", {})
 
     store: PipelineStorageCollection = hass.data[DOMAIN]
     assert len(store.data) == 3

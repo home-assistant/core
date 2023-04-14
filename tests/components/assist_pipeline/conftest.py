@@ -136,4 +136,4 @@ async def init_components(
     assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
     assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "test"}})
     assert await async_setup_component(hass, "media_source", {})
-    assert await async_setup_component(hass, "voice_assistant", {})
+    assert await async_setup_component(hass, "assist_pipeline", {})
