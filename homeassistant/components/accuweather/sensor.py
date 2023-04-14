@@ -63,6 +63,13 @@ class AccuWeatherSensorDescription(
 
 FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
+        key="AirQuality",
+        icon="mdi:air-filter",
+        name="Air quality",
+        entity_registry_enabled_default=True,
+        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+    ),
+    AccuWeatherSensorDescription(
         key="CloudCoverDay",
         icon="mdi:weather-cloudy",
         name="Cloud cover day",
@@ -100,14 +107,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         name="Mold pollen",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
-        value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
-    ),
-    AccuWeatherSensorDescription(
-        key="Ozone",
-        icon="mdi:vector-triangle",
-        name="Ozone",
-        entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
     ),
