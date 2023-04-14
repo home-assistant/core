@@ -87,6 +87,7 @@ class Debouncer(Generic[_R_co]):
             if self._timer_task:
                 return
 
+            # Check original cooldown if a run is requested after a cancellation
             if self._cooldown_until and self._cooldown_until > self.hass.loop.time():
                 self._execute_at_end_of_timer = True
                 self._schedule_timer(self._cooldown_until)
