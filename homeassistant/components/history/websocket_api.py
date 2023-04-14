@@ -41,7 +41,7 @@ from .helpers import entities_may_have_state_changes_after
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class HistoryLiveStream:
     """Track a history live stream."""
 
