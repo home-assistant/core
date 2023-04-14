@@ -90,8 +90,7 @@ class Debouncer(Generic[_R_co]):
             if task:
                 await task
 
-            if not self._shutdown_requested:
-                self._schedule_timer()
+            self._schedule_timer()
 
     async def _handle_timer_finish(self) -> None:
         """Handle a finished timer."""
@@ -116,18 +115,25 @@ class Debouncer(Generic[_R_co]):
                 self.logger.exception("Unexpected exception from %s", self.function)
 
             # Schedule a new timer to prevent new runs during cooldown
-            if not self._shutdown_requested:
-                self._schedule_timer()
+            self._schedule_timer()
 
     @callback
     def async_shutdown(self) -> None:
-        """Shutdown and cancel any scheduled call."""
+        """Shutdown and cancel any scheduled call.
+
+        Note: calling `async_call` after shutdown will ignore cooldown,
+        use `async_cancel` if this is not desired.
+        """
         self._shutdown_requested = True
         self.async_cancel()
 
     @callback
     def async_cancel(self) -> None:
-        """Cancel any scheduled call."""
+        """Cancel any scheduled call.
+
+        Note: calling `async_call` after cancel will follow cooldown,
+        use `async_shutdown` if this is not desired.
+        """
         if self._timer_task:
             self._timer_task.cancel()
             self._timer_task = None
@@ -147,4 +153,7 @@ class Debouncer(Generic[_R_co]):
     @callback
     def _schedule_timer(self) -> None:
         """Schedule a timer."""
-        self._timer_task = self.hass.loop.call_later(self.cooldown, self._on_debounce)
+        if not self._shutdown_requested:
+            self._timer_task = self.hass.loop.call_later(
+                self.cooldown, self._on_debounce
+            )
