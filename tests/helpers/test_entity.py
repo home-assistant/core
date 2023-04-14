@@ -996,10 +996,17 @@ async def test_warn_using_async_update_ha_state(
     ent.hass = hass
     ent.entity_id = "hello.world"
 
+    # When forcing, it should not trigger the warning
+    caplog.clear()
+    await ent.async_update_ha_state(force_refresh=True)
+    assert "is using self.async_update_ha_state()" not in caplog.text
+
+    # When not forcing, it should trigger the warning
     caplog.clear()
     await ent.async_update_ha_state()
     assert "is using self.async_update_ha_state()" in caplog.text
 
+    # When not forcing, it should not trigger the warning again
     caplog.clear()
     await ent.async_update_ha_state()
     assert "is using self.async_update_ha_state()" not in caplog.text
