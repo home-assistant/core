@@ -26,7 +26,7 @@ from .const import DOMAIN
 ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".sun_{}"
 
 
-@dataclass(slots=True)
+@dataclass
 class SunEntityDescriptionMixin:
     """Mixin for required Sun base description keys."""
 
