@@ -1223,6 +1223,59 @@ def test_monthly_statistics(
         ]
     }
 
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["not", "the", "same", "test:total_energy_import"],
+        period="month",
+        types={"sum"},
+    )
+    sep_start = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    sep_end = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_start = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_end = dt_util.as_utc(dt_util.parse_datetime("2021-11-01 00:00:00"))
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": sep_start.timestamp(),
+                "end": sep_end.timestamp(),
+                "sum": pytest.approx(3.0),
+            },
+            {
+                "start": oct_start.timestamp(),
+                "end": oct_end.timestamp(),
+                "sum": pytest.approx(5.0),
+            },
+        ]
+    }
+
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["not", "the", "same", "test:total_energy_import"],
+        period="month",
+        types={"sum"},
+        units={"energy": "Wh"},
+    )
+    sep_start = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    sep_end = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_start = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_end = dt_util.as_utc(dt_util.parse_datetime("2021-11-01 00:00:00"))
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": sep_start.timestamp(),
+                "end": sep_end.timestamp(),
+                "sum": pytest.approx(3000.0),
+            },
+            {
+                "start": oct_start.timestamp(),
+                "end": oct_end.timestamp(),
+                "sum": pytest.approx(5000.0),
+            },
+        ]
+    }
+
     # Use 5minute to ensure table switch works
     stats = statistics_during_period(
         hass,

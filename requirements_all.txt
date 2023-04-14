@@ -156,7 +156,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.6.1
+aioesphomeapi==13.7.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -2619,7 +2619,7 @@ waterfurnace==1.1.0
 # homeassistant.components.cisco_webex_teams
 webexteamssdk==1.1.1
 
-# homeassistant.components.voice_assistant
+# homeassistant.components.assist_pipeline
 webrtcvad==2.0.10
 
 # homeassistant.components.whirlpool

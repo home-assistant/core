@@ -555,8 +555,7 @@ class Entity(ABC):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
-
-        if not self._async_update_ha_state_reported:
+        elif not self._async_update_ha_state_reported:
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
                 (
