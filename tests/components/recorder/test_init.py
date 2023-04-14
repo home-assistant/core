@@ -8,7 +8,7 @@ from pathlib import Path
 import sqlite3
 import threading
 from typing import cast
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -2262,6 +2262,10 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_data
                 }
             },
         )
+        await hass.async_block_till_done()
+
+    instance = recorder.get_instance(hass)
+    assert instance.engine is None
 
 
 async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_schema(
@@ -2284,24 +2288,26 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
                 }
             },
         )
+        await hass.async_block_till_done()
+
+    instance = recorder.get_instance(hass)
+    assert instance.engine is None
 
 
 async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -> None:
     """Test we still shutdown cleanly when schema migration fails."""
-    with patch(
-        "sqlalchemy.engine.base.Engine.dispose"
-    ) as mock_engine_dispose, patch.object(
-        migration, "initialize_database", side_effect=Exception
+    with patch.object(
+        migration, "validate_db_schema", return_value=MagicMock(valid=False)
     ), patch(
         "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
     ), patch.object(
         migration,
-        "_apply_update",
-        side_effect=ValueError,
+        "migrate_schema",
+        side_effect=Exception,
     ):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
-        assert not await async_setup_component(
+        assert await async_setup_component(
             hass,
             recorder.DOMAIN,
             {
@@ -2312,7 +2318,7 @@ async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -
                 }
             },
         )
+        await hass.async_block_till_done()
 
     instance = recorder.get_instance(hass)
-    await hass.async_add_executor_job(instance.join)
-    assert mock_engine_dispose.called
+    assert instance.engine is None
