@@ -237,7 +237,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
             self._unsub_refresh()
             self._unsub_refresh = None
 
-        self._debounced_refresh.async_cancel()
+        self._debounced_refresh.async_cancel(keep_cooldown=True)
 
         if scheduled and self.hass.is_stopping:
             return
