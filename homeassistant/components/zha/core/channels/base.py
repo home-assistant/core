@@ -233,7 +233,12 @@ class ZigbeeChannel(LogMixin):
 
         for attr_report in self.REPORT_CONFIG:
             attr, config = attr_report["attr"], attr_report["config"]
-            attr_name = self.cluster.attributes.get(attr, [attr])[0]
+
+            try:
+                attr_name = self.cluster.find_attribute(attr).name
+            except KeyError:
+                attr_name = attr
+
             event_data[attr_name] = {
                 "min": config[0],
                 "max": config[1],
@@ -303,12 +308,23 @@ class ZigbeeChannel(LogMixin):
             )
             return
 
-        failed = [
-            self.cluster.attributes.get(r.attrid, [r.attrid])[0]
-            for r in res
-            if r.status != Status.SUCCESS
-        ]
-        attributes = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
+        failed = []
+
+        for record in res:
+            if record.status != Status.SUCCESS:
+                try:
+                    failed.append(self.cluster.find_attribute(record.attrid).name)
+                except KeyError:
+                    failed.append(record.attrid)
+
+        attributes = set()
+
+        for attr_name_or_id in attrs:
+            try:
+                attributes.add(self.cluster.find_attribute(attr_name_or_id).name)
+            except KeyError:
+                attributes.add(attr_name_or_id)
+
         self.debug(
             "Successfully configured reporting for '%s' on '%s' cluster",
             attributes - set(failed),
