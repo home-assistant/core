@@ -92,6 +92,7 @@ class Debouncer(Generic[_R_co]):
                 self._execute_at_end_of_timer = True
                 self._schedule_timer(self._cooldown_until)
                 return
+            self._cooldown_until = None
 
             task = self.hass.async_run_hass_job(self._job)
             if task:
