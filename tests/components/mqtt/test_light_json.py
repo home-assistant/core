@@ -493,6 +493,37 @@ async def test_controlling_state_via_topic(
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("effect") == "colorloop"
 
+    async_fire_mqtt_message(
+        hass,
+        "test_light_rgb",
+        '{"state":"ON",'
+        '"color":{"r":255,"g":255,"b":255},'
+        '"brightness":128,'
+        '"color_temp":155,'
+        '"effect":"colorloop"}',
+    )
+    light_state = hass.states.get("light.test")
+    assert light_state.state == STATE_ON
+    assert light_state.attributes.get("brightness") == 128
+
+    async_fire_mqtt_message(
+        hass,
+        "test_light_rgb",
+        '{"state":"OFF","brightness":0}',
+    )
+    light_state = hass.states.get("light.test")
+    assert light_state.state == STATE_OFF
+    assert light_state.attributes.get("brightness") is None
+
+    # test previous zero brightness received was ignored and brightness is restored
+    async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON"}')
+    light_state = hass.states.get("light.test")
+    assert light_state.attributes.get("brightness") == 128
+
+    async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON","brightness":0}')
+    light_state = hass.states.get("light.test")
+    assert light_state.attributes.get("brightness") == 128
+
 
 @pytest.mark.parametrize(
     "hass_config",

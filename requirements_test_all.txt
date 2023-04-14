@@ -61,7 +61,7 @@ WSDiscovery==2.0.0
 WazeRouteCalculator==0.14
 
 # homeassistant.components.accuweather
-accuweather==0.5.0
+accuweather==0.5.1
 
 # homeassistant.components.adax
 adax==0.2.0
@@ -146,7 +146,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.6.1
+aioesphomeapi==13.7.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -941,7 +941,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.2.3
+onvif-zeep-async==1.2.5
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1702,6 +1702,9 @@ solax==0.3.0
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
 
+# homeassistant.components.sonos
+sonos-websocket==0.0.5
+
 # homeassistant.components.marytts
 speak2mary==1.4.0
 
@@ -1880,7 +1883,7 @@ wallbox==0.4.12
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
 
-# homeassistant.components.voice_assistant
+# homeassistant.components.assist_pipeline
 webrtcvad==2.0.10
 
 # homeassistant.components.whirlpool
