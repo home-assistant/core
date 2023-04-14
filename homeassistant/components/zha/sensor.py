@@ -4,6 +4,7 @@ from __future__ import annotations
 import enum
 import functools
 import numbers
+import sys
 from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Self
@@ -442,7 +443,12 @@ class SmartEnergyMetering(Sensor):
         if self._channel.device_type is not None:
             attrs["device_type"] = self._channel.device_type
         if (status := self._channel.status) is not None:
-            attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
+            if isinstance(status, enum.IntFlag) and sys.version_info >= (3, 11):
+                attrs["status"] = str(
+                    status.name if status.name is not None else status.value
+                )
+            else:
+                attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
 
 
@@ -949,3 +955,15 @@ class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
     _attr_native_unit_of_measurement = UnitOfMass.GRAMS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_icon: str = "mdi:weight-gram"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
+class AqaraSmokeDensityDbm(Sensor, id_suffix="smoke_density_dbm"):
+    """Sensor that displays the smoke density of an Aqara smoke sensor in dB/m."""
+
+    SENSOR_ATTR = "smoke_density_dbm"
+    _attr_name: str = "Smoke density"
+    _attr_native_unit_of_measurement = "dB/m"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:google-circles-communities"
+    _attr_suggested_display_precision: int = 3

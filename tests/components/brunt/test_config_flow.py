@@ -1,5 +1,5 @@
 """Test the Brunt config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientResponseError
 from aiohttp.client_exceptions import ServerDisconnectedError
@@ -14,8 +14,10 @@ from tests.common import MockConfigEntry
 
 CONFIG = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_form(hass: HomeAssistant) -> None:
+
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -26,10 +28,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
         return_value=None,
-    ), patch(
-        "homeassistant.components.brunt.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
@@ -63,7 +62,7 @@ async def test_form_duplicate_login(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [
         (ServerDisconnectedError, "cannot_connect"),
         (ClientResponseError(Mock(), None, status=403), "invalid_auth"),
@@ -71,7 +70,7 @@ async def test_form_duplicate_login(hass: HomeAssistant) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_form_error(hass, side_effect, error_message):
+async def test_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
     """Test we handle cannot connect."""
     with patch(
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
@@ -86,7 +85,7 @@ async def test_form_error(hass, side_effect, error_message):
 
 
 @pytest.mark.parametrize(
-    "side_effect, result_type, password, step_id, reason",
+    ("side_effect", "result_type", "password", "step_id", "reason"),
     [
         (None, data_entry_flow.FlowResultType.ABORT, "test", None, "reauth_successful"),
         (
@@ -98,7 +97,9 @@ async def test_form_error(hass, side_effect, error_message):
         ),
     ],
 )
-async def test_reauth(hass, side_effect, result_type, password, step_id, reason):
+async def test_reauth(
+    hass: HomeAssistant, side_effect, result_type, password, step_id, reason
+) -> None:
     """Test uniqueness of username."""
     entry = MockConfigEntry(
         domain=DOMAIN,

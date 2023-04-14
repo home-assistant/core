@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entry.data[CONF_PROJECT],
                 BUILDS_QUERY,
             )
-        except (aiohttp.ClientError, aiohttp.ClientError) as exception:
+        except aiohttp.ClientError as exception:
             raise UpdateFailed from exception
 
     coordinator = DataUpdateCoordinator(

@@ -55,7 +55,7 @@ async def test_no_lights_or_groups(
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    ("input", "expected"),
     [
         (  # RGB light in color temp color mode
             {
@@ -293,7 +293,9 @@ async def test_no_lights_or_groups(
         ),
     ],
 )
-async def test_lights(hass, aioclient_mock, input, expected):
+async def test_lights(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, input, expected
+) -> None:
     """Test that different light entities are created with expected values."""
     data = {"lights": {"0": input}}
     with patch.dict(DECONZ_WEB_REQUEST, data):
@@ -317,7 +319,9 @@ async def test_lights(hass, aioclient_mock, input, expected):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_light_state_change(hass, aioclient_mock, mock_deconz_websocket):
+async def test_light_state_change(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Verify light can change state on websocket event."""
     data = {
         "lights": {
@@ -369,7 +373,7 @@ async def test_light_state_change(hass, aioclient_mock, mock_deconz_websocket):
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    ("input", "expected"),
     [
         (  # Turn on light with hue and sat
             {
@@ -505,7 +509,9 @@ async def test_light_state_change(hass, aioclient_mock, mock_deconz_websocket):
         ),
     ],
 )
-async def test_light_service_calls(hass, aioclient_mock, input, expected):
+async def test_light_service_calls(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, input, expected
+) -> None:
     """Verify light can change state on websocket event."""
     data = {
         "lights": {
@@ -700,7 +706,7 @@ async def test_configuration_tool(
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    ("input", "expected"),
     [
         (
             {
@@ -769,7 +775,9 @@ async def test_configuration_tool(
         ),
     ],
 )
-async def test_groups(hass, aioclient_mock, input, expected):
+async def test_groups(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, input, expected
+) -> None:
     """Test that different group entities are created with expected values."""
     data = {
         "groups": {
@@ -851,7 +859,7 @@ async def test_groups(hass, aioclient_mock, input, expected):
 
 
 @pytest.mark.parametrize(
-    "input,expected",
+    ("input", "expected"),
     [
         (  # Turn on group with short color loop
             {
@@ -907,7 +915,9 @@ async def test_groups(hass, aioclient_mock, input, expected):
         ),
     ],
 )
-async def test_group_service_calls(hass, aioclient_mock, input, expected):
+async def test_group_service_calls(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, input, expected
+) -> None:
     """Verify expected group web request from different service calls."""
     data = {
         "groups": {
@@ -1065,8 +1075,8 @@ async def test_disable_light_groups(
 
 
 async def test_non_color_light_reports_color(
-    hass, aioclient_mock, mock_deconz_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Verify hs_color does not crash when a group gets updated with a bad color value.
 
     After calling a scene color temp light of certain manufacturers

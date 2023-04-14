@@ -37,7 +37,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (RuntimeError, "unknown"),
         (

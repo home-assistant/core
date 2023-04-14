@@ -60,10 +60,10 @@ async def test_flow_no_devices_found(hass: HomeAssistant) -> None:
             result["flow_id"],
             {},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -87,8 +87,8 @@ async def test_flow_exceptions_caught(hass: HomeAssistant) -> None:
             result["flow_id"],
             {},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 0

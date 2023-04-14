@@ -10,7 +10,7 @@ from homeassistant.components import light
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from ..mixins import async_setup_entry_helper, warn_for_legacy_schema
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
@@ -87,7 +87,7 @@ async def _async_setup_entity(
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
     config_entry: ConfigEntry,
-    discovery_data: dict | None = None,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a MQTT Light."""
     setup_entity = {

@@ -181,14 +181,14 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception, base_error",
+    ("exception", "base_error"),
     [
         (CannotConnect, "cannot_connect"),
         (InvalidAuth, "invalid_auth"),
         (Exception, "unknown"),
     ],
 )
-async def test_reauth_flow_error(hass, exception, base_error):
+async def test_reauth_flow_error(hass: HomeAssistant, exception, base_error) -> None:
     """Test a reauthentication flow with errors."""
     entry = MockConfigEntry(
         domain=DOMAIN,

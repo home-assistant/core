@@ -292,7 +292,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Selectors from a config entry."""
     entities = []
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]

@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -59,7 +60,7 @@ async def lock(hass, zigpy_device_mock, zha_device_joined_restored):
     return zha_device, zigpy_device.endpoints[1].door_lock
 
 
-async def test_lock(hass, lock):
+async def test_lock(hass: HomeAssistant, lock) -> None:
     """Test ZHA lock platform."""
 
     zha_device, cluster = lock

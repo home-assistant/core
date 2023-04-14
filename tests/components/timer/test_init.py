@@ -53,7 +53,8 @@ from homeassistant.helpers.restore_state import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import MockUser, async_capture_events, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -296,7 +297,9 @@ async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> Non
     assert state.state == STATUS_IDLE
 
 
-async def test_config_reload(hass, hass_admin_user, hass_read_only_user):
+async def test_config_reload(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
     ent_reg = er.async_get(hass)
@@ -500,7 +503,7 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     assert len(results) == 2
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.timer_from_storage")
@@ -509,7 +512,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(config={DOMAIN: {"from_yaml": None}})
 
@@ -523,7 +526,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert state.state == STATUS_IDLE
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(config={DOMAIN: {"from_yaml": None}})
 
@@ -543,7 +548,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "timer from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -569,7 +576,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) is None
 
 
-async def test_update(hass, hass_ws_client, storage_setup):
+async def test_update(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating timer entity."""
 
     assert await storage_setup()
@@ -611,7 +620,9 @@ async def test_update(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_RESTORE]
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
@@ -642,7 +653,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
 
 
-async def test_setup_no_config(hass, hass_admin_user):
+async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
     assert await async_setup_component(hass, DOMAIN, {})

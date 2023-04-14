@@ -18,7 +18,7 @@ DEFAULT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_PIN: "123", HMIPC_NAME: "hmip"}
 IMPORT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"}
 
 
-async def test_flow_works(hass, simple_mock_home):
+async def test_flow_works(hass: HomeAssistant, simple_mock_home) -> None:
     """Test config flow."""
 
     with patch(
@@ -152,7 +152,7 @@ async def test_init_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_import_config(hass, simple_mock_home):
+async def test_import_config(hass: HomeAssistant, simple_mock_home) -> None:
     """Test importing a host with an existing config file."""
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",

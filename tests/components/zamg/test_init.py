@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id,station_id",
+    ("entitydata", "old_unique_id", "new_unique_id", "station_id"),
     [
         (
             {
@@ -91,7 +91,7 @@ async def test_migrate_unique_ids(
 
 
 @pytest.mark.parametrize(
-    "entitydata,old_unique_id,new_unique_id,station_id",
+    ("entitydata", "old_unique_id", "new_unique_id", "station_id"),
     [
         (
             {
@@ -153,7 +153,7 @@ async def test_dont_migrate_unique_ids(
 
 
 @pytest.mark.parametrize(
-    "entitydata,unique_id",
+    ("entitydata", "unique_id"),
     [
         (
             {

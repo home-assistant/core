@@ -25,12 +25,14 @@ async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_no_binary_sensors(hass, setup_config_entry):
+async def test_no_binary_sensors(hass: HomeAssistant, setup_config_entry) -> None:
     """Test that no sensors in Axis results in no sensor entities."""
     assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
 
 
-async def test_binary_sensors(hass, setup_config_entry, mock_rtsp_event):
+async def test_binary_sensors(
+    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
+) -> None:
     """Test that sensors are loaded properly."""
     mock_rtsp_event(
         topic="tns1:Device/tnsaxis:Sensor/PIR",

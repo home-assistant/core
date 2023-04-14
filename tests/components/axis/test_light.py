@@ -66,7 +66,7 @@ async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_no_lights(hass, setup_config_entry):
+async def test_no_lights(hass: HomeAssistant, setup_config_entry) -> None:
     """Test that no light events in Axis results in no light entities."""
     assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 
@@ -74,8 +74,8 @@ async def test_no_lights(hass, setup_config_entry):
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
 @pytest.mark.parametrize("light_control_items", [[]])
 async def test_no_light_entity_without_light_control_representation(
-    hass, setup_config_entry, mock_rtsp_event
-):
+    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
+) -> None:
     """Verify no lights entities get created without light control representation."""
     mock_rtsp_event(
         topic="tns1:Device/tnsaxis:Light/Status",
@@ -90,7 +90,7 @@ async def test_no_light_entity_without_light_control_representation(
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
-async def test_lights(hass, setup_config_entry, mock_rtsp_event):
+async def test_lights(hass: HomeAssistant, setup_config_entry, mock_rtsp_event) -> None:
     """Test that lights are loaded properly."""
     # Add light
     with patch(

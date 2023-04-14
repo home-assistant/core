@@ -172,7 +172,7 @@ MODERN_FAN_PRESET_MODE_AUTO_REVERSE_STATE = {
         MODERN_FAN_OFF_PPRESET_MODE_ECO_STATE,
     ],
 )
-async def test_modern_turn_on_invalid(hass, start_state):
+async def test_modern_turn_on_invalid(hass: HomeAssistant, start_state) -> None:
     """Test modern fan state reproduction, turning on with invalid state."""
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
@@ -217,7 +217,9 @@ async def test_modern_turn_on_invalid(hass, start_state):
         MODERN_FAN_OFF_PPRESET_MODE_ECO_STATE,
     ],
 )
-async def test_modern_turn_on_percentage_from_different_speed(hass, start_state):
+async def test_modern_turn_on_percentage_from_different_speed(
+    hass: HomeAssistant, start_state
+) -> None:
     """Test modern fan state reproduction, turning on with a different percentage of the state."""
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
@@ -283,7 +285,9 @@ async def test_modern_turn_on_percentage_from_same_speed(hass: HomeAssistant) ->
         MODERN_FAN_OFF_PPRESET_MODE_ECO_STATE,
     ],
 )
-async def test_modern_turn_on_preset_mode_from_different_speed(hass, start_state):
+async def test_modern_turn_on_preset_mode_from_different_speed(
+    hass: HomeAssistant, start_state
+) -> None:
     """Test modern fan state reproduction, turning on with a different preset mode from the state."""
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
@@ -351,7 +355,9 @@ async def test_modern_turn_on_preset_mode_from_same_speed(hass: HomeAssistant) -
         MODERN_FAN_OFF_PPRESET_MODE_ECO_STATE,
     ],
 )
-async def test_modern_turn_on_preset_mode_reverse(hass, start_state):
+async def test_modern_turn_on_preset_mode_reverse(
+    hass: HomeAssistant, start_state
+) -> None:
     """Test modern fan state reproduction, turning on with preset mode "Auto" and reverse direction."""
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
@@ -394,7 +400,7 @@ async def test_modern_turn_on_preset_mode_reverse(hass, start_state):
         MODERN_FAN_ON_PRESET_MODE_ECO_STATE,
     ],
 )
-async def test_modern_to_preset(hass, start_state):
+async def test_modern_to_preset(hass: HomeAssistant, start_state) -> None:
     """Test modern fan state reproduction, switching to preset mode "Auto"."""
     hass.states.async_set(MODERN_FAN_ENTITY, "on", start_state)
 
@@ -430,7 +436,7 @@ async def test_modern_to_preset(hass, start_state):
         MODERN_FAN_ON_PRESET_MODE_ECO_STATE,
     ],
 )
-async def test_modern_to_percentage(hass, start_state):
+async def test_modern_to_percentage(hass: HomeAssistant, start_state) -> None:
     """Test modern fan state reproduction, switching to 15% speed."""
     hass.states.async_set(MODERN_FAN_ENTITY, "on", start_state)
 

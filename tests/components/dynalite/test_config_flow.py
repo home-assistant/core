@@ -11,14 +11,16 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "first_con, second_con,exp_type, exp_result, exp_reason",
+    ("first_con", "second_con", "exp_type", "exp_result", "exp_reason"),
     [
         (True, True, "create_entry", config_entries.ConfigEntryState.LOADED, ""),
         (False, False, "abort", None, "no_connection"),
         (True, False, "create_entry", config_entries.ConfigEntryState.SETUP_RETRY, ""),
     ],
 )
-async def test_flow(hass, first_con, second_con, exp_type, exp_result, exp_reason):
+async def test_flow(
+    hass: HomeAssistant, first_con, second_con, exp_type, exp_result, exp_reason
+) -> None:
     """Run a flow with or without errors and return result."""
     host = "1.2.3.4"
     with patch(

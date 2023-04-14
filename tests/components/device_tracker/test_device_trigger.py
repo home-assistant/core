@@ -7,7 +7,12 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_tracker import DOMAIN, device_trigger
 import homeassistant.components.zone as zone
 from homeassistant.const import EntityCategory
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -51,7 +56,11 @@ def setup_zone(hass):
     )
 
 
-async def test_get_triggers(hass, device_registry, entity_registry):
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a device_tracker."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -80,7 +89,7 @@ async def test_get_triggers(hass, device_registry, entity_registry):
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -89,12 +98,12 @@ async def test_get_triggers(hass, device_registry, entity_registry):
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -127,7 +136,7 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_zone_change(hass, calls):
+async def test_if_fires_on_zone_change(hass: HomeAssistant, calls) -> None:
     """Test for enter and leave triggers firing."""
     hass.states.async_set(
         "device_tracker.entity",
@@ -217,7 +226,11 @@ async def test_if_fires_on_zone_change(hass, calls):
     )
 
 
-async def test_get_trigger_capabilities(hass, device_registry, entity_registry):
+async def test_get_trigger_capabilities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected capabilities from a device_tracker trigger."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

@@ -13,7 +13,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     EntityCategory,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -34,7 +35,7 @@ def calls(hass):
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_condition_types",
+    ("set_state", "features_reg", "features_state", "expected_condition_types"),
     [
         (False, 0, 0, []),
         (
@@ -69,14 +70,14 @@ def calls(hass):
     ],
 )
 async def test_get_conditions(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     features_reg,
     features_state,
     expected_condition_types,
-):
+) -> None:
     """Test we get the expected conditions from a cover."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -116,7 +117,7 @@ async def test_get_conditions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -125,12 +126,12 @@ async def test_get_conditions(
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_registry,
-    entity_registry,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -165,8 +166,11 @@ async def test_get_conditions_hidden_auxiliary(
 
 
 async def test_get_condition_capabilities(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -196,8 +200,11 @@ async def test_get_condition_capabilities(
 
 
 async def test_get_condition_capabilities_set_pos(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -250,8 +257,11 @@ async def test_get_condition_capabilities_set_pos(
 
 
 async def test_get_condition_capabilities_set_tilt_pos(
-    hass, device_registry, entity_registry, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -303,7 +313,7 @@ async def test_get_condition_capabilities_set_tilt_pos(
             assert capabilities == {"extra_fields": []}
 
 
-async def test_if_state(hass, calls):
+async def test_if_state(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off conditions."""
     hass.states.async_set("cover.entity", STATE_OPEN)
 
@@ -431,7 +441,12 @@ async def test_if_state(hass, calls):
     assert calls[3].data["some"] == "is_closing - event - test_event4"
 
 
-async def test_if_position(hass, calls, caplog, enable_custom_integrations):
+async def test_if_position(
+    hass: HomeAssistant,
+    calls,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test for position conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -576,7 +591,12 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
         assert record.levelname in ("DEBUG", "INFO")
 
 
-async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations):
+async def test_if_tilt_position(
+    hass: HomeAssistant,
+    calls,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test for tilt position conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()

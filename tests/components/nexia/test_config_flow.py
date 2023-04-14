@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize("brand", [BRAND_ASAIR, BRAND_NEXIA])
-async def test_form(hass, brand):
+async def test_form(hass: HomeAssistant, brand) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(

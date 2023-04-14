@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIClass, UIWidget
@@ -15,12 +15,12 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
-from .const import DOMAIN
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
@@ -107,6 +107,19 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         ),
         entity_category=EntityCategory.CONFIG,
     ),
+    OverkizSwitchDescription(
+        key=UIWidget.DYNAMIC_SHUTTER,
+        name="Silent mode",
+        turn_on=OverkizCommand.ACTIVATE_OPTION,
+        turn_on_args=OverkizCommandParam.SILENCE,
+        turn_off=OverkizCommand.DEACTIVATE_OPTION,
+        turn_off_args=OverkizCommandParam.SILENCE,
+        is_on=lambda select_state: (
+            OverkizCommandParam.SILENCE
+            in cast(list, select_state(OverkizState.CORE_ACTIVATED_OPTIONS))
+        ),
+        icon="mdi:feather",
+    ),
 ]
 
 SUPPORTED_DEVICES = {
@@ -123,7 +136,13 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizSwitch] = []
 
-    for device in data.platforms[Platform.SWITCH]:
+    for device in data.coordinator.data.values():
+        if (
+            device.widget in IGNORED_OVERKIZ_DEVICES
+            or device.ui_class in IGNORED_OVERKIZ_DEVICES
+        ):
+            continue
+
         if description := SUPPORTED_DEVICES.get(device.widget) or SUPPORTED_DEVICES.get(
             device.ui_class
         ):

@@ -31,13 +31,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import (
-    JSON_DECODE_EXCEPTIONS,
-    json_dumps,
-    json_loads_object,
-)
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA

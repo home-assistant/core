@@ -15,6 +15,8 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -41,8 +43,12 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
 
 
 async def test_full_flow(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host, mock_impl
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    mock_impl,
+) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -101,8 +107,12 @@ async def test_full_flow(
 
 
 async def test_reauthentication_flow(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host, mock_impl
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    mock_impl,
+) -> None:
     """Test reauthentication flow."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,

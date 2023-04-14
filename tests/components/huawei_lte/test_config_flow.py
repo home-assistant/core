@@ -6,6 +6,7 @@ from huawei_lte_api.enums.user import LoginErrorEnum, LoginStateEnum, PasswordTy
 import pytest
 import requests.exceptions
 from requests.exceptions import ConnectionError
+import requests_mock
 from requests_mock import ANY
 
 from homeassistant import config_entries, data_entry_flow
@@ -46,7 +47,9 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_urlize_plain_host(hass, requests_mock):
+async def test_urlize_plain_host(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test that plain host or IP gets converted to a URL."""
     requests_mock.request(ANY, ANY, exc=ConnectionError())
     host = "192.168.100.1"
@@ -60,7 +63,9 @@ async def test_urlize_plain_host(hass, requests_mock):
     assert user_input[CONF_URL] == f"http://{host}/"
 
 
-async def test_already_configured(hass, requests_mock, login_requests_mock):
+async def test_already_configured(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, login_requests_mock
+) -> None:
     """Test we reject already configured devices."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -90,7 +95,9 @@ async def test_already_configured(hass, requests_mock, login_requests_mock):
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(hass, requests_mock):
+async def test_connection_error(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test we show user form on connection error."""
     requests_mock.request(ANY, ANY, exc=ConnectionError())
     result = await hass.config_entries.flow.async_init(
@@ -168,8 +175,8 @@ def login_requests_mock(requests_mock):
     ),
 )
 async def test_login_error(
-    hass, login_requests_mock, request_outcome, fixture_override, errors
-):
+    hass: HomeAssistant, login_requests_mock, request_outcome, fixture_override, errors
+) -> None:
     """Test we show user form with appropriate error on response failure."""
     login_requests_mock.request(
         ANY,
@@ -187,7 +194,7 @@ async def test_login_error(
     assert result["errors"] == errors
 
 
-async def test_success(hass, login_requests_mock):
+async def test_success(hass: HomeAssistant, login_requests_mock) -> None:
     """Test successful flow provides entry creation data."""
     login_requests_mock.request(
         ANY,
@@ -262,8 +269,12 @@ async def test_success(hass, login_requests_mock):
     ),
 )
 async def test_ssdp(
-    hass, login_requests_mock, requests_mock_request_kwargs, upnp_data, expected_result
-):
+    hass: HomeAssistant,
+    login_requests_mock,
+    requests_mock_request_kwargs,
+    upnp_data,
+    expected_result,
+) -> None:
     """Test SSDP discovery initiates config properly."""
     url = FIXTURE_USER_INPUT[CONF_URL][:-1]  # strip trailing slash for appending port
     context = {"source": config_entries.SOURCE_SSDP}
@@ -317,8 +328,12 @@ async def test_ssdp(
     ),
 )
 async def test_reauth(
-    hass, login_requests_mock, login_response_text, expected_result, expected_entry_data
-):
+    hass: HomeAssistant,
+    login_requests_mock,
+    login_response_text,
+    expected_result,
+    expected_entry_data,
+) -> None:
     """Test reauth."""
     mock_entry_data = {**FIXTURE_USER_INPUT, CONF_PASSWORD: "invalid-password"}
     entry = MockConfigEntry(

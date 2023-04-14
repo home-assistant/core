@@ -43,7 +43,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("mock_client", [AsyncMock(side_effect=Exception)])
-async def test_unknown_auth_error(hass, mock_meater):
+async def test_unknown_auth_error(hass: HomeAssistant, mock_meater) -> None:
     """Test that an invalid API/App Key throws an error."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 
@@ -54,7 +54,7 @@ async def test_unknown_auth_error(hass, mock_meater):
 
 
 @pytest.mark.parametrize("mock_client", [AsyncMock(side_effect=AuthenticationError)])
-async def test_invalid_credentials(hass, mock_meater):
+async def test_invalid_credentials(hass: HomeAssistant, mock_meater) -> None:
     """Test that an invalid API/App Key throws an error."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 
@@ -67,7 +67,7 @@ async def test_invalid_credentials(hass, mock_meater):
 @pytest.mark.parametrize(
     "mock_client", [AsyncMock(side_effect=ServiceUnavailableError)]
 )
-async def test_service_unavailable(hass, mock_meater):
+async def test_service_unavailable(hass: HomeAssistant, mock_meater) -> None:
     """Test that an invalid API/App Key throws an error."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 
@@ -77,7 +77,7 @@ async def test_service_unavailable(hass, mock_meater):
     assert result["errors"] == {"base": "service_unavailable_error"}
 
 
-async def test_user_flow(hass, mock_meater):
+async def test_user_flow(hass: HomeAssistant, mock_meater) -> None:
     """Test that the user flow works."""
     conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
 
@@ -108,7 +108,7 @@ async def test_user_flow(hass, mock_meater):
     }
 
 
-async def test_reauth_flow(hass, mock_meater):
+async def test_reauth_flow(hass: HomeAssistant, mock_meater) -> None:
     """Test that the reauth flow works."""
     data = {
         CONF_USERNAME: "user@host.com",

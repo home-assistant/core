@@ -31,7 +31,9 @@ async def test_no_locks(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lock_from_light(hass, aioclient_mock, mock_deconz_websocket):
+async def test_lock_from_light(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported lock entities based on lights are created."""
     data = {
         "lights": {
@@ -104,7 +106,9 @@ async def test_lock_from_light(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lock_from_sensor(hass, aioclient_mock, mock_deconz_websocket):
+async def test_lock_from_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported lock entities based on sensors are created."""
     data = {
         "sensors": {

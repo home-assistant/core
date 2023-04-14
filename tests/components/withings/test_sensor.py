@@ -305,7 +305,9 @@ def async_assert_state_equals(
 
 
 async def test_sensor_default_enabled_entities(
-    hass: HomeAssistant, component_factory: ComponentFactory, current_request_with_host
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    current_request_with_host: None,
 ) -> None:
     """Test entities enabled by default."""
     entity_registry: EntityRegistry = er.async_get(hass)
@@ -352,7 +354,9 @@ async def test_sensor_default_enabled_entities(
 
 
 async def test_all_entities(
-    hass: HomeAssistant, component_factory: ComponentFactory, current_request_with_host
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    current_request_with_host: None,
 ) -> None:
     """Test all entities."""
     entity_registry: EntityRegistry = er.async_get(hass)

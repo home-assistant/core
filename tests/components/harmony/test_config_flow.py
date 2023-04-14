@@ -187,7 +187,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow(hass, mock_hc, mock_write_config):
+async def test_options_flow(hass: HomeAssistant, mock_hc, mock_write_config) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

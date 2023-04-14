@@ -25,7 +25,8 @@ from homeassistant.setup import async_setup_component
 
 from .common import async_decrement, async_increment, async_reset
 
-from tests.common import mock_restore_cache
+from tests.common import MockUser, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -266,7 +267,7 @@ async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> Non
     assert int(state.state) == 0
 
 
-async def test_counter_context(hass, hass_admin_user):
+async def test_counter_context(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that counter context works."""
     assert await async_setup_component(hass, "counter", {"counter": {"test": {}}})
 
@@ -287,7 +288,7 @@ async def test_counter_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_counter_min(hass, hass_admin_user):
+async def test_counter_min(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that min works."""
     assert await async_setup_component(
         hass, "counter", {"counter": {"test": {"minimum": "0", "initial": "0"}}}
@@ -322,7 +323,7 @@ async def test_counter_min(hass, hass_admin_user):
     assert state2.state == "1"
 
 
-async def test_counter_max(hass, hass_admin_user):
+async def test_counter_max(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that max works."""
     assert await async_setup_component(
         hass, "counter", {"counter": {"test": {"maximum": "0", "initial": "0"}}}
@@ -357,7 +358,7 @@ async def test_counter_max(hass, hass_admin_user):
     assert state2.state == "-1"
 
 
-async def test_configure(hass, hass_admin_user):
+async def test_configure(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that setting values through configure works."""
     assert await async_setup_component(
         hass, "counter", {"counter": {"test": {"maximum": "10", "initial": "10"}}}
@@ -492,7 +493,7 @@ async def test_configure(hass, hass_admin_user):
     assert state.attributes.get("initial") == 6
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -501,7 +502,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(
         config={
@@ -527,7 +528,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert state.attributes[ATTR_EDITABLE] is False
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(
         config={
@@ -559,7 +562,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -584,7 +589,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_update_min_max(hass, hass_ws_client, storage_setup):
+async def test_update_min_max(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating min/max updates the state."""
 
     settings = {
@@ -670,7 +677,9 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_STEP] == 6
 
 
-async def test_create(hass, hass_ws_client, storage_setup):
+async def test_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test creating counter using WS."""
 
     items = []

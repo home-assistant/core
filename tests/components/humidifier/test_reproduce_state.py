@@ -223,10 +223,10 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "service,attribute",
+    ("service", "attribute"),
     [(SERVICE_SET_MODE, ATTR_MODE), (SERVICE_SET_HUMIDITY, ATTR_HUMIDITY)],
 )
-async def test_attribute(hass, service, attribute):
+async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
     """Test that service call is made for each attribute."""
     hass.states.async_set(ENTITY_1, STATE_ON, {})
 

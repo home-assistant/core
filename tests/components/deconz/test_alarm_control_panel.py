@@ -42,7 +42,9 @@ async def test_no_sensors(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
+async def test_alarm_control_panel(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of alarm control panel entities."""
     data = {
         "alarmsystems": {

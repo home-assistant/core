@@ -1,4 +1,6 @@
 """Test starting HA helpers."""
+import pytest
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import start
@@ -27,7 +29,9 @@ async def test_at_start_when_running_awaitable(hass: HomeAssistant) -> None:
     assert len(calls) == 2
 
 
-async def test_at_start_when_running_callback(hass, caplog):
+async def test_at_start_when_running_callback(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test at start when already running."""
     assert hass.state == CoreState.running
     assert hass.is_running
@@ -73,7 +77,9 @@ async def test_at_start_when_starting_awaitable(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
 
-async def test_at_start_when_starting_callback(hass, caplog):
+async def test_at_start_when_starting_callback(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test at start when yet to start."""
     hass.state = CoreState.not_running
     assert not hass.is_running
@@ -100,7 +106,9 @@ async def test_at_start_when_starting_callback(hass, caplog):
         assert record.levelname in ("DEBUG", "INFO")
 
 
-async def test_cancelling_at_start_when_running(hass, caplog):
+async def test_cancelling_at_start_when_running(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test cancelling at start when already running."""
     assert hass.state == CoreState.running
     assert hass.is_running
@@ -163,7 +171,9 @@ async def test_at_started_when_running_awaitable(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
 
-async def test_at_started_when_running_callback(hass, caplog):
+async def test_at_started_when_running_callback(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test at started when already running."""
     assert hass.state == CoreState.running
 
@@ -211,7 +221,9 @@ async def test_at_started_when_starting_awaitable(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
 
-async def test_at_started_when_starting_callback(hass, caplog):
+async def test_at_started_when_starting_callback(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test at started when yet to start."""
     hass.state = CoreState.not_running
 
@@ -241,7 +253,9 @@ async def test_at_started_when_starting_callback(hass, caplog):
         assert record.levelname in ("DEBUG", "INFO")
 
 
-async def test_cancelling_at_started_when_running(hass, caplog):
+async def test_cancelling_at_started_when_running(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test cancelling at start when already running."""
     assert hass.state == CoreState.running
     assert hass.is_running

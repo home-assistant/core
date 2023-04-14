@@ -41,7 +41,7 @@ def mock_requests():
         yield mock_requests
 
 
-async def test_event_listener(hass, mock_dump, mock_requests):
+async def test_event_listener(hass: HomeAssistant, mock_dump, mock_requests) -> None:
     """Test event listener."""
     mock_dump.side_effect = lambda x: x
     mock_post = mock_requests.post

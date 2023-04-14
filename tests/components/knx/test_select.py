@@ -18,7 +18,7 @@ from .conftest import KNXTestKit
 from tests.common import mock_restore_cache
 
 
-async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit):
+async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test simple KNX select."""
     _options = [
         {CONF_PAYLOAD: 0b00, SelectSchema.CONF_OPTION: "No control"},
@@ -37,7 +37,6 @@ async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit):
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
     state = hass.states.get("select.test")
     assert state.state is STATE_UNKNOWN
 
@@ -88,7 +87,7 @@ async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_no_telegram()
 
 
-async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit):
+async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX select with passive_address and respond_to_read restoring state."""
     _options = [
         {CONF_PAYLOAD: 0b00, SelectSchema.CONF_OPTION: "No control"},
@@ -125,7 +124,9 @@ async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_no_telegram()
 
 
-async def test_select_dpt_20_103_all_options(hass: HomeAssistant, knx: KNXTestKit):
+async def test_select_dpt_20_103_all_options(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
     """Test KNX select with state_address, passive_address and respond_to_read."""
     _options = [
         {CONF_PAYLOAD: 0, SelectSchema.CONF_OPTION: "Auto"},
@@ -150,7 +151,6 @@ async def test_select_dpt_20_103_all_options(hass: HomeAssistant, knx: KNXTestKi
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
     state = hass.states.get("select.test")
     assert state.state is STATE_UNKNOWN
 

@@ -41,7 +41,15 @@ from homeassistant.helpers.reload import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_DATA, REST_IDX
+from .const import (
+    CONF_ENCODING,
+    COORDINATOR,
+    DOMAIN,
+    PLATFORM_IDX,
+    REST,
+    REST_DATA,
+    REST_IDX,
+)
 from .data import RestData
 from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA  # noqa: F401
 
@@ -182,7 +190,7 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
     headers: dict[str, str] | None = config.get(CONF_HEADERS)
     params: dict[str, str] | None = config.get(CONF_PARAMS)
     timeout: int = config[CONF_TIMEOUT]
-
+    encoding: str = config[CONF_ENCODING]
     if resource_template is not None:
         resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)
@@ -201,5 +209,14 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
             auth = (username, password)
 
     return RestData(
-        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
+        hass,
+        method,
+        resource,
+        encoding,
+        auth,
+        headers,
+        params,
+        payload,
+        verify_ssl,
+        timeout,
     )

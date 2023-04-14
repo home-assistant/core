@@ -119,7 +119,7 @@ async def test_api_set_color_temperature(hass: HomeAssistant) -> None:
     assert msg["header"]["name"] == "Response"
 
 
-@pytest.mark.parametrize("result,initial", [(383, "333"), (500, "500")])
+@pytest.mark.parametrize(("result", "initial"), [(383, "333"), (500, "500")])
 async def test_api_decrease_color_temp(
     hass: HomeAssistant, result: int, initial: str
 ) -> None:
@@ -149,7 +149,7 @@ async def test_api_decrease_color_temp(
     assert msg["header"]["name"] == "Response"
 
 
-@pytest.mark.parametrize("result,initial", [(283, "333"), (142, "142")])
+@pytest.mark.parametrize(("result", "initial"), [(283, "333"), (142, "142")])
 async def test_api_increase_color_temp(
     hass: HomeAssistant, result: int, initial: str
 ) -> None:
@@ -180,7 +180,7 @@ async def test_api_increase_color_temp(
 
 
 @pytest.mark.parametrize(
-    "domain,payload,source_list,idx",
+    ("domain", "payload", "source_list", "idx"),
     [
         ("media_player", "GAME CONSOLE", ["tv", "game console", 10000], 1),
         ("media_player", "SATELLITE TV", ["satellite-tv", "game console"], 0),

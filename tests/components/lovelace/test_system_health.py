@@ -1,4 +1,5 @@
 """Tests for Lovelace system health."""
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components.lovelace import dashboard
@@ -16,7 +17,9 @@ async def test_system_health_info_autogen(hass: HomeAssistant) -> None:
     assert info == {"dashboards": 1, "mode": "auto-gen", "resources": 0}
 
 
-async def test_system_health_info_storage(hass, hass_storage):
+async def test_system_health_info_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "system_health", {})
     hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {

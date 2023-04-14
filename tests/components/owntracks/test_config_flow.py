@@ -60,7 +60,7 @@ async def init_config_flow(hass):
     return flow
 
 
-async def test_user(hass, webhook_id, secret):
+async def test_user(hass: HomeAssistant, webhook_id, secret) -> None:
     """Test user step."""
     flow = await init_config_flow(hass)
 
@@ -103,7 +103,9 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_not_supports_encryption(hass, not_supports_encryption):
+async def test_user_not_supports_encryption(
+    hass: HomeAssistant, not_supports_encryption
+) -> None:
     """Test user step."""
     flow = await init_config_flow(hass)
 

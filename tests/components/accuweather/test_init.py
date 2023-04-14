@@ -1,6 +1,5 @@
 """Test init of AccuWeather integration."""
 from datetime import timedelta
-import json
 from unittest.mock import patch
 
 from accuweather import ApiError
@@ -13,7 +12,12 @@ from homeassistant.util.dt import utcnow
 
 from . import init_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
@@ -69,7 +73,7 @@ async def test_update_interval(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.LOADED
 
-    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
+    current = load_json_object_fixture("accuweather/current_conditions_data.json")
     future = utcnow() + timedelta(minutes=40)
 
     with patch(
@@ -90,8 +94,8 @@ async def test_update_interval_forecast(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.LOADED
 
-    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
-    forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
+    current = load_json_object_fixture("accuweather/current_conditions_data.json")
+    forecast = load_json_array_fixture("accuweather/forecast_data.json")
     future = utcnow() + timedelta(minutes=80)
 
     with patch(

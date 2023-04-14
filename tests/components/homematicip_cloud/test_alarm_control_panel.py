@@ -48,7 +48,9 @@ async def test_manually_configured_platform(hass: HomeAssistant) -> None:
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_alarm_control_panel(hass, default_mock_hap_factory):
+async def test_hmip_alarm_control_panel(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipAlarmControlPanel."""
     entity_id = "alarm_control_panel.hmip_alarm_control_panel"
     entity_name = "HmIP Alarm Control Panel"

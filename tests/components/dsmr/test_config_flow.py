@@ -28,7 +28,9 @@ def com_port():
     return port
 
 
-async def test_setup_network(hass, dsmr_connection_send_validate_fixture):
+async def test_setup_network(
+    hass: HomeAssistant, dsmr_connection_send_validate_fixture
+) -> None:
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,10 +73,10 @@ async def test_setup_network(hass, dsmr_connection_send_validate_fixture):
 
 
 async def test_setup_network_rfxtrx(
-    hass,
+    hass: HomeAssistant,
     dsmr_connection_send_validate_fixture,
     rfxtrx_dsmr_connection_send_validate_fixture,
-):
+) -> None:
     """Test we can setup network."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
@@ -122,7 +124,9 @@ async def test_setup_network_rfxtrx(
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixture):
+async def test_setup_serial(
+    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+) -> None:
     """Test we can setup serial."""
     port = com_port()
 
@@ -164,10 +168,10 @@ async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixtur
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_rfxtrx(
     com_mock,
-    hass,
+    hass: HomeAssistant,
     dsmr_connection_send_validate_fixture,
     rfxtrx_dsmr_connection_send_validate_fixture,
-):
+) -> None:
     """Test we can setup serial."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
@@ -212,7 +216,9 @@ async def test_setup_serial_rfxtrx(
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-async def test_setup_5L(com_mock, hass, dsmr_connection_send_validate_fixture):
+async def test_setup_5L(
+    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+) -> None:
     """Test we can setup serial."""
     port = com_port()
 
@@ -254,7 +260,9 @@ async def test_setup_5L(com_mock, hass, dsmr_connection_send_validate_fixture):
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-async def test_setup_5S(com_mock, hass, dsmr_connection_send_validate_fixture):
+async def test_setup_5S(
+    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+) -> None:
     """Test we can setup serial."""
     port = com_port()
 
@@ -295,7 +303,9 @@ async def test_setup_5S(com_mock, hass, dsmr_connection_send_validate_fixture):
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-async def test_setup_Q3D(com_mock, hass, dsmr_connection_send_validate_fixture):
+async def test_setup_Q3D(
+    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+) -> None:
     """Test we can setup serial."""
     port = com_port()
 
@@ -338,8 +348,8 @@ async def test_setup_Q3D(com_mock, hass, dsmr_connection_send_validate_fixture):
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_manual(
-    com_mock, hass, dsmr_connection_send_validate_fixture
-):
+    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+) -> None:
     """Test we can setup serial with manual entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -385,7 +395,9 @@ async def test_setup_serial_manual(
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
-async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_fixture):
+async def test_setup_serial_fail(
+    com_mock, hass: HomeAssistant, dsmr_connection_send_validate_fixture
+) -> None:
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
 
@@ -431,10 +443,10 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_timeout(
     com_mock,
-    hass,
+    hass: HomeAssistant,
     dsmr_connection_send_validate_fixture,
     rfxtrx_dsmr_connection_send_validate_fixture,
-):
+) -> None:
     """Test failed serial connection."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
     (
@@ -487,10 +499,10 @@ async def test_setup_serial_timeout(
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_wrong_telegram(
     com_mock,
-    hass,
+    hass: HomeAssistant,
     dsmr_connection_send_validate_fixture,
     rfxtrx_dsmr_connection_send_validate_fixture,
-):
+) -> None:
     """Test failed telegram data."""
     (connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
     (

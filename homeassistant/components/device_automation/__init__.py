@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
+from dataclasses import dataclass
 from enum import Enum
 from functools import wraps
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, overload
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -63,7 +64,8 @@ DEVICE_TRIGGER_BASE_SCHEMA: vol.Schema = cv.TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-class DeviceAutomationDetails(NamedTuple):
+@dataclass
+class DeviceAutomationDetails:
     """Details for device automation."""
 
     section: str

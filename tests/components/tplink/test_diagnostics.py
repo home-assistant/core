@@ -14,7 +14,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(
-    "mocked_dev,fixture_file,sysinfo_vars",
+    ("mocked_dev", "fixture_file", "sysinfo_vars"),
     [
         (
             _mocked_bulb(),

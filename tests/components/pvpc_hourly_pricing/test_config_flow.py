@@ -12,6 +12,7 @@ from homeassistant.components.pvpc_hourly_pricing import (
     TARIFFS,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import check_valid_state
@@ -22,7 +23,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 _MOCK_TIME_VALID_RESPONSES = datetime(2023, 1, 6, 12, 0, tzinfo=date_util.UTC)
 
 
-async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
+async def test_config_flow(
+    hass: HomeAssistant, pvpc_aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test config flow for pvpc_hourly_pricing.
 
     - Create a new entry with tariff "2.0TD (Ceuta/Melilla)"

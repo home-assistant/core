@@ -13,7 +13,8 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.typing import ClientSessionGenerator
+from tests.common import MockUser
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -127,7 +128,12 @@ async def test_media_view(
     assert resp.status == HTTPStatus.OK
 
 
-async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
+async def test_upload_view(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    temp_dir,
+    hass_admin_user: MockUser,
+) -> None:
     """Allow uploading media."""
 
     img = (Path(__file__).parent.parent / "image_upload/logo.png").read_bytes()
@@ -231,7 +237,12 @@ async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
     assert not (Path(temp_dir) / "no-admin-test.png").is_file()
 
 
-async def test_remove_file(hass, hass_ws_client, temp_dir, hass_admin_user):
+async def test_remove_file(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    temp_dir,
+    hass_admin_user: MockUser,
+) -> None:
     """Allow uploading media."""
 
     msg_count = 0

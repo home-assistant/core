@@ -18,7 +18,9 @@ def client(hass, hass_ws_client):
     return hass.loop.run_until_complete(hass_ws_client(hass))
 
 
-async def test_list_devices(hass, client, device_registry):
+async def test_list_devices(
+    hass: HomeAssistant, client, device_registry: dr.DeviceRegistry
+) -> None:
     """Test list entries."""
     device1 = device_registry.async_get_or_create(
         config_entry_id="1234",
@@ -110,7 +112,7 @@ async def test_list_devices(hass, client, device_registry):
 
 
 @pytest.mark.parametrize(
-    "payload_key,payload_value",
+    ("payload_key", "payload_value"),
     [
         ["area_id", "12345A"],
         ["area_id", None],
@@ -121,7 +123,13 @@ async def test_list_devices(hass, client, device_registry):
         ["name_by_user", None],
     ],
 )
-async def test_update_device(hass, client, device_registry, payload_key, payload_value):
+async def test_update_device(
+    hass: HomeAssistant,
+    client,
+    device_registry: dr.DeviceRegistry,
+    payload_key,
+    payload_value,
+) -> None:
     """Test update entry."""
     device = device_registry.async_get_or_create(
         config_entry_id="1234",

@@ -76,7 +76,9 @@ async def test_show_config_form_device_type_keg(hass: HomeAssistant) -> None:
     assert result["data_schema"].schema.get(CONF_USE_WEBHOOK) is None
 
 
-async def test_show_config_form_validate_webhook(hass, webhook_id):
+async def test_show_config_form_validate_webhook(
+    hass: HomeAssistant, webhook_id
+) -> None:
     """Test show configuration form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -120,7 +122,9 @@ async def test_show_config_form_validate_webhook(hass, webhook_id):
     assert result["step_id"] == "webhook"
 
 
-async def test_show_config_form_validate_webhook_not_connected(hass, webhook_id):
+async def test_show_config_form_validate_webhook_not_connected(
+    hass: HomeAssistant, webhook_id
+) -> None:
     """Test validating webhook when not connected aborts."""
 
     result = await hass.config_entries.flow.async_init(
@@ -197,7 +201,9 @@ async def test_show_config_form_validate_token(hass: HomeAssistant) -> None:
     }
 
 
-async def test_show_config_form_no_cloud_webhook(hass, webhook_id):
+async def test_show_config_form_no_cloud_webhook(
+    hass: HomeAssistant, webhook_id
+) -> None:
     """Test show configuration form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -228,7 +234,9 @@ async def test_show_config_form_no_cloud_webhook(hass, webhook_id):
     assert result["errors"] is None
 
 
-async def test_show_config_form_api_method_no_auth_token(hass, webhook_id):
+async def test_show_config_form_api_method_no_auth_token(
+    hass: HomeAssistant, webhook_id
+) -> None:
     """Test show configuration form."""
 
     # Using Keg
@@ -316,7 +324,7 @@ async def test_options(hass: HomeAssistant) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_webhook(hass, webhook_id):
+async def test_options_webhook(hass: HomeAssistant, webhook_id) -> None:
     """Test updating options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

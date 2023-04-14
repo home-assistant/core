@@ -1,5 +1,4 @@
 """Tests for Samsung TV config flow."""
-from collections.abc import Generator
 import socket
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
@@ -216,14 +215,7 @@ DEVICEINFO_WEBSOCKET_NO_SSL = {
     "timeout": TIMEOUT_WEBSOCKET,
 }
 
-
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.samsungtv.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 @pytest.mark.usefixtures("remote", "rest_api_failing")
@@ -968,7 +960,7 @@ async def test_import_legacy_without_name(
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
-async def test_import_websocket(hass: HomeAssistant):
+async def test_import_websocket(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -987,7 +979,7 @@ async def test_import_websocket(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("remoteencws")
-async def test_import_websocket_encrypted(hass: HomeAssistant):
+async def test_import_websocket_encrypted(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1007,7 +999,7 @@ async def test_import_websocket_encrypted(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
-async def test_import_websocket_without_port(hass: HomeAssistant):
+async def test_import_websocket_without_port(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname by no port."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1029,7 +1021,7 @@ async def test_import_websocket_without_port(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("remotews")
-async def test_import_unknown_host(hass: HomeAssistant):
+async def test_import_unknown_host(hass: HomeAssistant) -> None:
     """Test importing from yaml with hostname that does not resolve."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",

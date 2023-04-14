@@ -367,25 +367,49 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity, id_suffix="smart_bulb_
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names=CHANNEL_INOVELLI,
 )
-class InovelliDoubleTapForFullBrightness(
-    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_for_max_brightness"
+class InovelliDoubleTapUpEnabled(
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_enabled"
 ):
-    """Inovelli double tap for full brightness control."""
+    """Inovelli double tap up enabled."""
 
-    _zcl_attribute: str = "double_tap_up_for_max_brightness"
-    _attr_name: str = "Double tap full brightness"
+    _zcl_attribute: str = "double_tap_up_enabled"
+    _attr_name: str = "Double tap up enabled"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names=CHANNEL_INOVELLI,
 )
-class InovelliDoubleTapForMinBrightness(
-    ZHASwitchConfigurationEntity, id_suffix="double_tap_down_for_min_brightness"
+class InovelliDoubleTapDownEnabled(
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_down_enabled"
 ):
-    """Inovelli double tap down for minimum brightness control."""
+    """Inovelli double tap down enabled."""
 
-    _zcl_attribute: str = "double_tap_down_for_min_brightness"
-    _attr_name: str = "Double tap minimum brightness"
+    _zcl_attribute: str = "double_tap_down_enabled"
+    _attr_name: str = "Double tap down enabled"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliAuxSwitchScenes(
+    ZHASwitchConfigurationEntity, id_suffix="aux_switch_scenes"
+):
+    """Inovelli unique aux switch scenes."""
+
+    _zcl_attribute: str = "aux_switch_scenes"
+    _attr_name: str = "Aux switch scenes"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliBindingOffToOnSyncLevel(
+    ZHASwitchConfigurationEntity, id_suffix="binding_off_to_on_sync_level"
+):
+    """Inovelli send move to level with on/off to bound devices."""
+
+    _zcl_attribute: str = "binding_off_to_on_sync_level"
+    _attr_name: str = "Binding off to on sync level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -477,3 +501,82 @@ class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     _zcl_attribute: str = "child_lock"
     _attr_name = "Child lock"
     _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatWindowDetection(
+    ZHASwitchConfigurationEntity, id_suffix="window_detection"
+):
+    """Representation of an Aqara thermostat window detection configuration entity."""
+
+    _zcl_attribute: str = "window_detection"
+    _attr_name = "Window detection"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatValveDetection(
+    ZHASwitchConfigurationEntity, id_suffix="valve_detection"
+):
+    """Representation of an Aqara thermostat valve detection configuration entity."""
+
+    _zcl_attribute: str = "valve_detection"
+    _attr_name = "Valve detection"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """Representation of an Aqara thermostat child lock configuration entity."""
+
+    _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
+    _attr_icon: str = "mdi:account-lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraHeartbeatIndicator(
+    ZHASwitchConfigurationEntity, id_suffix="heartbeat_indicator"
+):
+    """Representation of a heartbeat indicator configuration entity for Aqara smoke sensors."""
+
+    _zcl_attribute: str = "heartbeat_indicator"
+    _attr_name = "Heartbeat indicator"
+    _attr_icon: str = "mdi:heart-flash"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraLinkageAlarm(ZHASwitchConfigurationEntity, id_suffix="linkage_alarm"):
+    """Representation of a linkage alarm configuration entity for Aqara smoke sensors."""
+
+    _zcl_attribute: str = "linkage_alarm"
+    _attr_name = "Linkage alarm"
+    _attr_icon: str = "mdi:shield-link-variant"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraBuzzerManualMute(
+    ZHASwitchConfigurationEntity, id_suffix="buzzer_manual_mute"
+):
+    """Representation of a buzzer manual mute configuration entity for Aqara smoke sensors."""
+
+    _zcl_attribute: str = "buzzer_manual_mute"
+    _attr_name = "Buzzer manual mute"
+    _attr_icon: str = "mdi:volume-off"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"}
+)
+class AqaraBuzzerManualAlarm(
+    ZHASwitchConfigurationEntity, id_suffix="buzzer_manual_alarm"
+):
+    """Representation of a buzzer manual mute configuration entity for Aqara smoke sensors."""
+
+    _zcl_attribute: str = "buzzer_manual_alarm"
+    _attr_name = "Buzzer manual alarm"
+    _attr_icon: str = "mdi:bullhorn"

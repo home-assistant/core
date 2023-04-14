@@ -1,6 +1,6 @@
 {
   "domain": "forked_daapd",
-  "name": "Owntone",
+  "name": "OwnTone",
   "after_dependencies": ["spotify"],
   "codeowners": ["@uvjustin"],
   "config_flow": true,

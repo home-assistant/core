@@ -31,7 +31,9 @@ async def test_no_fans(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_fans(hass, aioclient_mock, mock_deconz_websocket):
+async def test_fans(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported fan entities are created."""
     data = {
         "lights": {
@@ -240,7 +242,9 @@ async def test_fans(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websocket):
+async def test_fans_legacy_speed_modes(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported fan entities are created.
 
     Legacy fan support.

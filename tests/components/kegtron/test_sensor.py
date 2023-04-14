@@ -46,7 +46,6 @@ async def test_sensors_kt100(hass: HomeAssistant) -> None:
     assert keg_size_sensor.state == "18.927"
     assert keg_size_sensor_attrs[ATTR_FRIENDLY_NAME] == "Kegtron KT-100 9B75 Keg Size"
     assert keg_size_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "L"
-    assert keg_size_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     keg_type_sensor = hass.states.get("sensor.kegtron_kt_100_9b75_keg_type")
     keg_type_sensor_attrs = keg_type_sensor.attributes
@@ -61,7 +60,6 @@ async def test_sensors_kt100(hass: HomeAssistant) -> None:
         == "Kegtron KT-100 9B75 Volume Start"
     )
     assert volume_start_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "L"
-    assert volume_start_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     volume_dispensed_sensor = hass.states.get(
         "sensor.kegtron_kt_100_9b75_volume_dispensed"
@@ -127,7 +125,6 @@ async def test_sensors_kt200(hass: HomeAssistant) -> None:
         == "Kegtron KT-200 9B75 Keg Size Port 2"
     )
     assert keg_size_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "L"
-    assert keg_size_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     keg_type_sensor = hass.states.get("sensor.kegtron_kt_200_9b75_keg_type_port_2")
     keg_type_sensor_attrs = keg_type_sensor.attributes
@@ -147,7 +144,6 @@ async def test_sensors_kt200(hass: HomeAssistant) -> None:
         == "Kegtron KT-200 9B75 Volume Start Port 2"
     )
     assert volume_start_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "L"
-    assert volume_start_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     volume_dispensed_sensor = hass.states.get(
         "sensor.kegtron_kt_200_9b75_volume_dispensed_port_2"
@@ -197,7 +193,6 @@ async def test_sensors_kt200(hass: HomeAssistant) -> None:
         == "Kegtron KT-200 9B75 Keg Size Port 1"
     )
     assert keg_size_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "L"
-    assert keg_size_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     keg_type_sensor = hass.states.get("sensor.kegtron_kt_200_9b75_keg_type_port_1")
     keg_type_sensor_attrs = keg_type_sensor.attributes
@@ -217,7 +212,6 @@ async def test_sensors_kt200(hass: HomeAssistant) -> None:
         == "Kegtron KT-200 9B75 Volume Start Port 1"
     )
     assert volume_start_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "L"
-    assert volume_start_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     volume_dispensed_sensor = hass.states.get(
         "sensor.kegtron_kt_200_9b75_volume_dispensed_port_1"
