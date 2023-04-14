@@ -125,11 +125,7 @@ class Debouncer(Generic[_R_co]):
 
     @callback
     def async_cancel(self) -> None:
-        """Cancel any scheduled call.
-
-        Note: calling `async_call` after cancel will follow cooldown,
-        use `async_shutdown` if this is not desired.
-        """
+        """Cancel any scheduled call."""
         self._cancel_requested = True
         if self._timer_task:
             self._timer_task.cancel()
