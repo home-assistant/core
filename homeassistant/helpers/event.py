@@ -1578,23 +1578,30 @@ def async_track_utc_time_change(
         ).replace(microsecond=microsecond)
 
     time_listener: CALLBACK_TYPE | None = None
+    pattern_time_change_listener_job: HassJob[[datetime], Any] | None = None
 
     @callback
     def pattern_time_change_listener(_: datetime) -> None:
         """Listen for matching time_changed events."""
         nonlocal time_listener
+        nonlocal pattern_time_change_listener_job
 
         now = time_tracker_utcnow()
         hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
+        assert pattern_time_change_listener_job is not None
 
         time_listener = async_track_point_in_utc_time(
             hass,
-            pattern_time_change_listener,
+            pattern_time_change_listener_job,
             calculate_next(now + timedelta(seconds=1)),
         )
 
+    pattern_time_change_listener_job = HassJob(
+        pattern_time_change_listener,
+        "time change listener {hour}:{minute}:{second} {action}",
+    )
     time_listener = async_track_point_in_utc_time(
-        hass, pattern_time_change_listener, calculate_next(dt_util.utcnow())
+        hass, pattern_time_change_listener_job, calculate_next(dt_util.utcnow())
     )
 
     @callback
