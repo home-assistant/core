@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if result is not None
     }
     await mqtt_client.async_disconnect()
-    if len(network_info) == 0:
+    if not network_info:
         raise ConfigEntryNotReady(
             "Could not get network information about your devices"
         )
