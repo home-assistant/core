@@ -1,6 +1,6 @@
 """Unit tests for the Todoist calendar platform."""
-from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import AsyncMock, patch
 import urllib
 
@@ -24,6 +24,8 @@ from homeassistant.util import dt
 
 from tests.typing import ClientSessionGenerator
 
+SUMMARY = "A task"
+
 
 @pytest.fixture(autouse=True)
 def set_time_zone(hass: HomeAssistant):
@@ -33,19 +35,25 @@ def set_time_zone(hass: HomeAssistant):
     hass.config.set_time_zone("America/Regina")
 
 
+@pytest.fixture(name="due")
+def mock_due() -> Due:
+    """Mock a todoist Task Due date/time."""
+    return Due(is_recurring=False, date=dt.now().strftime("%Y-%m-%d"), string="today")
+
+
 @pytest.fixture(name="task")
-def mock_task() -> Task:
+def mock_task(due: Due) -> Task:
     """Mock a todoist Task instance."""
     return Task(
         assignee_id="1",
         assigner_id="1",
         comment_count=0,
         is_completed=False,
-        content="A task",
+        content=SUMMARY,
         created_at="2021-10-01T00:00:00",
         creator_id="1",
         description="A task",
-        due=Due(is_recurring=False, date=dt.now().strftime("%Y-%m-%d"), string="today"),
+        due=due,
         id="1",
         labels=["Label1"],
         order=1,
@@ -93,104 +101,91 @@ def get_events_url(entity: str, start: str, end: str) -> str:
     return f"/api/calendars/{entity}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
 
 
-@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+def get_events_response(start: dict[str, str], end: dict[str, str]) -> dict[str, Any]:
+    """Return an event response with a single task."""
+    return {
+        "start": start,
+        "end": end,
+        "summary": SUMMARY,
+        "description": None,
+        "location": None,
+        "uid": None,
+        "recurrence_id": None,
+        "rrule": None,
+    }
+
+
+@pytest.fixture(name="todoist_config")
+def mock_todoist_config() -> dict[str, Any]:
+    """Mock todoist configuration."""
+    return {}
+
+
+@pytest.fixture(name="setup_integration", autouse=True)
+async def mock_setup_integration(
+    hass: HomeAssistant,
+    api: AsyncMock,
+    todoist_config: dict[str, Any],
+) -> None:
+    """Mock setup of the todoist integration."""
+    with patch(
+        "homeassistant.components.todoist.calendar.TodoistAPIAsync"
+    ) as todoist_api:
+        todoist_api.return_value = api
+        assert await setup.async_setup_component(
+            hass,
+            "calendar",
+            {
+                "calendar": {
+                    "platform": DOMAIN,
+                    CONF_TOKEN: "token",
+                    **todoist_config,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "calendar.name")
+        yield
+
+
 async def test_calendar_entity_unique_id(
-    todoist_api, hass: HomeAssistant, api, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, api: AsyncMock, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unique id is set to project id."""
-    todoist_api.return_value = api
-    assert await setup.async_setup_component(
-        hass,
-        "calendar",
-        {
-            "calendar": {
-                "platform": DOMAIN,
-                CONF_TOKEN: "token",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
     entity = entity_registry.async_get("calendar.name")
     assert entity.unique_id == "12345"
 
 
-@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+@pytest.mark.parametrize(
+    "todoist_config",
+    [{"custom_projects": [{"name": "All projects", "labels": ["Label1"]}]}],
+)
 async def test_update_entity_for_custom_project_with_labels_on(
-    todoist_api, hass: HomeAssistant, api
+    hass: HomeAssistant,
+    api: AsyncMock,
 ) -> None:
     """Test that the calendar's state is on for a custom project using labels."""
-    todoist_api.return_value = api
-    assert await setup.async_setup_component(
-        hass,
-        "calendar",
-        {
-            "calendar": {
-                "platform": DOMAIN,
-                CONF_TOKEN: "token",
-                "custom_projects": [{"name": "All projects", "labels": ["Label1"]}],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
     await async_update_entity(hass, "calendar.all_projects")
     state = hass.states.get("calendar.all_projects")
     assert state.attributes["labels"] == ["Label1"]
     assert state.state == "on"
 
 
-@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+@pytest.mark.parametrize("due", [None])
 async def test_update_entity_for_custom_project_no_due_date_on(
-    todoist_api, hass: HomeAssistant, api
+    hass: HomeAssistant,
+    api: AsyncMock,
 ) -> None:
     """Test that a task without an explicit due date is considered to be in an on state."""
-    task_wo_due_date = Task(
-        assignee_id=None,
-        assigner_id=None,
-        comment_count=0,
-        is_completed=False,
-        content="No due date task",
-        created_at="2023-04-11T00:25:25.589971Z",
-        creator_id="1",
-        description="",
-        due=None,
-        id="123",
-        labels=["Label1"],
-        order=10,
-        parent_id=None,
-        priority=1,
-        project_id="12345",
-        section_id=None,
-        url="https://todoist.com/showTask?id=123",
-        sync_id=None,
-    )
-    api.get_tasks.return_value = [task_wo_due_date]
-    todoist_api.return_value = api
-
-    assert await setup.async_setup_component(
-        hass,
-        "calendar",
-        {
-            "calendar": {
-                "platform": DOMAIN,
-                CONF_TOKEN: "token",
-                "custom_projects": [{"name": "All projects", "labels": ["Label1"]}],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    await async_update_entity(hass, "calendar.all_projects")
-    state = hass.states.get("calendar.all_projects")
+    await async_update_entity(hass, "calendar.name")
+    state = hass.states.get("calendar.name")
     assert state.state == "on"
 
 
-@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
-async def test_failed_coordinator_update(todoist_api, hass: HomeAssistant, api) -> None:
+@pytest.mark.parametrize("setup_integration", [None])
+async def test_failed_coordinator_update(hass: HomeAssistant, api: AsyncMock) -> None:
     """Test a failed data coordinator update is handled correctly."""
     api.get_tasks.side_effect = Exception("API error")
-    todoist_api.return_value = api
 
     assert await setup.async_setup_component(
         hass,
@@ -210,25 +205,14 @@ async def test_failed_coordinator_update(todoist_api, hass: HomeAssistant, api) 
     assert state is None
 
 
-@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+@pytest.mark.parametrize(
+    "todoist_config",
+    [{"custom_projects": [{"name": "All projects"}]}],
+)
 async def test_calendar_custom_project_unique_id(
-    todoist_api, hass: HomeAssistant, api, entity_registry: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unique id is None for any custom projects."""
-    todoist_api.return_value = api
-    assert await setup.async_setup_component(
-        hass,
-        "calendar",
-        {
-            "calendar": {
-                "platform": DOMAIN,
-                CONF_TOKEN: "token",
-                "custom_projects": [{"name": "All projects"}],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
     entity = entity_registry.async_get("calendar.all_projects")
     assert entity is None
 
@@ -236,66 +220,35 @@ async def test_calendar_custom_project_unique_id(
     assert state.state == "off"
 
 
-@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
+@pytest.mark.parametrize(
+    ("due", "start", "end", "expected_response"),
+    [
+        (
+            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            "2023-03-28T00:00:00.000Z",
+            "2023-04-01T00:00:00.000Z",
+            [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
+        )
+    ],
+)
 async def test_all_day_event(
-    todoist_api, hass: HomeAssistant, hass_client: ClientSessionGenerator, api
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    start: str,
+    end: str,
+    expected_response: dict[str, Any],
 ) -> None:
     """Test for an all day calendar event."""
-    todoist_api.return_value = api
-    assert await setup.async_setup_component(
-        hass,
-        "calendar",
-        {
-            "calendar": {
-                "platform": DOMAIN,
-                CONF_TOKEN: "token",
-                "custom_projects": [{"name": "All projects", "labels": ["Label1"]}],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    await async_update_entity(hass, "calendar.all_projects")
     client = await hass_client()
-    start = dt.now() - timedelta(days=1)
-    end = dt.now() + timedelta(days=1)
     response = await client.get(
-        get_events_url("calendar.all_projects", start.isoformat(), end.isoformat())
+        get_events_url("calendar.name", start, end),
     )
     assert response.status == HTTPStatus.OK
-    events = await response.json()
-
-    expected = [
-        {
-            "start": {"date": dt.now().strftime("%Y-%m-%d")},
-            "end": {"date": (dt.now() + timedelta(days=1)).strftime("%Y-%m-%d")},
-            "summary": "A task",
-            "description": None,
-            "location": None,
-            "uid": None,
-            "recurrence_id": None,
-            "rrule": None,
-        }
-    ]
-    assert events == expected
+    assert await response.json() == expected_response
 
 
-@patch("homeassistant.components.todoist.calendar.TodoistAPIAsync")
-async def test_create_task_service_call(todoist_api, hass: HomeAssistant, api) -> None:
+async def test_create_task_service_call(hass: HomeAssistant, api: AsyncMock) -> None:
     """Test api is called correctly after a new task service call."""
-    todoist_api.return_value = api
-    assert await setup.async_setup_component(
-        hass,
-        "calendar",
-        {
-            "calendar": {
-                "platform": DOMAIN,
-                CONF_TOKEN: "token",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_NEW_TASK,
