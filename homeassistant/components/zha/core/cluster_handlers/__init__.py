@@ -205,7 +205,10 @@ class ClusterHandler(LogMixin):
             )
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
-                "Failed to bind '%s' cluster: %s", self.cluster.ep_attribute, str(ex)
+                "Failed to bind '%s' cluster: %s",
+                self.cluster.ep_attribute,
+                str(ex),
+                exc_info=ex,
             )
             async_dispatcher_send(
                 self._endpoint.device.hass,
