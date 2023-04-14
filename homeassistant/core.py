@@ -1,5 +1,4 @@
-"""
-Core components of Home Assistant.
+"""Core components of Home Assistant.
 
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
@@ -15,6 +14,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+import concurrent.futures
 from contextlib import suppress
 from contextvars import ContextVar
 import datetime
@@ -38,6 +38,8 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+import async_timeout
+from typing_extensions import Self
 import voluptuous as vol
 import yarl
 
@@ -77,12 +79,9 @@ from .exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
+from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .util import dt as dt_util, location, ulid as ulid_util
-from .util.async_ import (
-    fire_coroutine_threadsafe,
-    run_callback_threadsafe,
-    shutdown_run_callback_threadsafe,
-)
+from .util.async_ import run_callback_threadsafe, shutdown_run_callback_threadsafe
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
 from .util.unit_system import (
@@ -105,6 +104,7 @@ STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
 block_async_io.enable()
+restore_original_aiohttp_cancel_behavior()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
@@ -149,7 +149,7 @@ MAX_EXPECTED_ENTITY_IDS = 16384
 
 _LOGGER = logging.getLogger(__name__)
 
-_cv_hass: ContextVar[HomeAssistant] = ContextVar("current_entry")
+_cv_hass: ContextVar[HomeAssistant] = ContextVar("hass")
 
 
 @functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
@@ -217,16 +217,29 @@ class HassJob(Generic[_P, _R_co]):
     we run the job.
     """
 
-    __slots__ = ("job_type", "target")
+    __slots__ = ("job_type", "target", "name", "_cancel_on_shutdown")
 
-    def __init__(self, target: Callable[_P, _R_co]) -> None:
+    def __init__(
+        self,
+        target: Callable[_P, _R_co],
+        name: str | None = None,
+        *,
+        cancel_on_shutdown: bool | None = None,
+    ) -> None:
         """Create a job object."""
         self.target = target
+        self.name = name
         self.job_type = _get_hassjob_callable_job_type(target)
+        self._cancel_on_shutdown = cancel_on_shutdown
+
+    @property
+    def cancel_on_shutdown(self) -> bool | None:
+        """Return if the job should be cancelled on shutdown."""
+        return self._cancel_on_shutdown
 
     def __repr__(self) -> str:
         """Return the job."""
-        return f"<Job {self.job_type} {self.target}>"
+        return f"<Job {self.name} {self.job_type} {self.target}>"
 
 
 def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
@@ -276,8 +289,8 @@ class HomeAssistant:
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
-        self._pending_tasks: list[asyncio.Future[Any]] = []
-        self._track_task = True
+        self._tasks: set[asyncio.Future[Any]] = set()
+        self._background_tasks: set[asyncio.Future[Any]] = set()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -292,6 +305,7 @@ class HomeAssistant:
         self._stopped: asyncio.Event | None = None
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
+        self._stop_future: concurrent.futures.Future[None] | None = None
 
     @property
     def is_running(self) -> bool:
@@ -310,12 +324,14 @@ class HomeAssistant:
         For regular use, use "await hass.run()".
         """
         # Register the async start
-        fire_coroutine_threadsafe(self.async_start(), self.loop)
-
+        _future = asyncio.run_coroutine_threadsafe(self.async_start(), self.loop)
         # Run forever
         # Block until stopped
         _LOGGER.info("Starting Home Assistant core loop")
         self.loop.run_forever()
+        # The future is never retrieved but we still hold a reference to it
+        # to prevent the task from being garbage collected prematurely.
+        del _future
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:
@@ -353,12 +369,14 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
-        try:
-            # Only block for EVENT_HOMEASSISTANT_START listener
-            self.async_stop_track_tasks()
-            async with self.timeout.async_timeout(TIMEOUT_EVENT_START):
-                await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        if not self._tasks:
+            pending: set[asyncio.Future[Any]] | None = None
+        else:
+            _done, pending = await asyncio.wait(
+                self._tasks, timeout=TIMEOUT_EVENT_START
+            )
+
+        if pending:
             _LOGGER.warning(
                 (
                     "Something is blocking Home Assistant from wrapping up the start up"
@@ -483,7 +501,7 @@ class HomeAssistant:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
-            task = self.loop.create_task(hassjob.target(*args))
+            task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
         elif hassjob.job_type == HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -494,32 +512,53 @@ class HomeAssistant:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             task = self.loop.run_in_executor(None, hassjob.target, *args)
 
-        # If a task is scheduled
-        if self._track_task:
-            self._pending_tasks.append(task)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
         return task
 
-    def create_task(self, target: Coroutine[Any, Any, Any]) -> None:
+    def create_task(
+        self, target: Coroutine[Any, Any, Any], name: str | None = None
+    ) -> None:
         """Add task to the executor pool.
 
         target: target to call.
         """
-        self.loop.call_soon_threadsafe(self.async_create_task, target)
+        self.loop.call_soon_threadsafe(self.async_create_task, target, name)
 
     @callback
-    def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
-        """Create a task from within the eventloop.
+    def async_create_task(
+        self, target: Coroutine[Any, Any, _R], name: str | None = None
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the event loop.
 
-        This method must be run in the event loop.
+        This method must be run in the event loop. If you are using this in your
+        integration, use the create task methods on the config entry instead.
 
         target: target to call.
         """
-        task = self.loop.create_task(target)
+        task = self.loop.create_task(target, name=name)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
+        return task
 
-        if self._track_task:
-            self._pending_tasks.append(task)
+    @callback
+    def async_create_background_task(
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str,
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the event loop.
 
+        This is a background task which will not block startup and will be
+        automatically cancelled on shutdown. If you are using this in your
+        integration, use the create task methods on the config entry instead.
+
+        This method must be run in the event loop.
+        """
+        task = self.loop.create_task(target, name=name)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.remove)
         return task
 
     @callback
@@ -528,22 +567,10 @@ class HomeAssistant:
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
-
-        # If a task is scheduled
-        if self._track_task:
-            self._pending_tasks.append(task)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
 
         return task
-
-    @callback
-    def async_track_tasks(self) -> None:
-        """Track tasks so you can wait for all tasks to be done."""
-        self._track_task = True
-
-    @callback
-    def async_stop_track_tasks(self) -> None:
-        """Stop track tasks so you can't wait for all tasks to be done."""
-        self._track_task = False
 
     @overload
     @callback
@@ -638,29 +665,25 @@ class HomeAssistant:
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
         start_time: float | None = None
+        current_task = asyncio.current_task()
 
-        while self._pending_tasks:
-            pending = [task for task in self._pending_tasks if not task.done()]
-            self._pending_tasks.clear()
-            if pending:
-                await self._await_and_log_pending(pending)
+        while tasks := [task for task in self._tasks if task is not current_task]:
+            await self._await_and_log_pending(tasks)
 
-                if start_time is None:
-                    # Avoid calling monotonic() until we know
-                    # we may need to start logging blocked tasks.
-                    start_time = 0
-                elif start_time == 0:
-                    # If we have waited twice then we set the start
-                    # time
-                    start_time = monotonic()
-                elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
-                    # We have waited at least three loops and new tasks
-                    # continue to block. At this point we start
-                    # logging all waiting tasks.
-                    for task in pending:
-                        _LOGGER.debug("Waiting for task: %s", task)
-            else:
-                await asyncio.sleep(0)
+            if start_time is None:
+                # Avoid calling monotonic() until we know
+                # we may need to start logging blocked tasks.
+                start_time = 0
+            elif start_time == 0:
+                # If we have waited twice then we set the start
+                # time
+                start_time = monotonic()
+            elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
+                # We have waited at least three loops and new tasks
+                # continue to block. At this point we start
+                # logging all waiting tasks.
+                for task in tasks:
+                    _LOGGER.debug("Waiting for task: %s", task)
 
     async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
@@ -677,7 +700,11 @@ class HomeAssistant:
         """Stop Home Assistant and shuts down all threads."""
         if self.state == CoreState.not_running:  # just ignore
             return
-        fire_coroutine_threadsafe(self.async_stop(), self.loop)
+        # The future is never retrieved, and we only hold a reference
+        # to it to prevent it from being garbage collected.
+        self._stop_future = asyncio.run_coroutine_threadsafe(
+            self.async_stop(), self.loop
+        )
 
     async def async_stop(self, exit_code: int = 0, *, force: bool = False) -> None:
         """Stop Home Assistant and shuts down all threads.
@@ -702,9 +729,25 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # Keep holding the reference to the tasks but do not allow them
+        # to block shutdown. Only tasks created after this point will
+        # be waited for.
+        running_tasks = self._tasks
+        # Avoid clearing here since we want the remove callbacks to fire
+        # and remove the tasks from the original set which is now running_tasks
+        self._tasks = set()
+
+        # Cancel all background tasks
+        for task in self._background_tasks:
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.remove)
+            task.cancel()
+        self._cancel_cancellable_timers()
+
+        self.exit_code = exit_code
+
         # stage 1
         self.state = CoreState.stopping
-        self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
@@ -714,6 +757,7 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(1)
 
         # stage 2
         self.state = CoreState.final_write
@@ -726,10 +770,40 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(2)
 
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+
+        # Make a copy of running_tasks since a task can finish
+        # while we are awaiting canceled tasks to get their result
+        # which will result in the set size changing during iteration
+        for task in list(running_tasks):
+            if task.done():
+                # Since we made a copy we need to check
+                # to see if the task finished while we
+                # were awaiting another task
+                continue
+            _LOGGER.warning(
+                "Task %s was still running after stage 2 shutdown; "
+                "Integrations should cancel non-critical tasks when receiving "
+                "the stop event to prevent delaying shutdown",
+                task,
+            )
+            task.cancel()
+            try:
+                async with async_timeout.timeout(0.1):
+                    await task
+            except asyncio.CancelledError:
+                pass
+            except asyncio.TimeoutError:
+                # Task may be shielded from cancellation.
+                _LOGGER.exception(
+                    "Task %s could not be canceled during stage 3 shutdown", task
+                )
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.exception("Task %s error during stage 3 shutdown: %s", task, ex)
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
@@ -746,12 +820,31 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
                 " continue"
             )
+            self._async_log_running_tasks(3)
 
-        self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
+
+    def _cancel_cancellable_timers(self) -> None:
+        """Cancel timer handles marked as cancellable."""
+        # pylint: disable-next=protected-access
+        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
+        for handle in handles:
+            if (
+                not handle.cancelled()
+                and (args := handle._args)  # pylint: disable=protected-access
+                # pylint: disable-next=unidiomatic-typecheck
+                and type(job := args[0]) is HassJob
+                and job.cancel_on_shutdown
+            ):
+                handle.cancel()
+
+    def _async_log_running_tasks(self, stage: int) -> None:
+        """Log all running tasks."""
+        for task in self._tasks:
+            _LOGGER.warning("Shutdown stage %s: still running: %s", stage, task)
 
 
 class Context:
@@ -810,13 +903,8 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context(
-            id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
+            id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
         )
-
-    def __hash__(self) -> int:
-        """Make hashable."""
-        # The only event type that shares context are the TIME_CHANGED
-        return hash((self.event_type, self.context.id, self.time_fired))
 
     def as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
@@ -840,17 +928,6 @@ class Event:
             )
 
         return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.event_type == other.event_type
-            and self.data == other.data
-            and self.origin == other.origin
-            and self.time_fired == other.time_fired
-            and self.context == other.context
-        )
 
 
 class _FilterableJob(NamedTuple):
@@ -992,7 +1069,10 @@ class EventBus:
         if run_immediately and not is_callback(listener):
             raise HomeAssistantError(f"Event listener {listener} is not a callback")
         return self._async_listen_filterable_job(
-            event_type, _FilterableJob(HassJob(listener), event_filter, run_immediately)
+            event_type,
+            _FilterableJob(
+                HassJob(listener, f"listen {event_type}"), event_filter, run_immediately
+            ),
         )
 
     @callback
@@ -1066,7 +1146,11 @@ class EventBus:
             _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
         )
 
-        filterable_job = _FilterableJob(HassJob(_onetime_listener), None, False)
+        filterable_job = _FilterableJob(
+            HassJob(_onetime_listener, f"onetime listen {event_type} {listener}"),
+            None,
+            False,
+        )
 
         return self._async_listen_filterable_job(event_type, filterable_job)
 
@@ -1090,9 +1174,6 @@ class EventBus:
             _LOGGER.exception(
                 "Unable to remove unknown job listener %s", filterable_job
             )
-
-
-_StateT = TypeVar("_StateT", bound="State")
 
 
 class State:
@@ -1156,13 +1237,6 @@ class State:
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
         self._as_compressed_state: dict[str, Any] | None = None
 
-    def __hash__(self) -> int:
-        """Make the state hashable.
-
-        State objects are effectively immutable.
-        """
-        return hash((id(self), self.last_updated))
-
     @property
     def name(self) -> str:
         """Name of this state."""
@@ -1224,7 +1298,7 @@ class State:
         return compressed_state
 
     @classmethod
-    def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
+    def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
         """Initialize a state from a dict.
 
         Async friendly.
@@ -1272,16 +1346,6 @@ class State:
         """
         self.context = Context(
             self.context.user_id, self.context.parent_id, self.context.id
-        )
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison of the state."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-            and self.context == other.context
         )
 
     def __repr__(self) -> str:
@@ -1508,7 +1572,7 @@ class StateMachine:
         now = dt_util.utcnow()
 
         if context is None:
-            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
+            context = Context(id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(now)))
         state = State(
             entity_id,
             new_state,
@@ -1533,16 +1597,18 @@ class StateMachine:
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["job", "schema"]
+    __slots__ = ["job", "schema", "domain", "service"]
 
     def __init__(
         self,
         func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None,
+        domain: str,
+        service: str,
         context: Context | None = None,
     ) -> None:
         """Initialize a service."""
-        self.job = HassJob(func)
+        self.job = HassJob(func, f"service {domain}.{service}")
         self.schema = schema
 
 
@@ -1610,8 +1676,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
@@ -1627,8 +1692,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
 
@@ -1636,7 +1700,7 @@ class ServiceRegistry:
         """
         domain = domain.lower()
         service = service.lower()
-        service_obj = Service(service_func, schema)
+        service_obj = Service(service_func, schema, domain, service)
 
         if domain in self._services:
             self._services[domain][service] = service_obj
@@ -1685,8 +1749,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         See description of async_call for details.
         """
@@ -1707,8 +1770,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         Specify blocking=True to wait until service is executed.
         Waits a maximum of limit, which may be None for no timeout.
@@ -1814,7 +1876,10 @@ class ServiceRegistry:
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error executing service: %s", service_call)
 
-        self._hass.async_create_task(catch_exceptions())
+        self._hass.async_create_task(
+            catch_exceptions(),
+            f"service call background {service_call.domain}.{service_call.service}",
+        )
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
@@ -1843,7 +1908,10 @@ class Config:
 
         self.latitude: float = 0
         self.longitude: float = 0
+
         self.elevation: int = 0
+        """Elevation (always in meters regardless of the unit system)."""
+
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
@@ -1914,7 +1982,11 @@ class Config:
         )
 
     def is_allowed_path(self, path: str) -> bool:
-        """Check if the path is valid for access from outside."""
+        """Check if the path is valid for access from outside.
+
+        This function does blocking I/O and should not be called from the event loop.
+        Use hass.async_add_executor_job to schedule it on the executor.
+        """
         assert path is not None
 
         thepath = pathlib.Path(path)

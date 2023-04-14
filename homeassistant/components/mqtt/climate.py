@@ -117,9 +117,10 @@ CONF_MODE_LIST = "modes"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
 
-# CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE are deprecated,
-# support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE was already removed or never added
-# support was deprecated with release 2023.2 and will be removed with release 2023.8
+# CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+# are deprecated, support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+# was already removed or never added support was deprecated with release 2023.2
+# and will be removed with release 2023.8
 CONF_POWER_COMMAND_TOPIC = "power_command_topic"
 CONF_POWER_STATE_TEMPLATE = "power_state_template"
 CONF_POWER_STATE_TOPIC = "power_state_topic"
@@ -375,9 +376,10 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     cv.removed(CONF_HOLD_STATE_TEMPLATE),
     cv.removed(CONF_HOLD_STATE_TOPIC),
     cv.removed(CONF_HOLD_LIST),
-    # CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE are deprecated,
-    # support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE was already removed or never added
-    # support was deprecated with release 2023.2 and will be removed with release 2023.8
+    # CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+    # are deprecated, support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
+    # was already removed or never added support was deprecated with release 2023.2
+    # and will be removed with release 2023.8
     cv.deprecated(CONF_POWER_COMMAND_TOPIC),
     cv.deprecated(CONF_POWER_STATE_TEMPLATE),
     cv.deprecated(CONF_POWER_STATE_TOPIC),
@@ -644,7 +646,16 @@ class MqttClimate(MqttEntity, ClimateEntity):
         ) -> None:
             """Handle climate attributes coming via MQTT."""
             payload = render_template(msg, template_name)
-
+            if not payload:
+                _LOGGER.debug(
+                    "Invalid empty payload for attribute %s, ignoring update",
+                    attr,
+                )
+                return
+            if payload == PAYLOAD_NONE:
+                setattr(self, attr, None)
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+                return
             try:
                 setattr(self, attr, float(payload))
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)

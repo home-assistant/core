@@ -10,13 +10,14 @@ from homeassistant.components.twinkly.const import (
     DOMAIN as TWINKLY_DOMAIN,
 )
 from homeassistant.const import CONF_MODEL
+from homeassistant.core import HomeAssistant
 
 from . import TEST_MODEL, ClientMock
 
 from tests.common import MockConfigEntry
 
 
-async def test_invalid_host(hass):
+async def test_invalid_host(hass: HomeAssistant) -> None:
     """Test the failure when invalid host provided."""
     client = ClientMock()
     client.is_offline = True
@@ -39,7 +40,7 @@ async def test_invalid_host(hass):
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_success_flow(hass):
+async def test_success_flow(hass: HomeAssistant) -> None:
     """Test that an entity is created when the flow completes."""
     client = ClientMock()
     with patch(
@@ -68,7 +69,7 @@ async def test_success_flow(hass):
     }
 
 
-async def test_dhcp_can_confirm(hass):
+async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
     """Test DHCP discovery flow can confirm right away."""
     client = ClientMock()
     with patch(
@@ -89,7 +90,7 @@ async def test_dhcp_can_confirm(hass):
     assert result["step_id"] == "discovery_confirm"
 
 
-async def test_dhcp_success(hass):
+async def test_dhcp_success(hass: HomeAssistant) -> None:
     """Test DHCP discovery flow success."""
     client = ClientMock()
     with patch(
@@ -121,7 +122,7 @@ async def test_dhcp_success(hass):
     }
 
 
-async def test_dhcp_already_exists(hass):
+async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
     """Test DHCP discovery flow that fails to connect."""
     client = ClientMock()
 

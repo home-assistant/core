@@ -108,7 +108,7 @@ def valid_publish_topic(topic: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
     if "+" in validated_topic or "#" in validated_topic:
-        raise vol.Invalid("Wildcards can not be used in topic names")
+        raise vol.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
 
 
@@ -136,12 +136,9 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
     return config
 
 
-def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
+def get_mqtt_data(hass: HomeAssistant) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
     mqtt_data: MqttData
-    if ensure_exists:
-        mqtt_data = hass.data.setdefault(DATA_MQTT, MqttData())
-        return mqtt_data
     mqtt_data = hass.data[DATA_MQTT]
     return mqtt_data
 

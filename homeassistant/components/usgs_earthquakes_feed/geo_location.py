@@ -195,7 +195,7 @@ class UsgsEarthquakesFeedEntityManager:
 
 
 class UsgsEarthquakesEvent(GeolocationEvent):
-    """This represents an external event with USGS Earthquake data."""
+    """Represents an external event with USGS Earthquake data."""
 
     _attr_icon = "mdi:pulse"
     _attr_should_poll = False

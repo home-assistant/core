@@ -31,7 +31,7 @@ from .utils import (
 
 async def test_number_sensor_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, unadopted_camera: Camera
-):
+) -> None:
     """Test removing and re-adding a camera device."""
 
     await init_entry(hass, ufp, [camera, unadopted_camera])
@@ -44,7 +44,7 @@ async def test_number_sensor_camera_remove(
 
 async def test_number_sensor_light_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     await init_entry(hass, ufp, [light])
@@ -57,7 +57,7 @@ async def test_number_sensor_light_remove(
 
 async def test_number_lock_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     await init_entry(hass, ufp, [doorlock])
@@ -70,7 +70,7 @@ async def test_number_lock_remove(
 
 async def test_number_setup_light(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test number entity setup for light devices."""
 
     await init_entry(hass, ufp, [light])
@@ -94,7 +94,7 @@ async def test_number_setup_light(
 
 async def test_number_setup_camera_all(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
-):
+) -> None:
     """Test number entity setup for camera devices (all features)."""
 
     camera.feature_flags.has_chime = True
@@ -121,7 +121,7 @@ async def test_number_setup_camera_all(
 
 async def test_number_setup_camera_none(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
-):
+) -> None:
     """Test number entity setup for camera devices (no features)."""
 
     camera.feature_flags.can_optical_zoom = False
@@ -135,7 +135,7 @@ async def test_number_setup_camera_none(
 
 async def test_number_setup_camera_missing_attr(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
-):
+) -> None:
     """Test number entity setup for camera devices (no features, bad attrs)."""
 
     camera.feature_flags = None
@@ -146,7 +146,7 @@ async def test_number_setup_camera_missing_attr(
 
 async def test_number_light_sensitivity(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test sensitivity number entity for lights."""
 
     await init_entry(hass, ufp, [light])
@@ -169,7 +169,7 @@ async def test_number_light_sensitivity(
 
 async def test_number_light_duration(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test auto-shutoff duration number entity for lights."""
 
     await init_entry(hass, ufp, [light])
@@ -195,7 +195,7 @@ async def test_number_camera_simple(
     ufp: MockUFPFixture,
     camera: Camera,
     description: ProtectNumberEntityDescription,
-):
+) -> None:
     """Tests all simple numbers for cameras."""
 
     await init_entry(hass, ufp, [camera])
@@ -215,7 +215,7 @@ async def test_number_camera_simple(
 
 async def test_number_lock_auto_close(
     hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
-):
+) -> None:
     """Test auto-lock timeout for locks."""
 
     await init_entry(hass, ufp, [doorlock])

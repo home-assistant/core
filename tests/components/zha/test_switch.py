@@ -20,6 +20,7 @@ import zigpy.zcl.foundation as zcl_f
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -130,7 +131,9 @@ async def device_switch_2(hass, zigpy_device_mock, zha_device_joined):
     return zha_device
 
 
-async def test_switch(hass, zha_device_joined_restored, zigpy_device):
+async def test_switch(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
     """Test ZHA switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
@@ -261,8 +264,8 @@ async def zigpy_device_tuya(hass, zigpy_device_mock, zha_device_joined):
     new=0,
 )
 async def test_zha_group_switch_entity(
-    hass, device_switch_1, device_switch_2, coordinator
-):
+    hass: HomeAssistant, device_switch_1, device_switch_2, coordinator
+) -> None:
     """Test the switch entity for a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -376,7 +379,9 @@ async def test_zha_group_switch_entity(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_switch_configurable(hass, zha_device_joined_restored, zigpy_device_tuya):
+async def test_switch_configurable(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device_tuya
+) -> None:
     """Test ZHA configurable switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_tuya)

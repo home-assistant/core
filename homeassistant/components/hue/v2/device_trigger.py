@@ -46,6 +46,7 @@ DEFAULT_BUTTON_EVENT_TYPES = (
     ButtonEvent.INITIAL_PRESS,
     ButtonEvent.REPEAT,
     ButtonEvent.SHORT_RELEASE,
+    ButtonEvent.LONG_PRESS,
     ButtonEvent.LONG_RELEASE,
 )
 
@@ -62,7 +63,7 @@ DEVICE_SPECIFIC_EVENT_TYPES = {
 
 
 async def async_validate_trigger_config(
-    bridge: "HueBridge",
+    bridge: HueBridge,
     device_entry: DeviceEntry,
     config: ConfigType,
 ) -> ConfigType:
@@ -71,7 +72,7 @@ async def async_validate_trigger_config(
 
 
 async def async_attach_trigger(
-    bridge: "HueBridge",
+    bridge: HueBridge,
     device_entry: DeviceEntry,
     config: ConfigType,
     action: TriggerActionType,

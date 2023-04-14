@@ -101,7 +101,7 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
     )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class UsbServiceInfo(BaseServiceInfo):
     """Prepared info from usb entries."""
 

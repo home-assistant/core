@@ -118,6 +118,52 @@ set_zwave_parameter:
             - "1"
             - "2"
             - "4"
+set_zwave_lock_user_code:
+  name: Set Z-Wave Lock User Code
+  description: >-
+    Set a Z-Wave Lock User Code via the ISY.
+  target:
+    entity:
+      integration: isy994
+      domain: lock
+  fields:
+    user_num:
+      name: User Number
+      description: The user slot number on the lock
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+    code:
+      name: Code
+      description: The code to set for the user.
+      required: true
+      example: 33491663
+      selector:
+        number:
+          min: 1
+          max: 99999999
+          mode: box
+delete_zwave_lock_user_code:
+  name: Delete Z-Wave Lock User Code
+  description: >-
+    Delete a Z-Wave Lock User Code via the ISY.
+  target:
+    entity:
+      integration: isy994
+      domain: lock
+  fields:
+    user_num:
+      name: User Number
+      description: The user slot number on the lock
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
 rename_node:
   name: Rename Node on ISY
   description: >-

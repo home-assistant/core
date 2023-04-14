@@ -12,6 +12,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -29,7 +30,7 @@ def init_sensors_fixture(hass):
     )
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the mold indicator sensor setup."""
     assert await async_setup_component(
         hass,
@@ -50,7 +51,7 @@ async def test_setup(hass):
     assert moldind.attributes.get("unit_of_measurement") == PERCENTAGE
 
 
-async def test_invalidcalib(hass):
+async def test_invalidcalib(hass: HomeAssistant) -> None:
     """Test invalid sensor values."""
     hass.states.async_set(
         "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
@@ -85,7 +86,7 @@ async def test_invalidcalib(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
 
-async def test_invalidhum(hass):
+async def test_invalidhum(hass: HomeAssistant) -> None:
     """Test invalid sensor values."""
     hass.states.async_set(
         "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
@@ -143,7 +144,7 @@ async def test_invalidhum(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
 
-async def test_calculation(hass):
+async def test_calculation(hass: HomeAssistant) -> None:
     """Test the mold indicator internal calculations."""
     assert await async_setup_component(
         hass,
@@ -182,7 +183,7 @@ async def test_calculation(hass):
     assert state == "68"
 
 
-async def test_unknown_sensor(hass):
+async def test_unknown_sensor(hass: HomeAssistant) -> None:
     """Test the sensor_changed function."""
     assert await async_setup_component(
         hass,
@@ -260,7 +261,7 @@ async def test_unknown_sensor(hass):
     assert esttemp == 27.5
 
 
-async def test_sensor_changed(hass):
+async def test_sensor_changed(hass: HomeAssistant) -> None:
     """Test the sensor_changed function."""
     assert await async_setup_component(
         hass,

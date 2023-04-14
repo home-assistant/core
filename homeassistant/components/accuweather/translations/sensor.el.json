@@ -1,9 +1,0 @@
-{
-    "state": {
-        "accuweather__pressure_tendency": {
-            "falling": "\u03a0\u03c4\u03ce\u03c3\u03b7",
-            "rising": "\u0391\u03c5\u03be\u03b1\u03bd\u03cc\u03bc\u03b5\u03bd\u03b7",
-            "steady": "\u03a3\u03c4\u03b1\u03b8\u03b5\u03c1\u03ae"
-        }
-    }
-}

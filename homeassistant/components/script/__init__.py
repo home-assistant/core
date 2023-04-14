@@ -268,7 +268,6 @@ async def _create_script_entities(
     entities: list[ScriptEntity] = []
 
     for script_config in script_configs:
-
         entity = ScriptEntity(
             hass,
             script_config.key,
@@ -281,7 +280,9 @@ async def _create_script_entities(
     return entities
 
 
-async def _async_process_config(hass, config, component) -> None:
+async def _async_process_config(
+    hass: HomeAssistant, config: ConfigType, component: EntityComponent[ScriptEntity]
+) -> None:
     """Process script configuration."""
     entities = []
 
@@ -493,7 +494,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
                 self.script.last_triggered = parse_datetime(last_triggered)
 
     async def async_will_remove_from_hass(self):
-        """Stop script and remove service when it will be removed from Home Assistant."""
+        """Stop script and remove service when it will be removed from HA."""
         await self.script.async_stop()
 
         # remove service

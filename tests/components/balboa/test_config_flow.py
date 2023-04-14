@@ -1,9 +1,10 @@
 """Test the Balboa Spa Client config flow."""
 from unittest.mock import MagicMock, patch
 
+from pybalboa.exceptions import SpaConnectionError
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.balboa.const import CONF_SYNC_TIME, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,7 +26,7 @@ async def test_form(hass: HomeAssistant, client: MagicMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi",
+        "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
         return_value=client,
     ), patch(
         "homeassistant.components.balboa.async_setup_entry",
@@ -49,17 +50,35 @@ async def test_form_cannot_connect(hass: HomeAssistant, client: MagicMock) -> No
     )
 
     with patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi",
+        "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
         return_value=client,
+        side_effect=SpaConnectionError(),
     ):
-        client.connect.return_value = False
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_DATA,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_spa_not_configured(hass: HomeAssistant, client: MagicMock) -> None:
+    """Test we handle spa not configured error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
+        return_value=client,
+    ):
+        client.async_configuration_loaded.return_value = False
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_unknown_error(hass: HomeAssistant, client: MagicMock) -> None:
@@ -69,10 +88,10 @@ async def test_unknown_error(hass: HomeAssistant, client: MagicMock) -> None:
     )
 
     with patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi",
+        "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
         return_value=client,
+        side_effect=Exception("Boom"),
     ):
-        client.connect.side_effect = Exception("Boom")
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,
@@ -91,10 +110,10 @@ async def test_already_configured(hass: HomeAssistant, client: MagicMock) -> Non
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi",
+        "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
         return_value=client,
     ), patch(
         "homeassistant.components.balboa.async_setup_entry",

@@ -1,5 +1,4 @@
-"""
-Support for getting the state of a Thermoworks Smoke Thermometer.
+"""Support for getting the state of a Thermoworks Smoke Thermometer.
 
 Requires Smoke Gateway Wifi with an internet connection.
 """

@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.reload import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -13,7 +14,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, get_fixture_path
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -48,7 +49,7 @@ from tests.common import async_fire_time_changed, get_fixture_path
         },
     ],
 )
-async def test_reloadable(hass, start_ha):
+async def test_reloadable(hass: HomeAssistant, start_ha) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -76,7 +77,7 @@ async def test_reloadable(hass, start_ha):
     assert hass.states.get("sensor.top_level_2").state == "reload"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -99,7 +100,7 @@ async def test_reloadable(hass, start_ha):
         },
     ],
 )
-async def test_reloadable_can_remove(hass, start_ha):
+async def test_reloadable_can_remove(hass: HomeAssistant, start_ha) -> None:
     """Test that we can reload and remove all template sensors."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -113,7 +114,7 @@ async def test_reloadable_can_remove(hass, start_ha):
     assert len(hass.states.async_all()) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -129,7 +130,9 @@ async def test_reloadable_can_remove(hass, start_ha):
         },
     ],
 )
-async def test_reloadable_stops_on_invalid_config(hass, start_ha):
+async def test_reloadable_stops_on_invalid_config(
+    hass: HomeAssistant, start_ha
+) -> None:
     """Test we stop the reload if configuration.yaml is completely broken."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -141,7 +144,7 @@ async def test_reloadable_stops_on_invalid_config(hass, start_ha):
     assert len(hass.states.async_all()) == 2
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -157,7 +160,9 @@ async def test_reloadable_stops_on_invalid_config(hass, start_ha):
         },
     ],
 )
-async def test_reloadable_handles_partial_valid_config(hass, start_ha):
+async def test_reloadable_handles_partial_valid_config(
+    hass: HomeAssistant, start_ha
+) -> None:
     """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -172,7 +177,7 @@ async def test_reloadable_handles_partial_valid_config(hass, start_ha):
     assert float(hass.states.get("sensor.combined_sensor_energy_usage").state) == 0
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -188,7 +193,7 @@ async def test_reloadable_handles_partial_valid_config(hass, start_ha):
         },
     ],
 )
-async def test_reloadable_multiple_platforms(hass, start_ha):
+async def test_reloadable_multiple_platforms(hass: HomeAssistant, start_ha) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await async_setup_component(
@@ -218,7 +223,7 @@ async def test_reloadable_multiple_platforms(hass, start_ha):
     assert hass.states.get("sensor.top_level_2") is not None
 
 
-@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -232,7 +237,9 @@ async def test_reloadable_multiple_platforms(hass, start_ha):
         },
     ],
 )
-async def test_reload_sensors_that_reference_other_template_sensors(hass, start_ha):
+async def test_reload_sensors_that_reference_other_template_sensors(
+    hass: HomeAssistant, start_ha
+) -> None:
     """Test that we can reload sensor that reference other template sensors."""
     await async_yaml_patch_helper(hass, "ref_configuration.yaml")
     assert len(hass.states.async_all()) == 3

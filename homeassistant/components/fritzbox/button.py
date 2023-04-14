@@ -20,10 +20,7 @@ async def async_setup_entry(
     ][CONF_COORDINATOR]
 
     async_add_entities(
-        [
-            FritzBoxTemplate(coordinator, ain)
-            for ain in coordinator.data.templates.keys()
-        ]
+        [FritzBoxTemplate(coordinator, ain) for ain in coordinator.data.templates]
     )
 
 

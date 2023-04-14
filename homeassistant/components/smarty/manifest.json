@@ -1,9 +1,9 @@
 {
   "domain": "smarty",
   "name": "Salda Smarty",
-  "documentation": "https://www.home-assistant.io/integrations/smarty",
-  "requirements": ["pysmarty==0.8"],
   "codeowners": ["@z0mbieprocess"],
+  "documentation": "https://www.home-assistant.io/integrations/smarty",
   "iot_class": "local_polling",
-  "loggers": ["pymodbus", "pysmarty"]
+  "loggers": ["pymodbus", "pysmarty"],
+  "requirements": ["pysmarty==0.8"]
 }

@@ -92,10 +92,18 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name = entry.title
         self._device_name = entry.data.get(CONF_DEVICE_NAME)
 
-        if await self._retrieve_encryption_key_from_dashboard():
-            error = await self.fetch_device_info()
-            if error is None:
-                return await self._async_authenticate_or_add()
+        # Device without encryption allows fetching device info. We can then check
+        # if the device is no longer using a password. If we did try with a password,
+        # we know setting password to empty will allow us to authenticate.
+        error = await self.fetch_device_info()
+        if (
+            error is None
+            and self._password
+            and self._device_info
+            and not self._device_info.uses_password
+        ):
+            self._password = ""
+            return await self._async_authenticate_or_add()
 
         return await self.async_step_reauth_confirm()
 
@@ -104,6 +112,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle reauthorization flow."""
         errors = {}
+
+        if await self._retrieve_encryption_key_from_dashboard():
+            error = await self.fetch_device_info()
+            if error is None:
+                return await self._async_authenticate_or_add()
 
         if user_input is not None:
             self._noise_psk = user_input[CONF_NOISE_PSK]

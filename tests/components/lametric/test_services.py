@@ -29,12 +29,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_service_chart(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric chart service."""
@@ -122,7 +121,6 @@ async def test_service_chart(
 
 async def test_service_message(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric message service."""

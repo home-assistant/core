@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.nuheat.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .mocks import (
@@ -18,7 +19,7 @@ from .mocks import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_climate_thermostat_run(hass):
+async def test_climate_thermostat_run(hass: HomeAssistant) -> None:
     """Test a thermostat with the schedule running."""
     mock_thermostat = _get_mock_thermostat_run()
     mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
@@ -51,7 +52,9 @@ async def test_climate_thermostat_run(hass):
     assert all(item in state.attributes.items() for item in expected_attributes.items())
 
 
-async def test_climate_thermostat_schedule_hold_unavailable(hass):
+async def test_climate_thermostat_schedule_hold_unavailable(
+    hass: HomeAssistant,
+) -> None:
     """Test a thermostat with the schedule hold that is offline."""
     mock_thermostat = _get_mock_thermostat_schedule_hold_unavailable()
     mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
@@ -81,7 +84,7 @@ async def test_climate_thermostat_schedule_hold_unavailable(hass):
     assert all(item in state.attributes.items() for item in expected_attributes.items())
 
 
-async def test_climate_thermostat_schedule_hold_available(hass):
+async def test_climate_thermostat_schedule_hold_available(hass: HomeAssistant) -> None:
     """Test a thermostat with the schedule hold that is online."""
     mock_thermostat = _get_mock_thermostat_schedule_hold_available()
     mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
@@ -115,7 +118,7 @@ async def test_climate_thermostat_schedule_hold_available(hass):
     assert all(item in state.attributes.items() for item in expected_attributes.items())
 
 
-async def test_climate_thermostat_schedule_temporary_hold(hass):
+async def test_climate_thermostat_schedule_temporary_hold(hass: HomeAssistant) -> None:
     """Test a thermostat with the temporary schedule hold that is online."""
     mock_thermostat = _get_mock_thermostat_schedule_temporary_hold()
     mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)

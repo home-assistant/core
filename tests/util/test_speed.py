@@ -20,7 +20,7 @@ def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
     assert "use unit_conversion.SpeedConverter instead" in caplog.text
 
 
-def test_convert_same_unit():
+def test_convert_same_unit() -> None:
     """Test conversion from any unit to same unit."""
     assert speed_util.convert(2, SPEED_INCHES_PER_DAY, SPEED_INCHES_PER_DAY) == 2
     assert speed_util.convert(3, SPEED_INCHES_PER_HOUR, SPEED_INCHES_PER_HOUR) == 3
@@ -45,7 +45,7 @@ def test_convert_same_unit():
     )
 
 
-def test_convert_invalid_unit():
+def test_convert_invalid_unit() -> None:
     """Test exception is thrown for invalid units."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         speed_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
@@ -54,7 +54,7 @@ def test_convert_invalid_unit():
         speed_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 
-def test_convert_nonnumeric_value():
+def test_convert_nonnumeric_value() -> None:
     """Test exception is thrown for nonnumeric type."""
     with pytest.raises(TypeError):
         speed_util.convert(
@@ -63,7 +63,7 @@ def test_convert_nonnumeric_value():
 
 
 @pytest.mark.parametrize(
-    "from_value, from_unit, expected, to_unit",
+    ("from_value", "from_unit", "expected", "to_unit"),
     [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
         (5, UnitOfSpeed.KILOMETERS_PER_HOUR, 3.10686, UnitOfSpeed.MILES_PER_HOUR),
@@ -85,7 +85,7 @@ def test_convert_nonnumeric_value():
         (5, UnitOfSpeed.FEET_PER_SECOND, 1.524, UnitOfSpeed.METERS_PER_SECOND),
     ],
 )
-def test_convert_different_units(from_value, from_unit, expected, to_unit):
+def test_convert_different_units(from_value, from_unit, expected, to_unit) -> None:
     """Test conversion between units."""
     assert speed_util.convert(from_value, from_unit, to_unit) == pytest.approx(
         expected, rel=1e-4

@@ -9,10 +9,11 @@ import xmltodict
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -102,7 +103,6 @@ async def _async_port_entities_list(
     _LOGGER.debug("IP source for %s is %s", avm_wrapper.host, local_ip)
 
     for i in range(port_forwards_count):
-
         portmap = await avm_wrapper.async_get_port_mapping(
             avm_wrapper.device_conn_type, i
         )
@@ -406,7 +406,6 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             self._attributes[attr] = self.port_mapping[key]
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> bool:
-
         if self.port_mapping is None:
             return False
 

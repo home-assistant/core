@@ -52,7 +52,6 @@ async def async_get_service(
 ) -> PushoverNotificationService | None:
     """Get the Pushover notification service."""
     if discovery_info is None:
-
         async_create_issue(
             hass,
             DOMAIN,

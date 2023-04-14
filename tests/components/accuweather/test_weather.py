@@ -1,6 +1,5 @@
 """Test weather of AccuWeather integration."""
 from datetime import timedelta
-import json
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import ATTRIBUTION
@@ -23,16 +22,21 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import init_integration
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import (
+    async_fire_time_changed,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
-async def test_weather_without_forecast(hass):
+async def test_weather_without_forecast(hass: HomeAssistant) -> None:
     """Test states of the weather without forecast."""
     await init_integration(hass)
     registry = er.async_get(hass)
@@ -55,7 +59,7 @@ async def test_weather_without_forecast(hass):
     assert entry.unique_id == "0123456"
 
 
-async def test_weather_with_forecast(hass):
+async def test_weather_with_forecast(hass: HomeAssistant) -> None:
     """Test states of the weather with forecast."""
     await init_integration(hass, forecast=True)
     registry = er.async_get(hass)
@@ -86,7 +90,7 @@ async def test_weather_with_forecast(hass):
     assert entry.unique_id == "0123456"
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service is offline."""
     await init_integration(hass)
 
@@ -110,8 +114,8 @@ async def test_availability(hass):
     future = utcnow() + timedelta(minutes=120)
     with patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
-        return_value=json.loads(
-            load_fixture("accuweather/current_conditions_data.json")
+        return_value=load_json_object_fixture(
+            "accuweather/current_conditions_data.json"
         ),
     ), patch(
         "homeassistant.components.accuweather.AccuWeather.requests_remaining",
@@ -127,14 +131,14 @@ async def test_availability(hass):
         assert state.state == "sunny"
 
 
-async def test_manual_update_entity(hass):
+async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, forecast=True)
 
     await async_setup_component(hass, "homeassistant", {})
 
-    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
-    forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
+    current = load_json_object_fixture("accuweather/current_conditions_data.json")
+    forecast = load_json_array_fixture("accuweather/forecast_data.json")
 
     with patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
@@ -157,7 +161,7 @@ async def test_manual_update_entity(hass):
     assert mock_forecast.call_count == 1
 
 
-async def test_unsupported_condition_icon_data(hass):
+async def test_unsupported_condition_icon_data(hass: HomeAssistant) -> None:
     """Test with unsupported condition icon data."""
     await init_integration(hass, forecast=True, unsupported_icon=True)
 

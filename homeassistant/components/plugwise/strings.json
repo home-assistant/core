@@ -26,38 +26,94 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "compressor_state": {
+        "name": "Compressor state"
+      },
+      "cooling_enabled": {
+        "name": "Cooling enabled"
+      },
+      "dhw_state": {
+        "name": "DHW state"
+      },
+      "flame_state": {
+        "name": "Flame state"
+      },
+      "heating_state": {
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
+      },
+      "cooling_state": {
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
+      },
+      "slave_boiler_state": {
+        "name": "Secondary boiler state"
+      },
+      "plugwise_notification": {
+        "name": "Plugwise notification"
+      }
+    },
     "climate": {
       "plugwise": {
         "state_attributes": {
+          "available_schemas": {
+            "name": "Available schemas"
+          },
           "preset_mode": {
             "state": {
               "asleep": "Night",
-              "away": "Away",
-              "home": "Home",
+              "away": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
+              "home": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::home%]",
               "no_frost": "Anti-frost",
               "vacation": "Vacation"
             }
+          },
+          "selected_schema": {
+            "name": "Selected schema"
           }
         }
       }
     },
+    "number": {
+      "maximum_boiler_temperature": {
+        "name": "Maximum boiler temperature setpoint"
+      }
+    },
     "select": {
       "dhw_mode": {
+        "name": "DHW mode",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "auto": "Auto",
-          "boost": "Boost",
-          "comfort": "Comfort"
+          "boost": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::boost%]",
+          "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]"
         }
       },
       "regulation_mode": {
+        "name": "Regulation mode",
         "state": {
           "bleeding_cold": "Bleeding cold",
           "bleeding_hot": "Bleeding hot",
-          "cooling": "Cooling",
-          "heating": "Heating",
-          "off": "Off"
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "off": "[%key:common::state::off%]"
         }
+      },
+      "select_schedule": {
+        "name": "Thermostat schedule"
+      }
+    },
+    "switch": {
+      "cooling_ena_switch": {
+        "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]"
+      },
+      "dhw_cm_switch": {
+        "name": "DHW comfort mode"
+      },
+      "lock": {
+        "name": "[%key:component::lock::entity_component::_::name%]"
+      },
+      "relay": {
+        "name": "Relay"
       }
     }
   }

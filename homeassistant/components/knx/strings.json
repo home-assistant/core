@@ -42,14 +42,13 @@
         }
       },
       "secure_knxkeys": {
-        "title": "Keyfile",
-        "description": "Please enter the information for your `.knxkeys` file.",
+        "title": "Import KNX Keyring",
+        "description": "Please select a `.knxkeys` file to import.",
         "data": {
-          "knxkeys_filename": "The filename of your `.knxkeys` file (including extension)",
+          "knxkeys_file": "Keyring file",
           "knxkeys_password": "The password to decrypt the `.knxkeys` file"
         },
         "data_description": {
-          "knxkeys_filename": "The file is expected to be found in your config directory in `.storage/knx/`.\nIn Home Assistant OS this would be `/config/.storage/knx/`\nExample: `my_project.knxkeys`",
           "knxkeys_password": "This was set when exporting the file from ETS."
         }
       },
@@ -126,7 +125,8 @@
         "title": "KNX Settings",
         "menu_options": {
           "connection_type": "Configure KNX interface",
-          "communication_settings": "Communication settings"
+          "communication_settings": "Communication settings",
+          "secure_knxkeys": "Import a `.knxkeys` file"
         }
       },
       "communication_settings": {
@@ -184,11 +184,10 @@
         "title": "[%key:component::knx::config::step::secure_knxkeys::title%]",
         "description": "[%key:component::knx::config::step::secure_knxkeys::description%]",
         "data": {
-          "knxkeys_filename": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_filename%]",
+          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_file%]",
           "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]"
         },
         "data_description": {
-          "knxkeys_filename": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_filename%]",
           "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
         }
       },

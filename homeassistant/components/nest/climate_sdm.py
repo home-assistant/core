@@ -304,7 +304,10 @@ class ThermostatEntity(ClimateEntity):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
         if ThermostatTemperatureSetpointTrait.NAME not in self._device.traits:
-            return
+            raise HomeAssistantError(
+                f"Error setting {self.entity_id} temperature to {kwargs}: "
+                "Unable to find setpoint trait."
+            )
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
         try:
             if self.preset_mode == PRESET_ECO or hvac_mode == HVACMode.HEAT_COOL:

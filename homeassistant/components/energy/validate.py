@@ -603,7 +603,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             functools.partial(
                 recorder.statistics.get_metadata,
                 hass,
-                statistic_ids=list(wanted_statistics_metadata),
+                statistic_ids=set(wanted_statistics_metadata),
             )
         )
     )

@@ -1,7 +1,6 @@
 """Decorators for the Websocket API."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from functools import wraps
 from typing import Any
@@ -33,6 +32,7 @@ def async_response(
     func: const.AsyncWebSocketCommandHandler,
 ) -> const.WebSocketCommandHandler:
     """Decorate an async function to handle WebSocket API messages."""
+    task_name = f"websocket_api.async:{func.__name__}"
 
     @callback
     @wraps(func)
@@ -42,7 +42,10 @@ def async_response(
         """Schedule the handler."""
         # As the webserver is now started before the start
         # event we do not want to block for websocket responders
-        asyncio.create_task(_handle_async_response(func, hass, connection, msg))
+        hass.async_create_background_task(
+            _handle_async_response(func, hass, connection, msg),
+            task_name,
+        )
 
     return schedule_handler
 

@@ -91,7 +91,6 @@ def async_restore_climate_entities(
     entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     for entry in entries:
-
         if entry.domain != CLIMATE_DOMAIN:
             continue
 

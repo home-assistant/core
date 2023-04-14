@@ -442,10 +442,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
 
 class ZwaveBlackIsOffLight(ZwaveLight):
-    """
-    Representation of a Z-Wave light where setting the color to black turns it off.
+    """Representation of a Z-Wave light where setting the color to black turns it off.
 
-    Currently only supports lights with RGB, no color temperature, and no white channels.
+    Currently only supports lights with RGB, no color temperature,
+    and no white channels.
     """
 
     def __init__(

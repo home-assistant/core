@@ -1,5 +1,4 @@
 """Test the Livisi Home Assistant config flow."""
-
 from unittest.mock import patch
 
 from aiolivisi import errors as livisi_errors
@@ -8,6 +7,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.livisi.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
 
 from . import (
     VALID_CONFIG,
@@ -17,7 +17,7 @@ from . import (
 )
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test create LIVISI entity."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -36,7 +36,7 @@ async def test_create_entry(hass):
 
 
 @pytest.mark.parametrize(
-    "exception,expected_reason",
+    ("exception", "expected_reason"),
     [
         (livisi_errors.ShcUnreachableException(), "cannot_connect"),
         (livisi_errors.IncorrectIpAddressException(), "wrong_ip_address"),
@@ -44,8 +44,8 @@ async def test_create_entry(hass):
     ],
 )
 async def test_create_entity_after_login_error(
-    hass, exception: livisi_errors.LivisiException, expected_reason: str
-):
+    hass: HomeAssistant, exception: livisi_errors.LivisiException, expected_reason: str
+) -> None:
     """Test the LIVISI integration can create an entity after the user had login errors."""
     with patch(
         "homeassistant.components.livisi.config_flow.AioLivisi.async_set_token",

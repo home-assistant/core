@@ -65,7 +65,6 @@ async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> Non
         )
 
         with pytest.raises(ConnectionError):
-
             await hass.services.async_call(
                 "number",
                 SERVICE_SET_VALUE,

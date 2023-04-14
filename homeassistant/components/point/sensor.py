@@ -89,7 +89,7 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
 
     def __init__(
         self, point_client, device_id, description: MinutPointSensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(point_client, device_id, description.device_class)
         self.entity_description = description

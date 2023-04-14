@@ -28,7 +28,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_sensor_readings(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test for successfully setting up the Efergy platform."""
     for description in SENSOR_TYPES:
         description.entity_registry_enabled_default = True
@@ -99,7 +99,7 @@ async def test_sensor_readings(
 
 async def test_multi_sensor_readings(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test for multiple sensors in one household."""
     for description in SENSOR_TYPES:
         description.entity_registry_enabled_default = True
@@ -123,7 +123,7 @@ async def test_multi_sensor_readings(
 
 async def test_failed_update_and_reconnection(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test failed update and reconnection."""
     await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
     assert hass.states.get("sensor.power_usage").state == "1580"
