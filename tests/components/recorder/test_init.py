@@ -2243,7 +2243,7 @@ async def test_lru_increases_with_many_entities(
 
 
 async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_database(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
     """Test we still shutdown cleanly when the recorder thread raises during initialize_database."""
     with patch.object(migration, "initialize_database", side_effect=Exception), patch(
@@ -2254,12 +2254,18 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_data
         assert not await async_setup_component(
             hass,
             recorder.DOMAIN,
-            {recorder.DOMAIN: {CONF_DB_RETRY_WAIT: 0, CONF_DB_MAX_RETRIES: 1}},
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
         )
 
 
 async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_schema(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
     """Test we still shutdown cleanly when the recorder thread raises during validate_db_schema."""
     with patch.object(migration, "validate_db_schema", side_effect=Exception), patch(
@@ -2270,13 +2276,17 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
         assert not await async_setup_component(
             hass,
             recorder.DOMAIN,
-            {recorder.DOMAIN: {CONF_DB_RETRY_WAIT: 0, CONF_DB_MAX_RETRIES: 1}},
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
         )
 
 
-async def test_clean_shutdown_when_schema_migration_fails(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
-) -> None:
+async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -> None:
     """Test we still shutdown cleanly when schema migration fails."""
     with patch(
         "sqlalchemy.engine.base.Engine.dispose"
@@ -2294,6 +2304,12 @@ async def test_clean_shutdown_when_schema_migration_fails(
         assert not await async_setup_component(
             hass,
             recorder.DOMAIN,
-            {recorder.DOMAIN: {CONF_DB_RETRY_WAIT: 0, CONF_DB_MAX_RETRIES: 1}},
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
         )
     assert mock_engine_dispose.called
