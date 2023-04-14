@@ -1394,7 +1394,10 @@ class Recorder(threading.Thread):
         """Save end time for current run."""
         _LOGGER.debug("Shutting down recorder")
         if not self.schema_version:
-            # If the schema version is not set, we never connected to the database
+            # If the schema version is not set, we never had a working
+            # connection to the database or the database connection was
+            # never setup. In either case, we want to mark the connection
+            # as failed so we report the correct state.
             self.hass.add_job(self.async_connection_failed)
         self.hass.add_job(self._async_stop_listeners)
         self._stop_executor()
