@@ -154,6 +154,7 @@ class DebouncedEntryReloader:
             cooldown=ENTRY_RELOAD_COOLDOWN,
             immediate=False,
             function=self._async_reload_entry,
+            cancel_on_shutdown=True,
         )
 
     async def async_call(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
