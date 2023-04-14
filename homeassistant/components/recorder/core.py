@@ -660,13 +660,11 @@ class Recorder(threading.Thread):
 
         if not setup_result:
             # Give up if we could not connect
-            self.hass.add_job(self.async_connection_failed)
             return
 
         schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
-            self.hass.add_job(self.async_connection_failed)
             return
         self.schema_version = schema_status.current_version
 
@@ -1361,9 +1359,9 @@ class Recorder(threading.Thread):
 
     def _close_connection(self) -> None:
         """Close the connection."""
-        assert self.engine is not None
-        self.engine.dispose()
-        self.engine = None
+        if self.engine:
+            self.engine.dispose()
+            self.engine = None
         self._get_session = None
 
     def _setup_run(self) -> None:
@@ -1395,6 +1393,9 @@ class Recorder(threading.Thread):
     def _shutdown(self) -> None:
         """Save end time for current run."""
         _LOGGER.debug("Shutting down recorder")
+        if not self.schema_version:
+            # If the schema version is not set, we never connected to the database
+            self.hass.add_job(self.async_connection_failed)
         self.hass.add_job(self._async_stop_listeners)
         self._stop_executor()
         try:

@@ -27,6 +27,7 @@ from homeassistant.components.recorder import (
     SQLITE_URL_PREFIX,
     Recorder,
     get_instance,
+    migration,
     pool,
     statistics,
 )
@@ -2239,3 +2240,45 @@ async def test_lru_increases_with_many_entities(
         == mock_entity_count * 2
     )
     assert recorder_mock.states_meta_manager._id_map.get_size() == mock_entity_count * 2
+
+
+async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_database(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we still shutdown cleanly when the recorder thread raises during initialize_database."""
+    with patch(
+        "sqlalchemy.engine.base.Engine.dispose"
+    ) as mock_engine_dispose, patch.object(
+        migration, "initialize_database", side_effect=Exception
+    ), patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {recorder.DOMAIN: {CONF_DB_RETRY_WAIT: 0, CONF_DB_MAX_RETRIES: 1}},
+        )
+    assert mock_engine_dispose.called
+
+
+async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_schema(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we still shutdown cleanly when the recorder thread raises during validate_db_schema."""
+    with patch(
+        "sqlalchemy.engine.base.Engine.dispose"
+    ) as mock_engine_dispose, patch.object(
+        migration, "validate_db_schema", side_effect=Exception
+    ), patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {recorder.DOMAIN: {CONF_DB_RETRY_WAIT: 0, CONF_DB_MAX_RETRIES: 1}},
+        )
+    assert mock_engine_dispose.called
