@@ -593,13 +593,9 @@ class PipelineStorageCollection(
         """Create an item from its serialized representation."""
         return Pipeline(**data)
 
-    def _serialize_item(self, item: Pipeline) -> dict:
+    def _serialize_item(self, item_id: str, item: Pipeline) -> dict:
         """Return the serialized representation of an item for storing."""
         return item.to_json()
-
-    def serialize_item(self, item: Pipeline) -> dict:
-        """Return the serialized representation of an item for websocket."""
-        return item.to_json() | {"preferred": item.id == self._preferred_item}
 
     async def async_delete_item(self, item_id: str) -> None:
         """Delete item."""
@@ -660,6 +656,18 @@ class PipelineStorageCollectionWebsocket(
                     vol.Required(self.item_id_key): str,
                 }
             ),
+        )
+
+    def ws_list_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """List items."""
+        connection.send_result(
+            msg["id"],
+            {
+                "pipelines": self.storage_collection.async_items(),
+                "preferred_pipeline": self.storage_collection.preferred_item,
+            },
         )
 
     async def ws_delete_item(

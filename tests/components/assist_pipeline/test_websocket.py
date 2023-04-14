@@ -447,7 +447,6 @@ async def test_add_pipeline(
         "id": ANY,
         "language": "test_language",
         "name": "test_name",
-        "preferred": True,
         "stt_engine": "test_stt_engine",
         "tts_engine": "test_tts_engine",
     }
@@ -548,7 +547,7 @@ async def test_list_pipelines(
     await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == []
+    assert msg["result"] == {"pipelines": [], "preferred_pipeline": None}
 
     await client.send_json_auto_id(
         {
@@ -567,17 +566,19 @@ async def test_list_pipelines(
     await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == [
-        {
-            "conversation_engine": "test_conversation_engine",
-            "id": ANY,
-            "language": "test_language",
-            "name": "test_name",
-            "preferred": True,
-            "stt_engine": "test_stt_engine",
-            "tts_engine": "test_tts_engine",
-        }
-    ]
+    assert msg["result"] == {
+        "pipelines": [
+            {
+                "conversation_engine": "test_conversation_engine",
+                "id": ANY,
+                "language": "test_language",
+                "name": "test_name",
+                "stt_engine": "test_stt_engine",
+                "tts_engine": "test_tts_engine",
+            }
+        ],
+        "preferred_pipeline": ANY,
+    }
 
 
 async def test_update_pipeline(
@@ -638,7 +639,6 @@ async def test_update_pipeline(
         "id": pipeline_id,
         "language": "new_language",
         "name": "new_name",
-        "preferred": True,
         "stt_engine": "new_stt_engine",
         "tts_engine": "new_tts_engine",
     }
