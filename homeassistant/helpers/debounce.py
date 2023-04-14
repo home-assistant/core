@@ -90,7 +90,8 @@ class Debouncer(Generic[_R_co]):
             if task:
                 await task
 
-            self._schedule_timer()
+            if not self._cancelled:
+                self._schedule_timer()
 
     async def _handle_timer_finish(self) -> None:
         """Handle a finished timer."""
