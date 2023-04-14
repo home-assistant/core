@@ -25,7 +25,7 @@ from . import expose_entity, expose_new
 from tests.common import MockConfigEntry, MockUser, async_mock_service
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-AGENT_ID_OPTIONS = [None, conversation.AgentManager.HOME_ASSISTANT_AGENT]
+AGENT_ID_OPTIONS = [None, conversation.HOME_ASSISTANT_AGENT]
 
 
 class OrderBeerIntentHandler(intent.IntentHandler):
@@ -1569,7 +1569,7 @@ async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:
     with pytest.raises(vol.Invalid):
         conversation.agent_id_validator("invalid_agent")
 
-    conversation.agent_id_validator(conversation.AgentManager.HOME_ASSISTANT_AGENT)
+    conversation.agent_id_validator(conversation.HOME_ASSISTANT_AGENT)
 
 
 async def test_get_agent_list(

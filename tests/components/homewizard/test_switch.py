@@ -54,7 +54,7 @@ async def test_switch_loads_entities(
 ) -> None:
     """Test entity loads smr version."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(
         return_value=State.from_dict({"power_on": False, "switch_lock": False})
     )
@@ -109,7 +109,7 @@ async def test_switch_power_on_off(
 ) -> None:
     """Test entity turns switch on and off."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(
         return_value=State.from_dict({"power_on": False, "switch_lock": False})
     )
@@ -164,7 +164,7 @@ async def test_switch_lock_power_on_off(
 ) -> None:
     """Test entity turns switch on and off."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(
         return_value=State.from_dict({"power_on": False, "switch_lock": False})
     )
@@ -228,7 +228,7 @@ async def test_switch_lock_sets_power_on_unavailable(
 ) -> None:
     """Test entity turns switch on and off."""
 
-    api = get_mock_device()
+    api = get_mock_device(product_type="HWE-SKT")
     api.state = AsyncMock(
         return_value=State.from_dict({"power_on": True, "switch_lock": False})
     )
