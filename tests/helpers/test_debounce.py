@@ -196,35 +196,27 @@ async def test_shutdown(hass: HomeAssistant) -> None:
         function=_func,
     )
 
-    # Shutdown during initial run doesn't create a cooldown timer
-    hass.async_add_job(debouncer.async_call())
-    await asyncio.sleep(0.01)
-    debouncer.async_shutdown()
-    future.set_result(True)
+    # Cancel during run doesn't create a cooldown timer
+    hass.create_task(debouncer.async_call())
+    await asyncio.sleep(0.001)  # ensure the job is started
+    debouncer.async_cancel()  # cancel whilst the job is running
+    future.set_result(True)  # complete the job
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert debouncer._timer_task is None
 
-    # Ensure restart is possible, runs immediately and recreates a cooldown timer
+    # Second call occurs during "non-timer" cooldown, a new cooldown timer is created
+    await debouncer.async_call()  # the job is scheduled
     future.set_result(True)
-    await debouncer.async_call()
+    assert len(calls) == 1
+    assert debouncer._timer_task is not None
+
+    # After second call, a regular cooldown timer is recreated
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
     assert len(calls) == 2
     assert debouncer._timer_task is not None
 
-    # Third call during cooldown timer gets scheduled
-    hass.async_add_job(debouncer.async_call())
-    await hass.async_block_till_done()
-    assert debouncer._timer_task is not None
-
-    # Start third run
-    await asyncio.sleep(0.01)
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
-    assert len(calls) == 2  # still pending
-    assert debouncer._timer_task is None  # run in progress
-
-    # Shutdown during third run doesn't create a cooldown timer
-    debouncer.async_shutdown()
-    future.set_result(True)
-    await hass.async_block_till_done()
-    assert len(calls) == 3
+    # Reset debouncer to avoid lingering timer
+    debouncer.async_cancel()
     assert debouncer._timer_task is None

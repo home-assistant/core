@@ -44,7 +44,8 @@ class Debouncer(Generic[_R_co]):
                 function, f"debouncer cooldown={cooldown}, immediate={immediate}"
             )
         )
-        self._shutdown_requested = False
+        self._cancel_requested = False
+        self._cooldown_until: float | None = None
 
     @property
     def function(self) -> Callable[[], _R_co] | None:
@@ -63,7 +64,7 @@ class Debouncer(Generic[_R_co]):
 
     async def async_call(self) -> None:
         """Call the function."""
-        self._shutdown_requested = False
+        self._cancel_requested = False
         assert self._job is not None
 
         if self._timer_task:
@@ -84,6 +85,11 @@ class Debouncer(Generic[_R_co]):
         async with self._execute_lock:
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
+                return
+
+            if self._cooldown_until and self._cooldown_until > self.hass.loop.time():
+                self._execute_at_end_of_timer = True
+                self._schedule_timer(self._cooldown_until)
                 return
 
             task = self.hass.async_run_hass_job(self._job)
@@ -118,22 +124,13 @@ class Debouncer(Generic[_R_co]):
             self._schedule_timer()
 
     @callback
-    def async_shutdown(self) -> None:
-        """Shutdown and cancel any scheduled call.
-
-        Note: calling `async_call` after shutdown will ignore cooldown,
-        use `async_cancel` if this is not desired.
-        """
-        self._shutdown_requested = True
-        self.async_cancel()
-
-    @callback
     def async_cancel(self) -> None:
         """Cancel any scheduled call.
 
         Note: calling `async_call` after cancel will follow cooldown,
         use `async_shutdown` if this is not desired.
         """
+        self._cancel_requested = True
         if self._timer_task:
             self._timer_task.cancel()
             self._timer_task = None
@@ -151,9 +148,12 @@ class Debouncer(Generic[_R_co]):
             )
 
     @callback
-    def _schedule_timer(self) -> None:
+    def _schedule_timer(self, when: float | None = None) -> None:
         """Schedule a timer."""
-        if not self._shutdown_requested:
-            self._timer_task = self.hass.loop.call_later(
-                self.cooldown, self._on_debounce
-            )
+        if self._cancel_requested:
+            self._cooldown_until = self.hass.loop.time() + self.cooldown
+            return
+        if when:
+            self._timer_task = self.hass.loop.call_at(when, self._on_debounce)
+            return
+        self._timer_task = self.hass.loop.call_later(self.cooldown, self._on_debounce)
