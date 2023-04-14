@@ -51,7 +51,7 @@ def async_register(
 
     if allowed_methods is None:
         allowed_methods = DEFAULT_METHODS
-    allowed_methods = frozenset(method for method in allowed_methods)
+    allowed_methods = frozenset(allowed_methods)
 
     if not allowed_methods.issubset(SUPPORTED_METHODS):
         raise ValueError(
@@ -139,9 +139,6 @@ async def async_handle_webhook(
             method_name,
             received_from,
         )
-        if method_name == METH_HEAD:
-            # Allow websites to verify that the URL exists.
-            return Response(status=HTTPStatus.OK)
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     if webhook["local_only"] in (True, None) and not isinstance(request, MockRequest):
