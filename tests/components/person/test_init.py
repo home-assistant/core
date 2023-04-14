@@ -670,7 +670,7 @@ async def test_update_double_user_id(
     await storage_collection.async_create_item(
         {"name": "Hello", "user_id": hass_admin_user.id}
     )
-    person = await storage_collection.async_create_item({"name": "Hello"})
+    _, person = await storage_collection.async_create_item({"name": "Hello"})
 
     with pytest.raises(ValueError):
         await storage_collection.async_update_item(
@@ -680,7 +680,7 @@ async def test_update_double_user_id(
 
 async def test_update_invalid_user_id(hass: HomeAssistant, storage_collection) -> None:
     """Test updating to invalid user ID."""
-    person = await storage_collection.async_create_item({"name": "Hello"})
+    _, person = await storage_collection.async_create_item({"name": "Hello"})
 
     with pytest.raises(ValueError):
         await storage_collection.async_update_item(
@@ -694,7 +694,7 @@ async def test_update_person_when_user_removed(
     """Update person when user is removed."""
     storage_collection = hass.data[DOMAIN][1]
 
-    person = await storage_collection.async_create_item(
+    _, person = await storage_collection.async_create_item(
         {"name": "Hello", "user_id": hass_read_only_user.id}
     )
 
@@ -712,7 +712,7 @@ async def test_removing_device_tracker(hass: HomeAssistant, storage_setup) -> No
         "device_tracker", "mobile_app", "bla", suggested_object_id="pixel"
     )
 
-    person = await storage_collection.async_create_item(
+    _, person = await storage_collection.async_create_item(
         {"name": "Hello", "device_trackers": [entry.entity_id]}
     )
 
@@ -727,7 +727,7 @@ async def test_add_user_device_tracker(
 ) -> None:
     """Test adding a device tracker to a person tied to a user."""
     storage_collection = hass.data[DOMAIN][1]
-    pers = await storage_collection.async_create_item(
+    _, pers = await storage_collection.async_create_item(
         {
             "name": "Hello",
             "user_id": hass_read_only_user.id,

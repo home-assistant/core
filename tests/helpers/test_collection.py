@@ -220,7 +220,8 @@ async def test_storage_collection(hass: HomeAssistant) -> None:
         {"id": "mock-2", "name": "Mock 2", "data": 2},
     )
 
-    item = await coll.async_create_item({"name": "Mock 3"})
+    item_id, item = await coll.async_create_item({"name": "Mock 3"})
+    assert item_id == "mock_3"
     assert item["id"] == "mock_3"
     assert len(changes) == 3
     assert changes[2] == (
@@ -436,7 +437,7 @@ async def test_storage_collection_websocket(
     store = storage.Store(hass, 1, "test-data")
     coll = MockStorageCollection(store)
     changes = track_changes(coll)
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         coll,
         "test_item/collection",
         "test_item",

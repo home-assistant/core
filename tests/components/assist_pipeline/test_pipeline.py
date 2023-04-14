@@ -44,8 +44,10 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
 
     store1: PipelineStorageCollection = hass.data[DOMAIN]
     for pipeline in pipelines:
-        pipeline_ids.append((await store1.async_create_item(pipeline)).id)
+        pipeline_id, _ = await store1.async_create_item(pipeline)
+        pipeline_ids.append(pipeline_id)
     assert len(store1.data) == 3
+    assert store1.preferred_item == list(store1.data)[0]
 
     await store1.async_delete_item(pipeline_ids[1])
     assert len(store1.data) == 2
@@ -58,6 +60,7 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
 
     assert store1.data is not store2.data
     assert store1.data == store2.data
+    assert store1.preferred_item == store2.preferred_item
 
 
 async def test_loading_datasets_from_storage(
@@ -94,7 +97,8 @@ async def test_loading_datasets_from_storage(
                     "stt_engine": "stt_engine_3",
                     "tts_engine": "tts_engine_3",
                 },
-            ]
+            ],
+            "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
         },
     }
 
@@ -102,3 +106,4 @@ async def test_loading_datasets_from_storage(
 
     store: PipelineStorageCollection = hass.data[DOMAIN]
     assert len(store.data) == 3
+    assert store.preferred_item == "01GX8ZWBAQYWNB1XV3EXEZ75DY"

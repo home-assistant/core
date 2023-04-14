@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     image_dir = pathlib.Path(hass.config.path("image"))
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection,
         "image",
         "image",
@@ -156,7 +156,7 @@ class ImageUploadView(HomeAssistantView):
         request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
 
         data = await request.post()
-        item = await request.app["hass"].data[DOMAIN].async_create_item(data)
+        _, item = await request.app["hass"].data[DOMAIN].async_create_item(data)
         return self.json(item)
 
 
