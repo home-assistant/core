@@ -1399,7 +1399,7 @@ class Recorder(threading.Thread):
     def _shutdown(self) -> None:
         """Save end time for current run."""
         _LOGGER.debug("Shutting down recorder")
-        if not self.schema_version:
+        if not self.schema_version or self.schema_version != SCHEMA_VERSION:
             # If the schema version is not set, we never had a working
             # connection to the database or the schema never reached a
             # good state.

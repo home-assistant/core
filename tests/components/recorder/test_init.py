@@ -2297,7 +2297,9 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
 async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -> None:
     """Test we still shutdown cleanly when schema migration fails."""
     with patch.object(
-        migration, "validate_db_schema", return_value=MagicMock(valid=False)
+        migration,
+        "validate_db_schema",
+        return_value=MagicMock(valid=False, current_version=1),
     ), patch(
         "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
     ), patch.object(
