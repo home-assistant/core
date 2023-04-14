@@ -128,6 +128,7 @@ class Debouncer(Generic[_R_co]):
         """Cancel any scheduled call."""
         self._cancel_requested = True
         if self._timer_task:
+            self._cooldown_until = self._timer_task.when()
             self._timer_task.cancel()
             self._timer_task = None
 
