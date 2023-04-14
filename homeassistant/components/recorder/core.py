@@ -1408,9 +1408,8 @@ class Recorder(threading.Thread):
         else:
             self.hass.add_job(self._async_stop_listeners)
 
-        self._stop_executor()
-
         try:
             self._end_session()
         finally:
+            self._stop_executor()
             self._close_connection()
