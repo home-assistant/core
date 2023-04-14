@@ -177,13 +177,15 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._job.target == debouncer.function
 
 
-async def test_shutdown_initial_run(hass: HomeAssistant) -> None:
-    """Test that shutdown during initial run avoids cooldown."""
+async def test_shutdown(hass: HomeAssistant) -> None:
+    """Test that shutdown avoids cooldown."""
     calls = []
     future = asyncio.Future()
 
     async def _func() -> None:
+        nonlocal future
         await future
+        future = asyncio.Future()
         calls.append(None)
 
     debouncer = debounce.Debouncer(
@@ -203,48 +205,26 @@ async def test_shutdown_initial_run(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     assert debouncer._timer_task is None
 
-
-async def test_shutdown_subsequent_run(hass: HomeAssistant) -> None:
-    """Test that shutdown during subsequent run avoids cooldown."""
-    calls = []
-    future = asyncio.Future()
-
-    async def _func() -> None:
-        nonlocal future
-        await future
-        future = asyncio.Future()
-        calls.append(None)
-
-    debouncer = debounce.Debouncer(
-        hass,
-        None,
-        cooldown=0.01,
-        immediate=True,
-        function=_func,
-    )
-
-    # First run should create a cooldown timer
-    hass.async_add_job(debouncer.async_call())
-    await asyncio.sleep(0.01)
+    # Ensure restart is possible, runs immediately and recreates a cooldown timer
     future.set_result(True)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
+    await debouncer.async_call()
+    assert len(calls) == 2
     assert debouncer._timer_task is not None
 
-    # Second call during cooldown timer gets scheduled
+    # Third call during cooldown timer gets scheduled
     hass.async_add_job(debouncer.async_call())
     await hass.async_block_till_done()
     assert debouncer._timer_task is not None
 
-    # Start second run
+    # Start third run
     await asyncio.sleep(0.01)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
-    assert len(calls) == 1  # still pending
+    assert len(calls) == 2  # still pending
     assert debouncer._timer_task is None  # run in progress
 
-    # Shutdown during second run doesn't create a cooldown timer
+    # Shutdown during third run doesn't create a cooldown timer
     debouncer.async_shutdown()
     future.set_result(True)
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(calls) == 3
     assert debouncer._timer_task is None
