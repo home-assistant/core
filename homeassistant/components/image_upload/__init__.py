@@ -156,7 +156,7 @@ class ImageUploadView(HomeAssistantView):
         request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
 
         data = await request.post()
-        _, item = await request.app["hass"].data[DOMAIN].async_create_item(data)
+        item = await request.app["hass"].data[DOMAIN].async_create_item(data)
         return self.json(item)
 
 

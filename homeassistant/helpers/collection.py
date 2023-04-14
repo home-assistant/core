@@ -293,20 +293,20 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
         """Create an item from its serialized representation."""
 
     @abstractmethod
-    def _serialize_item(self, item_id: str, item: _ItemT) -> dict:
+    def _serialize_item(self, item: _ItemT) -> dict:
         """Return the serialized representation of an item for storing.
 
         The serialized representation must include the item_id in the "id" key.
         """
 
-    def serialize_item(self, item_id: str, item: _ItemT) -> dict:
+    def serialize_item(self, item: _ItemT) -> dict:
         """Return the serialized representation of an item for websocket.
 
         The serialized representation must include the item_id in the "id" key.
         """
-        return self._serialize_item(item_id, item)
+        return self._serialize_item(item)
 
-    async def async_create_item(self, data: dict) -> tuple[str, _ItemT]:
+    async def async_create_item(self, data: dict) -> _ItemT:
         """Create a new item."""
         validated_data = await self._process_create_data(data)
         item_id = self.id_manager.generate_id(self._get_suggested_id(validated_data))
@@ -314,7 +314,7 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
         self.data[item_id] = item
         self._async_schedule_save()
         await self.notify_changes([CollectionChangeSet(CHANGE_ADDED, item_id, item)])
-        return (item_id, item)
+        return item
 
     async def async_update_item(self, item_id: str, updates: dict) -> _ItemT:
         """Update item."""
@@ -354,12 +354,9 @@ class StorageCollection(ObservableCollection[_ItemT], Generic[_ItemT, _StoreT]):
 
     @callback
     def _base_data_to_save(self) -> SerializedStorageCollection:
-        """Return JSON-compatible date for storing to file."""
+        """Return JSON-compatible data for storing to file."""
         return {
-            "items": [
-                self._serialize_item(item_id, item)
-                for item_id, item in self.data.items()
-            ]
+            "items": [self._serialize_item(item) for item_id, item in self.data.items()]
         }
 
     @abstractmethod
@@ -379,7 +376,7 @@ class DictStorageCollection(StorageCollection[dict, SerializedStorageCollection]
         """Create an item from its validated, serialized representation."""
         return data
 
-    def _serialize_item(self, item_id: str, item: dict) -> dict:
+    def _serialize_item(self, item: dict) -> dict:
         """Return the serialized representation of an item for storing."""
         return item
 
@@ -589,7 +586,7 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
         connection.send_result(
             msg["id"],
             [
-                self.storage_collection.serialize_item(item_id, item)
+                self.storage_collection.serialize_item(item)
                 for item_id, item in self.storage_collection.data.items()
             ],
         )
@@ -602,9 +599,9 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
             data = dict(msg)
             data.pop("id")
             data.pop("type")
-            item_id, item = await self.storage_collection.async_create_item(data)
+            item = await self.storage_collection.async_create_item(data)
             connection.send_result(
-                msg["id"], self.storage_collection.serialize_item(item_id, item)
+                msg["id"], self.storage_collection.serialize_item(item)
             )
         except vol.Invalid as err:
             connection.send_error(
@@ -628,9 +625,7 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
 
         try:
             item = await self.storage_collection.async_update_item(item_id, data)
-            connection.send_result(
-                msg_id, self.storage_collection.serialize_item(item_id, item)
-            )
+            connection.send_result(msg_id, self.storage_collection.serialize_item(item))
         except ItemNotFound:
             connection.send_error(
                 msg["id"],

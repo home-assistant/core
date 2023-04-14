@@ -44,8 +44,7 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
 
     store1: PipelineStorageCollection = hass.data[DOMAIN]
     for pipeline in pipelines:
-        pipeline_id, _ = await store1.async_create_item(pipeline)
-        pipeline_ids.append(pipeline_id)
+        pipeline_ids.append((await store1.async_create_item(pipeline)).id)
     assert len(store1.data) == 3
     assert store1.preferred_item == list(store1.data)[0]
 

@@ -60,7 +60,7 @@ async def async_get_pipeline(
 
     # Construct a pipeline for the required/configured language
     language = language or hass.config.language
-    _, pipeline = await pipeline_store.async_create_item(
+    pipeline = await pipeline_store.async_create_item(
         {
             "name": language,
             "language": language,
@@ -594,13 +594,13 @@ class PipelineStorageCollection(
         """Create an item from its serialized representation."""
         return Pipeline(**data)
 
-    def _serialize_item(self, item_id: str, item: Pipeline) -> dict:
+    def _serialize_item(self, item: Pipeline) -> dict:
         """Return the serialized representation of an item for storing."""
         return item.to_json()
 
-    def serialize_item(self, item_id: str, item: Pipeline) -> dict:
+    def serialize_item(self, item: Pipeline) -> dict:
         """Return the serialized representation of an item for websocket."""
-        return item.to_json() | {"preferred": item_id == self._preferred_item}
+        return item.to_json() | {"preferred": item.id == self._preferred_item}
 
     async def async_delete_item(self, item_id: str) -> None:
         """Delete item."""
