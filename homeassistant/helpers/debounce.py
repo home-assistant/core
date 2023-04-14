@@ -44,6 +44,7 @@ class Debouncer(Generic[_R_co]):
                 function, f"debouncer cooldown={cooldown}, immediate={immediate}"
             )
         )
+        self._cancelled = False
 
     @property
     def function(self) -> Callable[[], _R_co] | None:
@@ -62,6 +63,7 @@ class Debouncer(Generic[_R_co]):
 
     async def async_call(self) -> None:
         """Call the function."""
+        self._cancelled = False
         assert self._job is not None
 
         if self._timer_task:
@@ -113,11 +115,13 @@ class Debouncer(Generic[_R_co]):
                 self.logger.exception("Unexpected exception from %s", self.function)
 
             # Schedule a new timer to prevent new runs during cooldown
-            self._schedule_timer()
+            if not self._cancelled:
+                self._schedule_timer()
 
     @callback
     def async_cancel(self) -> None:
         """Cancel any scheduled call."""
+        self._cancelled = True
         if self._timer_task:
             self._timer_task.cancel()
             self._timer_task = None
