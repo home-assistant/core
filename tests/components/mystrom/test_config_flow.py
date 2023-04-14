@@ -122,3 +122,20 @@ async def test_step_import(hass: HomeAssistant) -> None:
         assert result["data"] == {
             CONF_HOST: "1.1.1.1",
         }
+
+
+async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
+    """Test the import step."""
+    conf = {
+        CONF_HOST: "1.1.1.1",
+    }
+    with patch("pymystrom.switch.MyStromSwitch.get_state"), patch(
+        "aiohttp.ClientSession.get",
+        return_value=ResponseMock(
+            {"type": 101, "mac": DEVICE_MAC}, 200, "application/text"
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
+        )
+        assert result["type"] == FlowResultType.FORM

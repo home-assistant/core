@@ -18,15 +18,18 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 class ResponseMock:
     """Mock class for aiohttp response."""
 
-    def __init__(self, json: dict, status: int):
+    def __init__(
+        self, json: dict, status: int, content_type: str = "application/json"
+    ) -> None:
         """Initialize the response mock."""
         self._json = json
         self.status = status
+        self._content_type = content_type
 
     @property
     def headers(self) -> dict:
         """Headers of the response."""
-        return {"Content-Type": "application/json"}
+        return {"Content-Type": self._content_type}
 
     async def json(self) -> dict:
         """Return the json content of the response."""
