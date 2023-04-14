@@ -200,7 +200,7 @@ async def test_shutdown(hass: HomeAssistant) -> None:
     )
 
     # Ensure shutdown during a run doesn't create a cooldown timer
-    hass.async_add_job(debouncer.async_call())
+    hass.async_create_task(debouncer.async_call())
     await asyncio.sleep(0.01)
     debouncer.async_shutdown()
     future.set_result(True)
