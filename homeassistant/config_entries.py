@@ -20,7 +20,7 @@ from . import data_entry_flow, loader
 from .backports.enum import StrEnum
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
-from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from .core import CALLBACK_TYPE, CoreState, Event, HassJob, HomeAssistant, callback
 from .data_entry_flow import FlowResult
 from .exceptions import (
     ConfigEntryAuthFailed,
@@ -1965,7 +1965,9 @@ class EntityRegistryDisabledHandler:
             self._remove_call_later()
 
         self._remove_call_later = async_call_later(
-            self.hass, RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+            self.hass,
+            RELOAD_AFTER_UPDATE_DELAY,
+            HassJob(self._handle_reload, cancel_on_shutdown=True),
         )
 
     async def _handle_reload(self, _now: Any) -> None:

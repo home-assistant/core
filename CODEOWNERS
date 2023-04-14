@@ -105,6 +105,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/arris_tg2492lg/ @vanbalken
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
+/homeassistant/components/assist_pipeline/ @balloob @synesthesiam
+/tests/components/assist_pipeline/ @balloob @synesthesiam
 /homeassistant/components/asuswrt/ @kennedyshead @ollo69
 /tests/components/asuswrt/ @kennedyshead @ollo69
 /homeassistant/components/atag/ @MatsNL
@@ -1312,8 +1314,6 @@ build.json @home-assistant/supervisor
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
-/homeassistant/components/voice_assistant/ @balloob @synesthesiam
-/tests/components/voice_assistant/ @balloob @synesthesiam
 /homeassistant/components/voip/ @balloob @synesthesiam
 /tests/components/voip/ @balloob @synesthesiam
 /homeassistant/components/volumio/ @OnFreund
