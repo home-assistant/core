@@ -147,11 +147,9 @@ class Debouncer(Generic[_R_co]):
     @callback
     def _schedule_timer(self, when: float | None = None) -> None:
         """Schedule a timer."""
+        self._cooldown_until = when if when else self.hass.loop.time() + self.cooldown
         if self._cancel_requested:
-            self._cooldown_until = self.hass.loop.time() + self.cooldown
             return
-        if when:
-            self._timer_task = self.hass.loop.call_at(when, self._on_debounce)
-            return
-        self._timer_task = self.hass.loop.call_later(self.cooldown, self._on_debounce)
-        self._cooldown_until = self._timer_task.when()
+        self._timer_task = self.hass.loop.call_at(
+            self._cooldown_until, self._on_debounce
+        )
