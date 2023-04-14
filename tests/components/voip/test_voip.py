@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import async_timeout
 
-from homeassistant.components import voice_assistant, voip
+from homeassistant.components import assist_pipeline, voip
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -35,7 +35,7 @@ async def test_pipeline(hass: HomeAssistant) -> None:
 
         # Test empty data
         event_callback(
-            voice_assistant.PipelineEvent(
+            assist_pipeline.PipelineEvent(
                 type="not-used",
                 data={},
             )
@@ -43,8 +43,8 @@ async def test_pipeline(hass: HomeAssistant) -> None:
 
         # Fake intent result
         event_callback(
-            voice_assistant.PipelineEvent(
-                type=voice_assistant.PipelineEventType.INTENT_END,
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.INTENT_END,
                 data={
                     "intent_output": {
                         "conversation_id": "fake-conversation",
@@ -55,8 +55,8 @@ async def test_pipeline(hass: HomeAssistant) -> None:
 
         # Proceed with media output
         event_callback(
-            voice_assistant.PipelineEvent(
-                type=voice_assistant.PipelineEventType.TTS_END,
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.TTS_END,
                 data={"tts_output": {"media_id": _MEDIA_ID}},
             )
         )

@@ -4,8 +4,8 @@ from unittest.mock import ANY, MagicMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.voice_assistant.const import DOMAIN
-from homeassistant.components.voice_assistant.pipeline import (
+from homeassistant.components.assist_pipeline.const import DOMAIN
+from homeassistant.components.assist_pipeline.pipeline import (
     Pipeline,
     PipelineStorageCollection,
 )
@@ -25,7 +25,7 @@ async def test_text_only_pipeline(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/run",
+            "type": "assist_pipeline/run",
             "start_stage": "intent",
             "end_stage": "intent",
             "input": {"text": "Are the lights on?"},
@@ -67,7 +67,7 @@ async def test_audio_pipeline(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/run",
+            "type": "assist_pipeline/run",
             "start_stage": "stt",
             "end_stage": "tts",
             "input": {
@@ -139,7 +139,7 @@ async def test_intent_timeout(
     ):
         await client.send_json_auto_id(
             {
-                "type": "voice_assistant/run",
+                "type": "assist_pipeline/run",
                 "start_stage": "intent",
                 "end_stage": "intent",
                 "input": {"text": "Are the lights on?"},
@@ -180,12 +180,12 @@ async def test_text_pipeline_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.voice_assistant.pipeline.PipelineInput.execute",
+        "homeassistant.components.assist_pipeline.pipeline.PipelineInput.execute",
         new=sleepy_run,
     ):
         await client.send_json_auto_id(
             {
-                "type": "voice_assistant/run",
+                "type": "assist_pipeline/run",
                 "start_stage": "intent",
                 "end_stage": "intent",
                 "input": {"text": "Are the lights on?"},
@@ -218,7 +218,7 @@ async def test_intent_failed(
     ):
         await client.send_json_auto_id(
             {
-                "type": "voice_assistant/run",
+                "type": "assist_pipeline/run",
                 "start_stage": "intent",
                 "end_stage": "intent",
                 "input": {"text": "Are the lights on?"},
@@ -258,12 +258,12 @@ async def test_audio_pipeline_timeout(
         await asyncio.sleep(3600)
 
     with patch(
-        "homeassistant.components.voice_assistant.pipeline.PipelineInput.execute",
+        "homeassistant.components.assist_pipeline.pipeline.PipelineInput.execute",
         new=sleepy_run,
     ):
         await client.send_json_auto_id(
             {
-                "type": "voice_assistant/run",
+                "type": "assist_pipeline/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
                 "input": {
@@ -298,7 +298,7 @@ async def test_stt_provider_missing(
 
         await client.send_json_auto_id(
             {
-                "type": "voice_assistant/run",
+                "type": "assist_pipeline/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
                 "input": {
@@ -321,14 +321,14 @@ async def test_stt_stream_failed(
 ) -> None:
     """Test events from a pipeline run with a non-existent STT provider."""
     with patch(
-        "tests.components.voice_assistant.conftest.MockSttProvider.async_process_audio_stream",
+        "tests.components.assist_pipeline.conftest.MockSttProvider.async_process_audio_stream",
         new=MagicMock(side_effect=RuntimeError),
     ):
         client = await hass_ws_client(hass)
 
         await client.send_json_auto_id(
             {
-                "type": "voice_assistant/run",
+                "type": "assist_pipeline/run",
                 "start_stage": "stt",
                 "end_stage": "tts",
                 "input": {
@@ -376,7 +376,7 @@ async def test_tts_failed(
         await client.send_json(
             {
                 "id": 5,
-                "type": "voice_assistant/run",
+                "type": "assist_pipeline/run",
                 "start_stage": "tts",
                 "end_stage": "tts",
                 "input": {"text": "Lights are on."},
@@ -411,7 +411,7 @@ async def test_invalid_stage_order(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/run",
+            "type": "assist_pipeline/run",
             "start_stage": "tts",
             "end_stage": "stt",
             "input": {"text": "Lights are on."},
@@ -432,7 +432,7 @@ async def test_add_pipeline(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/create",
+            "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
             "language": "test_language",
             "name": "test_name",
@@ -472,7 +472,7 @@ async def test_delete_pipeline(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/create",
+            "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
             "language": "test_language",
             "name": "test_name",
@@ -488,7 +488,7 @@ async def test_delete_pipeline(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/delete",
+            "type": "assist_pipeline/pipeline/delete",
             "pipeline_id": pipeline_id,
         }
     )
@@ -498,7 +498,7 @@ async def test_delete_pipeline(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/delete",
+            "type": "assist_pipeline/pipeline/delete",
             "pipeline_id": pipeline_id,
         }
     )
@@ -517,14 +517,14 @@ async def test_list_pipelines(
     client = await hass_ws_client(hass)
     pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
 
-    await client.send_json_auto_id({"type": "voice_assistant/pipeline/list"})
+    await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == []
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/create",
+            "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
             "language": "test_language",
             "name": "test_name",
@@ -536,7 +536,7 @@ async def test_list_pipelines(
     assert msg["success"]
     assert len(pipeline_store.data) == 1
 
-    await client.send_json_auto_id({"type": "voice_assistant/pipeline/list"})
+    await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == [
@@ -560,7 +560,7 @@ async def test_update_pipeline(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/update",
+            "type": "assist_pipeline/pipeline/update",
             "conversation_engine": "new_conversation_engine",
             "language": "new_language",
             "name": "new_name",
@@ -578,7 +578,7 @@ async def test_update_pipeline(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/create",
+            "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
             "language": "test_language",
             "name": "test_name",
@@ -593,7 +593,7 @@ async def test_update_pipeline(
 
     await client.send_json_auto_id(
         {
-            "type": "voice_assistant/pipeline/update",
+            "type": "assist_pipeline/pipeline/update",
             "conversation_engine": "new_conversation_engine",
             "language": "new_language",
             "name": "new_name",
