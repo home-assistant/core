@@ -1092,16 +1092,15 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
     elif new_version == 42:
         dialect_name = engine.dialect.name
-        if dialect_name not in (
-            SupportedDialect.POSTGRESQL,
-            SupportedDialect.MYSQL,
-        ):
+        if dialect_name != SupportedDialect.MYSQL:
             # SQLite doesn't support ALTER TABLE with our minimum version
+            # PostgreSQL doesn't support IGNORE so if they ever downgraded
+            # and upgraded it would fail
             return
         unused_column_type = _column_types.unused_column_type
         # We use ignore since the column might still have legacy data
         # in it an we don't want to fail because they downgraded an upgraded
-        ignore = dialect_name == SupportedDialect.MYSQL
+        # in the past
         _modify_columns(
             session_maker,
             engine,
@@ -1110,14 +1109,14 @@ def _apply_update(  # noqa: C901
                 f"{column} {unused_column_type}"
                 for column in ("last_updated", "last_changed", "created")
             ],
-            ignore=ignore,
+            ignore=True,
         )
         _modify_columns(
             session_maker,
             engine,
             "events",
             [f"{column} {unused_column_type}" for column in ("time_fired",)],
-            ignore=ignore,
+            ignore=True,
         )
         for table in ("statistics", "statistics_short_term"):
             _modify_columns(
@@ -1128,23 +1127,22 @@ def _apply_update(  # noqa: C901
                     f"{column} {unused_column_type}"
                     for column in ("created", "start", "last_reset")
                 ],
-                ignore=ignore,
+                ignore=True,
             )
-        if dialect_name == SupportedDialect.MYSQL:
-            # The hash column used more space than needed
-            hash_column_type = _column_types.hash_column_type
-            _modify_columns(
-                session_maker,
-                engine,
-                "state_attributes",
-                [f"hash {hash_column_type}"],
-            )
-            _modify_columns(
-                session_maker,
-                engine,
-                "event_data",
-                [f"hash {hash_column_type}"],
-            )
+        # The hash column used more space than needed
+        hash_column_type = _column_types.hash_column_type
+        _modify_columns(
+            session_maker,
+            engine,
+            "state_attributes",
+            [f"hash {hash_column_type}"],
+        )
+        _modify_columns(
+            session_maker,
+            engine,
+            "event_data",
+            [f"hash {hash_column_type}"],
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
