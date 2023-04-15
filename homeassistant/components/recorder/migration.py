@@ -1091,13 +1091,24 @@ def _apply_update(  # noqa: C901
         ):
             # SQLite doesn't support ALTER TABLE with our minimum version
             return
-        # event_type can only be done after migration is complete
-        # event_data can only be done if all legacy events are gone
-        # origin can only be done if all legacy events are gone
-        # context_id can only be done after migration is complete
-        # context_user_id can only be done after migration is complete
-        # context_parent_id can only be done after migration is complete
-        # entity_id can only be done after migration is complete
+
+        # TODO: after all legacy events are gone, we alter the following:
+
+        # states.attributes can only be done if all legacy events are gone
+        # states.event_id can only be done if all legacy events are gone
+        # events.event_data can only be done if all legacy events are gone
+        # events.origin can only be done if all legacy events are gone
+
+        # TODO: after each migration task or after all migration tasks are done, we alter the following:
+
+        # events.event_type can only be done after migration is complete
+        # events.context_id can only be done after migration is complete
+        # events.context_user_id can only be done after migration is complete
+        # events.context_parent_id can only be done after migration is complete
+        # states.context_id can only be done after migration is complete
+        # states.context_user_id can only be done after migration is complete
+        # states.context_parent_id can only be done after migration is complete
+        # states.entity_id can only be done after migration is complete
         unused_column_type = _column_types.unused_column_type
         _modify_columns(
             session_maker,
@@ -1112,7 +1123,7 @@ def _apply_update(  # noqa: C901
             session_maker,
             engine,
             "events",
-            [f"{column} {unused_column_type}" for column in ("time_fired")],
+            [f"{column} {unused_column_type}" for column in ("time_fired",)],
         )
         for table in ("statistics", "statistics_short_term"):
             _modify_columns(
