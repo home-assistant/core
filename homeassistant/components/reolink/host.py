@@ -362,7 +362,7 @@ class ReolinkHost:
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ) -> None:
-        """Read the incoming webhook from Reolink for inbound messages and schedule processing"""
+        """Read the incoming webhook from Reolink for inbound messages and schedule processing."""
         _LOGGER.debug("Webhook '%s' called", webhook_id)
         try:
             data = await request.text()
