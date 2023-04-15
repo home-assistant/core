@@ -42,13 +42,13 @@ def _select_entities_context_ids_sub_query(
         select_events_context_id_subquery(start_day, end_day, event_types).where(
             apply_event_entity_id_matchers(json_quoted_entity_ids)
         ),
-        apply_entities_hints(select(States.context_id))
+        apply_entities_hints(select(States.context_id_bin))
         .filter(
             (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
         )
         .where(States.entity_id.in_(entity_ids)),
-    )
-    return select(union.c.context_id).group_by(union.c.context_id)
+    ).subquery()
+    return select(union.c.context_id_bin).group_by(union.c.context_id_bin)
 
 
 def _apply_entities_context_union(
@@ -77,12 +77,12 @@ def _apply_entities_context_union(
         apply_events_context_hints(
             select_events_context_only()
             .select_from(entities_cte)
-            .outerjoin(Events, entities_cte.c.context_id == Events.context_id)
+            .outerjoin(Events, entities_cte.c.context_id_bin == Events.context_id_bin)
         ).outerjoin(EventData, (Events.data_id == EventData.data_id)),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(entities_cte)
-            .outerjoin(States, entities_cte.c.context_id == States.context_id)
+            .outerjoin(States, entities_cte.c.context_id_bin == States.context_id_bin)
         ),
     )
 
@@ -138,4 +138,8 @@ def apply_entities_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large selects."""
     return sel.with_hint(
         States, f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX_TS})", dialect_name="mysql"
+    ).with_hint(
+        States,
+        f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX_TS})",
+        dialect_name="mariadb",
     )

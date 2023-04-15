@@ -42,7 +42,7 @@ class SFRBoxBinarySensorEntityDescription(
 DSL_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[DslInfo], ...] = (
     SFRBoxBinarySensorEntityDescription[DslInfo](
         key="status",
-        name="Status",
+        name="DSL status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x.status == "up",

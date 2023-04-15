@@ -84,11 +84,9 @@ def test_run_does_not_block_forever_with_shielded_task(
     """Test we can shutdown and not block forever."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
-    created_tasks = False
+    tasks = []
 
     async def _async_create_tasks(*_):
-        nonlocal created_tasks
-
         async def async_raise(*_):
             try:
                 await asyncio.sleep(2)
@@ -101,11 +99,10 @@ def test_run_does_not_block_forever_with_shielded_task(
             except asyncio.CancelledError:
                 await asyncio.sleep(2)
 
-        asyncio.ensure_future(asyncio.shield(async_shielded()))
-        asyncio.ensure_future(asyncio.sleep(2))
-        asyncio.ensure_future(async_raise())
+        tasks.append(asyncio.ensure_future(asyncio.shield(async_shielded())))
+        tasks.append(asyncio.ensure_future(asyncio.sleep(2)))
+        tasks.append(asyncio.ensure_future(async_raise()))
         await asyncio.sleep(0.1)
-        created_tasks = True
         return 0
 
     with patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1), patch(
@@ -115,7 +112,7 @@ def test_run_does_not_block_forever_with_shielded_task(
     ):
         runner.run(default_config)
 
-    assert created_tasks is True
+    assert len(tasks) == 3
     assert (
         "Task could not be canceled and was still running after shutdown" in caplog.text
     )

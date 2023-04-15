@@ -2,7 +2,7 @@
 import copy
 from http import HTTPStatus
 import ssl
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import plexapi.exceptions
 import pytest
@@ -42,7 +42,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN, PLEX_DIRECT_URL
-from .helpers import trigger_plex_update, wait_for_debouncer
 from .mock_classes import MockGDM
 
 from tests.common import MockConfigEntry
@@ -170,7 +169,10 @@ async def test_no_servers_found(
 
 
 async def test_single_available_server(
-    hass: HomeAssistant, mock_plex_calls, current_request_with_host: None
+    hass: HomeAssistant,
+    mock_plex_calls,
+    current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test creating an entry with one server available."""
     result = await hass.config_entries.flow.async_init(
@@ -204,7 +206,7 @@ async def test_single_available_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
+    mock_setup_entry.assert_called_once()
 
 
 async def test_multiple_servers_with_selection(
@@ -213,6 +215,7 @@ async def test_multiple_servers_with_selection(
     requests_mock: requests_mock.Mocker,
     plextv_resources_two_servers,
     current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test creating an entry with multiple servers available."""
     result = await hass.config_entries.flow.async_init(
@@ -259,7 +262,7 @@ async def test_multiple_servers_with_selection(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
+    mock_setup_entry.assert_called_once()
 
 
 async def test_adding_last_unconfigured_server(
@@ -268,6 +271,7 @@ async def test_adding_last_unconfigured_server(
     requests_mock: requests_mock.Mocker,
     plextv_resources_two_servers,
     current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test automatically adding last unconfigured server when multiple servers on account."""
     MockConfigEntry(
@@ -314,7 +318,7 @@ async def test_adding_last_unconfigured_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
+    assert mock_setup_entry.call_count == 2
 
 
 async def test_all_available_servers_configured(
@@ -718,31 +722,22 @@ async def test_integration_discovery(hass: HomeAssistant) -> None:
     assert flow["step_id"] == "user"
 
 
-async def test_trigger_reauth(
+async def test_reauth(
     hass: HomeAssistant,
-    entry,
-    mock_plex_server,
-    mock_websocket,
+    entry: MockConfigEntry,
+    mock_plex_calls: None,
     current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test setup and reauthorization of a Plex token."""
+    entry.add_to_hass(hass)
 
-    assert entry.state is ConfigEntryState.LOADED
-
-    with patch(
-        "plexapi.server.PlexServer.clients", side_effect=plexapi.exceptions.Unauthorized
-    ), patch("plexapi.server.PlexServer", side_effect=plexapi.exceptions.Unauthorized):
-        trigger_plex_update(mock_websocket)
-        await wait_for_debouncer(hass)
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is not ConfigEntryState.LOADED
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-
-    flow_id = flows[0]["flow_id"]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH},
+        data=entry.data,
+    )
+    flow_id = result["flow_id"]
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
         "plexauth.PlexAuth.token", return_value="BRAND_NEW_TOKEN"
@@ -767,38 +762,33 @@ async def test_trigger_reauth(
     assert entry.data[PLEX_SERVER_CONFIG][CONF_URL] == PLEX_DIRECT_URL
     assert entry.data[PLEX_SERVER_CONFIG][CONF_TOKEN] == "BRAND_NEW_TOKEN"
 
+    mock_setup_entry.assert_called_once()
 
-async def test_trigger_reauth_multiple_servers_available(
+
+async def test_reauth_multiple_servers_available(
     hass: HomeAssistant,
-    entry,
-    mock_plex_server,
-    mock_websocket,
+    entry: MockConfigEntry,
+    mock_plex_calls: None,
     current_request_with_host: None,
     requests_mock: requests_mock.Mocker,
-    plextv_resources_two_servers,
+    plextv_resources_two_servers: str,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test setup and reauthorization of a Plex token when multiple servers are available."""
-    assert entry.state is ConfigEntryState.LOADED
-
     requests_mock.get(
         "https://plex.tv/api/resources",
         text=plextv_resources_two_servers,
     )
 
-    with patch(
-        "plexapi.server.PlexServer.clients", side_effect=plexapi.exceptions.Unauthorized
-    ), patch("plexapi.server.PlexServer", side_effect=plexapi.exceptions.Unauthorized):
-        trigger_plex_update(mock_websocket)
-        await wait_for_debouncer(hass)
+    entry.add_to_hass(hass)
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is not ConfigEntryState.LOADED
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH},
+        data=entry.data,
+    )
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-
-    flow_id = flows[0]["flow_id"]
+    flow_id = result["flow_id"]
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
         "plexauth.PlexAuth.token", return_value="BRAND_NEW_TOKEN"
@@ -822,6 +812,8 @@ async def test_trigger_reauth_multiple_servers_available(
     assert entry.data[CONF_SERVER_IDENTIFIER] == "unique_id_123"
     assert entry.data[PLEX_SERVER_CONFIG][CONF_URL] == PLEX_DIRECT_URL
     assert entry.data[PLEX_SERVER_CONFIG][CONF_TOKEN] == "BRAND_NEW_TOKEN"
+
+    mock_setup_entry.assert_called_once()
 
 
 async def test_client_request_missing(hass: HomeAssistant) -> None:

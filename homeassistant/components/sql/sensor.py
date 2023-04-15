@@ -11,9 +11,15 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -54,6 +60,8 @@ async def async_setup_platform(
     column_name: str = conf[CONF_COLUMN_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
     db_url: str | None = conf.get(CONF_DB_URL)
+    device_class: SensorDeviceClass | None = conf.get(CONF_DEVICE_CLASS)
+    state_class: SensorStateClass | None = conf.get(CONF_STATE_CLASS)
 
     if value_template is not None:
         value_template.hass = hass
@@ -68,6 +76,8 @@ async def async_setup_platform(
         unique_id,
         db_url,
         True,
+        device_class,
+        state_class,
         async_add_entities,
     )
 
@@ -104,6 +114,8 @@ async def async_setup_entry(
         entry.entry_id,
         db_url,
         False,
+        None,
+        None,
         async_add_entities,
     )
 
@@ -118,6 +130,8 @@ async def async_setup_sensor(
     unique_id: str | None,
     db_url: str | None,
     yaml: bool,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
@@ -163,6 +177,8 @@ async def async_setup_sensor(
                 value_template,
                 unique_id,
                 yaml,
+                device_class,
+                state_class,
             )
         ],
         True,
@@ -185,11 +201,15 @@ class SQLSensor(SensorEntity):
         value_template: Template | None,
         unique_id: str | None,
         yaml: bool,
+        device_class: SensorDeviceClass | None,
+        state_class: SensorStateClass | None,
     ) -> None:
         """Initialize the SQL sensor."""
         self._query = query
         self._attr_name = name if yaml else None
         self._attr_native_unit_of_measurement = unit
+        self._attr_device_class = device_class
+        self._attr_state_class = state_class
         self._template = value_template
         self._column_name = column
         self.sessionmaker = sessmaker

@@ -227,20 +227,21 @@ class BaseHaRemoteScanner(BaseHaScanner):
             self.hass, self._async_expire_devices, timedelta(seconds=30)
         )
         cancel_stop = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._save_history
+            EVENT_HOMEASSISTANT_STOP, self._async_save_history
         )
         self._async_setup_scanner_watchdog()
 
         @hass_callback
         def _cancel() -> None:
-            self._save_history()
+            self._async_save_history()
             self._async_stop_scanner_watchdog()
             cancel_track()
             cancel_stop()
 
         return _cancel
 
-    def _save_history(self, event: Event | None = None) -> None:
+    @hass_callback
+    def _async_save_history(self, event: Event | None = None) -> None:
         """Save the history."""
         self._storage.async_set_advertisement_history(
             self.source,
@@ -252,6 +253,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             ),
         )
 
+    @hass_callback
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
         """Expire old devices."""
         now = MONOTONIC_TIME()

@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 import threading
 from typing import TYPE_CHECKING, Any
 
@@ -17,6 +18,9 @@ from .const import DOMAIN, EXCLUDE_ATTRIBUTES
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups
+
+_LOGGER = logging.getLogger(__name__)
+
 
 if TYPE_CHECKING:
     from .core import Recorder
@@ -339,3 +343,16 @@ class AdjustLRUSizeTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Handle the task to adjust the size."""
         instance._adjust_lru_size()  # pylint: disable=[protected-access]
+
+
+@dataclass
+class ContextIDMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to migrate context ids."""
+
+    commit_before = False
+
+    def run(self, instance: Recorder) -> None:
+        """Run context id migration task."""
+        if not instance._migrate_context_ids():  # pylint: disable=[protected-access]
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(ContextIDMigrationTask())

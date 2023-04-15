@@ -275,7 +275,7 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
             )
 
         # Create an async_get_options_flow method
-        cls.async_get_options_flow = _async_get_options_flow  # type: ignore[assignment]
+        cls.async_get_options_flow = _async_get_options_flow  # type: ignore[method-assign]
 
         # Create flow step methods for each step defined in the flow schema
         for step in cls.config_flow:

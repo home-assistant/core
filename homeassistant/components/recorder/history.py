@@ -17,7 +17,6 @@ from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Subquery
 
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
@@ -592,48 +591,6 @@ def get_last_state_changes(
         )
 
 
-def _generate_most_recent_states_for_entities_by_date(
-    schema_version: int,
-    run_start: datetime,
-    utc_point_in_time: datetime,
-    entity_ids: list[str],
-) -> Subquery:
-    """Generate the sub query for the most recent states for specific entities by date."""
-    if schema_version >= 31:
-        run_start_ts = process_timestamp(run_start).timestamp()
-        utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
-        return (
-            select(
-                States.entity_id.label("max_entity_id"),
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                # pylint: disable-next=not-callable
-                func.max(States.last_updated_ts).label("max_last_updated"),
-            )
-            .filter(
-                (States.last_updated_ts >= run_start_ts)
-                & (States.last_updated_ts < utc_point_in_time_ts)
-            )
-            .filter(States.entity_id.in_(entity_ids))
-            .group_by(States.entity_id)
-            .subquery()
-        )
-    return (
-        select(
-            States.entity_id.label("max_entity_id"),
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-            # pylint: disable-next=not-callable
-            func.max(States.last_updated).label("max_last_updated"),
-        )
-        .filter(
-            (States.last_updated >= run_start)
-            & (States.last_updated < utc_point_in_time)
-        )
-        .filter(States.entity_id.in_(entity_ids))
-        .group_by(States.entity_id)
-        .subquery()
-    )
-
-
 def _get_states_for_entities_stmt(
     schema_version: int,
     run_start: datetime,
@@ -645,16 +602,29 @@ def _get_states_for_entities_stmt(
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=True
     )
-    most_recent_states_for_entities_by_date = (
-        _generate_most_recent_states_for_entities_by_date(
-            schema_version, run_start, utc_point_in_time, entity_ids
-        )
-    )
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
     if schema_version >= 31:
+        run_start_ts = process_timestamp(run_start).timestamp()
+        utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
         stmt += lambda q: q.join(
-            most_recent_states_for_entities_by_date,
+            (
+                most_recent_states_for_entities_by_date := (
+                    select(
+                        States.entity_id.label("max_entity_id"),
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(States.last_updated_ts).label("max_last_updated"),
+                    )
+                    .filter(
+                        (States.last_updated_ts >= run_start_ts)
+                        & (States.last_updated_ts < utc_point_in_time_ts)
+                    )
+                    .filter(States.entity_id.in_(entity_ids))
+                    .group_by(States.entity_id)
+                    .subquery()
+                )
+            ),
             and_(
                 States.entity_id
                 == most_recent_states_for_entities_by_date.c.max_entity_id,
@@ -664,7 +634,21 @@ def _get_states_for_entities_stmt(
         )
     else:
         stmt += lambda q: q.join(
-            most_recent_states_for_entities_by_date,
+            (
+                most_recent_states_for_entities_by_date := select(
+                    States.entity_id.label("max_entity_id"),
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                    # pylint: disable-next=not-callable
+                    func.max(States.last_updated).label("max_last_updated"),
+                )
+                .filter(
+                    (States.last_updated >= run_start)
+                    & (States.last_updated < utc_point_in_time)
+                )
+                .filter(States.entity_id.in_(entity_ids))
+                .group_by(States.entity_id)
+                .subquery()
+            ),
             and_(
                 States.entity_id
                 == most_recent_states_for_entities_by_date.c.max_entity_id,
@@ -677,45 +661,6 @@ def _get_states_for_entities_stmt(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     return stmt
-
-
-def _generate_most_recent_states_by_date(
-    schema_version: int,
-    run_start: datetime,
-    utc_point_in_time: datetime,
-) -> Subquery:
-    """Generate the sub query for the most recent states by date."""
-    if schema_version >= 31:
-        run_start_ts = process_timestamp(run_start).timestamp()
-        utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
-        return (
-            select(
-                States.entity_id.label("max_entity_id"),
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                # pylint: disable-next=not-callable
-                func.max(States.last_updated_ts).label("max_last_updated"),
-            )
-            .filter(
-                (States.last_updated_ts >= run_start_ts)
-                & (States.last_updated_ts < utc_point_in_time_ts)
-            )
-            .group_by(States.entity_id)
-            .subquery()
-        )
-    return (
-        select(
-            States.entity_id.label("max_entity_id"),
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-            # pylint: disable-next=not-callable
-            func.max(States.last_updated).label("max_last_updated"),
-        )
-        .filter(
-            (States.last_updated >= run_start)
-            & (States.last_updated < utc_point_in_time)
-        )
-        .group_by(States.entity_id)
-        .subquery()
-    )
 
 
 def _get_states_for_all_stmt(
@@ -733,12 +678,26 @@ def _get_states_for_all_stmt(
     # query, then filter out unwanted domains as well as applying the custom filter.
     # This filtering can't be done in the inner query because the domain column is
     # not indexed and we can't control what's in the custom filter.
-    most_recent_states_by_date = _generate_most_recent_states_by_date(
-        schema_version, run_start, utc_point_in_time
-    )
     if schema_version >= 31:
+        run_start_ts = process_timestamp(run_start).timestamp()
+        utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
         stmt += lambda q: q.join(
-            most_recent_states_by_date,
+            (
+                most_recent_states_by_date := (
+                    select(
+                        States.entity_id.label("max_entity_id"),
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(States.last_updated_ts).label("max_last_updated"),
+                    )
+                    .filter(
+                        (States.last_updated_ts >= run_start_ts)
+                        & (States.last_updated_ts < utc_point_in_time_ts)
+                    )
+                    .group_by(States.entity_id)
+                    .subquery()
+                )
+            ),
             and_(
                 States.entity_id == most_recent_states_by_date.c.max_entity_id,
                 States.last_updated_ts == most_recent_states_by_date.c.max_last_updated,
@@ -746,7 +705,22 @@ def _get_states_for_all_stmt(
         )
     else:
         stmt += lambda q: q.join(
-            most_recent_states_by_date,
+            (
+                most_recent_states_by_date := (
+                    select(
+                        States.entity_id.label("max_entity_id"),
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                        # pylint: disable-next=not-callable
+                        func.max(States.last_updated).label("max_last_updated"),
+                    )
+                    .filter(
+                        (States.last_updated >= run_start)
+                        & (States.last_updated < utc_point_in_time)
+                    )
+                    .group_by(States.entity_id)
+                    .subquery()
+                )
+            ),
             and_(
                 States.entity_id == most_recent_states_by_date.c.max_entity_id,
                 States.last_updated == most_recent_states_by_date.c.max_last_updated,

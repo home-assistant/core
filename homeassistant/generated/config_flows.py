@@ -145,6 +145,7 @@ FLOWS = {
         "fritzbox",
         "fritzbox_callmonitor",
         "fronius",
+        "frontier_silicon",
         "fully_kiosk",
         "garages_amsterdam",
         "gdacs",

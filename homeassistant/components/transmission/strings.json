@@ -40,5 +40,17 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "transmission_status": {
+        "state": {
+          "idle": "Idle",
+          "up_down": "Up/Down",
+          "seeding": "Seeding",
+          "downloading": "Downloading"
+        }
+      }
+    }
   }
 }

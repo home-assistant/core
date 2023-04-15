@@ -1,7 +1,6 @@
 """Support for manual alarms controllable via MQTT."""
 from __future__ import annotations
 
-import copy
 import datetime
 import logging
 import re
@@ -87,15 +86,18 @@ ATTR_POST_PENDING_STATE = "post_pending_state"
 
 def _state_validator(config):
     """Validate the state."""
-    config = copy.deepcopy(config)
     for state in SUPPORTED_PRETRIGGER_STATES:
         if CONF_DELAY_TIME not in config[state]:
-            config[state][CONF_DELAY_TIME] = config[CONF_DELAY_TIME]
+            config[state] = config[state] | {CONF_DELAY_TIME: config[CONF_DELAY_TIME]}
         if CONF_TRIGGER_TIME not in config[state]:
-            config[state][CONF_TRIGGER_TIME] = config[CONF_TRIGGER_TIME]
+            config[state] = config[state] | {
+                CONF_TRIGGER_TIME: config[CONF_TRIGGER_TIME]
+            }
     for state in SUPPORTED_PENDING_STATES:
         if CONF_PENDING_TIME not in config[state]:
-            config[state][CONF_PENDING_TIME] = config[CONF_PENDING_TIME]
+            config[state] = config[state] | {
+                CONF_PENDING_TIME: config[CONF_PENDING_TIME]
+            }
 
     return config
 

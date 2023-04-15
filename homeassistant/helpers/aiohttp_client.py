@@ -129,7 +129,7 @@ def _async_create_clientsession(
         {USER_AGENT: SERVER_SOFTWARE},
     )
 
-    clientsession.close = warn_use(  # type: ignore[assignment]
+    clientsession.close = warn_use(  # type: ignore[method-assign]
         clientsession.close,
         WARN_CLOSE_MSG,
     )

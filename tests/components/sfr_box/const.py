@@ -45,7 +45,7 @@ EXPECTED_ENTITIES = {
     Platform.BINARY_SENSOR: [
         {
             ATTR_DEVICE_CLASS: BinarySensorDeviceClass.CONNECTIVITY,
-            ATTR_ENTITY_ID: "binary_sensor.sfr_box_status",
+            ATTR_ENTITY_ID: "binary_sensor.sfr_box_dsl_status",
             ATTR_STATE: STATE_ON,
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_status",
         },
@@ -85,26 +85,26 @@ EXPECTED_ENTITIES = {
         },
         {
             ATTR_DEFAULT_DISABLED: True,
-            ATTR_ENTITY_ID: "sensor.sfr_box_line_mode",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_line_mode",
             ATTR_STATE: "ADSL2+",
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_linemode",
         },
         {
             ATTR_DEFAULT_DISABLED: True,
-            ATTR_ENTITY_ID: "sensor.sfr_box_counter",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_counter",
             ATTR_STATE: "16",
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_counter",
         },
         {
             ATTR_DEFAULT_DISABLED: True,
-            ATTR_ENTITY_ID: "sensor.sfr_box_crc",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_crc",
             ATTR_STATE: "0",
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_crc",
         },
         {
             ATTR_DEFAULT_DISABLED: True,
             ATTR_DEVICE_CLASS: SensorDeviceClass.SIGNAL_STRENGTH,
-            ATTR_ENTITY_ID: "sensor.sfr_box_noise_down",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_noise_down",
             ATTR_STATE: "5.8",
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_noise_down",
@@ -113,7 +113,7 @@ EXPECTED_ENTITIES = {
         {
             ATTR_DEFAULT_DISABLED: True,
             ATTR_DEVICE_CLASS: SensorDeviceClass.SIGNAL_STRENGTH,
-            ATTR_ENTITY_ID: "sensor.sfr_box_noise_up",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_noise_up",
             ATTR_STATE: "6.0",
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_noise_up",
@@ -122,7 +122,7 @@ EXPECTED_ENTITIES = {
         {
             ATTR_DEFAULT_DISABLED: True,
             ATTR_DEVICE_CLASS: SensorDeviceClass.SIGNAL_STRENGTH,
-            ATTR_ENTITY_ID: "sensor.sfr_box_attenuation_down",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_attenuation_down",
             ATTR_STATE: "28.5",
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_attenuation_down",
@@ -131,7 +131,7 @@ EXPECTED_ENTITIES = {
         {
             ATTR_DEFAULT_DISABLED: True,
             ATTR_DEVICE_CLASS: SensorDeviceClass.SIGNAL_STRENGTH,
-            ATTR_ENTITY_ID: "sensor.sfr_box_attenuation_up",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_attenuation_up",
             ATTR_STATE: "20.8",
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_attenuation_up",
@@ -139,7 +139,7 @@ EXPECTED_ENTITIES = {
         },
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.DATA_RATE,
-            ATTR_ENTITY_ID: "sensor.sfr_box_rate_down",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_rate_down",
             ATTR_STATE: "5549",
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_rate_down",
@@ -147,7 +147,7 @@ EXPECTED_ENTITIES = {
         },
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.DATA_RATE,
-            ATTR_ENTITY_ID: "sensor.sfr_box_rate_up",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_rate_up",
             ATTR_STATE: "187",
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_rate_up",
@@ -156,7 +156,7 @@ EXPECTED_ENTITIES = {
         {
             ATTR_DEFAULT_DISABLED: True,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
-            ATTR_ENTITY_ID: "sensor.sfr_box_line_status",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_line_status",
             ATTR_OPTIONS: [
                 "no_defect",
                 "of_frame",
@@ -171,7 +171,7 @@ EXPECTED_ENTITIES = {
         {
             ATTR_DEFAULT_DISABLED: True,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
-            ATTR_ENTITY_ID: "sensor.sfr_box_training",
+            ATTR_ENTITY_ID: "sensor.sfr_box_dsl_training",
             ATTR_OPTIONS: [
                 "idle",
                 "g_994_training",

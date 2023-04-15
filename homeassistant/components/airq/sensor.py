@@ -68,7 +68,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="co",
         name="CO",
-        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("co"),
@@ -289,7 +288,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="tvoc",
         name="VOC",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc"),
@@ -297,7 +295,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="tvoc_ionsc",
         name="VOC (Industrial)",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc_ionsc"),

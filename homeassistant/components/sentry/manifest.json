@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sentry",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["sentry-sdk==1.13.0"]
+  "requirements": ["sentry-sdk==1.16.0"]
 }

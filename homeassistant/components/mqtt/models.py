@@ -21,6 +21,8 @@ from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 
 if TYPE_CHECKING:
+    from paho.mqtt.client import MQTTMessage
+
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
@@ -260,11 +262,21 @@ class EntityTopicState:
         self.subscribe_calls: dict[str, Entity] = {}
 
     @callback
-    def process_write_state_requests(self) -> None:
+    def process_write_state_requests(self, msg: MQTTMessage) -> None:
         """Process the write state requests."""
         while self.subscribe_calls:
             _, entity = self.subscribe_calls.popitem()
-            entity.async_write_ha_state()
+            try:
+                entity.async_write_ha_state()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.error(
+                    "Exception raised when updating state of %s, topic: "
+                    "'%s' with payload: %s",
+                    entity.entity_id,
+                    msg.topic,
+                    msg.payload,
+                    exc_info=True,
+                )
 
     @callback
     def write_state_request(self, entity: Entity) -> None:

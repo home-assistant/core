@@ -146,6 +146,9 @@ async def test_request_refresh(crd) -> None:
     assert crd.data == 1
     assert crd.last_update_success is True
 
+    # Cleanup to avoid lingering timer
+    crd._unschedule_refresh()
+
 
 async def test_request_refresh_no_auto_update(crd_without_update_interval) -> None:
     """Test request refresh for update coordinator without automatic update."""
@@ -159,6 +162,9 @@ async def test_request_refresh_no_auto_update(crd_without_update_interval) -> No
     await crd.async_request_refresh()
     assert crd.data == 1
     assert crd.last_update_success is True
+
+    # Cleanup to avoid lingering timer
+    crd._unschedule_refresh()
 
 
 @pytest.mark.parametrize(
@@ -293,7 +299,8 @@ async def test_coordinator_entity(crd: update_coordinator.DataUpdateCoordinator[
     ) as mock_async_on_remove:
         await entity.async_added_to_hass()
 
-    assert mock_async_on_remove.called
+    mock_async_on_remove.assert_called_once()
+    _on_remove_callback = mock_async_on_remove.call_args[0][0]
 
     # Verify we do not update if the entity is disabled
     crd.last_update_success = False
@@ -302,6 +309,11 @@ async def test_coordinator_entity(crd: update_coordinator.DataUpdateCoordinator[
     assert entity.available is False
 
     assert list(crd.async_contexts()) == [context]
+
+    # Call remove callback to cleanup debouncer and avoid lingering timer
+    assert len(crd._listeners) == 1
+    _on_remove_callback()
+    assert len(crd._listeners) == 0
 
 
 async def test_async_set_updated_data(crd) -> None:
