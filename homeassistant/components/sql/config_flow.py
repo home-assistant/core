@@ -6,7 +6,7 @@ from typing import Any
 
 import sqlalchemy
 from sqlalchemy.engine import Result
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import voluptuous as vol
 
@@ -69,9 +69,17 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
         _LOGGER.debug("Execution error %s", error)
         if sess:
             sess.close()
+            engine.dispose()
         raise ValueError(error) from error
 
     for res in result.mappings():
+        if column not in res:
+            _LOGGER.debug("Column `%s` is not returned by the query", column)
+            if sess:
+                sess.close()
+                engine.dispose()
+            raise NoSuchColumnError(f"Column {column} is not returned by the query.")
+
         data = res[column]
         _LOGGER.debug("Return value from query: %s", data)
 
@@ -100,6 +108,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the user step."""
         errors = {}
+        description_placeholders = {}
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
@@ -116,6 +125,9 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
                 )
+            except NoSuchColumnError:
+                errors["column"] = "column_invalid"
+                description_placeholders = {"column": column}
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
@@ -143,6 +155,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
 
@@ -158,6 +171,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage SQL options."""
         errors = {}
+        description_placeholders = {}
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
@@ -171,6 +185,9 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
                 )
+            except NoSuchColumnError:
+                errors["column"] = "column_invalid"
+                description_placeholders = {"column": column}
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except ValueError:
@@ -193,4 +210,5 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                 OPTIONS_SCHEMA, user_input or self.entry.options
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
