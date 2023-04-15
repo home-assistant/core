@@ -48,6 +48,7 @@ from .const import (
 )
 from .exception import SonosUpdateError
 from .favorites import SonosFavorites
+from .helpers import sync_get_visible_zones
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -347,11 +348,11 @@ class SonosDiscoveryManager:
 
         # Loop through each configured host and verify that Soco attributes are available for it.
         for host in self.hosts.copy():
-            ip_addr = socket.gethostbyname(host)
+            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
             soco = SoCo(ip_addr)
             try:
                 visible_zones = await self.hass.async_add_executor_job(
-                    get_sync_attributes,
+                    sync_get_visible_zones,
                     soco,
                 )
             except (
@@ -388,7 +389,7 @@ class SonosDiscoveryManager:
         # Loop through each configured host that is not in error.  Send a discovery message
         # if a speaker does not already exist, or ping the speaker if it is unavailable.
         for host in self.hosts.copy():
-            ip_addr = socket.gethostbyname(host)
+            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
             # Skip hosts that are in error to avoid blocking call on soco.uuid in event loop
             if self.hosts_in_error.get(ip_addr):
                 continue
