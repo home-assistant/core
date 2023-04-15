@@ -338,7 +338,6 @@ def test_state_changes_during_period_descending(
         > hist_states[1].last_changed
         > hist_states[2].last_changed
     )
-
     hist = history.state_changes_during_period(
         hass,
         start_time,  # Pick a point where we will generate a start time state
