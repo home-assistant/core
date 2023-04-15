@@ -758,8 +758,8 @@ async def test_configure_reporting(hass: HomeAssistant, endpoint) -> None:
         ],
     )
 
-    channel = TestZigbeeClusterHandler(cluster, endpoint)
-    await channel.async_configure()
+    cluster_handler = TestZigbeeClusterHandler(cluster, endpoint)
+    await cluster_handler.async_configure()
 
     # Since we request reporting for five attributes, we need to make two calls (3 + 1)
     assert cluster.configure_reporting_multiple.mock_calls == [
