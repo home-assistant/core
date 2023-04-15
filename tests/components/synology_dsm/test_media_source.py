@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import tempfile
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
@@ -39,29 +39,22 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def dsm_with_photos() -> Mock:
+def dsm_with_photos() -> MagicMock:
     """Set up SynologyDSM API fixture."""
-    with patch(
-        "homeassistant.components.synology_dsm.common.SynologyDSM"
-    ) as dsm, patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
-        dsm.login = AsyncMock(return_value=True)
-        dsm.update = AsyncMock(return_value=True)
-        dsm.network.update = AsyncMock(return_value=True)
-        dsm.surveillance_station.update = AsyncMock(return_value=True)
-        dsm.upgrade.update = AsyncMock(return_value=True)
+    dsm = MagicMock()
+    dsm.login = AsyncMock(return_value=True)
+    dsm.update = AsyncMock(return_value=True)
+    dsm.network.update = AsyncMock(return_value=True)
+    dsm.surveillance_station.update = AsyncMock(return_value=True)
+    dsm.upgrade.update = AsyncMock(return_value=True)
 
-        dsm.photos.get_albums = AsyncMock(
-            return_value=[SynoPhotosAlbum(1, "Album 1", 10)]
-        )
-        dsm.photos.get_items_from_album = AsyncMock(
-            return_value=[
-                SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm")
-            ]
-        )
-        dsm.photos.get_item_thumbnail_url = AsyncMock(
-            return_value="http://my.thumbnail.url"
-        )
-
+    dsm.photos.get_albums = AsyncMock(return_value=[SynoPhotosAlbum(1, "Album 1", 10)])
+    dsm.photos.get_items_from_album = AsyncMock(
+        return_value=[SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm")]
+    )
+    dsm.photos.get_item_thumbnail_url = AsyncMock(
+        return_value="http://my.thumbnail.url"
+    )
     return dsm
 
 
@@ -173,7 +166,9 @@ async def test_browse_media_album_error(
 
 
 @pytest.mark.usefixtures("setup_media_source")
-async def test_browse_media_get_root(hass: HomeAssistant, dsm_with_photos) -> None:
+async def test_browse_media_get_root(
+    hass: HomeAssistant, dsm_with_photos: MagicMock
+) -> None:
     """Test browse_media returning root media sources."""
     with patch(
         "homeassistant.components.synology_dsm.common.SynologyDSM",
@@ -205,7 +200,9 @@ async def test_browse_media_get_root(hass: HomeAssistant, dsm_with_photos) -> No
 
 
 @pytest.mark.usefixtures("setup_media_source")
-async def test_browse_media_get_albums(hass: HomeAssistant, dsm_with_photos) -> None:
+async def test_browse_media_get_albums(
+    hass: HomeAssistant, dsm_with_photos: MagicMock
+) -> None:
     """Test browse_media returning albums."""
     with patch(
         "homeassistant.components.synology_dsm.common.SynologyDSM",
@@ -242,7 +239,7 @@ async def test_browse_media_get_albums(hass: HomeAssistant, dsm_with_photos) -> 
 
 @pytest.mark.usefixtures("setup_media_source")
 async def test_browse_media_get_items_error(
-    hass: HomeAssistant, dsm_with_photos
+    hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
     with patch(
@@ -289,7 +286,7 @@ async def test_browse_media_get_items_error(
 
 @pytest.mark.usefixtures("setup_media_source")
 async def test_browse_media_get_items_thumbnail_error(
-    hass: HomeAssistant, dsm_with_photos
+    hass: HomeAssistant, dsm_with_photos: MagicMock
 ) -> None:
     """Test browse_media returning albums."""
     with patch(
@@ -327,7 +324,9 @@ async def test_browse_media_get_items_thumbnail_error(
 
 
 @pytest.mark.usefixtures("setup_media_source")
-async def test_browse_media_get_items(hass: HomeAssistant, dsm_with_photos) -> None:
+async def test_browse_media_get_items(
+    hass: HomeAssistant, dsm_with_photos: MagicMock
+) -> None:
     """Test browse_media returning albums."""
     with patch(
         "homeassistant.components.synology_dsm.common.SynologyDSM",
@@ -367,7 +366,9 @@ async def test_browse_media_get_items(hass: HomeAssistant, dsm_with_photos) -> N
 
 
 @pytest.mark.usefixtures("setup_media_source")
-async def test_media_view(hass: HomeAssistant, tmp_path: Path, dsm_with_photos) -> None:
+async def test_media_view(
+    hass: HomeAssistant, tmp_path: Path, dsm_with_photos: MagicMock
+) -> None:
     """Test SynologyDsmMediaView returning albums."""
     view = SynologyDsmMediaView(hass)
     request = MockRequest(b"", DOMAIN)
