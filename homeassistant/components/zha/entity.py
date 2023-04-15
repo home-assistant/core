@@ -34,7 +34,7 @@ from .core.const import (
 from .core.helpers import LogMixin
 
 if TYPE_CHECKING:
-    from .core.channels.base import ClusterHandler
+    from .core.channels import ClusterHandler
     from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)

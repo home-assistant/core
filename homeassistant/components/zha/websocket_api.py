@@ -1410,8 +1410,8 @@ def async_load_api(hass: HomeAssistant) -> None:
         """Get the IASWD cluster handler for a device."""
         cluster_handlers = {
             ch.name: ch
-            for pool in zha_device.channels.pools
-            for ch in pool.claimed_channels.values()
+            for endpoint in zha_device.endpoints.values()
+            for ch in endpoint.claimed_cluster_handlers.values()
         }
         return cluster_handlers.get(CLUSTER_HANDLER_IAS_WD)
 

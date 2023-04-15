@@ -1,9 +1,9 @@
-"""Test ZHA base channel module."""
+"""Test ZHA base cluster handlers module."""
 
-from homeassistant.components.zha.core.channels.base import parse_and_log_command
+from homeassistant.components.zha.core.channels import parse_and_log_command
 
 from tests.components.zha.test_channels import (  # noqa: F401
-    channel_pool,
+    endpoint,
     poll_control_ch,
     zigpy_coordinator_device,
 )

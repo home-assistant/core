@@ -67,7 +67,7 @@ from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
 if TYPE_CHECKING:
-    from .core.channels.base import ClusterHandler
+    from .core.channels import ClusterHandler
     from .core.device import ZHADevice
 
 PARALLEL_UPDATES = 5
@@ -88,7 +88,9 @@ BATTERY_SIZES = {
     255: "Unknown",
 }
 
-CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
+CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER = (
+    f"cluster_handler_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
+)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SENSOR)
 
@@ -656,7 +658,7 @@ class CarbonMonoxideConcentration(Sensor):
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
 
-@MULTI_MATCH(generic_ids="channel_0x042e", stop_on_match_group="voc_level")
+@MULTI_MATCH(generic_ids="cluster_handler_0x042e", stop_on_match_group="voc_level")
 @MULTI_MATCH(cluster_handler_names="voc_level", stop_on_match_group="voc_level")
 class VOCLevel(Sensor):
     """VOC Level sensor."""

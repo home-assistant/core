@@ -10,6 +10,7 @@ import zigpy.zcl
 
 from homeassistant.core import callback
 
+from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 from .. import registries
 from ..const import (
     ATTR_ATTRIBUTE_ID,
@@ -23,10 +24,9 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
-from .base import AttrReportConfig, ClientClusterHandler, ClusterHandler
 
 if TYPE_CHECKING:
-    from . import ChannelPool
+    from ..endpoint import Endpoint
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,9 +70,9 @@ class TuyaClusterHandler(ClusterHandler):
 
     REPORT_CONFIG = ()
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Initialize TuyaClusterHandler."""
-        super().__init__(cluster, ch_pool)
+        super().__init__(cluster, endpoint)
 
         if self.cluster.endpoint.manufacturer in (
             "_TZE200_7tdtqgwv",
@@ -105,9 +105,9 @@ class OppleRemote(ClusterHandler):
 
     REPORT_CONFIG = ()
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Initialize Opple cluster handler."""
-        super().__init__(cluster, ch_pool)
+        super().__init__(cluster, endpoint)
         if self.cluster.endpoint.model == "lumi.motion.ac02":
             self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
                 "detection_interval": True,
@@ -215,7 +215,7 @@ class SmartThingsAcceleration(ClusterHandler):
         )
 
 
-@registries.CLIENT_CLUSTER_HANDLERS_REGISTRY.register(0xFC31)
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(0xFC31)
 class InovelliNotificationClusterHandler(ClientClusterHandler):
     """Inovelli Notification cluster handler."""
 

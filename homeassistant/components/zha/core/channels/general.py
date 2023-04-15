@@ -14,6 +14,12 @@ from zigpy.zcl.foundation import Status
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
+from . import (
+    AttrReportConfig,
+    ClientClusterHandler,
+    ClusterHandler,
+    parse_and_log_command,
+)
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -27,16 +33,10 @@ from ..const import (
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
 )
-from .base import (
-    AttrReportConfig,
-    ClientClusterHandler,
-    ClusterHandler,
-    parse_and_log_command,
-)
 from .helpers import is_hue_motion_sensor
 
 if TYPE_CHECKING:
-    from . import ChannelPool
+    from ..endpoint import Endpoint
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(general.Alarms.cluster_id)
@@ -160,9 +160,9 @@ class BasicClusterHandler(ClusterHandler):
         6: "Emergency mains and transfer switch",
     }
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Initialize Basic cluster handler."""
-        super().__init__(cluster, ch_pool)
+        super().__init__(cluster, endpoint)
         if is_hue_motion_sensor(self) and self.cluster.endpoint.endpoint_id == 2:
             self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
                 self.ZCL_INIT_ATTRS.copy()
@@ -251,7 +251,7 @@ class Identify(ClusterHandler):
             self.async_send_signal(f"{self.unique_id}_{cmd}", args[0])
 
 
-@registries.CLIENT_CLUSTER_HANDLERS_REGISTRY.register(general.LevelControl.cluster_id)
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(general.LevelControl.cluster_id)
 class LevelControlClientClusterHandler(ClientClusterHandler):
     """LevelControl client cluster."""
 
@@ -337,7 +337,7 @@ class MultistateValue(ClusterHandler):
     )
 
 
-@registries.CLIENT_CLUSTER_HANDLERS_REGISTRY.register(general.OnOff.cluster_id)
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(general.OnOff.cluster_id)
 class OnOffClientClusterHandler(ClientClusterHandler):
     """OnOff client cluster handler."""
 
@@ -353,9 +353,9 @@ class OnOffClusterHandler(ClusterHandler):
         "start_up_on_off": True,
     }
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Initialize OnOffClusterHandler."""
-        super().__init__(cluster, ch_pool)
+        super().__init__(cluster, endpoint)
         self._off_listener = None
 
         if self.cluster.endpoint.model in (
@@ -415,7 +415,7 @@ class OnOffClusterHandler(ClusterHandler):
                 self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
                 if on_time > 0:
                     self._off_listener = async_call_later(
-                        self._ch_pool.hass,
+                        self._endpoint.device.hass,
                         (on_time / 10),  # value is in 10ths of a second
                         self.set_to_off,
                     )
@@ -440,7 +440,7 @@ class OnOffClusterHandler(ClusterHandler):
         """Initialize cluster handler."""
         if self.cluster.is_client:
             return
-        from_cache = not self._ch_pool.is_mains_powered
+        from_cache = not self._endpoint.device.is_mains_powered
         self.debug("attempting to update onoff state - from cache: %s", from_cache)
         await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
         await super().async_update()
@@ -454,7 +454,7 @@ class OnOffConfiguration(ClusterHandler):
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(general.Ota.cluster_id)
-@registries.CLIENT_CLUSTER_HANDLERS_REGISTRY.register(general.Ota.cluster_id)
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(general.Ota.cluster_id)
 class Ota(ClientClusterHandler):
     """OTA cluster handler."""
 
@@ -470,7 +470,7 @@ class Ota(ClientClusterHandler):
         else:
             cmd_name = command_id
 
-        signal_id = self._ch_pool.unique_id.split("-")[0]
+        signal_id = self._endpoint.unique_id.split("-")[0]
         if cmd_name == "query_next_image":
             assert args
             self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
@@ -521,7 +521,7 @@ class PollControl(ClusterHandler):
     async def check_in_response(self, tsn: int) -> None:
         """Respond to checkin command."""
         await self.checkin_response(True, self.CHECKIN_FAST_POLL_TIMEOUT, tsn=tsn)
-        if self._ch_pool.manufacturer_code not in self._IGNORED_MANUFACTURER_ID:
+        if self._endpoint.device.manufacturer_code not in self._IGNORED_MANUFACTURER_ID:
             await self.set_long_poll_interval(self.LONG_POLL)
         await self.fast_poll_stop()
 
@@ -565,7 +565,7 @@ class RSSILocation(ClusterHandler):
     """RSSI Location cluster handler."""
 
 
-@registries.CLIENT_CLUSTER_HANDLERS_REGISTRY.register(general.Scenes.cluster_id)
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(general.Scenes.cluster_id)
 class ScenesClientClusterHandler(ClientClusterHandler):
     """Scenes cluster handler."""
 

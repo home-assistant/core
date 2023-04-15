@@ -45,18 +45,27 @@ def cluster_handlers(cluster_handler):
             False,
         ),
         # test generic_id matching
-        (registries.MatchRule(generic_ids={"channel_0x0006"}), True),
-        (registries.MatchRule(generic_ids={"channel_0x0008"}), True),
-        (registries.MatchRule(generic_ids={"channel_0x0006", "channel_0x0008"}), True),
+        (registries.MatchRule(generic_ids={"cluster_handler_0x0006"}), True),
+        (registries.MatchRule(generic_ids={"cluster_handler_0x0008"}), True),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008", "channel_0x0009"}
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"}
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                generic_ids={
+                    "cluster_handler_0x0006",
+                    "cluster_handler_0x0008",
+                    "cluster_handler_0x0009",
+                }
             ),
             False,
         ),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008"},
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"},
                 cluster_handler_names={"on_off", "level"},
             ),
             True,
@@ -66,41 +75,48 @@ def cluster_handlers(cluster_handler):
         (registries.MatchRule(manufacturers=MANUFACTURER), True),
         (
             registries.MatchRule(
-                manufacturers="no match", aux_cluster_handlers="aux_channel"
+                manufacturers="no match", aux_cluster_handlers="aux_cluster_handler"
             ),
             False,
         ),
         (
             registries.MatchRule(
-                manufacturers=MANUFACTURER, aux_cluster_handlers="aux_channel"
+                manufacturers=MANUFACTURER, aux_cluster_handlers="aux_cluster_handler"
             ),
             True,
         ),
         (registries.MatchRule(models=MODEL), True),
         (registries.MatchRule(models="no match"), False),
-        (registries.MatchRule(models=MODEL, aux_cluster_handlers="aux_channel"), True),
         (
-            registries.MatchRule(models="no match", aux_cluster_handlers="aux_channel"),
+            registries.MatchRule(
+                models=MODEL, aux_cluster_handlers="aux_cluster_handler"
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                models="no match", aux_cluster_handlers="aux_cluster_handler"
+            ),
             False,
         ),
         (registries.MatchRule(quirk_classes=QUIRK_CLASS), True),
         (registries.MatchRule(quirk_classes="no match"), False),
         (
             registries.MatchRule(
-                quirk_classes=QUIRK_CLASS, aux_cluster_handlers="aux_channel"
+                quirk_classes=QUIRK_CLASS, aux_cluster_handlers="aux_cluster_handler"
             ),
             True,
         ),
         (
             registries.MatchRule(
-                quirk_classes="no match", aux_cluster_handlers="aux_channel"
+                quirk_classes="no match", aux_cluster_handlers="aux_cluster_handler"
             ),
             False,
         ),
         # match everything
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008"},
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"},
                 cluster_handler_names={"on_off", "level"},
                 manufacturers=MANUFACTURER,
                 models=MODEL,
@@ -232,32 +248,49 @@ def test_registry_matching(rule, matched, cluster_handlers) -> None:
             True,
         ),
         # test generic_id matching
-        (registries.MatchRule(generic_ids={"channel_0x0006"}), True),
-        (registries.MatchRule(generic_ids={"channel_0x0008"}), True),
-        (registries.MatchRule(generic_ids={"channel_0x0006", "channel_0x0008"}), True),
+        (registries.MatchRule(generic_ids={"cluster_handler_0x0006"}), True),
+        (registries.MatchRule(generic_ids={"cluster_handler_0x0008"}), True),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008", "channel_0x0009"}
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"}
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                generic_ids={
+                    "cluster_handler_0x0006",
+                    "cluster_handler_0x0008",
+                    "cluster_handler_0x0009",
+                }
             ),
             False,
         ),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008", "channel_0x0009"},
+                generic_ids={
+                    "cluster_handler_0x0006",
+                    "cluster_handler_0x0008",
+                    "cluster_handler_0x0009",
+                },
                 models="mo match",
             ),
             False,
         ),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008", "channel_0x0009"},
+                generic_ids={
+                    "cluster_handler_0x0006",
+                    "cluster_handler_0x0008",
+                    "cluster_handler_0x0009",
+                },
                 models=MODEL,
             ),
             True,
         ),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008"},
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"},
                 cluster_handler_names={"on_off", "level"},
             ),
             True,
@@ -272,7 +305,7 @@ def test_registry_matching(rule, matched, cluster_handlers) -> None:
         # match everything
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008"},
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"},
                 cluster_handler_names={"on_off", "level"},
                 manufacturers=MANUFACTURER,
                 models=MODEL,
@@ -309,10 +342,10 @@ def test_match_rule_claim_cluster_handlers_color(cluster_handler) -> None:
         (registries.MatchRule(cluster_handler_names={"level"}), {"level"}),
         (registries.MatchRule(cluster_handler_names={"level", "no match"}), {"level"}),
         (registries.MatchRule(cluster_handler_names={"on_off"}), {"on_off"}),
-        (registries.MatchRule(generic_ids="channel_0x0000"), {"basic"}),
+        (registries.MatchRule(generic_ids="cluster_handler_0x0000"), {"basic"}),
         (
             registries.MatchRule(
-                cluster_handler_names="level", generic_ids="channel_0x0000"
+                cluster_handler_names="level", generic_ids="cluster_handler_0x0000"
             ),
             {"basic", "level"},
         ),

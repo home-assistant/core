@@ -640,7 +640,7 @@ class Light(BaseLight, ZhaEntity):
         self._attr_state = bool(self._on_off_cluster_handler.on_off)
         self._level_cluster_handler = self.cluster_handlers.get(CLUSTER_HANDLER_LEVEL)
         self._color_cluster_handler = self.cluster_handlers.get(CLUSTER_HANDLER_COLOR)
-        self._identify_cluster_handler = self.zha_device.channels.identify_ch
+        self._identify_cluster_handler = zha_device.identify_ch
         if self._color_cluster_handler:
             self._attr_min_mireds: int = self._color_cluster_handler.min_mireds
             self._attr_max_mireds: int = self._color_cluster_handler.max_mireds
@@ -1102,8 +1102,10 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         # If at least one member has a color cluster and doesn't support it,
         # it's not used.
         for member in group.members:
-            for pool in member.device.channels.pools:
-                for cluster_handler in pool.all_channels.values():
+            for (
+                endpoint
+            ) in member.device._endpoints.values():  # pylint: disable=protected-access
+                for cluster_handler in endpoint.all_cluster_handlers.values():
                     if (
                         cluster_handler.name == CLUSTER_HANDLER_COLOR
                         and not cluster_handler.execute_if_off_supported

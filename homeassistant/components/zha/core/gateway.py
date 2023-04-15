@@ -93,7 +93,7 @@ if TYPE_CHECKING:
     from logging import Filter, LogRecord
 
     from ..entity import ZhaEntity
-    from .channels.base import ClusterHandler
+    from .channels import ClusterHandler
 
     _LogFilterType = Filter | Callable[[LogRecord], bool]
 

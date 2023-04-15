@@ -616,30 +616,30 @@ async def test_electrical_measurement_init(
     await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
     assert int(hass.states.get(entity_id).state) == 100
 
-    channel = zha_device.channels.pools[0].all_channels["1:0x0b04"]
-    assert channel.ac_power_divisor == 1
-    assert channel.ac_power_multiplier == 1
+    cluster_handler = zha_device._endpoints[1].all_cluster_handlers["1:0x0b04"]
+    assert cluster_handler.ac_power_divisor == 1
+    assert cluster_handler.ac_power_multiplier == 1
 
     # update power divisor
     await send_attributes_report(hass, cluster, {0: 1, 1291: 20, 0x0403: 5, 10: 1000})
-    assert channel.ac_power_divisor == 5
-    assert channel.ac_power_multiplier == 1
+    assert cluster_handler.ac_power_divisor == 5
+    assert cluster_handler.ac_power_multiplier == 1
     assert hass.states.get(entity_id).state == "4.0"
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 30, 0x0605: 10, 10: 1000})
-    assert channel.ac_power_divisor == 10
-    assert channel.ac_power_multiplier == 1
+    assert cluster_handler.ac_power_divisor == 10
+    assert cluster_handler.ac_power_multiplier == 1
     assert hass.states.get(entity_id).state == "3.0"
 
     # update power multiplier
     await send_attributes_report(hass, cluster, {0: 1, 1291: 20, 0x0402: 6, 10: 1000})
-    assert channel.ac_power_divisor == 10
-    assert channel.ac_power_multiplier == 6
+    assert cluster_handler.ac_power_divisor == 10
+    assert cluster_handler.ac_power_multiplier == 6
     assert hass.states.get(entity_id).state == "12.0"
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 30, 0x0604: 20, 10: 1000})
-    assert channel.ac_power_divisor == 10
-    assert channel.ac_power_multiplier == 20
+    assert cluster_handler.ac_power_divisor == 10
+    assert cluster_handler.ac_power_multiplier == 20
     assert hass.states.get(entity_id).state == "60.0"
 
 

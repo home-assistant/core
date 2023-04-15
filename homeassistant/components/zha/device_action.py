@@ -25,7 +25,7 @@ ATTR_DATA = "data"
 ATTR_IEEE = "ieee"
 CONF_ZHA_ACTION_TYPE = "zha_action_type"
 ZHA_ACTION_TYPE_SERVICE_CALL = "service_call"
-ZHA_ACTION_TYPE_CLUSTER_HANDLER_COMMAND = "channel_command"
+ZHA_ACTION_TYPE_CLUSTER_HANDLER_COMMAND = "cluster_handler_command"
 INOVELLI_ALL_LED_EFFECT = "issue_all_led_effect"
 INOVELLI_INDIVIDUAL_LED_EFFECT = "issue_individual_led_effect"
 
@@ -146,8 +146,8 @@ async def async_get_actions(
         return []
     cluster_handlers = [
         ch.name
-        for pool in zha_device.channels.pools
-        for ch in pool.claimed_channels.values()
+        for endpoint in zha_device.endpoints.values()
+        for ch in endpoint.claimed_cluster_handlers.values()
     ]
     actions = [
         action
@@ -202,8 +202,8 @@ async def _execute_cluster_handler_command_based_action(
         return
 
     action_cluster_handler = None
-    for pool in zha_device.channels.pools:
-        for cluster_handler in pool.all_channels.values():
+    for endpoint in zha_device.endpoints.values():
+        for cluster_handler in endpoint.all_cluster_handlers.values():
             if cluster_handler.name == cluster_handler_name:
                 action_cluster_handler = cluster_handler
                 break

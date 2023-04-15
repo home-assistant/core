@@ -14,13 +14,11 @@ from zigpy.types.named import EUI64
 
 from homeassistant.const import Platform
 
-# importing cluster handlers updates registries
-from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
 from .decorators import DictRegistry, SetRegistry
 
 if TYPE_CHECKING:
     from ..entity import ZhaEntity, ZhaGroupEntity
-    from .channels.base import ClientClusterHandler, ClusterHandler
+    from .channels import ClientClusterHandler, ClusterHandler
 
 
 _ZhaEntityT = TypeVar("_ZhaEntityT", bound=type["ZhaEntity"])
@@ -75,7 +73,6 @@ SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
 }
 
 BINDABLE_CLUSTERS = SetRegistry()
-CLUSTER_HANDLER_ONLY_CLUSTERS = SetRegistry()
 
 DEVICE_CLASS = {
     zigpy.profiles.zha.PROFILE_ID: {
@@ -108,7 +105,8 @@ DEVICE_CLASS = {
 }
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
-CLIENT_CLUSTER_HANDLERS_REGISTRY: DictRegistry[
+CLUSTER_HANDLER_ONLY_CLUSTERS = SetRegistry()
+CLIENT_CLUSTER_HANDLER_REGISTRY: DictRegistry[
     type[ClientClusterHandler]
 ] = DictRegistry()
 ZIGBEE_CLUSTER_HANDLER_REGISTRY: DictRegistry[type[ClusterHandler]] = DictRegistry()
@@ -184,21 +182,21 @@ class MatchRule:
         return weight
 
     def claim_cluster_handlers(
-        self, channel_pool: list[ClusterHandler]
+        self, cluster_handlers: list[ClusterHandler]
     ) -> list[ClusterHandler]:
         """Return a list of cluster handlers this rule matches + aux cluster handlers."""
         claimed = []
         if isinstance(self.cluster_handler_names, frozenset):
             claimed.extend(
-                [ch for ch in channel_pool if ch.name in self.cluster_handler_names]
+                [ch for ch in cluster_handlers if ch.name in self.cluster_handler_names]
             )
         if isinstance(self.generic_ids, frozenset):
             claimed.extend(
-                [ch for ch in channel_pool if ch.generic_id in self.generic_ids]
+                [ch for ch in cluster_handlers if ch.generic_id in self.generic_ids]
             )
         if isinstance(self.aux_cluster_handlers, frozenset):
             claimed.extend(
-                [ch for ch in channel_pool if ch.name in self.aux_cluster_handlers]
+                [ch for ch in cluster_handlers if ch.name in self.aux_cluster_handlers]
             )
         return claimed
 
@@ -256,7 +254,7 @@ class EntityClassAndClusterHandlers:
     """Container for entity class and corresponding cluster handlers."""
 
     entity_class: type[ZhaEntity]
-    claimed_cluster_handler: list[ClusterHandler]
+    claimed_cluster_handlers: list[ClusterHandler]
 
 
 class ZHAEntityRegistry:

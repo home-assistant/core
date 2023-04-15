@@ -1,20 +1,21 @@
-"""Test ZHA Core channels."""
+"""Test ZHA Core cluster handlers."""
 import asyncio
 import math
 from unittest import mock
 from unittest.mock import AsyncMock, patch
 
 import pytest
-import zigpy.endpoint
+from zigpy.endpoint import Endpoint as ZigpyEndpoint
 import zigpy.profiles.zha
 import zigpy.types as t
 from zigpy.zcl import foundation
 import zigpy.zcl.clusters
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.core.channels as zha_channels
-import homeassistant.components.zha.core.channels.base as base_channels
+import homeassistant.components.zha.core.channels as cluster_handlers
 import homeassistant.components.zha.core.const as zha_const
+from homeassistant.components.zha.core.device import ZHADevice as Device
+from homeassistant.components.zha.core.endpoint import Endpoint
 import homeassistant.components.zha.core.registries as registries
 from homeassistant.core import HomeAssistant
 
@@ -65,20 +66,22 @@ def zigpy_coordinator_device(zigpy_device_mock):
 
 
 @pytest.fixture
-def channel_pool(zigpy_coordinator_device):
-    """Endpoint Channels fixture."""
-    ch_pool_mock = mock.MagicMock(spec_set=zha_channels.ChannelPool)
-    ch_pool_mock.endpoint.device.application.get_device.return_value = (
+def endpoint(zigpy_coordinator_device):
+    """Endpoint fixture."""
+    endpoint_mock = mock.MagicMock(spec_set=Endpoint)
+    endpoint_mock.zigpy_endpoint.device.application.get_device.return_value = (
         zigpy_coordinator_device
     )
-    type(ch_pool_mock).skip_configuration = mock.PropertyMock(return_value=False)
-    ch_pool_mock.id = 1
-    return ch_pool_mock
+    type(endpoint_mock.device).skip_configuration = mock.PropertyMock(
+        return_value=False
+    )
+    endpoint_mock.id = 1
+    return endpoint_mock
 
 
 @pytest.fixture
-def poll_control_ch(channel_pool, zigpy_device_mock):
-    """Poll control channel fixture."""
+def poll_control_ch(endpoint, zigpy_device_mock):
+    """Poll control cluster handler fixture."""
     cluster_id = zigpy.zcl.clusters.general.PollControl.cluster_id
     zigpy_dev = zigpy_device_mock(
         {1: {SIG_EP_INPUT: [cluster_id], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
@@ -88,8 +91,8 @@ def poll_control_ch(channel_pool, zigpy_device_mock):
     )
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
-    channel_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(cluster_id)
-    return channel_class(cluster, channel_pool)
+    cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(cluster_id)
+    return cluster_handler_class(cluster, endpoint)
 
 
 @pytest.fixture
@@ -236,10 +239,10 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         ),
     ],
 )
-async def test_in_channel_config(
-    cluster_id, bind_count, attrs, channel_pool, zigpy_device_mock, zha_gateway
+async def test_in_cluster_handler_config(
+    cluster_id, bind_count, attrs, endpoint, zigpy_device_mock, zha_gateway
 ) -> None:
-    """Test ZHA core channel configuration for input clusters."""
+    """Test ZHA core cluster handler configuration for input clusters."""
     zigpy_dev = zigpy_device_mock(
         {1: {SIG_EP_INPUT: [cluster_id], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
         "00:11:22:33:44:55:66:77",
@@ -248,12 +251,12 @@ async def test_in_channel_config(
     )
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
-    channel_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-        cluster_id, base_channels.ClusterHandler
+    cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+        cluster_id, cluster_handlers.ClusterHandler
     )
-    channel = channel_class(cluster, channel_pool)
+    cluster_handler = cluster_handler_class(cluster, endpoint)
 
-    await channel.async_configure()
+    await cluster_handler.async_configure()
 
     assert cluster.bind.call_count == bind_count
     assert cluster.configure_reporting.call_count == 0
@@ -299,10 +302,10 @@ async def test_in_channel_config(
         (0x0B04, 1),
     ],
 )
-async def test_out_channel_config(
-    cluster_id, bind_count, channel_pool, zigpy_device_mock, zha_gateway
+async def test_out_cluster_handler_config(
+    cluster_id, bind_count, endpoint, zigpy_device_mock, zha_gateway
 ) -> None:
-    """Test ZHA core channel configuration for output clusters."""
+    """Test ZHA core cluster handler configuration for output clusters."""
     zigpy_dev = zigpy_device_mock(
         {1: {SIG_EP_OUTPUT: [cluster_id], SIG_EP_INPUT: [], SIG_EP_TYPE: 0x1234}},
         "00:11:22:33:44:55:66:77",
@@ -312,102 +315,109 @@ async def test_out_channel_config(
 
     cluster = zigpy_dev.endpoints[1].out_clusters[cluster_id]
     cluster.bind_only = True
-    channel_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-        cluster_id, base_channels.ClusterHandler
+    cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+        cluster_id, cluster_handlers.ClusterHandler
     )
-    channel = channel_class(cluster, channel_pool)
+    cluster_handler = cluster_handler_class(cluster, endpoint)
 
-    await channel.async_configure()
+    await cluster_handler.async_configure()
 
     assert cluster.bind.call_count == bind_count
     assert cluster.configure_reporting.call_count == 0
 
 
-def test_channel_registry() -> None:
-    """Test ZIGBEE Channel Registry."""
-    for cluster_id, channel in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.items():
+def test_cluster_handler_registry() -> None:
+    """Test ZIGBEE cluster handler Registry."""
+    for (
+        cluster_id,
+        cluster_handler,
+    ) in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.items():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
-        assert issubclass(channel, base_channels.ClusterHandler)
+        assert issubclass(cluster_handler, cluster_handlers.ClusterHandler)
 
 
-def test_epch_unclaimed_channels(cluster_handler) -> None:
+def test_epch_unclaimed_cluster_handlers(cluster_handler) -> None:
     """Test unclaimed cluster handlers."""
 
     ch_1 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
     ch_2 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
     ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
 
-    ep_channels = zha_channels.ChannelPool(
-        mock.MagicMock(spec_set=zha_channels.Channels), mock.sentinel.ep
+    ep_cluster_handlers = Endpoint(
+        mock.MagicMock(spec_set=ZigpyEndpoint), mock.MagicMock(spec_set=Device)
     )
-    all_channels = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
-    with mock.patch.dict(ep_channels.all_channels, all_channels, clear=True):
-        available = ep_channels.unclaimed_channels()
+    all_cluster_handlers = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
+    with mock.patch.dict(
+        ep_cluster_handlers.all_cluster_handlers, all_cluster_handlers, clear=True
+    ):
+        available = ep_cluster_handlers.unclaimed_cluster_handlers()
         assert ch_1 in available
         assert ch_2 in available
         assert ch_3 in available
 
-        ep_channels.claimed_channels[ch_2.id] = ch_2
-        available = ep_channels.unclaimed_channels()
+        ep_cluster_handlers.claimed_cluster_handlers[ch_2.id] = ch_2
+        available = ep_cluster_handlers.unclaimed_cluster_handlers()
         assert ch_1 in available
         assert ch_2 not in available
         assert ch_3 in available
 
-        ep_channels.claimed_channels[ch_1.id] = ch_1
-        available = ep_channels.unclaimed_channels()
+        ep_cluster_handlers.claimed_cluster_handlers[ch_1.id] = ch_1
+        available = ep_cluster_handlers.unclaimed_cluster_handlers()
         assert ch_1 not in available
         assert ch_2 not in available
         assert ch_3 in available
 
-        ep_channels.claimed_channels[ch_3.id] = ch_3
-        available = ep_channels.unclaimed_channels()
+        ep_cluster_handlers.claimed_cluster_handlers[ch_3.id] = ch_3
+        available = ep_cluster_handlers.unclaimed_cluster_handlers()
         assert ch_1 not in available
         assert ch_2 not in available
         assert ch_3 not in available
 
 
-def test_epch_claim_channels(cluster_handler) -> None:
-    """Test channel claiming."""
+def test_epch_claim_cluster_handlers(cluster_handler) -> None:
+    """Test cluster handler claiming."""
 
     ch_1 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
     ch_2 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
     ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
 
-    ep_channels = zha_channels.ChannelPool(
-        mock.MagicMock(spec_set=zha_channels.Channels), mock.sentinel.ep
+    ep_cluster_handlers = Endpoint(
+        mock.MagicMock(spec_set=ZigpyEndpoint), mock.MagicMock(spec_set=Device)
     )
-    all_channels = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
-    with mock.patch.dict(ep_channels.all_channels, all_channels, clear=True):
-        assert ch_1.id not in ep_channels.claimed_channels
-        assert ch_2.id not in ep_channels.claimed_channels
-        assert ch_3.id not in ep_channels.claimed_channels
+    all_cluster_handlers = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
+    with mock.patch.dict(
+        ep_cluster_handlers.all_cluster_handlers, all_cluster_handlers, clear=True
+    ):
+        assert ch_1.id not in ep_cluster_handlers.claimed_cluster_handlers
+        assert ch_2.id not in ep_cluster_handlers.claimed_cluster_handlers
+        assert ch_3.id not in ep_cluster_handlers.claimed_cluster_handlers
 
-        ep_channels.claim_channels([ch_2])
-        assert ch_1.id not in ep_channels.claimed_channels
-        assert ch_2.id in ep_channels.claimed_channels
-        assert ep_channels.claimed_channels[ch_2.id] is ch_2
-        assert ch_3.id not in ep_channels.claimed_channels
+        ep_cluster_handlers.claim_cluster_handlers([ch_2])
+        assert ch_1.id not in ep_cluster_handlers.claimed_cluster_handlers
+        assert ch_2.id in ep_cluster_handlers.claimed_cluster_handlers
+        assert ep_cluster_handlers.claimed_cluster_handlers[ch_2.id] is ch_2
+        assert ch_3.id not in ep_cluster_handlers.claimed_cluster_handlers
 
-        ep_channels.claim_channels([ch_3, ch_1])
-        assert ch_1.id in ep_channels.claimed_channels
-        assert ep_channels.claimed_channels[ch_1.id] is ch_1
-        assert ch_2.id in ep_channels.claimed_channels
-        assert ep_channels.claimed_channels[ch_2.id] is ch_2
-        assert ch_3.id in ep_channels.claimed_channels
-        assert ep_channels.claimed_channels[ch_3.id] is ch_3
-        assert "1:0x0300" in ep_channels.claimed_channels
+        ep_cluster_handlers.claim_cluster_handlers([ch_3, ch_1])
+        assert ch_1.id in ep_cluster_handlers.claimed_cluster_handlers
+        assert ep_cluster_handlers.claimed_cluster_handlers[ch_1.id] is ch_1
+        assert ch_2.id in ep_cluster_handlers.claimed_cluster_handlers
+        assert ep_cluster_handlers.claimed_cluster_handlers[ch_2.id] is ch_2
+        assert ch_3.id in ep_cluster_handlers.claimed_cluster_handlers
+        assert ep_cluster_handlers.claimed_cluster_handlers[ch_3.id] is ch_3
+        assert "1:0x0300" in ep_cluster_handlers.claimed_cluster_handlers
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+    "homeassistant.components.zha.core.endpoint.Endpoint.add_client_cluster_handlers"
 )
 @mock.patch(
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-def test_ep_channels_all_channels(m1, zha_device_mock) -> None:
-    """Test EndpointChannels adding all channels."""
+def test_ep_all_cluster_handlers(m1, zha_device_mock) -> None:
+    """Test Endpoint adding all cluster handlers."""
     zha_device = zha_device_mock(
         {
             1: {
@@ -422,43 +432,37 @@ def test_ep_channels_all_channels(m1, zha_device_mock) -> None:
             },
         }
     )
-    channels = zha_channels.Channels(zha_device)
-
-    ep_channels = zha_channels.ChannelPool.new(channels, 1)
-    assert "1:0x0000" in ep_channels.all_channels
-    assert "1:0x0001" in ep_channels.all_channels
-    assert "1:0x0006" in ep_channels.all_channels
-    assert "1:0x0008" in ep_channels.all_channels
-    assert "1:0x0300" not in ep_channels.all_channels
-    assert "2:0x0000" not in ep_channels.all_channels
-    assert "2:0x0001" not in ep_channels.all_channels
-    assert "2:0x0006" not in ep_channels.all_channels
-    assert "2:0x0008" not in ep_channels.all_channels
-    assert "2:0x0300" not in ep_channels.all_channels
-
-    channels = zha_channels.Channels(zha_device)
-    ep_channels = zha_channels.ChannelPool.new(channels, 2)
-    assert "1:0x0000" not in ep_channels.all_channels
-    assert "1:0x0001" not in ep_channels.all_channels
-    assert "1:0x0006" not in ep_channels.all_channels
-    assert "1:0x0008" not in ep_channels.all_channels
-    assert "1:0x0300" not in ep_channels.all_channels
-    assert "2:0x0000" in ep_channels.all_channels
-    assert "2:0x0001" in ep_channels.all_channels
-    assert "2:0x0006" in ep_channels.all_channels
-    assert "2:0x0008" in ep_channels.all_channels
-    assert "2:0x0300" in ep_channels.all_channels
+    assert "1:0x0000" in zha_device._endpoints[1].all_cluster_handlers
+    assert "1:0x0001" in zha_device._endpoints[1].all_cluster_handlers
+    assert "1:0x0006" in zha_device._endpoints[1].all_cluster_handlers
+    assert "1:0x0008" in zha_device._endpoints[1].all_cluster_handlers
+    assert "1:0x0300" not in zha_device._endpoints[1].all_cluster_handlers
+    assert "2:0x0000" not in zha_device._endpoints[1].all_cluster_handlers
+    assert "2:0x0001" not in zha_device._endpoints[1].all_cluster_handlers
+    assert "2:0x0006" not in zha_device._endpoints[1].all_cluster_handlers
+    assert "2:0x0008" not in zha_device._endpoints[1].all_cluster_handlers
+    assert "2:0x0300" not in zha_device._endpoints[1].all_cluster_handlers
+    assert "1:0x0000" not in zha_device._endpoints[2].all_cluster_handlers
+    assert "1:0x0001" not in zha_device._endpoints[2].all_cluster_handlers
+    assert "1:0x0006" not in zha_device._endpoints[2].all_cluster_handlers
+    assert "1:0x0008" not in zha_device._endpoints[2].all_cluster_handlers
+    assert "1:0x0300" not in zha_device._endpoints[2].all_cluster_handlers
+    assert "2:0x0000" in zha_device._endpoints[2].all_cluster_handlers
+    assert "2:0x0001" in zha_device._endpoints[2].all_cluster_handlers
+    assert "2:0x0006" in zha_device._endpoints[2].all_cluster_handlers
+    assert "2:0x0008" in zha_device._endpoints[2].all_cluster_handlers
+    assert "2:0x0300" in zha_device._endpoints[2].all_cluster_handlers
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+    "homeassistant.components.zha.core.endpoint.Endpoint.add_client_cluster_handlers"
 )
 @mock.patch(
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-def test_channel_power_config(m1, zha_device_mock) -> None:
-    """Test that channels only get a single power channel."""
+def test_cluster_handler_power_config(m1, zha_device_mock) -> None:
+    """Test that cluster handlers only get a single power cluster handler."""
     in_clusters = [0, 1, 6, 8]
     zha_device = zha_device_mock(
         {
@@ -470,18 +474,16 @@ def test_channel_power_config(m1, zha_device_mock) -> None:
             },
         }
     )
-    channels = zha_channels.Channels.new(zha_device)
-    pools = {pool.id: pool for pool in channels.pools}
-    assert "1:0x0000" in pools[1].all_channels
-    assert "1:0x0001" in pools[1].all_channels
-    assert "1:0x0006" in pools[1].all_channels
-    assert "1:0x0008" in pools[1].all_channels
-    assert "1:0x0300" not in pools[1].all_channels
-    assert "2:0x0000" in pools[2].all_channels
-    assert "2:0x0001" not in pools[2].all_channels
-    assert "2:0x0006" in pools[2].all_channels
-    assert "2:0x0008" in pools[2].all_channels
-    assert "2:0x0300" in pools[2].all_channels
+    assert "1:0x0000" in zha_device._endpoints[1].all_cluster_handlers
+    assert "1:0x0001" in zha_device._endpoints[1].all_cluster_handlers
+    assert "1:0x0006" in zha_device._endpoints[1].all_cluster_handlers
+    assert "1:0x0008" in zha_device._endpoints[1].all_cluster_handlers
+    assert "1:0x0300" not in zha_device._endpoints[1].all_cluster_handlers
+    assert "2:0x0000" in zha_device._endpoints[2].all_cluster_handlers
+    assert "2:0x0001" in zha_device._endpoints[2].all_cluster_handlers
+    assert "2:0x0006" in zha_device._endpoints[2].all_cluster_handlers
+    assert "2:0x0008" in zha_device._endpoints[2].all_cluster_handlers
+    assert "2:0x0300" in zha_device._endpoints[2].all_cluster_handlers
 
     zha_device = zha_device_mock(
         {
@@ -489,21 +491,17 @@ def test_channel_power_config(m1, zha_device_mock) -> None:
             2: {SIG_EP_INPUT: in_clusters, SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x0000},
         }
     )
-    channels = zha_channels.Channels.new(zha_device)
-    pools = {pool.id: pool for pool in channels.pools}
-    assert "1:0x0001" not in pools[1].all_channels
-    assert "2:0x0001" in pools[2].all_channels
+    assert "1:0x0001" not in zha_device._endpoints[1].all_cluster_handlers
+    assert "2:0x0001" in zha_device._endpoints[2].all_cluster_handlers
 
     zha_device = zha_device_mock(
         {2: {SIG_EP_INPUT: in_clusters, SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x0000}}
     )
-    channels = zha_channels.Channels.new(zha_device)
-    pools = {pool.id: pool for pool in channels.pools}
-    assert "2:0x0001" in pools[2].all_channels
+    assert "2:0x0001" in zha_device._endpoints[2].all_cluster_handlers
 
 
-async def test_ep_channels_configure(cluster_handler) -> None:
-    """Test unclaimed channels."""
+async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
+    """Test unclaimed cluster handlers."""
 
     ch_1 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
     ch_2 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
@@ -515,20 +513,21 @@ async def test_ep_channels_configure(cluster_handler) -> None:
     ch_5.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
     ch_5.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
 
-    channels = mock.MagicMock(spec_set=zha_channels.Channels)
-    type(channels).semaphore = mock.PropertyMock(return_value=asyncio.Semaphore(3))
-    ep_channels = zha_channels.ChannelPool(channels, mock.sentinel.ep)
+    endpoint_mock = mock.MagicMock(spec_set=ZigpyEndpoint)
+    type(endpoint_mock).in_clusters = mock.PropertyMock(return_value={})
+    type(endpoint_mock).out_clusters = mock.PropertyMock(return_value={})
+    endpoint = Endpoint.new(endpoint_mock, mock.MagicMock(spec_set=Device))
 
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
-    client_chans = {ch_4.id: ch_4, ch_5.id: ch_5}
+    client_handlers = {ch_4.id: ch_4, ch_5.id: ch_5}
 
     with mock.patch.dict(
-        ep_channels.claimed_channels, claimed, clear=True
-    ), mock.patch.dict(ep_channels.client_channels, client_chans, clear=True):
-        await ep_channels.async_configure()
-        await ep_channels.async_initialize(mock.sentinel.from_cache)
+        endpoint.claimed_cluster_handlers, claimed, clear=True
+    ), mock.patch.dict(endpoint.client_cluster_handlers, client_handlers, clear=True):
+        await endpoint.async_configure()
+        await endpoint.async_initialize(mock.sentinel.from_cache)
 
-    for ch in [*claimed.values(), *client_chans.values()]:
+    for ch in [*claimed.values(), *client_handlers.values()]:
         assert ch.async_initialize.call_count == 1
         assert ch.async_initialize.await_count == 1
         assert ch.async_initialize.call_args[0][0] is mock.sentinel.from_cache
@@ -540,7 +539,7 @@ async def test_ep_channels_configure(cluster_handler) -> None:
 
 
 async def test_poll_control_configure(poll_control_ch) -> None:
-    """Test poll control channel configuration."""
+    """Test poll control cluster handler configuration."""
     await poll_control_ch.async_configure()
     assert poll_control_ch.cluster.write_attributes.call_count == 1
     assert poll_control_ch.cluster.write_attributes.call_args[0][0] == {
@@ -549,7 +548,7 @@ async def test_poll_control_configure(poll_control_ch) -> None:
 
 
 async def test_poll_control_checkin_response(poll_control_ch) -> None:
-    """Test poll control channel checkin response."""
+    """Test poll control cluster handler checkin response."""
     rsp_mock = AsyncMock()
     set_interval_mock = AsyncMock()
     fast_poll_mock = AsyncMock()
@@ -576,9 +575,9 @@ async def test_poll_control_checkin_response(poll_control_ch) -> None:
 async def test_poll_control_cluster_command(
     hass: HomeAssistant, poll_control_device
 ) -> None:
-    """Test poll control channel response to cluster command."""
+    """Test poll control cluster handler response to cluster command."""
     checkin_mock = AsyncMock()
-    poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
+    poll_control_ch = poll_control_device._endpoints[1].all_cluster_handlers["1:0x0020"]
     cluster = poll_control_ch.cluster
     events = async_capture_events(hass, zha_const.ZHA_EVENT)
 
@@ -607,9 +606,9 @@ async def test_poll_control_cluster_command(
 async def test_poll_control_ignore_list(
     hass: HomeAssistant, poll_control_device
 ) -> None:
-    """Test poll control channel ignore list."""
+    """Test poll control cluster handler ignore list."""
     set_long_poll_mock = AsyncMock()
-    poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
+    poll_control_ch = poll_control_device._endpoints[1].all_cluster_handlers["1:0x0020"]
     cluster = poll_control_ch.cluster
 
     with mock.patch.object(cluster, "set_long_poll_interval", set_long_poll_mock):
@@ -626,9 +625,9 @@ async def test_poll_control_ignore_list(
 
 
 async def test_poll_control_ikea(hass: HomeAssistant, poll_control_device) -> None:
-    """Test poll control channel ignore list for ikea."""
+    """Test poll control cluster handler ignore list for ikea."""
     set_long_poll_mock = AsyncMock()
-    poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
+    poll_control_ch = poll_control_device._endpoints[1].all_cluster_handlers["1:0x0020"]
     cluster = poll_control_ch.cluster
 
     poll_control_device.device.node_desc.manufacturer_code = 4476
@@ -651,12 +650,12 @@ def zigpy_zll_device(zigpy_device_mock):
 
 
 async def test_zll_device_groups(
-    zigpy_zll_device, channel_pool, zigpy_coordinator_device
+    zigpy_zll_device, endpoint, zigpy_coordinator_device
 ) -> None:
     """Test adding coordinator to ZLL groups."""
 
     cluster = zigpy_zll_device.endpoints[1].lightlink
-    channel = zha_channels.lightlink.LightLink(cluster, channel_pool)
+    cluster_handler = cluster_handlers.lightlink.LightLink(cluster, endpoint)
 
     get_group_identifiers_rsp = zigpy.zcl.clusters.lightlink.LightLink.commands_by_name[
         "get_group_identifiers_rsp"
@@ -671,7 +670,7 @@ async def test_zll_device_groups(
             )
         ),
     ) as cmd_mock:
-        await channel.async_configure()
+        await cluster_handler.async_configure()
         assert cmd_mock.await_count == 1
         assert (
             cluster.server_commands[cmd_mock.await_args[0][0]].name
@@ -693,7 +692,7 @@ async def test_zll_device_groups(
             )
         ),
     ) as cmd_mock:
-        await channel.async_configure()
+        await cluster_handler.async_configure()
         assert cmd_mock.await_count == 1
         assert (
             cluster.server_commands[cmd_mock.await_args[0][0]].name
@@ -712,73 +711,15 @@ async def test_zll_device_groups(
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
-)
-@mock.patch(
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-async def test_cluster_no_ep_attribute(m1, zha_device_mock) -> None:
-    """Test channels for clusters without ep_attribute."""
+async def test_cluster_no_ep_attribute(zha_device_mock) -> None:
+    """Test cluster handlers for clusters without ep_attribute."""
 
     zha_device = zha_device_mock(
         {1: {SIG_EP_INPUT: [0x042E], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
     )
 
-    channels = zha_channels.Channels.new(zha_device)
-    pools = {pool.id: pool for pool in channels.pools}
-    assert "1:0x042e" in pools[1].all_channels
-    assert pools[1].all_channels["1:0x042e"].name
-
-
-async def test_configure_reporting(hass: HomeAssistant) -> None:
-    """Test setting up a channel and configuring attribute reporting in two batches."""
-
-    class TestZigbeeChannel(base_channels.ZigbeeChannel):
-        BIND = True
-        REPORT_CONFIG = (
-            # By name
-            base_channels.AttrReportConfig(attr="current_x", config=(1, 60, 1)),
-            base_channels.AttrReportConfig(attr="current_hue", config=(1, 60, 2)),
-            base_channels.AttrReportConfig(attr="color_temperature", config=(1, 60, 3)),
-            base_channels.AttrReportConfig(attr="current_y", config=(1, 60, 4)),
-        )
-
-    mock_ep = mock.AsyncMock(spec_set=zigpy.endpoint.Endpoint)
-    mock_ep.device.zdo = AsyncMock()
-
-    cluster = zigpy.zcl.clusters.lighting.Color(mock_ep)
-    cluster.bind = AsyncMock(
-        spec_set=cluster.bind,
-        return_value=[zdo_t.Status.SUCCESS],  # ZDOCmd.Bind_rsp
-    )
-    cluster.configure_reporting_multiple = AsyncMock(
-        spec_set=cluster.configure_reporting_multiple,
-        return_value=[
-            foundation.ConfigureReportingResponseRecord(
-                status=foundation.Status.SUCCESS
-            )
-        ],
-    )
-
-    ch_pool = mock.AsyncMock(spec_set=zha_channels.ChannelPool)
-    ch_pool.skip_configuration = False
-
-    channel = TestZigbeeChannel(cluster, ch_pool)
-    await channel.async_configure()
-
-    # Since we request reporting for five attributes, we need to make two calls (3 + 1)
-    assert cluster.configure_reporting_multiple.mock_calls == [
-        mock.call(
-            {
-                "current_x": (1, 60, 1),
-                "current_hue": (1, 60, 2),
-                "color_temperature": (1, 60, 3),
-            }
-        ),
-        mock.call(
-            {
-                "current_y": (1, 60, 4),
-            }
-        ),
-    ]
+    assert "1:0x042e" in zha_device._endpoints[1].all_cluster_handlers
+    assert zha_device._endpoints[1].all_cluster_handlers["1:0x042e"].name

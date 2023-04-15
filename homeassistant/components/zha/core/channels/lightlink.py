@@ -5,8 +5,8 @@ import zigpy.exceptions
 from zigpy.zcl.clusters import lightlink
 from zigpy.zcl.foundation import GENERAL_COMMANDS, GeneralCommand
 
+from . import ClusterHandler, ClusterHandlerStatus
 from .. import registries
-from .base import ClusterHandler, ClusterHandlerStatus
 
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(lightlink.LightLink.cluster_id)
@@ -19,11 +19,11 @@ class LightLink(ClusterHandler):
     async def async_configure(self) -> None:
         """Add Coordinator to LightLink group."""
 
-        if self._ch_pool.skip_configuration:
+        if self._endpoint.device.skip_configuration:
             self._status = ClusterHandlerStatus.CONFIGURED
             return
 
-        application = self._ch_pool.endpoint.device.application
+        application = self._endpoint.zigpy_endpoint.device.application
         try:
             coordinator = application.get_device(application.state.node_info.ieee)
         except KeyError:
