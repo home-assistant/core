@@ -48,6 +48,7 @@ from .const import (
 )
 from .exception import SonosUpdateError
 from .favorites import SonosFavorites
+from .helpers import sync_get_visible_zones
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -338,19 +339,12 @@ class SonosDiscoveryManager:
         self, now: datetime.datetime | None = None
     ) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
-
-        def get_sync_attributes(soco: SoCo) -> set[SoCo]:
-            """Ensure I/O attributes are cached and return visible zones."""
-            _ = soco.household_id
-            _ = soco.uid
-            return soco.visible_zones
-
         for host in self.hosts:
-            ip_addr = socket.gethostbyname(host)
+            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
             soco = SoCo(ip_addr)
             try:
                 visible_zones = await self.hass.async_add_executor_job(
-                    get_sync_attributes,
+                    sync_get_visible_zones,
                     soco,
                 )
             except (OSError, SoCoException, Timeout) as ex:
@@ -382,7 +376,7 @@ class SonosDiscoveryManager:
                 break
 
         for host in self.hosts.copy():
-            ip_addr = socket.gethostbyname(host)
+            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
             if self.is_device_invisible(ip_addr):
                 _LOGGER.debug("Discarding %s from manual hosts", ip_addr)
                 self.hosts.discard(ip_addr)

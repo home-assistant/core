@@ -64,8 +64,8 @@ async def test_light_async_setup_entry(
     )
     assert len(aioclient_mock.mock_calls) == 3
     assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setLight"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get("100")
     assert data["id"] == "100"
     assert data["state"] == ADVANTAGE_AIR_STATE_ON
     assert aioclient_mock.mock_calls[-1][0] == "GET"
@@ -79,8 +79,8 @@ async def test_light_async_setup_entry(
     )
     assert len(aioclient_mock.mock_calls) == 5
     assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setLight"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get("100")
     assert data["id"] == "100"
     assert data["state"] == ADVANTAGE_AIR_STATE_OFF
     assert aioclient_mock.mock_calls[-1][0] == "GET"
@@ -101,8 +101,8 @@ async def test_light_async_setup_entry(
     )
     assert len(aioclient_mock.mock_calls) == 7
     assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setLight"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert aioclient_mock.mock_calls[-2][1].path == "/setLights"
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"]).get("101")
     assert data["id"] == "101"
     assert data["value"] == 50
     assert data["state"] == ADVANTAGE_AIR_STATE_ON
