@@ -336,7 +336,7 @@ class SonosDiscoveryManager:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
     async def _async_gethostbyname(self, host: str) -> str:
-        """Helper function to enable unit testing."""
+        """Enable patching of this function for unit testing."""
         return await self.hass.async_add_executor_job(socket.gethostbyname, host)
 
     async def async_poll_manual_hosts(
