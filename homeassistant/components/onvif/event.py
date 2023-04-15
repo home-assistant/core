@@ -34,6 +34,15 @@ def _stringify_onvif_error(error: Exception) -> str:
     return str(error)
 
 
+def _get_next_termination_time() -> str:
+    """Get next termination time."""
+    return (
+        (dt_util.utcnow() + dt.timedelta(days=1))
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z")
+    )
+
+
 class EventManager:
     """ONVIF Event Manager."""
 
@@ -86,7 +95,9 @@ class EventManager:
 
     async def async_start(self) -> bool:
         """Start polling events."""
-        if not await self.device.create_pullpoint_subscription():
+        if not await self.device.create_pullpoint_subscription(
+            {"InitialTerminationTime": _get_next_termination_time()}
+        ):
             return False
 
         # Create subscription manager
@@ -173,16 +184,11 @@ class EventManager:
         if not self._subscription:
             return
 
-        termination_time = (
-            (dt_util.utcnow() + dt.timedelta(days=1))
-            .isoformat(timespec="seconds")
-            .replace("+00:00", "Z")
-        )
         with suppress(*SUBSCRIPTION_ERRORS):
             # The first time we renew, we may get a Fault error so we
             # suppress it. The subscription will be restarted in
             # async_restart later.
-            await self._subscription.Renew(termination_time)
+            await self._subscription.Renew(_get_next_termination_time())
 
     def async_schedule_pull(self) -> None:
         """Schedule async_pull_messages to run."""
