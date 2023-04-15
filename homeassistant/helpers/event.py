@@ -1553,7 +1553,7 @@ def async_track_utc_time_change(
     """Add a listener that will fire if time matches a pattern."""
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
-    if all(val is None for val in (hour, minute, second)):
+    if all(val is None or val == "*" for val in (hour, minute, second)):
         # Previously this relied on EVENT_TIME_FIRED
         # which meant it would not fire right away because
         # the caller would always be misaligned with the call
