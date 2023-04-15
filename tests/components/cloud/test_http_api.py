@@ -429,6 +429,7 @@ async def test_websocket_status(
         "google_local_connected": False,
         "remote_domain": None,
         "remote_connected": False,
+        "remote_certificate_status": None,
         "remote_certificate": None,
         "http_use_ssl": False,
         "active_subscription": False,

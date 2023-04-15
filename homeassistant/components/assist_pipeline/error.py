@@ -1,4 +1,4 @@
-"""Voice Assistant errors."""
+"""Assist pipeline errors."""
 
 from homeassistant.exceptions import HomeAssistantError
 
