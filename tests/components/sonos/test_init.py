@@ -1,7 +1,6 @@
 """Tests for the Sonos config flow."""
 import asyncio
 import logging
-
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest

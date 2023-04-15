@@ -340,12 +340,6 @@ class SonosDiscoveryManager:
     ) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
 
-        def get_sync_attributes(soco: SoCo) -> set[SoCo]:
-            """Ensure I/O attributes are cached and return visible zones."""
-            _ = soco.household_id
-            _ = soco.uid
-            return soco.visible_zones
-
         # Loop through each configured host and verify that Soco attributes are available for it.
         for host in self.hosts.copy():
             ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
