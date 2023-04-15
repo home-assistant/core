@@ -1,0 +1,12 @@
+{
+  "domain": "connector",
+  "name": "Connector",
+  "codeowners": ["@ConnectorGit"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/connector",
+  "homekit": {},
+  "iot_class": "local_push",
+  "loggers": ["connector"],
+  "requirements": ["connectorlocal==0.1.1"]
+}
