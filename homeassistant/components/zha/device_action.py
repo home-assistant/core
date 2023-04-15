@@ -12,7 +12,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
-from .core.channels.manufacturerspecific import AllLEDEffectType, SingleLEDEffectType
+from .core.cluster_handlers.manufacturerspecific import (
+    AllLEDEffectType,
+    SingleLEDEffectType,
+)
 from .core.const import CLUSTER_HANDLER_IAS_WD, CLUSTER_HANDLER_INOVELLI
 from .core.helpers import async_get_zha_device
 from .websocket_api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN

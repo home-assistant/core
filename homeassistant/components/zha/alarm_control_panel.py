@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
-from .core.channels.security import (
+from .core.cluster_handlers.security import (
     SIGNAL_ALARM_TRIGGERED,
     SIGNAL_ARMED_STATE_CHANGED,
     IasAce as AceClusterHandler,

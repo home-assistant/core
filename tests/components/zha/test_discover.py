@@ -14,7 +14,7 @@ import zigpy.zcl.clusters.security
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.binary_sensor
-import homeassistant.components.zha.core.channels as cluster_handlers
+import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.discovery as disc
 from homeassistant.components.zha.core.endpoint import Endpoint

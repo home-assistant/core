@@ -1,8 +1,8 @@
 """Test ZHA base cluster handlers module."""
 
-from homeassistant.components.zha.core.channels import parse_and_log_command
+from homeassistant.components.zha.core.cluster_handlers import parse_and_log_command
 
-from tests.components.zha.test_channels import (  # noqa: F401
+from tests.components.zha.test_cluster_handlers import (  # noqa: F401
     endpoint,
     poll_control_ch,
     zigpy_coordinator_device,

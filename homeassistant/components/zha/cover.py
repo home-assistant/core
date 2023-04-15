@@ -41,7 +41,7 @@ from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 if TYPE_CHECKING:
-    from .core.channels import ClusterHandler
+    from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)

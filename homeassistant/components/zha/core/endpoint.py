@@ -14,11 +14,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const, discovery, registries
-from .channels import ClusterHandler
-from .channels.general import MultistateInput
+from .cluster_handlers import ClusterHandler
+from .cluster_handlers.general import MultistateInput
 
 if TYPE_CHECKING:
-    from .channels import ClientClusterHandler
+    from .cluster_handlers import ClientClusterHandler
     from .device import ZHADevice
 
 ATTR_DEVICE_TYPE: Final[str] = "device_type"

@@ -33,7 +33,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import const
-from .channels import ClusterHandler, ZDOClusterHandler
+from .cluster_handlers import ClusterHandler, ZDOClusterHandler
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
     ATTR_ARGS,

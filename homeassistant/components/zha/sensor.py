@@ -67,7 +67,7 @@ from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
 if TYPE_CHECKING:
-    from .core.channels import ClusterHandler
+    from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
 
 PARALLEL_UPDATES = 5

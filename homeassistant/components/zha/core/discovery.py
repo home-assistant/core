@@ -35,7 +35,7 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
 )
 
 # importing cluster handlers updates registries
-from .channels import (  # noqa: F401 pylint: disable=unused-import,
+from .cluster_handlers import (  # noqa: F401 pylint: disable=unused-import,
     ClusterHandler,
     closures,
     general,

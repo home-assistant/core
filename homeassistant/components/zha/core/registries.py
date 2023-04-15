@@ -18,7 +18,7 @@ from .decorators import DictRegistry, SetRegistry
 
 if TYPE_CHECKING:
     from ..entity import ZhaEntity, ZhaGroupEntity
-    from .channels import ClientClusterHandler, ClusterHandler
+    from .cluster_handlers import ClientClusterHandler, ClusterHandler
 
 
 _ZhaEntityT = TypeVar("_ZhaEntityT", bound=type["ZhaEntity"])

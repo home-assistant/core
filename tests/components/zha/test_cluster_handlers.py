@@ -12,7 +12,7 @@ from zigpy.zcl import foundation
 import zigpy.zcl.clusters
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.core.channels as cluster_handlers
+import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.device import ZHADevice as Device
 from homeassistant.components.zha.core.endpoint import Endpoint

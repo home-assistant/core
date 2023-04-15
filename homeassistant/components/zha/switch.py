@@ -30,7 +30,7 @@ from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
 if TYPE_CHECKING:
-    from .core.channels import ClusterHandler
+    from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SWITCH)
