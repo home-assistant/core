@@ -495,7 +495,7 @@ def _modify_columns(
             connection = session.connection()
             connection.execute(
                 text(
-                    "ALTER TABLE {ignore_sql} {table} {columns_def}".format(
+                    "ALTER {ignore_sql} TABLE {table} {columns_def}".format(
                         ignore_sql=ignore_sql,
                         table=table_name,
                         columns_def=", ".join(columns_def),
@@ -512,7 +512,7 @@ def _modify_columns(
                 connection = session.connection()
                 connection.execute(
                     text(
-                        "ALTER TABLE {ignore_sql} {table} {column_def}".format(
+                        "ALTER {ignore_sql} TABLE {table} {column_def}".format(
                             ignore_sql=ignore_sql,
                             table=table_name,
                             column_def=column_def,
