@@ -39,7 +39,7 @@ BIG_QUERY_RECENT_HOURS = 24
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class LogbookLiveStream:
     """Track a logbook live stream."""
 
