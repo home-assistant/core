@@ -24,7 +24,7 @@
       },
       "discovery_confirm": {
         "title": "UniFi Protect Discovered",
-        "description": "Do you want to set up {name} ({ip_address})? [%key:component::unifiprotect::config::step::user::description%]",
+        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
