@@ -61,7 +61,7 @@
     },
     "error": {
       "timeout": "Timeout validating code",
-      "invalid_pin": "Invalid [%key:common::config_flow::data::pin%]",
+      "invalid_pin": "Invalid PIN",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "internal_error": "Internal error validating code",
       "bad_project_id": "Please enter a valid Cloud Project ID (check Cloud Console)",

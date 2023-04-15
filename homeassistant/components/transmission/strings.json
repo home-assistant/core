@@ -20,7 +20,7 @@
       }
     },
     "error": {
-      "name_exists": "[%key:common::config_flow::data::name%] already exists",
+      "name_exists": "Name already exists",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
