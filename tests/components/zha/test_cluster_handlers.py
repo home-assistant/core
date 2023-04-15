@@ -5,6 +5,7 @@ from unittest import mock
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import zigpy.endpoint
 from zigpy.endpoint import Endpoint as ZigpyEndpoint
 import zigpy.profiles.zha
 import zigpy.types as t
@@ -723,3 +724,55 @@ async def test_cluster_no_ep_attribute(zha_device_mock) -> None:
 
     assert "1:0x042e" in zha_device._endpoints[1].all_cluster_handlers
     assert zha_device._endpoints[1].all_cluster_handlers["1:0x042e"].name
+
+
+async def test_configure_reporting(hass: HomeAssistant, endpoint) -> None:
+    """Test setting up a cluster handler and configuring attribute reporting in two batches."""
+
+    class TestZigbeeClusterHandler(cluster_handlers.ClusterHandler):
+        BIND = True
+        REPORT_CONFIG = (
+            # By name
+            cluster_handlers.AttrReportConfig(attr="current_x", config=(1, 60, 1)),
+            cluster_handlers.AttrReportConfig(attr="current_hue", config=(1, 60, 2)),
+            cluster_handlers.AttrReportConfig(
+                attr="color_temperature", config=(1, 60, 3)
+            ),
+            cluster_handlers.AttrReportConfig(attr="current_y", config=(1, 60, 4)),
+        )
+
+    mock_ep = mock.AsyncMock(spec_set=zigpy.endpoint.Endpoint)
+    mock_ep.device.zdo = AsyncMock()
+
+    cluster = zigpy.zcl.clusters.lighting.Color(mock_ep)
+    cluster.bind = AsyncMock(
+        spec_set=cluster.bind,
+        return_value=[zdo_t.Status.SUCCESS],  # ZDOCmd.Bind_rsp
+    )
+    cluster.configure_reporting_multiple = AsyncMock(
+        spec_set=cluster.configure_reporting_multiple,
+        return_value=[
+            foundation.ConfigureReportingResponseRecord(
+                status=foundation.Status.SUCCESS
+            )
+        ],
+    )
+
+    channel = TestZigbeeClusterHandler(cluster, endpoint)
+    await channel.async_configure()
+
+    # Since we request reporting for five attributes, we need to make two calls (3 + 1)
+    assert cluster.configure_reporting_multiple.mock_calls == [
+        mock.call(
+            {
+                "current_x": (1, 60, 1),
+                "current_hue": (1, 60, 2),
+                "color_temperature": (1, 60, 3),
+            }
+        ),
+        mock.call(
+            {
+                "current_y": (1, 60, 4),
+            }
+        ),
+    ]
