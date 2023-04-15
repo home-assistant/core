@@ -104,24 +104,32 @@ class _ColumnTypesForDialect:
     big_int_type: str
     timestamp_type: str
     context_bin_type: str
+    unused_column_type: str
+    hash_column_type: str
 
 
 _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER(20)",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
+    unused_column_type="CHAR(0)",
+    hash_column_type="UNSIGNED INT",
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type="BYTEA",
+    unused_column_type="CHAR(1)",
+    hash_column_type="BIGINT",
 )
 
 _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type="FLOAT",
     context_bin_type="BLOB",
+    unused_column_type="CHAR(1)",
+    hash_column_type="BIGINT",
 )
 
 _COLUMN_TYPES_FOR_DIALECT: dict[SupportedDialect | None, _ColumnTypesForDialect] = {
@@ -1076,6 +1084,61 @@ def _apply_update(  # noqa: C901
     elif new_version == 41:
         _create_index(session_maker, "event_types", "ix_event_types_event_type")
         _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
+    elif new_version == 42:
+        if engine.dialect.name not in (
+            SupportedDialect.POSTGRESQL,
+            SupportedDialect.MYSQL,
+        ):
+            # SQLite doesn't support ALTER TABLE with our minimum version
+            return
+        # event_type can only be done after migration is complete
+        # event_data can only be done if all legacy events are gone
+        # origin can only be done if all legacy events are gone
+        # context_id can only be done after migration is complete
+        # context_user_id can only be done after migration is complete
+        # context_parent_id can only be done after migration is complete
+        # entity_id can only be done after migration is complete
+        unused_column_type = _column_types.unused_column_type
+        _modify_columns(
+            session_maker,
+            engine,
+            "states",
+            [
+                f"{column} {unused_column_type}"
+                for column in ("last_updated", "last_changed", "created")
+            ],
+        )
+        _modify_columns(
+            session_maker,
+            engine,
+            "events",
+            [f"{column} {unused_column_type}" for column in ("time_fired")],
+        )
+        for table in ("statistics", "statistics_short_term"):
+            _modify_columns(
+                session_maker,
+                engine,
+                table,
+                [
+                    f"{column} {unused_column_type}"
+                    for column in ("created", "start", "last_reset")
+                ],
+            )
+        if engine.dialect.name == SupportedDialect.MYSQL:
+            # The hash column used more space than needed
+            hash_column_type = _column_types.hash_column_type
+            _modify_columns(
+                session_maker,
+                engine,
+                "state_attributes",
+                [f"hash {hash_column_type}"],
+            )
+            _modify_columns(
+                session_maker,
+                engine,
+                "event_data",
+                [f"hash {hash_column_type}"],
+            )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
