@@ -1,5 +1,7 @@
 """The ONVIF integration."""
+from httpx import RequestError
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
+from zeep.exceptions import Fault
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
@@ -27,9 +29,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = ONVIFDevice(hass, entry)
 
-    if not await device.async_setup():
+    try:
+        await device.async_setup()
+    except RequestError as err:
         await device.device.close()
-        return False
+        raise ConfigEntryNotReady(f"Could not connect to camera: {err}") from err
+    except Fault as err:
+        await device.device.close()
+        raise ConfigEntryNotReady(
+            f"Could not connect to camera, verify credentials are correct: {err}"
+        ) from err
+    except ONVIFError as err:
+        await device.device.close()
+        raise ConfigEntryNotReady(f"Could not setup camera: {err}") from err
 
     if not device.available:
         raise ConfigEntryNotReady()
