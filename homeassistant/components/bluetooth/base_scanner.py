@@ -39,7 +39,7 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class BluetoothScannerDevice:
     """Data for a bluetooth device from a given scanner."""
 

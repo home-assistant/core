@@ -8,10 +8,9 @@ from pathlib import Path
 import sqlite3
 import threading
 from typing import cast
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-import py
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
@@ -28,6 +27,7 @@ from homeassistant.components.recorder import (
     SQLITE_URL_PREFIX,
     Recorder,
     get_instance,
+    migration,
     pool,
     statistics,
 )
@@ -1280,11 +1280,13 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
 def test_compile_missing_statistics(
-    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+    tmp_path: Path, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     hass = get_test_home_assistant()
@@ -1541,9 +1543,11 @@ def test_service_disable_states_not_recording(
         )
 
 
-def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None:
+def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
     """Test that runs are still recorded when recorder is disabled."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     hass = get_test_home_assistant()
@@ -1590,12 +1594,14 @@ class CannotSerializeMe:
 
 
 async def test_database_corruption_while_running(
-    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
 
-    def _create_tmpdir_for_test_db():
-        return tmpdir.mkdir("sqlite").join("test.db")
+    def _create_tmpdir_for_test_db() -> Path:
+        test_dir = tmp_path.joinpath("sqlite")
+        test_dir.mkdir()
+        return test_dir.joinpath("test.db")
 
     test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -2234,3 +2240,90 @@ async def test_lru_increases_with_many_entities(
         == mock_entity_count * 2
     )
     assert recorder_mock.states_meta_manager._id_map.get_size() == mock_entity_count * 2
+
+
+async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_database(
+    hass: HomeAssistant,
+) -> None:
+    """Test we still shutdown cleanly when the recorder thread raises during initialize_database."""
+    with patch.object(migration, "initialize_database", side_effect=Exception), patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    instance = recorder.get_instance(hass)
+    await hass.async_stop()
+    assert instance.engine is None
+
+
+async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test we still shutdown cleanly when the recorder thread raises during validate_db_schema."""
+    with patch.object(migration, "validate_db_schema", side_effect=Exception), patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    instance = recorder.get_instance(hass)
+    await hass.async_stop()
+    assert instance.engine is None
+
+
+async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -> None:
+    """Test we still shutdown cleanly when schema migration fails."""
+    with patch.object(
+        migration,
+        "validate_db_schema",
+        return_value=MagicMock(valid=False, current_version=1),
+    ), patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+    ), patch.object(
+        migration,
+        "migrate_schema",
+        side_effect=Exception,
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    instance = recorder.get_instance(hass)
+    await hass.async_stop()
+    assert instance.engine is None
