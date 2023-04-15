@@ -22,6 +22,7 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    VoiceAssistantEventType,
 )
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -64,6 +65,7 @@ from .domain_data import DomainData
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
+from .voice_assistant import VoiceAssistantUDPServer
 
 CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
@@ -284,6 +286,39 @@ async def async_setup_entry(  # noqa: C901
             _send_home_assistant_state(entity_id, attribute, hass.states.get(entity_id))
         )
 
+    voice_assistant_udp_server: VoiceAssistantUDPServer | None = None
+
+    def handle_pipeline_event(
+        event_type: VoiceAssistantEventType, data: dict[str, str] | None
+    ) -> None:
+        """Handle a voice assistant pipeline event."""
+        cli.send_voice_assistant_event(event_type, data)
+
+    async def handle_pipeline_start() -> int | None:
+        """Start a voice assistant pipeline."""
+        nonlocal voice_assistant_udp_server
+
+        if voice_assistant_udp_server is not None:
+            return None
+
+        voice_assistant_udp_server = VoiceAssistantUDPServer(hass)
+        port = await voice_assistant_udp_server.start_server()
+
+        hass.async_create_background_task(
+            voice_assistant_udp_server.run_pipeline(handle_pipeline_event),
+            "esphome.voice_assistant_udp_server.run_pipeline",
+        )
+
+        return port
+
+    async def handle_pipeline_stop() -> None:
+        """Stop a voice assistant pipeline."""
+        nonlocal voice_assistant_udp_server
+
+        if voice_assistant_udp_server is not None:
+            voice_assistant_udp_server.stop()
+            voice_assistant_udp_server = None
+
     async def on_connect() -> None:
         """Subscribe to states and list entities on successful API login."""
         nonlocal device_id
@@ -327,6 +362,14 @@ async def async_setup_entry(  # noqa: C901
             await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
+
+            if device_info.voice_assistant_version:
+                entry_data.disconnect_callbacks.append(
+                    await cli.subscribe_voice_assistant(
+                        handle_pipeline_start,
+                        handle_pipeline_stop,
+                    )
+                )
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:

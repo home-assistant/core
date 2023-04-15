@@ -1,8 +1,8 @@
 """Websocket tests for Voice Assistant integration."""
 from typing import Any
 
-from homeassistant.components.voice_assistant.const import DOMAIN
-from homeassistant.components.voice_assistant.pipeline import (
+from homeassistant.components.assist_pipeline.const import DOMAIN
+from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
     PipelineStorageCollection,
@@ -46,6 +46,7 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
     for pipeline in pipelines:
         pipeline_ids.append((await store1.async_create_item(pipeline)).id)
     assert len(store1.data) == 3
+    assert store1.async_get_preferred_item() == list(store1.data)[0]
 
     await store1.async_delete_item(pipeline_ids[1])
     assert len(store1.data) == 2
@@ -58,6 +59,7 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
 
     assert store1.data is not store2.data
     assert store1.data == store2.data
+    assert store1.async_get_preferred_item() == store2.async_get_preferred_item()
 
 
 async def test_loading_datasets_from_storage(
@@ -67,7 +69,7 @@ async def test_loading_datasets_from_storage(
     hass_storage[STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
-        "key": "voice_assistant.pipelines",
+        "key": "assist_pipeline.pipelines",
         "data": {
             "items": [
                 {
@@ -94,11 +96,13 @@ async def test_loading_datasets_from_storage(
                     "stt_engine": "stt_engine_3",
                     "tts_engine": "tts_engine_3",
                 },
-            ]
+            ],
+            "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
         },
     }
 
-    assert await async_setup_component(hass, "voice_assistant", {})
+    assert await async_setup_component(hass, "assist_pipeline", {})
 
     store: PipelineStorageCollection = hass.data[DOMAIN]
     assert len(store.data) == 3
+    assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"

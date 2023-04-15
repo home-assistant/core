@@ -1,4 +1,4 @@
-"""The Voice Assistant integration."""
+"""The Assist pipeline integration."""
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
@@ -33,7 +33,7 @@ __all__ = (
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Voice Assistant integration."""
+    """Set up the Assist pipeline integration."""
     await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)
 

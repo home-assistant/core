@@ -25,10 +25,10 @@
       "public_weather": {
         "data": {
           "area_name": "Name of the area",
-          "lat_ne": "[%key:common::config_flow::data::latitude%] North-East corner",
-          "lon_ne": "[%key:common::config_flow::data::longitude%] North-East corner",
-          "lat_sw": "[%key:common::config_flow::data::latitude%] South-West corner",
-          "lon_sw": "[%key:common::config_flow::data::longitude%] South-West corner",
+          "lat_ne": "North-East corner latitude",
+          "lon_ne": "North-East corner longitude",
+          "lat_sw": "South-West corner latitude",
+          "lon_sw": "South-West corner longitude",
           "mode": "Calculation",
           "show_on_map": "Show on map"
         },

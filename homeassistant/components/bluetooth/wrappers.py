@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from .manager import BluetoothManager
 
 
-@dataclass
+@dataclass(slots=True)
 class _HaWrappedBleakBackend:
     """Wrap bleak backend to make it usable by Home Assistant."""
 

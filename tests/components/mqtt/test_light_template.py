@@ -330,6 +330,12 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
     light_state = hass.states.get("light.test")
     assert light_state.attributes["brightness"] == 100
 
+    # ignore a zero brightness
+    async_fire_mqtt_message(hass, "test_light_rgb", "on,0")
+
+    light_state = hass.states.get("light.test")
+    assert light_state.attributes["brightness"] == 100
+
     # change the color temp
     async_fire_mqtt_message(hass, "test_light_rgb", "on,,195")
 
