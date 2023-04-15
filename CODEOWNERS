@@ -80,6 +80,8 @@ build.json @home-assistant/supervisor
 /tests/components/android_ip_webcam/ @engrbm87
 /homeassistant/components/androidtv/ @JeffLIrion @ollo69
 /tests/components/androidtv/ @JeffLIrion @ollo69
+/homeassistant/components/androidtv_remote/ @tronikos
+/tests/components/androidtv_remote/ @tronikos
 /homeassistant/components/anthemav/ @hyralex
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
@@ -103,6 +105,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/arris_tg2492lg/ @vanbalken
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
+/homeassistant/components/assist_pipeline/ @balloob @synesthesiam
+/tests/components/assist_pipeline/ @balloob @synesthesiam
 /homeassistant/components/asuswrt/ @kennedyshead @ollo69
 /tests/components/asuswrt/ @kennedyshead @ollo69
 /homeassistant/components/atag/ @MatsNL
@@ -168,6 +172,8 @@ build.json @home-assistant/supervisor
 /tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
+/homeassistant/components/brottsplatskartan/ @gjohansson-ST
+/tests/components/brottsplatskartan/ @gjohansson-ST
 /homeassistant/components/brunt/ @eavanvalkenburg
 /tests/components/brunt/ @eavanvalkenburg
 /homeassistant/components/bsblan/ @liudger
@@ -215,8 +221,6 @@ build.json @home-assistant/supervisor
 /tests/components/conversation/ @home-assistant/core @synesthesiam
 /homeassistant/components/coolmaster/ @OnFreund
 /tests/components/coolmaster/ @OnFreund
-/homeassistant/components/coronavirus/ @home-assistant/core
-/tests/components/coronavirus/ @home-assistant/core
 /homeassistant/components/counter/ @fabaff
 /tests/components/counter/ @fabaff
 /homeassistant/components/cover/ @home-assistant/core
@@ -649,8 +653,8 @@ build.json @home-assistant/supervisor
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/life360/ @pnbruckner
 /tests/components/life360/ @pnbruckner
-/homeassistant/components/lifx/ @bdraco @Djelibeybi
-/tests/components/lifx/ @bdraco @Djelibeybi
+/homeassistant/components/lifx/ @bdraco
+/tests/components/lifx/ @bdraco
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
@@ -1303,8 +1307,6 @@ build.json @home-assistant/supervisor
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey
-/homeassistant/components/vicare/ @oischinger
-/tests/components/vicare/ @oischinger
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vivotek/ @HarlemSquirrel
@@ -1312,8 +1314,8 @@ build.json @home-assistant/supervisor
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
-/homeassistant/components/voice_assistant/ @balloob @synesthesiam
-/tests/components/voice_assistant/ @balloob @synesthesiam
+/homeassistant/components/voip/ @balloob @synesthesiam
+/tests/components/voip/ @balloob @synesthesiam
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos

@@ -1,6 +1,9 @@
 """Support for RESTful binary sensors."""
 from __future__ import annotations
 
+import logging
+import ssl
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -31,6 +34,8 @@ from .data import RestData
 from .entity import RestEntity
 from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **BINARY_SENSOR_SCHEMA})
 
 PLATFORM_SCHEMA = vol.All(
@@ -59,6 +64,13 @@ async def async_setup_platform(
 
     if rest.data is None:
         if rest.last_exception:
+            if isinstance(rest.last_exception, ssl.SSLError):
+                _LOGGER.error(
+                    "Error connecting %s failed with %s",
+                    conf[CONF_RESOURCE],
+                    rest.last_exception,
+                )
+                return
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
