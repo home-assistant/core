@@ -1091,7 +1091,8 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "event_types", "ix_event_types_event_type")
         _create_index(session_maker, "states_meta", "ix_states_meta_entity_id")
     elif new_version == 42:
-        if engine.dialect.name not in (
+        dialect_name = engine.dialect.name
+        if dialect_name not in (
             SupportedDialect.POSTGRESQL,
             SupportedDialect.MYSQL,
         ):
@@ -1100,6 +1101,7 @@ def _apply_update(  # noqa: C901
         unused_column_type = _column_types.unused_column_type
         # We use ignore since the column might still have legacy data
         # in it an we don't want to fail because they downgraded an upgraded
+        ignore = dialect_name == SupportedDialect.MYSQL
         _modify_columns(
             session_maker,
             engine,
@@ -1108,14 +1110,14 @@ def _apply_update(  # noqa: C901
                 f"{column} {unused_column_type}"
                 for column in ("last_updated", "last_changed", "created")
             ],
-            ignore=True,
+            ignore=ignore,
         )
         _modify_columns(
             session_maker,
             engine,
             "events",
             [f"{column} {unused_column_type}" for column in ("time_fired",)],
-            ignore=True,
+            ignore=ignore,
         )
         for table in ("statistics", "statistics_short_term"):
             _modify_columns(
@@ -1126,9 +1128,9 @@ def _apply_update(  # noqa: C901
                     f"{column} {unused_column_type}"
                     for column in ("created", "start", "last_reset")
                 ],
-                ignore=True,
+                ignore=ignore,
             )
-        if engine.dialect.name == SupportedDialect.MYSQL:
+        if dialect_name == SupportedDialect.MYSQL:
             # The hash column used more space than needed
             hash_column_type = _column_types.hash_column_type
             _modify_columns(
