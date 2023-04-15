@@ -300,7 +300,7 @@ def test_discover_probe_single_cluster() -> None:
     get_entity_mock = mock.MagicMock(
         return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
-    channel_mock = mock.MagicMock(spec_set=base_channels.ZigbeeChannel)
+    channel_mock = mock.MagicMock(spec_set=base_channels.ClusterHandler)
     with mock.patch(
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,

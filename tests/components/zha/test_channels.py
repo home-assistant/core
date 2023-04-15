@@ -88,7 +88,7 @@ def poll_control_ch(channel_pool, zigpy_device_mock):
     )
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
-    channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(cluster_id)
+    channel_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(cluster_id)
     return channel_class(cluster, channel_pool)
 
 
@@ -248,8 +248,8 @@ async def test_in_channel_config(
     )
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
-    channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
-        cluster_id, base_channels.ZigbeeChannel
+    channel_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+        cluster_id, base_channels.ClusterHandler
     )
     channel = channel_class(cluster, channel_pool)
 
@@ -312,8 +312,8 @@ async def test_out_channel_config(
 
     cluster = zigpy_dev.endpoints[1].out_clusters[cluster_id]
     cluster.bind_only = True
-    channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
-        cluster_id, base_channels.ZigbeeChannel
+    channel_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+        cluster_id, base_channels.ClusterHandler
     )
     channel = channel_class(cluster, channel_pool)
 
@@ -325,18 +325,18 @@ async def test_out_channel_config(
 
 def test_channel_registry() -> None:
     """Test ZIGBEE Channel Registry."""
-    for cluster_id, channel in registries.ZIGBEE_CHANNEL_REGISTRY.items():
+    for cluster_id, channel in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.items():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
-        assert issubclass(channel, base_channels.ZigbeeChannel)
+        assert issubclass(channel, base_channels.ClusterHandler)
 
 
-def test_epch_unclaimed_channels(channel) -> None:
-    """Test unclaimed channels."""
+def test_epch_unclaimed_channels(cluster_handler) -> None:
+    """Test unclaimed cluster handlers."""
 
-    ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
-    ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
-    ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
+    ch_1 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
+    ch_2 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
+    ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
 
     ep_channels = zha_channels.ChannelPool(
         mock.MagicMock(spec_set=zha_channels.Channels), mock.sentinel.ep
@@ -367,12 +367,12 @@ def test_epch_unclaimed_channels(channel) -> None:
         assert ch_3 not in available
 
 
-def test_epch_claim_channels(channel) -> None:
+def test_epch_claim_channels(cluster_handler) -> None:
     """Test channel claiming."""
 
-    ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
-    ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
-    ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
+    ch_1 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
+    ch_2 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
+    ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
 
     ep_channels = zha_channels.ChannelPool(
         mock.MagicMock(spec_set=zha_channels.Channels), mock.sentinel.ep
@@ -502,16 +502,16 @@ def test_channel_power_config(m1, zha_device_mock) -> None:
     assert "2:0x0001" in pools[2].all_channels
 
 
-async def test_ep_channels_configure(channel) -> None:
+async def test_ep_channels_configure(cluster_handler) -> None:
     """Test unclaimed channels."""
 
-    ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
-    ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
-    ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
+    ch_1 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
+    ch_2 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
+    ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
     ch_3.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
     ch_3.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
-    ch_4 = channel(zha_const.CHANNEL_ON_OFF, 6)
-    ch_5 = channel(zha_const.CHANNEL_LEVEL, 8)
+    ch_4 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
+    ch_5 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
     ch_5.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
     ch_5.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
 

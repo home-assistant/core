@@ -51,7 +51,7 @@ async def async_add_entities(
     entities: list[
         tuple[
             type[ZhaEntity],
-            tuple[str, ZHADevice, list[base.ZigbeeChannel]],
+            tuple[str, ZHADevice, list[base.ClusterHandler]],
         ]
     ],
 ) -> None:
@@ -118,7 +118,7 @@ class ProbeEndpoint:
         }
         remaining_channels = channel_pool.unclaimed_channels()
         for channel in remaining_channels:
-            if channel.cluster.cluster_id in zha_regs.CHANNEL_ONLY_CLUSTERS:
+            if channel.cluster.cluster_id in zha_regs.CLUSTER_HANDLER_ONLY_CLUSTERS:
                 channel_pool.claim_channels([channel])
                 continue
 
@@ -139,7 +139,7 @@ class ProbeEndpoint:
     @staticmethod
     def probe_single_cluster(
         component: Platform | None,
-        channel: base.ZigbeeChannel,
+        channel: base.ClusterHandler,
         ep_channels: ChannelPool,
     ) -> None:
         """Probe specified cluster for specific component."""
@@ -175,8 +175,8 @@ class ProbeEndpoint:
             if component is None:
                 continue
 
-            channel_class = zha_regs.ZIGBEE_CHANNEL_REGISTRY.get(
-                cluster_id, base.ZigbeeChannel
+            channel_class = zha_regs.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+                cluster_id, base.ClusterHandler
             )
             channel = channel_class(cluster, ep_channels)
             self.probe_single_cluster(component, channel, ep_channels)
@@ -215,7 +215,7 @@ class ProbeEndpoint:
                     "'%s' component -> '%s' using %s",
                     component,
                     entity_and_channel.entity_class.__name__,
-                    [ch.name for ch in entity_and_channel.claimed_channel],
+                    [ch.name for ch in entity_and_channel.claimed_cluster_handler],
                 )
         for component, ent_n_chan_list in matches.items():
             for entity_and_channel in ent_n_chan_list:
@@ -225,15 +225,15 @@ class ProbeEndpoint:
                         component,
                         entity_and_channel.entity_class,
                         channel_pool.unique_id,
-                        entity_and_channel.claimed_channel,
+                        entity_and_channel.claimed_cluster_handler,
                     )
                     break
-                first_ch = entity_and_channel.claimed_channel[0]
+                first_ch = entity_and_channel.claimed_cluster_handler[0]
                 channel_pool.async_new_entity(
                     component,
                     entity_and_channel.entity_class,
                     f"{channel_pool.unique_id}-{first_ch.cluster.cluster_id}",
-                    entity_and_channel.claimed_channel,
+                    entity_and_channel.claimed_cluster_handler,
                 )
 
     def initialize(self, hass: HomeAssistant) -> None:

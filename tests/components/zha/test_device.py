@@ -125,7 +125,7 @@ def _send_time_changed(hass, seconds):
 
 
 @patch(
-    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    "homeassistant.components.zha.core.channels.general.BasicClusterHandler.async_initialize",
     new=mock.AsyncMock(),
 )
 async def test_check_available_success(
@@ -177,7 +177,7 @@ async def test_check_available_success(
 
 
 @patch(
-    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    "homeassistant.components.zha.core.channels.general.BasicClusterHandler.async_initialize",
     new=mock.AsyncMock(),
 )
 async def test_check_available_unsuccessful(
@@ -219,7 +219,7 @@ async def test_check_available_unsuccessful(
 
 
 @patch(
-    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    "homeassistant.components.zha.core.channels.general.BasicClusterHandler.async_initialize",
     new=mock.AsyncMock(),
 )
 async def test_check_available_no_basic_channel(

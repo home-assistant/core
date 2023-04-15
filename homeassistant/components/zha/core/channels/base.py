@@ -1,4 +1,4 @@
-"""Base classes for channels."""
+"""Base classes for cluster handlers."""
 from __future__ import annotations
 
 import asyncio
@@ -29,14 +29,14 @@ from ..const import (
     ATTR_TYPE,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
-    CHANNEL_ZDO,
+    CLUSTER_HANDLER_ZDO,
     REPORT_CONFIG_ATTR_PER_REQ,
     SIGNAL_ATTR_UPDATED,
-    ZHA_CHANNEL_MSG,
-    ZHA_CHANNEL_MSG_BIND,
-    ZHA_CHANNEL_MSG_CFG_RPT,
-    ZHA_CHANNEL_MSG_DATA,
-    ZHA_CHANNEL_READS_PER_REQ,
+    ZHA_CLUSTER_HANDLER_MSG,
+    ZHA_CLUSTER_HANDLER_MSG_BIND,
+    ZHA_CLUSTER_HANDLER_MSG_CFG_RPT,
+    ZHA_CLUSTER_HANDLER_MSG_DATA,
+    ZHA_CLUSTER_HANDLER_READS_PER_REQ,
 )
 from ..helpers import LogMixin, retryable_req, safe_read
 
@@ -56,31 +56,31 @@ class AttrReportConfig(TypedDict, total=True):
     config: tuple[int, int, int | float]
 
 
-def parse_and_log_command(channel, tsn, command_id, args):
+def parse_and_log_command(cluster_handler, tsn, command_id, args):
     """Parse and log a zigbee cluster command."""
     try:
-        name = channel.cluster.server_commands[command_id].name
+        name = cluster_handler.cluster.server_commands[command_id].name
     except KeyError:
         name = f"0x{command_id:02X}"
 
-    channel.debug(
+    cluster_handler.debug(
         "received '%s' command with %s args on cluster_id '%s' tsn '%s'",
         name,
         args,
-        channel.cluster.cluster_id,
+        cluster_handler.cluster.cluster_id,
         tsn,
     )
     return name
 
 
-def decorate_command(channel, command):
+def decorate_command(cluster_handler, command):
     """Wrap a cluster command to make it safe."""
 
     @wraps(command)
     async def wrapper(*args, **kwds):
         try:
             result = await command(*args, **kwds)
-            channel.debug(
+            cluster_handler.debug(
                 "executed '%s' command with args: '%s' kwargs: '%s' result: %s",
                 command.__name__,
                 args,
@@ -90,7 +90,7 @@ def decorate_command(channel, command):
             return result
 
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
-            channel.debug(
+            cluster_handler.debug(
                 "command failed: '%s' args: '%s' kwargs '%s' exception: '%s'",
                 command.__name__,
                 args,
@@ -102,27 +102,27 @@ def decorate_command(channel, command):
     return wrapper
 
 
-class ChannelStatus(Enum):
-    """Status of a channel."""
+class ClusterHandlerStatus(Enum):
+    """Status of a cluster handler."""
 
     CREATED = 1
     CONFIGURED = 2
     INITIALIZED = 3
 
 
-class ZigbeeChannel(LogMixin):
-    """Base channel for a Zigbee cluster."""
+class ClusterHandler(LogMixin):
+    """Base cluster handler for a Zigbee cluster."""
 
     REPORT_CONFIG: tuple[AttrReportConfig, ...] = ()
     BIND: bool = True
 
-    # Dict of attributes to read on channel initialization.
+    # Dict of attributes to read on cluster handler initialization.
     # Dict keys -- attribute ID or names, with bool value indicating whether a cached
     # attribute read is acceptable.
     ZCL_INIT_ATTRS: dict[int | str, bool] = {}
 
     def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
-        """Initialize ZigbeeChannel."""
+        """Initialize ClusterHandler."""
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
         self._ch_pool = ch_pool
         self._cluster = cluster
@@ -136,29 +136,29 @@ class ZigbeeChannel(LogMixin):
             if attr_def is not None:
                 self.value_attribute = attr_def.id
             else:
-                self.value_attribute = None
-        self._status = ChannelStatus.CREATED
+                self.value_attribute = attr
+        self._status = ClusterHandlerStatus.CREATED
         self._cluster.add_listener(self)
         self.data_cache: dict[str, Enum] = {}
 
     @property
     def id(self) -> str:
-        """Return channel id unique for this device only."""
+        """Return cluster handler id unique for this device only."""
         return self._id
 
     @property
     def generic_id(self):
-        """Return the generic id for this channel."""
+        """Return the generic id for this cluster handler."""
         return self._generic_id
 
     @property
     def unique_id(self):
-        """Return the unique id for this channel."""
+        """Return the unique id for this cluster handler."""
         return self._unique_id
 
     @property
     def cluster(self):
-        """Return the zigpy cluster for this channel."""
+        """Return the zigpy cluster for this cluster handler."""
         return self._cluster
 
     @property
@@ -168,7 +168,7 @@ class ZigbeeChannel(LogMixin):
 
     @property
     def status(self):
-        """Return the status of the channel."""
+        """Return the status of the cluster handler."""
         return self._status
 
     def __hash__(self) -> int:
@@ -191,10 +191,10 @@ class ZigbeeChannel(LogMixin):
             self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
             async_dispatcher_send(
                 self._ch_pool.hass,
-                ZHA_CHANNEL_MSG,
+                ZHA_CLUSTER_HANDLER_MSG,
                 {
-                    ATTR_TYPE: ZHA_CHANNEL_MSG_BIND,
-                    ZHA_CHANNEL_MSG_DATA: {
+                    ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
+                    ZHA_CLUSTER_HANDLER_MSG_DATA: {
                         "cluster_name": self.cluster.name,
                         "cluster_id": self.cluster.cluster_id,
                         "success": res[0] == 0,
@@ -207,10 +207,10 @@ class ZigbeeChannel(LogMixin):
             )
             async_dispatcher_send(
                 self._ch_pool.hass,
-                ZHA_CHANNEL_MSG,
+                ZHA_CLUSTER_HANDLER_MSG,
                 {
-                    ATTR_TYPE: ZHA_CHANNEL_MSG_BIND,
-                    ZHA_CHANNEL_MSG_DATA: {
+                    ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
+                    ZHA_CLUSTER_HANDLER_MSG_DATA: {
                         "cluster_name": self.cluster.name,
                         "cluster_id": self.cluster.cluster_id,
                         "success": False,
@@ -273,10 +273,10 @@ class ZigbeeChannel(LogMixin):
 
         async_dispatcher_send(
             self._ch_pool.hass,
-            ZHA_CHANNEL_MSG,
+            ZHA_CLUSTER_HANDLER_MSG,
             {
-                ATTR_TYPE: ZHA_CHANNEL_MSG_CFG_RPT,
-                ZHA_CHANNEL_MSG_DATA: {
+                ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_CFG_RPT,
+                ZHA_CLUSTER_HANDLER_MSG_DATA: {
                     "cluster_name": self.cluster.name,
                     "cluster_id": self.cluster.cluster_id,
                     "attributes": event_data,
@@ -333,36 +333,38 @@ class ZigbeeChannel(LogMixin):
             if self.cluster.is_server:
                 self.debug("Configuring cluster attribute reporting")
                 await self.configure_reporting()
-            ch_specific_cfg = getattr(self, "async_configure_channel_specific", None)
+            ch_specific_cfg = getattr(
+                self, "async_configure_cluster_handler_specific", None
+            )
             if ch_specific_cfg:
-                self.debug("Performing channel specific configuration")
+                self.debug("Performing cluster handler specific configuration")
                 await ch_specific_cfg()
-            self.debug("finished channel configuration")
+            self.debug("finished cluster handler configuration")
         else:
-            self.debug("skipping channel configuration")
-        self._status = ChannelStatus.CONFIGURED
+            self.debug("skipping cluster handler configuration")
+        self._status = ClusterHandlerStatus.CONFIGURED
 
     @retryable_req(delays=(1, 1, 3))
     async def async_initialize(self, from_cache: bool) -> None:
-        """Initialize channel."""
+        """Initialize cluster handler."""
         if not from_cache and self._ch_pool.skip_configuration:
-            self.debug("Skipping channel initialization")
-            self._status = ChannelStatus.INITIALIZED
+            self.debug("Skipping cluster handler initialization")
+            self._status = ClusterHandlerStatus.INITIALIZED
             return
 
-        self.debug("initializing channel: from_cache: %s", from_cache)
+        self.debug("initializing cluster handler: from_cache: %s", from_cache)
         cached = [a for a, cached in self.ZCL_INIT_ATTRS.items() if cached]
         uncached = [a for a, cached in self.ZCL_INIT_ATTRS.items() if not cached]
         uncached.extend([cfg["attr"] for cfg in self.REPORT_CONFIG])
 
         if cached:
-            self.debug("initializing cached channel attributes: %s", cached)
+            self.debug("initializing cached cluster handler attributes: %s", cached)
             await self._get_attributes(
                 True, cached, from_cache=True, only_cache=from_cache
             )
         if uncached:
             self.debug(
-                "initializing uncached channel attributes: %s - from cache[%s]",
+                "initializing uncached cluster handler attributes: %s - from cache[%s]",
                 uncached,
                 from_cache,
             )
@@ -370,13 +372,17 @@ class ZigbeeChannel(LogMixin):
                 True, uncached, from_cache=from_cache, only_cache=from_cache
             )
 
-        ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
+        ch_specific_init = getattr(
+            self, "async_initialize_cluster_handler_specific", None
+        )
         if ch_specific_init:
-            self.debug("Performing channel specific initialization: %s", uncached)
+            self.debug(
+                "Performing cluster handler specific initialization: %s", uncached
+            )
             await ch_specific_init(from_cache=from_cache)
 
-        self.debug("finished channel initialization")
-        self._status = ChannelStatus.INITIALIZED
+        self.debug("finished cluster handler initialization")
+        self._status = ClusterHandlerStatus.INITIALIZED
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -458,8 +464,8 @@ class ZigbeeChannel(LogMixin):
         manufacturer_code = self._ch_pool.manufacturer_code
         if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
             manufacturer = manufacturer_code
-        chunk = attributes[:ZHA_CHANNEL_READS_PER_REQ]
-        rest = attributes[ZHA_CHANNEL_READS_PER_REQ:]
+        chunk = attributes[:ZHA_CLUSTER_HANDLER_READS_PER_REQ]
+        rest = attributes[ZHA_CLUSTER_HANDLER_READS_PER_REQ:]
         result = {}
         while chunk:
             try:
@@ -480,8 +486,8 @@ class ZigbeeChannel(LogMixin):
                 )
                 if raise_exceptions:
                     raise
-            chunk = rest[:ZHA_CHANNEL_READS_PER_REQ]
-            rest = rest[ZHA_CHANNEL_READS_PER_REQ:]
+            chunk = rest[:ZHA_CLUSTER_HANDLER_READS_PER_REQ]
+            rest = rest[ZHA_CLUSTER_HANDLER_READS_PER_REQ:]
         return result
 
     get_attributes = partialmethod(_get_attributes, False)
@@ -501,31 +507,31 @@ class ZigbeeChannel(LogMixin):
         return self.__getattribute__(name)
 
 
-class ZDOChannel(LogMixin):
-    """Channel for ZDO events."""
+class ZDOClusterHandler(LogMixin):
+    """Cluster handler for ZDO events."""
 
     def __init__(self, cluster, device):
-        """Initialize ZDOChannel."""
-        self.name = CHANNEL_ZDO
+        """Initialize ZDOClusterHandler."""
+        self.name = CLUSTER_HANDLER_ZDO
         self._cluster = cluster
         self._zha_device = device
-        self._status = ChannelStatus.CREATED
+        self._status = ClusterHandlerStatus.CREATED
         self._unique_id = f"{str(device.ieee)}:{device.name}_ZDO"
         self._cluster.add_listener(self)
 
     @property
     def unique_id(self):
-        """Return the unique id for this channel."""
+        """Return the unique id for this cluster handler."""
         return self._unique_id
 
     @property
     def cluster(self):
-        """Return the aigpy cluster for this channel."""
+        """Return the aigpy cluster for this cluster handler."""
         return self._cluster
 
     @property
     def status(self):
-        """Return the status of the channel."""
+        """Return the status of the cluster handler."""
         return self._status
 
     @callback
@@ -537,12 +543,12 @@ class ZDOChannel(LogMixin):
         """Permit handler."""
 
     async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        self._status = ChannelStatus.INITIALIZED
+        """Initialize cluster handler."""
+        self._status = ClusterHandlerStatus.INITIALIZED
 
     async def async_configure(self):
-        """Configure channel."""
-        self._status = ChannelStatus.CONFIGURED
+        """Configure cluster handler."""
+        self._status = ClusterHandlerStatus.CONFIGURED
 
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
@@ -551,8 +557,8 @@ class ZDOChannel(LogMixin):
         _LOGGER.log(level, msg, *args, **kwargs)
 
 
-class ClientChannel(ZigbeeChannel):
-    """Channel listener for Zigbee client (output) clusters."""
+class ClientClusterHandler(ClusterHandler):
+    """ClusterHandler for Zigbee client (output) clusters."""
 
     @callback
     def attribute_updated(self, attrid, value):

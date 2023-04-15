@@ -1,4 +1,4 @@
-"""Lightlink channels module for Zigbee Home Automation."""
+"""Lightlink cluster handlers module for Zigbee Home Automation."""
 import asyncio
 
 import zigpy.exceptions
@@ -6,13 +6,13 @@ from zigpy.zcl.clusters import lightlink
 from zigpy.zcl.foundation import GENERAL_COMMANDS, GeneralCommand
 
 from .. import registries
-from .base import ChannelStatus, ZigbeeChannel
+from .base import ClusterHandler, ClusterHandlerStatus
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(lightlink.LightLink.cluster_id)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(lightlink.LightLink.cluster_id)
-class LightLink(ZigbeeChannel):
-    """Lightlink channel."""
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(lightlink.LightLink.cluster_id)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(lightlink.LightLink.cluster_id)
+class LightLink(ClusterHandler):
+    """Lightlink cluster handler."""
 
     BIND: bool = False
 
@@ -20,7 +20,7 @@ class LightLink(ZigbeeChannel):
         """Add Coordinator to LightLink group."""
 
         if self._ch_pool.skip_configuration:
-            self._status = ChannelStatus.CONFIGURED
+            self._status = ClusterHandlerStatus.CONFIGURED
             return
 
         application = self._ch_pool.endpoint.device.application

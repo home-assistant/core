@@ -1,4 +1,4 @@
-"""Security channels module for Zigbee Home Automation.
+"""Security cluster handlers module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
@@ -24,7 +24,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from .base import ChannelStatus, ZigbeeChannel
+from .base import ClusterHandler, ClusterHandlerStatus
 
 if TYPE_CHECKING:
     from . import ChannelPool
@@ -46,9 +46,9 @@ SIGNAL_ARMED_STATE_CHANGED = "zha_armed_state_changed"
 SIGNAL_ALARM_TRIGGERED = "zha_armed_triggered"
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(AceCluster.cluster_id)
-class IasAce(ZigbeeChannel):
-    """IAS Ancillary Control Equipment channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(AceCluster.cluster_id)
+class IasAce(ClusterHandler):
+    """IAS Ancillary Control Equipment cluster handler."""
 
     def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize IAS Ancillary Control Equipment channel."""
@@ -249,10 +249,10 @@ class IasAce(ZigbeeChannel):
         """Handle the IAS ACE zone status command."""
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(security.IasWd.cluster_id)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasWd.cluster_id)
-class IasWd(ZigbeeChannel):
-    """IAS Warning Device channel."""
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(security.IasWd.cluster_id)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(security.IasWd.cluster_id)
+class IasWd(ClusterHandler):
+    """IAS Warning Device cluster handler."""
 
     @staticmethod
     def set_bit(destination_value, destination_bit, source_value, source_bit):
@@ -332,9 +332,9 @@ class IasWd(ZigbeeChannel):
         )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(IasZone.cluster_id)
-class IASZoneChannel(ZigbeeChannel):
-    """Channel for the IASZone Zigbee cluster."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(IasZone.cluster_id)
+class IASZoneClusterHandler(ClusterHandler):
+    """Cluster handler for the IASZone Zigbee cluster."""
 
     ZCL_INIT_ATTRS = {"zone_status": False, "zone_state": True, "zone_type": True}
 
@@ -357,10 +357,10 @@ class IASZoneChannel(ZigbeeChannel):
         """Configure IAS device."""
         await self.get_attribute_value("zone_type", from_cache=False)
         if self._ch_pool.skip_configuration:
-            self.debug("skipping IASZoneChannel configuration")
+            self.debug("skipping IASZoneClusterHandler configuration")
             return
 
-        self.debug("started IASZoneChannel configuration")
+        self.debug("started IASZoneClusterHandler configuration")
 
         await self.bind()
         ieee = self.cluster.endpoint.device.application.state.node_info.ieee
@@ -384,8 +384,8 @@ class IASZoneChannel(ZigbeeChannel):
         self.debug("Sending pro-active IAS enroll response")
         self._cluster.create_catching_task(self._cluster.enroll_response(0, 0))
 
-        self._status = ChannelStatus.CONFIGURED
-        self.debug("finished IASZoneChannel configuration")
+        self._status = ClusterHandlerStatus.CONFIGURED
+        self.debug("finished IASZoneClusterHandler configuration")
 
     @callback
     def attribute_updated(self, attrid, value):

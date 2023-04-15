@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from ...entity import ZhaEntity
     from ..device import ZHADevice
 
-_ChannelsDictType = dict[str, base.ZigbeeChannel]
+_ChannelsDictType = dict[str, base.ClusterHandler]
 
 
 class Channels:
@@ -46,10 +46,12 @@ class Channels:
     def __init__(self, zha_device: ZHADevice) -> None:
         """Initialize instance."""
         self._pools: list[ChannelPool] = []
-        self._power_config: base.ZigbeeChannel | None = None
-        self._identify: base.ZigbeeChannel | None = None
+        self._power_config: base.ClusterHandler | None = None
+        self._identify: base.ClusterHandler | None = None
         self._unique_id = str(zha_device.ieee)
-        self._zdo_channel = base.ZDOChannel(zha_device.device.endpoints[0], zha_device)
+        self._zdo_cluster_handler = base.ZDOClusterHandler(
+            zha_device.device.endpoints[0], zha_device
+        )
         self._zha_device = zha_device
 
     @property
@@ -58,31 +60,31 @@ class Channels:
         return self._pools
 
     @property
-    def power_configuration_ch(self) -> base.ZigbeeChannel | None:
-        """Return power configuration channel."""
+    def power_configuration_ch(self) -> base.ClusterHandler | None:
+        """Return power configuration cluster handler."""
         return self._power_config
 
     @power_configuration_ch.setter
-    def power_configuration_ch(self, channel: base.ZigbeeChannel) -> None:
-        """Power configuration channel setter."""
+    def power_configuration_ch(self, cluster_handler: base.ClusterHandler) -> None:
+        """Power configuration cluster handler setter."""
         if self._power_config is None:
-            self._power_config = channel
+            self._power_config = cluster_handler
 
     @property
-    def identify_ch(self) -> base.ZigbeeChannel | None:
-        """Return power configuration channel."""
+    def identify_ch(self) -> base.ClusterHandler | None:
+        """Return power configuration cluster handler."""
         return self._identify
 
     @identify_ch.setter
-    def identify_ch(self, channel: base.ZigbeeChannel) -> None:
-        """Power configuration channel setter."""
+    def identify_ch(self, cluster_handler: base.ClusterHandler) -> None:
+        """Power configuration cluster handler setter."""
         if self._identify is None:
-            self._identify = channel
+            self._identify = cluster_handler
 
     @property
-    def zdo_channel(self) -> base.ZDOChannel:
-        """Return ZDO channel."""
-        return self._zdo_channel
+    def zdo_cluster_handler(self) -> base.ZDOClusterHandler:
+        """Return ZDO cluster handler."""
+        return self._zdo_cluster_handler
 
     @property
     def zha_device(self) -> ZHADevice:
@@ -91,7 +93,7 @@ class Channels:
 
     @property
     def unique_id(self) -> str:
-        """Return the unique id for this channel."""
+        """Return the unique id for this cluster handler."""
         return self._unique_id
 
     @property
@@ -118,22 +120,22 @@ class Channels:
 
     async def async_initialize(self, from_cache: bool = False) -> None:
         """Initialize claimed channels."""
-        await self.zdo_channel.async_initialize(from_cache)
-        self.zdo_channel.debug("'async_initialize' stage succeeded")
+        await self.zdo_cluster_handler.async_initialize(from_cache)
+        self.zdo_cluster_handler.debug("'async_initialize' stage succeeded")
         await asyncio.gather(
             *(pool.async_initialize(from_cache) for pool in self.pools)
         )
 
     async def async_configure(self) -> None:
         """Configure claimed channels."""
-        await self.zdo_channel.async_configure()
-        self.zdo_channel.debug("'async_configure' stage succeeded")
+        await self.zdo_cluster_handler.async_configure()
+        self.zdo_cluster_handler.debug("'async_configure' stage succeeded")
         await asyncio.gather(*(pool.async_configure() for pool in self.pools))
         async_dispatcher_send(
             self.zha_device.hass,
-            const.ZHA_CHANNEL_MSG,
+            const.ZHA_CLUSTER_HANDLER_MSG,
             {
-                const.ATTR_TYPE: const.ZHA_CHANNEL_CFG_DONE,
+                const.ATTR_TYPE: const.ZHA_CLUSTER_HANDLER_CFG_DONE,
             },
         )
 
@@ -143,14 +145,14 @@ class Channels:
         component: str,
         entity_class: type[ZhaEntity],
         unique_id: str,
-        channels: list[base.ZigbeeChannel],
+        cluster_handlers: list[base.ClusterHandler],
     ):
         """Signal new entity addition."""
         if self.zha_device.status == zha_core_device.DeviceStatus.INITIALIZED:
             return
 
         self.zha_device.hass.data[const.DATA_ZHA][component].append(
-            (entity_class, (unique_id, self.zha_device, channels))
+            (entity_class, (unique_id, self.zha_device, cluster_handlers))
         )
 
     @callback
@@ -181,7 +183,7 @@ class ChannelPool:
         self._channels = channels
         self._claimed_channels: _ChannelsDictType = {}
         self._id = ep_id
-        self._client_channels: dict[str, base.ClientChannel] = {}
+        self._client_channels: dict[str, base.ClientClusterHandler] = {}
         self._unique_id = f"{channels.unique_id}-{ep_id}"
 
     @property
@@ -195,7 +197,7 @@ class ChannelPool:
         return self._claimed_channels
 
     @property
-    def client_channels(self) -> dict[str, base.ClientChannel]:
+    def client_channels(self) -> dict[str, base.ClientClusterHandler]:
         """Return a dict of client channels."""
         return self._client_channels
 
@@ -289,8 +291,8 @@ class ChannelPool:
     def add_all_channels(self) -> None:
         """Create and add channels for all input clusters."""
         for cluster_id, cluster in self.endpoint.in_clusters.items():
-            channel_class = zha_regs.ZIGBEE_CHANNEL_REGISTRY.get(
-                cluster_id, base.ZigbeeChannel
+            channel_class = zha_regs.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+                cluster_id, base.ClusterHandler
             )
             # really ugly hack to deal with xiaomi using the door lock cluster
             # incorrectly.
@@ -302,7 +304,7 @@ class ChannelPool:
                 channel_class = general.MultistateInput
             # end of ugly hack
             channel = channel_class(cluster, self)
-            if channel.name == const.CHANNEL_POWER_CONFIGURATION:
+            if channel.name == const.CLUSTER_HANDLER_POWER_CONFIGURATION:
                 if (
                     self._channels.power_configuration_ch
                     or self._channels.zha_device.is_mains_powered
@@ -310,7 +312,7 @@ class ChannelPool:
                     # on power configuration channel per device
                     continue
                 self._channels.power_configuration_ch = channel
-            elif channel.name == const.CHANNEL_IDENTIFY:
+            elif channel.name == const.CLUSTER_HANDLER_IDENTIFY:
                 self._channels.identify_ch = channel
 
             self.all_channels[channel.id] = channel
@@ -318,7 +320,10 @@ class ChannelPool:
     @callback
     def add_client_channels(self) -> None:
         """Create client channels for all output clusters if in the registry."""
-        for cluster_id, channel_class in zha_regs.CLIENT_CHANNELS_REGISTRY.items():
+        for (
+            cluster_id,
+            channel_class,
+        ) in zha_regs.CLIENT_CLUSTER_HANDLERS_REGISTRY.items():
             cluster = self.endpoint.out_clusters.get(cluster_id)
             if cluster is not None:
                 channel = channel_class(cluster, self)
@@ -351,7 +356,7 @@ class ChannelPool:
         component: str,
         entity_class: type[ZhaEntity],
         unique_id: str,
-        channels: list[base.ZigbeeChannel],
+        channels: list[base.ClusterHandler],
     ):
         """Signal new entity addition."""
         self._channels.async_new_entity(component, entity_class, unique_id, channels)
@@ -362,12 +367,12 @@ class ChannelPool:
         self._channels.async_send_signal(signal, *args)
 
     @callback
-    def claim_channels(self, channels: list[base.ZigbeeChannel]) -> None:
+    def claim_channels(self, channels: list[base.ClusterHandler]) -> None:
         """Claim a channel."""
         self.claimed_channels.update({ch.id: ch for ch in channels})
 
     @callback
-    def unclaimed_channels(self) -> list[base.ZigbeeChannel]:
+    def unclaimed_channels(self) -> list[base.ClusterHandler]:
         """Return a list of available (unclaimed) channels."""
         claimed = set(self.claimed_channels)
         available = set(self.all_channels)

@@ -121,10 +121,10 @@ def setup_zha(hass, config_entry, zigpy_app_controller):
 
 
 @pytest.fixture
-def channel():
-    """Channel mock factory fixture."""
+def cluster_handler():
+    """ClusterHandler mock factory fixture."""
 
-    def channel(name: str, cluster_id: int, endpoint_id: int = 1):
+    def cluster_handler(name: str, cluster_id: int, endpoint_id: int = 1):
         ch = MagicMock()
         ch.name = name
         ch.generic_id = f"channel_0x{cluster_id:04x}"
@@ -133,7 +133,7 @@ def channel():
         ch.async_initialize = AsyncMock()
         return ch
 
-    return channel
+    return cluster_handler
 
 
 @pytest.fixture
