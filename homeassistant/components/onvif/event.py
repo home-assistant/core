@@ -20,11 +20,9 @@ from .models import Event
 from .parsers import PARSERS
 
 UNHANDLED_TOPICS: set[str] = set()
-SUBSCRIPTION_ERRORS = (
-    Fault,
-    asyncio.TimeoutError,
-    TransportError,
-)
+
+SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
+SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 
 
 def _stringify_onvif_error(error: Exception) -> str:
@@ -110,7 +108,7 @@ class EventManager:
 
         # Initialize events
         pullpoint = self.device.create_pullpoint_service()
-        with suppress(*SUBSCRIPTION_ERRORS):
+        with suppress(*SET_SYNCHRONIZATION_POINT_ERRORS):
             await pullpoint.SetSynchronizationPoint()
         response = await pullpoint.PullMessages(
             {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=5)}
