@@ -690,7 +690,7 @@ async def test_set_preferred_pipeline(
     assert msg["success"]
     pipeline_id_2 = msg["result"]["id"]
 
-    assert pipeline_store.preferred_item == pipeline_id_1
+    assert pipeline_store.async_get_preferred_item() == pipeline_id_1
 
     await client.send_json_auto_id(
         {
@@ -701,7 +701,7 @@ async def test_set_preferred_pipeline(
     msg = await client.receive_json()
     assert msg["success"]
 
-    assert pipeline_store.preferred_item == pipeline_id_2
+    assert pipeline_store.async_get_preferred_item() == pipeline_id_2
 
 
 async def test_set_preferred_pipeline_wrong_id(

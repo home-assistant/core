@@ -603,15 +603,13 @@ class PipelineStorageCollection(
             raise PipelinePreferred(item_id)
         await super().async_delete_item(item_id)
 
-    @property
     @callback
-    def preferred_item(self) -> str | None:
+    def async_get_preferred_item(self) -> str | None:
         """Get the id of the preferred item."""
         return self._preferred_item
 
-    @preferred_item.setter
     @callback
-    def preferred_item(self, item_id: str) -> None:
+    def async_set_preferred_item(self, item_id: str) -> None:
         """Set the preferred pipeline."""
         if item_id not in self.data:
             raise ItemNotFound(item_id)
@@ -666,7 +664,7 @@ class PipelineStorageCollectionWebsocket(
             msg["id"],
             {
                 "pipelines": self.storage_collection.async_items(),
-                "preferred_pipeline": self.storage_collection.preferred_item,
+                "preferred_pipeline": self.storage_collection.async_get_preferred_item(),
             },
         )
 
@@ -689,7 +687,7 @@ class PipelineStorageCollectionWebsocket(
     ) -> None:
         """Set the preferred item."""
         try:
-            self.storage_collection.preferred_item = msg[self.item_id_key]
+            self.storage_collection.async_set_preferred_item(msg[self.item_id_key])
         except ItemNotFound:
             connection.send_error(
                 msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown item"
