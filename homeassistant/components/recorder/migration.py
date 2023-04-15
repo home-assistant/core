@@ -452,6 +452,7 @@ def _modify_columns(
     engine: Engine,
     table_name: str,
     columns_def: list[str],
+    ignore: bool = False,
 ) -> None:
     """Modify columns in a table."""
     if engine.dialect.name == SupportedDialect.SQLITE:
@@ -488,13 +489,16 @@ def _modify_columns(
     else:
         columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
 
+    ignore_sql = "IGNORE" if ignore else ""
     with session_scope(session=session_maker()) as session:
         try:
             connection = session.connection()
             connection.execute(
                 text(
-                    "ALTER TABLE {table} {columns_def}".format(
-                        table=table_name, columns_def=", ".join(columns_def)
+                    "ALTER TABLE {ignore_sql} {table} {columns_def}".format(
+                        ignore_sql=ignore_sql,
+                        table=table_name,
+                        columns_def=", ".join(columns_def),
                     )
                 )
             )
@@ -508,8 +512,10 @@ def _modify_columns(
                 connection = session.connection()
                 connection.execute(
                     text(
-                        "ALTER TABLE {table} {column_def}".format(
-                            table=table_name, column_def=column_def
+                        "ALTER TABLE {ignore_sql} {table} {column_def}".format(
+                            ignore_sql=ignore_sql,
+                            table=table_name,
+                            column_def=column_def,
                         )
                     )
                 )
@@ -1092,6 +1098,8 @@ def _apply_update(  # noqa: C901
             # SQLite doesn't support ALTER TABLE with our minimum version
             return
         unused_column_type = _column_types.unused_column_type
+        # We use ignore since the column might still have legacy data
+        # in it an we don't want to fail because they downgraded an upgraded
         _modify_columns(
             session_maker,
             engine,
@@ -1100,12 +1108,14 @@ def _apply_update(  # noqa: C901
                 f"{column} {unused_column_type}"
                 for column in ("last_updated", "last_changed", "created")
             ],
+            ignore=True,
         )
         _modify_columns(
             session_maker,
             engine,
             "events",
             [f"{column} {unused_column_type}" for column in ("time_fired",)],
+            ignore=True,
         )
         for table in ("statistics", "statistics_short_term"):
             _modify_columns(
@@ -1116,6 +1126,7 @@ def _apply_update(  # noqa: C901
                     f"{column} {unused_column_type}"
                     for column in ("created", "start", "last_reset")
                 ],
+                ignore=True,
             )
         if engine.dialect.name == SupportedDialect.MYSQL:
             # The hash column used more space than needed
