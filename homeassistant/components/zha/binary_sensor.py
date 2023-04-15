@@ -4,6 +4,8 @@ from __future__ import annotations
 import functools
 from typing import Any
 
+import zigpy.types as t
+from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
 
 from homeassistant.components.binary_sensor import (
@@ -119,10 +121,20 @@ class Occupancy(BinarySensor):
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
 class Opening(BinarySensor):
-    """ZHA BinarySensor."""
+    """ZHA OnOff BinarySensor."""
 
     SENSOR_ATTR = "on_off"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
+
+    # Client/out cluster attributes aren't stored in the zigpy database, but are properly stored in the runtime cache.
+    # We need to manually restore the last state from the sensor state to the runtime cache for now.
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state to zigpy cache."""
+        self._channel.cluster.update_attribute(
+            OnOff.attributes_by_name[self.SENSOR_ATTR].id,
+            t.Bool.true if last_state.state == STATE_ON else t.Bool.false,
+        )
 
 
 @MULTI_MATCH(channel_names=CHANNEL_BINARY_INPUT)
@@ -144,10 +156,9 @@ class BinaryInput(BinarySensor):
     manufacturers="Philips",
     models={"SML001", "SML002"},
 )
-class Motion(BinarySensor):
-    """ZHA BinarySensor."""
+class Motion(Opening):
+    """ZHA OnOff BinarySensor with motion device class."""
 
-    SENSOR_ATTR = "on_off"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOTION
 
 

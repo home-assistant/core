@@ -43,5 +43,39 @@
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "air_quality": {
+        "name": "[%key:component::sensor::entity_component::aqi::name%]"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "light": {
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "power": {
+        "name": "[%key:component::sensor::entity_component::power::name%]"
+      },
+      "voltage": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%]"
+      },
+      "current": {
+        "name": "[%key:component::sensor::entity_component::current::name%]"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      }
+    }
   }
 }

@@ -16,6 +16,7 @@ from typing import Any, TypeVar
 import async_timeout
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.engine import Engine
+from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.orm.session import Session
@@ -58,6 +59,7 @@ from .const import (
     SupportedDialect,
 )
 from .db_schema import (
+    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
     LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
     TABLE_STATES,
@@ -96,6 +98,7 @@ from .tasks import (
     CompileMissingStatisticsTask,
     DatabaseLockTask,
     EntityIDMigrationTask,
+    EntityIDPostMigrationTask,
     EventIdMigrationTask,
     EventsContextIDMigrationTask,
     EventTask,
@@ -299,7 +302,7 @@ class Recorder(threading.Thread):
             self.hass,
             self._async_check_queue,
             timedelta(minutes=10),
-            "Recorder queue watcher",
+            name="Recorder queue watcher",
         )
 
     @callback
@@ -441,10 +444,17 @@ class Recorder(threading.Thread):
         async_at_started(self.hass, self._async_hass_started)
 
     @callback
-    def async_connection_failed(self) -> None:
-        """Connect failed tasks."""
-        self.async_db_connected.set_result(False)
-        self.async_db_ready.set_result(False)
+    def _async_startup_failed(self) -> None:
+        """Report startup failure."""
+        # If a live migration failed, we were able to connect (async_db_connected
+        # marked True), the database was marked ready (async_db_ready marked
+        # True), the data in the queue cannot be written to the database because
+        # the schema not in the correct format so we must stop listeners and report
+        # failure.
+        if not self.async_db_connected.done():
+            self.async_db_connected.set_result(False)
+        if not self.async_db_ready.done():
+            self.async_db_ready.set_result(False)
         persistent_notification.async_create(
             self.hass,
             "The recorder could not start, check [the logs](/config/logs)",
@@ -602,7 +612,7 @@ class Recorder(threading.Thread):
                 self.hass,
                 self._async_keep_alive,
                 timedelta(seconds=KEEPALIVE_TIME),
-                "Recorder keep alive",
+                name="Recorder keep alive",
             )
 
         # If the commit interval is not 0, we need to commit periodically
@@ -611,7 +621,7 @@ class Recorder(threading.Thread):
                 self.hass,
                 self._async_commit,
                 timedelta(seconds=self.commit_interval),
-                "Recorder commit",
+                name="Recorder commit",
             )
 
         # Run nightly tasks at 4:12am
@@ -642,19 +652,26 @@ class Recorder(threading.Thread):
             return SHUTDOWN_TASK
 
     def run(self) -> None:
+        """Run the recorder thread."""
+        try:
+            self._run()
+        finally:
+            # Ensure shutdown happens cleanly if
+            # anything goes wrong in the run loop
+            self._shutdown()
+
+    def _run(self) -> None:
         """Start processing events to save."""
         self.thread_id = threading.get_ident()
         setup_result = self._setup_recorder()
 
         if not setup_result:
             # Give up if we could not connect
-            self.hass.add_job(self.async_connection_failed)
             return
 
         schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
-            self.hass.add_job(self.async_connection_failed)
             return
         self.schema_version = schema_status.current_version
 
@@ -681,7 +698,6 @@ class Recorder(threading.Thread):
                 self.migration_in_progress = False
                 # Make sure we cleanly close the run if
                 # we restart before startup finishes
-                self._shutdown()
                 return
 
         if not schema_status.valid:
@@ -699,8 +715,6 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self.hass.add_job(self.async_set_db_ready)
-                self._shutdown()
                 return
 
         if not database_was_ready:
@@ -712,7 +726,6 @@ class Recorder(threading.Thread):
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
-        self._shutdown()
 
     def _activate_and_set_db_ready(self) -> None:
         """Activate the table managers or schedule migrations and mark the db as ready."""
@@ -757,6 +770,18 @@ class Recorder(threading.Thread):
             else:
                 _LOGGER.debug("Activating states_meta manager as all data is migrated")
                 self.states_meta_manager.active = True
+                with contextlib.suppress(SQLAlchemyError):
+                    # If ix_states_entity_id_last_updated_ts still exists
+                    # on the states table it means the entity id migration
+                    # finished by the EntityIDPostMigrationTask did not
+                    # because they restarted in the middle of it. We need
+                    # to pick back up where we left off.
+                    if get_index_by_name(
+                        session,
+                        TABLE_STATES,
+                        LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
+                    ):
+                        self.queue_task(EntityIDPostMigrationTask())
 
             if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
                 with contextlib.suppress(SQLAlchemyError):
@@ -1279,24 +1304,24 @@ class Recorder(threading.Thread):
 
         return success
 
+    def _setup_recorder_connection(
+        self, dbapi_connection: DBAPIConnection, connection_record: Any
+    ) -> None:
+        """Dbapi specific connection settings."""
+        assert self.engine is not None
+        if database_engine := setup_connection_for_dialect(
+            self,
+            self.engine.dialect.name,
+            dbapi_connection,
+            not self._completed_first_database_setup,
+        ):
+            self.database_engine = database_engine
+        self._completed_first_database_setup = True
+
     def _setup_connection(self) -> None:
         """Ensure database is ready to fly."""
         kwargs: dict[str, Any] = {}
         self._completed_first_database_setup = False
-
-        def setup_recorder_connection(
-            dbapi_connection: Any, connection_record: Any
-        ) -> None:
-            """Dbapi specific connection settings."""
-            assert self.engine is not None
-            if database_engine := setup_connection_for_dialect(
-                self,
-                self.engine.dialect.name,
-                dbapi_connection,
-                not self._completed_first_database_setup,
-            ):
-                self.database_engine = database_engine
-            self._completed_first_database_setup = True
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
@@ -1332,7 +1357,7 @@ class Recorder(threading.Thread):
 
         self.engine = create_engine(self.db_url, **kwargs, future=True)
         self._dialect_name = try_parse_enum(SupportedDialect, self.engine.dialect.name)
-        sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
+        sqlalchemy_event.listen(self.engine, "connect", self._setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
         self._get_session = scoped_session(sessionmaker(bind=self.engine, future=True))
@@ -1340,9 +1365,9 @@ class Recorder(threading.Thread):
 
     def _close_connection(self) -> None:
         """Close the connection."""
-        assert self.engine is not None
-        self.engine.dispose()
-        self.engine = None
+        if self.engine:
+            self.engine.dispose()
+            self.engine = None
         self._get_session = None
 
     def _setup_run(self) -> None:
@@ -1374,9 +1399,19 @@ class Recorder(threading.Thread):
     def _shutdown(self) -> None:
         """Save end time for current run."""
         _LOGGER.debug("Shutting down recorder")
-        self.hass.add_job(self._async_stop_listeners)
-        self._stop_executor()
+        if not self.schema_version or self.schema_version != SCHEMA_VERSION:
+            # If the schema version is not set, we never had a working
+            # connection to the database or the schema never reached a
+            # good state.
+            #
+            # In either case, we want to mark startup as failed.
+            #
+            self.hass.add_job(self._async_startup_failed)
+        else:
+            self.hass.add_job(self._async_stop_listeners)
+
         try:
             self._end_session()
         finally:
+            self._stop_executor()
             self._close_connection()

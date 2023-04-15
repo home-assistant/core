@@ -20,6 +20,8 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, get_fixture_path
+from tests.components.recorder.common import async_wait_recording_done
+from tests.typing import RecorderInstanceGenerator
 
 
 async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -1367,13 +1369,20 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
 
 @pytest.mark.parametrize("time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii"])
 async def test_end_time_with_microseconds_zeroed(
-    time_zone, recorder_mock: Recorder, hass: HomeAssistant
+    time_zone: str,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
 ) -> None:
     """Test the history statistics sensor that has the end time microseconds zeroed out."""
     hass.config.set_time_zone(time_zone)
     start_of_today = dt_util.now().replace(
         day=9, month=7, year=1986, hour=0, minute=0, second=0, microsecond=0
     )
+    with freeze_time(start_of_today):
+        await async_setup_recorder_instance(hass)
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+
     start_time = start_of_today + timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
@@ -1434,7 +1443,7 @@ async def test_end_time_with_microseconds_zeroed(
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
         hass.states.async_set("binary_sensor.heatpump_compressor_state", "on")
-        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
     time_600 = start_of_today + timedelta(hours=6)
     with freeze_time(time_600):
         async_fire_time_changed(hass, time_600)
@@ -1473,6 +1482,7 @@ async def test_end_time_with_microseconds_zeroed(
     )
     with freeze_time(rolled_to_next_day_plus_16_860000):
         hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
+        await async_wait_recording_done(hass)
         async_fire_time_changed(hass, rolled_to_next_day_plus_16_860000)
         await hass.async_block_till_done()
 

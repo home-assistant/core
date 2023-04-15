@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.util.ssl import (
     SSL_CIPHER_LISTS,
-    SslCipherList,
+    SSLCipherList,
     client_context,
     create_no_verify_ssl_context,
 )
@@ -25,14 +25,14 @@ def test_client_context(mock_sslcontext) -> None:
         client_context()
         mock_sslcontext.set_ciphers.assert_not_called()
 
-        client_context(SslCipherList.MODERN)
+        client_context(SSLCipherList.MODERN)
         mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SslCipherList.MODERN]
+            SSL_CIPHER_LISTS[SSLCipherList.MODERN]
         )
 
-        client_context(SslCipherList.INTERMEDIATE)
+        client_context(SSLCipherList.INTERMEDIATE)
         mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SslCipherList.INTERMEDIATE]
+            SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE]
         )
 
 
@@ -42,12 +42,12 @@ def test_no_verify_ssl_context(mock_sslcontext) -> None:
         create_no_verify_ssl_context()
         mock_sslcontext.set_ciphers.assert_not_called()
 
-        create_no_verify_ssl_context(SslCipherList.MODERN)
+        create_no_verify_ssl_context(SSLCipherList.MODERN)
         mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SslCipherList.MODERN]
+            SSL_CIPHER_LISTS[SSLCipherList.MODERN]
         )
 
-        create_no_verify_ssl_context(SslCipherList.INTERMEDIATE)
+        create_no_verify_ssl_context(SSLCipherList.INTERMEDIATE)
         mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SslCipherList.INTERMEDIATE]
+            SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE]
         )

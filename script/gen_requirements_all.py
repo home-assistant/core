@@ -105,7 +105,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.6.2
 h11==0.14.0
-httpcore==0.16.3
+httpcore==0.17.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -162,6 +162,11 @@ uamqp==1.6.0;python_version<'3.11'
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
+
+# websockets 11.0 is missing files in the source distribution
+# which break wheel builds so we need at least 11.0.1
+# https://github.com/aaugustin/websockets/issues/1329
+websockets>=11.0.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

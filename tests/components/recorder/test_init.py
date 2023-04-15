@@ -8,10 +8,9 @@ from pathlib import Path
 import sqlite3
 import threading
 from typing import cast
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-import py
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
@@ -28,6 +27,7 @@ from homeassistant.components.recorder import (
     SQLITE_URL_PREFIX,
     Recorder,
     get_instance,
+    migration,
     pool,
     statistics,
 )
@@ -66,14 +66,16 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, recorder as recorder_helper
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 from .common import (
     async_block_recorder,
     async_wait_recording_done,
+    convert_pending_states_to_meta,
     corrupt_db_file,
     run_information_with_session,
     wait_recording_done,
@@ -186,7 +188,7 @@ async def test_shutdown_closes_connections(
     pool.shutdown = Mock()
 
     def _ensure_connected():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             list(session.query(States))
 
     await instance.async_add_executor_job(_ensure_connected)
@@ -220,7 +222,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
@@ -236,7 +238,7 @@ async def test_saving_state(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = []
         for db_state, db_state_attributes, states_meta in (
             session.query(States, StateAttributes, StatesMeta)
@@ -277,7 +279,7 @@ async def test_saving_state_with_nul(
         hass.states.async_set(entity_id, state, attributes)
         await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = []
         for db_state, db_state_attributes, states_meta in (
             session.query(States, StateAttributes, StatesMeta)
@@ -320,7 +322,7 @@ async def test_saving_many_states(
 
     assert expire_all.called
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 6
         assert db_states[0].event_id is None
@@ -344,7 +346,7 @@ async def test_saving_state_with_intermixed_time_changes(
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 2
         assert db_states[0].event_id is None
@@ -384,7 +386,7 @@ def test_saving_state_with_exception(
     hass.states.set(entity_id, state, attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) >= 1
 
@@ -425,7 +427,7 @@ def test_saving_state_with_sqlalchemy_exception(
     hass.states.set(entity_id, state, attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) >= 1
 
@@ -493,7 +495,7 @@ def test_saving_event(hass_recorder: Callable[..., HomeAssistant]) -> None:
     get_instance(hass).block_till_done()
     events: list[Event] = []
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         for select_event, event_data, event_types in (
             session.query(Events, EventData, EventTypes)
             .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
@@ -536,7 +538,7 @@ def test_saving_state_with_commit_interval_zero(
 
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
@@ -562,6 +564,7 @@ def _add_entities(hass, entity_ids):
             native_state = db_state.to_native()
             native_state.attributes = db_state_attributes.to_native()
             states.append(native_state)
+        convert_pending_states_to_meta(get_instance(hass), session)
         return states
 
 
@@ -646,7 +649,7 @@ async def test_saving_event_exclude_event_type(
     await async_wait_recording_done(hass)
 
     def _get_events(hass: HomeAssistant, event_types: list[str]) -> list[Event]:
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             events = []
             for event, event_data, event_types in (
                 session.query(Events, EventData, EventTypes)
@@ -776,7 +779,7 @@ def test_saving_state_and_removing_entity(
 
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(StatesMeta.entity_id, States.state)
             .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
@@ -803,7 +806,7 @@ def test_saving_state_with_oversized_attributes(
     wait_recording_done(hass)
     states = []
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         for db_state, db_state_attributes, states_meta in (
             session.query(States, StateAttributes, StatesMeta)
             .outerjoin(
@@ -823,6 +826,59 @@ def test_saving_state_with_oversized_attributes(
     assert states[1].state == "on"
     assert states[1].entity_id == "switch.too_big"
     assert states[1].attributes == {}
+
+
+def test_saving_event_with_oversized_data(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test saving events is limited to 32KiB of JSON encoded data."""
+    hass = hass_recorder()
+    massive_dict = {"a": "b" * 32768}
+    event_data = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.bus.fire("test_event", event_data)
+    hass.bus.fire("test_event_too_big", massive_dict)
+    wait_recording_done(hass)
+    events = {}
+
+    with session_scope(hass=hass, read_only=True) as session:
+        for _, data, event_type in (
+            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+            .where(EventTypes.event_type.in_(["test_event", "test_event_too_big"]))
+        ):
+            events[event_type] = data
+
+    assert "test_event_too_big" in caplog.text
+
+    assert len(events) == 2
+    assert json_loads(events["test_event"]) == event_data
+    assert json_loads(events["test_event_too_big"]) == {}
+
+
+def test_saving_event_invalid_context_ulid(
+    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we handle invalid manually injected context ids."""
+    hass = hass_recorder()
+    event_data = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.bus.fire("test_event", event_data, context=Context(id="invalid"))
+    wait_recording_done(hass)
+    events = {}
+
+    with session_scope(hass=hass, read_only=True) as session:
+        for _, data, event_type in (
+            session.query(Events.event_id, EventData.shared_data, EventTypes.event_type)
+            .outerjoin(EventData, Events.data_id == EventData.data_id)
+            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+            .where(EventTypes.event_type.in_(["test_event"]))
+        ):
+            events[event_type] = data
+
+    assert "invalid" in caplog.text
+
+    assert len(events) == 1
+    assert json_loads(events["test_event"]) == event_data
 
 
 def test_recorder_setup_failure(hass: HomeAssistant) -> None:
@@ -1213,7 +1269,7 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             statistics_runs = list(session.query(StatisticsRuns))
             assert len(statistics_runs) == 1
             last_run = process_timestamp(statistics_runs[0].start)
@@ -1224,11 +1280,13 @@ def test_statistics_runs_initiated(hass_recorder: Callable[..., HomeAssistant]) 
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
 def test_compile_missing_statistics(
-    tmpdir: py.path.local, freezer: FrozenDateTimeFactory
+    tmp_path: Path, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     hass = get_test_home_assistant()
@@ -1238,7 +1296,7 @@ def test_compile_missing_statistics(
     wait_recording_done(hass)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         statistics_runs = list(session.query(StatisticsRuns))
         assert len(statistics_runs) == 1
         last_run = process_timestamp(statistics_runs[0].start)
@@ -1276,7 +1334,7 @@ def test_compile_missing_statistics(
     wait_recording_done(hass)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         statistics_runs = list(session.query(StatisticsRuns))
         assert len(statistics_runs) == 13  # 12 5-minute runs
         last_run = process_timestamp(statistics_runs[1].start)
@@ -1301,7 +1359,7 @@ def test_saving_sets_old_state(hass_recorder: Callable[..., HomeAssistant]) -> N
     hass.states.set("test.two", "s4", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(
                 StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
@@ -1335,7 +1393,7 @@ def test_saving_state_with_serializable_data(
     hass.states.set("test.two", "s3", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(
                 StatesMeta.entity_id, States.state_id, States.old_state_id, States.state
@@ -1393,7 +1451,7 @@ def test_service_disable_events_not_recording(
     assert len(events) == 1
     event = events[0]
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_events = list(
             session.query(Events)
             .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
@@ -1417,7 +1475,7 @@ def test_service_disable_events_not_recording(
     assert events[0].data != events[1].data
 
     db_events = []
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         for select_event, event_data, event_types in (
             session.query(Events, EventData, EventTypes)
             .filter(Events.event_type_id.in_(select_event_type_ids((event_type,))))
@@ -1461,7 +1519,7 @@ def test_service_disable_states_not_recording(
     hass.states.set("test.one", "on", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         assert len(list(session.query(States))) == 0
 
     assert hass.services.call(
@@ -1474,7 +1532,7 @@ def test_service_disable_states_not_recording(
     hass.states.set("test.two", "off", {})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
@@ -1485,9 +1543,11 @@ def test_service_disable_states_not_recording(
         )
 
 
-def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None:
+def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
     """Test that runs are still recorded when recorder is disabled."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     hass = get_test_home_assistant()
@@ -1496,7 +1556,7 @@ def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None
     hass.start()
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_run_info = list(session.query(RecorderRuns))
         assert len(db_run_info) == 1
         assert db_run_info[0].start is not None
@@ -1518,7 +1578,7 @@ def test_service_disable_run_information_recorded(tmpdir: py.path.local) -> None
     hass.start()
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_run_info = list(session.query(RecorderRuns))
         assert len(db_run_info) == 2
         assert db_run_info[0].start is not None
@@ -1534,12 +1594,14 @@ class CannotSerializeMe:
 
 
 async def test_database_corruption_while_running(
-    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can recover from sqlite3 db corruption."""
 
-    def _create_tmpdir_for_test_db():
-        return tmpdir.mkdir("sqlite").join("test.db")
+    def _create_tmpdir_for_test_db() -> Path:
+        test_dir = tmp_path.joinpath("sqlite")
+        test_dir.mkdir()
+        return test_dir.joinpath("test.db")
 
     test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
@@ -1588,7 +1650,7 @@ async def test_database_corruption_while_running(
     await async_wait_recording_done(hass)
 
     def _get_last_state():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             db_states = list(session.query(States))
             assert len(db_states) == 1
             db_states[0].entity_id = "test.two"
@@ -1626,7 +1688,7 @@ def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
         hass.bus.fire("hello", data)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             db_events = list(
                 session.query(Events).filter(
                     Events.event_type_id.in_(select_event_type_ids(event_types))
@@ -1641,7 +1703,7 @@ def test_entity_id_filter(hass_recorder: Callable[..., HomeAssistant]) -> None:
         hass.bus.fire("hello", data)
         wait_recording_done(hass)
 
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             db_events = list(
                 session.query(Events).filter(
                     Events.event_type_id.in_(select_event_type_ids(event_types))
@@ -1675,7 +1737,7 @@ async def test_database_lock_and_unlock(
     event_types = (event_type,)
 
     def _get_db_events():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             return list(
                 session.query(Events).filter(
                     Events.event_type_id.in_(select_event_type_ids(event_types))
@@ -1730,7 +1792,7 @@ async def test_database_lock_and_overflow(
     event_types = (event_type,)
 
     def _get_db_events():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             return list(
                 session.query(Events).filter(
                     Events.event_type_id.in_(select_event_type_ids(event_types))
@@ -1865,7 +1927,7 @@ def test_deduplication_event_data_inside_commit_interval(
         hass.bus.fire("this_event", {"de": "dupe"})
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         event_types = ("this_event",)
         events = list(
             session.query(Events)
@@ -1906,7 +1968,7 @@ def test_deduplication_state_attributes_inside_commit_interval(
         hass.states.set(entity_id, "off", attributes)
     wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         states = list(
             session.query(States).outerjoin(
                 StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
@@ -1932,7 +1994,7 @@ async def test_async_block_till_done(
     hass.states.async_set(entity_id, "off", attributes)
 
     def _fetch_states():
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             return list(session.query(States))
 
     await async_block_recorder(hass, 0.1)
@@ -2140,7 +2202,7 @@ async def test_excluding_attributes_by_integration(
 
     await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         db_states = []
         for db_state, db_state_attributes, states_meta in (
             session.query(States, StateAttributes, StatesMeta)
@@ -2178,3 +2240,90 @@ async def test_lru_increases_with_many_entities(
         == mock_entity_count * 2
     )
     assert recorder_mock.states_meta_manager._id_map.get_size() == mock_entity_count * 2
+
+
+async def test_clean_shutdown_when_recorder_thread_raises_during_initialize_database(
+    hass: HomeAssistant,
+) -> None:
+    """Test we still shutdown cleanly when the recorder thread raises during initialize_database."""
+    with patch.object(migration, "initialize_database", side_effect=Exception), patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    instance = recorder.get_instance(hass)
+    await hass.async_stop()
+    assert instance.engine is None
+
+
+async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test we still shutdown cleanly when the recorder thread raises during validate_db_schema."""
+    with patch.object(migration, "validate_db_schema", side_effect=Exception), patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    instance = recorder.get_instance(hass)
+    await hass.async_stop()
+    assert instance.engine is None
+
+
+async def test_clean_shutdown_when_schema_migration_fails(hass: HomeAssistant) -> None:
+    """Test we still shutdown cleanly when schema migration fails."""
+    with patch.object(
+        migration,
+        "validate_db_schema",
+        return_value=MagicMock(valid=False, current_version=1),
+    ), patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True
+    ), patch.object(
+        migration,
+        "migrate_schema",
+        side_effect=Exception,
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    instance = recorder.get_instance(hass)
+    await hass.async_stop()
+    assert instance.engine is None
