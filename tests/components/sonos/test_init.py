@@ -143,6 +143,11 @@ async def test_async_poll_manual_hosts_warnings(
         assert mock_async_call_later.call_count == 5
 
 
+async def patch_gethostbyname(host: str) -> str:
+    """Mock to return host name as ip address for testing."""
+    return host
+
+
 async def test_async_poll_manual_hosts_ping_failure(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -154,33 +159,29 @@ async def test_async_poll_manual_hosts_ping_failure(
     )
     await hass.async_block_till_done()
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
-    manager.hosts.add("10.10.10.10")
+    with patch.object(manager, "_async_gethostbyname", side_effect=patch_gethostbyname):
+        manager.hosts.add("10.10.10.10")
 
-    with caplog.at_level(logging.DEBUG), patch.object(
-        manager, "_async_handle_discovery_message", new=AsyncMock()
-    ) as mock_discovery_message, patch(
-        "homeassistant.components.sonos.async_call_later"
-    ) as mock_async_call_later, patch(
-        "homeassistant.components.sonos.async_dispatcher_send"
-    ), patch.object(
-        hass, "async_add_executor_job", new=AsyncMock()
-    ) as mock_async_add_executor_job:
-        mock_async_add_executor_job.return_value = []
-        caplog.clear()
+        with caplog.at_level(logging.DEBUG), patch.object(
+            manager, "_async_handle_discovery_message", new=AsyncMock()
+        ) as mock_discovery_message, patch(
+            "homeassistant.components.sonos.async_call_later"
+        ) as mock_async_call_later, patch(
+            "homeassistant.components.sonos.async_dispatcher_send"
+        ), patch.object(
+            hass, "async_add_executor_job", new=AsyncMock()
+        ) as mock_async_add_executor_job:
+            mock_async_add_executor_job.return_value = []
+            caplog.clear()
 
-        mock_discovery_message.side_effect = asyncio.TimeoutError("TimeoutError")
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "WARNING"
-        assert "Discovery message failed" in record.message
-        assert "TimeoutError" in record.message
-        mock_async_call_later.assert_called_once()
-
-
-def patch_gethostbyname(host: str) -> str:
-    """Mock to return host name as ip address for testing."""
-    return host
+            mock_discovery_message.side_effect = asyncio.TimeoutError("TimeoutError")
+            await manager.async_poll_manual_hosts()
+            assert len(caplog.messages) == 1
+            record = caplog.records[0]
+            assert record.levelname == "WARNING"
+            assert "Discovery message failed" in record.message
+            assert "TimeoutError" in record.message
+            mock_async_call_later.assert_called_once()
 
 
 async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
@@ -193,7 +194,7 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
 
-    with patch("socket.gethostbyname", side_effect=patch_gethostbyname):
+    with patch.object(manager, "_async_gethostbyname", side_effect=patch_gethostbyname):
         manager.hosts.add("10.10.10.1")
         manager.hosts.add("10.10.10.2")
 

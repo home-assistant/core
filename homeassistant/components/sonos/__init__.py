@@ -335,6 +335,10 @@ class SonosDiscoveryManager:
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
+    async def _async_gethostbyname(self, host: str) -> str:
+        """Helper function to enable unit testing."""
+        return await self.hass.async_add_executor_job(socket.gethostbyname, host)
+
     async def async_poll_manual_hosts(
         self, now: datetime.datetime | None = None
     ) -> None:
@@ -342,7 +346,7 @@ class SonosDiscoveryManager:
 
         # Loop through each configured host and verify that Soco attributes are available for it.
         for host in self.hosts.copy():
-            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+            ip_addr = await self._async_gethostbyname(host)
             soco = SoCo(ip_addr)
             try:
                 visible_zones = await self.hass.async_add_executor_job(
@@ -383,7 +387,7 @@ class SonosDiscoveryManager:
         # Loop through each configured host that is not in error.  Send a discovery message
         # if a speaker does not already exist, or ping the speaker if it is unavailable.
         for host in self.hosts.copy():
-            ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+            ip_addr = await self._async_gethostbyname(host)
             # Skip hosts that are in error to avoid blocking call on soco.uuid in event loop
             if self.hosts_in_error.get(ip_addr):
                 continue
