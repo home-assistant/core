@@ -1297,7 +1297,7 @@ def async_track_point_in_time(
 
     track_job = HassJob(
         utc_converter,
-        name=f"UTC converter for {job.name}",
+        name=f"{job.name} UTC converter",
         cancel_on_shutdown=job.cancel_on_shutdown,
     )
     return async_track_point_in_utc_time(hass, track_job, point_in_time)
