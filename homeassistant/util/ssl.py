@@ -107,14 +107,19 @@ def client_context(
     return sslcontext
 
 
+# Create this only once and reuse it
+_DEFAULT_SSL_CONTEXT = client_context()
+_DEFAULT_NO_VERIFY_SSL_CONTEXT = create_no_verify_ssl_context()
+
+
 def get_default_context() -> ssl.SSLContext:
     """Return the default SSL context."""
-    return client_context(SSLCipherList.PYTHON_DEFAULT)
+    return _DEFAULT_SSL_CONTEXT
 
 
 def get_default_no_verify_context() -> ssl.SSLContext:
     """Return the default SSL context that does not verify the server certificate."""
-    return create_no_verify_ssl_context(SSLCipherList.PYTHON_DEFAULT)
+    return _DEFAULT_NO_VERIFY_SSL_CONTEXT
 
 
 def server_context_modern() -> ssl.SSLContext:
