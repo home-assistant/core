@@ -31,7 +31,7 @@ from homeassistant.helpers.template_entity import (
     TEMPLATE_ENTITY_BASE_SCHEMA,
     TEMPLATE_SENSOR_BASE_SCHEMA,
 )
-from homeassistant.util.ssl import SslCipherList
+from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
     CONF_ENCODING,
@@ -64,7 +64,7 @@ RESOURCE_SCHEMA = {
     vol.Optional(
         CONF_SSL_CIPHER_LIST,
         default=DEFAULT_SSL_CIPHER_LIST,
-    ): vol.In([e.value for e in SslCipherList]),
+    ): vol.In([e.value for e in SSLCipherList]),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
 }

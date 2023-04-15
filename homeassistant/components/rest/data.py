@@ -9,7 +9,7 @@ import httpx
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
 from homeassistant.helpers.httpx_client import create_async_httpx_client
-from homeassistant.util.ssl import SslCipherList
+from homeassistant.util.ssl import SSLCipherList
 
 DEFAULT_TIMEOUT = 10
 
@@ -44,7 +44,7 @@ class RestData:
         self._request_data = data
         self._timeout = timeout
         self._verify_ssl = verify_ssl
-        self._ssl_cipher_list = SslCipherList(ssl_cipher_list)
+        self._ssl_cipher_list = SSLCipherList(ssl_cipher_list)
         self._async_client: httpx.AsyncClient | None = None
         self.data: str | None = None
         self.last_exception: Exception | None = None
