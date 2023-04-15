@@ -417,6 +417,7 @@ async def test_history_during_period_bad_start_time(
         {
             "id": 1,
             "type": "history/history_during_period",
+            "entity_ids": ["sensor.pet"],
             "start_time": "cats",
         }
     )
@@ -442,6 +443,7 @@ async def test_history_during_period_bad_end_time(
         {
             "id": 1,
             "type": "history/history_during_period",
+            "entity_ids": ["sensor.pet"],
             "start_time": now.isoformat(),
             "end_time": "dogs",
         }
@@ -1524,3 +1526,320 @@ async def test_overflow_queue(
     assert listeners_without_writes(
         hass.bus.async_listeners()
     ) == listeners_without_writes(init_listeners)
+
+
+async def test_history_during_period_for_invalid_entity_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test history_during_period for valid and invalid entity ids."""
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    sensor_one_last_updated = hass.states.get("sensor.one").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.three", "off", attributes={"any": "again"})
+    await async_recorder_block_till_done(hass)
+    await async_wait_recording_done(hass)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response == {
+        "result": {
+            "sensor.one": [
+                {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+            ],
+        },
+        "id": 1,
+        "type": "result",
+        "success": True,
+    }
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensor.two"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response == {
+        "result": {
+            "sensor.one": [
+                {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+            ],
+            "sensor.two": [
+                {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
+            ],
+        },
+        "id": 2,
+        "type": "result",
+        "success": True,
+    }
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sens!or.one", "two"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 3,
+        "type": "result",
+        "success": False,
+    }
+
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensortwo."],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 4,
+        "type": "result",
+        "success": False,
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "entity_ids": ["one", ".sensortwo"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 5,
+        "type": "result",
+        "success": False,
+    }
+
+
+async def test_history_stream_for_invalid_entity_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test history stream for invalid and valid entity ids."""
+
+    now = dt_util.utcnow()
+    await async_setup_component(
+        hass,
+        "history",
+        {history.DOMAIN: {}},
+    )
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    sensor_one_last_updated = hass.states.get("sensor.one").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.three", "off", attributes={"any": "again"})
+    await async_recorder_block_till_done(hass)
+    await async_wait_recording_done(hass)
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "end_time": sensor_one_last_updated.timestamp(),
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.one": [
+                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensor.two"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 2
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "end_time": sensor_two_last_updated.timestamp(),
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.one": [
+                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+                ],
+                "sensor.two": [
+                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
+                ],
+            },
+        },
+        "id": 2,
+        "type": "event",
+    }
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sens!or.one", "two"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response["id"] == 3
+    assert response["type"] == "result"
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 3,
+        "type": "result",
+        "success": False,
+    }
+
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.one", "sensortwo."],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response["id"] == 4
+    assert response["type"] == "result"
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 4,
+        "type": "result",
+        "success": False,
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["one", ".sensortwo"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+    assert response["id"] == 5
+    assert response["type"] == "result"
+    assert response == {
+        "error": {
+            "code": "invalid_entity_ids",
+            "message": "Invalid entity_ids",
+        },
+        "id": 5,
+        "type": "result",
+        "success": False,
+    }
