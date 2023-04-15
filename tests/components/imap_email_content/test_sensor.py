@@ -4,12 +4,24 @@ import datetime
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from unittest.mock import Mock, patch
+
+import pytest
 
 from homeassistant.components.imap_email_content import sensor as imap_email_content
+from homeassistant.components.imap_email_content.const import (
+    CONF_SENDERS,
+    CONF_SERVER,
+    CONF_SSL_CIPHER_LIST,
+    DOMAIN,
+)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
+from homeassistant.util.ssl import SSLCipherList
 
 
 class FakeEMailReader:
@@ -41,6 +53,44 @@ class FakeEMailReader:
 async def test_integration_setup_(hass: HomeAssistant) -> None:
     """Test the integration component setup is successful."""
     assert await async_setup_component(hass, "imap_email_content", {})
+
+
+@pytest.mark.parametrize(
+    ("ssl_cipher_list", "ssl_cipher_list_expected"),
+    (
+        ("python_default", SSLCipherList.PYTHON_DEFAULT),
+        ("intermediate", SSLCipherList.INTERMEDIATE),
+        ("modern", SSLCipherList.MODERN),
+    ),
+)
+async def test_integration_setup_ssl_ciphers(
+    hass: HomeAssistant,
+    ssl_cipher_list: str,
+    ssl_cipher_list_expected: SSLCipherList,
+) -> None:
+    """Test the integration component setup is successful."""
+    with patch(
+        "homeassistant.components.imap_email_content.sensor.client_context"
+    ) as client_context, patch(
+        "homeassistant.components.imap_email_content.sensor.imaplib.IMAP4_SSL",
+        return_value=Mock(login=Mock(return_value=True)),
+    ):
+        assert await async_setup_component(
+            hass,
+            SENSOR_DOMAIN,
+            {
+                SENSOR_DOMAIN: {
+                    CONF_PLATFORM: DOMAIN,
+                    CONF_SERVER: "myserver.local",
+                    CONF_USERNAME: "username",
+                    CONF_PASSWORD: "password",
+                    CONF_SENDERS: ["sender_a"],
+                    CONF_SSL_CIPHER_LIST: ssl_cipher_list,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+        client_context.assert_called_once_with(ssl_cipher_list_expected)
 
 
 async def test_allowed_sender(hass: HomeAssistant) -> None:

@@ -6,6 +6,7 @@ import datetime
 import email
 import imaplib
 import logging
+import ssl
 
 import voluptuous as vol
 
@@ -24,7 +25,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.ssl import client_context
+from homeassistant.util.ssl import SSLCipherList, client_context
 
 from .const import (
     ATTR_BODY,
@@ -33,7 +34,9 @@ from .const import (
     CONF_FOLDER,
     CONF_SENDERS,
     CONF_SERVER,
+    CONF_SSL_CIPHER_LIST,
     DEFAULT_PORT,
+    DEFAULT_SSL_CIPHER_LIST,
 )
 from .repairs import async_process_issue
 
@@ -50,6 +53,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(
+            CONF_SSL_CIPHER_LIST,
+            default=DEFAULT_SSL_CIPHER_LIST,
+        ): vol.In([e.value for e in SSLCipherList]),
     }
 )
 
@@ -68,6 +75,7 @@ def setup_platform(
         config[CONF_PORT],
         config[CONF_FOLDER],
         config[CONF_VERIFY_SSL],
+        config[CONF_SSL_CIPHER_LIST],
     )
 
     if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
@@ -89,7 +97,9 @@ def setup_platform(
 class EmailReader:
     """A class to read emails from an IMAP server."""
 
-    def __init__(self, user, password, server, port, folder, verify_ssl):
+    def __init__(
+        self, user, password, server, port, folder, verify_ssl, ssl_cipher_list
+    ):
         """Initialize the Email Reader."""
         self._user = user
         self._password = password
@@ -97,6 +107,7 @@ class EmailReader:
         self._port = port
         self._folder = folder
         self._verify_ssl = verify_ssl
+        self._ssl_cipher_list = SSLCipherList(ssl_cipher_list)
         self._last_id = None
         self._last_message = None
         self._unread_ids = deque([])
@@ -119,7 +130,9 @@ class EmailReader:
 
     def connect(self):
         """Login and setup the connection."""
-        ssl_context = client_context() if self._verify_ssl else None
+        ssl_context = (
+            client_context(self._ssl_cipher_list) if self._verify_ssl else None
+        )
         try:
             self.connection = imaplib.IMAP4_SSL(
                 self._server, self._port, ssl_context=ssl_context
@@ -128,6 +141,9 @@ class EmailReader:
             return True
         except imaplib.IMAP4.error:
             _LOGGER.error("Failed to login to %s", self._server)
+            return False
+        except ssl.SSLError as ex:
+            _LOGGER.error("Error connecting to %s failed with %s", self._server, ex)
             return False
 
     def _fetch_message(self, message_uid):
