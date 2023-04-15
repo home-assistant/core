@@ -33,7 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.async_setup()
     except RequestError as err:
         await device.device.close()
-        raise ConfigEntryNotReady(f"Could not connect to camera: {err}") from err
+        raise ConfigEntryNotReady(
+            f"Could not connect to camera {device.device.host}:{device.device.port}: {err}"
+        ) from err
     except Fault as err:
         await device.device.close()
         # We do no know if the credentials are wrong or the camera is
@@ -43,7 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
     except ONVIFError as err:
         await device.device.close()
-        raise ConfigEntryNotReady(f"Could not setup camera: {err}") from err
+        raise ConfigEntryNotReady(
+            f"Could not setup camera {device.device.host}:{device.device.port}: {err}"
+        ) from err
 
     if not device.available:
         raise ConfigEntryNotReady()
