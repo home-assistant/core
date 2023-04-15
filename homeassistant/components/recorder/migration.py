@@ -113,7 +113,7 @@ _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
     unused_column_type="CHAR(0)",
-    hash_column_type="UNSIGNED INT",
+    hash_column_type="INT UNSIGNED",
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
