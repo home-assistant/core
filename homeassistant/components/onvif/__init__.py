@@ -36,6 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Could not connect to camera: {err}") from err
     except Fault as err:
         await device.device.close()
+        # We do no know if the credentials are wrong or the camera is
+        # still booting up, so we will retry later
         raise ConfigEntryNotReady(
             f"Could not connect to camera, verify credentials are correct: {err}"
         ) from err
