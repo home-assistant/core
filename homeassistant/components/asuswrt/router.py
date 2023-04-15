@@ -381,6 +381,7 @@ class AsusWrtRouter:
                 KEY_COORDINATOR: coordinator,
                 KEY_SENSORS: sensor_names,
             }
+            self.async_on_close(coordinator.async_shutdown)
 
     async def _update_unpolled_sensors(self) -> None:
         """Request refresh for AsusWrt unpolled sensors."""
