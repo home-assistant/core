@@ -482,31 +482,58 @@ async def test_delete_pipeline(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert len(pipeline_store.data) == 1
-
-    pipeline_id = msg["result"]["id"]
+    pipeline_id_1 = msg["result"]["id"]
 
     await client.send_json_auto_id(
         {
-            "type": "assist_pipeline/pipeline/delete",
-            "pipeline_id": pipeline_id,
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
         }
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert len(pipeline_store.data) == 0
+    pipeline_id_2 = msg["result"]["id"]
+
+    assert len(pipeline_store.data) == 2
 
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/delete",
-            "pipeline_id": pipeline_id,
+            "pipeline_id": pipeline_id_1,
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_allowed",
+        "message": f"Item {pipeline_id_1} preferred.",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/delete",
+            "pipeline_id": pipeline_id_2,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(pipeline_store.data) == 1
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/delete",
+            "pipeline_id": pipeline_id_2,
         }
     )
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {
         "code": "not_found",
-        "message": f"Unable to find pipeline_id {pipeline_id}",
+        "message": f"Unable to find pipeline_id {pipeline_id_2}",
     }
 
 
@@ -520,7 +547,7 @@ async def test_list_pipelines(
     await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == []
+    assert msg["result"] == {"pipelines": [], "preferred_pipeline": None}
 
     await client.send_json_auto_id(
         {
@@ -539,16 +566,19 @@ async def test_list_pipelines(
     await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == [
-        {
-            "conversation_engine": "test_conversation_engine",
-            "id": ANY,
-            "language": "test_language",
-            "name": "test_name",
-            "stt_engine": "test_stt_engine",
-            "tts_engine": "test_tts_engine",
-        }
-    ]
+    assert msg["result"] == {
+        "pipelines": [
+            {
+                "conversation_engine": "test_conversation_engine",
+                "id": ANY,
+                "language": "test_language",
+                "name": "test_name",
+                "stt_engine": "test_stt_engine",
+                "tts_engine": "test_tts_engine",
+            }
+        ],
+        "preferred_pipeline": ANY,
+    }
 
 
 async def test_update_pipeline(
@@ -606,9 +636,9 @@ async def test_update_pipeline(
     assert msg["success"]
     assert msg["result"] == {
         "conversation_engine": "new_conversation_engine",
+        "id": pipeline_id,
         "language": "new_language",
         "name": "new_name",
-        "id": pipeline_id,
         "stt_engine": "new_stt_engine",
         "tts_engine": "new_tts_engine",
     }
@@ -623,3 +653,65 @@ async def test_update_pipeline(
         stt_engine="new_stt_engine",
         tts_engine="new_tts_engine",
     )
+
+
+async def test_set_preferred_pipeline(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test updating the preferred pipeline."""
+    client = await hass_ws_client(hass)
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id_1 = msg["result"]["id"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id_2 = msg["result"]["id"]
+
+    assert pipeline_store.async_get_preferred_item() == pipeline_id_1
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/set_preferred",
+            "pipeline_id": pipeline_id_2,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    assert pipeline_store.async_get_preferred_item() == pipeline_id_2
+
+
+async def test_set_preferred_pipeline_wrong_id(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test updating the preferred pipeline."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "assist_pipeline/pipeline/set_preferred", "pipeline_id": "don_t_exist"}
+    )
+    msg = await client.receive_json()
+    assert msg["error"]["code"] == "not_found"
