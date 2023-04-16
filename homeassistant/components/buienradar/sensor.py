@@ -700,8 +700,6 @@ class BrSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        if description.translation_key is None:
-            self._attr_name = f"{client_name} {description.name}"
         self._measured = None
         self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(
             coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], description.key
