@@ -137,7 +137,7 @@ def gen_data_entry_schema(
     require_step_title: bool,
     mandatory_description: str | None = None,
 ) -> vol.All:
-    """Generate a data entry schemas."""
+    """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
     schema = {
         vol.Optional("flow_title"): translation_value_validator,
