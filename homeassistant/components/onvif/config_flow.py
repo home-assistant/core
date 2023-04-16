@@ -125,9 +125,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if hass.config_entries.async_update_entry(
                 entry, data=entry.data | {CONF_HOST: discovery_info.ip}
             ):
-                hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                hass.async_create_task(self.hass.config_entries.async_reload(entry_id))
         return self.async_abort(reason="already_configured")
 
     async def async_step_device(self, user_input=None):
