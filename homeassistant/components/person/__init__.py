@@ -188,7 +188,7 @@ class PersonStore(Store):
         return {"items": old_data["persons"]}
 
 
-class PersonStorageCollection(collection.StorageCollection):
+class PersonStorageCollection(collection.DictStorageCollection):
     """Person collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -197,15 +197,14 @@ class PersonStorageCollection(collection.StorageCollection):
     def __init__(
         self,
         store: Store,
-        logger: logging.Logger,
         id_manager: collection.IDManager,
         yaml_collection: collection.YamlCollection,
     ) -> None:
         """Initialize a person storage collection."""
-        super().__init__(store, logger, id_manager)
+        super().__init__(store, id_manager)
         self.yaml_collection = yaml_collection
 
-    async def _async_load_data(self) -> dict | None:
+    async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data.
 
         A past bug caused onboarding to create invalid person objects.
@@ -271,16 +270,16 @@ class PersonStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
 
         user_id = update_data.get(CONF_USER_ID)
 
-        if user_id is not None and user_id != data.get(CONF_USER_ID):
+        if user_id is not None and user_id != item.get(CONF_USER_ID):
             await self._validate_user_id(user_id)
 
-        return {**data, **update_data}
+        return {**item, **update_data}
 
     async def _validate_user_id(self, user_id):
         """Validate the used user_id."""
@@ -337,7 +336,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     storage_collection = PersonStorageCollection(
         PersonStore(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
         yaml_collection,
     )
@@ -356,7 +354,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass, create_list=False)
 

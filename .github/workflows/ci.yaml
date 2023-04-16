@@ -31,7 +31,7 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.4
+  HA_SHORT_VERSION: 2023.5
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
   # 10.3 is the oldest supported version
@@ -40,7 +40,9 @@ env:
   # - 10.6.10 is the version currently shipped with the Add-on (as of 31 Jan 2023)
   # 10.10 is the latest short-term-support
   # - 10.10.3 is the latest (as of 6 Feb 2023)
-  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3']"
+  # mysql 8.0.32 does not always behave the same as MariaDB
+  # and some queries that work on MariaDB do not work on MySQL
+  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mysql:8.0.32']"
   # 12 is the oldest supported version
   # - 12.14 is the latest (as of 9 Feb 2023)
   # 15 is the latest version
@@ -79,7 +81,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
@@ -203,7 +205,7 @@ jobs:
       - info
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -248,7 +250,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.5.0
         id: python
@@ -294,7 +296,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.5.0
         id: python
@@ -343,7 +345,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.5.0
         id: python
@@ -381,7 +383,7 @@ jobs:
       - pre-commit
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v4.5.0
         id: python
@@ -434,6 +436,7 @@ jobs:
         shell: bash
         run: |
           . venv/bin/activate
+          shopt -s globstar
           pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
 
       - name: Register check executables problem matcher
@@ -487,7 +490,7 @@ jobs:
         python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -555,7 +558,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -587,7 +590,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -620,7 +623,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -664,7 +667,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -730,7 +733,7 @@ jobs:
     name: Run pip check ${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -783,7 +786,7 @@ jobs:
             bluez \
             ffmpeg
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -909,7 +912,7 @@ jobs:
             ffmpeg \
             libmariadb-dev-compat
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -1017,7 +1020,7 @@ jobs:
             ffmpeg \
             postgresql-server-dev-14
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@v4.5.0
@@ -1091,19 +1094,20 @@ jobs:
     needs:
       - info
       - pytest
+    timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@v3.5.2
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v3.1.1
+        uses: codecov/codecov-action@v3.1.2
         with:
           fail_ci_if_error: true
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v3.1.1
+        uses: codecov/codecov-action@v3.1.2
         with:
           fail_ci_if_error: true

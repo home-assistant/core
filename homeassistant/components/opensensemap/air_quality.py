@@ -20,7 +20,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by openSenseMap"
 
 CONF_STATION_ID = "station_id"
 
@@ -59,6 +58,8 @@ async def async_setup_platform(
 class OpenSenseMapQuality(AirQualityEntity):
     """Implementation of an openSenseMap air quality entity."""
 
+    _attr_attribution = "Data provided by openSenseMap"
+
     def __init__(self, name, osm):
         """Initialize the air quality entity."""
         self._name = name
@@ -78,11 +79,6 @@ class OpenSenseMapQuality(AirQualityEntity):
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._osm.api.pm10
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
 
     async def async_update(self):
         """Get the latest data from the openSenseMap API."""

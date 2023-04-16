@@ -1,5 +1,4 @@
 """Websocket API for OTBR."""
-from typing import TYPE_CHECKING
 
 import python_otbr_api
 from python_otbr_api import tlv_parser
@@ -11,10 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_CHANNEL, DOMAIN
-from .util import get_allowed_channel
-
-if TYPE_CHECKING:
-    from . import OTBRData
+from .util import OTBRData, get_allowed_channel, update_issues
 
 
 @callback
@@ -109,6 +105,9 @@ async def websocket_create_network(
 
     await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
 
+    # Update repair issues
+    await update_issues(hass, data, dataset_tlvs)
+
     connection.send_result(msg["id"])
 
 
@@ -166,6 +165,9 @@ async def websocket_set_network(
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "set_enabled_failed", str(exc))
         return
+
+    # Update repair issues
+    await update_issues(hass, data, bytes.fromhex(dataset_tlv))
 
     connection.send_result(msg["id"])
 

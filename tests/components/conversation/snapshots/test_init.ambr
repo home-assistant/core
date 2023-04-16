@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_get_agent_info
+  dict({
+    'id': 'mock-entry',
+    'name': 'Mock Title',
+  })
+# ---
+# name: test_get_agent_info.1
+  dict({
+    'id': 'homeassistant',
+    'name': 'Home Assistant',
+  })
+# ---
+# name: test_get_agent_info.2
+  dict({
+    'id': 'mock-entry',
+    'name': 'Mock Title',
+  })
+# ---
+# name: test_get_agent_list
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+      }),
+    ]),
+    'default_agent': 'mock-entry',
+  })
+# ---
