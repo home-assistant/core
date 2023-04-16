@@ -189,7 +189,7 @@ async def test_sensor_with_forecast(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-sunny"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UV_INDEX
-    assert state.attributes.get("level") == "Moderate"
+    assert state.attributes.get("level") == "moderate"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
     entry = registry.async_get("sensor.home_uv_index_0d")
@@ -198,7 +198,7 @@ async def test_sensor_with_forecast(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_air_quality_0d")
     assert state
-    assert state.state == "high"
+    assert state.state == "good"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
@@ -518,7 +518,7 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:grass"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
@@ -534,7 +534,7 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get("sensor.home_mold_pollen_0d")
@@ -549,7 +549,7 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:sprout"
 
     entry = registry.async_get("sensor.home_ragweed_pollen_0d")
@@ -587,7 +587,7 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:tree-outline"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
