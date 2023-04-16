@@ -44,6 +44,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
     def __init__(self, instance: dict[str, Any], light: dict[str, Any]) -> None:
         """Initialize an Advantage Air Light."""
         super().__init__(instance)
+
         self._id: str = light["id"]
         self._attr_unique_id += f"-{self._id}"
         self._attr_device_info = DeviceInfo(

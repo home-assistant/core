@@ -104,6 +104,7 @@ async def test_light(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,

@@ -121,11 +121,6 @@ class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
         """Return if cover is fully closed."""
         return self._data["value"] == 0
 
-    @property
-    def current_cover_position(self) -> int:
-        """Return covers current position as a percentage."""
-        return self._data["value"]
-
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open zone vent."""
         return await self.async_turn_on()
