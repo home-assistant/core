@@ -4,7 +4,7 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from sfrbox_api.models import DslInfo, SystemInfo
+from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
 
 from homeassistant.components.sfr_box.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
@@ -58,17 +58,6 @@ def get_config_entry_with_auth(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
-def system_get_info() -> Generator[SystemInfo, None, None]:
-    """Fixture for SFRBox.system_get_info."""
-    system_info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
-    with patch(
-        "homeassistant.components.sfr_box.coordinator.SFRBox.system_get_info",
-        return_value=system_info,
-    ):
-        yield system_info
-
-
-@pytest.fixture
 def dsl_get_info() -> Generator[DslInfo, None, None]:
     """Fixture for SFRBox.dsl_get_info."""
     dsl_info = DslInfo(**json.loads(load_fixture("dsl_getInfo.json", DOMAIN)))
@@ -77,3 +66,36 @@ def dsl_get_info() -> Generator[DslInfo, None, None]:
         return_value=dsl_info,
     ):
         yield dsl_info
+
+
+@pytest.fixture
+def ftth_get_info() -> Generator[FtthInfo, None, None]:
+    """Fixture for SFRBox.ftth_get_info."""
+    info = FtthInfo(**json.loads(load_fixture("ftth_getInfo.json", DOMAIN)))
+    with patch(
+        "homeassistant.components.sfr_box.coordinator.SFRBox.ftth_get_info",
+        return_value=info,
+    ):
+        yield info
+
+
+@pytest.fixture
+def system_get_info() -> Generator[SystemInfo, None, None]:
+    """Fixture for SFRBox.system_get_info."""
+    info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
+    with patch(
+        "homeassistant.components.sfr_box.coordinator.SFRBox.system_get_info",
+        return_value=info,
+    ):
+        yield info
+
+
+@pytest.fixture
+def wan_get_info() -> Generator[WanInfo, None, None]:
+    """Fixture for SFRBox.wan_get_info."""
+    info = WanInfo(**json.loads(load_fixture("wan_getInfo.json", DOMAIN)))
+    with patch(
+        "homeassistant.components.sfr_box.coordinator.SFRBox.wan_get_info",
+        return_value=info,
+    ):
+        yield info

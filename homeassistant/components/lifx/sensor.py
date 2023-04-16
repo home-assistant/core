@@ -14,10 +14,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_RSSI, ATTR_ZONES, DOMAIN
-from .coordinator import LIFXSensorUpdateCoordinator, LIFXUpdateCoordinator
-from .entity import LIFXSensorEntity
-from .util import lifx_features
+from .const import ATTR_RSSI, DOMAIN
+from .coordinator import LIFXUpdateCoordinator
+from .entity import LIFXEntity
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -44,7 +43,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up LIFX sensor from config entry."""
     coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([LIFXRssiSensor(coordinator.sensor_coordinator, RSSI_SENSOR)])
+    async_add_entities([LIFXRssiSensor(coordinator, RSSI_SENSOR)])
 
     if lifx_features(coordinator.device)["multizone"]:
         async_add_entities(
@@ -87,21 +86,21 @@ class LIFXZonesSensor(LIFXSensorEntity, SensorEntity):
         return await super().async_added_to_hass()
 
 
-class LIFXRssiSensor(LIFXSensorEntity, SensorEntity):
+class LIFXRssiSensor(LIFXEntity, SensorEntity):
     """LIFX RSSI sensor."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: LIFXSensorUpdateCoordinator,
+        coordinator: LIFXUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialise the RSSI sensor."""
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_native_unit_of_measurement = coordinator.rssi_uom
 
     @callback

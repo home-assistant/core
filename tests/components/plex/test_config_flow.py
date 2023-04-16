@@ -169,7 +169,10 @@ async def test_no_servers_found(
 
 
 async def test_single_available_server(
-    hass: HomeAssistant, mock_plex_calls, current_request_with_host: None
+    hass: HomeAssistant,
+    mock_plex_calls,
+    current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test creating an entry with one server available."""
     result = await hass.config_entries.flow.async_init(
@@ -203,7 +206,7 @@ async def test_single_available_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
+    mock_setup_entry.assert_called_once()
 
 
 async def test_multiple_servers_with_selection(
@@ -212,6 +215,7 @@ async def test_multiple_servers_with_selection(
     requests_mock: requests_mock.Mocker,
     plextv_resources_two_servers,
     current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test creating an entry with multiple servers available."""
     result = await hass.config_entries.flow.async_init(
@@ -258,7 +262,7 @@ async def test_multiple_servers_with_selection(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
+    mock_setup_entry.assert_called_once()
 
 
 async def test_adding_last_unconfigured_server(
@@ -267,6 +271,7 @@ async def test_adding_last_unconfigured_server(
     requests_mock: requests_mock.Mocker,
     plextv_resources_two_servers,
     current_request_with_host: None,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test automatically adding last unconfigured server when multiple servers on account."""
     MockConfigEntry(
@@ -313,7 +318,7 @@ async def test_adding_last_unconfigured_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
-    await hass.config_entries.async_unload(result["result"].entry_id)
+    assert mock_setup_entry.call_count == 2
 
 
 async def test_all_available_servers_configured(

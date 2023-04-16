@@ -38,7 +38,6 @@ async def test_binary_sensor_entity_category(
             ]
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     await knx.assert_read("1/1/1")
     await knx.receive_response("1/1/1", True)
@@ -65,7 +64,6 @@ async def test_binary_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
             ]
         }
     )
-    assert len(hass.states.async_all()) == 2
 
     # StateUpdater initialize state
     await knx.assert_read("1/1/1")
@@ -103,8 +101,6 @@ async def test_binary_sensor_ignore_internal_state(
     hass: HomeAssistant, knx: KNXTestKit
 ) -> None:
     """Test KNX binary_sensor with ignore_internal_state."""
-    events = async_capture_events(hass, "state_changed")
-
     await knx.setup_integration(
         {
             BinarySensorSchema.PLATFORM: [
@@ -122,39 +118,36 @@ async def test_binary_sensor_ignore_internal_state(
             ]
         }
     )
-    assert len(hass.states.async_all()) == 2
-    # binary_sensor defaults to STATE_OFF - state change form None
-    assert len(events) == 2
+    events = async_capture_events(hass, "state_changed")
 
     # receive initial ON telegram
     await knx.receive_write("1/1/1", True)
     await knx.receive_write("2/2/2", True)
     await hass.async_block_till_done()
-    assert len(events) == 4
+    assert len(events) == 2
 
     # receive second ON telegram - ignore_internal_state shall force state_changed event
     await knx.receive_write("1/1/1", True)
     await knx.receive_write("2/2/2", True)
     await hass.async_block_till_done()
-    assert len(events) == 5
+    assert len(events) == 3
 
     # receive first OFF telegram
     await knx.receive_write("1/1/1", False)
     await knx.receive_write("2/2/2", False)
     await hass.async_block_till_done()
-    assert len(events) == 7
+    assert len(events) == 5
 
     # receive second OFF telegram - ignore_internal_state shall force state_changed event
     await knx.receive_write("1/1/1", False)
     await knx.receive_write("2/2/2", False)
     await hass.async_block_till_done()
-    assert len(events) == 8
+    assert len(events) == 6
 
 
 async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX binary_sensor with context timeout."""
     async_fire_time_changed(hass, dt.utcnow())
-    events = async_capture_events(hass, "state_changed")
     context_timeout = 1
 
     await knx.setup_integration(
@@ -169,9 +162,7 @@ async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit) -> No
             ]
         }
     )
-    assert len(hass.states.async_all()) == 1
-    assert len(events) == 1
-    events.pop()
+    events = async_capture_events(hass, "state_changed")
 
     # receive initial ON telegram
     await knx.receive_write("2/2/2", True)
@@ -236,7 +227,6 @@ async def test_binary_sensor_reset(hass: HomeAssistant, knx: KNXTestKit) -> None
             ]
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     # receive ON telegram
     await knx.receive_write("2/2/2", True)

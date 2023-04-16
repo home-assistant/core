@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 from gios import Gios
 from gios.exceptions import GiosError
+from gios.model import GiosSensors
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
@@ -74,7 +74,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class GiosDataUpdateCoordinator(DataUpdateCoordinator):
+class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
     """Define an object to hold GIOS data."""
 
     def __init__(
@@ -85,10 +85,10 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> GiosSensors:
         """Update data via library."""
         try:
             async with timeout(API_TIMEOUT):
-                return cast(dict[str, Any], await self.gios.async_update())
+                return await self.gios.async_update()
         except (GiosError, ClientConnectorError) as error:
             raise UpdateFailed(error) from error

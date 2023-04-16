@@ -105,7 +105,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.6.2
 h11==0.14.0
-httpcore==0.16.3
+httpcore==0.17.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -151,9 +151,9 @@ pandas==1.4.3;python_version<'3.11'
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
 
-# pyOpenSSL 23.0.0 or later required to avoid import errors when
-# cryptography 39.0.0 is installed with botocore
-pyOpenSSL>=23.0.0
+# pyOpenSSL 23.1.0 or later required to avoid import errors when
+# cryptography 40.0.1 is installed with botocore
+pyOpenSSL>=23.1.0
 
 # uamqp newer versions we currently can't build for armv7/armhf
 # Limit this to Python 3.10, to not block Python 3.11 dev for now
@@ -162,6 +162,11 @@ uamqp==1.6.0;python_version<'3.11'
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
+
+# websockets 11.0 is missing files in the source distribution
+# which break wheel builds so we need at least 11.0.1
+# https://github.com/aaugustin/websockets/issues/1329
+websockets>=11.0.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

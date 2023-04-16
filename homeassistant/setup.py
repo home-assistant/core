@@ -236,7 +236,7 @@ async def _async_setup_component(
                 SLOW_SETUP_WARNING,
             )
 
-        task = None
+        task: Awaitable[bool] | None = None
         result: Any | bool = True
         try:
             if hasattr(component, "async_setup"):
@@ -295,7 +295,10 @@ async def _async_setup_component(
 
         await asyncio.gather(
             *(
-                entry.async_setup(hass, integration=integration)
+                asyncio.create_task(
+                    entry.async_setup(hass, integration=integration),
+                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+                )
                 for entry in hass.config_entries.async_entries(domain)
             )
         )

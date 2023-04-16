@@ -183,7 +183,7 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
