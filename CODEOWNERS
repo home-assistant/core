@@ -105,6 +105,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/arris_tg2492lg/ @vanbalken
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
+/homeassistant/components/assist_pipeline/ @balloob @synesthesiam
+/tests/components/assist_pipeline/ @balloob @synesthesiam
 /homeassistant/components/asuswrt/ @kennedyshead @ollo69
 /tests/components/asuswrt/ @kennedyshead @ollo69
 /homeassistant/components/atag/ @MatsNL
@@ -170,6 +172,8 @@ build.json @home-assistant/supervisor
 /tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
+/homeassistant/components/brottsplatskartan/ @gjohansson-ST
+/tests/components/brottsplatskartan/ @gjohansson-ST
 /homeassistant/components/brunt/ @eavanvalkenburg
 /tests/components/brunt/ @eavanvalkenburg
 /homeassistant/components/bsblan/ @liudger
@@ -649,8 +653,8 @@ build.json @home-assistant/supervisor
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/life360/ @pnbruckner
 /tests/components/life360/ @pnbruckner
-/homeassistant/components/lifx/ @bdraco @Djelibeybi
-/tests/components/lifx/ @bdraco @Djelibeybi
+/homeassistant/components/lifx/ @bdraco
+/tests/components/lifx/ @bdraco
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
@@ -1135,8 +1139,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck
 /tests/components/spotify/ @frenck
-/homeassistant/components/sql/ @dgomes @gjohansson-ST
-/tests/components/sql/ @dgomes @gjohansson-ST
+/homeassistant/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
+/tests/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
 /homeassistant/components/squeezebox/ @rajlaud
 /tests/components/squeezebox/ @rajlaud
 /homeassistant/components/srp_energy/ @briglx
@@ -1311,8 +1315,8 @@ build.json @home-assistant/supervisor
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
-/homeassistant/components/voice_assistant/ @balloob @synesthesiam
-/tests/components/voice_assistant/ @balloob @synesthesiam
+/homeassistant/components/voip/ @balloob @synesthesiam
+/tests/components/voip/ @balloob @synesthesiam
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvooncall/ @molobrakos

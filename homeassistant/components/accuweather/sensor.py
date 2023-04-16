@@ -104,14 +104,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
     ),
     AccuWeatherSensorDescription(
-        key="Ozone",
-        icon="mdi:vector-triangle",
-        name="Ozone",
-        entity_registry_enabled_default=False,
-        value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
-    ),
-    AccuWeatherSensorDescription(
         key="Ragweed",
         icon="mdi:sprout",
         name="Ragweed pollen",
