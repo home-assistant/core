@@ -9,7 +9,8 @@ async def test_allow_call(
     hass: HomeAssistant, config_entry, voip_devices, call_info
 ) -> None:
     """Test allow call."""
-    assert not voip_devices.async_allow_call(call_info)
+    voip_device = voip_devices.async_get_or_create(call_info)
+    assert not voip_device.async_allow_call(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.192_168_1_210_allow_calls")
@@ -28,7 +29,7 @@ async def test_allow_call(
         blocking=True,
     )
 
-    assert voip_devices.async_allow_call(call_info)
+    assert voip_device.async_allow_call(hass)
 
     state = hass.states.get("switch.192_168_1_210_allow_calls")
     assert state.state == "on"

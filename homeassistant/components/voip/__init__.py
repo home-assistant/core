@@ -25,6 +25,7 @@ __all__ = [
     "DOMAIN",
     "async_setup_entry",
     "async_unload_entry",
+    "async_remove_config_entry_device",
 ]
 
 
@@ -39,6 +40,7 @@ class DomainData:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up VoIP integration from a config entry."""
     devices = VoIPDevices(hass, entry)
+    devices.async_setup()
     transport = await _create_sip_server(
         hass,
         lambda: HassVoipDatagramProtocol(hass, devices),
@@ -79,5 +81,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
-    """Remove config entry from a device."""
+    """Remove device from a config entry."""
     return True

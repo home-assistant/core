@@ -43,11 +43,13 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
                 hass.config.language,
             ),
         )
+        self.hass = hass
         self.devices = devices
 
     def is_valid_call(self, call_info: CallInfo) -> bool:
         """Filter calls."""
-        return self.devices.async_allow_call(call_info)
+        device = self.devices.async_get_or_create(call_info)
+        return device.async_allow_call(self.hass)
 
 
 class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
