@@ -1,7 +1,8 @@
 """The tests for the REST sensor platform."""
 import asyncio
 from http import HTTPStatus
-from unittest.mock import MagicMock, patch
+import ssl
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
@@ -29,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.ssl import SSLCipherList
 
 from tests.common import get_fixture_path
 
@@ -75,6 +77,28 @@ async def test_setup_failed_connect(
     await hass.async_block_till_done()
     assert len(hass.states.async_all(SENSOR_DOMAIN)) == 0
     assert "server offline" in caplog.text
+
+
+@respx.mock
+async def test_setup_fail_on_ssl_erros(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup when connection error occurs."""
+    respx.get("https://localhost").mock(side_effect=ssl.SSLError("ssl error"))
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "https://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 0
+    assert "ssl error" in caplog.text
 
 
 @respx.mock
@@ -132,6 +156,44 @@ async def test_setup_encoding(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
     assert hass.states.get("sensor.mysensor").state == "tack själv"
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    ("ssl_cipher_list", "ssl_cipher_list_expected"),
+    (
+        ("python_default", SSLCipherList.PYTHON_DEFAULT),
+        ("intermediate", SSLCipherList.INTERMEDIATE),
+        ("modern", SSLCipherList.MODERN),
+    ),
+)
+async def test_setup_ssl_ciphers(
+    hass: HomeAssistant, ssl_cipher_list: str, ssl_cipher_list_expected: SSLCipherList
+) -> None:
+    """Test setup with minimum configuration."""
+    with patch(
+        "homeassistant.components.rest.data.create_async_httpx_client",
+        return_value=MagicMock(request=AsyncMock(return_value=respx.MockResponse())),
+    ) as httpx:
+        assert await async_setup_component(
+            hass,
+            SENSOR_DOMAIN,
+            {
+                SENSOR_DOMAIN: {
+                    "platform": DOMAIN,
+                    "resource": "http://localhost",
+                    "method": "GET",
+                    "ssl_cipher_list": ssl_cipher_list,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+        httpx.assert_called_once_with(
+            hass,
+            verify_ssl=True,
+            default_encoding="UTF-8",
+            ssl_cipher_list=ssl_cipher_list_expected,
+        )
 
 
 @respx.mock
