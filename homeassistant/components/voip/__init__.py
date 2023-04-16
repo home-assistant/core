@@ -17,7 +17,10 @@ from .const import DOMAIN
 from .devices import VoIPDevices
 from .voip import HassVoipDatagramProtocol
 
-PLATFORMS = (Platform.SWITCH,)
+PLATFORMS = (
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+)
 _LOGGER = logging.getLogger(__name__)
 _IP_WILDCARD = "0.0.0.0"
 

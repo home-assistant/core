@@ -19,7 +19,15 @@ class VoIPDevice:
 
     voip_id: str
     device_id: str
+    is_active: bool = False
     update_listeners: list[Callable[[VoIPDevice], None]] = field(default_factory=list)
+
+    @callback
+    def set_is_active(self, active: bool) -> None:
+        """Set active state."""
+        self.is_active = active
+        for listener in self.update_listeners:
+            listener(self)
 
     @callback
     def async_listen_update(

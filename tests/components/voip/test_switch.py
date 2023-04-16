@@ -1,15 +1,15 @@
 """Test VoIP switch devices."""
-
-from __future__ import annotations
-
+from homeassistant.components.voip.devices import VoIPDevice
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
 async def test_allow_call(
-    hass: HomeAssistant, config_entry, voip_devices, call_info
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    voip_device: VoIPDevice,
 ) -> None:
     """Test allow call."""
-    voip_device = voip_devices.async_get_or_create(call_info)
     assert not voip_device.async_allow_call(hass)
     await hass.async_block_till_done()
 
