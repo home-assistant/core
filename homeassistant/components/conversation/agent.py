@@ -9,7 +9,7 @@ from homeassistant.core import Context
 from homeassistant.helpers import intent
 
 
-@dataclass
+@dataclass(slots=True)
 class ConversationInput:
     """User input to be processed."""
 
@@ -19,7 +19,7 @@ class ConversationInput:
     language: str
 
 
-@dataclass
+@dataclass(slots=True)
 class ConversationResult:
     """Result of async_process."""
 
