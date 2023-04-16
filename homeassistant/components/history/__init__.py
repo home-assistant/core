@@ -12,7 +12,7 @@ from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, valid_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
 from homeassistant.helpers.typing import ConfigType
@@ -73,6 +73,14 @@ class HistoryPeriodView(HomeAssistantView):
                 "filter_entity_id is missing", HTTPStatus.BAD_REQUEST
             )
 
+        hass = request.app["hass"]
+
+        for entity_id in entity_ids:
+            if not hass.states.get(entity_id) and not valid_entity_id(entity_id):
+                return self.json_message(
+                    "Invalid filter_entity_id", HTTPStatus.BAD_REQUEST
+                )
+
         now = dt_util.utcnow()
         if datetime_:
             start_time = dt_util.as_utc(datetime_)
@@ -95,8 +103,6 @@ class HistoryPeriodView(HomeAssistantView):
 
         minimal_response = "minimal_response" in request.query
         no_attributes = "no_attributes" in request.query
-
-        hass = request.app["hass"]
 
         if (
             not include_start_time_state

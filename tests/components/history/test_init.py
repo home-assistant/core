@@ -696,3 +696,72 @@ async def test_fetch_period_api_with_no_entity_ids(
     assert response.status == HTTPStatus.BAD_REQUEST
     response_json = await response.json()
     assert response_json == {"message": "filter_entity_id is missing"}
+
+
+@pytest.mark.parametrize(
+    ("filter_entity_id", "status_code", "response_contains1", "response_contains2"),
+    [
+        ("light.kitchen,light.cow", HTTPStatus.OK, "light.kitchen", "light.cow"),
+        (
+            "light.kitchen,light.cow&",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        (
+            "light.kitchen,li-ght.cow",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        (
+            "light.kit!chen",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        (
+            "lig+ht.kitchen,light.cow",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        (
+            "light.kitchenlight.cow",
+            HTTPStatus.BAD_REQUEST,
+            "message",
+            "Invalid filter_entity_id",
+        ),
+        ("cow", HTTPStatus.BAD_REQUEST, "message", "Invalid filter_entity_id"),
+    ],
+)
+async def test_history_with_invalid_entity_ids(
+    filter_entity_id,
+    status_code,
+    response_contains1,
+    response_contains2,
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test sending valid and invalid entity_ids to the API."""
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+
+    await async_wait_recording_done(hass)
+    now = dt_util.utcnow().isoformat()
+    client = await hass_client()
+
+    response = await client.get(
+        f"/api/history/period/{now}",
+        params={"filter_entity_id": filter_entity_id},
+    )
+    assert response.status == status_code
+    response_json = await response.json()
+    assert response_contains1 in str(response_json)
+    assert response_contains2 in str(response_json)

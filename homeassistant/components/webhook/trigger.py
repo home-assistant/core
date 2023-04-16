@@ -49,7 +49,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 WEBHOOK_TRIGGERS = f"{DOMAIN}_triggers"
 
 
-@dataclass
+@dataclass(slots=True)
 class TriggerInstance:
     """Attached trigger settings."""
 

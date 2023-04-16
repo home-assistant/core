@@ -3073,16 +3073,26 @@ async def test_subscribe_connection_status(
 ) -> None:
     """Test connextion status subscription."""
     mqtt_mock = await mqtt_mock_entry()
-    mqtt_connected_calls = []
+    mqtt_connected_calls_callback: list[bool] = []
+    mqtt_connected_calls_async: list[bool] = []
 
     @callback
-    def async_mqtt_connected(status: bool) -> None:
+    def async_mqtt_connected_callback(status: bool) -> None:
         """Update state on connection/disconnection to MQTT broker."""
-        mqtt_connected_calls.append(status)
+        mqtt_connected_calls_callback.append(status)
+
+    async def async_mqtt_connected_async(status: bool) -> None:
+        """Update state on connection/disconnection to MQTT broker."""
+        mqtt_connected_calls_async.append(status)
 
     mqtt_mock.connected = True
 
-    unsub = mqtt.async_subscribe_connection_status(hass, async_mqtt_connected)
+    unsub_callback = mqtt.async_subscribe_connection_status(
+        hass, async_mqtt_connected_callback
+    )
+    unsub_async = mqtt.async_subscribe_connection_status(
+        hass, async_mqtt_connected_async
+    )
     await hass.async_block_till_done()
 
     # Mock connection status
@@ -3095,15 +3105,20 @@ async def test_subscribe_connection_status(
     await hass.async_block_till_done()
 
     # Unsubscribe
-    unsub()
+    unsub_callback()
+    unsub_async()
 
     mqtt_client_mock.on_connect(None, None, 0, 0)
     await hass.async_block_till_done()
 
     # Check calls
-    assert len(mqtt_connected_calls) == 2
-    assert mqtt_connected_calls[0] is True
-    assert mqtt_connected_calls[1] is False
+    assert len(mqtt_connected_calls_callback) == 2
+    assert mqtt_connected_calls_callback[0] is True
+    assert mqtt_connected_calls_callback[1] is False
+
+    assert len(mqtt_connected_calls_async) == 2
+    assert mqtt_connected_calls_async[0] is True
+    assert mqtt_connected_calls_async[1] is False
 
 
 # Test existence of removed YAML configuration under the platform key
