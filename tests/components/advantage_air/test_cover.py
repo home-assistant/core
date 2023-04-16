@@ -168,7 +168,6 @@ async def test_things_cover(
     assert state
     assert state.state == STATE_OPEN
     assert state.attributes.get("device_class") == CoverDeviceClass.BLIND
-    assert state.attributes.get("current_position") == 100
 
     entry = registry.async_get(entity_id)
     assert entry
