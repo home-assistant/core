@@ -485,6 +485,7 @@ async def _account_data(hass: HomeAssistant, cloud: Cloud):
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
         "remote_certificate": certificate,
+        "remote_certificate_status": remote.certificate_status,
         "remote_connected": remote.is_connected,
         "remote_domain": remote.instance_domain,
         "http_use_ssl": hass.config.api.use_ssl,

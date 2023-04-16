@@ -363,7 +363,7 @@ class IASZoneChannel(ZigbeeChannel):
         self.debug("started IASZoneChannel configuration")
 
         await self.bind()
-        ieee = self.cluster.endpoint.device.application.ieee
+        ieee = self.cluster.endpoint.device.application.state.node_info.ieee
 
         try:
             res = await self._cluster.write_attributes({"cie_addr": ieee})
