@@ -84,7 +84,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 NOTIFICATION_CONTROL_SCHEMA = {
     vol.Required("enable"): vol.Any(STATE_ON, STATE_OFF, NOTIFICATION_SNOOZE),
-    vol.Optional("snooze_hours"): vol.All(vol.Coerce(float), vol.Range(min=0)),
+    vol.Optional("snooze_until"): cv.datetime,
 }
 
 
@@ -259,18 +259,18 @@ class Alert(RestoreEntity):
         self.async_write_ha_state()
 
     async def async_notification_control(
-        self, enable: str, snooze_hours: float | None = None
+        self, enable: str, snooze_until: datetime | None = None
     ) -> None:
         """Enable, disable or snooze notifications, for current and future alerts."""
         LOGGER.debug(
             "async_notification_control: %s enable=%s snooze_hours=%s",
             self._attr_name,
             enable,
-            snooze_hours,
+            snooze_until,
         )
-        if (snooze_hours is not None) != (enable == NOTIFICATION_SNOOZE):
+        if (snooze_until is not None) != (enable == NOTIFICATION_SNOOZE):
             raise vol.Invalid(
-                "snooze_hours parameter should be present only when 'enable' is "
+                "snooze_until parameter should be present only when 'enable' is "
                 f"set to '{NOTIFICATION_SNOOZE}'"
             )
 
@@ -294,12 +294,17 @@ class Alert(RestoreEntity):
                 self.async_write_ha_state()
         else:  # enable == NOTIFICATION_SNOOZE, enforced by NOTIFICATION_CONTROL_SCHEMA
             LOGGER.debug(
-                "Snoozing notifications for alert %s for %f hours",
+                "Snoozing notifications for alert %s until %s",
                 self._attr_name,
-                snooze_hours,
+                snooze_until,
             )
-            assert isinstance(snooze_hours, float)  # checked above
-            self._snooze_until = now() + timedelta(hours=snooze_hours)
+            assert isinstance(snooze_until, datetime)  # checked above
+            snooze_until = as_local(snooze_until)
+            if snooze_until <= now():
+                raise vol.Invalid(
+                    f"Requested snooze end time is in the past: {snooze_until}"
+                )
+            self._snooze_until = snooze_until
 
             async def snooze_timeout(adt: datetime) -> None:
                 self._snooze_until_cancel = None
@@ -332,13 +337,10 @@ class Alert(RestoreEntity):
                     await self.async_notification_control(STATE_ON)
                 else:
                     adt = as_local(adt)
-                    hours = (adt - now()).total_seconds() / (60 * 60)
-                    if hours <= 0:
+                    if adt < now():
                         await self.async_notification_control(STATE_ON)
                     else:
-                        await self.async_notification_control(
-                            NOTIFICATION_SNOOZE, hours
-                        )
+                        await self.async_notification_control(NOTIFICATION_SNOOZE, adt)
 
     @final
     @property

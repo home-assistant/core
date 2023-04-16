@@ -4,6 +4,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 
 import pytest
+import voluptuous as vol
 
 import homeassistant.components.alert as alert
 from homeassistant.components.alert.const import (
@@ -387,14 +388,31 @@ async def test_snooze_notification(
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     assert len(mock_notifier) == 0
 
-    # Snooze notifications for an hour
+    try:
+        # Snooze notifications till a time in the past
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NOTIFICATION_CONTROL,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                "enable": NOTIFICATION_SNOOZE,
+                "snooze_until": str(now() + timedelta(hours=-1)),
+            },
+            blocking=True,
+        )
+    except vol.error.Invalid:
+        pass
+    else:
+        pytest.fail("Test of snoozing until time in the past did not fail")
+
+    # Snooze notifications for an hour in the future
     await hass.services.async_call(
         DOMAIN,
         SERVICE_NOTIFICATION_CONTROL,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             "enable": NOTIFICATION_SNOOZE,
-            "snooze_hours": 1,
+            "snooze_until": str(now() + timedelta(hours=1)),
         },
         blocking=True,
     )

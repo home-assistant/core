@@ -7,21 +7,21 @@ toggle:
 
 turn_off:
   name: Turn off
-  description: Silence alert's notifications.
+  description: Silence alert's notifications. Affects only current firing, not future firings of the alert.
   target:
     entity:
       domain: alert
 
 turn_on:
   name: Turn on
-  description: Reset alert's notifications.
+  description: Reset alert's notifications. Affects only current firing, not future firings of the alert.
   target:
     entity:
       domain: alert
 
 notification_control:
   name: Notification Control
-  description: Enable/Disable/Snooze notifications (for current and future alerts).
+  description: Enable/Disable/Snooze notifications. Affects current and future alert firings.
   target:
     entity:
       domain: alert
@@ -34,17 +34,15 @@ notification_control:
       selector:
         select:
           options:
-            - label: "On"
+            - label: "Enable"
               value: "on"
-            - label: "Off"
+            - label: "Disable"
               value: "off"
             - label: "Snooze"
               value: "snooze"
-    snooze_hours:
-      name: Snooze for (hours)
-      description: Notifications will only be sent for alerts that fire after this many hours from now.  Should only be set if Notifications is set to "Snooze"
+    snooze_until:
+      name: Snooze until
+      description: Notifications will only be sent for alerts that fire after this time.  Should only be set if Notifications is set to "Snooze". Format can be "2000-01-20 04:23:00". Time is parsed as GMT.
       required: false
       selector:
-        number:
-          min: 0
-          mode: box
+        text:
