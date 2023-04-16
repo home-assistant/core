@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -55,6 +56,7 @@ class ONVIFDevice:
         self.capabilities: Capabilities = Capabilities()
         self.profiles: list[Profile] = []
         self.max_resolution: int = 0
+        self.platforms: list[Platform] = []
 
         self._dt_diff_seconds: float = 0
 
