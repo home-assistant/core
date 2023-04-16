@@ -51,8 +51,24 @@ async def test_switch(hass: HomeAssistant) -> None:
     registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
+        "xyz12_block_bereal",
+        suggested_object_id="fake_profile_block_bereal",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
         "xyz12_block_blizzard",
         suggested_object_id="fake_profile_block_blizzard",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        "xyz12_block_chatgpt",
+        suggested_object_id="fake_profile_block_chatgpt",
         disabled_by=None,
     )
 
@@ -107,6 +123,22 @@ async def test_switch(hass: HomeAssistant) -> None:
     registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
+        "xyz12_block_google_chat",
+        suggested_object_id="fake_profile_block_google_chat",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        "xyz12_block_hbomax",
+        suggested_object_id="fake_profile_block_hbomax",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
         "xyz12_block_hulu",
         suggested_object_id="fake_profile_block_hulu",
         disabled_by=None,
@@ -125,6 +157,14 @@ async def test_switch(hass: HomeAssistant) -> None:
         DOMAIN,
         "xyz12_block_instagram",
         suggested_object_id="fake_profile_block_instagram",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        "xyz12_block_mastodon",
+        suggested_object_id="fake_profile_block_mastodon",
         disabled_by=None,
     )
 
@@ -165,6 +205,14 @@ async def test_switch(hass: HomeAssistant) -> None:
         DOMAIN,
         "xyz12_block_pinterest",
         suggested_object_id="fake_profile_block_pinterest",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        "xyz12_block_playstation_network",
+        suggested_object_id="fake_profile_block_playstation_network",
         disabled_by=None,
     )
 
@@ -347,6 +395,14 @@ async def test_switch(hass: HomeAssistant) -> None:
     registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
+        "xyz12_block_online_gaming",
+        suggested_object_id="fake_profile_block_online_gaming",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
         "xyz12_block_piracy",
         suggested_object_id="fake_profile_block_piracy",
         disabled_by=None,
@@ -365,6 +421,14 @@ async def test_switch(hass: HomeAssistant) -> None:
         DOMAIN,
         "xyz12_block_social_networks",
         suggested_object_id="fake_profile_block_social_networks",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        "xyz12_block_video_streaming",
+        suggested_object_id="fake_profile_block_video_streaming",
         disabled_by=None,
     )
 
@@ -576,6 +640,14 @@ async def test_switch(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "xyz12_block_amazon"
 
+    state = hass.states.get("switch.fake_profile_block_bereal")
+    assert state
+    assert state.state == STATE_ON
+
+    entry = registry.async_get("switch.fake_profile_block_bereal")
+    assert entry
+    assert entry.unique_id == "xyz12_block_bereal"
+
     state = hass.states.get("switch.fake_profile_block_blizzard")
     assert state
     assert state.state == STATE_ON
@@ -583,6 +655,14 @@ async def test_switch(hass: HomeAssistant) -> None:
     entry = registry.async_get("switch.fake_profile_block_blizzard")
     assert entry
     assert entry.unique_id == "xyz12_block_blizzard"
+
+    state = hass.states.get("switch.fake_profile_block_chatgpt")
+    assert state
+    assert state.state == STATE_ON
+
+    entry = registry.async_get("switch.fake_profile_block_chatgpt")
+    assert entry
+    assert entry.unique_id == "xyz12_block_chatgpt"
 
     state = hass.states.get("switch.fake_profile_block_dailymotion")
     assert state
@@ -632,6 +712,22 @@ async def test_switch(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "xyz12_block_fortnite"
 
+    state = hass.states.get("switch.fake_profile_block_google_chat")
+    assert state
+    assert state.state == STATE_ON
+
+    entry = registry.async_get("switch.fake_profile_block_google_chat")
+    assert entry
+    assert entry.unique_id == "xyz12_block_google_chat"
+
+    state = hass.states.get("switch.fake_profile_block_hbomax")
+    assert state
+    assert state.state == STATE_ON
+
+    entry = registry.async_get("switch.fake_profile_block_hbomax")
+    assert entry
+    assert entry.unique_id == "xyz12_block_hbomax"
+
     state = hass.states.get("switch.fake_profile_block_hulu")
     assert state
     assert state.state == STATE_ON
@@ -664,6 +760,14 @@ async def test_switch(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "xyz12_block_leagueoflegends"
 
+    state = hass.states.get("switch.fake_profile_block_mastodon")
+    assert state
+    assert state.state == STATE_ON
+
+    entry = registry.async_get("switch.fake_profile_block_mastodon")
+    assert entry
+    assert entry.unique_id == "xyz12_block_mastodon"
+
     state = hass.states.get("switch.fake_profile_block_messenger")
     assert state
     assert state.state == STATE_ON
@@ -695,6 +799,14 @@ async def test_switch(hass: HomeAssistant) -> None:
     entry = registry.async_get("switch.fake_profile_block_pinterest")
     assert entry
     assert entry.unique_id == "xyz12_block_pinterest"
+
+    state = hass.states.get("switch.fake_profile_block_playstation_network")
+    assert state
+    assert state.state == STATE_ON
+
+    entry = registry.async_get("switch.fake_profile_block_playstation_network")
+    assert entry
+    assert entry.unique_id == "xyz12_block_playstation_network"
 
     state = hass.states.get("switch.fake_profile_block_primevideo")
     assert state
@@ -872,6 +984,14 @@ async def test_switch(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "xyz12_block_gambling"
 
+    state = hass.states.get("switch.fake_profile_block_online_gaming")
+    assert state
+    assert state.state == STATE_ON
+
+    entry = registry.async_get("switch.fake_profile_block_online_gaming")
+    assert entry
+    assert entry.unique_id == "xyz12_block_online_gaming"
+
     state = hass.states.get("switch.fake_profile_block_piracy")
     assert state
     assert state.state == STATE_ON
@@ -895,6 +1015,14 @@ async def test_switch(hass: HomeAssistant) -> None:
     entry = registry.async_get("switch.fake_profile_block_social_networks")
     assert entry
     assert entry.unique_id == "xyz12_block_social_networks"
+
+    state = hass.states.get("switch.fake_profile_block_video_streaming")
+    assert state
+    assert state.state == STATE_ON
+
+    entry = registry.async_get("switch.fake_profile_block_video_streaming")
+    assert entry
+    assert entry.unique_id == "xyz12_block_video_streaming"
 
 
 async def test_switch_on(hass: HomeAssistant) -> None:
