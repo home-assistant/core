@@ -364,16 +364,24 @@ class ReolinkHost:
     ) -> None:
         """Read the incoming webhook from Reolink for inbound messages and schedule processing."""
         _LOGGER.debug("Webhook '%s' called", webhook_id)
+        data: str | None = None
         try:
             data = await request.text()
             if not data:
                 _LOGGER.debug(
                     "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
                 )
-        except (asyncio.CancelledError, ConnectionResetError):
-            data = None
+        except ConnectionResetError:
             _LOGGER.debug(
-                "Webhook '%s' called, but lost connection before reading message, issuing poll",
+                "Webhook '%s' called, but lost connection before reading message "
+                "(ConnectionResetError), issuing poll",
+                webhook_id,
+            )
+            return
+        except asyncio.CancelledError:
+            _LOGGER.debug(
+                "Webhook '%s' called, but lost connection before reading message "
+                "(CancelledError), issuing poll",
                 webhook_id,
             )
             raise
