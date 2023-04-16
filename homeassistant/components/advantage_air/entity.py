@@ -101,7 +101,6 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
             instance["api"].things.async_update_value, self._id
         )
 
-
     @property
     def _data(self) -> dict:
         """Return the thing data."""
@@ -119,4 +118,3 @@ class AdvantageAirThingEntity(AdvantageAirEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the thing off."""
         await self.async_update_value(False)
-
