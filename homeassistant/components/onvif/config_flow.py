@@ -115,13 +115,9 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         ):
             return self.async_abort(reason="no_devices_found")
-        possible_entries = [
-            hass.config_entries.async_get_entry(entry)
-            for entry in device.config_entries
-        ]
-        for entry in possible_entries:
+        for entry_id in device.config_entries:
             if (
-                not entry
+                not (entry := hass.config_entries.async_get_entry(entry_id))
                 or entry.domain != DOMAIN
                 or entry.state is config_entries.ConfigEntryState.LOADED
             ):
