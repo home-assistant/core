@@ -21,7 +21,6 @@ from homeassistant.components.synology_dsm.media_source import (
     SynologyPhotosMediaSource,
     async_get_media_source,
 )
-from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -377,21 +376,37 @@ async def test_media_view(
     with pytest.raises(web.HTTPNotFound):
         await view.get(request, "", "")
 
-    # mime type not guessable
-    dsm = SynologyDSMData
-    dsm.api = dsm_with_photos
-    hass.data[DOMAIN] = {"unique_id": dsm}
+    with patch(
+        "homeassistant.components.synology_dsm.common.SynologyDSM",
+        return_value=dsm_with_photos,
+    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+                CONF_MAC: MACS[0],
+            },
+            unique_id="mocked_syno_dsm_entry",
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
     with pytest.raises(web.HTTPNotFound):
         await view.get(request, "", "10_1298753/filename")
 
     # exception in download_item()
-    dsm.api.photos.download_item = AsyncMock(side_effect=SynologyDSMException("", None))
+    dsm_with_photos.photos.download_item = AsyncMock(
+        side_effect=SynologyDSMException("", None)
+    )
     with pytest.raises(web.HTTPNotFound):
-        await view.get(request, "unique_id", "10_1298753/filename.jpg")
+        await view.get(request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg")
 
     # success
-    dsm.api.photos.download_item = AsyncMock(return_value=b"xxxx")
+    dsm_with_photos.photos.download_item = AsyncMock(return_value=b"xxxx")
     tempfile.tempdir = tmp_path
-    result = await view.get(request, "unique_id", "10_1298753/filename.jpg")
+    result = await view.get(request, "mocked_syno_dsm_entry", "10_1298753/filename.jpg")
     assert isinstance(result, web.Response)
