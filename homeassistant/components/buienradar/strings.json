@@ -44,7 +44,7 @@
         "name": "Condition",
         "state": {
           "clear": "Clear",
-          "cloudy": "asd [%key:component::weather::entity_component::_::state::cloudy%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
           "fog": "[%key:component::weather::entity_component::_::state::fog%]",
           "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
           "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
@@ -55,7 +55,25 @@
         "name": "Condition code"
       },
       "conditiondetailed": {
-        "name": "Detailed condition"
+        "name": "Detailed condition",
+        "state": {
+          "clear": "Clear",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "partlycloudy-fog": "Partly cloudy, fog",
+          "partlycloudy-light-rain": "Partly cloudy, light rain",
+          "partlycloudy-rain": "Partly cloudy, rain",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "light-rain": "Light rain",
+          "light-snow": "Light snow",
+          "partlycloudy-light-snow": "Partly cloudy, light snow",
+          "partlycloudy-snow": "Partly cloudy, snow",
+          "partlycloudy-lightning": "Partly cloudy, lightning",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]"
+        }
       },
       "conditionexact": {
         "name": "Full condition"
