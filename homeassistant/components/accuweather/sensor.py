@@ -95,6 +95,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        translation_key="grass_pollen",
     ),
     AccuWeatherSensorDescription(
         key="HoursOfSun",
@@ -111,6 +112,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        translation_key="mold_pollen",
     ),
     AccuWeatherSensorDescription(
         key="Ragweed",
@@ -120,6 +122,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        translation_key="ragweed_pollen",
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureMax",
@@ -173,6 +176,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        translation_key="tree_pollen",
     ),
     AccuWeatherSensorDescription(
         key="UVIndex",
@@ -181,6 +185,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        translation_key="uv_index",
     ),
     AccuWeatherSensorDescription(
         key="WindGustDay",
