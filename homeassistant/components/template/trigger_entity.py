@@ -189,7 +189,7 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await TriggerBaseEntity.async_added_to_hass(self)
-        await CoordinatorEntity.async_added_to_hass(self)  # type: ignore[arg-type]
+        await super(CoordinatorEntity, self).async_added_to_hass()
         if self.coordinator.data is not None:
             self._process_data()
 
