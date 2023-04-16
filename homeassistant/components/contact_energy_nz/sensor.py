@@ -4,10 +4,10 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 import async_timeout
-from contact_energy_nz import AuthException, ContactEnergyApi, UsageDatum
+from contact_energy_nz import ContactEnergyApi, UsageDatum
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -17,18 +17,19 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import UnitOfEnergy
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import InvalidStateError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
-from .const import DOMAIN
-from .exceptions import CannotUpdate
+from .const import DOMAIN, UPDATE_INTERVAL_HOURS
 
 ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".contact_enegry_nz_{}"
 
@@ -38,7 +39,7 @@ class ContactEnergyUsageMixin:
     """Extra fields to pass."""
 
     value_fn: Callable[[UsageDatum], float]
-    unit_fn: Callable[[UsageDatum], float]
+    unit_fn: Callable[[UsageDatum], str]
 
 
 @dataclass
@@ -58,8 +59,8 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         translation_key="value",
-        value_fn=lambda data: data.value,
-        unit_fn=lambda data: data.unit,
+        value_fn=lambda data: float(data.value),
+        unit_fn=lambda data: str(data.unit),
     ),
     ContactEnergyUsageSensorEntityDescription(
         key="dollar_value",
@@ -68,8 +69,8 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="NZD",
         translation_key="dollar_value",
-        value_fn=lambda data: data.dollar_value,
-        unit_fn=lambda data: data.currency,
+        value_fn=lambda data: float(data.dollar_value),
+        unit_fn=lambda data: str(data.currency),
     ),
     ContactEnergyUsageSensorEntityDescription(
         key="offpeak_value",
@@ -78,8 +79,8 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         translation_key="offpeak_value",
-        value_fn=lambda data: data.offpeak_value,
-        unit_fn=lambda data: data.unit,
+        value_fn=lambda data: float(data.offpeak_value),
+        unit_fn=lambda data: str(data.unit),
     ),
     ContactEnergyUsageSensorEntityDescription(
         key="offpeak_dollar_value",
@@ -88,8 +89,8 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="NZD",
         translation_key="offpeak_dollar_value",
-        value_fn=lambda data: data.offpeak_dollar_value,
-        unit_fn=lambda data: data.currency,
+        value_fn=lambda data: float(data.offpeak_dollar_value),
+        unit_fn=lambda data: str(data.currency),
     ),
     ContactEnergyUsageSensorEntityDescription(
         key="uncharged_value",
@@ -98,8 +99,8 @@ SENSOR_TYPES: tuple[ContactEnergyUsageSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         translation_key="uncharged_value",
-        value_fn=lambda data: data.uncharged_value,
-        unit_fn=lambda data: data.unit,
+        value_fn=lambda data: float(data.uncharged_value),
+        unit_fn=lambda data: str(data.unit),
     ),
 )
 
@@ -109,8 +110,13 @@ async def async_setup_entry(
 ) -> None:
     """Contact Energy Sensor Setup."""
     api: ContactEnergyApi = hass.data[DOMAIN][entry.entry_id]
-    coordinator = ContactEnergyUsageCoordinator(hass, api, entry)
-    await api.account_summary()
+    coordinator = ContactEnergyUsageCoordinator(hass, api)
+
+    # check if API object has been initialised
+    if api.account_id is None or api.contract_id is None:
+        raise InvalidStateError(
+            f"Entry {entry.unique_id} has no account information fields"
+        )
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -127,13 +133,9 @@ async def async_setup_entry(
 class ContactEnergyUsageCoordinator(DataUpdateCoordinator):
     """Coordinator to fetch data once per cycle."""
 
-    def __init__(
-        self, hass: HomeAssistant, api: ContactEnergyApi, config_entry: ConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: ContactEnergyApi) -> None:
         """Initialize my coordinator."""
-        self.retry = 0
         self._api = api
-        self._config_entry = config_entry
         self.device_info = DeviceInfo(
             name="Contact Energy NZ API",
             identifiers={(DOMAIN, api.account_id)},
@@ -143,27 +145,18 @@ class ContactEnergyUsageCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="Contact Enegry NZ API",
-            update_interval=timedelta(hours=1),
+            update_interval=timedelta(hours=UPDATE_INTERVAL_HOURS),
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> UsageDatum:
         """Get the pricing data from the web service."""
         try:
             async with async_timeout.timeout(60):
                 data = await self._api.get_latest_usage()
-                self.retry = 0
-                return data
-        except AuthException as ex:
-            self._api = await ContactEnergyApi.from_credentials(
-                self._config_entry.data[CONF_USERNAME],
-                self._config_entry.data[CONF_PASSWORD],
-            )
-            await self._api.account_summary()
-            if self.retry <= 5:
-                self.retry += 1
-                _LOGGER.info("Updated token, retrying %s", self.retry)
-                return await self._async_update_data()
-            raise CannotUpdate("Unable to call Contact energy API") from ex
+        except Exception as err:
+            _LOGGER.error("Failed to update data: %s", err)
+            raise UpdateFailed(f"Failed to update data: {err}") from err
+        return data
 
 
 class ContactEnergyUsageSensor(
@@ -171,15 +164,12 @@ class ContactEnergyUsageSensor(
 ):
     """Entity object for Contact Energy Usage sensor."""
 
-    _usage: UsageDatum = None
-    retry = 0
-
     def __init__(
         self,
         coordinator: ContactEnergyUsageCoordinator,
         description: ContactEnergyUsageSensorEntityDescription,
-        account_id,
-        contract_id,
+        account_id: str,
+        contract_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -194,21 +184,18 @@ class ContactEnergyUsageSensor(
                 self.entity_description.key,
             ]
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._usage = self.coordinator.data
-        self.async_write_ha_state()
+        _LOGGER.info("Initialised %s", self._attr_unique_id)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         return (
             {}
-            if not self._usage
+            if not self.coordinator.data
             else {
-                "unit_of_measure": self.entity_description.unit_fn(self._usage),
+                "unit_of_measure": self.entity_description.unit_fn(
+                    self.coordinator.data
+                ),
             }
         )
 
@@ -217,8 +204,8 @@ class ContactEnergyUsageSensor(
         """Return the state of the sensor."""
         return (
             0.0
-            if not self._usage
-            else float(self.entity_description.value_fn(self._usage))
+            if not self.coordinator.data
+            else float(self.entity_description.value_fn(self.coordinator.data))
         )
 
     @property
@@ -228,4 +215,8 @@ class ContactEnergyUsageSensor(
         Since we are collecting monthly stats, it should have reset on the 1st of current month
         The API happens to return this date so we will rely on it.
         """
-        return datetime.now().replace(day=1) if not self._usage else self._usage.date
+        return (
+            datetime.now().replace(day=1)
+            if not self.coordinator.data
+            else cast(datetime, self.coordinator.data.date)
+        )

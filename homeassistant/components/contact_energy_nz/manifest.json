@@ -7,5 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/contact_energy_nz",
   "integration_type": "service",
   "iot_class": "cloud_polling",
+  "loggers": ["contact_energy_nz"],
   "requirements": ["contact-energy-nz==0.1.4684953769"]
 }
