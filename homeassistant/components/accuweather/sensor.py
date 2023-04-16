@@ -63,13 +63,6 @@ class AccuWeatherSensorDescription(
 
 FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
-        key="AirQuality",
-        icon="mdi:air-filter",
-        name="Air quality",
-        entity_registry_enabled_default=True,
-        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
-    ),
-    AccuWeatherSensorDescription(
         key="CloudCoverDay",
         icon="mdi:weather-cloudy",
         name="Cloud cover day",
