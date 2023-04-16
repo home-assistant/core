@@ -424,9 +424,7 @@ class Entity(ABC):
                     name_translation_key
                 ]
                 return name
-        if hasattr(self, "entity_description"):
-            return self.entity_description.name
-        return None
+        return self.name
 
     @property
     def name(self) -> str | UndefinedType | None:
