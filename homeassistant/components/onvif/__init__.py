@@ -57,15 +57,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.unique_id] = device
 
-    platforms = [Platform.BUTTON, Platform.CAMERA]
+    device.platforms = [Platform.BUTTON, Platform.CAMERA]
 
     if device.capabilities.events:
-        platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
+        device.platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
 
     if device.capabilities.imaging:
-        platforms += [Platform.SWITCH]
+        device.platforms += [Platform.SWITCH]
 
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, device.platforms)
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
@@ -77,16 +77,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    device = hass.data[DOMAIN][entry.unique_id]
-    platforms = ["camera"]
+    device: ONVIFDevice = hass.data[DOMAIN][entry.unique_id]
 
     if device.capabilities.events and device.events.started:
-        platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
         await device.events.async_stop()
-    if device.capabilities.imaging:
-        platforms += [Platform.SWITCH]
 
-    return await hass.config_entries.async_unload_platforms(entry, platforms)
+    return await hass.config_entries.async_unload_platforms(entry, device.platforms)
 
 
 async def _get_snapshot_auth(device):
