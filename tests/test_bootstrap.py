@@ -10,12 +10,15 @@ import pytest
 
 from homeassistant import bootstrap, runner
 import homeassistant.config as config_util
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType
 
 from .common import (
+    MockConfigEntry,
     MockModule,
     MockPlatform,
     get_test_config_dir,
@@ -825,3 +828,59 @@ async def test_bootstrap_empty_integrations(
     """Test setting up an empty integrations does not raise."""
     await bootstrap.async_setup_multi_components(hass, set(), {})
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("integration", "dependencies"),
+    [
+        ("mqtt_eventstream", {"file_upload", "http"}),
+        ("mqtt_statestream", {"file_upload", "http"}),
+    ],
+)
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_dependencies(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    integration: str,
+    dependencies: set[str],
+) -> None:
+    """Test dependencies are set up correctly,."""
+    # Prepare MQTT config entry
+    entry = MockConfigEntry(domain="mqtt", data={"broker": "test-broker"})
+    entry.add_to_hass(hass)
+
+    integrations = {integration}
+
+    calls: list[str] = []
+
+    async def async_mqtt_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Assert the mqtt config entry was set up."""
+        calls.append("mqtt")
+        # assert the integration is not yet set up
+        assert hass.data["setup_done"][integration].is_set() is False
+        assert hass.data["setup_done"]["mqtt"].is_set() is False
+        assert dependencies in hass.config.components
+        return True
+
+    async def async_integration_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        """Assert the mqtt config entry was set up."""
+        calls.append(integration)
+        # assert mqtt was already set up
+        assert (
+            "mqtt" not in hass.data["setup_done"]
+            or hass.data["setup_done"]["mqtt"].is_set()
+        )
+        return True
+
+    with patch(
+        "homeassistant.components.mqtt.async_setup_entry",
+        side_effect=async_mqtt_setup_entry,
+    ), patch(
+        f"homeassistant.components.{integration}.async_setup",
+        side_effect=async_integration_setup,
+    ):
+        bootstrap.async_set_domains_to_be_loaded(hass, integrations)
+        await bootstrap.async_setup_multi_components(hass, integrations, {})
+        await hass.async_block_till_done()
+
+    assert calls == ["mqtt", integration]
