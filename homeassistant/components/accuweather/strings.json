@@ -30,6 +30,16 @@
           "rising": "Rising",
           "falling": "Falling"
         }
+      },
+      "air_quality": {
+        "state": {
+          "good": "Good",
+          "hazardous": "Hazardous",
+          "high": "High",
+          "low": "Low",
+          "moderate": "Moderate",
+          "unhealthy": "Unhealthy"
+        }
       }
     }
   },

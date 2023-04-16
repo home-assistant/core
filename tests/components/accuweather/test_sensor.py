@@ -196,6 +196,25 @@ async def test_sensor_with_forecast(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "0123456-uvindex-0"
 
+    state = hass.states.get("sensor.home_air_quality_0d")
+    assert state
+    assert state.state == "high"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "good",
+        "hazardous",
+        "high",
+        "low",
+        "moderate",
+        "unhealthy",
+    ]
+
+    entry = registry.async_get("sensor.home_air_quality_0d")
+    assert entry
+    assert entry.unique_id == "0123456-airquality-0"
+
 
 async def test_sensor_disabled(hass: HomeAssistant) -> None:
     """Test sensor disabled by default."""
