@@ -924,6 +924,7 @@ class EsphomeAssistEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self._entry_data.async_subscribe_assist_pipeline_update(self._update)
         )

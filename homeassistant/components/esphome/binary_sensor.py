@@ -70,7 +70,7 @@ class EsphomeBinarySensor(
 class EsphomeAssistActiveBinarySensor(EsphomeAssistEntity, BinarySensorEntity):
     """A binary sensor implementation for ESPHome for use with assist_pipeline."""
 
-    _attr_name = "Pipeline Active"
+    _attr_name = "Assist Active"
     _attr_has_entity_name = True
 
     @property
