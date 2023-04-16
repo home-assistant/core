@@ -1,11 +1,7 @@
 """Support for Proxmox VE."""
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any
-
 from proxmoxer import AuthenticationError, ProxmoxAPI
-from proxmoxer.core import ResourceException
 import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
@@ -22,7 +18,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_CONTAINERS,
@@ -37,10 +32,8 @@ from .const import (
     DOMAIN,
     LOGGER,
     PROXMOX_CLIENTS,
-    UPDATE_INTERVAL,
-    ProxmoxType,
 )
-from .models import ProxmoxVMData
+from .coordinator import ProxmoxLXCCoordinator, ProxmoxQEMUCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR]
 
@@ -135,7 +128,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await hass.async_add_executor_job(build_client)
 
     coordinators: dict[
-        str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
+        str,
+        dict[
+            str,
+            dict[
+                int,
+                ProxmoxQEMUCoordinator | ProxmoxLXCCoordinator,
+            ],
+        ],
     ] = {}
     hass.data[DOMAIN][COORDINATORS] = coordinators
 
@@ -157,24 +157,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             node_coordinators = coordinators[host_name][node_name] = {}
 
             for vm_id in node_config["vms"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, vm_id, ProxmoxType.QEMU
+                coordinator_qemu = ProxmoxQEMUCoordinator(
+                    hass=hass,
+                    proxmox=proxmox,
+                    host_name=host_name,
+                    node_name=node_name,
+                    qemu_id=vm_id,
                 )
 
                 # Fetch initial data
-                await coordinator.async_refresh()
+                await coordinator_qemu.async_refresh()
 
-                node_coordinators[vm_id] = coordinator
+                node_coordinators[vm_id] = coordinator_qemu
 
             for container_id in node_config["containers"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, container_id, ProxmoxType.LXC
+                coordinator_lxc = ProxmoxLXCCoordinator(
+                    hass=hass,
+                    proxmox=proxmox,
+                    host_name=host_name,
+                    node_name=node_name,
+                    container_id=container_id,
                 )
+                await coordinator_lxc.async_refresh()
 
-                # Fetch initial data
-                await coordinator.async_refresh()
-
-                node_coordinators[container_id] = coordinator
+                node_coordinators[container_id] = coordinator_lxc
 
     for component in PLATFORMS:
         await hass.async_create_task(
@@ -182,67 +188,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     return True
-
-
-def create_coordinator_container_vm(
-    hass: HomeAssistant,
-    proxmox: ProxmoxAPI,
-    host_name: str,
-    node_name: str,
-    vm_id: int,
-    api_category: ProxmoxType,
-) -> DataUpdateCoordinator[dict[str, Any] | None]:
-    """Create and return a DataUpdateCoordinator for a vm/container."""
-
-    async def async_update_data() -> dict[str, ProxmoxVMData] | None:
-        """Call the api and handle the response."""
-
-        def poll_api() -> dict[str, Any] | None:
-            """Call the api."""
-            api_status = {}
-
-            try:
-                if api_category == ProxmoxType.QEMU:
-                    api_status = (
-                        proxmox.nodes(node_name).qemu(vm_id).status.current.get()
-                    )
-                elif api_category == ProxmoxType.LXC:
-                    api_status = (
-                        proxmox.nodes(node_name).lxc(vm_id).status.current.get()
-                    )
-            except (
-                AuthenticationError,
-                SSLError,
-                ConnectTimeout,
-                ResourceException,
-            ) as error:
-                raise UpdateFailed from error
-
-            LOGGER.debug("API Response: %s", api_status)
-            return api_status
-
-        api_status = await hass.async_add_executor_job(poll_api)
-
-        if api_status is None:
-            LOGGER.warning(
-                "Vm/Container %s unable to be found in node %s", vm_id, node_name
-            )
-            return None
-
-        api_result = {}
-        api_result["result"] = ProxmoxVMData(
-            status=api_status["status"],
-            name=api_status["name"],
-        )
-        return api_result
-
-    return DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
-    )
 
 
 class ProxmoxClient:

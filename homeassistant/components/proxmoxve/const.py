@@ -1,6 +1,5 @@
 """Constants for ProxmoxVE."""
 
-from enum import Enum
 import logging
 
 DOMAIN = "proxmoxve"
@@ -16,15 +15,6 @@ COORDINATORS = "coordinators"
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pam"
 DEFAULT_VERIFY_SSL = True
-TYPE_VM = 0
-TYPE_CONTAINER = 1
 UPDATE_INTERVAL = 60
 
 LOGGER = logging.getLogger(__package__)
-
-
-class ProxmoxType(Enum):
-    """Proxmox type of information."""
-
-    QEMU = "qemu"
-    LXC = "lxc"
