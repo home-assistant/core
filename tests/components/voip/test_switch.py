@@ -11,7 +11,6 @@ async def test_allow_call(
 ) -> None:
     """Test allow call."""
     assert not voip_device.async_allow_call(hass)
-    await hass.async_block_till_done()
 
     state = hass.states.get("switch.192_168_1_210_allow_calls")
     assert state is not None
@@ -35,6 +34,7 @@ async def test_allow_call(
     assert state.state == "on"
 
     await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("switch.192_168_1_210_allow_calls")
     assert state is not None

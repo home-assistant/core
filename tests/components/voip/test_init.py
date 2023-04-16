@@ -1,9 +1,6 @@
 """Test VoIP init."""
 from homeassistant.core import HomeAssistant
 
-# socket_enabled,
-# unused_udp_port_factory,
-
 
 async def test_unload_entry(
     hass: HomeAssistant,
