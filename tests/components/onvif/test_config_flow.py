@@ -44,6 +44,11 @@ DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     ip="5.6.7.8",
     macaddress=MAC,
 )
+DHCP_DISCOVERY_SAME_IP = dhcp.DhcpServiceInfo(
+    hostname="any",
+    ip="1.2.3.4",
+    macaddress=MAC,
+)
 
 
 def setup_mock_discovery(
@@ -372,6 +377,31 @@ async def test_discovered_by_dhcp_updates_host(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == DHCP_DISCOVERY.ip
+
+
+async def test_discovered_by_dhcp_does_nothing_if_host_is_the_same(
+    hass: HomeAssistant,
+) -> None:
+    """Test dhcp update does nothing if host is the same."""
+    config_entry, _camera, device = await setup_onvif_integration(hass)
+    device.profiles = device.async_get_profiles()
+    registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    assert len(devices) == 1
+    device = devices[0]
+    assert device.model == "TestModel"
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
+    assert config_entry.data[CONF_HOST] == DHCP_DISCOVERY_SAME_IP.ip
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY_SAME_IP
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == DHCP_DISCOVERY_SAME_IP.ip
 
 
 async def test_discovered_by_dhcp_does_not_update_if_already_loaded(
