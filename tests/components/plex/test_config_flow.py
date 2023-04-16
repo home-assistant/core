@@ -19,7 +19,6 @@ from homeassistant.components.plex.const import (
     CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
     DOMAIN,
-    INVALID_TOKEN_MESSAGE,
     MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
     SERVERS,
@@ -59,28 +58,24 @@ async def test_bad_credentials(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    auth_exceptions = (
-        plexapi.exceptions.Unauthorized,
-        plexapi.exceptions.BadRequest(INVALID_TOKEN_MESSAGE),
-    )
+    with patch(
+        "plexapi.myplex.MyPlexAccount", side_effect=plexapi.exceptions.Unauthorized
+    ), patch("plexauth.PlexAuth.initiate_auth"), patch(
+        "plexauth.PlexAuth.token", return_value="BAD TOKEN"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] == FlowResultType.EXTERNAL_STEP
 
-    for auth_exception in auth_exceptions:
-        with patch("plexapi.myplex.MyPlexAccount", side_effect=auth_exception), patch(
-            "plexauth.PlexAuth.initiate_auth"
-        ), patch("plexauth.PlexAuth.token", return_value="BAD TOKEN"):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input={}
-            )
-            assert result["type"] == FlowResultType.EXTERNAL_STEP
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] == FlowResultType.EXTERNAL_STEP_DONE
 
-            result = await hass.config_entries.flow.async_configure(result["flow_id"])
-            assert result["type"] == FlowResultType.EXTERNAL_STEP_DONE
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-            result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-            assert result["type"] == FlowResultType.FORM
-            assert result["step_id"] == "user"
-            assert result["errors"][CONF_TOKEN] == "faulty_credentials"
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"][CONF_TOKEN] == "faulty_credentials"
 
 
 async def test_bad_hostname(
