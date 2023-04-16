@@ -37,5 +37,16 @@ async def test_allow_call(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.192_168_1_210_allow_calls")
-    assert state is not None
     assert state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.192_168_1_210_allow_calls"},
+        blocking=True,
+    )
+
+    assert not voip_device.async_allow_call(hass)
+
+    state = hass.states.get("switch.192_168_1_210_allow_calls")
+    assert state.state == "off"
