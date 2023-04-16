@@ -5,6 +5,7 @@
   "dependencies": [
     "application_credentials",
     "automation",
+    "backup",
     "bluetooth",
     "cloud",
     "conversation",
