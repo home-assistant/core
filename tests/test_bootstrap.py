@@ -860,6 +860,7 @@ async def test_bootstrap_dependencies(
         assert hass.data["setup_done"][integration].is_set() is False
         assert hass.data["setup_done"]["mqtt"].is_set() is False
         assert dependencies in hass.config.components
+        assert integration not in hass.config.components
         return True
 
     async def async_integration_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -870,6 +871,7 @@ async def test_bootstrap_dependencies(
             "mqtt" not in hass.data["setup_done"]
             or hass.data["setup_done"]["mqtt"].is_set()
         )
+        assert integration in hass.config.components
         return True
 
     with patch(
@@ -884,3 +886,7 @@ async def test_bootstrap_dependencies(
         await hass.async_block_till_done()
 
     assert calls == ["mqtt", integration]
+
+    assert (
+        f"Dependency {integration} will wait for dependencies ['mqtt']" in caplog.text
+    )
