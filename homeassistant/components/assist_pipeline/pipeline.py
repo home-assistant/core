@@ -10,12 +10,15 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.components import conversation, media_source, stt, tts
+from homeassistant.components import conversation, media_source, stt, tts, websocket_api
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.collection import (
+    CollectionError,
+    ItemNotFound,
+    SerializedStorageCollection,
     StorageCollection,
     StorageCollectionWebsocket,
 )
@@ -533,10 +536,38 @@ class PipelineInput:
             await asyncio.gather(*prepare_tasks)
 
 
-class PipelineStorageCollection(StorageCollection[Pipeline]):
+class PipelinePreferred(CollectionError):
+    """Raised when attempting to delete the preferred pipelen."""
+
+    def __init__(self, item_id: str) -> None:
+        """Initialize pipeline preferred error."""
+        super().__init__(f"Item {item_id} preferred.")
+        self.item_id = item_id
+
+
+class SerializedPipelineStorageCollection(SerializedStorageCollection):
+    """Serialized pipeline storage collection."""
+
+    preferred_item: str | None
+
+
+class PipelineStorageCollection(
+    StorageCollection[Pipeline, SerializedPipelineStorageCollection]
+):
     """Pipeline storage collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
+
+    _preferred_item: str | None = None
+
+    async def _async_load_data(self) -> SerializedPipelineStorageCollection | None:
+        """Load the data."""
+        if not (data := await super()._async_load_data()):
+            return data
+
+        self._preferred_item = data["preferred_item"]
+
+        return data
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
@@ -554,6 +585,8 @@ class PipelineStorageCollection(StorageCollection[Pipeline]):
 
     def _create_item(self, item_id: str, data: dict) -> Pipeline:
         """Create an item from validated config."""
+        if self._preferred_item is None:
+            self._preferred_item = item_id
         return Pipeline(id=item_id, **data)
 
     def _deserialize_item(self, data: dict) -> Pipeline:
@@ -561,8 +594,106 @@ class PipelineStorageCollection(StorageCollection[Pipeline]):
         return Pipeline(**data)
 
     def _serialize_item(self, item_id: str, item: Pipeline) -> dict:
-        """Return the serialized representation of an item."""
+        """Return the serialized representation of an item for storing."""
         return item.to_json()
+
+    async def async_delete_item(self, item_id: str) -> None:
+        """Delete item."""
+        if self._preferred_item == item_id:
+            raise PipelinePreferred(item_id)
+        await super().async_delete_item(item_id)
+
+    @callback
+    def async_get_preferred_item(self) -> str | None:
+        """Get the id of the preferred item."""
+        return self._preferred_item
+
+    @callback
+    def async_set_preferred_item(self, item_id: str) -> None:
+        """Set the preferred pipeline."""
+        if item_id not in self.data:
+            raise ItemNotFound(item_id)
+        self._preferred_item = item_id
+        self._async_schedule_save()
+
+    @callback
+    def _data_to_save(self) -> SerializedPipelineStorageCollection:
+        """Return JSON-compatible date for storing to file."""
+        base_data = super()._base_data_to_save()
+        return {
+            "items": base_data["items"],
+            "preferred_item": self._preferred_item,
+        }
+
+
+class PipelineStorageCollectionWebsocket(
+    StorageCollectionWebsocket[PipelineStorageCollection]
+):
+    """Class to expose storage collection management over websocket."""
+
+    @callback
+    def async_setup(
+        self,
+        hass: HomeAssistant,
+        *,
+        create_list: bool = True,
+        create_create: bool = True,
+    ) -> None:
+        """Set up the websocket commands."""
+        super().async_setup(hass, create_list=create_list, create_create=create_create)
+
+        websocket_api.async_register_command(
+            hass,
+            f"{self.api_prefix}/set_preferred",
+            websocket_api.require_admin(
+                websocket_api.async_response(self.ws_set_preferred_item)
+            ),
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {
+                    vol.Required("type"): f"{self.api_prefix}/set_preferred",
+                    vol.Required(self.item_id_key): str,
+                }
+            ),
+        )
+
+    def ws_list_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """List items."""
+        connection.send_result(
+            msg["id"],
+            {
+                "pipelines": self.storage_collection.async_items(),
+                "preferred_pipeline": self.storage_collection.async_get_preferred_item(),
+            },
+        )
+
+    async def ws_delete_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Delete an item."""
+        try:
+            await super().ws_delete_item(hass, connection, msg)
+        except PipelinePreferred as exc:
+            connection.send_error(
+                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
+            )
+
+    async def ws_set_preferred_item(
+        self,
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        """Set the preferred item."""
+        try:
+            self.storage_collection.async_set_preferred_item(msg[self.item_id_key])
+        except ItemNotFound:
+            connection.send_error(
+                msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown item"
+            )
+            return
+        connection.send_result(msg["id"])
 
 
 async def async_setup_pipeline_store(hass):
@@ -571,7 +702,7 @@ async def async_setup_pipeline_store(hass):
         Store(hass, STORAGE_VERSION, STORAGE_KEY)
     )
     await pipeline_store.async_load()
-    StorageCollectionWebsocket(
+    PipelineStorageCollectionWebsocket(
         pipeline_store, f"{DOMAIN}/pipeline", "pipeline", STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
     hass.data[DOMAIN] = pipeline_store

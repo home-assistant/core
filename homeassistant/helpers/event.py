@@ -1295,7 +1295,12 @@ def async_track_point_in_time(
         """Convert passed in UTC now to local now."""
         hass.async_run_hass_job(job, dt_util.as_local(utc_now))
 
-    return async_track_point_in_utc_time(hass, utc_converter, point_in_time)
+    track_job = HassJob(
+        utc_converter,
+        name=f"{job.name} UTC converter",
+        cancel_on_shutdown=job.cancel_on_shutdown,
+    )
+    return async_track_point_in_utc_time(hass, track_job, point_in_time)
 
 
 track_point_in_time = threaded_listener_factory(async_track_point_in_time)
