@@ -109,13 +109,15 @@ class SIAHub:
         if self.sia_client is not None:
             self.sia_client.accounts = self.sia_accounts
             return
-        # the new client class method creates a subclass based on protocal, hence the type ignore
-        self.sia_client = SIAClient(  # pylint: disable=E0110 # type: ignore
-            host="",
-            port=self._port,
-            accounts=self.sia_accounts,
-            function=self.async_create_and_fire_event,
-            protocol=CommunicationsProtocol(self._protocol),
+        # the new client class method creates a subclass based on protocol, hence the type ignore
+        self.sia_client = (
+            SIAClient(  # pylint: disable=abstract-class-instantiated # type: ignore
+                host="",
+                port=self._port,
+                accounts=self.sia_accounts,
+                function=self.async_create_and_fire_event,
+                protocol=CommunicationsProtocol(self._protocol),
+            )
         )
 
     def _load_options(self) -> None:
