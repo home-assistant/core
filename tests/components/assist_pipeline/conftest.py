@@ -144,4 +144,4 @@ async def init_components(
 @pytest.fixture
 def pipeline_storage(hass: HomeAssistant, init_components) -> PipelineStorageCollection:
     """Return pipeline storage collection."""
-    return hass.data[DOMAIN]
+    return hass.data[DOMAIN].pipeline_store
