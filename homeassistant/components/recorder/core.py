@@ -975,7 +975,7 @@ class Recorder(threading.Thread):
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
                 if self._reached_max_backlog(0.90):
                     _LOGGER.warning(
-                        "Database queue backlog reached %s events in the queue "
+                        "Database queue backlog reached more than 90% (%s events) of maximum queue "
                         "length while waiting for backup to finish; recorder will now "
                         "resume writing to database. The backup cannot be trusted and "
                         "must be restarted",
