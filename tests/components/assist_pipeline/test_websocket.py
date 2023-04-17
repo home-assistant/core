@@ -613,6 +613,35 @@ async def test_add_pipeline(
         tts_engine="test_tts_engine",
     )
 
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "language": "test_language",
+            "name": "test_name",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": None,
+        "id": ANY,
+        "language": "test_language",
+        "name": "test_name",
+        "stt_engine": None,
+        "tts_engine": None,
+    }
+
+    assert len(pipeline_store.data) == 2
+    pipeline = pipeline_store.data[msg["result"]["id"]]
+    assert pipeline == Pipeline(
+        conversation_engine=None,
+        id=msg["result"]["id"],
+        language="test_language",
+        name="test_name",
+        stt_engine=None,
+        tts_engine=None,
+    )
+
 
 async def test_delete_pipeline(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
@@ -806,6 +835,38 @@ async def test_update_pipeline(
         name="new_name",
         stt_engine="new_stt_engine",
         tts_engine="new_tts_engine",
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/update",
+            "conversation_engine": None,
+            "language": "new_language",
+            "name": "new_name",
+            "pipeline_id": pipeline_id,
+            "stt_engine": None,
+            "tts_engine": None,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": None,
+        "id": pipeline_id,
+        "language": "new_language",
+        "name": "new_name",
+        "stt_engine": None,
+        "tts_engine": None,
+    }
+
+    pipeline = pipeline_store.data[pipeline_id]
+    assert pipeline == Pipeline(
+        conversation_engine=None,
+        id=pipeline_id,
+        language="new_language",
+        name="new_name",
+        stt_engine=None,
+        tts_engine=None,
     )
 
 
