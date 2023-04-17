@@ -144,7 +144,7 @@ async def async_setup_legacy(
                 )
 
             if provider is None:
-                _LOGGER.error("Error setting up platform %s", p_type)
+                _LOGGER.error("Error setting up platform: %s", p_type)
                 return
 
             tts.async_register_legacy_engine(p_type, provider, p_config)
