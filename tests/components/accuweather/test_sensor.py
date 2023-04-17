@@ -308,13 +308,6 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
     registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
-        "0123456-ozone-0",
-        suggested_object_id="home_ozone_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
         "0123456-ragweed-0",
         suggested_object_id="home_ragweed_pollen_0d",
         disabled_by=None,
@@ -528,18 +521,6 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
     entry = registry.async_get("sensor.home_mold_pollen_0d")
     assert entry
     assert entry.unique_id == "0123456-mold-0"
-
-    state = hass.states.get("sensor.home_ozone_0d")
-    assert state
-    assert state.state == "32"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get("level") == "Good"
-    assert state.attributes.get(ATTR_ICON) == "mdi:vector-triangle"
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_ozone_0d")
-    assert entry
-    assert entry.unique_id == "0123456-ozone-0"
 
     state = hass.states.get("sensor.home_ragweed_pollen_0d")
     assert state

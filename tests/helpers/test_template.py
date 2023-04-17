@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+import json
 import logging
 import math
 import random
@@ -10,6 +11,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import orjson
 import pytest
 import voluptuous as vol
 
@@ -1047,20 +1049,50 @@ def test_to_json(hass: HomeAssistant) -> None:
     ).async_render()
     assert actual_result == expected_result
 
+    expected_result = orjson.dumps({"Foo": "Bar"}, option=orjson.OPT_INDENT_2).decode()
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json(pretty_print=True) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
 
-def test_to_json_string(hass: HomeAssistant) -> None:
+    expected_result = orjson.dumps(
+        {"Z": 26, "A": 1, "M": 13}, option=orjson.OPT_SORT_KEYS
+    ).decode()
+    actual_result = template.Template(
+        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ {'Foo': now()} | to_json }}", hass).async_render()
+
+
+def test_to_json_ensure_ascii(hass: HomeAssistant) -> None:
     """Test the object to JSON string filter."""
 
     # Note that we're not testing the actual json.loads and json.dumps methods,
     # only the filters, so we don't need to be exhaustive with our sample JSON.
     actual_value_ascii = template.Template(
-        "{{ 'Bar ҝ éèà' | to_json }}", hass
+        "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=True) }}", hass
     ).async_render()
     assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
     actual_value = template.Template(
         "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=False) }}", hass
     ).async_render()
     assert actual_value == '"Bar ҝ éèà"'
+
+    expected_result = json.dumps({"Foo": "Bar"}, indent=2)
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json(pretty_print=True, ensure_ascii=True) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
+
+    expected_result = json.dumps({"Z": 26, "A": 1, "M": 13}, sort_keys=True)
+    actual_result = template.Template(
+        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True, ensure_ascii=True) }}",
+        hass,
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
 
 
 def test_from_json(hass: HomeAssistant) -> None:

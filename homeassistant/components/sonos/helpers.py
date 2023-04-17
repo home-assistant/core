@@ -117,3 +117,10 @@ def hostname_to_uid(hostname: str) -> str:
     else:
         raise ValueError(f"{hostname} is not a sonos device.")
     return f"{UID_PREFIX}{baseuid}{UID_POSTFIX}"
+
+
+def sync_get_visible_zones(soco: SoCo) -> set[SoCo]:
+    """Ensure I/O attributes are cached and return visible zones."""
+    _ = soco.household_id
+    _ = soco.uid
+    return soco.visible_zones

@@ -285,17 +285,18 @@ async def async_setup_add_event_service(
             raise ValueError(
                 "Missing required fields to set start or end date/datetime"
             )
-
+        event = Event(
+            summary=call.data[EVENT_SUMMARY],
+            description=call.data[EVENT_DESCRIPTION],
+            start=start,
+            end=end,
+        )
+        if location := call.data.get(EVENT_LOCATION):
+            event.location = location
         try:
             await calendar_service.async_create_event(
                 call.data[EVENT_CALENDAR_ID],
-                Event(
-                    summary=call.data[EVENT_SUMMARY],
-                    description=call.data[EVENT_DESCRIPTION],
-                    location=call.data[EVENT_LOCATION],
-                    start=start,
-                    end=end,
-                ),
+                event,
             )
         except ApiException as err:
             raise HomeAssistantError(str(err)) from err
