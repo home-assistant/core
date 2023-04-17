@@ -364,9 +364,9 @@ class ReolinkHost:
     ) -> None:
         """Read the incoming webhook from Reolink for inbound messages and schedule processing."""
         _LOGGER.debug("Webhook '%s' called", webhook_id)
-        data: str | None = None
+        data: bytes | None = None
         try:
-            data = await request.text()
+            data = await request.read()
             if not data:
                 _LOGGER.debug(
                     "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
@@ -375,6 +375,12 @@ class ReolinkHost:
             _LOGGER.debug(
                 "Webhook '%s' called, but lost connection before reading message "
                 "(ConnectionResetError), issuing poll",
+                webhook_id,
+            )
+            return
+        except aiohttp.ClientResponseError:
+            _LOGGER.debug(
+                "Webhook '%s' called, but could not read the message, issuing poll",
                 webhook_id,
             )
             return
@@ -394,7 +400,7 @@ class ReolinkHost:
             )
 
     async def _process_webhook_data(
-        self, hass: HomeAssistant, webhook_id: str, data: str | None
+        self, hass: HomeAssistant, webhook_id: str, data: bytes | None
     ) -> None:
         """Process the data from the Reolink webhook."""
         # This task is executed in the background so we need to catch exceptions
@@ -413,7 +419,8 @@ class ReolinkHost:
                 async_dispatcher_send(hass, f"{webhook_id}_all", {})
                 return
 
-            channels = await self._api.ONVIF_event_callback(data)
+            message = data.decode("utf-8")
+            channels = await self._api.ONVIF_event_callback(message)
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error processing ONVIF event for Reolink %s: %s",
