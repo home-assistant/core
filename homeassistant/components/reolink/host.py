@@ -362,58 +362,65 @@ class ReolinkHost:
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
     ) -> None:
-        """Shield the incoming webhook callback from cancellation."""
-        shielded_future = asyncio.shield(
-            self._handle_webhook(hass, webhook_id, request)
-        )
+        """Read the incoming webhook from Reolink for inbound messages and schedule processing."""
         _LOGGER.debug("Webhook '%s' called", webhook_id)
+        data: bytes | None = None
+        try:
+            data = await request.read()
+            if not data:
+                _LOGGER.debug(
+                    "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
+                )
+        except ConnectionResetError:
+            _LOGGER.debug(
+                "Webhook '%s' called, but lost connection before reading message "
+                "(ConnectionResetError), issuing poll",
+                webhook_id,
+            )
+            return
+        except aiohttp.ClientResponseError:
+            _LOGGER.debug(
+                "Webhook '%s' called, but could not read the message, issuing poll",
+                webhook_id,
+            )
+            return
+        except asyncio.CancelledError:
+            _LOGGER.debug(
+                "Webhook '%s' called, but lost connection before reading message "
+                "(CancelledError), issuing poll",
+                webhook_id,
+            )
+            raise
+        finally:
+            # We want handle_webhook to return as soon as possible
+            # so we process the data in the background, this also shields from cancellation
+            hass.async_create_background_task(
+                self._process_webhook_data(hass, webhook_id, data),
+                "Process Reolink webhook",
+            )
+
+    async def _process_webhook_data(
+        self, hass: HomeAssistant, webhook_id: str, data: bytes | None
+    ) -> None:
+        """Process the data from the Reolink webhook."""
+        # This task is executed in the background so we need to catch exceptions
+        # and log them
         if not self._webhook_reachable.is_set():
             self._webhook_reachable.set()
             ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
-        await shielded_future
 
-    async def _handle_webhook(
-        self, hass: HomeAssistant, webhook_id: str, request: Request
-    ) -> None:
-        """Handle incoming webhook from Reolink for inbound messages and calls."""
         try:
-            data = await request.text()
-        except ConnectionResetError:
-            # We lost the connection before reading the message, fallback to polling
-            # No need for a background task here as we already know the connection is lost
-            _LOGGER.debug(
-                "Webhook '%s' called, but lost connection before reading message, issuing poll",
-                webhook_id,
-            )
-            if not await self._api.get_motion_state_all_ch():
-                _LOGGER.error(
-                    "Could not poll motion state after losing connection during receiving ONVIF event"
-                )
+            if not data:
+                if not await self._api.get_motion_state_all_ch():
+                    _LOGGER.error(
+                        "Could not poll motion state after losing connection during receiving ONVIF event"
+                    )
+                    return
+                async_dispatcher_send(hass, f"{webhook_id}_all", {})
                 return
-            async_dispatcher_send(hass, f"{webhook_id}_all", {})
-            return
 
-        if not data:
-            _LOGGER.debug(
-                "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
-            )
-            return
-
-        # We received the data but we want handle_webhook to return as soon as possible
-        # so we process the data in the background
-        hass.async_create_background_task(
-            self._process_webhook_data(hass, webhook_id, data),
-            "Process Reolink webhook",
-        )
-
-    async def _process_webhook_data(
-        self, hass: HomeAssistant, webhook_id: str, data: str
-    ) -> None:
-        """Process the data from the webhook."""
-        # This task is executed in the background so we need to catch exceptions
-        # and log them
-        try:
-            channels = await self._api.ONVIF_event_callback(data)
+            message = data.decode("utf-8")
+            channels = await self._api.ONVIF_event_callback(message)
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error processing ONVIF event for Reolink %s: %s",
