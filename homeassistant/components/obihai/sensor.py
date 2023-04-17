@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from pyobihai import PyObihai
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -89,7 +90,7 @@ async def async_setup_entry(
 class ObihaiServiceSensors(SensorEntity):
     """Get the status of each Obihai Lines."""
 
-    def __init__(self, pyobihai, serial, service_name):
+    def __init__(self, pyobihai: PyObihai, serial: str, service_name: str) -> None:
         """Initialize monitor sensor."""
         self._service_name = service_name
         self._state = None

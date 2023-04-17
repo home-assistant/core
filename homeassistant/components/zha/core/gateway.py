@@ -41,6 +41,8 @@ from .const import (
     ATTR_TYPE,
     CONF_DATABASE,
     CONF_DEVICE_PATH,
+    CONF_NWK,
+    CONF_NWK_CHANNEL,
     CONF_RADIO_TYPE,
     CONF_USE_THREAD,
     CONF_ZIGPY,
@@ -148,14 +150,8 @@ class ZHAGateway:
         self._unsubs: list[Callable[[], None]] = []
         self.initialized: bool = False
 
-    async def async_initialize(self) -> None:
-        """Initialize controller and connect radio."""
-        discovery.PROBE.initialize(self._hass)
-        discovery.GROUP_PROBE.initialize(self._hass)
-
-        self.ha_device_registry = dr.async_get(self._hass)
-        self.ha_entity_registry = er.async_get(self._hass)
-
+    def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
+        """Get an uninitialized instance of a zigpy `ControllerApplication`."""
         radio_type = self.config_entry.data[CONF_RADIO_TYPE]
 
         app_controller_cls = RadioType[radio_type].controller
@@ -178,7 +174,31 @@ class ZHAGateway:
         ):
             app_config[CONF_USE_THREAD] = False
 
-        app_config = app_controller_cls.SCHEMA(app_config)
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+            is_multiprotocol_url,
+        )
+
+        # Until we have a way to coordinate channels with the Thread half of multi-PAN,
+        # stick to the old zigpy default of channel 15 instead of dynamically scanning
+        if (
+            is_multiprotocol_url(app_config[CONF_DEVICE][CONF_DEVICE_PATH])
+            and app_config.get(CONF_NWK, {}).get(CONF_NWK_CHANNEL) is None
+        ):
+            app_config.setdefault(CONF_NWK, {})[CONF_NWK_CHANNEL] = 15
+
+        return app_controller_cls, app_controller_cls.SCHEMA(app_config)
+
+    async def async_initialize(self) -> None:
+        """Initialize controller and connect radio."""
+        discovery.PROBE.initialize(self._hass)
+        discovery.GROUP_PROBE.initialize(self._hass)
+
+        self.ha_device_registry = dr.async_get(self._hass)
+        self.ha_entity_registry = er.async_get(self._hass)
+
+        app_controller_cls, app_config = self.get_application_controller_data()
 
         for attempt in range(STARTUP_RETRIES):
             try:
@@ -393,7 +413,10 @@ class ZHAGateway:
             device_info = zha_device.zha_device_info
             zha_device.async_cleanup_handles()
             async_dispatcher_send(self._hass, f"{SIGNAL_REMOVE}_{str(zha_device.ieee)}")
-            asyncio.ensure_future(self._async_remove_device(zha_device, entity_refs))
+            self._hass.async_create_task(
+                self._async_remove_device(zha_device, entity_refs),
+                "ZHAGateway._async_remove_device",
+            )
             if device_info is not None:
                 async_dispatcher_send(
                     self._hass,

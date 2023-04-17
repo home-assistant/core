@@ -84,6 +84,8 @@ FAKE_BRAVIA_SSDP = ssdp.SsdpServiceInfo(
     },
 )
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
@@ -92,7 +94,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
 
 async def test_ssdp_discovery(hass: HomeAssistant) -> None:
@@ -111,8 +113,6 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
     ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
         "pybravia.BraviaClient.get_system_info",
         return_value=BRAVIA_SYSTEM_INFO,
-    ), patch(
-        "homeassistant.components.braviatv.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -302,8 +302,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
         "pybravia.BraviaClient.get_system_info",
         return_value=BRAVIA_SYSTEM_INFO,
-    ), patch(
-        "homeassistant.components.braviatv.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
@@ -343,8 +341,6 @@ async def test_create_entry_psk(hass: HomeAssistant) -> None:
     ), patch(
         "pybravia.BraviaClient.get_system_info",
         return_value=BRAVIA_SYSTEM_INFO,
-    ), patch(
-        "homeassistant.components.braviatv.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}

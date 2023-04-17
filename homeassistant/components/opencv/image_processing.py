@@ -104,7 +104,7 @@ def setup_platform(
     if not CV2_IMPORTED:
         _LOGGER.error(
             "No OpenCV library found! Install or compile for your system "
-            "following instructions here: http://opencv.org/releases.html"
+            "following instructions here: https://opencv.org/?s=releases"
         )
         return
 
