@@ -72,6 +72,6 @@ class MockTTS(MockPlatform):
         hass: HomeAssistant,
         config: ConfigType,
         discovery_info: DiscoveryInfoType | None = None,
-    ) -> Provider:
+    ) -> Provider | None:
         """Set up a mock speech component."""
         return self._provider(config.get(CONF_LANG, DEFAULT_LANG))
