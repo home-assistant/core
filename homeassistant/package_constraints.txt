@@ -18,7 +18,7 @@ bluetooth-auto-recovery==1.0.3
 bluetooth-data-tools==0.4.0
 certifi>=2021.5.30
 ciso8601==2.3.0
-cryptography==40.0.1
+cryptography==40.0.2
 dbus-fast==1.84.2
 fnv-hash-fast==0.3.1
 ha-av==10.0.0
@@ -35,7 +35,7 @@ lru-dict==1.1.8
 orjson==3.8.10
 paho-mqtt==1.6.1
 pillow==9.5.0
-pip>=21.0,<23.1
+pip>=21.0,<23.2
 psutil-home-assistant==0.0.1
 pyOpenSSL==23.1.0
 pyserial==3.5

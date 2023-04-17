@@ -1,4 +1,5 @@
 """Test Voice Assistant init."""
+from dataclasses import asdict
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -34,7 +35,7 @@ async def test_pipeline_from_audio_stream(
 
     processed = []
     for event in events:
-        as_dict = event.as_dict()
+        as_dict = asdict(event)
         as_dict.pop("timestamp")
         processed.append(as_dict)
 
