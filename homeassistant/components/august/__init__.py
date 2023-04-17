@@ -87,7 +87,9 @@ async def async_setup_august(
     await august_gateway.async_refresh_access_token_if_needed()
 
     hass.data.setdefault(DOMAIN, {})
-    data = hass.data[DOMAIN][config_entry.entry_id] = AugustData(hass, august_gateway)
+    data = hass.data[DOMAIN][config_entry.entry_id] = AugustData(
+        hass, config_entry, august_gateway
+    )
     await data.async_setup()
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -120,9 +122,10 @@ def _async_trigger_ble_lock_discovery(
 class AugustData(AugustSubscriberMixin):
     """August data object."""
 
-    def __init__(self, hass, august_gateway):
+    def __init__(self, hass, config_entry, august_gateway):
         """Init August data object."""
         super().__init__(hass, MIN_TIME_BETWEEN_DETAIL_UPDATES)
+        self._config_entry = config_entry
         self._hass = hass
         self._august_gateway = august_gateway
         self.activity_stream = None
@@ -188,7 +191,9 @@ class AugustData(AugustSubscriberMixin):
             # Do not prevent setup as the sync can timeout
             # but it is not a fatal error as the lock
             # will recover automatically when it comes back online.
-            asyncio.create_task(self._async_initial_sync())
+            self._config_entry.async_create_background_task(
+                self._hass, self._async_initial_sync(), "august-initial-sync"
+            )
 
     async def _async_initial_sync(self):
         """Attempt to request an initial sync."""
@@ -341,7 +346,7 @@ class AugustData(AugustSubscriberMixin):
         )
 
     async def async_status_async(self, device_id, hyper_bridge):
-        """Request status of the the device but do not wait for a response since it will come via pubnub."""
+        """Request status of the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
             self._api.async_status_async,
@@ -400,7 +405,10 @@ class AugustData(AugustSubscriberMixin):
             if self._device_detail_by_id.get(device_id):
                 continue
             _LOGGER.info(
-                "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
+                (
+                    "The doorbell %s could not be setup because the system could not"
+                    " fetch details about the doorbell"
+                ),
                 doorbell.device_name,
             )
             del self._doorbells_by_id[device_id]
@@ -414,12 +422,18 @@ class AugustData(AugustSubscriberMixin):
             lock_detail = self._device_detail_by_id.get(device_id)
             if lock_detail is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because the system could not fetch details about the lock",
+                    (
+                        "The lock %s could not be setup because the system could not"
+                        " fetch details about the lock"
+                    ),
                     lock.device_name,
                 )
             elif lock_detail.bridge is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because it does not have a bridge (Connect)",
+                    (
+                        "The lock %s could not be setup because it does not have a"
+                        " bridge (Connect)"
+                    ),
                     lock.device_name,
                 )
                 del self._device_detail_by_id[device_id]

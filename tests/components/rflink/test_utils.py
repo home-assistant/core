@@ -3,9 +3,10 @@ from homeassistant.components.rflink.utils import (
     brightness_to_rflink,
     rflink_to_brightness,
 )
+from homeassistant.core import HomeAssistant
 
 
-async def test_utils(hass, monkeypatch):
+async def test_utils(hass: HomeAssistant, monkeypatch) -> None:
     """Test all utils methods."""
     # test brightness_to_rflink
     assert brightness_to_rflink(0) == 0

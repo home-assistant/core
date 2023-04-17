@@ -68,9 +68,14 @@ class VulcanCalendarEntity(CalendarEntity):
             "identifiers": {(DOMAIN, f"calendar_{self.student_info['id']}")},
             "entry_type": DeviceEntryType.SERVICE,
             "name": f"{self.student_info['full_name']}: Calendar",
-            "model": f"{self.student_info['full_name']} - {self.student_info['class']} {self.student_info['school']}",
+            "model": (
+                f"{self.student_info['full_name']} -"
+                f" {self.student_info['class']} {self.student_info['school']}"
+            ),
             "manufacturer": "Uonet +",
-            "configuration_url": f"https://uonetplus.vulcan.net.pl/{self.student_info['symbol']}",
+            "configuration_url": (
+                f"https://uonetplus.vulcan.net.pl/{self.student_info['symbol']}"
+            ),
         }
 
     @property

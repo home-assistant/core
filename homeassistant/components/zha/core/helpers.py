@@ -1,5 +1,4 @@
-"""
-Helpers for Zigbee Home Automation.
+"""Helpers for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
@@ -136,12 +135,12 @@ def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
 
 def schema_type_to_vol(field_type: Any) -> Any:
     """Convert a schema type to a voluptuous type."""
-    if issubclass(field_type, enum.Flag) and len(field_type.__members__.keys()):
+    if issubclass(field_type, enum.Flag) and field_type.__members__:
         return cv.multi_select(
-            [key.replace("_", " ") for key in field_type.__members__.keys()]
+            [key.replace("_", " ") for key in field_type.__members__]
         )
-    if issubclass(field_type, enum.Enum) and len(field_type.__members__.keys()):
-        return vol.In([key.replace("_", " ") for key in field_type.__members__.keys()])
+    if issubclass(field_type, enum.Enum) and field_type.__members__:
+        return vol.In([key.replace("_", " ") for key in field_type.__members__])
     if (
         issubclass(field_type, zigpy.types.FixedIntType)
         or issubclass(field_type, enum.Flag)
@@ -213,7 +212,7 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 def async_get_zha_config_value(
     config_entry: ConfigEntry, section: str, config_key: str, default: _T
 ) -> _T:
-    """Get the value for the specified configuration from the zha config entry."""
+    """Get the value for the specified configuration from the ZHA config entry."""
     return (
         config_entry.options.get(CUSTOM_CONFIGURATION, {})
         .get(section, {})
@@ -338,7 +337,6 @@ def retryable_req(
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(channel, *args, **kwargs):
-
             exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
             try_count, errors = 1, []
             for delay in itertools.chain(delays, [None]):
@@ -349,10 +347,7 @@ def retryable_req(
                     if delay:
                         delay = uniform(delay * 0.75, delay * 1.25)
                         channel.debug(
-                            (
-                                "%s: retryable request #%d failed: %s. "
-                                "Retrying in %ss"
-                            ),
+                            "%s: retryable request #%d failed: %s. Retrying in %ss",
                             func.__name__,
                             try_count,
                             ex,

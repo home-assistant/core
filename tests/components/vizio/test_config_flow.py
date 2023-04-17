@@ -669,7 +669,7 @@ async def test_import_error(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that error is logged when import config has an error."""
     entry = MockConfigEntry(

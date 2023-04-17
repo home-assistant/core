@@ -49,7 +49,7 @@ class HomeAssistantSpotifyData:
 
     client: Spotify
     current_user: dict[str, Any]
-    devices: DataUpdateCoordinator
+    devices: DataUpdateCoordinator[list[dict[str, Any]]]
     session: OAuth2Session
 
 

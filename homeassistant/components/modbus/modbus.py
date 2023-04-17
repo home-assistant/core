@@ -7,8 +7,8 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-from pymodbus.client.sync import (
-    BaseModbusClient,
+from pymodbus.client import (
+    ModbusBaseClient,
     ModbusSerialClient,
     ModbusTcpClient,
     ModbusUdpClient,
@@ -16,7 +16,7 @@ from pymodbus.client.sync import (
 from pymodbus.constants import Defaults
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ModbusResponse
-from pymodbus.transaction import ModbusRtuFramer
+from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -137,8 +137,10 @@ async def async_modbus_setup(
         for name in hubs:
             if not await hubs[name].async_setup():
                 return False
+        hub_collect = hass.data[DOMAIN]
+    else:
+        hass.data[DOMAIN] = hub_collect = {}
 
-    hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
         my_hub = ModbusHub(hass, conf_hub)
         hub_collect[conf_hub[CONF_NAME]] = my_hub
@@ -255,7 +257,7 @@ class ModbusHub:
         """Initialize the Modbus hub."""
 
         # generic configuration
-        self._client: BaseModbusClient | None = None
+        self._client: ModbusBaseClient | None = None
         self._async_cancel_listener: Callable[[], None] | None = None
         self._in_error = False
         self._lock = asyncio.Lock()
@@ -279,9 +281,12 @@ class ModbusHub:
         }
         if self._config_type == SERIAL:
             # serial configuration
+            if client_config[CONF_METHOD] == "ascii":
+                self._pb_params["framer"] = ModbusAsciiFramer
+            else:
+                self._pb_params["framer"] = ModbusRtuFramer
             self._pb_params.update(
                 {
-                    "method": client_config[CONF_METHOD],
                     "baudrate": client_config[CONF_BAUDRATE],
                     "stopbits": client_config[CONF_STOPBITS],
                     "bytesize": client_config[CONF_BYTESIZE],
@@ -293,6 +298,8 @@ class ModbusHub:
             self._pb_params["host"] = client_config[CONF_HOST]
             if self._config_type == RTUOVERTCP:
                 self._pb_params["framer"] = ModbusRtuFramer
+            else:
+                self._pb_params["framer"] = ModbusSocketFramer
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
         if CONF_MSG_WAIT in client_config:
@@ -310,6 +317,13 @@ class ModbusHub:
             _LOGGER.error(log_text)
             self._in_error = error_state
 
+    async def async_pymodbus_connect(self) -> None:
+        """Connect to device, async."""
+        async with self._lock:
+            if not await self.hass.async_add_executor_job(self._pymodbus_connect):
+                err = f"{self.name} connect failed, retry in pymodbus"
+                self._log_error(err, error_state=False)
+
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
         try:
@@ -322,11 +336,9 @@ class ModbusHub:
             func = getattr(self._client, entry.func_name)
             self._pb_call[entry.call_type] = RunEntry(entry.attr, func)
 
-        async with self._lock:
-            if not await self.hass.async_add_executor_job(self._pymodbus_connect):
-                err = f"{self.name} connect failed, retry in pymodbus"
-                self._log_error(err, error_state=False)
-                return False
+        self.hass.async_create_background_task(
+            self.async_pymodbus_connect(), "modbus-connect"
+        )
 
         # Start counting down to allow modbus requests.
         if self._config_delay:
@@ -371,19 +383,19 @@ class ModbusHub:
         except ModbusException as exception_error:
             self._log_error(str(exception_error), error_state=False)
             return False
-        else:
-            message = f"modbus {self.name} communication open"
-            _LOGGER.info(message)
-            return True
+
+        message = f"modbus {self.name} communication open"
+        _LOGGER.info(message)
+        return True
 
     def _pymodbus_call(
         self, unit: int | None, address: int, value: int | list[int], use_call: str
-    ) -> ModbusResponse:
+    ) -> ModbusResponse | None:
         """Call sync. pymodbus."""
-        kwargs = {"unit": unit} if unit else {}
+        kwargs = {"slave": unit} if unit else {}
         entry = self._pb_call[use_call]
         try:
-            result = entry.func(address, value, **kwargs)
+            result: ModbusResponse = entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
             return None

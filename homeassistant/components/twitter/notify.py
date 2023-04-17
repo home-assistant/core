@@ -1,4 +1,6 @@
 """Twitter platform for notify component."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from functools import partial
 from http import HTTPStatus
@@ -17,8 +19,10 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +43,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> TwitterNotificationService:
     """Get the Twitter notification service."""
     return TwitterNotificationService(
         hass,

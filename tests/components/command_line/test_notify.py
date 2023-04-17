@@ -7,7 +7,7 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant import setup
 from homeassistant.components.notify import DOMAIN
@@ -63,7 +63,7 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
 
 
 async def test_error_for_none_zero_exit_code(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test if an error is logged for non zero exit codes."""
     await setup_test_service(
@@ -80,7 +80,7 @@ async def test_error_for_none_zero_exit_code(
     assert "return code 1" in caplog.text
 
 
-async def test_timeout(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_timeout(caplog: pytest.LogCaptureFixture, hass: HomeAssistant) -> None:
     """Test blocking is not forever."""
     await setup_test_service(
         hass,
@@ -96,7 +96,7 @@ async def test_timeout(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
 
 
 async def test_subprocess_exceptions(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test that notify subprocess exceptions are handled correctly."""
 

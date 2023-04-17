@@ -51,7 +51,9 @@ def async_describe_events(
         if rev_button_map is None:
             return {
                 LOGBOOK_ENTRY_NAME: f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
-                LOGBOOK_ENTRY_MESSAGE: f"{data[ATTR_ACTION]} Error retrieving button description",
+                LOGBOOK_ENTRY_MESSAGE: (
+                    f"{data[ATTR_ACTION]} Error retrieving button description"
+                ),
             }
 
         button_description = rev_button_map.get(leap_button_number)

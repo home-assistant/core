@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Self
 import zigpy.endpoint
 import zigpy.zcl.clusters.closures
 
@@ -36,8 +37,6 @@ if TYPE_CHECKING:
     from ...entity import ZhaEntity
     from ..device import ZHADevice
 
-_ChannelsSelfT = TypeVar("_ChannelsSelfT", bound="Channels")
-_ChannelPoolSelfT = TypeVar("_ChannelPoolSelfT", bound="ChannelPool")
 _ChannelsDictType = dict[str, base.ZigbeeChannel]
 
 
@@ -87,7 +86,7 @@ class Channels:
 
     @property
     def zha_device(self) -> ZHADevice:
-        """Return parent zha device."""
+        """Return parent ZHA device."""
         return self._zha_device
 
     @property
@@ -104,7 +103,7 @@ class Channels:
         }
 
     @classmethod
-    def new(cls: type[_ChannelsSelfT], zha_device: ZHADevice) -> _ChannelsSelfT:
+    def new(cls, zha_device: ZHADevice) -> Self:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
@@ -241,6 +240,11 @@ class ChannelPool:
         return self._channels.zha_device.model
 
     @property
+    def quirk_class(self) -> str:
+        """Return device quirk class."""
+        return self._channels.zha_device.quirk_class
+
+    @property
     def skip_configuration(self) -> bool:
         """Return True if device does not require channel configuration."""
         return self._channels.zha_device.skip_configuration
@@ -272,9 +276,7 @@ class ChannelPool:
         )
 
     @classmethod
-    def new(
-        cls: type[_ChannelPoolSelfT], channels: Channels, ep_id: int
-    ) -> _ChannelPoolSelfT:
+    def new(cls, channels: Channels, ep_id: int) -> Self:
         """Create new channels for an endpoint."""
         pool = cls(channels, ep_id)
         pool.add_all_channels()

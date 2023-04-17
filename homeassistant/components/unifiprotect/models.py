@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import Any, Generic, TypeVar, Union, cast
+from typing import Any, Generic, TypeVar, cast
 
 from pyunifiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
@@ -15,7 +15,7 @@ from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=Union[ProtectAdoptableDeviceModel, NVR])
+T = TypeVar("T", bound=ProtectAdoptableDeviceModel | NVR)
 
 
 class PermRequired(int, Enum):
@@ -83,10 +83,22 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
         if value:
             event = self.get_event_obj(obj)
             value = event is not None
+            if not value:
+                _LOGGER.debug("%s (%s): missing event", self.name, obj.mac)
 
             if event is not None and self.ufp_smart_type is not None:
                 value = self.ufp_smart_type in event.smart_detect_types
+                if not value:
+                    _LOGGER.debug(
+                        "%s (%s): %s not in %s",
+                        self.name,
+                        obj.mac,
+                        self.ufp_smart_type,
+                        event.smart_detect_types,
+                    )
 
+        if value:
+            _LOGGER.debug("%s (%s): value is on", self.name, obj.mac)
         return value
 
 

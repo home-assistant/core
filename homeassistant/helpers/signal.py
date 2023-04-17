@@ -1,4 +1,5 @@
 """Signal handling related helpers."""
+import asyncio
 import logging
 import signal
 
@@ -23,7 +24,9 @@ def async_register_signal_handling(hass: HomeAssistant) -> None:
         """
         hass.loop.remove_signal_handler(signal.SIGTERM)
         hass.loop.remove_signal_handler(signal.SIGINT)
-        hass.async_create_task(hass.async_stop(exit_code))
+        hass.data["homeassistant_stop"] = asyncio.create_task(
+            hass.async_stop(exit_code)
+        )
 
     try:
         hass.loop.add_signal_handler(signal.SIGTERM, async_signal_handle, 0)

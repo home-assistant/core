@@ -177,7 +177,8 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
                 await self._feature.async_api_command("effect", effect_value)
             except ValueError as exc:
                 raise ValueError(
-                    f"Turning on with effect '{self.name}' failed: {effect} not in effect list."
+                    f"Turning on with effect '{self.name}' failed: {effect} not in"
+                    " effect list."
                 ) from exc
 
     async def async_turn_off(self, **kwargs: Any) -> None:

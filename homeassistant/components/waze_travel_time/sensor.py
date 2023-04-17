@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
 
@@ -16,9 +17,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STARTED,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    TIME_MINUTES,
+    UnitOfLength,
+    UnitOfTime,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -60,8 +60,6 @@ async def async_setup_entry(
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
 
     data = WazeTravelTimeData(
-        None,
-        None,
         region,
         config_entry,
     )
@@ -75,7 +73,7 @@ class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
     _attr_attribution = "Powered by Waze"
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_device_info = DeviceInfo(
@@ -85,7 +83,14 @@ class WazeTravelTime(SensorEntity):
         configuration_url="https://www.waze.com",
     )
 
-    def __init__(self, unique_id, name, origin, destination, waze_data):
+    def __init__(
+        self,
+        unique_id: str,
+        name: str,
+        origin: str,
+        destination: str,
+        waze_data: WazeTravelTimeData,
+    ) -> None:
         """Initialize the Waze travel time sensor."""
         self._attr_unique_id = unique_id
         self._waze_data = waze_data
@@ -113,7 +118,7 @@ class WazeTravelTime(SensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the last update."""
         if self._waze_data.duration is None:
             return None
@@ -126,7 +131,7 @@ class WazeTravelTime(SensorEntity):
             "destination": self._waze_data.destination,
         }
 
-    async def first_update(self, _=None):
+    async def first_update(self, _=None) -> None:
         """Run first update and write state."""
         await self.hass.async_add_executor_job(self.update)
         self.async_write_ha_state()
@@ -142,12 +147,12 @@ class WazeTravelTime(SensorEntity):
 class WazeTravelTimeData:
     """WazeTravelTime Data object."""
 
-    def __init__(self, origin, destination, region, config_entry):
+    def __init__(self, region: str, config_entry: ConfigEntry) -> None:
         """Set up WazeRouteCalculator."""
-        self.origin = origin
-        self.destination = destination
         self.region = region
         self.config_entry = config_entry
+        self.origin: str | None = None
+        self.destination: str | None = None
         self.duration = None
         self.distance = None
         self.route = None
@@ -210,7 +215,7 @@ class WazeTravelTimeData:
                 if units == IMPERIAL_UNITS:
                     # Convert to miles.
                     self.distance = DistanceConverter.convert(
-                        distance, LENGTH_KILOMETERS, LENGTH_MILES
+                        distance, UnitOfLength.KILOMETERS, UnitOfLength.MILES
                     )
                 else:
                     self.distance = distance

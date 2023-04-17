@@ -1,11 +1,18 @@
 {
   "domain": "senseme",
   "name": "SenseME",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/senseme",
-  "requirements": ["aiosenseme==0.6.1"],
   "codeowners": ["@mikelawrence", "@bdraco"],
-  "dhcp": [{ "registered_devices": true }, { "macaddress": "20F85E*" }],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "macaddress": "20F85E*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/senseme",
   "iot_class": "local_push",
-  "loggers": ["aiosenseme"]
+  "loggers": ["aiosenseme"],
+  "requirements": ["aiosenseme==0.6.1"]
 }

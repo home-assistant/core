@@ -5,9 +5,8 @@ from pyrituals import Diffuser
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
@@ -106,7 +105,6 @@ class DiffuserBatterySensor(DiffuserEntity, SensorEntity):
 class DiffuserWifiSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser wifi sensor."""
 
-    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 

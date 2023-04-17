@@ -31,7 +31,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .coordinator import InvalidApiKeyMonitor, OpenUvCoordinator
+from .coordinator import OpenUvCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -45,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_LONGITUDE, hass.config.longitude),
         altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
         session=websession,
+        check_status_before_request=True,
     )
 
     async def async_update_protection_data() -> dict[str, Any]:
@@ -53,16 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         high = entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
         return await client.uv_protection_window(low=low, high=high)
 
-    invalid_api_key_monitor = InvalidApiKeyMonitor(hass, entry)
-
     coordinators: dict[str, OpenUvCoordinator] = {
         coordinator_name: OpenUvCoordinator(
             hass,
+            entry=entry,
             name=coordinator_name,
             latitude=client.latitude,
             longitude=client.longitude,
             update_method=update_method,
-            invalid_api_key_monitor=invalid_api_key_monitor,
         )
         for coordinator_name, update_method in (
             (DATA_UV, client.uv_index),
@@ -70,16 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     }
 
-    # We disable the client's request retry abilities here to avoid a lengthy (and
-    # blocking) startup; then, if the initial update is successful, we re-enable client
-    # request retries:
-    client.disable_request_retries()
     init_tasks = [
         coordinator.async_config_entry_first_refresh()
         for coordinator in coordinators.values()
     ]
     await asyncio.gather(*init_tasks)
-    client.enable_request_retries()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators

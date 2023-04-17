@@ -1,19 +1,17 @@
-"""
-Security channels module for Zigbee Home Automation.
+"""Security channels module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 from zigpy.zcl.clusters import security
-from zigpy.zcl.clusters.security import IasAce as AceCluster
+from zigpy.zcl.clusters.security import IasAce as AceCluster, IasZone
 
 from homeassistant.core import callback
 
@@ -76,7 +74,7 @@ class IasAce(ZigbeeChannel):
         self.armed_state: AceCluster.PanelStatus = AceCluster.PanelStatus.Panel_Disarmed
         self.invalid_tries: int = 0
 
-        # These will all be setup by the entity from zha configuration
+        # These will all be setup by the entity from ZHA configuration
         self.panel_code: str = "1234"
         self.code_required_arm_actions = False
         self.max_invalid_tries: int = 3
@@ -277,9 +275,9 @@ class IasWd(ZigbeeChannel):
     ):
         """Issue a squawk command.
 
-        This command uses the WD capabilities to emit a quick audible/visible pulse called a
-        "squawk". The squawk command has no effect if the WD is currently active
-        (warning in progress).
+        This command uses the WD capabilities to emit a quick audible/visible
+        pulse called a "squawk". The squawk command has no effect if the WD
+        is currently active (warning in progress).
         """
         value = 0
         value = IasWd.set_bit(value, 0, squawk_level, 0)
@@ -305,16 +303,18 @@ class IasWd(ZigbeeChannel):
     ):
         """Issue a start warning command.
 
-        This command starts the WD operation. The WD alerts the surrounding area by audible
-        (siren) and visual (strobe) signals.
+        This command starts the WD operation. The WD alerts the surrounding area
+        by audible (siren) and visual (strobe) signals.
 
         strobe_duty_cycle indicates the length of the flash cycle. This provides a means
-        of varying the flash duration for different alarm types (e.g., fire, police, burglar).
-        Valid range is 0-100 in increments of 10. All other values SHALL be rounded to the
-        nearest valid value. Strobe SHALL calculate duty cycle over a duration of one second.
-        The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle Field specifies
-        “40,” then the strobe SHALL flash ON for 4/10ths of a second and then turn OFF for
-        6/10ths of a second.
+        of varying the flash duration for different alarm types (e.g., fire, police,
+        burglar). Valid range is 0-100 in increments of 10. All other values SHALL
+        be rounded to the nearest valid value. Strobe SHALL calculate duty cycle over
+        a duration of one second.
+
+        The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle
+        Field specifies “40,” then the strobe SHALL flash ON for 4/10ths of a second
+        and then turn OFF for 6/10ths of a second.
         """
         value = 0
         value = IasWd.set_bit(value, 0, siren_level, 0)
@@ -332,25 +332,26 @@ class IasWd(ZigbeeChannel):
         )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasZone.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(IasZone.cluster_id)
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
 
-    ZCL_INIT_ATTRS = {"zone_status": True, "zone_state": False, "zone_type": True}
+    ZCL_INIT_ATTRS = {"zone_status": False, "zone_state": True, "zone_type": True}
 
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         if command_id == 0:
-            state = args[0] & 3
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 2, "zone_status", state
+            zone_status = args[0]
+            # update attribute cache with new zone status
+            self.cluster.update_attribute(
+                IasZone.attributes_by_name["zone_status"].id, zone_status
             )
-            self.debug("Updated alarm state: %s", state)
+            self.debug("Updated alarm state: %s", zone_status)
         elif command_id == 1:
             self.debug("Enroll requested")
             res = self._cluster.enroll_response(0, 0)
-            asyncio.create_task(res)
+            self._cluster.create_catching_task(res)
 
     async def async_configure(self):
         """Configure IAS device."""
@@ -362,7 +363,7 @@ class IASZoneChannel(ZigbeeChannel):
         self.debug("started IASZoneChannel configuration")
 
         await self.bind()
-        ieee = self.cluster.endpoint.device.application.ieee
+        ieee = self.cluster.endpoint.device.application.state.node_info.ieee
 
         try:
             res = await self._cluster.write_attributes({"cie_addr": ieee})
@@ -389,11 +390,10 @@ class IASZoneChannel(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
-        if attrid == 2:
-            value = value & 3
+        if attrid == IasZone.attributes_by_name["zone_status"].id:
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
                 attrid,
-                self.cluster.attributes.get(attrid, [attrid])[0],
+                "zone_status",
                 value,
             )

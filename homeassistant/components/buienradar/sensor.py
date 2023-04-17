@@ -34,8 +34,9 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     DEGREE,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
     PERCENTAGE,
+    Platform,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -47,7 +48,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TIMEFRAME, DEFAULT_TIMEFRAME
+from .const import CONF_TIMEFRAME, DEFAULT_TIMEFRAME, DOMAIN
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -188,8 +189,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="irradiance",
         name="Irradiance",
-        native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
-        icon="mdi:sunglasses",
+        device_class=SensorDeviceClass.IRRADIANCE,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -684,6 +685,7 @@ async def async_setup_entry(
     data = BrData(hass, coordinates, timeframe, entities)
     # schedule the first update in 1 minute from now:
     await data.schedule_update(1)
+    hass.data[DOMAIN][entry.entry_id][Platform.SENSOR] = data
 
 
 class BrSensor(SensorEntity):
@@ -692,7 +694,9 @@ class BrSensor(SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = False
 
-    def __init__(self, client_name, coordinates, description: SensorEntityDescription):
+    def __init__(
+        self, client_name, coordinates, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{client_name} {description.name}"
@@ -735,7 +739,6 @@ class BrSensor(SensorEntity):
             or sensor_type.endswith("_4d")
             or sensor_type.endswith("_5d")
         ):
-
             # update forecasting sensors:
             fcday = 0
             if sensor_type.endswith("_2d"):

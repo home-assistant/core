@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, RestoreSensor, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -16,16 +16,12 @@ from homeassistant.const import (
     CONF_SOURCE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfTime,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -54,10 +50,10 @@ UNIT_PREFIXES = {
 
 # SI Time prefixes
 UNIT_TIME = {
-    TIME_SECONDS: 1,
-    TIME_MINUTES: 60,
-    TIME_HOURS: 60 * 60,
-    TIME_DAYS: 24 * 60 * 60,
+    UnitOfTime.SECONDS: 1,
+    UnitOfTime.MINUTES: 60,
+    UnitOfTime.HOURS: 60 * 60,
+    UnitOfTime.DAYS: 24 * 60 * 60,
 }
 
 ICON = "mdi:chart-line"
@@ -71,7 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SOURCE): cv.entity_id,
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+        vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
         vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
     }
@@ -129,7 +125,7 @@ async def async_setup_platform(
     async_add_entities([derivative])
 
 
-class DerivativeSensor(RestoreEntity, SensorEntity):
+class DerivativeSensor(RestoreSensor, SensorEntity):
     """Representation of an derivative sensor."""
 
     _attr_icon = ICON
@@ -144,7 +140,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         time_window: timedelta,
         unit_of_measurement: str | None,
         unit_prefix: str | None,
-        unit_time: str,
+        unit_time: UnitOfTime,
         unique_id: str | None,
     ) -> None:
         """Initialize the derivative sensor."""
@@ -173,9 +169,13 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if (state := await self.async_get_last_state()) is not None:
+        restored_data = await self.async_get_last_sensor_data()
+        if restored_data:
+            self._attr_native_unit_of_measurement = (
+                restored_data.native_unit_of_measurement
+            )
             try:
-                self._state = Decimal(state.state)
+                self._state = Decimal(restored_data.native_value)  # type: ignore[arg-type]
             except SyntaxError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 
@@ -248,7 +248,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 derivative = new_derivative
             else:
                 derivative = Decimal(0)
-                for (start, end, value) in self._state_list:
+                for start, end, value in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
 

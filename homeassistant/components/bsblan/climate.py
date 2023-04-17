@@ -64,10 +64,11 @@ async def async_setup_entry(
     )
 
 
-class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
+class BSBLANClimate(
+    BSBLANEntity, CoordinatorEntity[DataUpdateCoordinator[State]], ClimateEntity
+):
     """Defines a BSBLAN climate device."""
 
-    coordinator: DataUpdateCoordinator[State]
     _attr_has_entity_name = True
     # Determine preset modes
     _attr_supported_features = (
@@ -80,7 +81,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[State],
         client: BSBLAN,
         device: Device,
         info: Info,
@@ -128,7 +129,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
             return PRESET_ECO
         return PRESET_NONE
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         await self.async_set_data(hvac_mode=hvac_mode)
 

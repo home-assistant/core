@@ -1,12 +1,12 @@
 """Test Met weather entity."""
-
 from homeassistant import config_entries
 from homeassistant.components.met import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
-async def test_tracking_home(hass, mock_weather):
+async def test_tracking_home(hass: HomeAssistant, mock_weather) -> None:
     """Test we track home."""
     await hass.config_entries.flow.async_init("met", context={"source": "onboarding"})
     await hass.async_block_till_done()
@@ -41,7 +41,7 @@ async def test_tracking_home(hass, mock_weather):
     assert len(hass.states.async_entity_ids("weather")) == 0
 
 
-async def test_not_tracking_home(hass, mock_weather):
+async def test_not_tracking_home(hass: HomeAssistant, mock_weather) -> None:
     """Test when we not track home."""
 
     # Pre-create registry entry for disabled by default hourly weather

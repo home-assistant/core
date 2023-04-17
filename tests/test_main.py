@@ -6,7 +6,7 @@ from homeassistant.const import REQUIRED_PYTHON_VER
 
 
 @patch("sys.exit")
-def test_validate_python(mock_exit):
+def test_validate_python(mock_exit) -> None:
     """Test validate Python version method."""
     with patch("sys.version_info", new_callable=PropertyMock(return_value=(2, 7, 8))):
         main.validate_python()
@@ -64,7 +64,7 @@ def test_validate_python(mock_exit):
 
 
 @patch("sys.exit")
-def test_skip_pip_mutually_exclusive(mock_exit):
+def test_skip_pip_mutually_exclusive(mock_exit) -> None:
     """Test --skip-pip and --skip-pip-package are mutually exclusive."""
 
     def parse_args(*args):

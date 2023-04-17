@@ -135,9 +135,11 @@ def devices_from_config(domain_config):
         repetitions_enabled = device_config[CONF_SIGNAL_REPETITIONS] != 1
         if is_hybrid and repetitions_enabled:
             _LOGGER.warning(
-                "Hybrid type for %s not compatible with signal "
-                "repetitions. Please set 'dimmable' or 'switchable' "
-                "type explicitly in configuration",
+                (
+                    "Hybrid type for %s not compatible with signal "
+                    "repetitions. Please set 'dimmable' or 'switchable' "
+                    "type explicitly in configuration"
+                ),
                 device_id,
             )
 

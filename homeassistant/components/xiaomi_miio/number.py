@@ -12,10 +12,15 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, DEGREE, REVOLUTIONS_PER_MINUTE, TIME_MINUTES
+from homeassistant.const import (
+    CONF_MODEL,
+    DEGREE,
+    REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -193,7 +198,7 @@ NUMBER_TYPES = {
         key=ATTR_DELAY_OFF_COUNTDOWN,
         name="Delay off countdown",
         icon="mdi:fan-off",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         native_min_value=0,
         native_max_value=480,
         native_step=1,
@@ -287,7 +292,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Selectors from a config entry."""
     entities = []
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]

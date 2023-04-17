@@ -35,7 +35,8 @@ def datapoints_greater_than_degree(value: dict) -> dict:
     """Validate data point list is greater than polynomial degrees."""
     if len(value[CONF_DATAPOINTS]) <= value[CONF_DEGREE]:
         raise vol.Invalid(
-            f"{CONF_DATAPOINTS} must have at least {value[CONF_DEGREE]+1} {CONF_DATAPOINTS}"
+            f"{CONF_DATAPOINTS} must have at least"
+            f" {value[CONF_DEGREE]+1} {CONF_DATAPOINTS}"
         )
 
     return value

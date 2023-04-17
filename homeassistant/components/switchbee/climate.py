@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.const import (
     ApiAttribute,
     ThermostatFanSpeed,
@@ -115,7 +115,6 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         super()._handle_coordinator_update()
 
     def _update_attrs_from_coordinator(self) -> None:
-
         coordinator_device = self._get_coordinator_device()
 
         self._attr_hvac_mode: HVACMode = (
@@ -178,5 +177,5 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
             raise HomeAssistantError(
                 f"Failed to set {self.name} state {state}, error: {str(exp)}"
             ) from exp
-        else:
-            await self.coordinator.async_refresh()
+
+        await self.coordinator.async_refresh()

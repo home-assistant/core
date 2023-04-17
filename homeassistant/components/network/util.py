@@ -142,7 +142,10 @@ def async_get_source_ip(target_ip: str) -> str | None:
         return cast(str, test_sock.getsockname()[0])
     except Exception:  # pylint: disable=broad-except
         _LOGGER.debug(
-            "The system could not auto detect the source ip for %s on your operating system",
+            (
+                "The system could not auto detect the source ip for %s on your"
+                " operating system"
+            ),
             target_ip,
         )
         return None

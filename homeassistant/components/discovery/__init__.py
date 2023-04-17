@@ -60,7 +60,6 @@ class ServiceDetails(NamedTuple):
 SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ServiceDetails("media_player", "enigma2"),
     "yamaha": ServiceDetails("media_player", "yamaha"),
-    "frontier_silicon": ServiceDetails("media_player", "frontier_silicon"),
     "openhome": ServiceDetails("media_player", "openhome"),
     "bluesound": ServiceDetails("media_player", "bluesound"),
 }
@@ -146,8 +145,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for platform in enabled_platforms:
         if platform in DEFAULT_ENABLED:
             logger.warning(
-                "Please remove %s from your discovery.enable configuration "
-                "as it is now enabled by default",
+                (
+                    "Please remove %s from your discovery.enable configuration "
+                    "as it is now enabled by default"
+                ),
                 platform,
             )
 

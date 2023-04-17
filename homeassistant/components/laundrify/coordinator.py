@@ -16,7 +16,7 @@ from .model import LaundrifyDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-class LaundrifyUpdateCoordinator(DataUpdateCoordinator):
+class LaundrifyUpdateCoordinator(DataUpdateCoordinator[dict[str, LaundrifyDevice]]):
     """Class to manage fetching laundrify API data."""
 
     def __init__(

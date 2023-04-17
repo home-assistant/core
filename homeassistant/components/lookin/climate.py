@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final, cast
 
-from aiolookin import Climate, MeteoSensor
+from aiolookin import Climate, MeteoSensor, Remote
 from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.components.climate import (
@@ -75,7 +75,7 @@ async def async_setup_entry(
             continue
         uuid = remote["UUID"]
         coordinator = lookin_data.device_coordinators[uuid]
-        device: Climate = coordinator.data
+        device = cast(Climate, coordinator.data)
         entities.append(
             ConditionerEntity(
                 uuid=uuid,
@@ -110,7 +110,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         uuid: str,
         device: Climate,
         lookin_data: LookinData,
-        coordinator: LookinDataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator[Remote],
     ) -> None:
         """Init the ConditionerEntity."""
         super().__init__(coordinator, uuid, device, lookin_data)

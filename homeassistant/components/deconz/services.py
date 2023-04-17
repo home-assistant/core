@@ -186,10 +186,8 @@ async def async_remove_orphaned_entries_service(gateway: DeconzGateway) -> None:
             devices_to_be_removed.remove(event.device_id)
 
     for entry in entity_entries:
-
         # Don't remove available entities
         if entry.unique_id in gateway.entities[entry.domain]:
-
             # Don't remove devices with available entities
             if entry.device_id in devices_to_be_removed:
                 devices_to_be_removed.remove(entry.device_id)

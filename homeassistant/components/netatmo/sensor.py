@@ -20,10 +20,11 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     PERCENTAGE,
-    SOUND_PRESSURE_DB,
+    EntityCategory,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
@@ -34,7 +35,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -115,7 +115,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
     ),
     NetatmoSensorEntityDescription(
         key="pressure_trend",
@@ -129,8 +129,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Noise",
         netatmo_name="noise",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=SOUND_PRESSURE_DB,
-        icon="mdi:volume-high",
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetatmoSensorEntityDescription(

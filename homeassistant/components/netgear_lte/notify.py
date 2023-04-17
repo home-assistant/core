@@ -1,20 +1,28 @@
 """Support for Netgear LTE notifications."""
+from __future__ import annotations
+
 import logging
 
 import attr
 import eternalegypt
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_NOTIFY, CONF_RECIPIENT, DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> NetgearNotifyService | None:
     """Get the notification service."""
     if discovery_info is None:
-        return
+        return None
 
     return NetgearNotifyService(hass, discovery_info)
 

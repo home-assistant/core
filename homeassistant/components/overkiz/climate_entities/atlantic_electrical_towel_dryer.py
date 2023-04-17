@@ -12,8 +12,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
@@ -42,7 +43,8 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator

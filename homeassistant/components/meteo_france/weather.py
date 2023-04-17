@@ -2,6 +2,8 @@
 import logging
 import time
 
+from meteofrance_api.model.forecast import Forecast
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
@@ -56,7 +58,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Meteo-France weather platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
+    coordinator: DataUpdateCoordinator[Forecast] = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR_FORECAST
+    ]
 
     async_add_entities(
         [
@@ -74,15 +78,18 @@ async def async_setup_entry(
     )
 
 
-class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
+class MeteoFranceWeather(
+    CoordinatorEntity[DataUpdateCoordinator[Forecast]], WeatherEntity
+):
     """Representation of a weather condition."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
-    def __init__(self, coordinator: DataUpdateCoordinator, mode: str) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator[Forecast], mode: str) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
         self._city_name = self.coordinator.data.position["name"]
@@ -197,8 +204,3 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
                     }
                 )
         return forecast_data
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION

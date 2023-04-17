@@ -6,7 +6,13 @@ from datetime import timedelta
 import logging
 from typing import Any, NamedTuple
 
-from ismartgate import AbstractGateApi, GogoGate2Api, ISmartGateApi
+from ismartgate import (
+    AbstractGateApi,
+    GogoGate2Api,
+    GogoGate2InfoResponse,
+    ISmartGateApi,
+    ISmartGateInfoResponse,
+)
 from ismartgate.common import AbstractDoor, get_door_by_id
 
 from homeassistant.config_entries import ConfigEntry
@@ -39,7 +45,9 @@ class StateData(NamedTuple):
     door: AbstractDoor | None
 
 
-class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class DeviceDataUpdateCoordinator(
+    DataUpdateCoordinator[GogoGate2InfoResponse | ISmartGateInfoResponse]
+):
     """Manages polling for state changes from the device."""
 
     def __init__(
@@ -50,7 +58,10 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         *,
         name: str,
         update_interval: timedelta,
-        update_method: Callable[[], Awaitable] | None = None,
+        update_method: Callable[
+            [], Awaitable[GogoGate2InfoResponse | ISmartGateInfoResponse]
+        ]
+        | None = None,
         request_refresh_debouncer: Debouncer | None = None,
     ) -> None:
         """Initialize the data update coordinator."""
@@ -131,7 +142,7 @@ def get_data_update_coordinator(
     if DATA_UPDATE_COORDINATOR not in config_entry_data:
         api = get_api(hass, config_entry.data)
 
-        async def async_update_data():
+        async def async_update_data() -> GogoGate2InfoResponse | ISmartGateInfoResponse:
             try:
                 return await api.async_info()
             except Exception as exception:

@@ -22,17 +22,17 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-async def test_show_form(hass: HomeAssistant):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.MENU
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
 
-async def test_invalid_access_token(hass: HomeAssistant):
+async def test_invalid_access_token(hass: HomeAssistant) -> None:
     """Test that errors are shown when the access token is invalid."""
 
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
@@ -53,7 +53,7 @@ async def test_invalid_access_token(hass: HomeAssistant):
         assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
 
-async def test_unexpected_api_error(hass: HomeAssistant):
+async def test_unexpected_api_error(hass: HomeAssistant) -> None:
     """Test that we abort on generic errors."""
 
     with patch("python_awair.AwairClient.query", side_effect=AwairError()):
@@ -75,7 +75,7 @@ async def test_unexpected_api_error(hass: HomeAssistant):
         assert result["reason"] == "unknown"
 
 
-async def test_duplicate_error(hass: HomeAssistant, user, cloud_devices):
+async def test_duplicate_error(hass: HomeAssistant, user, cloud_devices) -> None:
     """Test that errors are shown when adding a duplicate config."""
 
     with patch(
@@ -104,7 +104,7 @@ async def test_duplicate_error(hass: HomeAssistant, user, cloud_devices):
         assert result["reason"] == "already_configured_account"
 
 
-async def test_no_devices_error(hass: HomeAssistant, user, no_devices):
+async def test_no_devices_error(hass: HomeAssistant, user, no_devices) -> None:
     """Test that errors are shown when the API returns no devices."""
 
     with patch("python_awair.AwairClient.query", side_effect=[user, no_devices]):
@@ -195,7 +195,7 @@ async def test_reauth_error(hass: HomeAssistant) -> None:
         assert result["reason"] == "unknown"
 
 
-async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices):
+async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices) -> None:
     """Test overall flow when using cloud api."""
 
     with patch(
@@ -225,7 +225,7 @@ async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices):
         assert result["result"].unique_id == CLOUD_UNIQUE_ID
 
 
-async def test_create_local_entry(hass: HomeAssistant, local_devices):
+async def test_create_local_entry(hass: HomeAssistant, local_devices) -> None:
     """Test overall flow when using local API."""
 
     with patch("python_awair.AwairClient.query", side_effect=[local_devices]), patch(
@@ -258,7 +258,9 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices):
         assert result["result"].unique_id == LOCAL_UNIQUE_ID
 
 
-async def test_create_local_entry_from_discovery(hass: HomeAssistant, local_devices):
+async def test_create_local_entry_from_discovery(
+    hass: HomeAssistant, local_devices
+) -> None:
     """Test local API when device discovered after instructions shown."""
 
     menu_step = await hass.config_entries.flow.async_init(
@@ -299,7 +301,7 @@ async def test_create_local_entry_from_discovery(hass: HomeAssistant, local_devi
     assert result["result"].unique_id == LOCAL_UNIQUE_ID
 
 
-async def test_create_local_entry_awair_error(hass: HomeAssistant):
+async def test_create_local_entry_awair_error(hass: HomeAssistant) -> None:
     """Test overall flow when using local API and device is returns error."""
 
     with patch(
@@ -331,7 +333,7 @@ async def test_create_local_entry_awair_error(hass: HomeAssistant):
         assert result["step_id"] == "local_pick"
 
 
-async def test_create_zeroconf_entry(hass: HomeAssistant, local_devices):
+async def test_create_zeroconf_entry(hass: HomeAssistant, local_devices) -> None:
     """Test overall flow when using discovery."""
 
     with patch("python_awair.AwairClient.query", side_effect=[local_devices]), patch(
@@ -353,7 +355,7 @@ async def test_create_zeroconf_entry(hass: HomeAssistant, local_devices):
         assert result["result"].unique_id == LOCAL_UNIQUE_ID
 
 
-async def test_unsuccessful_create_zeroconf_entry(hass: HomeAssistant):
+async def test_unsuccessful_create_zeroconf_entry(hass: HomeAssistant) -> None:
     """Test overall flow when using discovery and device is unreachable."""
 
     with patch(

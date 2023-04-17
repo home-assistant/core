@@ -3,15 +3,21 @@
 
 import logging
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     PERCENTAGE,
     STATE_OFF,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NestSensorDevice
 from .const import DATA_NEST, DATA_NEST_CONFIG
@@ -49,6 +55,8 @@ SENSOR_UNITS = {"humidity": PERCENTAGE}
 
 SENSOR_DEVICE_CLASSES = {"humidity": SensorDeviceClass.HUMIDITY}
 
+SENSOR_STATE_CLASSES = {"humidity": SensorStateClass.MEASUREMENT}
+
 VARIABLE_NAME_MAPPING = {"eta": "eta_begin", "operation_mode": "mode"}
 
 VALUE_MAPPING = {
@@ -70,14 +78,9 @@ _SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED + DEPRECATED_WEATHER_VARS
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Nest Sensor.
-
-    No longer used.
-    """
-
-
-async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_legacy_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up a Nest sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
 
@@ -136,7 +139,7 @@ async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
             ]
 
         structures_has_camera = {}
-        for structure, device in nest.cameras():
+        for structure, _ in nest.cameras():
             structures_has_camera[structure] = True
         for structure in structures_has_camera:
             all_sensors += [
@@ -167,6 +170,11 @@ class NestBasicSensor(NestSensorDevice, SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return SENSOR_DEVICE_CLASSES.get(self.variable)
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return SENSOR_STATE_CLASSES.get(self.variable)
 
     def update(self):
         """Retrieve latest state."""
@@ -203,12 +211,17 @@ class NestTempSensor(NestSensorDevice, SensorEntity):
         """Return the device class of the sensor."""
         return SensorDeviceClass.TEMPERATURE
 
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return SensorStateClass.MEASUREMENT
+
     def update(self):
         """Retrieve latest state."""
         if self.device.temperature_scale == "C":
-            self._unit = TEMP_CELSIUS
+            self._unit = UnitOfTemperature.CELSIUS
         else:
-            self._unit = TEMP_FAHRENHEIT
+            self._unit = UnitOfTemperature.FAHRENHEIT
 
         if (temp := getattr(self.device, self.variable)) is None:
             self._state = None

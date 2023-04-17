@@ -24,7 +24,8 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         """Init YoLink DataUpdateCoordinator.
 
         fetch state every 30 minutes base on yolink device heartbeat interval
-        data is None before the first successful update, but we need to use data at first update
+        data is None before the first successful update, but we need to use
+        data at first update
         """
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
@@ -35,7 +36,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         """Fetch device state."""
         try:
             async with async_timeout.timeout(10):
-                device_state_resp = await self.device.fetch_state_with_api()
+                device_state_resp = await self.device.fetch_state()
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:

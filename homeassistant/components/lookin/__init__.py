@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     push_coordinator = LookinPushCoordinator(entry.title)
 
     if lookin_device.model >= 2:
-        meteo_coordinator: LookinDataUpdateCoordinator = LookinDataUpdateCoordinator(
+        meteo_coordinator = LookinDataUpdateCoordinator[MeteoSensor](
             hass,
             push_coordinator,
             name=entry.title,
@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         await meteo_coordinator.async_config_entry_first_refresh()
 
-    device_coordinators: dict[str, LookinDataUpdateCoordinator] = {}
+    device_coordinators: dict[str, LookinDataUpdateCoordinator[Remote]] = {}
     for remote in devices:
         if (platform := TYPE_TO_PLATFORM.get(remote["Type"])) is None:
             continue

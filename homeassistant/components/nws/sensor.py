@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import MappingProxyType
+from typing import Any
+
+from pynws import SimpleNWS
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,7 +36,7 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import base_unique_id, device_info
+from . import NwsDataUpdateCoordinator, base_unique_id, device_info
 from .const import (
     ATTRIBUTION,
     CONF_STATION,
@@ -163,7 +167,7 @@ async def async_setup_entry(
     )
 
 
-class NWSSensor(CoordinatorEntity, SensorEntity):
+class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
     """An NWS Sensor Entity."""
 
     entity_description: NWSSensorEntityDescription
@@ -172,14 +176,14 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data,
-        hass_data,
+        entry_data: MappingProxyType[str, Any],
+        hass_data: dict[str, Any],
         description: NWSSensorEntityDescription,
-        station,
-    ):
+        station: str,
+    ) -> None:
         """Initialise the platform with a data instance."""
         super().__init__(hass_data[COORDINATOR_OBSERVATION])
-        self._nws = hass_data[NWS_DATA]
+        self._nws: SimpleNWS = hass_data[NWS_DATA]
         self._latitude = entry_data[CONF_LATITUDE]
         self._longitude = entry_data[CONF_LONGITUDE]
         self.entity_description = description
@@ -189,7 +193,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
             self._attr_native_unit_of_measurement = description.unit_convert
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state."""
         value = self._nws.observation.get(self.entity_description.key)
         if value is None:
@@ -222,7 +226,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         return value
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique_id for this entity."""
         return f"{base_unique_id(self._latitude, self._longitude)}_{self.entity_description.key}"
 

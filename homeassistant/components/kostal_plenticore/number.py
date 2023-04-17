@@ -1,12 +1,11 @@
 """Platform for Kostal Plenticore numbers."""
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from kostal.plenticore import SettingsData
+from pykoplenti import SettingsData
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -15,9 +14,9 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, POWER_WATT
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -66,7 +65,7 @@ NUMBER_SETTINGS_DATA = [
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         name="Battery min Home Consumption",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         native_max_value=38000,
         native_min_value=50,
         native_step=1,
@@ -130,11 +129,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
+class PlenticoreDataNumber(
+    CoordinatorEntity[SettingDataUpdateCoordinator], NumberEntity
+):
     """Representation of a Kostal Plenticore Number entity."""
 
     entity_description: PlenticoreNumberEntityDescription
-    coordinator: SettingDataUpdateCoordinator
 
     def __init__(
         self,

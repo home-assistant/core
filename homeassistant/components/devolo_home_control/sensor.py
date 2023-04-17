@@ -10,9 +10,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -21,7 +20,6 @@ from .devolo_device import DevoloDeviceEntity
 DEVICE_CLASS_MAPPING = {
     "battery": SensorDeviceClass.BATTERY,
     "temperature": SensorDeviceClass.TEMPERATURE,
-    "light": SensorDeviceClass.ILLUMINANCE,
     "humidity": SensorDeviceClass.HUMIDITY,
     "current": SensorDeviceClass.POWER,
     "total": SensorDeviceClass.ENERGY,
