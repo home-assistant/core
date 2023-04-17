@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "select": {
+      "pipeline": {
+        "name": "Assist Pipeline",
+        "state": {
+          "preferred": "Preferred"
+        }
+      }
+    }
+  }
+}

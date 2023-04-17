@@ -5,6 +5,7 @@ from homeassistant.components.assist_pipeline.const import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
+    PipelineData,
     PipelineStorageCollection,
 )
 from homeassistant.core import HomeAssistant
@@ -33,19 +34,21 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
             "tts_engine": "tts_engine_2",
         },
         {
-            "conversation_engine": "conversation_engine_3",
+            "conversation_engine": None,
             "language": "language_3",
             "name": "name_3",
-            "stt_engine": "stt_engine_3",
-            "tts_engine": "tts_engine_3",
+            "stt_engine": None,
+            "tts_engine": None,
         },
     ]
     pipeline_ids = []
 
-    store1: PipelineStorageCollection = hass.data[DOMAIN]
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store1 = pipeline_data.pipeline_store
     for pipeline in pipelines:
         pipeline_ids.append((await store1.async_create_item(pipeline)).id)
     assert len(store1.data) == 3
+    assert store1.async_get_preferred_item() == list(store1.data)[0]
 
     await store1.async_delete_item(pipeline_ids[1])
     assert len(store1.data) == 2
@@ -58,6 +61,7 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
 
     assert store1.data is not store2.data
     assert store1.data == store2.data
+    assert store1.async_get_preferred_item() == store2.async_get_preferred_item()
 
 
 async def test_loading_datasets_from_storage(
@@ -87,18 +91,21 @@ async def test_loading_datasets_from_storage(
                     "tts_engine": "tts_engine_2",
                 },
                 {
-                    "conversation_engine": "conversation_engine_3",
+                    "conversation_engine": None,
                     "id": "01GX8ZWBAQSV1HP3WGJPFWEJ8J",
                     "language": "language_3",
                     "name": "name_3",
-                    "stt_engine": "stt_engine_3",
-                    "tts_engine": "tts_engine_3",
+                    "stt_engine": None,
+                    "tts_engine": None,
                 },
-            ]
+            ],
+            "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
         },
     }
 
     assert await async_setup_component(hass, "assist_pipeline", {})
 
-    store: PipelineStorageCollection = hass.data[DOMAIN]
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
     assert len(store.data) == 3
+    assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"
