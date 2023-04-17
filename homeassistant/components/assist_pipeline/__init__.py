@@ -52,15 +52,12 @@ async def async_pipeline_from_audio_stream(
     tts_options: dict | None = None,
 ) -> None:
     """Create an audio pipeline from an audio stream."""
-    if language is None:
+    if language is None and pipeline_id is None:
         language = hass.config.language
 
     # Temporary workaround for language codes
     if language == "en":
         language = "en-US"
-
-    if stt_metadata.language == "":
-        stt_metadata.language = language
 
     if context is None:
         context = Context()
@@ -74,6 +71,9 @@ async def async_pipeline_from_audio_stream(
         raise PipelineNotFound(
             "pipeline_not_found", f"Pipeline {pipeline_id} not found"
         )
+
+    if stt_metadata.language == "":
+        stt_metadata.language = pipeline.language
 
     pipeline_input = PipelineInput(
         conversation_id=conversation_id,
