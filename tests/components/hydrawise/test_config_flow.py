@@ -20,10 +20,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch("pydrawise.Auth.check_token"), patch(
-        "homeassistant.components.hydrawise.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with patch("pydrawise.Auth.check_token"):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
