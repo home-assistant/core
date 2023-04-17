@@ -348,7 +348,7 @@ class Recorder(threading.Thread):
         """
         size = self.backlog
         _LOGGER.debug("Recorder queue size is: %s", size)
-        if not self._reached_max_backlog():
+        if not self._reached_max_backlog_percentage(100.0):
             return
         _LOGGER.error(
             (
@@ -362,13 +362,12 @@ class Recorder(threading.Thread):
         self._async_stop_queue_watcher_and_event_listener()
 
     @callback
-    def _reached_max_backlog(self, percentage: float | None = None) -> bool:
+    def _reached_max_backlog_percentage(self, percentage: int) -> bool:
         """Check if the system has reached the max queue backlog and return the maximum if it has."""
-        if percentage is None:
-            percentage = 100.0
+        percentage_modifier = percentage / 100
         current_backlog = self.backlog
         # First check the minimum value since its cheap
-        if current_backlog < (MAX_QUEUE_BACKLOG_MIN_VALUE * percentage):
+        if current_backlog < (MAX_QUEUE_BACKLOG_MIN_VALUE * percentage_modifier):
             return False
         # If they have more RAM available, keep filling the backlog
         # since we do not want to stop recording events or give the
@@ -381,7 +380,7 @@ class Recorder(threading.Thread):
             * (available / ESTIMATED_QUEUE_ITEM_SIZE)
         )
         self.max_backlog = max(max_queue_backlog, MAX_QUEUE_BACKLOG_MIN_VALUE)
-        if current_backlog < (max_queue_backlog * percentage):
+        if current_backlog < (max_queue_backlog * percentage_modifier):
             return False
         return True
 
@@ -975,7 +974,7 @@ class Recorder(threading.Thread):
             # Notify that lock is being held, wait until database can be used again.
             self.hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
-                if self._reached_max_backlog(0.90):
+                if self._reached_max_backlog_percentage(90):
                     _LOGGER.warning(
                         "Database queue backlog reached more than 90% (%s events) of maximum queue "
                         "length while waiting for backup to finish; recorder will now "
