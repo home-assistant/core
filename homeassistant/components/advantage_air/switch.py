@@ -12,6 +12,7 @@ from .const import (
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
 from .entity import AdvantageAirAcEntity, AdvantageAirThingEntity
+from .models import AdvantageAirData
 
 
 async def async_setup_entry(
@@ -21,14 +22,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up AdvantageAir switch platform."""
 
-    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[SwitchEntity] = []
-    if aircons := instance["coordinator"].data.get("aircons"):
+    if aircons := instance.coordinator.data.get("aircons"):
         for ac_key, ac_device in aircons.items():
             if ac_device["info"]["freshAirStatus"] != "none":
                 entities.append(AdvantageAirFreshAir(instance, ac_key))
-    if things := instance["coordinator"].data.get("myThings"):
+    if things := instance.coordinator.data.get("myThings"):
         for thing in things["things"].values():
             if thing["channelDipState"] == 8:  # 8 = Other relay
                 entities.append(AdvantageAirRelay(instance, thing))
@@ -42,7 +43,7 @@ class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
     _attr_name = "Fresh air"
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(self, instance: dict[str, Any], ac_key: str) -> None:
+    def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
         """Initialize an Advantage Air fresh air control."""
         super().__init__(instance, ac_key)
         self._attr_unique_id += "-freshair"

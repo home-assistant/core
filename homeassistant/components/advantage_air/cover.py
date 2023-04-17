@@ -17,6 +17,7 @@ from .const import (
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
 from .entity import AdvantageAirThingEntity, AdvantageAirZoneEntity
+from .models import AdvantageAirData
 
 PARALLEL_UPDATES = 0
 
@@ -28,16 +29,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up AdvantageAir cover platform."""
 
-    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[CoverEntity] = []
-    if aircons := instance["coordinator"].data.get("aircons"):
+    if aircons := instance.coordinator.data.get("aircons"):
         for ac_key, ac_device in aircons.items():
             for zone_key, zone in ac_device["zones"].items():
                 # Only add zone vent controls when zone in vent control mode.
                 if zone["type"] == 0:
                     entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
-    if things := instance["coordinator"].data.get("myThings"):
+    if things := instance.coordinator.data.get("myThings"):
         for thing in things["things"].values():
             if thing["channelDipState"] in [1, 2]:  # 1 = "Blind", 2 = "Blind 2"
                 entities.append(
@@ -60,7 +61,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
+    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Vent."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
@@ -108,7 +109,7 @@ class AdvantageAirThingCover(AdvantageAirThingEntity, CoverEntity):
 
     def __init__(
         self,
-        instance: dict[str, Any],
+        instance: AdvantageAirData,
         thing: dict[str, Any],
         device_class: CoverDeviceClass,
     ) -> None:
