@@ -973,7 +973,7 @@ class Recorder(threading.Thread):
             # Notify that lock is being held, wait until database can be used again.
             self.hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
-                if self._reached_max_backlog():
+                if self._reached_max_backlog(0.90):
                     _LOGGER.warning(
                         "Database queue backlog reached %s events in the queue "
                         "length while waiting for backup to finish; recorder will now "
