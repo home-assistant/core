@@ -15,6 +15,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "call_active": {
+        "name": "Call Active"
+      }
+    },
     "switch": {
       "allow_call": {
         "name": "Allow Calls"
