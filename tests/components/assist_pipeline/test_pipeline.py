@@ -34,11 +34,11 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
             "tts_engine": "tts_engine_2",
         },
         {
-            "conversation_engine": "conversation_engine_3",
+            "conversation_engine": None,
             "language": "language_3",
             "name": "name_3",
-            "stt_engine": "stt_engine_3",
-            "tts_engine": "tts_engine_3",
+            "stt_engine": None,
+            "tts_engine": None,
         },
     ]
     pipeline_ids = []
@@ -91,12 +91,12 @@ async def test_loading_datasets_from_storage(
                     "tts_engine": "tts_engine_2",
                 },
                 {
-                    "conversation_engine": "conversation_engine_3",
+                    "conversation_engine": None,
                     "id": "01GX8ZWBAQSV1HP3WGJPFWEJ8J",
                     "language": "language_3",
                     "name": "name_3",
-                    "stt_engine": "stt_engine_3",
-                    "tts_engine": "tts_engine_3",
+                    "stt_engine": None,
+                    "tts_engine": None,
                 },
             ],
             "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
