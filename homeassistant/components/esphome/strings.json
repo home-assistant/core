@@ -46,6 +46,13 @@
     },
     "flow_title": "{name}"
   },
+  "entity": {
+    "binary_sensor": {
+      "call_active": {
+        "name": "Call Active"
+      }
+    }
+  },
   "issues": {
     "ble_firmware_outdated": {
       "title": "Update {name} with ESPHome {version} or later",

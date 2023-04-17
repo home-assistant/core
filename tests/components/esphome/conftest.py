@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioesphomeapi import APIClient, DeviceInfo
+from aioesphomeapi import APIClient, APIVersion, DeviceInfo
 import pytest
 from zeroconf import Zeroconf
 
@@ -101,6 +101,8 @@ def mock_client(mock_device_info):
     mock_client.device_info = AsyncMock(return_value=mock_device_info)
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.api_version = APIVersion(99, 99)
 
     with patch("homeassistant.components.esphome.APIClient", mock_client), patch(
         "homeassistant.components.esphome.config_flow.APIClient", mock_client
