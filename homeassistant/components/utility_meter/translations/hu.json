@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "K\u00e9thavonta",
+                "daily": "Naponta",
+                "hourly": "\u00d3r\u00e1nk\u00e9nt",
+                "monthly": "Havonta",
+                "none": "Nincs ciklus",
+                "quarter-hourly": "Negyed\u00f3r\u00e1nk\u00e9nt",
+                "quarterly": "Negyed\u00e9vente",
+                "weekly": "Hetente",
+                "yearly": "\u00c9vente"
+            }
+        }
+    },
     "title": "K\u00f6z\u00fczemi fogyaszt\u00e1sm\u00e9r\u0151"
 }

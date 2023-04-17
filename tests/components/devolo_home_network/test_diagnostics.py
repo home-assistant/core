@@ -1,7 +1,6 @@
 """Tests for the devolo Home Network diagnostics."""
 from __future__ import annotations
 
-from aiohttp import ClientSession
 import pytest
 
 from homeassistant.components.devolo_home_network.diagnostics import TO_REDACT
@@ -13,12 +12,13 @@ from . import configure_integration
 from .const import DISCOVERY_INFO
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("mock_device")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
 ):
     """Test config entry diagnostics."""
     entry = configure_integration(hass)

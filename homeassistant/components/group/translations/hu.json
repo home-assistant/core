@@ -51,6 +51,21 @@
                 },
                 "title": "Csoport hozz\u00e1ad\u00e1sa"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Eszk\u00f6zoszt\u00e1ly",
+                    "entities": "Tagok",
+                    "hide_members": "Tagok elrejt\u00e9se",
+                    "ignore_non_numeric": "Nem numerikus \u00e9rt\u00e9kek ignor\u00e1l\u00e1sa",
+                    "name": "Elnevez\u00e9s",
+                    "round_digits": "Kerek\u00edt\u00e9s pontoss\u00e1ga",
+                    "state_class": "\u00c1llapotoszt\u00e1ly",
+                    "type": "T\u00edpus",
+                    "unit_of_measurement": "M\u00e9rt\u00e9kegys\u00e9g"
+                },
+                "description": "Ha a \"nem numerikus ignor\u00e1l\u00e1sa\" enged\u00e9lyezve van, a csoport \u00e1llapot\u00e1t akkor sz\u00e1m\u00edtja ki a rendszer, ha legal\u00e1bb egy tagnak sz\u00e1m\u00e9rt\u00e9ke van. Ha ez le van tiltva, a csoport \u00e1llapot\u00e1t csak akkor sz\u00e1m\u00edtja ki a rendszer, ha minden csoporttag rendelkezik sz\u00e1m\u00e9rt\u00e9kekkel.",
+                "title": "Csoport hozz\u00e1ad\u00e1sa"
+            },
             "switch": {
                 "data": {
                     "entities": "A csoport tagjai",
@@ -68,6 +83,7 @@
                     "light": "L\u00e1mpa csoport",
                     "lock": "Z\u00e1r csoport",
                     "media_player": "M\u00e9dialej\u00e1tsz\u00f3 csoport",
+                    "sensor": "\u00c9rz\u00e9kel\u0151 csoport",
                     "switch": "Kapcsol\u00f3csoport"
                 },
                 "title": "Csoport hozz\u00e1ad\u00e1sa"
@@ -115,6 +131,18 @@
                     "entities": "A csoport tagjai",
                     "hide_members": "Tagok elrejt\u00e9se"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Eszk\u00f6zoszt\u00e1ly",
+                    "entities": "Tagok",
+                    "hide_members": "Tagok elrejt\u00e9se",
+                    "ignore_non_numeric": "Nem numerikus \u00e9rt\u00e9kek ignor\u00e1l\u00e1sa",
+                    "round_digits": "Kerek\u00edt\u00e9s pontoss\u00e1ga",
+                    "type": "T\u00edpus",
+                    "unit_of_measurement": "M\u00e9rt\u00e9kegys\u00e9g"
+                },
+                "description": "Ha a \"nem numerikus ignor\u00e1l\u00e1sa\" enged\u00e9lyezve van, a csoport \u00e1llapot\u00e1t akkor sz\u00e1m\u00edtja ki a rendszer, ha legal\u00e1bb egy tagnak sz\u00e1m\u00e9rt\u00e9ke van. Ha ez le van tiltva, a csoport \u00e1llapot\u00e1t csak akkor sz\u00e1m\u00edtja ki a rendszer, ha minden csoporttag rendelkezik sz\u00e1m\u00e9rt\u00e9kekkel."
             },
             "switch": {
                 "data": {

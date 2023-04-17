@@ -1,8 +1,11 @@
 """RESTful platform for notify component."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
 import requests
+from requests.auth import AuthBase, HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -26,8 +29,10 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_DATA = "data"
 CONF_DATA_TEMPLATE = "data_template"
@@ -66,7 +71,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> RestNotificationService:
     """Get the RESTful notification service."""
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
@@ -81,13 +90,12 @@ def get_service(hass, config, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
+    auth: AuthBase | None = None
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = requests.auth.HTTPDigestAuth(username, password)
+            auth = HTTPDigestAuth(username, password)
         else:
-            auth = requests.auth.HTTPBasicAuth(username, password)
-    else:
-        auth = None
+            auth = HTTPBasicAuth(username, password)
 
     return RestNotificationService(
         hass,

@@ -79,7 +79,7 @@ def _get_config_entry_from_unique_id(
     hass: HomeAssistant, unique_id: str
 ) -> ConfigEntry | None:
     for entry in hass.config_entries.async_entries(domain=DOMAIN):
-        if TEST_SYSINFO_ID == entry.unique_id:
+        if entry.unique_id == TEST_SYSINFO_ID:
             return entry
     return None
 

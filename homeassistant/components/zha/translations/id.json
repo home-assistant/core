@@ -22,7 +22,8 @@
                 "description": "Pilih pengaturan jaringan untuk radio Anda.",
                 "menu_options": {
                     "choose_automatic_backup": "Pulihkan cadangan otomatis",
-                    "form_new_network": "Hapus pengaturan jaringan dan bangun jaringan baru",
+                    "form_initial_network": "Buat jaringan",
+                    "form_new_network": "Hapus pengaturan jaringan dan buat jaringan baru",
                     "reuse_settings": "Pertahankan pengaturan jaringan radio",
                     "upload_manual_backup": "Unggah cadangan manual"
                 },
@@ -172,7 +173,8 @@
                 "description": "Pilih pengaturan jaringan untuk radio Anda.",
                 "menu_options": {
                     "choose_automatic_backup": "Pulihkan cadangan otomatis",
-                    "form_new_network": "Hapus pengaturan jaringan dan bangun jaringan baru",
+                    "form_initial_network": "Buat jaringan",
+                    "form_new_network": "Hapus pengaturan jaringan dan buat jaringan baru",
                     "reuse_settings": "Pertahankan pengaturan jaringan radio",
                     "upload_manual_backup": "Unggah cadangan manual"
                 },
@@ -190,11 +192,11 @@
                 "title": "Konfigurasi Ulang ZHA"
             },
             "instruct_unplug": {
-                "description": "Radio lama Anda telah disetel ulang. Jika perangkat keras tidak lagi diperlukan, Anda dapat mencabutnya sekarang.",
+                "description": "Radio lama Anda telah disetel ulang. Jika perangkat keras tidak lagi diperlukan, Anda dapat mencabutnya sekarang.\n\nKini ada bisa mencolokkan radio baru Anda.",
                 "title": "Cabut radio lama Anda"
             },
             "intent_migrate": {
-                "description": "Radio lama Anda akan disetel ulang ke setelan pabrikan. Jika Anda menggunakan adaptor gabungan Z-Wave dan Zigbee seperti HUSBZB-1, ini hanya akan mengatur ulang bagian Zigbee.\n\nApakah Anda ingin melanjutkan?",
+                "description": "Sebelum mencolokkan radio baru, radio lama Anda harus diatur ulang.  Pencadangan otomatis akan dilakukan.  Jika Anda menggunakan adaptor gabungan Z-Wave dan Zigbee seperti HUSBZB-1, ini hanya akan mengatur ulang bagian Zigbee.\n\n*Catatan: jika Anda bermigrasi dari perangkat **ConBee/RaspBee**, pastikan perangkat tersebut menjalankan firmware `x26720700` atau yang lebih baru! Jika tidak, beberapa perangkat mungkin tidak dapat dikontrol setelah migrasi hingga daya dimatikan lalu dihidupkan kembali secara manual.*\n\nIngin melanjutkan?",
                 "title": "Migrasikan ke radio baru"
             },
             "manual_pick_radio_type": {

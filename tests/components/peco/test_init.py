@@ -29,15 +29,14 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             outage_count=0,
             customers_served=350394,
         ),
+    ), patch(
+        "peco.PecoOutageApi.get_map_alerts",
+        return_value=AlertResults(
+            alert_content="Testing 1234", alert_title="Testing 4321"
+        ),
     ):
-        with patch(
-            "peco.PecoOutageApi.get_map_alerts",
-            return_value=AlertResults(
-                alert_content="Testing 1234", alert_title="Testing 4321"
-            ),
-        ):
-            assert await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
     assert hass.data[DOMAIN]
 
     entries = hass.config_entries.async_entries(DOMAIN)

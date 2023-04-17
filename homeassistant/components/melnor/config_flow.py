@@ -80,12 +80,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for discovery_info in async_discovered_service_info(
             self.hass, connectable=True
         ):
-
             if discovery_info.manufacturer_id == MANUFACTURER_ID and any(
                 manufacturer_data.startswith(MANUFACTURER_DATA_START)
                 for manufacturer_data in discovery_info.manufacturer_data.values()
             ):
-
                 address = discovery_info.address
                 if (
                     address not in current_addresses

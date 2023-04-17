@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Najnov\u0161ie aktualizovan\u00e9",
+                "max": "Maximum",
+                "mean": "Aritmetick\u00fd priemer",
+                "median": "Medi\u00e1n",
+                "min": "Minimum",
+                "range": "\u0160tatistick\u00fd rozsah",
+                "sum": "S\u00fa\u010det"
+            }
+        }
+    },
     "title": "Skombinujte stav nieko\u013ek\u00fdch sn\u00edma\u010dov"
 }

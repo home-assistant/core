@@ -290,7 +290,6 @@ def setup_comp(hass, mock_device_tracker_conf, mqtt_mock):
     hass.states.async_set("zone.inner_2", "zoning", INNER_ZONE)
 
     hass.states.async_set("zone.outer", "zoning", OUTER_ZONE)
-    yield
 
 
 async def setup_owntracks(hass, config, ctx_cls=owntracks.OwnTracksContext):
@@ -334,7 +333,7 @@ def context(hass, setup_comp):
         """Get the current context."""
         return context
 
-    yield get_context
+    return get_context
 
 
 async def send_message(hass, topic, message, corrupt=False):

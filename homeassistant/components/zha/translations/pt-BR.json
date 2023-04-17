@@ -22,7 +22,8 @@
                 "description": "Escolha as configura\u00e7\u00f5es de rede para o seu r\u00e1dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaurar um backup autom\u00e1tico",
-                    "form_new_network": "Apague as configura\u00e7\u00f5es de rede e forme uma nova rede",
+                    "form_initial_network": "Criar uma rede",
+                    "form_new_network": "Apague as configura\u00e7\u00f5es de rede e crie uma nova rede",
                     "reuse_settings": "Manter as configura\u00e7\u00f5es de rede de r\u00e1dio",
                     "upload_manual_backup": "Carregar um backup manualmente"
                 },
@@ -174,7 +175,8 @@
                 "description": "Escolha as configura\u00e7\u00f5es de rede para o seu r\u00e1dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaurar um backup autom\u00e1tico",
-                    "form_new_network": "Apague as configura\u00e7\u00f5es de rede e forme uma nova rede",
+                    "form_initial_network": "Criar uma rede",
+                    "form_new_network": "Apague as configura\u00e7\u00f5es de rede e crie uma nova rede",
                     "reuse_settings": "Manter as configura\u00e7\u00f5es de rede de r\u00e1dio",
                     "upload_manual_backup": "Carregar um backup manualmente"
                 },
@@ -192,11 +194,11 @@
                 "title": "Reconfigurar ZHA"
             },
             "instruct_unplug": {
-                "description": "Seu r\u00e1dio antigo foi reiniciado. Se o hardware n\u00e3o for mais necess\u00e1rio, agora voc\u00ea pode desconect\u00e1-lo.",
+                "description": "Seu r\u00e1dio antigo foi redefinido. Se o hardware n\u00e3o for mais necess\u00e1rio, voc\u00ea pode desconect\u00e1-lo. \n\n Agora voc\u00ea pode conectar seu novo r\u00e1dio.",
                 "title": "Desconecte seu r\u00e1dio antigo"
             },
             "intent_migrate": {
-                "description": "Seu r\u00e1dio antigo ser\u00e1 redefinido de f\u00e1brica. Se voc\u00ea estiver usando um adaptador Z-Wave e Zigbee combinado, como o HUSBZB-1, isso apenas redefinir\u00e1 a parte Zigbee. \n\n Voc\u00ea deseja continuar?",
+                "description": "Antes de conectar seu novo r\u00e1dio, seu r\u00e1dio antigo precisa ser redefinido. Um backup autom\u00e1tico ser\u00e1 executado. Se voc\u00ea estiver usando um adaptador Z-Wave e Zigbee combinado como o HUSBZB-1, isso apenas redefinir\u00e1 a parte Zigbee. \n\n *Observa\u00e7\u00e3o: se voc\u00ea estiver migrando de um **ConBee/RaspBee**, verifique se ele est\u00e1 executando o firmware `0x26720700` ou mais recente! Caso contr\u00e1rio, alguns dispositivos podem n\u00e3o ser control\u00e1veis ap\u00f3s a migra\u00e7\u00e3o at\u00e9 que sejam desligados e ligados novamente.* \n\n Voc\u00ea deseja continuar?",
                 "title": "Migrar para um novo r\u00e1dio"
             },
             "manual_pick_radio_type": {

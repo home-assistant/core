@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
         "error": {
             "invalid_auth": "Autentikasi tidak valid",
             "service_unavailable_error": "API saat ini tidak tersedia, harap coba lagi nanti.",

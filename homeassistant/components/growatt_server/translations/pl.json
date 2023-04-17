@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "no_plants": "Nie znaleziono plantacji na tym koncie"
         },
         "error": {

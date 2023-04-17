@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "Jumat",
+                "mon": "Senin",
+                "sat": "Sabtu",
+                "sun": "Minggu",
+                "thu": "Kamis",
+                "tue": "Selasa",
+                "wed": "Rabu"
+            }
+        }
     }
 }

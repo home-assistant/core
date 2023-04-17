@@ -399,7 +399,6 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         observations_by_entity: dict[str, list[Observation]] = {}
         for observation in self._observations:
-
             if (key := observation.entity_id) is None:
                 continue
             observations_by_entity.setdefault(key, []).append(observation)

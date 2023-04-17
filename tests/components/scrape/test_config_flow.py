@@ -131,7 +131,10 @@ async def test_flow_fails(hass: HomeAssistant, get_data: MockRestData) -> None:
 
     assert result2["errors"] == {"base": "resource_error"}
 
-    with patch("homeassistant.components.rest.RestData", return_value=get_data,), patch(
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=get_data,
+    ), patch(
         "homeassistant.components.scrape.async_setup_entry",
         return_value=True,
     ):

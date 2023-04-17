@@ -233,15 +233,6 @@ class LazyStatePreSchema31(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (
-            other.__class__ in [self.__class__, State]
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-        )
-
 
 class LazyState(State):
     """A lazy version of core State after schema 31."""
@@ -340,15 +331,6 @@ class LazyState(State):
             "last_changed": last_changed_isoformat,
             "last_updated": last_updated_isoformat,
         }
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (
-            other.__class__ in [self.__class__, State]
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-        )
 
 
 def decode_attributes_from_row(

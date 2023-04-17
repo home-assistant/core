@@ -11,7 +11,7 @@ from tests.common import ANY, mock_area_registry
 def client(hass, hass_ws_client):
     """Fixture that can interact with the config manager API."""
     hass.loop.run_until_complete(area_registry.async_setup(hass))
-    yield hass.loop.run_until_complete(hass_ws_client(hass))
+    return hass.loop.run_until_complete(hass_ws_client(hass))
 
 
 @pytest.fixture

@@ -1457,7 +1457,7 @@ async def test_event_listener_scheduled_write(
     )
     event = MagicMock(data={"new_state": state}, time_fired=12345)
     write_api = get_write_api(mock_client)
-    write_api.side_effect = IOError("foo")
+    write_api.side_effect = OSError("foo")
 
     # Write fails
     with patch.object(influxdb.time, "sleep") as mock_sleep:

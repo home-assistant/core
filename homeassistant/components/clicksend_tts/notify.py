@@ -1,4 +1,6 @@
 """clicksend_tts platform for notify component."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
@@ -14,7 +16,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +53,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> ClicksendNotificationService | None:
     """Get the ClickSend notification service."""
     if not _authenticate(config):
         _LOGGER.error("You are not authorized to access ClickSend")

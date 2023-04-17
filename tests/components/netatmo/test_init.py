@@ -304,7 +304,6 @@ async def test_setup_component_with_delay(hass, config_entry):
     ) as mock_post_api_request, patch(
         "homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]
     ):
-
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )

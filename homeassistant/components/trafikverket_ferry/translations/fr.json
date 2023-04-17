@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "Vendredi",
+                "mon": "Lundi",
+                "sat": "Samedi",
+                "sun": "Dimanche",
+                "thu": "Jeudi",
+                "tue": "Mardi",
+                "wed": "Mercredi"
+            }
+        }
     }
 }

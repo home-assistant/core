@@ -379,7 +379,7 @@ class HueOneLightChangeView(HomeAssistantView):
         else:
             parsed[STATE_ON] = entity.state != STATE_OFF
 
-        for (key, attr) in (
+        for key, attr in (
             (HUE_API_STATE_BRI, STATE_BRIGHTNESS),
             (HUE_API_STATE_HUE, STATE_HUE),
             (HUE_API_STATE_SAT, STATE_SATURATION),
@@ -587,7 +587,7 @@ class HueOneLightChangeView(HomeAssistantView):
             )
         ]
 
-        for (key, val) in (
+        for key, val in (
             (STATE_BRIGHTNESS, HUE_API_STATE_BRI),
             (STATE_HUE, HUE_API_STATE_HUE),
             (STATE_SATURATION, HUE_API_STATE_SAT),
@@ -705,7 +705,7 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
             data[STATE_SATURATION] = 0
 
     # Clamp brightness, hue, saturation, and color temp to valid values
-    for (key, v_min, v_max) in (
+    for key, v_min, v_max in (
         (STATE_BRIGHTNESS, HUE_API_STATE_BRI_MIN, HUE_API_STATE_BRI_MAX),
         (STATE_HUE, HUE_API_STATE_HUE_MIN, HUE_API_STATE_HUE_MAX),
         (STATE_SATURATION, HUE_API_STATE_SAT_MIN, HUE_API_STATE_SAT_MAX),

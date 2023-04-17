@@ -84,7 +84,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     async def async_get_pss_state(self, capability: str) -> bool | None:
         """Set the PSS state."""
-        response: dict[str, Any] = await self.aiolivisi.async_get_pss_state(
+        response: dict[str, Any] = await self.aiolivisi.async_get_device_state(
             capability[1:]
         )
         if response is None:

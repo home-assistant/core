@@ -22,6 +22,7 @@
                 "description": "W\u00e4hle die Netzwerkeinstellungen f\u00fcr dein Funkger\u00e4t.",
                 "menu_options": {
                     "choose_automatic_backup": "Wiederherstellung eines automatischen Backups",
+                    "form_initial_network": "Ein Netzwerk erstellen",
                     "form_new_network": "L\u00f6schen der Netzwerkeinstellungen und Aufbau eines neuen Netzwerks",
                     "reuse_settings": "Funknetzeinstellungen beibehalten",
                     "upload_manual_backup": "Manuelles Backup hochladen"
@@ -174,6 +175,7 @@
                 "description": "W\u00e4hle die Netzwerkeinstellungen f\u00fcr dein Funkger\u00e4t.",
                 "menu_options": {
                     "choose_automatic_backup": "Wiederherstellung eines automatischen Backups",
+                    "form_initial_network": "Ein Netzwerk erstellen",
                     "form_new_network": "L\u00f6schen der Netzwerkeinstellungen und Aufbau eines neuen Netzwerks",
                     "reuse_settings": "Funknetzeinstellungen beibehalten",
                     "upload_manual_backup": "Manuelles Backup hochladen"
@@ -192,11 +194,11 @@
                 "title": "ZHA rekonfigurieren"
             },
             "instruct_unplug": {
-                "description": "Dein altes Funkger\u00e4t wurde zur\u00fcckgesetzt. Wenn die Hardware nicht mehr ben\u00f6tigt wird, kannst du es jetzt ausstecken.",
+                "description": "Ihr altes Radio wurde zur\u00fcckgesetzt. Wenn die Hardware nicht mehr ben\u00f6tigt wird, k\u00f6nnen Sie sie jetzt ausstecken. \n\nJetzt kannst du dein neues Radio anschlie\u00dfen.",
                 "title": "Stecke dein altes Funkger\u00e4t aus"
             },
             "intent_migrate": {
-                "description": "Dein altes Funkger\u00e4t wird auf die Werkseinstellungen zur\u00fcckgesetzt. Wenn du einen kombinierten Z-Wave- und Zigbee-Adapter wie den HUSBZB-1 verwendest, wird nur der Zigbee-Teil zur\u00fcckgesetzt.\n\nM\u00f6chtest du fortfahren?",
+                "description": "Bevor du dein neues Radio anschlie\u00dft, muss dein altes Radio zur\u00fcckgesetzt werden.  Es wird eine automatische Sicherung durchgef\u00fchrt.  Wenn du einen kombinierten Z-Wave- und Zigbee-Adapter wie den HUSBZB-1 verwendest, wird nur der Zigbee-Teil zur\u00fcckgesetzt.\n\n*Hinweis: Wenn du von einem **ConBee/RaspBee** migrierst, stelle sicher, dass dieser mit der Firmware `0x26720700` oder neuer l\u00e4uft! Andernfalls kann es sein, dass einige Ger\u00e4te nach der Migration nicht mehr steuerbar sind, bis die Stromversorgung unterbrochen wird.\n\nM\u00f6chtest du fortfahren?",
                 "title": "Umstellung auf ein neues Funkger\u00e4t"
             },
             "manual_pick_radio_type": {

@@ -58,4 +58,4 @@ def test_load_key_map(hass):
         "os.path.isfile", Mock(return_value=True)
     ):
         config = rtm.RememberTheMilkConfiguration(hass)
-    assert ("0", "1", "2") == config.get_rtm_id(PROFILE, "1234")
+    assert config.get_rtm_id(PROFILE, "1234") == ("0", "1", "2")

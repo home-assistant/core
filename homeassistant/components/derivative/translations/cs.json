@@ -16,5 +16,15 @@
                 }
             }
         }
+    },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "Dny",
+                "h": "Hodiny",
+                "min": "Minuty",
+                "s": "Sekundy"
+            }
+        }
     }
 }

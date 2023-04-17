@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
         "error": {
             "invalid_account_format": "L'account non \u00e8 un valore esadecimale, utilizza solo 0-9 e AF.",
             "invalid_account_length": "L'account non \u00e8 della lunghezza giusta, deve essere compreso tra 3 e 16 caratteri.",

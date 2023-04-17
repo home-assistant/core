@@ -497,8 +497,8 @@ async def test_control_error_handling(hass, client, caplog, monkeypatch):
 
     assert client.play.call_count == 1
     assert (
-        f"Error calling async_media_play on entity {ENTITY_ID}, state:off, error: TimeoutError()"
-        in caplog.text
+        f"Error calling async_media_play on entity {ENTITY_ID}, state:off, error:"
+        " TimeoutError()" in caplog.text
     )
 
 
@@ -582,7 +582,7 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     await client.mock_state_update()
 
     # TV off, restored state supports mute, step
-    # validate SUPPORT_TURN_ON is not cached
+    # validate MediaPlayerEntityFeature.TURN_ON is not cached
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert (

@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "Nap",
+                "h": "\u00d3ra",
+                "min": "Perc",
+                "s": "M\u00e1sodperc"
+            }
+        }
+    },
     "title": "Sz\u00e1rmaz\u00e9kos \u00e9rz\u00e9kel\u0151"
 }

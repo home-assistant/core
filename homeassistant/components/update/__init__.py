@@ -60,6 +60,8 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(UpdateDeviceClass))
 
 __all__ = [
     "ATTR_BACKUP",
+    "ATTR_INSTALLED_VERSION",
+    "ATTR_LATEST_VERSION",
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",

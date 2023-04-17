@@ -60,7 +60,7 @@ class BroadlinkDevice:
     @property
     def available(self):
         """Return True if the device is available."""
-        if self.update_manager is None:  # pragma: no cover
+        if self.update_manager is None:
             return False
         return self.update_manager.available
 

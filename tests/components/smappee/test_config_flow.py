@@ -538,7 +538,10 @@ async def test_full_zeroconf_flow_next_generation(hass):
     """Test the full zeroconf flow."""
     with patch(
         "pysmappee.mqtt.SmappeeLocalMqtt.start_attempt", return_value=True
-    ), patch("pysmappee.mqtt.SmappeeLocalMqtt.start", return_value=None,), patch(
+    ), patch(
+        "pysmappee.mqtt.SmappeeLocalMqtt.start",
+        return_value=None,
+    ), patch(
         "pysmappee.mqtt.SmappeeLocalMqtt.is_config_ready",
         return_value=None,
     ):

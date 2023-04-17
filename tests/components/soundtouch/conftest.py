@@ -23,7 +23,7 @@ DEVICE_2_ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.my_soundtouch_2"
 @pytest.fixture
 def device1_config() -> MockConfigEntry:
     """Mock SoundTouch device 1 config entry."""
-    yield MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         unique_id=DEVICE_1_ID,
         data={
@@ -36,7 +36,7 @@ def device1_config() -> MockConfigEntry:
 @pytest.fixture
 def device2_config() -> MockConfigEntry:
     """Mock SoundTouch device 2 config entry."""
-    yield MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         unique_id=DEVICE_2_ID,
         data={
@@ -155,7 +155,7 @@ def device1_requests_mock(
     requests_mock.get(f"{DEVICE_1_URL}/volume", text=device1_volume)
     requests_mock.get(f"{DEVICE_1_URL}/presets", text=device1_presets)
     requests_mock.get(f"{DEVICE_1_URL}/getZone", text=device1_zone_master)
-    yield requests_mock
+    return requests_mock
 
 
 @pytest.fixture
@@ -229,7 +229,7 @@ def device1_requests_mock_key(
     device1_requests_mock: Mocker,
 ):
     """Mock SoundTouch device 1 API - key endpoint."""
-    yield device1_requests_mock.post(f"{DEVICE_1_URL}/key")
+    return device1_requests_mock.post(f"{DEVICE_1_URL}/key")
 
 
 @pytest.fixture
@@ -237,7 +237,7 @@ def device1_requests_mock_volume(
     device1_requests_mock: Mocker,
 ):
     """Mock SoundTouch device 1 API - volume endpoint."""
-    yield device1_requests_mock.post(f"{DEVICE_1_URL}/volume")
+    return device1_requests_mock.post(f"{DEVICE_1_URL}/volume")
 
 
 @pytest.fixture
@@ -245,7 +245,7 @@ def device1_requests_mock_select(
     device1_requests_mock: Mocker,
 ):
     """Mock SoundTouch device 1 API - select endpoint."""
-    yield device1_requests_mock.post(f"{DEVICE_1_URL}/select")
+    return device1_requests_mock.post(f"{DEVICE_1_URL}/select")
 
 
 @pytest.fixture
@@ -253,7 +253,7 @@ def device1_requests_mock_set_zone(
     device1_requests_mock: Mocker,
 ):
     """Mock SoundTouch device 1 API - setZone endpoint."""
-    yield device1_requests_mock.post(f"{DEVICE_1_URL}/setZone")
+    return device1_requests_mock.post(f"{DEVICE_1_URL}/setZone")
 
 
 @pytest.fixture
@@ -261,7 +261,7 @@ def device1_requests_mock_add_zone_slave(
     device1_requests_mock: Mocker,
 ):
     """Mock SoundTouch device 1 API - addZoneSlave endpoint."""
-    yield device1_requests_mock.post(f"{DEVICE_1_URL}/addZoneSlave")
+    return device1_requests_mock.post(f"{DEVICE_1_URL}/addZoneSlave")
 
 
 @pytest.fixture
@@ -269,7 +269,7 @@ def device1_requests_mock_remove_zone_slave(
     device1_requests_mock: Mocker,
 ):
     """Mock SoundTouch device 1 API - removeZoneSlave endpoint."""
-    yield device1_requests_mock.post(f"{DEVICE_1_URL}/removeZoneSlave")
+    return device1_requests_mock.post(f"{DEVICE_1_URL}/removeZoneSlave")
 
 
 @pytest.fixture
@@ -277,7 +277,7 @@ def device1_requests_mock_dlna(
     device1_requests_mock: Mocker,
 ):
     """Mock SoundTouch device 1 API - DLNA endpoint."""
-    yield device1_requests_mock.post(f"http://{DEVICE_1_IP}:8091/AVTransport/Control")
+    return device1_requests_mock.post(f"http://{DEVICE_1_IP}:8091/AVTransport/Control")
 
 
 @pytest.fixture
@@ -294,4 +294,4 @@ def device2_requests_mock_standby(
     requests_mock.get(f"{DEVICE_2_URL}/now_playing", text=device2_now_playing_standby)
     requests_mock.get(f"{DEVICE_2_URL}/getZone", text=device2_zone_slave)
 
-    yield requests_mock
+    return requests_mock

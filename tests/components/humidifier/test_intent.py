@@ -1,4 +1,6 @@
 """Tests for the humidifier intents."""
+import pytest
+
 from homeassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
@@ -178,7 +180,7 @@ async def test_intent_set_mode_tests_feature(hass):
             intent.INTENT_MODE,
             {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "away"}},
         )
-        assert False, "handling intent should have raised"
+        pytest.fail("handling intent should have raised")
     except IntentHandleError as err:
         assert str(err) == "Entity bedroom humidifier does not support modes"
 
@@ -207,7 +209,7 @@ async def test_intent_set_unknown_mode(hass):
             intent.INTENT_MODE,
             {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "eco"}},
         )
-        assert False, "handling intent should have raised"
+        pytest.fail("handling intent should have raised")
     except IntentHandleError as err:
         assert str(err) == "Entity bedroom humidifier does not support eco mode"
 

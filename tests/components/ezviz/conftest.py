@@ -1,18 +1,18 @@
-"""Define fixtures available for all tests."""
+"""Define pytest.fixtures available for all tests."""
 from unittest.mock import MagicMock, patch
 
 from pyezviz import EzvizClient
 from pyezviz.test_cam_rtsp import TestRTSPAuth
-from pytest import fixture
+import pytest
 
 
-@fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def mock_ffmpeg(hass):
     """Mock ffmpeg is loaded."""
     hass.config.components.add("ffmpeg")
 
 
-@fixture
+@pytest.fixture
 def ezviz_test_rtsp_config_flow(hass):
     """Mock the EzvizApi for easier testing."""
     with patch.object(TestRTSPAuth, "main", return_value=True), patch(
@@ -29,7 +29,7 @@ def ezviz_test_rtsp_config_flow(hass):
         yield mock_ezviz_test_rtsp
 
 
-@fixture
+@pytest.fixture
 def ezviz_config_flow(hass):
     """Mock the EzvizAPI for easier config flow testing."""
     with patch.object(EzvizClient, "login", return_value=True), patch(

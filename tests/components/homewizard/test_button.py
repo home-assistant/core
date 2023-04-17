@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homewizard_energy.errors import DisabledError, RequestError
-from pytest import raises
+import pytest
 
 from homeassistant.components import button
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNKNOWN
@@ -123,7 +123,7 @@ async def test_identify_press_catches_requesterror(
 
     assert api.identify.call_count == 0
 
-    with raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             button.DOMAIN,
             button.SERVICE_PRESS,
@@ -161,7 +161,7 @@ async def test_identify_press_catches_disablederror(
 
     assert api.identify.call_count == 0
 
-    with raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             button.DOMAIN,
             button.SERVICE_PRESS,

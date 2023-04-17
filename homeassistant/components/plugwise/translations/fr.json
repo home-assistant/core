@@ -29,6 +29,9 @@
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
+                            "asleep": "Nuit",
+                            "away": "Absent",
+                            "home": "\u00c0 la maison",
                             "no_frost": "Hors-gel",
                             "vacation": "Vacances"
                         }

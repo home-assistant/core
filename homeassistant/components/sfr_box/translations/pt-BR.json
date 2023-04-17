@@ -1,16 +1,32 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
         },
         "error": {
-            "cannot_connect": "Falhou ao conectar"
+            "cannot_connect": "Falhou ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            },
+            "choose_auth": {
+                "description": "Definir credenciais permite funcionalidade adicional.",
+                "menu_options": {
+                    "auth": "Definir credenciais (recomendado)",
+                    "skip_auth": "Pular autentica\u00e7\u00e3o"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Nome do host"
-                }
+                },
+                "description": "Definir as credenciais \u00e9 opcional, mas permite funcionalidade adicional."
             }
         }
     },

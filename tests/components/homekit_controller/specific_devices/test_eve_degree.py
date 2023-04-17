@@ -2,7 +2,7 @@
 
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE, PRESSURE_HPA, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, UnitOfPressure
 from homeassistant.helpers.entity import EntityCategory
 
 from ..common import (
@@ -52,7 +52,7 @@ async def test_eve_degree_setup(hass):
                     entity_id="sensor.eve_degree_aa11_air_pressure",
                     unique_id="00:00:00:00:00:00_1_30_32",
                     friendly_name="Eve Degree AA11 Air Pressure",
-                    unit_of_measurement=PRESSURE_HPA,
+                    unit_of_measurement=UnitOfPressure.HPA,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="1005.70001220703",
                 ),

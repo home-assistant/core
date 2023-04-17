@@ -15,6 +15,7 @@ DONT_IGNORE = (
     "intent.py",
     "logbook.py",
     "media_source.py",
+    "recorder.py",
     "scene.py",
 )
 

@@ -28,6 +28,20 @@
       "problemMatcher": []
     },
     {
+      "label": "Pytest (changed tests only)",
+      "type": "shell",
+      "command": "pytest --timeout=10 --picked",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Flake8",
       "type": "shell",
       "command": "pre-commit run flake8 --all-files",

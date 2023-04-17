@@ -93,7 +93,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
         async with async_timeout.timeout(10):
             try:
                 data = await self.poolsense.get_poolsense_data()
-            except (PoolSenseError) as error:
+            except PoolSenseError as error:
                 _LOGGER.error("PoolSense query did not complete")
                 raise UpdateFailed(error) from error
 

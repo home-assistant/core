@@ -31,5 +31,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "Lev\u00fd Riemann\u016fv sou\u010det",
+                "right": "Prav\u00fd Riemann\u016fv sou\u010det",
+                "trapezoidal": "Lichob\u011b\u017en\u00edkov\u00e1 metoda"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "Dny",
+                "h": "Hodiny",
+                "min": "Minuty",
+                "s": "Sekundy"
+            }
+        }
+    },
     "title": "Integrace - Riemann\u016fv sou\u010dtov\u00fd integr\u00e1ln\u00ed senzor"
 }

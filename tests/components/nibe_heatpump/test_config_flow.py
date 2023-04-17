@@ -10,7 +10,6 @@ from nibe.exceptions import (
     CoilWriteException,
 )
 import pytest
-from pytest import fixture
 
 from homeassistant import config_entries
 from homeassistant.components.nibe_heatpump import DOMAIN
@@ -33,7 +32,7 @@ MOCK_FLOW_MODBUS_USERDATA = {
 }
 
 
-@fixture(autouse=True, name="mock_setup_entry")
+@pytest.fixture(autouse=True, name="mock_setup_entry")
 async def fixture_mock_setup():
     """Make sure we never actually run setup."""
     with patch(

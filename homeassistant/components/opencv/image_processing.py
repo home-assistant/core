@@ -189,7 +189,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
             )
             regions = []
             # pylint: disable=invalid-name
-            for (x, y, w, h) in detections:
+            for x, y, w, h in detections:
                 regions.append((int(x), int(y), int(w), int(h)))
                 total_matches += 1
 

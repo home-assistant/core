@@ -173,7 +173,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         if self._data != {}:
             self._next_buses = []
 
-            for (route, departures) in self._data["departures"].items():
+            for route, departures in self._data["departures"].items():
                 for departure in departures:
                     if self._destination_re.search(departure["direction"]):
                         self._next_buses.append(

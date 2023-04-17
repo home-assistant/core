@@ -3,7 +3,7 @@
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import SLEEP_PERIOD_MULTIPLIER
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import State
 from homeassistant.helpers.entity_registry import async_get
 
@@ -134,6 +134,29 @@ async def test_block_restored_sleeping_binary_sensor(
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
+async def test_block_restored_sleeping_binary_sensor_no_last_state(
+    hass, mock_block_device, device_reg, monkeypatch
+):
+    """Test block restored sleeping binary sensor missing last state."""
+    entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass, BINARY_SENSOR_DOMAIN, "test_name_motion", "sensor_0-motion", entry
+    )
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    # Make device online
+    monkeypatch.setattr(mock_block_device, "initialized", True)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
 async def test_rpc_binary_sensor(hass, mock_rpc_device, monkeypatch) -> None:
     """Test RPC binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_cover_0_overpowering"
@@ -205,6 +228,31 @@ async def test_rpc_restored_sleeping_binary_sensor(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ON
+
+    # Make device online
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
+    hass, mock_rpc_device, device_reg, monkeypatch
+):
+    """Test RPC restored sleeping binary sensor missing last state."""
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry
+    )
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)

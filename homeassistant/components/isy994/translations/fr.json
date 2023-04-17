@@ -32,6 +32,18 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Le service {deprecated_service} sera supprim\u00e9"
+                    }
+                }
+            },
+            "title": "Le service {deprecated_service} sera supprim\u00e9"
+        }
+    },
     "options": {
         "step": {
             "init": {

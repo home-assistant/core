@@ -14,6 +14,9 @@
                 "description": "Cliquez sur soumettre et acceptez la demande de jumelage sur votre t\u00e9l\u00e9viseur.\n\n![Image](/static/images/config_webos.png)",
                 "title": "Appairage de la TV webOS"
             },
+            "reauth_confirm": {
+                "title": "Appairage webOS TV"
+            },
             "user": {
                 "data": {
                     "host": "H\u00f4te",

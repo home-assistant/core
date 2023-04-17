@@ -144,7 +144,7 @@ class HorizonDevice(MediaPlayerEntity):
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play media / switch to channel."""
-        if MediaType.CHANNEL == media_type:
+        if media_type == MediaType.CHANNEL:
             try:
                 self._select_channel(int(media_id))
                 self._attr_state = MediaPlayerState.PLAYING

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.2.0.dev0"
+version     = "2023.3.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -74,7 +74,7 @@ include-package-data = true
 include = ["homeassistant*"]
 
 [tool.black]
-target-version = ["py39", "py310"]
+target-version = ["py310"]
 extend-exclude = "/generated/"
 
 [tool.isort]
@@ -161,11 +161,11 @@ good-names = [
 # wrong-import-order - isort guards this
 # consider-using-f-string - str.format sometimes more readable
 # ---
-# Enable once current issues are fixed:
-# consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
-# consider-using-assignment-expr (Pylint CodeStyle extension)
+# Pylint CodeStyle plugin
+# consider-using-namedtuple-or-dataclass - too opinionated
+# consider-using-assignment-expr - decision to use := better left to devs
 # ---
-# Temporary for the Python 3.10 update
+# Temporary for the Python 3.10 update, remove with mypy v1.0
 # consider-alternative-union-syntax
 disable = [
     "format",
@@ -212,9 +212,9 @@ expected-line-ending-format = "LF"
 
 [tool.pylint.EXCEPTIONS]
 overgeneral-exceptions = [
-    "BaseException",
-    "Exception",
-    "HomeAssistantError",
+    "builtins.BaseException",
+    "builtins.Exception",
+    # "homeassistant.exceptions.HomeAssistantError",  # too many issues
 ]
 
 [tool.pylint.TYPING]
@@ -224,7 +224,10 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.pylint-per-file-ignores]
-"/tests/"="protected-access,redefined-outer-name"
+# hass-component-root-import: Tests test non-public APIs
+# protected-access: Tests do often test internals a lot
+# redefined-outer-name: Tests reference fixtures in the test function
+"/tests/"="hass-component-root-import,protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [
@@ -240,7 +243,23 @@ asyncio_mode = "auto"
 
 [tool.ruff]
 target-version = "py310"
-exclude = []
+
+select = [
+    "C",  # complexity
+    "D",  # docstrings
+    "E",  # pycodestyle
+    "F",  # pyflakes/autoflake
+    "PGH004",  # Use specific rule codes when using noqa
+    "PLC0414", # Useless import alias. Import alias does not rename original package.
+    "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
+    "SIM117", # Merge with-statements that use the same scope
+    "SIM300", # Yoda conditions. Use 'age == 42' instead of '42 == age'.
+    "SIM401", # Use get from dict with default instead of an if block
+    "T20",  # flake8-print
+    "TRY004", # Prefer TypeError exception for invalid type
+    "UP",  # pyupgrade
+    "W",  # pycodestyle
+]
 
 ignore = [
     "D202",  # No blank lines allowed after function docstring
@@ -255,18 +274,10 @@ ignore = [
     "E501",  # line too long
     "E713",  # Test for membership should be 'not in'
     "E731",  # do not assign a lambda expression, use a def
-    "UP024", # Replace aliased errors with `OSError`
 ]
-select = [
-    "C",  # complexity
-    "D",  # docstrings
-    "E",  # pycodestyle
-    "F",  # pyflakes/autoflake
-    "T20",  # flake8-print
-    "W",  # pycodestyle
-    "UP",  # pyupgrade
-    "PGH004",  # Use specific rule codes when using noqa
-]
+
+[tool.ruff.flake8-pytest-style]
+fixture-parentheses = false
 
 [tool.ruff.per-file-ignores]
 

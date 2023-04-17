@@ -12,13 +12,13 @@
                 "data": {
                     "path": "USB-donglebane"
                 },
-                "title": "Velg banen til din ENOcean dongle"
+                "title": "Velg banen til ENOcean-dongelen din"
             },
             "manual": {
                 "data": {
                     "path": "USB-donglebane"
                 },
-                "title": "Angi banen til din ENOcean dongle"
+                "title": "G\u00e5 inn p\u00e5 banen til ENOcean-dongelen din"
             }
         }
     }

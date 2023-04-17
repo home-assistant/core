@@ -33,10 +33,30 @@
         }
     },
     "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Instantan\u00e9",
+                    "always_charging": "Instantan\u00e9",
+                    "schedule_mode": "Planificateur"
+                }
+            }
+        },
         "sensor": {
             "charge_state": {
                 "state": {
+                    "charge_ended": "Charge termin\u00e9e",
+                    "charge_error": "Pas en charge ni branch\u00e9",
+                    "charge_in_progress": "En charge",
+                    "not_in_charge": "Pas en chargement",
+                    "unavailable": "Indisponible",
                     "waiting_for_a_planned_charge": "En attente d'une charge planifi\u00e9e"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plugged": "Branch\u00e9",
+                    "unplugged": "D\u00e9branch\u00e9"
                 }
             }
         }

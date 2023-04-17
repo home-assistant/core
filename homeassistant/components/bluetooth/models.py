@@ -12,7 +12,6 @@ from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from homeassistant.util.dt import monotonic_time_coarse
 
 if TYPE_CHECKING:
-
     from .manager import BluetoothManager
 
 

@@ -25,13 +25,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def extra_os_info():
     """Extra os/info."""
     return {}
 
 
-@pytest.fixture()
+@pytest.fixture
 def os_info(extra_os_info):
     """Mock os/info."""
     return {
@@ -291,7 +291,7 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock, hass_storag
         if token.token == refresh_token:
             break
     else:
-        assert False, "refresh token not found"
+        pytest.fail("refresh token not found")
 
 
 async def test_setup_adds_admin_group_to_user(hass, aioclient_mock, hass_storage):

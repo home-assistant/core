@@ -22,7 +22,8 @@
                 "description": "Elige la configuraci\u00f3n de red para tu radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaurar una copia de seguridad autom\u00e1tica",
-                    "form_new_network": "Borrar la configuraci\u00f3n de red y formar una nueva red",
+                    "form_initial_network": "Crear una red",
+                    "form_new_network": "Borrar la configuraci\u00f3n de red y crear una nueva red",
                     "reuse_settings": "Mantener la configuraci\u00f3n de red de la radio",
                     "upload_manual_backup": "Subir una copia de seguridad manual"
                 },
@@ -174,7 +175,8 @@
                 "description": "Elige la configuraci\u00f3n de red para tu radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaurar una copia de seguridad autom\u00e1tica",
-                    "form_new_network": "Borrar la configuraci\u00f3n de red y formar una nueva red",
+                    "form_initial_network": "Crear una red",
+                    "form_new_network": "Borrar la configuraci\u00f3n de red y crear una nueva red",
                     "reuse_settings": "Mantener la configuraci\u00f3n de red de la radio",
                     "upload_manual_backup": "Subir una copia de seguridad manual"
                 },
@@ -192,11 +194,11 @@
                 "title": "Reconfigurar ZHA"
             },
             "instruct_unplug": {
-                "description": "Tu antigua radio ha sido reiniciada. Si ya no necesitas el hardware, puedes desconectarlo ahora.",
+                "description": "Tu antigua radio ha sido reiniciada. Si ya no necesitas el hardware, puedes desconectarlo ahora. \n\nPuedes conectar tu nueva radio ahora.",
                 "title": "Desconecta tu antigua radio"
             },
             "intent_migrate": {
-                "description": "Tu antigua radio se restablecer\u00e1 de f\u00e1brica. Si est\u00e1s utilizando un adaptador combinado de Z-Wave y Zigbee como el HUSBZB-1, esto solo restablecer\u00e1 la parte de Zigbee. \n\n\u00bfDeseas continuar?",
+                "description": "Antes de conectar tu nueva radio, tu vieja radio necesita ser reiniciada. Se realizar\u00e1 una copia de seguridad autom\u00e1tica. Si est\u00e1s utilizando un adaptador combinado de Z-Wave y Zigbee como el HUSBZB-1, esto solo restablecer\u00e1 la parte de Zigbee. \n\n*Nota: si est\u00e1s migrando desde un **ConBee/RaspBee**, \u00a1aseg\u00farate de que est\u00e9 ejecutando el firmware `0x26720700` o m\u00e1s reciente! De lo contrario, es posible que algunos dispositivos no se puedan controlar despu\u00e9s de la migraci\u00f3n hasta que se apaguen y enciendan.* \n\n\u00bfDeseas continuar?",
                 "title": "Migrar a una nueva radio"
             },
             "manual_pick_radio_type": {

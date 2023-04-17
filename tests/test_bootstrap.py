@@ -13,7 +13,7 @@ from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from tests.common import (
+from .common import (
     MockModule,
     MockPlatform,
     get_test_config_dir,

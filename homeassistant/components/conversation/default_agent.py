@@ -11,7 +11,7 @@ import re
 from typing import IO, Any
 
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
-from hassil.recognize import recognize
+from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
 from home_assistant_intents import get_intents
 import yaml
@@ -71,6 +71,8 @@ class DefaultAgent(AbstractConversationAgent):
 
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
+        self._areas_list: TextSlotList | None = None
+        self._names_list: TextSlotList | None = None
 
     async def async_initialize(self, config_intents):
         """Initialize the default agent."""
@@ -80,6 +82,22 @@ class DefaultAgent(AbstractConversationAgent):
         # Intents from config may only contains sentences for HA config's language
         if config_intents:
             self._config_intents = config_intents
+
+        self.hass.bus.async_listen(
+            area_registry.EVENT_AREA_REGISTRY_UPDATED,
+            self._async_handle_area_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._async_handle_entity_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
+            core.EVENT_STATE_CHANGED,
+            self._async_handle_state_changed,
+            run_immediately=True,
+        )
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
@@ -109,7 +127,12 @@ class DefaultAgent(AbstractConversationAgent):
             "name": self._make_names_list(),
         }
 
-        result = recognize(user_input.text, lang_intents.intents, slot_lists=slot_lists)
+        result = await self.hass.async_add_executor_job(
+            self._recognize,
+            user_input,
+            lang_intents,
+            slot_lists,
+        )
         if result is None:
             _LOGGER.debug("No intent was matched for '%s'", user_input.text)
             return _make_error_result(
@@ -160,20 +183,42 @@ class DefaultAgent(AbstractConversationAgent):
             ).get(response_key)
             if response_str:
                 response_template = template.Template(response_str, self.hass)
-                intent_response.async_set_speech(
-                    response_template.async_render(
-                        {
-                            "slots": {
-                                entity_name: entity_value.text or entity_value.value
-                                for entity_name, entity_value in result.entities.items()
-                            }
+                speech = response_template.async_render(
+                    {
+                        "slots": {
+                            entity_name: entity_value.text or entity_value.value
+                            for entity_name, entity_value in result.entities.items()
                         }
-                    )
+                    }
                 )
+
+                # Normalize whitespace
+                speech = " ".join(speech.strip().split())
+                intent_response.async_set_speech(speech)
 
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
+
+    def _recognize(
+        self,
+        user_input: ConversationInput,
+        lang_intents: LanguageIntents,
+        slot_lists: dict[str, SlotList],
+    ) -> RecognizeResult | None:
+        """Search intents for a match to user input."""
+        # Prioritize matches with entity names above area names
+        maybe_result: RecognizeResult | None = None
+        for result in recognize_all(
+            user_input.text, lang_intents.intents, slot_lists=slot_lists
+        ):
+            if "name" in result.entities:
+                return result
+
+            # Keep looking in case an entity has the same name
+            maybe_result = result
+
+        return maybe_result
 
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""
@@ -196,13 +241,15 @@ class DefaultAgent(AbstractConversationAgent):
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
+        hass_components = set(self.hass.config.components)
         async with self._lang_lock[language]:
             return await self.hass.async_add_executor_job(
-                self._get_or_load_intents,
-                language,
+                self._get_or_load_intents, language, hass_components
             )
 
-    def _get_or_load_intents(self, language: str) -> LanguageIntents | None:
+    def _get_or_load_intents(
+        self, language: str, hass_components: set[str]
+    ) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
         lang_intents = self._lang_intents.get(language)
 
@@ -215,7 +262,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Check if any new components have been loaded
         intents_changed = False
-        for component in self.hass.config.components:
+        for component in hass_components:
             if component in loaded_components:
                 continue
 
@@ -310,8 +357,29 @@ class DefaultAgent(AbstractConversationAgent):
 
         return lang_intents
 
+    @core.callback
+    def _async_handle_area_registry_changed(self, event: core.Event) -> None:
+        """Clear area area cache when the area registry has changed."""
+        self._areas_list = None
+
+    @core.callback
+    def _async_handle_entity_registry_changed(self, event: core.Event) -> None:
+        """Clear names list cache when an entity changes aliases."""
+        if event.data["action"] == "update" and "aliases" not in event.data["changes"]:
+            return
+        self._names_list = None
+
+    @core.callback
+    def _async_handle_state_changed(self, event: core.Event) -> None:
+        """Clear names list cache when a state is added or removed from the state machine."""
+        if event.data.get("old_state") and event.data.get("new_state"):
+            return
+        self._names_list = None
+
     def _make_areas_list(self) -> TextSlotList:
         """Create slot list mapping area names/aliases to area ids."""
+        if self._areas_list is not None:
+            return self._areas_list
         registry = area_registry.async_get(self.hass)
         areas = []
         for entry in registry.async_list_areas():
@@ -320,31 +388,38 @@ class DefaultAgent(AbstractConversationAgent):
                 for alias in entry.aliases:
                     areas.append((alias, entry.id))
 
-        return TextSlotList.from_tuples(areas)
+        self._areas_list = TextSlotList.from_tuples(areas, allow_template=False)
+        return self._areas_list
 
     def _make_names_list(self) -> TextSlotList:
         """Create slot list mapping entity names/aliases to entity ids."""
+        if self._names_list is not None:
+            return self._names_list
         states = self.hass.states.async_all()
-        registry = entity_registry.async_get(self.hass)
+        entities = entity_registry.async_get(self.hass)
         names = []
         for state in states:
-            domain = state.entity_id.split(".", maxsplit=1)[0]
-            context = {"domain": domain}
+            context = {"domain": state.domain}
 
-            entry = registry.async_get(state.entity_id)
-            if entry is not None:
-                if entry.entity_category:
-                    # Skip configuration/diagnostic entities
+            entity = entities.async_get(state.entity_id)
+            if entity is not None:
+                if entity.entity_category or entity.hidden:
+                    # Skip configuration/diagnostic/hidden entities
                     continue
 
-                if entry.aliases:
-                    for alias in entry.aliases:
+                if entity.aliases:
+                    for alias in entity.aliases:
                         names.append((alias, state.entity_id, context))
 
-            # Default name
-            names.append((state.name, state.entity_id, context))
+                # Default name
+                names.append((state.name, state.entity_id, context))
 
-        return TextSlotList.from_tuples(names)
+            else:
+                # Default name
+                names.append((state.name, state.entity_id, context))
+
+        self._names_list = TextSlotList.from_tuples(names, allow_template=False)
+        return self._names_list
 
     def _get_error_text(
         self, response_type: ResponseType, lang_intents: LanguageIntents

@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
 from math import ceil, floor, log10
+import re
 from typing import Any, Final, cast, final
 
 from homeassistant.config_entries import ConfigEntry
@@ -58,6 +58,7 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, UndefinedType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (  # noqa: F401
     ATTR_LAST_RESET,
@@ -69,6 +70,7 @@ from .const import (  # noqa: F401
     DEVICE_CLASSES,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
+    NON_NUMERIC_DEVICE_CLASSES,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
@@ -83,6 +85,8 @@ from .websocket_api import async_setup as async_setup_ws_api
 _LOGGER: Final = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+
+NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
@@ -242,6 +246,20 @@ class SensorEntity(Entity):
         if hasattr(self, "entity_description"):
             return self.entity_description.device_class
         return None
+
+    @final
+    @property
+    def _numeric_state_expected(self) -> bool:
+        """Return true if the sensor must be numeric."""
+        if (
+            self.state_class is not None
+            or self.native_unit_of_measurement is not None
+            or self.native_precision is not None
+        ):
+            return True
+        # Sensors with custom device classes are not considered numeric
+        device_class = try_parse_enum(SensorDeviceClass, self.device_class)
+        return device_class not in {None, *NON_NUMERIC_DEVICE_CLASSES}
 
     @property
     def options(self) -> list[str] | None:
@@ -461,24 +479,14 @@ class SensorEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         value = self.native_value
-        device_class: SensorDeviceClass | None = None
-        with suppress(ValueError):
-            # For the sake of validation, we can ignore custom device classes
-            # (customization and legacy style translations)
-            device_class = SensorDeviceClass(str(self.device_class))
+        # For the sake of validation, we can ignore custom device classes
+        # (customization and legacy style translations)
+        device_class = try_parse_enum(SensorDeviceClass, self.device_class)
         state_class = self.state_class
 
         # Sensors with device classes indicating a non-numeric value
         # should not have a unit of measurement
-        if (
-            device_class
-            in {
-                SensorDeviceClass.DATE,
-                SensorDeviceClass.ENUM,
-                SensorDeviceClass.TIMESTAMP,
-            }
-            and unit_of_measurement
-        ):
+        if device_class in NON_NUMERIC_DEVICE_CLASSES and unit_of_measurement:
             raise ValueError(
                 f"Sensor {self.entity_id} has a unit of measurement and thus "
                 "indicating it has a numeric value; however, it has the "
@@ -569,12 +577,7 @@ class SensorEntity(Entity):
 
         # If the sensor has neither a device class, a state class, a unit of measurement
         # nor a precision then there are no further checks or conversions
-        if (
-            not device_class
-            and not state_class
-            and not unit_of_measurement
-            and precision is None
-        ):
+        if not self._numeric_state_expected:
             return value
 
         # From here on a numerical value is expected
@@ -596,21 +599,22 @@ class SensorEntity(Entity):
                         f"({type(value)})"
                     ) from err
                 # This should raise in Home Assistant Core 2023.4
-                self._invalid_numeric_value_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    "Sensor %s has device class %s, state class %s and unit %s "
-                    "thus indicating it has a numeric value; however, it has the "
-                    "non-numeric value: %s (%s); Please update your configuration "
-                    "if your entity is manually configured, otherwise %s",
-                    self.entity_id,
-                    device_class,
-                    state_class,
-                    unit_of_measurement,
-                    value,
-                    type(value),
-                    report_issue,
-                )
+                if not self._invalid_numeric_value_reported:
+                    self._invalid_numeric_value_reported = True
+                    report_issue = self._suggest_report_issue()
+                    _LOGGER.warning(
+                        "Sensor %s has device class %s, state class %s and unit %s "
+                        "thus indicating it has a numeric value; however, it has the "
+                        "non-numeric value: %s (%s); Please update your configuration "
+                        "if your entity is manually configured, otherwise %s",
+                        self.entity_id,
+                        device_class,
+                        state_class,
+                        unit_of_measurement,
+                        value,
+                        type(value),
+                        report_issue,
+                    )
                 return value
         else:
             numerical_value = value
@@ -647,8 +651,14 @@ class SensorEntity(Entity):
                 unit_of_measurement,
             )
             value = f"{converted_numerical_value:.{precision}f}"
+            # This can be replaced with adding the z option when we drop support for
+            # Python 3.10
+            value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
         elif precision is not None:
             value = f"{numerical_value:.{precision}f}"
+            # This can be replaced with adding the z option when we drop support for
+            # Python 3.10
+            value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
 
         # Validate unit of measurement used for sensors with a device class
         if (
@@ -665,6 +675,7 @@ class SensorEntity(Entity):
                 (
                     "Entity %s (%s) is using native unit of measurement '%s' which "
                     "is not a valid unit for the device class ('%s') it is using; "
+                    "expected one of %s; "
                     "Please update your configuration if your entity is manually "
                     "configured, otherwise %s"
                 ),
@@ -672,6 +683,7 @@ class SensorEntity(Entity):
                 type(self),
                 native_unit_of_measurement,
                 device_class,
+                [str(unit) if unit else "no unit of measurement" for unit in units],
                 report_issue,
             )
 

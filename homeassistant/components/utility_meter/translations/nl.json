@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Elke twee maanden",
+                "daily": "Dagelijks",
+                "hourly": "Per uur",
+                "monthly": "Maandelijks",
+                "none": "Geen cyclus",
+                "quarter-hourly": "Elke 15 minuten",
+                "quarterly": "Per kwartaal",
+                "weekly": "Wekelijks",
+                "yearly": "Jaarlijks"
+            }
+        }
+    },
     "title": "Nutsmeter"
 }

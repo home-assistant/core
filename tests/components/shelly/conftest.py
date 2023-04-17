@@ -1,7 +1,7 @@
 """Test configuration for Shelly."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.rpc_device import RpcDevice, UpdateType
@@ -245,7 +245,9 @@ async def mock_block_device():
             status=MOCK_STATUS_COAP,
             firmware_version="some fw string",
             initialized=True,
+            model="SHSW-1",
         )
+        type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device
         block_device_mock.return_value.mock_update = Mock(side_effect=update)
 
@@ -254,7 +256,7 @@ async def mock_block_device():
 
 def _mock_rpc_device(version: str | None = None):
     """Mock rpc (Gen2, Websocket) device."""
-    return Mock(
+    device = Mock(
         spec=RpcDevice,
         config=MOCK_CONFIG,
         event={},
@@ -265,6 +267,8 @@ def _mock_rpc_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
     )
+    type(device).name = PropertyMock(return_value="Test name")
+    return device
 
 
 @pytest.fixture

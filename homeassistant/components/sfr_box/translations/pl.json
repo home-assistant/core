@@ -1,16 +1,32 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
+            "choose_auth": {
+                "description": "Ustawienie po\u015bwiadcze\u0144 w\u0142\u0105cza dodatkowe funkcje.",
+                "menu_options": {
+                    "auth": "Ustaw po\u015bwiadczenia (zalecane)",
+                    "skip_auth": "Pomi\u0144 uwierzytelnianie"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
-                }
+                },
+                "description": "Ustawienie po\u015bwiadcze\u0144 jest opcjonalne, ale umo\u017cliwia korzystanie z dodatkowych funkcji."
             }
         }
     },

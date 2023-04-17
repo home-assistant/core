@@ -24,6 +24,10 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.components.recorder.common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context,
+    assert_multiple_states_equal_without_context_and_last_changed,
+    assert_states_equal_without_context,
     async_recorder_block_till_done,
     async_wait_recording_done,
     wait_recording_done,
@@ -91,7 +95,7 @@ def test_get_significant_states(hass_history):
     hass = hass_history
     zero, four, states = record_states(hass)
     hist = get_significant_states(hass, zero, four, filters=history.Filters())
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_minimal_response(hass_history):
@@ -133,7 +137,31 @@ def test_get_significant_states_minimal_response(hass_history):
                 "last_changed": orig_last_changed,
                 "state": orig_state,
             }
-    assert states == hist
+
+    assert len(hist) == len(states)
+    assert_states_equal_without_context(
+        states["media_player.test"][0], hist["media_player.test"][0]
+    )
+    assert states["media_player.test"][1] == hist["media_player.test"][1]
+    assert states["media_player.test"][2] == hist["media_player.test"][2]
+
+    assert_multiple_states_equal_without_context(
+        states["media_player.test2"], hist["media_player.test2"]
+    )
+    assert_states_equal_without_context(
+        states["media_player.test3"][0], hist["media_player.test3"][0]
+    )
+    assert states["media_player.test3"][1] == hist["media_player.test3"][1]
+
+    assert_multiple_states_equal_without_context(
+        states["script.can_cancel_this_one"], hist["script.can_cancel_this_one"]
+    )
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["thermostat.test"], hist["thermostat.test"]
+    )
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["thermostat.test2"], hist["thermostat.test2"]
+    )
 
 
 def test_get_significant_states_with_initial(hass_history):
@@ -153,6 +181,7 @@ def test_get_significant_states_with_initial(hass_history):
         for state in states[entity_id]:
             if state.last_changed == one:
                 state.last_changed = one_and_half
+                state.last_updated = one_and_half
 
     hist = get_significant_states(
         hass,
@@ -161,7 +190,7 @@ def test_get_significant_states_with_initial(hass_history):
         filters=history.Filters(),
         include_start_time_state=True,
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_without_initial(hass_history):
@@ -188,7 +217,7 @@ def test_get_significant_states_without_initial(hass_history):
         filters=history.Filters(),
         include_start_time_state=False,
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_entity_id(hass_history):
@@ -204,7 +233,7 @@ def test_get_significant_states_entity_id(hass_history):
     hist = get_significant_states(
         hass, zero, four, ["media_player.test"], filters=history.Filters()
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_multiple_entity_ids(hass_history):
@@ -223,7 +252,7 @@ def test_get_significant_states_multiple_entity_ids(hass_history):
         ["media_player.test", "thermostat.test"],
         filters=history.Filters(),
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_exclude_domain(hass_history):
@@ -528,14 +557,22 @@ def test_get_significant_states_only(hass_history):
     hist = get_significant_states(hass, start, significant_changes_only=True)
 
     assert len(hist[entity_id]) == 2
-    assert states[0] not in hist[entity_id]
-    assert states[1] in hist[entity_id]
-    assert states[2] in hist[entity_id]
+    assert not any(
+        state.last_updated == states[0].last_updated for state in hist[entity_id]
+    )
+    assert any(
+        state.last_updated == states[1].last_updated for state in hist[entity_id]
+    )
+    assert any(
+        state.last_updated == states[2].last_updated for state in hist[entity_id]
+    )
 
     hist = get_significant_states(hass, start, significant_changes_only=False)
 
     assert len(hist[entity_id]) == 3
-    assert states == hist[entity_id]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states, hist[entity_id]
+    )
 
 
 def check_significant_states(hass, zero, four, states, config):
@@ -551,7 +588,7 @@ def check_significant_states(hass, zero, four, states, config):
         filters.included_domains = include.get(CONF_DOMAINS, [])
 
     hist = get_significant_states(hass, zero, four, filters=filters)
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def record_states(hass):

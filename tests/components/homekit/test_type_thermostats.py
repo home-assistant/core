@@ -742,6 +742,29 @@ async def test_thermostat_humidity(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] == "35%"
 
 
+async def test_thermostat_humidity_with_target_humidity(hass, hk_driver, events):
+    """Test if accessory and HA are updated accordingly with humidity without target hudmidity.
+
+    This test is for thermostats that do not support target humidity but
+    have a current humidity sensor.
+    """
+    entity_id = "climate.test"
+
+    # support_auto = True
+    hass.states.async_set(entity_id, HVACMode.OFF, {ATTR_CURRENT_HUMIDITY: 40})
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_current_humidity.value == 40
+    hass.states.async_set(entity_id, HVACMode.HEAT_COOL, {ATTR_CURRENT_HUMIDITY: 65})
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 65
+
+
 async def test_thermostat_power_state(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"

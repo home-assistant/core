@@ -22,7 +22,8 @@
                 "description": "Choose the network settings for your radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restore an automatic backup",
-                    "form_new_network": "Erase network settings and form a new network",
+                    "form_initial_network": "Create a network",
+                    "form_new_network": "Erase network settings and create a new network",
                     "reuse_settings": "Keep radio network settings",
                     "upload_manual_backup": "Upload a manual backup"
                 },
@@ -174,7 +175,8 @@
                 "description": "Choose the network settings for your radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restore an automatic backup",
-                    "form_new_network": "Erase network settings and form a new network",
+                    "form_initial_network": "Create a network",
+                    "form_new_network": "Erase network settings and create a new network",
                     "reuse_settings": "Keep radio network settings",
                     "upload_manual_backup": "Upload a manual backup"
                 },
@@ -192,11 +194,11 @@
                 "title": "Reconfigure ZHA"
             },
             "instruct_unplug": {
-                "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it.",
+                "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio.",
                 "title": "Unplug your old radio"
             },
             "intent_migrate": {
-                "description": "Your old radio will be factory reset.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\nDo you wish to continue?",
+                "description": "Before plugging in your new radio, your old radio needs to be reset.  An automatic backup will be performed.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?",
                 "title": "Migrate to a new radio"
             },
             "manual_pick_radio_type": {

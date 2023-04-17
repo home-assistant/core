@@ -42,7 +42,6 @@ class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Manage relay modes step."""
         errors = {}
         if user_input is not None:
-
             whole_data = user_input
             whole_data.update(self.s1_in)
 

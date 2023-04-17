@@ -666,7 +666,6 @@ class MQTT:
         subscriptions = self._matching_subscriptions(msg.topic)
 
         for subscription in subscriptions:
-
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
                 try:

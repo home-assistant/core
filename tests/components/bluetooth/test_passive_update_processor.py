@@ -479,7 +479,7 @@ async def test_bad_data_from_update_method(
     assert processor.available is True
 
     # We should go unavailable once we get bad data
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO_2, BluetoothChange.ADVERTISEMENT)
 
     assert processor.available is False

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
         "error": {
             "invalid_account_format": "Le compte n'est pas une valeur hexad\u00e9cimale, veuillez utiliser uniquement 0-9 et AF.",
             "invalid_account_length": "Le compte n'est pas de la bonne longueur, il doit faire entre 3 et 16 caract\u00e8res.",

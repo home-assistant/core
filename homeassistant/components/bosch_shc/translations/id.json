@@ -14,7 +14,7 @@
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Tekan tombol sisi depan Bosch Smart Home Controller hingga LED mulai berkedip.\nSiap melanjutkan penyiapan {model} @ {host} dengan Home Assistant?"
+                "description": "Smart Home Controller I: Tekan tombol sisi depan hingga LED mulai berkedip.\nSmart Home Controller II: Tekan tombol fungsi sebentar. Lampu cloud dan jaringan mulai berkedip oranye.\nPerangkat sekarang siap untuk dipasangkan.\n\nSiap untuk melanjutkan penyiapan {model} @ {host} dengan Home Assistant?"
             },
             "credentials": {
                 "data": {
@@ -22,6 +22,9 @@
                 }
             },
             "reauth_confirm": {
+                "data": {
+                    "host": "Host"
+                },
                 "description": "Integrasi bosch_shc perlu mengautentikasi ulang akun Anda",
                 "title": "Autentikasi Ulang Integrasi"
             },

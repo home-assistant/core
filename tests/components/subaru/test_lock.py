@@ -1,7 +1,7 @@
 """Test Subaru locks."""
 from unittest.mock import patch
 
-from pytest import raises
+import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -51,7 +51,7 @@ async def test_unlock_cmd(hass, ev_entry):
 
 async def test_lock_cmd_fails(hass, ev_entry):
     """Test subaru lock request that initiates but fails."""
-    with patch(MOCK_API_LOCK, return_value=False) as mock_lock, raises(
+    with patch(MOCK_API_LOCK, return_value=False) as mock_lock, pytest.raises(
         HomeAssistantError
     ):
         await hass.services.async_call(
@@ -76,7 +76,7 @@ async def test_unlock_specific_door(hass, ev_entry):
 
 async def test_unlock_specific_door_invalid(hass, ev_entry):
     """Test subaru unlock specific door function."""
-    with patch(MOCK_API_UNLOCK) as mock_unlock, raises(MultipleInvalid):
+    with patch(MOCK_API_UNLOCK) as mock_unlock, pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             SUBARU_DOMAIN,
             SERVICE_UNLOCK_SPECIFIC_DOOR,

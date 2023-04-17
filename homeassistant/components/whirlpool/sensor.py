@@ -295,6 +295,5 @@ class WasherDryerTimeClass(RestoreSensor):
             if isinstance(self._attr_native_value, datetime) and abs(
                 new_timestamp - self._attr_native_value
             ) > timedelta(seconds=60):
-
                 self._attr_native_value = new_timestamp
                 self._async_write_ha_state()

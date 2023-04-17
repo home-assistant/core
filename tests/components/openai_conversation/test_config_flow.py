@@ -5,7 +5,11 @@ from openai.error import APIConnectionError, AuthenticationError, InvalidRequest
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.openai_conversation.const import DOMAIN
+from homeassistant.components.openai_conversation.const import (
+    CONF_MODEL,
+    DEFAULT_MODEL,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -48,6 +52,27 @@ async def test_form(hass: HomeAssistant) -> None:
         "api_key": "bla",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test the options form."""
+    options_flow = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    options = await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "Speak like a pirate",
+            "max_tokens": 200,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] == FlowResultType.CREATE_ENTRY
+    assert options["data"]["prompt"] == "Speak like a pirate"
+    assert options["data"]["max_tokens"] == 200
+    assert options["data"][CONF_MODEL] == DEFAULT_MODEL
 
 
 @pytest.mark.parametrize(

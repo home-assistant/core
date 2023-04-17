@@ -104,7 +104,6 @@ def _get_nvr_memory(obj: NVR) -> float | None:
 
 
 def _get_alarm_sound(obj: Sensor) -> str:
-
     alarm_type = OBJECT_TYPE_NONE
     if (
         obj.is_alarm_detected

@@ -12,7 +12,8 @@
             "oauth_error": "\u6536\u5230\u7121\u6548\u7684\u6b0a\u6756\u8cc7\u6599\u3002",
             "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
             "timeout_connect": "\u5efa\u7acb\u9023\u7dda\u903e\u6642",
-            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
+            "wrong_account": "\u932f\u8aa4\u5e33\u865f\uff1a\u8acb\u4f7f\u7528 {email} \u9032\u884c\u8a8d\u8b49\u3002"
         },
         "create_entry": {
             "default": "\u5df2\u6210\u529f\u8a8d\u8b49"

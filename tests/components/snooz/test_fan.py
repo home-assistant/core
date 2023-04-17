@@ -286,7 +286,7 @@ async def fixture_snooz_fan_entity_id(
 ) -> str:
     """Mock a Snooz fan entity and config entry."""
 
-    yield get_fan_entity_id(hass, mock_connected_snooz.device)
+    return get_fan_entity_id(hass, mock_connected_snooz.device)
 
 
 def get_fan_entity_id(hass: HomeAssistant, device: MockSnoozDevice) -> str:

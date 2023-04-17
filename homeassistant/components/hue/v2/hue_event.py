@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 from homeassistant.util import slugify
 
-from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN as DOMAIN
+from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 
 CONF_CONTROL_ID = "control_id"
 CONF_DURATION = "duration"

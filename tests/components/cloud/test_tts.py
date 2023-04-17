@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.cloud import const, tts
 
 
-@pytest.fixture()
+@pytest.fixture
 def cloud_with_prefs(cloud_prefs):
     """Return a cloud mock with prefs."""
     return Mock(client=Mock(prefs=cloud_prefs))

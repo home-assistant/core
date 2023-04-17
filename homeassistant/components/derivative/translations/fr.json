@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "Jours",
+                "h": "Heures",
+                "min": "Minutes",
+                "s": "Secondes"
+            }
+        }
+    },
     "title": "Capteur de d\u00e9riv\u00e9e"
 }

@@ -17,12 +17,15 @@
             "hpf": "Home Positie Fout",
             "off": "Uit",
             "offline": "Offline",
+            "otf": "Over Torque Fault",
             "p": "Gepauzeerd",
+            "pd": "Knijp gedetecteerd",
             "pwrd": "Uitschakelen",
             "pwru": "Opstarten",
             "rdy": "Gereed",
             "scf": "Kattensensorfout bij opstarten",
-            "sdf": "Lade vol bij opstarten"
+            "sdf": "Lade vol bij opstarten",
+            "spf": "Knijp gedetecteerd bij opstarten"
         }
     }
 }

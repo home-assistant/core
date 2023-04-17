@@ -51,6 +51,21 @@
                 },
                 "title": "Nov\u00e1 skupina"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "T\u0159\u00edda za\u0159\u00edzen\u00ed",
+                    "entities": "\u010clenov\u00e9",
+                    "hide_members": "Skr\u00fdt \u010dleny",
+                    "ignore_non_numeric": "Ignorovat ne\u010d\u00edseln\u00e9 hodnoty",
+                    "name": "Jm\u00e9no",
+                    "round_digits": "Zaokrouhlit hodnotu na po\u010det desetinn\u00fdch m\u00edst",
+                    "state_class": "T\u0159\u00edda stavu",
+                    "type": "Typ",
+                    "unit_of_measurement": "M\u011brn\u00e1 jednotka"
+                },
+                "description": "Pokud je povolena volba \"ignorovat ne\u010d\u00edseln\u00e9 hodnoty\", stav skupiny se vypo\u010d\u00edt\u00e1, pokud m\u00e1 alespo\u0148 jeden \u010dlen \u010d\u00edselnou hodnotu. Pokud je mo\u017enost \"ignorovat ne\u010d\u00edseln\u00e9 hodnoty\" vypnuta, stav skupiny se vypo\u010d\u00edt\u00e1 pouze tehdy, pokud maj\u00ed v\u0161ichni \u010dlenov\u00e9 skupiny \u010d\u00edseln\u00e9 hodnoty.",
+                "title": "Nov\u00e1 skupina"
+            },
             "switch": {
                 "data": {
                     "entities": "\u010clenov\u00e9",
@@ -68,6 +83,7 @@
                     "light": "Skupina sv\u011btel",
                     "lock": "Skupina z\u00e1mk\u016f",
                     "media_player": "Skupina p\u0159ehr\u00e1va\u010d\u016f m\u00e9di\u00ed",
+                    "sensor": "Skupina senzor\u016f",
                     "switch": "Skupina vyp\u00edna\u010d\u016f"
                 },
                 "title": "Nov\u00e1 skupina"
@@ -115,6 +131,19 @@
                     "entities": "\u010clenov\u00e9",
                     "hide_members": "Skr\u00fdt \u010dleny"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "T\u0159\u00edda za\u0159\u00edzen\u00ed",
+                    "entities": "\u010clenov\u00e9",
+                    "hide_members": "Skr\u00fdt \u010dleny",
+                    "ignore_non_numeric": "Ignorovat ne\u010d\u00edseln\u00e9 hodnoty",
+                    "round_digits": "Zaokrouhlit hodnotu na po\u010det desetinn\u00fdch m\u00edst",
+                    "state_class": "T\u0159\u00edda stavu",
+                    "type": "Typ",
+                    "unit_of_measurement": "M\u011brn\u00e1 jednotka"
+                },
+                "description": "Pokud je povolena volba \"ignorovat ne\u010d\u00edseln\u00e9 hodnoty\", stav skupiny se vypo\u010d\u00edt\u00e1, pokud m\u00e1 alespo\u0148 jeden \u010dlen \u010d\u00edselnou hodnotu. Pokud je mo\u017enost \"ignorovat ne\u010d\u00edseln\u00e9 hodnoty\" vypnuta, stav skupiny se vypo\u010d\u00edt\u00e1 pouze tehdy, pokud maj\u00ed v\u0161ichni \u010dlenov\u00e9 skupiny \u010d\u00edseln\u00e9 hodnoty."
             },
             "switch": {
                 "data": {

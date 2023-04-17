@@ -119,7 +119,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-
             control_schema = vol.Schema(
                 {
                     vol.Required(

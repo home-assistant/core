@@ -81,7 +81,6 @@ def async_setup_block_entry(
                 continue
 
             blocks.append(block)
-            assert coordinator.device.shelly
             unique_id = f"{coordinator.mac}-{block.type}_{block.channel}"
             async_remove_shelly_entity(hass, "switch", unique_id)
 

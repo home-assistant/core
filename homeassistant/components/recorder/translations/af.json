@@ -1,0 +1,7 @@
+{
+    "issues": {
+        "maria_db_range_index_regression": {
+            "title": "Aktualizujte MariaDB na {min_version} nebo nov\u011bj\u0161\u00ed pro zlep\u0161en\u00ed v\u00fdkonu."
+        }
+    }
+}

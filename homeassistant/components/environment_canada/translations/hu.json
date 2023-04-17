@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        },
         "error": {
             "bad_station_id": "Az \u00e1llom\u00e1s azonos\u00edt\u00f3ja \u00e9rv\u00e9nytelen, hi\u00e1nyzik, vagy nem tal\u00e1lhat\u00f3 az \u00e1llom\u00e1s azonos\u00edt\u00f3 adatb\u00e1zisban.",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",

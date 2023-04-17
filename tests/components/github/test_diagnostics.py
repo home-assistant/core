@@ -3,7 +3,6 @@
 import json
 
 from aiogithubapi import GitHubException
-from aiohttp import ClientSession
 
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -13,11 +12,12 @@ from .common import setup_github_integration
 from tests.common import MockConfigEntry, load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -56,7 +56,7 @@ async def test_entry_diagnostics(
 
 async def test_entry_diagnostics_exception(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:

@@ -54,4 +54,4 @@ async def fixture_coils(mock_connection):
 
     mock_connection.read_coil = read_coil
     mock_connection.read_coils = read_coils
-    yield coils
+    return coils

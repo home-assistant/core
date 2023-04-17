@@ -1,6 +1,7 @@
 """Support for MQTT cover devices."""
 from __future__ import annotations
 
+from contextlib import suppress
 import functools
 import logging
 from typing import Any
@@ -414,10 +415,8 @@ class MqttCover(MqttEntity, CoverEntity):
                 _LOGGER.debug("Ignoring empty position message from '%s'", msg.topic)
                 return
 
-            try:
+            with suppress(*JSON_DECODE_EXCEPTIONS):
                 payload_dict = json_loads(payload)
-            except JSON_DECODE_EXCEPTIONS:
-                pass
 
             if payload_dict and isinstance(payload_dict, dict):
                 if "position" not in payload_dict:

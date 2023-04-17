@@ -80,11 +80,18 @@
                 },
                 "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistanta. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "\u015acie\u017cka urz\u0105dzenia USB"
+                },
+                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Insteon PLM. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistanta. Nie zmienia to konfiguracji samego PLM."
+            },
             "init": {
                 "data": {
                     "add_override": "Dodawanie nadpisanie urz\u0105dzenia.",
                     "add_x10": "Dodaj urz\u0105dzenie X10.",
                     "change_hub_config": "Zmie\u0144 konfiguracj\u0119 Huba.",
+                    "change_plm_config": "Zmie\u0144 konfiguracj\u0119 PLM.",
                     "remove_override": "Usu\u0144 nadpisanie urz\u0105dzenia.",
                     "remove_x10": "Usu\u0144 urz\u0105dzenie X10."
                 }

@@ -1146,7 +1146,9 @@ async def test_state_unknown_attribute(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "attribute 'model' of entity sensor.door does not exist",
+                        "message": (
+                            "attribute 'model' of entity sensor.door does not exist"
+                        ),
                     }
                 }
             ],
@@ -1428,7 +1430,9 @@ async def test_numeric_state_known_non_matching(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "value 'unavailable' is non-numeric and treated as False",
+                        "message": (
+                            "value 'unavailable' is non-numeric and treated as False"
+                        ),
                     }
                 }
             ],
@@ -1446,7 +1450,9 @@ async def test_numeric_state_known_non_matching(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "value 'unknown' is non-numeric and treated as False",
+                        "message": (
+                            "value 'unknown' is non-numeric and treated as False"
+                        ),
                     }
                 }
             ],
@@ -1566,7 +1572,10 @@ async def test_numeric_state_unknown_attribute(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "attribute 'temperature' of entity sensor.temperature does not exist",
+                        "message": (
+                            "attribute 'temperature' of entity sensor.temperature does"
+                            " not exist"
+                        ),
                     }
                 }
             ],

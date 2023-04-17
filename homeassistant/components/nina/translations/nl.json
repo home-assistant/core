@@ -27,6 +27,7 @@
     "options": {
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
+            "no_selection": "Selecteer minimaal \u00e9\u00e9n stad/deelstaat",
             "unknown": "Onverwachte fout"
         },
         "step": {

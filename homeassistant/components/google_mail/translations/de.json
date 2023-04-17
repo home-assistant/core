@@ -12,7 +12,8 @@
             "oauth_error": "Ung\u00fcltige Token-Daten empfangen.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "timeout_connect": "Zeit\u00fcberschreitung beim Verbindungsaufbau",
-            "unknown": "Unerwarteter Fehler"
+            "unknown": "Unerwarteter Fehler",
+            "wrong_account": "Falsches Konto: Bitte authentifiziere dich mit {email}."
         },
         "create_entry": {
             "default": "Erfolgreich authentifiziert"

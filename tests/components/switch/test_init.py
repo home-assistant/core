@@ -14,7 +14,7 @@ def entities(hass):
     """Initialize the test switch."""
     platform = getattr(hass.components, "test.switch")
     platform.init()
-    yield platform.ENTITIES
+    return platform.ENTITIES
 
 
 async def test_methods(hass, entities, enable_custom_integrations):

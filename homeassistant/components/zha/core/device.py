@@ -725,10 +725,8 @@ class ZHADevice(LogMixin):
             response = await getattr(cluster, commands[command].name)(*args)
         else:
             assert params is not None
-            response = await (
-                getattr(cluster, commands[command].name)(
-                    **convert_to_zcl_values(params, commands[command].schema)
-                )
+            response = await getattr(cluster, commands[command].name)(
+                **convert_to_zcl_values(params, commands[command].schema)
             )
         self.debug(
             "Issued cluster command: %s %s %s %s %s %s %s %s",

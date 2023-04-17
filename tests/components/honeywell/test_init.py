@@ -2,7 +2,7 @@
 
 from unittest.mock import create_autospec, patch
 
-import AIOSomecomfort
+import aiosomecomfort
 
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,
@@ -46,7 +46,7 @@ async def test_setup_multiple_thermostats_with_same_deviceid(
     hass: HomeAssistant, caplog, config_entry: MockConfigEntry, device, client
 ) -> None:
     """Test Honeywell TCC API returning duplicate device IDs."""
-    mock_location2 = create_autospec(AIOSomecomfort.Location, instance=True)
+    mock_location2 = create_autospec(aiosomecomfort.Location, instance=True)
     mock_location2.locationid.return_value = "location2"
     mock_location2.devices_by_id = {device.deviceid: device}
     client.locations_by_id["location2"] = mock_location2

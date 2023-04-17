@@ -73,7 +73,7 @@ async def test_sensors_pro(hass, canary) -> None:
         ),
     }
 
-    for (sensor_id, data) in sensors.items():
+    for sensor_id, data in sensors.items():
         entity_entry = registry.async_get(f"sensor.{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]
@@ -192,7 +192,7 @@ async def test_sensors_flex(hass, canary) -> None:
         ),
     }
 
-    for (sensor_id, data) in sensors.items():
+    for sensor_id, data in sensors.items():
         entity_entry = registry.async_get(f"sensor.{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]

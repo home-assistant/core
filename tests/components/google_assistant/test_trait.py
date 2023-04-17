@@ -1865,7 +1865,10 @@ async def test_inputselector(hass):
     """Test input selector trait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.InputSelectorTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_SELECT_SOURCE, None, None
+        media_player.DOMAIN,
+        media_player.MediaPlayerEntityFeature.SELECT_SOURCE,
+        None,
+        None,
     )
 
     trt = trait.InputSelectorTrait(
@@ -2252,7 +2255,10 @@ async def test_sound_modes(hass):
     """Test Mode trait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_SELECT_SOUND_MODE, None, None
+        media_player.DOMAIN,
+        media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE,
+        None,
+        None,
     )
 
     trt = trait.ModesTrait(
@@ -2698,7 +2704,10 @@ async def test_volume_media_player(hass):
     """Test volume trait support for media player domain."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.VolumeTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_VOLUME_SET, None, None
+        media_player.DOMAIN,
+        media_player.MediaPlayerEntityFeature.VOLUME_SET,
+        None,
+        None,
     )
 
     trt = trait.VolumeTrait(
@@ -2707,7 +2716,7 @@ async def test_volume_media_player(hass):
             "media_player.bla",
             media_player.STATE_PLAYING,
             {
-                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_VOLUME_SET,
+                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.VOLUME_SET,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.3,
             },
         ),
@@ -2749,7 +2758,10 @@ async def test_volume_media_player(hass):
 async def test_volume_media_player_relative(hass):
     """Test volume trait support for relative-volume-only media players."""
     assert trait.VolumeTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_VOLUME_STEP, None, None
+        media_player.DOMAIN,
+        media_player.MediaPlayerEntityFeature.VOLUME_STEP,
+        None,
+        None,
     )
     trt = trait.VolumeTrait(
         hass,
@@ -2758,7 +2770,7 @@ async def test_volume_media_player_relative(hass):
             media_player.STATE_PLAYING,
             {
                 ATTR_ASSUMED_STATE: True,
-                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_VOLUME_STEP,
+                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.VOLUME_STEP,
             },
         ),
         BASIC_CONFIG,
@@ -2815,7 +2827,8 @@ async def test_media_player_mute(hass):
     """Test volume trait support for muting."""
     assert trait.VolumeTrait.supported(
         media_player.DOMAIN,
-        media_player.SUPPORT_VOLUME_STEP | media_player.SUPPORT_VOLUME_MUTE,
+        media_player.MediaPlayerEntityFeature.VOLUME_STEP
+        | media_player.MediaPlayerEntityFeature.VOLUME_MUTE,
         None,
         None,
     )
@@ -2826,7 +2839,8 @@ async def test_media_player_mute(hass):
             media_player.STATE_PLAYING,
             {
                 ATTR_SUPPORTED_FEATURES: (
-                    media_player.SUPPORT_VOLUME_STEP | media_player.SUPPORT_VOLUME_MUTE
+                    media_player.MediaPlayerEntityFeature.VOLUME_STEP
+                    | media_player.MediaPlayerEntityFeature.VOLUME_MUTE
                 ),
                 media_player.ATTR_MEDIA_VOLUME_MUTED: False,
             },
@@ -2986,8 +3000,8 @@ async def test_transport_control(hass):
                 media_player.ATTR_MEDIA_POSITION_UPDATED_AT: now
                 - timedelta(seconds=10),
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
-                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_PLAY
-                | media_player.SUPPORT_STOP,
+                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.PLAY
+                | media_player.MediaPlayerEntityFeature.STOP,
             },
         ),
         BASIC_CONFIG,
@@ -3101,7 +3115,7 @@ async def test_media_state(hass, state):
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
 
     assert trait.TransportControlTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_PLAY, None, None
+        media_player.DOMAIN, media_player.MediaPlayerEntityFeature.PLAY, None, None
     )
 
     trt = trait.MediaStateTrait(
@@ -3113,8 +3127,8 @@ async def test_media_state(hass, state):
                 media_player.ATTR_MEDIA_POSITION: 100,
                 media_player.ATTR_MEDIA_DURATION: 200,
                 media_player.ATTR_MEDIA_VOLUME_LEVEL: 0.5,
-                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_PLAY
-                | media_player.SUPPORT_STOP,
+                ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.PLAY
+                | media_player.MediaPlayerEntityFeature.STOP,
             },
         ),
         BASIC_CONFIG,
@@ -3135,13 +3149,16 @@ async def test_channel(hass):
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ChannelTrait.supported(
         media_player.DOMAIN,
-        media_player.SUPPORT_PLAY_MEDIA,
+        media_player.MediaPlayerEntityFeature.PLAY_MEDIA,
         media_player.MediaPlayerDeviceClass.TV,
         None,
     )
     assert (
         trait.ChannelTrait.supported(
-            media_player.DOMAIN, media_player.SUPPORT_PLAY_MEDIA, None, None
+            media_player.DOMAIN,
+            media_player.MediaPlayerEntityFeature.PLAY_MEDIA,
+            None,
+            None,
         )
         is False
     )

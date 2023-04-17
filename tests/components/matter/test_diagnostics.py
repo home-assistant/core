@@ -1,12 +1,10 @@
 """Test the Matter diagnostics platform."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 import json
 from typing import Any
 from unittest.mock import MagicMock
 
-from aiohttp import ClientSession
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models.server_information import ServerDiagnostics
 import pytest
@@ -23,6 +21,7 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="config_entry_diagnostics")
@@ -61,7 +60,7 @@ async def test_matter_attribute_redact(device_diagnostics: dict[str, Any]) -> No
 
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
-    hass_client: Callable[..., Awaitable[ClientSession]],
+    hass_client: ClientSessionGenerator,
     matter_client: MagicMock,
     integration: MockConfigEntry,
     config_entry_diagnostics: dict[str, Any],
@@ -79,7 +78,7 @@ async def test_config_entry_diagnostics(
 
 async def test_device_diagnostics(
     hass: HomeAssistant,
-    hass_client: Callable[..., Awaitable[ClientSession]],
+    hass_client: ClientSessionGenerator,
     matter_client: MagicMock,
     config_entry_diagnostics: dict[str, Any],
     device_diagnostics: dict[str, Any],

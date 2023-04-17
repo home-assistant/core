@@ -21,7 +21,7 @@ from .coordinator import (
     get_block_coordinator_by_device_id,
     get_rpc_coordinator_by_device_id,
 )
-from .utils import get_block_device_name, get_rpc_entity_name
+from .utils import get_rpc_entity_name
 
 
 @callback
@@ -48,8 +48,7 @@ def async_describe_events(
         elif click_type in BLOCK_INPUTS_EVENTS_TYPES:
             block_coordinator = get_block_coordinator_by_device_id(hass, device_id)
             if block_coordinator and block_coordinator.device.initialized:
-                device_name = get_block_device_name(block_coordinator.device)
-                input_name = f"{device_name} channel {channel}"
+                input_name = f"{block_coordinator.device.name} channel {channel}"
 
         return {
             LOGBOOK_ENTRY_NAME: "Shelly",

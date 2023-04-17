@@ -12,7 +12,8 @@
             "oauth_error": "Mottatt ugyldige token data.",
             "reauth_successful": "Re-autentisering var vellykket",
             "timeout_connect": "Tidsavbrudd oppretter forbindelse",
-            "unknown": "Uventet feil"
+            "unknown": "Uventet feil",
+            "wrong_account": "Feil konto: Vennligst autentiser med {email} ."
         },
         "create_entry": {
             "default": "Vellykket godkjenning"

@@ -179,4 +179,4 @@ async def mock_ha_fixture(hass, mock_pymodbus_return):
 @pytest.fixture(name="caplog_setup_text")
 async def caplog_setup_text_fixture(caplog):
     """Return setup log of integration."""
-    yield caplog.text
+    return caplog.text

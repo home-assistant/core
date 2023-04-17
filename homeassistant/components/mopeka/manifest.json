@@ -1,0 +1,25 @@
+{
+  "domain": "mopeka",
+  "name": "Mopeka",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mopeka",
+  "bluetooth": [
+    {
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 89,
+      "manufacturer_data_start": [3],
+      "connectable": false
+    },
+    {
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 89,
+      "manufacturer_data_start": [8],
+      "connectable": false
+    }
+  ],
+  "requirements": ["mopeka_iot_ble==0.4.0"],
+  "dependencies": ["bluetooth_adapters"],
+  "codeowners": ["@bdraco"],
+  "iot_class": "local_push",
+  "integration_type": "device"
+}

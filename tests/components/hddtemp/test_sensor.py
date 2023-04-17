@@ -161,7 +161,6 @@ async def test_hddtemp_multiple_disks(hass, telnetmock):
         "sensor.hd_temperature_dev_sdb1",
         "sensor.hd_temperature_dev_sdc1",
     ]:
-
         state = hass.states.get(sensor)
 
         reference = REFERENCE[state.attributes.get("device")]

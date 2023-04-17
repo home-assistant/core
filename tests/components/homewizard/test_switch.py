@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import State, System
-from pytest import raises
+import pytest
 
 from homeassistant.components import switch
 from homeassistant.components.switch import SwitchDeviceClass
@@ -375,7 +375,7 @@ async def test_switch_handles_requesterror(
         await hass.async_block_till_done()
 
         # Power on toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -383,7 +383,7 @@ async def test_switch_handles_requesterror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -392,7 +392,7 @@ async def test_switch_handles_requesterror(
             )
 
         # Switch Lock toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -400,7 +400,7 @@ async def test_switch_handles_requesterror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -409,7 +409,7 @@ async def test_switch_handles_requesterror(
             )
 
         # Disable Cloud toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -417,7 +417,7 @@ async def test_switch_handles_requesterror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -452,7 +452,7 @@ async def test_switch_handles_disablederror(
         await hass.async_block_till_done()
 
         # Power on toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -460,7 +460,7 @@ async def test_switch_handles_disablederror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -469,7 +469,7 @@ async def test_switch_handles_disablederror(
             )
 
         # Switch Lock toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -477,7 +477,7 @@ async def test_switch_handles_disablederror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -486,7 +486,7 @@ async def test_switch_handles_disablederror(
             )
 
         # Disable Cloud toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -494,7 +494,7 @@ async def test_switch_handles_disablederror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,

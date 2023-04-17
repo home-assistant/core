@@ -341,7 +341,7 @@ def test_should_return_pure_white_at_6600():
     guess" approach.
     """
     rgb = color_util.color_temperature_to_rgb(6600)
-    assert (255, 255, 255) == rgb
+    assert rgb == (255, 255, 255)
 
 
 def test_color_above_6600_should_have_more_blue_than_red_or_green():

@@ -85,6 +85,17 @@
         }
     },
     "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Zaktualizuj wszystkie automatyzacje lub skrypty, kt\u00f3re u\u017cywaj\u0105 tej encji w wywo\u0142aniu us\u0142ugi `{deprecated_service} `, aby zamiast tego u\u017cywa\u0107 us\u0142ugi `{alternate_service}` z identyfikatorem encji docelowej `{alternate_target}`.",
+                        "title": "Encja {deprecated_entity} zostanie usuni\u0119ta"
+                    }
+                }
+            },
+            "title": "Encja {deprecated_entity} zostanie usuni\u0119ta"
+        },
         "deprecated_service": {
             "fix_flow": {
                 "step": {

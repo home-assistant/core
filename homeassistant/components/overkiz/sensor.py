@@ -386,7 +386,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_THREE_WAY_HANDLE_DIRECTION,
         name="Three way handle direction",
         device_class=SensorDeviceClass.ENUM,
-        options=["open", "tilt", "close"],
+        options=["open", "tilt", "closed"],
         translation_key="three_way_handle_direction",
     ),
 ]

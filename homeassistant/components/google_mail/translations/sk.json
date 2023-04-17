@@ -12,7 +12,8 @@
             "oauth_error": "Prijat\u00e9 neplatn\u00e9 \u00fadaje tokenu.",
             "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9",
             "timeout_connect": "\u010casov\u00fd limit na nadviazanie spojenia",
-            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba",
+            "wrong_account": "Nespr\u00e1vny \u00fa\u010det: Overte sa pomocou {email}."
         },
         "create_entry": {
             "default": "\u00daspe\u0161ne overen\u00e9"

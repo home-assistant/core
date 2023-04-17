@@ -4,6 +4,23 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from yolink.const import (
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_DIMMER,
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_LEAK_SENSOR,
+    ATTR_DEVICE_LOCK,
+    ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_SIREN,
+    ATTR_DEVICE_SWITCH,
+    ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_THERMOSTAT,
+    ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_GARAGE_DOOR_CONTROLLER,
+)
 from yolink.device import YoLinkDevice
 
 from homeassistant.components.sensor import (
@@ -23,18 +40,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
 
-from .const import (
-    ATTR_COORDINATORS,
-    ATTR_DEVICE_CO_SMOKE_SENSOR,
-    ATTR_DEVICE_DOOR_SENSOR,
-    ATTR_DEVICE_LEAK_SENSOR,
-    ATTR_DEVICE_LOCK,
-    ATTR_DEVICE_MANIPULATOR,
-    ATTR_DEVICE_MOTION_SENSOR,
-    ATTR_DEVICE_TH_SENSOR,
-    ATTR_DEVICE_VIBRATION_SENSOR,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -57,14 +63,21 @@ class YoLinkSensorEntityDescription(
 
 
 SENSOR_DEVICE_TYPE = [
+    ATTR_DEVICE_DIMMER,
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_SIREN,
+    ATTR_DEVICE_SWITCH,
     ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_THERMOSTAT,
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_GARAGE_DOOR_CONTROLLER,
 ]
 
 BATTERY_POWER_SENSOR = [
@@ -150,7 +163,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
     sensor_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()

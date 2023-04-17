@@ -29,7 +29,7 @@ async def test_setup_success(
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
 
-    assert not len(hass.services.async_services().get(DOMAIN, {}))
+    assert not hass.services.async_services().get(DOMAIN)
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
@@ -125,6 +125,7 @@ async def test_device_info(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
 
+    assert device.entry_type is dr.DeviceEntryType.SERVICE
     assert device.identifiers == {(DOMAIN, entry.entry_id)}
     assert device.manufacturer == "Google, Inc."
     assert device.name == "example@gmail.com"

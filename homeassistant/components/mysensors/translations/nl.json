@@ -84,6 +84,17 @@
         }
     },
     "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Update huidige automatiseringen of scripts die deze entiteit gebruiken met service `{deprecated_service}` door service `{alternate_service}` met een entiteit ID van `{alternate_target}`.",
+                        "title": "De {deprecated_entity} entiteit wordt verwijderd"
+                    }
+                }
+            },
+            "title": "De {deprecated_entity} entiteit wordt verwijderd"
+        },
         "deprecated_service": {
             "fix_flow": {
                 "step": {

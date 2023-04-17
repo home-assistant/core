@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
         "error": {
             "invalid_credentials": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"

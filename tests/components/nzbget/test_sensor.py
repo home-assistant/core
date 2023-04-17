@@ -73,7 +73,7 @@ async def test_sensors(hass, nzbget_api) -> None:
         ),
     }
 
-    for (sensor_id, data) in sensors.items():
+    for sensor_id, data in sensors.items():
         entity_entry = registry.async_get(f"sensor.nzbgettest_{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]

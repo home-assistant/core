@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Annenhver m\u00e5ned",
+                "daily": "Daglig",
+                "hourly": "Hver time",
+                "monthly": "M\u00e5nedlig",
+                "none": "Ingen syklus",
+                "quarter-hourly": "Hvert 15. minutt",
+                "quarterly": "Kvartalsvis",
+                "weekly": "Ukentlig",
+                "yearly": "\u00c5rlig"
+            }
+        }
+    },
     "title": "Verkt\u00f8ym\u00e5ler"
 }

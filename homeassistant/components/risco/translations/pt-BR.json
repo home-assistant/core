@@ -37,7 +37,7 @@
                 "data": {
                     "armed_away": "Armado Fora",
                     "armed_custom_bypass": "Bypass Armado Personalizado",
-                    "armed_home": "Armado (Casa)",
+                    "armed_home": "Armado em Casa",
                     "armed_night": "Armado (Noite)"
                 },
                 "description": "Selecione o estado para definir seu alarme Risco ao armar o alarme do Home Assistant",

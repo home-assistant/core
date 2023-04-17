@@ -44,11 +44,23 @@
     },
     "entity": {
         "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "co": "Koolmonoxide",
+                    "n2": "Stikstofdioxide",
+                    "o3": "Ozon",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "Zwaveldioxide"
+                }
+            },
             "pollutant_level": {
                 "state": {
                     "good": "Goed",
                     "hazardous": "Gevaarlijk",
-                    "unhealthy": "Ongezond"
+                    "unhealthy": "Ongezond",
+                    "unhealthy_sensitive": "Ongezond voor gevoelige groepen",
+                    "very_unhealthy": "Zeer ongezond"
                 }
             }
         }

@@ -1,4 +1,6 @@
 """Telegram platform for notify component."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -18,7 +20,9 @@ from homeassistant.components.telegram_bot import (
     ATTR_PARSER,
 )
 from homeassistant.const import ATTR_LOCATION
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as TELEGRAM_DOMAIN, PLATFORMS
 
@@ -37,7 +41,11 @@ CONF_CHAT_ID = "chat_id"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_CHAT_ID): vol.Coerce(int)})
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> TelegramNotificationService:
     """Get the Telegram notification service."""
 
     setup_reload_service(hass, TELEGRAM_DOMAIN, PLATFORMS)

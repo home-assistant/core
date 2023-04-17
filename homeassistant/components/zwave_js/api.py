@@ -35,14 +35,14 @@ from zwave_js_server.model.controller import (
     QRProvisioningInformation,
 )
 from zwave_js_server.model.driver import Driver
-from zwave_js_server.model.firmware import (
-    FirmwareUpdateData,
-    FirmwareUpdateProgress,
-    FirmwareUpdateResult,
-)
+from zwave_js_server.model.firmware import FirmwareUpdateData
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.model.node import Node, NodeStatistics
+from zwave_js_server.model.node.firmware import (
+    NodeFirmwareUpdateProgress,
+    NodeFirmwareUpdateResult,
+)
 from zwave_js_server.model.utils import async_parse_qr_code_string
 from zwave_js_server.util.node import async_set_config_parameter
 
@@ -1897,7 +1897,7 @@ async def websocket_is_node_firmware_update_in_progress(
 
 
 def _get_firmware_update_progress_dict(
-    progress: FirmwareUpdateProgress,
+    progress: NodeFirmwareUpdateProgress,
 ) -> dict[str, int | float]:
     """Get a dictionary of firmware update progress."""
     return {
@@ -1934,7 +1934,7 @@ async def websocket_subscribe_firmware_update_status(
 
     @callback
     def forward_progress(event: dict) -> None:
-        progress: FirmwareUpdateProgress = event["firmware_update_progress"]
+        progress: NodeFirmwareUpdateProgress = event["firmware_update_progress"]
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],
@@ -1947,7 +1947,7 @@ async def websocket_subscribe_firmware_update_status(
 
     @callback
     def forward_finished(event: dict) -> None:
-        finished: FirmwareUpdateResult = event["firmware_update_finished"]
+        finished: NodeFirmwareUpdateResult = event["firmware_update_finished"]
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],

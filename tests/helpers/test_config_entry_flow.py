@@ -370,7 +370,6 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
         "hass_nabucasa.cloudhooks.Cloudhooks.async_delete",
         return_value={"cloudhook_url": "https://example.com"},
     ) as mock_delete:
-
         result = await hass.config_entries.async_remove(result["result"].entry_id)
 
     assert len(mock_delete.mock_calls) == 1
@@ -413,7 +412,6 @@ async def test_webhook_create_cloudhook_aborts_not_connected(hass, webhook_flow_
         "hass_nabucasa.iot_base.BaseIoT.connected",
         new_callable=PropertyMock(return_value=False),
     ):
-
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT

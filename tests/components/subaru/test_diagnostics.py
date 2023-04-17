@@ -9,16 +9,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .api_responses import TEST_VIN_2_EV
+from .conftest import MOCK_API_FETCH, MOCK_API_GET_DATA, advance_time_to_next_fetch
 
 from tests.common import load_fixture
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
-)
-from tests.components.subaru.conftest import (
-    MOCK_API_FETCH,
-    MOCK_API_GET_DATA,
-    advance_time_to_next_fetch,
 )
 
 

@@ -53,7 +53,6 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         "pyuptimerobot.UptimeRobot.async_edit_monitor",
         return_value=mock_uptimerobot_api_response(),
     ):
-
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -81,7 +80,6 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         "pyuptimerobot.UptimeRobot.async_edit_monitor",
         return_value=mock_uptimerobot_api_response(),
     ):
-
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 

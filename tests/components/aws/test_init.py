@@ -85,7 +85,6 @@ async def test_profile_credential(hass):
     with async_patch(
         "homeassistant.components.aws.AioSession", return_value=mock_session
     ):
-
         await async_setup_component(
             hass,
             "aws",

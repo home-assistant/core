@@ -195,7 +195,10 @@ async def test_events_during_migration_are_queued(hass):
 
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True,), patch(
+    with patch(
+        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
+        True,
+    ), patch(
         "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ):

@@ -175,7 +175,6 @@ async def test_import_flow_triggered_with_ecobee_conf_and_invalid_data(hass):
     ), patch.object(
         flow, "async_step_user", return_value=mock_coro()
     ) as mock_async_step_user:
-
         await flow.async_step_import(import_data=None)
 
         mock_async_step_user.assert_called_once_with(

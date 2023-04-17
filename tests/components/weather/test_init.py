@@ -2,7 +2,6 @@
 from datetime import datetime
 
 import pytest
-from pytest import approx
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
@@ -164,12 +163,12 @@ async def test_temperature(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         expected, rel=0.1
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
-    assert float(forecast[ATTR_FORECAST_TEMP]) == approx(expected, rel=0.1)
-    assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
 
 
 @pytest.mark.parametrize("native_unit", (None,))
@@ -200,12 +199,12 @@ async def test_temperature_no_unit(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         expected, rel=0.1
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
-    assert float(forecast[ATTR_FORECAST_TEMP]) == approx(expected, rel=0.1)
-    assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
 
 
 @pytest.mark.parametrize("native_unit", (UnitOfPressure.INHG, UnitOfPressure.INHG))
@@ -232,8 +231,10 @@ async def test_pressure(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected, rel=1e-2)
-    assert float(forecast[ATTR_FORECAST_PRESSURE]) == approx(expected, rel=1e-2)
+    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
+        expected, rel=1e-2
+    )
+    assert float(forecast[ATTR_FORECAST_PRESSURE]) == pytest.approx(expected, rel=1e-2)
 
 
 @pytest.mark.parametrize("native_unit", (None,))
@@ -260,8 +261,10 @@ async def test_pressure_no_unit(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected, rel=1e-2)
-    assert float(forecast[ATTR_FORECAST_PRESSURE]) == approx(expected, rel=1e-2)
+    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
+        expected, rel=1e-2
+    )
+    assert float(forecast[ATTR_FORECAST_PRESSURE]) == pytest.approx(expected, rel=1e-2)
 
 
 @pytest.mark.parametrize(
@@ -299,10 +302,12 @@ async def test_wind_speed(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
         expected, rel=1e-2
     )
-    assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == approx(expected, rel=1e-2)
+    assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == pytest.approx(
+        expected, rel=1e-2
+    )
 
 
 @pytest.mark.parametrize("native_unit", (None,))
@@ -333,10 +338,12 @@ async def test_wind_speed_no_unit(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
         expected, rel=1e-2
     )
-    assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == approx(expected, rel=1e-2)
+    assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == pytest.approx(
+        expected, rel=1e-2
+    )
 
 
 @pytest.mark.parametrize("native_unit", (UnitOfLength.MILES, UnitOfLength.KILOMETERS))
@@ -365,7 +372,7 @@ async def test_visibility(
 
     state = hass.states.get(entity0.entity_id)
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == pytest.approx(
         expected, rel=1e-2
     )
 
@@ -396,7 +403,7 @@ async def test_visibility_no_unit(
 
     state = hass.states.get(entity0.entity_id)
     expected = state_value
-    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == pytest.approx(
         expected, rel=1e-2
     )
 
@@ -429,7 +436,9 @@ async def test_precipitation(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
-    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(expected, rel=1e-2)
+    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
+        expected, rel=1e-2
+    )
 
 
 @pytest.mark.parametrize("native_unit", (None,))
@@ -460,7 +469,9 @@ async def test_precipitation_no_unit(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
-    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(expected, rel=1e-2)
+    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
+        expected, rel=1e-2
+    )
 
 
 async def test_wind_bearing_and_ozone(
@@ -585,17 +596,19 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
         ROUNDING_PRECISION,
     )
 
-    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
         expected_wind_speed
     )
-    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         expected_temperature, rel=0.1
     )
-    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected_pressure)
-    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
+        expected_pressure
+    )
+    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == pytest.approx(
         expected_visibility
     )
-    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(
+    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
         expected_precipitation, rel=1e-2
     )
 
@@ -681,42 +694,50 @@ async def test_backwards_compatibility(
     state1 = hass.states.get(entity1.entity_id)
     forecast1 = state1.attributes[ATTR_FORECAST][0]
 
-    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
         wind_speed_value * 3.6
     )
     assert (
         state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT]
         == UnitOfSpeed.KILOMETERS_PER_HOUR
     )
-    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         temperature_value, rel=0.1
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == UnitOfTemperature.CELSIUS
-    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(
+    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
         pressure_value / 100
     )
     assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == UnitOfPressure.HPA
-    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(visibility_value)
+    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == pytest.approx(
+        visibility_value
+    )
     assert state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == UnitOfLength.KILOMETERS
-    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(
+    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
         precipitation_value, rel=1e-2
     )
     assert state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == UnitOfLength.MILLIMETERS
 
-    assert float(state1.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(wind_speed_value)
+    assert float(state1.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
+        wind_speed_value
+    )
     assert (
         state1.attributes[ATTR_WEATHER_WIND_SPEED_UNIT]
         == UnitOfSpeed.KILOMETERS_PER_HOUR
     )
-    assert float(state1.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
+    assert float(state1.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         temperature_value, rel=0.1
     )
     assert state1.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == UnitOfTemperature.CELSIUS
-    assert float(state1.attributes[ATTR_WEATHER_PRESSURE]) == approx(pressure_value)
+    assert float(state1.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
+        pressure_value
+    )
     assert state1.attributes[ATTR_WEATHER_PRESSURE_UNIT] == UnitOfPressure.HPA
-    assert float(state1.attributes[ATTR_WEATHER_VISIBILITY]) == approx(visibility_value)
+    assert float(state1.attributes[ATTR_WEATHER_VISIBILITY]) == pytest.approx(
+        visibility_value
+    )
     assert state1.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == UnitOfLength.KILOMETERS
-    assert float(forecast1[ATTR_FORECAST_PRECIPITATION]) == approx(
+    assert float(forecast1[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
         precipitation_value, rel=1e-2
     )
     assert (
@@ -798,23 +819,25 @@ async def test_backwards_compatibility_convert_values(
     assert state.attributes == {
         ATTR_FORECAST: [
             {
-                ATTR_FORECAST_PRECIPITATION: approx(expected_precipitation, rel=0.1),
-                ATTR_FORECAST_PRESSURE: approx(expected_pressure, rel=0.1),
-                ATTR_FORECAST_TEMP: approx(expected_temperature, rel=0.1),
-                ATTR_FORECAST_TEMP_LOW: approx(expected_temperature, rel=0.1),
+                ATTR_FORECAST_PRECIPITATION: pytest.approx(
+                    expected_precipitation, rel=0.1
+                ),
+                ATTR_FORECAST_PRESSURE: pytest.approx(expected_pressure, rel=0.1),
+                ATTR_FORECAST_TEMP: pytest.approx(expected_temperature, rel=0.1),
+                ATTR_FORECAST_TEMP_LOW: pytest.approx(expected_temperature, rel=0.1),
                 ATTR_FORECAST_WIND_BEARING: None,
-                ATTR_FORECAST_WIND_SPEED: approx(expected_wind_speed, rel=0.1),
+                ATTR_FORECAST_WIND_SPEED: pytest.approx(expected_wind_speed, rel=0.1),
             }
         ],
         ATTR_FRIENDLY_NAME: "Test",
         ATTR_WEATHER_PRECIPITATION_UNIT: UnitOfLength.INCHES,
-        ATTR_WEATHER_PRESSURE: approx(expected_pressure, rel=0.1),
+        ATTR_WEATHER_PRESSURE: pytest.approx(expected_pressure, rel=0.1),
         ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.INHG,
-        ATTR_WEATHER_TEMPERATURE: approx(expected_temperature, rel=0.1),
+        ATTR_WEATHER_TEMPERATURE: pytest.approx(expected_temperature, rel=0.1),
         ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
-        ATTR_WEATHER_VISIBILITY: approx(expected_visibility, rel=0.1),
+        ATTR_WEATHER_VISIBILITY: pytest.approx(expected_visibility, rel=0.1),
         ATTR_WEATHER_VISIBILITY_UNIT: UnitOfLength.MILES,
-        ATTR_WEATHER_WIND_SPEED: approx(expected_wind_speed, rel=0.1),
+        ATTR_WEATHER_WIND_SPEED: pytest.approx(expected_wind_speed, rel=0.1),
         ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.MILES_PER_HOUR,
     }
 

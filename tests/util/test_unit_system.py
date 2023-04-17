@@ -312,51 +312,6 @@ def test_properties():
 
 
 @pytest.mark.parametrize(
-    "unit_system, expected_flag",
-    [
-        (METRIC_SYSTEM, True),
-        (IMPERIAL_SYSTEM, False),
-    ],
-)
-def test_is_metric(
-    caplog: pytest.LogCaptureFixture, unit_system: UnitSystem, expected_flag: bool
-):
-    """Test the is metric flag."""
-    assert unit_system.is_metric == expected_flag
-    assert (
-        "Detected code that accesses the `is_metric` property of the unit system."
-        in caplog.text
-    )
-
-
-@pytest.mark.parametrize(
-    "unit_system, expected_name, expected_private_name",
-    [
-        (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_METRIC),
-        (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
-        (
-            US_CUSTOMARY_SYSTEM,
-            _CONF_UNIT_SYSTEM_IMPERIAL,
-            _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-        ),
-    ],
-)
-def test_deprecated_name(
-    caplog: pytest.LogCaptureFixture,
-    unit_system: UnitSystem,
-    expected_name: str,
-    expected_private_name: str,
-) -> None:
-    """Test the name is deprecated."""
-    assert unit_system.name == expected_name
-    assert unit_system._name == expected_private_name
-    assert (
-        "Detected code that accesses the `name` property of the unit system."
-        in caplog.text
-    )
-
-
-@pytest.mark.parametrize(
     "key, expected_system",
     [
         (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),

@@ -12,7 +12,8 @@
             "oauth_error": "Se han recibido datos de token no v\u00e1lidos.",
             "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "timeout_connect": "Tiempo de espera agotado para establecer la conexi\u00f3n",
-            "unknown": "Error inesperado"
+            "unknown": "Error inesperado",
+            "wrong_account": "Cuenta incorrecta: por favor, autent\u00edcate con {email}."
         },
         "create_entry": {
             "default": "Autenticado correctamente"

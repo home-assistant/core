@@ -255,7 +255,7 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
         FILTER_NODE_DEF_ID: ["DimmerMotorSwitch_ADV"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_COVER],
-        FILTER_ZWAVE_CAT: [],
+        FILTER_ZWAVE_CAT: ["106", "107"],
     },
     Platform.LIGHT: {
         FILTER_UOM: ["51"],

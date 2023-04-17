@@ -22,6 +22,7 @@
                 "description": "Velg nettverksinnstillingene for radioen.",
                 "menu_options": {
                     "choose_automatic_backup": "Gjenopprette en automatisk sikkerhetskopiering",
+                    "form_initial_network": "Lag et nettverk",
                     "form_new_network": "Slett nettverksinnstillinger og opprett et nytt nettverk",
                     "reuse_settings": "Behold innstillingene for radionettverk",
                     "upload_manual_backup": "Last opp en manuell sikkerhetskopiering"
@@ -174,6 +175,7 @@
                 "description": "Velg nettverksinnstillingene for radioen.",
                 "menu_options": {
                     "choose_automatic_backup": "Gjenopprette en automatisk sikkerhetskopiering",
+                    "form_initial_network": "Lag et nettverk",
                     "form_new_network": "Slett nettverksinnstillinger og opprett et nytt nettverk",
                     "reuse_settings": "Behold innstillingene for radionettverk",
                     "upload_manual_backup": "Last opp en manuell sikkerhetskopiering"
@@ -192,11 +194,11 @@
                 "title": "Konfigurer ZHA p\u00e5 nytt"
             },
             "instruct_unplug": {
-                "description": "Den gamle radioen din er tilbakestilt. Hvis maskinvaren ikke lenger er n\u00f8dvendig, kan du n\u00e5 koble den fra.",
+                "description": "Den gamle radioen din er tilbakestilt. Hvis maskinvaren ikke lenger er n\u00f8dvendig, kan du n\u00e5 koble den fra. \n\n Du kan n\u00e5 koble til din nye radio.",
                 "title": "Koble fra den gamle radioen"
             },
             "intent_migrate": {
-                "description": "Den gamle radioen blir tilbakestilt til fabrikkstandard. Hvis du bruker en kombinert Z-Wave og Zigbee-adapter som HUSBZB-1, vil dette bare tilbakestille Zigbee-delen. \n\n \u00d8nsker du \u00e5 fortsette?",
+                "description": "F\u00f8r du kobler til den nye radioen, m\u00e5 den gamle radioen tilbakestilles. En automatisk sikkerhetskopiering vil bli utf\u00f8rt. Hvis du bruker en kombinert Z-Wave og Zigbee-adapter som HUSBZB-1, vil dette bare tilbakestille Zigbee-delen. \n\n *Merk: hvis du migrerer fra en **ConBee/RaspBee**, s\u00f8rg for at den kj\u00f8rer firmware `0x26720700` eller nyere! Ellers kan det hende at enkelte enheter ikke kan kontrolleres etter migrering f\u00f8r de sl\u00e5s av og p\u00e5.* \n\n \u00d8nsker du \u00e5 fortsette?",
                 "title": "Migrer til en ny radio"
             },
             "manual_pick_radio_type": {

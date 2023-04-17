@@ -106,7 +106,6 @@ async def test_import(hass):
         "homeassistant.components.radiotherm.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},

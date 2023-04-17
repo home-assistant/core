@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
+        },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "service_unavailable_error": "Interfejs API jest obecnie niedost\u0119pny, spr\u00f3buj ponownie p\u00f3\u017aniej.",

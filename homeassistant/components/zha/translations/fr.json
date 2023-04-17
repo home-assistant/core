@@ -22,6 +22,7 @@
                 "description": "S\u00e9lectionnez les param\u00e8tres r\u00e9seau de votre radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaurer une sauvegarde automatique",
+                    "form_initial_network": "Cr\u00e9er un r\u00e9seau",
                     "form_new_network": "Effacer les param\u00e8tres r\u00e9seau pour cr\u00e9er un nouveau r\u00e9seau",
                     "reuse_settings": "Conserver les param\u00e8tres r\u00e9seau de la radio",
                     "upload_manual_backup": "T\u00e9l\u00e9charger une sauvegarde manuelle"
@@ -91,6 +92,7 @@
         },
         "trigger_subtype": {
             "both_buttons": "Les deux boutons",
+            "button": "Bouton",
             "button_1": "Premier bouton",
             "button_2": "Deuxi\u00e8me bouton",
             "button_3": "Troisi\u00e8me bouton",
@@ -163,6 +165,7 @@
                 "description": "S\u00e9lectionnez les param\u00e8tres r\u00e9seau de votre radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaurer une sauvegarde automatique",
+                    "form_initial_network": "Cr\u00e9er un r\u00e9seau",
                     "form_new_network": "Effacer les param\u00e8tres r\u00e9seau pour cr\u00e9er un nouveau r\u00e9seau",
                     "reuse_settings": "Conserver les param\u00e8tres r\u00e9seau de la radio",
                     "upload_manual_backup": "T\u00e9l\u00e9charger une sauvegarde manuelle"
@@ -199,6 +202,9 @@
                     "overwrite_coordinator_ieee": "Remplacer d\u00e9finitivement l'adresse IEEE de la radio"
                 },
                 "title": "\u00c9craser l'adresse IEEE de la radio"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "title": "Migrer ou reconfigurer"
             },
             "upload_manual_backup": {
                 "data": {

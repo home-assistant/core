@@ -9,6 +9,11 @@
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API sleutel"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-sleutel"

@@ -265,7 +265,6 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
             self.task = None
 
     async def _async_update_data_internal(self) -> dict[int, Coil]:
-
         result: dict[int, Coil] = {}
 
         def _get_coils() -> Iterable[Coil]:

@@ -825,7 +825,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
     assert orig_light4 == new_light4
 
     # Ensure enums converted
-    for (old, new) in (
+    for old, new in (
         (orig_via, new_via),
         (orig_light, new_light),
         (orig_light4, new_light4),

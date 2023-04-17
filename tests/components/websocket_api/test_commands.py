@@ -1768,7 +1768,10 @@ async def test_validate_config_works(websocket_client, key, config):
                 "entity_id": "hello.world",
                 "state": "paulus",
             },
-            "Unexpected value for condition: 'non_existing'. Expected and, device, not, numeric_state, or, state, sun, template, time, trigger, zone",
+            (
+                "Unexpected value for condition: 'non_existing'. Expected and, device,"
+                " not, numeric_state, or, state, sun, template, time, trigger, zone"
+            ),
         ),
         (
             "action",

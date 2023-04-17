@@ -73,7 +73,7 @@ async def rfxtrx_fixture(hass):
 async def rfxtrx_automatic_fixture(hass, rfxtrx):
     """Fixture that starts up with automatic additions."""
     await setup_rfx_test_cfg(hass, automatic_add=True, devices={})
-    yield rfxtrx
+    return rfxtrx
 
 
 @pytest.fixture

@@ -51,6 +51,21 @@
                 },
                 "title": "Afegeix grup"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Classe de dispositiu",
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres",
+                    "ignore_non_numeric": "Ignora els no num\u00e8rics",
+                    "name": "Nom",
+                    "round_digits": "Arrodoneix el valor a un nombre de decimals",
+                    "state_class": "Classe d'estat",
+                    "type": "Tipus",
+                    "unit_of_measurement": "Unitat de mesura"
+                },
+                "description": "Si s'activa \"ignora els no num\u00e8rics\", l'estat del grup es calcula si almenys un membre t\u00e9 un valor num\u00e8ric. Si \"ignora els no num\u00e8rics\" est\u00e0 desactivat, l'estat del grup nom\u00e9s es calcula si tots els membres del grup tenen valors num\u00e8rics.",
+                "title": "Afegeix grup"
+            },
             "switch": {
                 "data": {
                     "entities": "Membres",
@@ -68,6 +83,7 @@
                     "light": "Grup de llums",
                     "lock": "Grup de panys",
                     "media_player": "Grup de reproductors multim\u00e8dia",
+                    "sensor": "Grup de sensors",
                     "switch": "Grup de commutadors"
                 },
                 "title": "Afegeix grup"
@@ -115,6 +131,19 @@
                     "entities": "Membres",
                     "hide_members": "Amaga membres"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Classe de dispositiu",
+                    "entities": "Membres",
+                    "hide_members": "Amaga membres",
+                    "ignore_non_numeric": "Ignora els no num\u00e8rics",
+                    "round_digits": "Arrodoneix el valor a un nombre de decimals",
+                    "state_class": "Classe d'estat",
+                    "type": "Tipus",
+                    "unit_of_measurement": "Unitat de mesura"
+                },
+                "description": "Si s'activa \"ignora els no num\u00e8rics\", l'estat del grup es calcula si almenys un membre t\u00e9 un valor num\u00e8ric. Si \"ignora els no num\u00e8rics\" est\u00e0 desactivat, l'estat del grup nom\u00e9s es calcula si tots els membres del grup tenen valors num\u00e8rics."
             },
             "switch": {
                 "data": {

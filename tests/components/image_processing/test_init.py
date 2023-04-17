@@ -134,8 +134,7 @@ async def test_face_event_call(hass, aioclient_mock):
 
 
 @patch(
-    "homeassistant.components.demo.image_processing."
-    "DemoImageProcessingFace.confidence",
+    "homeassistant.components.demo.image_processing.DemoImageProcessingFace.confidence",
     new_callable=PropertyMock(return_value=None),
 )
 async def test_face_event_call_no_confidence(mock_config, hass, aioclient_mock):

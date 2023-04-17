@@ -23,7 +23,6 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolume,
 )
-from homeassistant.helpers.frame import report
 
 from .unit_conversion import (
     DistanceConverter,
@@ -120,35 +119,6 @@ class UnitSystem:
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
         self._conversions = conversions
-
-    @property
-    def name(self) -> str:
-        """Return the name of the unit system."""
-        report(
-            (
-                "accesses the `name` property of the unit system. "
-                "This is deprecated and will stop working in Home Assistant 2023.1. "
-                "Please adjust to use instance check instead."
-            ),
-            error_if_core=False,
-        )
-        if self is IMPERIAL_SYSTEM:
-            # kept for compatibility reasons, with associated warning above
-            return _CONF_UNIT_SYSTEM_IMPERIAL
-        return self._name
-
-    @property
-    def is_metric(self) -> bool:
-        """Determine if this is the metric unit system."""
-        report(
-            (
-                "accesses the `is_metric` property of the unit system. "
-                "This is deprecated and will stop working in Home Assistant 2023.1. "
-                "Please adjust to use instance check instead."
-            ),
-            error_if_core=False,
-        )
-        return self is METRIC_SYSTEM
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""

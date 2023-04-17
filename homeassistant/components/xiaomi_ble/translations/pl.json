@@ -38,5 +38,10 @@
                 "description": "Wybierz urz\u0105dzenie do skonfigurowania"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "nast\u0105pi\u0142o wykrycie ruchu"
+        }
     }
 }

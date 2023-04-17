@@ -1,0 +1,26 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after_time": "\u010cas zapnut\u00ed",
+                    "before_time": "\u010cas vypnut\u00ed",
+                    "name": "Jm\u00e9no"
+                },
+                "description": "Vytvo\u0159te bin\u00e1rn\u00ed senzor, kter\u00fd se zap\u00edn\u00e1 nebo vyp\u00edn\u00e1 v z\u00e1vislosti na \u010dase.",
+                "title": "P\u0159idat senzor Denn\u00ed doba"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after_time": "\u010cas zapnut\u00ed",
+                    "before_time": "\u010cas vypnut\u00ed"
+                }
+            }
+        }
+    },
+    "title": "Senzor Denn\u00ed doba"
+}

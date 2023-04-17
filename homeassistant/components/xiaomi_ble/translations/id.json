@@ -38,5 +38,10 @@
                 "description": "Pilih perangkat untuk disiapkan"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Gerakan terdeteksi"
+        }
     }
 }

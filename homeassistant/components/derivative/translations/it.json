@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "Giorni",
+                "h": "Ore",
+                "min": "Minuti",
+                "s": "Secondi"
+            }
+        }
+    },
     "title": "Sensore derivata"
 }

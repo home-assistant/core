@@ -193,7 +193,6 @@ def resolve_slot_synonyms(key, request):
         and "resolutionsPerAuthority" in request["resolutions"]
         and len(request["resolutions"]["resolutionsPerAuthority"]) >= 1
     ):
-
         # Extract all of the possible values from each authority with a
         # successful match
         possible_values = []

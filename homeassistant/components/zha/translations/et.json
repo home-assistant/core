@@ -22,6 +22,7 @@
                 "description": "Vali raadio v\u00f5rguseaded.",
                 "menu_options": {
                     "choose_automatic_backup": "Taastamine automaatsest varukoopiast",
+                    "form_initial_network": "V\u00f5rgu loomine",
                     "form_new_network": "Kustuta v\u00f5rgu seaded ja moodusta uus v\u00f5rk",
                     "reuse_settings": "Raadiov\u00f5rgu s\u00e4tete s\u00e4ilitamine",
                     "upload_manual_backup": "Varukoopia \u00fcleslaadimine"
@@ -174,6 +175,7 @@
                 "description": "Vali raadiov\u00f5rgu s\u00e4tted",
                 "menu_options": {
                     "choose_automatic_backup": "Taasta automaatvarundusest",
+                    "form_initial_network": "V\u00f5rgu loomine",
                     "form_new_network": "Kustuta vana v\u00f5rk ja loo uus",
                     "reuse_settings": "S\u00e4ilita raadiov\u00f5rgu s\u00e4tted",
                     "upload_manual_backup": "Lae varukoopia \u00fcles"
@@ -192,11 +194,11 @@
                 "title": "Seadista ZHA uuesti"
             },
             "instruct_unplug": {
-                "description": "Teie vana raadio on l\u00e4htestatud. Kui riistvara pole enam vaja, saad selle n\u00fc\u00fcd lahti \u00fchendada.",
+                "description": "Teie vana raadio on l\u00e4htestatud. Kui riistvara pole enam vaja, saad selle n\u00fc\u00fcd lahti \u00fchendada.\n\nV\u00f5id vana raadio lahti \u00fchedada.",
                 "title": "\u00dchenda vana raadio lahti"
             },
             "intent_migrate": {
-                "description": "Vana raadio l\u00e4htestatakse tehaseseadetele. Kui kasutad kombineeritud Z-Wave ja Zigbee adapterit, n\u00e4iteks HUSBZB-1, l\u00e4htestab see ainult Zigbee osa. \n\n Kas soovid j\u00e4tkata?",
+                "description": "Enne uue raadio \u00fchendamist tuleb vana raadio l\u00e4htestada. Tehakse automaatne varukoopia. Kui kasutad kombineeritud Z-Wave ja Zigbee adapterit, n\u00e4iteks HUSBZB-1, l\u00e4htestab see ainult Zigbee osa. \n\n *M\u00e4rkus: kui l\u00e4hed \u00fcle seadmelt **ConBee/RaspBee**, veenduge, et sellel oleks p\u00fcsivara `0x26720700` v\u00f5i uuem! Vastasel juhul ei pruugi m\u00f5ned seadmed p\u00e4rast migreerimist olla juhitavad enne, kui need on l\u00fclitatud sisse.* \n\n Kas soovid j\u00e4tkata?",
                 "title": "Teisalda uuele seadmele"
             },
             "manual_pick_radio_type": {

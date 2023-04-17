@@ -450,7 +450,6 @@ async def test_diagnostics_remote_adapter(
         "homeassistant.components.bluetooth.diagnostics.get_dbus_managed_objects",
         return_value={},
     ):
-
         entry1 = MockConfigEntry(
             domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
         )

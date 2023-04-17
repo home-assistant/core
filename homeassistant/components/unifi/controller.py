@@ -228,7 +228,6 @@ class UniFiController:
     def async_unifi_signalling_callback(self, signal, data):
         """Handle messages back from UniFi library."""
         if signal == WebsocketSignal.CONNECTION_STATE:
-
             if data == WebsocketState.DISCONNECTED and self.available:
                 LOGGER.warning("Lost connection to UniFi Network")
 
@@ -244,14 +243,12 @@ class UniFiController:
                     LOGGER.info("Connected to UniFi Network")
 
         elif signal == WebsocketSignal.DATA and data:
-
             if DATA_EVENT in data:
                 clients_connected = set()
                 devices_connected = set()
                 wireless_clients_connected = False
 
                 for event in data[DATA_EVENT]:
-
                     if event.key in CLIENT_CONNECTED:
                         clients_connected.add(event.mac)
 

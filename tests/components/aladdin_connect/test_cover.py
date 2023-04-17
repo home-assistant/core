@@ -129,7 +129,6 @@ async def test_cover_operation(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
-
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -183,7 +182,6 @@ async def test_cover_operation(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
-
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,

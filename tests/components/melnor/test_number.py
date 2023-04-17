@@ -16,7 +16,6 @@ async def test_manual_watering_minutes(hass):
     entry = mock_config_entry(hass)
 
     with patch_async_ble_device_from_address(), patch_melnor_device() as device_patch, patch_async_register_callback():
-
         device = device_patch.return_value
 
         assert await hass.config_entries.async_setup(entry.entry_id)

@@ -25,7 +25,7 @@ def entities(hass):
     """Initialize the test light."""
     platform = getattr(hass.components, "test.light")
     platform.init()
-    yield platform.ENTITIES[0:2]
+    return platform.ENTITIES[0:2]
 
 
 async def test_config_yaml_alias_anchor(hass, entities, enable_custom_integrations):

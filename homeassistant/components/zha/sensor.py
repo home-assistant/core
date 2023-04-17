@@ -511,7 +511,7 @@ class PolledSmartEnergySummation(SmartEnergySummation):
     models={"ZLinky_TIC"},
 )
 class Tier1SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier1_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier1_summation_delivered"
 ):
     """Tier 1 Smart Energy Metering summation sensor."""
 
@@ -524,7 +524,7 @@ class Tier1SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier2SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier2_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier2_summation_delivered"
 ):
     """Tier 2 Smart Energy Metering summation sensor."""
 
@@ -537,7 +537,7 @@ class Tier2SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier3SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier3_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier3_summation_delivered"
 ):
     """Tier 3 Smart Energy Metering summation sensor."""
 
@@ -550,7 +550,7 @@ class Tier3SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier4SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier4_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier4_summation_delivered"
 ):
     """Tier 4 Smart Energy Metering summation sensor."""
 
@@ -563,7 +563,7 @@ class Tier4SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier5SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier5_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier5_summation_delivered"
 ):
     """Tier 5 Smart Energy Metering summation sensor."""
 
@@ -576,7 +576,7 @@ class Tier5SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier6SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier6_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier6_summation_delivered"
 ):
     """Tier 6 Smart Energy Metering summation sensor."""
 

@@ -1,16 +1,32 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi"
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "choose_auth": {
+                "description": "Menetapkan kredensial memungkinkan fungsionalitas tambahan.",
+                "menu_options": {
+                    "auth": "Tetapkan kredensial (disarankan)",
+                    "skip_auth": "Lewati autentikasi"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Menetapkan kredensial bersifat opsional, tetapi memungkinkan fungsionalitas tambahan."
             }
         }
     },

@@ -256,7 +256,6 @@ def _async_setup_keypads(
     leap_to_keypad_button_names: dict[int, dict[int, str]] = {}
 
     for bridge_button in bridge_buttons.values():
-
         parent_device = cast(str, bridge_button["parent_device"])
         bridge_keypad = bridge_devices[parent_device]
         keypad_lutron_device_id = cast(int, bridge_keypad["device_id"])

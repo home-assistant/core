@@ -11,11 +11,7 @@ from homeassistant.components.blackbird.media_player import (
     PLATFORM_SCHEMA,
     setup_platform,
 )
-from homeassistant.components.media_player import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-)
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON
 
 
@@ -290,7 +286,9 @@ async def test_state(hass, media_player_entity, mock_blackbird):
 async def test_supported_features(media_player_entity):
     """Test supported features property."""
     assert (
-        SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
         == media_player_entity.supported_features
     )
 

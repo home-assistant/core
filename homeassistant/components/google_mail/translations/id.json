@@ -12,7 +12,8 @@
             "oauth_error": "Menerima respons token yang tidak valid.",
             "reauth_successful": "Autentikasi ulang berhasil",
             "timeout_connect": "Tenggang waktu pembuatan koneksi habis",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "wrong_account": "Akun salah: Harap autentikasi dengan {email} ."
         },
         "create_entry": {
             "default": "Berhasil diautentikasi"

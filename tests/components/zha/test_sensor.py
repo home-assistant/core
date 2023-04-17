@@ -875,7 +875,10 @@ async def test_se_summation_uom(
         (9, "ACTIVE_MEASUREMENT, PHASE_A_MEASUREMENT"),
         (
             15,
-            "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT, PHASE_A_MEASUREMENT",
+            (
+                "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT,"
+                " PHASE_A_MEASUREMENT"
+            ),
         ),
     ),
 )

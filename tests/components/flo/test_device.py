@@ -85,6 +85,5 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
     with patch(
         "homeassistant.components.flo.device.FloDeviceDataUpdateCoordinator.send_presence_ping",
         side_effect=RequestError,
-    ):
-        with pytest.raises(UpdateFailed):
-            await valve._async_update_data()
+    ), pytest.raises(UpdateFailed):
+        await valve._async_update_data()

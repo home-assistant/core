@@ -51,6 +51,21 @@
                 },
                 "title": "\u65b0\u589e\u7fa4\u7d44"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "\u88dd\u7f6e\u985e\u5225",
+                    "entities": "\u6210\u54e1",
+                    "hide_members": "\u96b1\u85cf\u6210\u54e1",
+                    "ignore_non_numeric": "\u5ffd\u7565\u975e\u6578\u5b57",
+                    "name": "\u540d\u7a31",
+                    "round_digits": "\u56db\u6368\u4e94\u5165\u5c0f\u6578\u4f4d\u6578",
+                    "state_class": "\u72c0\u614b\u985e\u5225",
+                    "type": "\u985e\u5225",
+                    "unit_of_measurement": "\u6e2c\u91cf\u55ae\u4f4d"
+                },
+                "description": "\u5047\u5982\u958b\u555f \"ignore non-numeric\uff0c\u50c5\u65bc\u81f3\u5c11\u4e00\u4f4d\u6210\u54e1\u90fd\u70ba\u6578\u503c\u6642\u3001\u7fa4\u7d44\u72c0\u614b\u624d\u6703\u8a08\u7b97\u3002\u5047\u5982 \"ignore non-numeric\" \u70ba\u95dc\u9589\u3001\u5247\u6240\u6709\u7fa4\u7d44\u6210\u54e1\u70ba\u6578\u503c\u6642\uff0c\u7fa4\u7d44\u88dd\u614b\u624d\u6703\u9032\u884c\u8a08\u7b97\u3002",
+                "title": "\u65b0\u589e\u7fa4\u7d44"
+            },
             "switch": {
                 "data": {
                     "entities": "\u6210\u54e1",
@@ -68,6 +83,7 @@
                     "light": "\u71c8\u5149\u7fa4\u7d44",
                     "lock": "\u9580\u9396\u7fa4\u7d44",
                     "media_player": "\u5a92\u9ad4\u64ad\u653e\u5668\u7fa4\u7d44",
+                    "sensor": "\u611f\u6e2c\u5668\u7fa4\u7d44",
                     "switch": "\u958b\u95dc\u7fa4\u7d44"
                 },
                 "title": "\u65b0\u589e\u7fa4\u7d44"
@@ -115,6 +131,19 @@
                     "entities": "\u6210\u54e1",
                     "hide_members": "\u96b1\u85cf\u6210\u54e1"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "\u88dd\u7f6e\u985e\u5225",
+                    "entities": "\u6210\u54e1",
+                    "hide_members": "\u96b1\u85cf\u6210\u54e1",
+                    "ignore_non_numeric": "\u5ffd\u7565\u975e\u6578\u5b57",
+                    "round_digits": "\u56db\u6368\u4e94\u5165\u5c0f\u6578\u4f4d\u6578",
+                    "state_class": "\u72c0\u614b\u985e\u5225",
+                    "type": "\u985e\u5225",
+                    "unit_of_measurement": "\u6e2c\u91cf\u55ae\u4f4d"
+                },
+                "description": "\u5047\u5982\u958b\u555f \"ignore non-numeric\uff0c\u50c5\u65bc\u81f3\u5c11\u4e00\u4f4d\u6210\u54e1\u90fd\u70ba\u6578\u503c\u6642\u3001\u7fa4\u7d44\u72c0\u614b\u624d\u6703\u8a08\u7b97\u3002\u5047\u5982 \"ignore non-numeric\" \u70ba\u95dc\u9589\u3001\u5247\u6240\u6709\u7fa4\u7d44\u6210\u54e1\u70ba\u6578\u503c\u6642\uff0c\u7fa4\u7d44\u88dd\u614b\u624d\u6703\u9032\u884c\u8a08\u7b97\u3002"
             },
             "switch": {
                 "data": {

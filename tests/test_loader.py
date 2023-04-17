@@ -7,7 +7,7 @@ from homeassistant import core, loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 
-from tests.common import MockModule, mock_integration
+from .common import MockModule, mock_integration
 
 
 async def test_component_dependencies(hass):

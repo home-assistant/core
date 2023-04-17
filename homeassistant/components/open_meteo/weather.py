@@ -94,7 +94,6 @@ class OpenMeteoWeatherEntity(
         forecasts: list[Forecast] = []
         daily = self.coordinator.data.daily
         for index, time in enumerate(self.coordinator.data.daily.time):
-
             forecast = Forecast(
                 datetime=time.isoformat(),
             )

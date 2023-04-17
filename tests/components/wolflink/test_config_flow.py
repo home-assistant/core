@@ -124,7 +124,6 @@ async def test_already_configured_error(hass):
         "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
         return_value=[DEVICE],
     ), patch("homeassistant.components.wolflink.async_setup_entry", return_value=True):
-
         MockConfigEntry(
             domain=DOMAIN, unique_id=CONFIG[DEVICE_ID], data=CONFIG
         ).add_to_hass(hass)

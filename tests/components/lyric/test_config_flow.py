@@ -19,7 +19,7 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-@pytest.fixture()
+@pytest.fixture
 async def mock_impl(hass):
     """Mock implementation."""
     await async_setup_component(hass, DOMAIN, {})
@@ -140,11 +140,10 @@ async def test_reauthentication_flow(
         },
     )
 
-    with patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"):
-        with patch(
-            "homeassistant.components.lyric.async_setup_entry", return_value=True
-        ) as mock_setup:
-            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch("homeassistant.components.lyric.api.ConfigEntryLyricClient"), patch(
+        "homeassistant.components.lyric.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

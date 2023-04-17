@@ -118,7 +118,6 @@ def mock_melnor_device():
     """Return a mocked Melnor device."""
 
     with patch("melnor_bluetooth.device.Device") as mock:
-
         device = mock.return_value
 
         device.connect = AsyncMock(return_value=True)

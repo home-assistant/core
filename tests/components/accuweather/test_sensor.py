@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -79,8 +80,9 @@ async def test_sensor_without_forecast(hass):
     assert state.state == "falling"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert state.attributes.get(ATTR_STATE_CLASS) is None
+    assert state.attributes.get(ATTR_OPTIONS) == ["falling", "rising", "steady"]
 
     entry = registry.async_get("sensor.home_pressure_tendency")
     assert entry

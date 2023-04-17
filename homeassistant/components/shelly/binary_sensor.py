@@ -296,12 +296,15 @@ class BlockSleepingBinarySensor(ShellySleepingBlockAttributeEntity, BinarySensor
     entity_description: BlockBinarySensorDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if sensor state is on."""
         if self.block is not None:
             return bool(self.attribute_value)
 
-        return self.last_state == STATE_ON
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state == STATE_ON
 
 
 class RpcSleepingBinarySensor(ShellySleepingRpcAttributeEntity, BinarySensorEntity):
@@ -310,9 +313,12 @@ class RpcSleepingBinarySensor(ShellySleepingRpcAttributeEntity, BinarySensorEnti
     entity_description: RpcBinarySensorDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if RPC sensor state is on."""
         if self.coordinator.device.initialized:
             return bool(self.attribute_value)
 
-        return self.last_state == STATE_ON
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state == STATE_ON

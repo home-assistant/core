@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "Venerd\u00ec",
+                "mon": "Lunedi",
+                "sat": "Sabato",
+                "sun": "Domenica",
+                "thu": "Gioved\u00ec",
+                "tue": "Marted\u00ec",
+                "wed": "Mercoled\u00ec"
+            }
+        }
     }
 }

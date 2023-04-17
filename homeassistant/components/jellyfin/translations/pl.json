@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {

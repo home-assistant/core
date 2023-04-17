@@ -69,14 +69,14 @@ def mock_update_duration_fixture(mock_update):
             }
         ]
     }
-    yield mock_update
+    return mock_update
 
 
 @pytest.fixture(name="mock_update_empty")
 def mock_update_empty_fixture(mock_update):
     """Mock an update to the sensor with an empty response."""
     mock_update.return_value = None
-    yield mock_update
+    return mock_update
 
 
 @pytest.mark.parametrize(

@@ -81,7 +81,6 @@ async def test_step_user(hass):
         "homeassistant.components.fireservicerota.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         mock_fireservicerota = mock_fsr.return_value
         mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
 

@@ -25,7 +25,7 @@ API_DISCOVERY_LIGHT_CONTROL = {
 }
 
 
-@pytest.fixture()
+@pytest.fixture
 def light_control_items():
     """Available lights."""
     return [

@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
             "unsupported_device": "Nieobs\u0142ugiwane urz\u0105dzenie"
         },

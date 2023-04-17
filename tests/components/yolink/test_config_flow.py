@@ -192,11 +192,10 @@ async def test_reauthentication(
         },
     )
 
-    with patch("homeassistant.components.yolink.api.ConfigEntryAuth"):
-        with patch(
-            "homeassistant.components.yolink.async_setup_entry", return_value=True
-        ) as mock_setup:
-            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch("homeassistant.components.yolink.api.ConfigEntryAuth"), patch(
+        "homeassistant.components.yolink.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
     token_data = old_entry.data["token"]
     assert token_data["access_token"] == "mock-access-token"
     assert token_data["refresh_token"] == "mock-refresh-token"

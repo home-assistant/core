@@ -78,7 +78,6 @@ async def test_preserve_new_tracked_device_name(
     ) as mock_async_discovered_service_info, patch.object(
         device_tracker, "MIN_SEEN_NEW", 3
     ):
-
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
@@ -147,7 +146,6 @@ async def test_tracking_battery_times_out(
     ) as mock_async_discovered_service_info, patch.object(
         device_tracker, "MIN_SEEN_NEW", 3
     ):
-
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
@@ -213,7 +211,6 @@ async def test_tracking_battery_fails(hass, mock_bluetooth, mock_device_tracker_
     ) as mock_async_discovered_service_info, patch.object(
         device_tracker, "MIN_SEEN_NEW", 3
     ):
-
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
@@ -281,7 +278,6 @@ async def test_tracking_battery_successful(
     ) as mock_async_discovered_service_info, patch.object(
         device_tracker, "MIN_SEEN_NEW", 3
     ):
-
         device = BluetoothServiceInfoBleak(
             name=name,
             address=address,
