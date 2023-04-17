@@ -22,7 +22,7 @@ from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
 
 
-@dataclass
+@dataclass(slots=True)
 class LogbookConfig:
     """Configuration for the logbook integration."""
 
@@ -95,7 +95,7 @@ class LazyEventPartialState:
         return bytes_to_ulid_or_none(self.context_parent_id_bin)
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, frozen=True)
 class EventAsRow:
     """Convert an event to a row."""
 

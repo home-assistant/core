@@ -2,132 +2,75 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 from datetime import datetime
-import functools as ft
 import hashlib
 from http import HTTPStatus
 import io
 import logging
 import mimetypes
 import os
-from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Any, TypedDict, cast
+from typing import TypedDict
 
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
 import voluptuous as vol
-import yarl
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as DOMAIN_MP,
-    SERVICE_PLAY_MEDIA,
-    MediaType,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DESCRIPTION,
-    CONF_NAME,
-    CONF_PLATFORM,
-    PLATFORM_FORMAT,
-)
+from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.util.network import normalize_url
-from homeassistant.util.yaml import load_yaml
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import (
+    ATTR_CACHE,
+    ATTR_LANGUAGE,
+    ATTR_MESSAGE,
+    ATTR_OPTIONS,
+    CONF_BASE_URL,
+    CONF_CACHE,
+    CONF_CACHE_DIR,
+    CONF_TIME_MEMORY,
+    DEFAULT_CACHE,
+    DEFAULT_CACHE_DIR,
+    DEFAULT_TIME_MEMORY,
+    DOMAIN,
+    TtsAudioType,
+)
+from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
+
+__all__ = [
+    "async_get_media_source_audio",
+    "async_resolve_engine",
+    "async_support_options",
+    "ATTR_AUDIO_OUTPUT",
+    "CONF_LANG",
+    "DEFAULT_CACHE_DIR",
+    "generate_media_source_id",
+    "get_base_url",
+    "PLATFORM_SCHEMA_BASE",
+    "PLATFORM_SCHEMA",
+    "Provider",
+    "TtsAudioType",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
-TtsAudioType = tuple[str | None, bytes | None]
-
-ATTR_CACHE = "cache"
-ATTR_LANGUAGE = "language"
-ATTR_MESSAGE = "message"
-ATTR_OPTIONS = "options"
 ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
 
+CONF_LANG = "language"
+
 BASE_URL_KEY = "tts_base_url"
 
-CONF_BASE_URL = "base_url"
-CONF_CACHE = "cache"
-CONF_CACHE_DIR = "cache_dir"
-CONF_LANG = "language"
-CONF_SERVICE_NAME = "service_name"
-CONF_TIME_MEMORY = "time_memory"
-
-CONF_FIELDS = "fields"
-
-DEFAULT_CACHE = True
-DEFAULT_CACHE_DIR = "tts"
-DEFAULT_TIME_MEMORY = 300
-
 SERVICE_CLEAR_CACHE = "clear_cache"
-SERVICE_SAY = "say"
 
 _RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}")
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
-
-
-def _deprecated_platform(value: str) -> str:
-    """Validate if platform is deprecated."""
-    if value == "google":
-        raise vol.Invalid(
-            "google tts service has been renamed to google_translate,"
-            " please update your configuration."
-        )
-    return value
-
-
-def valid_base_url(value: str) -> str:
-    """Validate base url, return value."""
-    url = yarl.URL(cv.url(value))
-
-    if url.path != "/":
-        raise vol.Invalid("Path should be empty")
-
-    return normalize_url(value)
-
-
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
-        vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
-        vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
-        vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
-            vol.Coerce(int), vol.Range(min=60, max=57600)
-        ),
-        vol.Optional(CONF_BASE_URL): valid_base_url,
-        vol.Optional(CONF_SERVICE_NAME): cv.string,
-    }
-)
-PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
-
-SCHEMA_SERVICE_SAY = vol.Schema(
-    {
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_CACHE): cv.boolean,
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_OPTIONS): dict,
-    }
-)
 
 SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
 
@@ -191,22 +134,23 @@ async def async_get_media_source_audio(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TTS."""
-    tts = SpeechManager(hass)
+    # Legacy config options
+    conf = config[DOMAIN][0] if config.get(DOMAIN) else {}
+    use_cache: bool = conf.get(CONF_CACHE, DEFAULT_CACHE)
+    cache_dir: str = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
+    time_memory: int = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
+    base_url: str | None = conf.get(CONF_BASE_URL)
+    if base_url is not None:
+        _LOGGER.warning(
+            "TTS base_url option is deprecated. Configure internal/external URL"
+            " instead"
+        )
+    hass.data[BASE_URL_KEY] = base_url
+
+    tts = SpeechManager(hass, use_cache, cache_dir, time_memory, base_url)
 
     try:
-        conf = config[DOMAIN][0] if config.get(DOMAIN, []) else {}
-        use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
-        cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
-        time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
-        base_url = conf.get(CONF_BASE_URL)
-        if base_url is not None:
-            _LOGGER.warning(
-                "TTS base_url option is deprecated. Configure internal/external URL"
-                " instead"
-            )
-        hass.data[BASE_URL_KEY] = base_url
-
-        await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
+        await tts.async_init_cache()
     except (HomeAssistantError, KeyError):
         _LOGGER.exception("Error on cache init")
         return False
@@ -215,99 +159,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
-    # Load service descriptions from tts/services.yaml
-    services_yaml = Path(__file__).parent / "services.yaml"
-    services_dict = cast(
-        dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
-    )
+    platform_setups = await async_setup_legacy(hass, config)
 
-    async def async_setup_platform(
-        p_type: str,
-        p_config: ConfigType | None = None,
-        discovery_info: DiscoveryInfoType | None = None,
-    ) -> None:
-        """Set up a TTS platform."""
-        if p_config is None:
-            p_config = {}
-
-        platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
-        if platform is None:
-            return
-
-        try:
-            if hasattr(platform, "async_get_engine"):
-                provider = await platform.async_get_engine(
-                    hass, p_config, discovery_info
-                )
-            else:
-                provider = await hass.async_add_executor_job(
-                    platform.get_engine, hass, p_config, discovery_info
-                )
-
-            if provider is None:
-                _LOGGER.error("Error setting up platform %s", p_type)
-                return
-
-            tts.async_register_engine(p_type, provider, p_config)
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up platform: %s", p_type)
-            return
-
-        async def async_say_handle(service: ServiceCall) -> None:
-            """Service handle for say."""
-            entity_ids = service.data[ATTR_ENTITY_ID]
-
-            await hass.services.async_call(
-                DOMAIN_MP,
-                SERVICE_PLAY_MEDIA,
-                {
-                    ATTR_ENTITY_ID: entity_ids,
-                    ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
-                        hass,
-                        engine=p_type,
-                        message=service.data[ATTR_MESSAGE],
-                        language=service.data.get(ATTR_LANGUAGE),
-                        options=service.data.get(ATTR_OPTIONS),
-                        cache=service.data.get(ATTR_CACHE),
-                    ),
-                    ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                    ATTR_MEDIA_ANNOUNCE: True,
-                },
-                blocking=True,
-                context=service.context,
-            )
-
-        service_name = p_config.get(CONF_SERVICE_NAME, f"{p_type}_{SERVICE_SAY}")
-        hass.services.async_register(
-            DOMAIN, service_name, async_say_handle, schema=SCHEMA_SERVICE_SAY
-        )
-
-        # Register the service description
-        service_desc = {
-            CONF_NAME: f"Say a TTS message with {p_type}",
-            CONF_DESCRIPTION: (
-                f"Say something using text-to-speech on a media player with {p_type}."
-            ),
-            CONF_FIELDS: services_dict[SERVICE_SAY][CONF_FIELDS],
-        }
-        async_set_service_schema(hass, DOMAIN, service_name, service_desc)
-
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(p_type, p_config))
-        for p_type, p_config in config_per_platform(config, DOMAIN)
-        if p_type is not None
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
-
-    async def async_platform_discovered(
-        platform: str, info: dict[str, Any] | None
-    ) -> None:
-        """Handle for discovered platform."""
-        await async_setup_platform(platform, discovery_info=info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+    if platform_setups:
+        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
 
     async def async_clear_cache_handle(service: ServiceCall) -> None:
         """Handle clear cache service call."""
@@ -336,29 +191,30 @@ def _hash_options(options: dict) -> str:
 class SpeechManager:
     """Representation of a speech store."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        use_cache: bool,
+        cache_dir: str,
+        time_memory: int,
+        base_url: str | None,
+    ) -> None:
         """Initialize a speech store."""
         self.hass = hass
         self.providers: dict[str, Provider] = {}
 
-        self.use_cache = DEFAULT_CACHE
-        self.cache_dir = DEFAULT_CACHE_DIR
-        self.time_memory = DEFAULT_TIME_MEMORY
-        self.base_url: str | None = None
+        self.use_cache = use_cache
+        self.cache_dir = cache_dir
+        self.time_memory = time_memory
+        self.base_url = base_url
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
-    async def async_init_cache(
-        self, use_cache: bool, cache_dir: str, time_memory: int, base_url: str | None
-    ) -> None:
+    async def async_init_cache(self) -> None:
         """Init config folder and load file cache."""
-        self.use_cache = use_cache
-        self.time_memory = time_memory
-        self.base_url = base_url
-
         try:
             self.cache_dir = await self.hass.async_add_executor_job(
-                _init_tts_cache_dir, self.hass, cache_dir
+                _init_tts_cache_dir, self.hass, self.cache_dir
             )
         except OSError as err:
             raise HomeAssistantError(f"Can't init cache dir {err}") from err
@@ -389,7 +245,7 @@ class SpeechManager:
         self.file_cache = {}
 
     @callback
-    def async_register_engine(
+    def async_register_legacy_engine(
         self, engine: str, provider: Provider, config: ConfigType
     ) -> None:
         """Register a TTS provider."""
@@ -736,52 +592,6 @@ class SpeechManager:
             _LOGGER.error("ID3 tag error: %s", err)
 
         return data_bytes.getvalue()
-
-
-class Provider:
-    """Represent a single TTS provider."""
-
-    hass: HomeAssistant | None = None
-    name: str | None = None
-
-    @property
-    def default_language(self) -> str | None:
-        """Return the default language."""
-        return None
-
-    @property
-    def supported_languages(self) -> list[str] | None:
-        """Return a list of supported languages."""
-        return None
-
-    @property
-    def supported_options(self) -> list[str] | None:
-        """Return a list of supported options like voice, emotions."""
-        return None
-
-    @property
-    def default_options(self) -> Mapping[str, Any] | None:
-        """Return a mapping with the default options."""
-        return None
-
-    def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
-    ) -> TtsAudioType:
-        """Load tts audio file from provider."""
-        raise NotImplementedError()
-
-    async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
-    ) -> TtsAudioType:
-        """Load tts audio file from provider.
-
-        Return a tuple of file extension and data as bytes.
-        """
-        if TYPE_CHECKING:
-            assert self.hass
-        return await self.hass.async_add_executor_job(
-            ft.partial(self.get_tts_audio, message, language, options=options)
-        )
 
 
 def _init_tts_cache_dir(hass: HomeAssistant, cache_dir: str) -> str:

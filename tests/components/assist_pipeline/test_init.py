@@ -1,8 +1,9 @@
 """Test Voice Assistant init."""
+from dataclasses import asdict
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import stt, voice_assistant
+from homeassistant.components import assist_pipeline, stt
 from homeassistant.core import HomeAssistant
 
 
@@ -18,7 +19,7 @@ async def test_pipeline_from_audio_stream(
         yield b"part2"
         yield b""
 
-    await voice_assistant.async_pipeline_from_audio_stream(
+    await assist_pipeline.async_pipeline_from_audio_stream(
         hass,
         events.append,
         stt.SpeechMetadata(
@@ -34,7 +35,7 @@ async def test_pipeline_from_audio_stream(
 
     processed = []
     for event in events:
-        as_dict = event.as_dict()
+        as_dict = asdict(event)
         as_dict.pop("timestamp")
         processed.append(as_dict)
 

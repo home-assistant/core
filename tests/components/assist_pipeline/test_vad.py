@@ -1,7 +1,7 @@
 """Tests for webrtcvad voice command segmenter."""
 from unittest.mock import patch
 
-from homeassistant.components.voice_assistant.vad import VoiceCommandSegmenter
+from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 

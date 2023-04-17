@@ -10,18 +10,21 @@ import async_timeout
 from voip_utils import CallInfo, RtpDatagramProtocol, SdpInfo, VoipDatagramProtocol
 
 from homeassistant.components import stt, tts
-from homeassistant.components.voice_assistant import (
+from homeassistant.components.assist_pipeline import (
     Pipeline,
     PipelineEvent,
     PipelineEventType,
     async_pipeline_from_audio_stream,
+    select as pipeline_select,
 )
-from homeassistant.components.voice_assistant.vad import VoiceCommandSegmenter
+from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 
+from .const import DOMAIN
+
 if TYPE_CHECKING:
-    from .devices import VoIPDevices
+    from .devices import VoIPDevice, VoIPDevices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,13 +44,16 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
             protocol_factory=lambda call_info: PipelineRtpDatagramProtocol(
                 hass,
                 hass.config.language,
+                devices.async_get_or_create(call_info),
             ),
         )
+        self.hass = hass
         self.devices = devices
 
     def is_valid_call(self, call_info: CallInfo) -> bool:
         """Filter calls."""
-        return self.devices.async_allow_call(call_info)
+        device = self.devices.async_get_or_create(call_info)
+        return device.async_allow_call(self.hass)
 
 
 class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
@@ -57,6 +63,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self,
         hass: HomeAssistant,
         language: str,
+        voip_device: VoIPDevice,
         pipeline_timeout: float = 30.0,
         audio_timeout: float = 2.0,
     ) -> None:
@@ -66,6 +73,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
         self.hass = hass
         self.language = language
+        self.voip_device = voip_device
         self.pipeline: Pipeline | None = None
         self.pipeline_timeout = pipeline_timeout
         self.audio_timeout = audio_timeout
@@ -76,7 +84,13 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
     def connection_made(self, transport):
         """Server is ready."""
-        self.transport = transport
+        super().connection_made(transport)
+        self.voip_device.set_is_active(True)
+
+    def connection_lost(self, exc):
+        """Handle connection is lost or closed."""
+        super().connection_lost(exc)
+        self.voip_device.set_is_active(False)
 
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
@@ -140,7 +154,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                         channel=stt.AudioChannels.CHANNEL_MONO,
                     ),
                     stt_stream=stt_stream(),
-                    language=self.language,
+                    pipeline_id=pipeline_select.get_chosen_pipeline(
+                        self.hass, DOMAIN, self.voip_device.voip_id
+                    ),
                     conversation_id=self._conversation_id,
                     tts_options={tts.ATTR_AUDIO_OUTPUT: "raw"},
                 )
