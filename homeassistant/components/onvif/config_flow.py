@@ -13,6 +13,7 @@ from wsdiscovery.service import Service
 from zeep.exceptions import Fault
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
@@ -27,6 +28,8 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_DEVICE_ID, DEFAULT_ARGUMENTS, DEFAULT_PORT, DOMAIN, LOGGER
 from .device import get_device
@@ -100,6 +103,30 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
         )
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle dhcp discovery."""
+        hass = self.hass
+        mac = discovery_info.macaddress
+        registry = dr.async_get(self.hass)
+        if not (
+            device := registry.async_get_device(
+                identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+            )
+        ):
+            return self.async_abort(reason="no_devices_found")
+        for entry_id in device.config_entries:
+            if (
+                not (entry := hass.config_entries.async_get_entry(entry_id))
+                or entry.domain != DOMAIN
+                or entry.state is config_entries.ConfigEntryState.LOADED
+            ):
+                continue
+            if hass.config_entries.async_update_entry(
+                entry, data=entry.data | {CONF_HOST: discovery_info.ip}
+            ):
+                hass.async_create_task(self.hass.config_entries.async_reload(entry_id))
+        return self.async_abort(reason="already_configured")
 
     async def async_step_device(self, user_input=None):
         """Handle WS-Discovery.
