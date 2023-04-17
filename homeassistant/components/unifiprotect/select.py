@@ -99,16 +99,6 @@ DEVICE_RECORDING_MODES = [
 
 DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
 
-SERVICE_SET_DOORBELL_MESSAGE = "set_doorbell_message"
-
-SET_DOORBELL_LCD_MESSAGE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DURATION, default=""): cv.string,
-    }
-)
-
 
 @dataclass
 class ProtectSelectEntityDescription(
@@ -352,12 +342,6 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities)
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_DOORBELL_MESSAGE,
-        SET_DOORBELL_LCD_MESSAGE_SCHEMA,
-        "async_set_doorbell_message",
-    )
 
 
 class ProtectSelects(ProtectDeviceEntity, SelectEntity):
@@ -428,43 +412,3 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         if self.entity_description.ufp_enum_type is not None:
             unifi_value = self.entity_description.ufp_enum_type(unifi_value)
         await self.entity_description.ufp_set(self.device, unifi_value)
-
-    async def async_set_doorbell_message(self, message: str, duration: str) -> None:
-        """Set LCD Message on Doorbell display."""
-
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "deprecated_service_set_doorbell_message",
-            breaks_in_ha_version="2023.3.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_placeholders={
-                "link": (
-                    "https://www.home-assistant.io/integrations"
-                    "/text#service-textset_value"
-                )
-            },
-            translation_key="deprecated_service_set_doorbell_message",
-        )
-
-        if self.entity_description.device_class != DEVICE_CLASS_LCD_MESSAGE:
-            raise HomeAssistantError("Not a doorbell text select entity")
-
-        assert isinstance(self.device, Camera)
-        reset_at = None
-        timeout_msg = ""
-        if duration.isnumeric():
-            reset_at = utcnow() + timedelta(minutes=int(duration))
-            timeout_msg = f" with timeout of {duration} minute(s)"
-
-        _LOGGER.debug(
-            'Setting message for %s to "%s"%s',
-            self.device.display_name,
-            message,
-            timeout_msg,
-        )
-        await self.device.set_lcd_text(
-            DoorbellMessageType.CUSTOM_MESSAGE, message, reset_at=reset_at
-        )
