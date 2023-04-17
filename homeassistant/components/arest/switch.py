@@ -161,7 +161,7 @@ class ArestSwitchFunction(ArestSwitchBase):
 class ArestSwitchPin(ArestSwitchBase):
     """Representation of an aREST switch. Based on digital I/O."""
 
-    def __init__(self, resource, location, name, pin, invert):
+    def __init__(self, resource, location, name, pin, invert) -> None:
         """Initialize the switch."""
         super().__init__(resource, location, name)
         self._pin = pin
