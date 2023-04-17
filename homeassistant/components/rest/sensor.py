@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import ssl
 from xml.parsers.expat import ExpatError
 
 from jsonpath import jsonpath
@@ -67,6 +68,13 @@ async def async_setup_platform(
 
     if rest.data is None:
         if rest.last_exception:
+            if isinstance(rest.last_exception, ssl.SSLError):
+                _LOGGER.error(
+                    "Error connecting %s failed with %s",
+                    conf[CONF_RESOURCE],
+                    rest.last_exception,
+                )
+                return
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 

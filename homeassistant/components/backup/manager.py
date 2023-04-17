@@ -26,7 +26,7 @@ from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 BUF_SIZE = 2**20 * 4  # 4MB
 
 
-@dataclass
+@dataclass(slots=True)
 class Backup:
     """Backup class."""
 
