@@ -65,7 +65,7 @@ def test_language_as_region() -> None:
 
 
 def test_zh_hant() -> None:
-    """Test that the zh-Hant matches HK or TW."""
+    """Test that the zh-Hant matches HK or TW first."""
     assert language.matches(
         "zh-Hant",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
@@ -86,7 +86,7 @@ def test_zh_hant() -> None:
 
 
 def test_zh_hans() -> None:
-    """Test that the zh-Hans matches CN."""
+    """Test that the zh-Hans matches CN first."""
     assert language.matches(
         "zh-Hans",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
@@ -98,7 +98,7 @@ def test_zh_hans() -> None:
 
 
 def test_zh_no_code() -> None:
-    """Test that the zh defaults to CN."""
+    """Test that the zh defaults to CN first."""
     assert language.matches(
         "zh",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
