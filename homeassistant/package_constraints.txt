@@ -22,7 +22,7 @@ cryptography==40.0.2
 dbus-fast==1.84.2
 fnv-hash-fast==0.3.1
 ha-av==10.0.0
-hass-nabucasa==0.64.1
+hass-nabucasa==0.65.0
 hassil==1.0.6
 home-assistant-bluetooth==1.9.3
 home-assistant-frontend==20230411.1
