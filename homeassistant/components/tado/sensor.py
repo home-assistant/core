@@ -1,9 +1,15 @@
 """Support for Tado sensors for each zone."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -11,6 +17,7 @@ from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     CONDITIONS_MAP,
@@ -25,26 +32,108 @@ from .entity import TadoHomeEntity, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-HOME_SENSORS = {
-    "outdoor temperature",
-    "solar percentage",
-    "weather condition",
-}
+
+@dataclass
+class TadoSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    state_fn: Callable[[Any], StateType]
+
+
+@dataclass
+class TadoSensorEntityDescription(
+    SensorEntityDescription, TadoSensorEntityDescriptionMixin
+):
+    """Describes Tado sensor entity."""
+
+    attributes_fn: Callable[[Any], dict[Any, StateType]] | None = None
+
+
+HOME_SENSORS = [
+    TadoSensorEntityDescription(
+        key="outdoor temperature",
+        name="Outdoor temperature",
+        state_fn=lambda data: data["outsideTemperature"]["celsius"],
+        attributes_fn=lambda data: {
+            "time": data["outsideTemperature"]["timestamp"],
+        },
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TadoSensorEntityDescription(
+        key="solar percentage",
+        name="Solar percentage",
+        state_fn=lambda data: data["solarIntensity"]["percentage"],
+        attributes_fn=lambda data: {
+            "time": data["solarIntensity"]["timestamp"],
+        },
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TadoSensorEntityDescription(
+        key="weather condition",
+        name="Weather condition",
+        state_fn=lambda data: format_condition(data["weatherState"]["value"]),
+        attributes_fn=lambda data: {"time": data["weatherState"]["timestamp"]},
+    ),
+]
+
+TEMPERATURE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="temperature",
+    name="Temperature",
+    state_fn=lambda data: data.current_temp,
+    attributes_fn=lambda data: {
+        "time": data.current_temp_timestamp,
+        "setting": 0,  # setting is used in climate device
+    },
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
+)
+HUMIDITY_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="humidity",
+    name="Humidity",
+    state_fn=lambda data: data.current_humidity,
+    attributes_fn=lambda data: {"time": data.current_humidity_timestamp},
+    native_unit_of_measurement=PERCENTAGE,
+    device_class=SensorDeviceClass.HUMIDITY,
+    state_class=SensorStateClass.MEASUREMENT,
+)
+TADO_MODE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="tado mode",
+    name="Tado mode",
+    state_fn=lambda data: data.tado_mode,
+)
+HEATING_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="heating",
+    name="Heating",
+    state_fn=lambda data: data.heating_power_percentage,
+    attributes_fn=lambda data: {"time": data.heating_power_timestamp},
+    native_unit_of_measurement=PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+)
+AC_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="ac",
+    name="AC",
+    state_fn=lambda data: data.ac_power,
+    attributes_fn=lambda data: {"time": data.ac_power_timestamp},
+)
 
 ZONE_SENSORS = {
     TYPE_HEATING: [
-        "temperature",
-        "humidity",
-        "heating",
-        "tado mode",
+        TEMPERATURE_ENTITY_DESCRIPTION,
+        HUMIDITY_ENTITY_DESCRIPTION,
+        TADO_MODE_ENTITY_DESCRIPTION,
+        HEATING_ENTITY_DESCRIPTION,
     ],
     TYPE_AIR_CONDITIONING: [
-        "temperature",
-        "humidity",
-        "ac",
-        "tado mode",
+        TEMPERATURE_ENTITY_DESCRIPTION,
+        HUMIDITY_ENTITY_DESCRIPTION,
+        TADO_MODE_ENTITY_DESCRIPTION,
+        AC_ENTITY_DESCRIPTION,
     ],
-    TYPE_HOT_WATER: ["tado mode"],
+    TYPE_HOT_WATER: [TADO_MODE_ENTITY_DESCRIPTION],
 }
 
 
@@ -66,7 +155,12 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
 
     # Create home sensors
-    entities.extend([TadoHomeSensor(tado, variable) for variable in HOME_SENSORS])
+    entities.extend(
+        [
+            TadoHomeSensor(tado, entity_description)
+            for entity_description in HOME_SENSORS
+        ]
+    )
 
     # Create zone sensors
     for zone in zones:
@@ -77,8 +171,8 @@ async def async_setup_entry(
 
         entities.extend(
             [
-                TadoZoneSensor(tado, zone["name"], zone["id"], variable)
-                for variable in ZONE_SENSORS[zone_type]
+                TadoZoneSensor(tado, zone["name"], zone["id"], entity_description)
+                for entity_description in ZONE_SENSORS[zone_type]
             ]
         )
 
@@ -88,18 +182,17 @@ async def async_setup_entry(
 class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     """Representation of a Tado Sensor."""
 
-    def __init__(self, tado, home_variable):
+    entity_description: TadoSensorEntityDescription
+
+    _attr_has_entity_name = True
+
+    def __init__(self, tado, entity_description: TadoSensorEntityDescription) -> None:
         """Initialize of the Tado Sensor."""
+        self.entity_description = entity_description
         super().__init__(tado)
         self._tado = tado
 
-        self.home_variable = home_variable
-
-        self._unique_id = f"{home_variable} {tado.home_id}"
-
-        self._state = None
-        self._state_attributes = None
-        self._tado_weather_data = self._tado.data["weather"]
+        self._attr_unique_id = f"{entity_description.key} {tado.home_id}"
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
@@ -115,50 +208,6 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         )
         self._async_update_home_data()
 
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._tado.home_name} {self.home_variable}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._state_attributes
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if self.home_variable in ["temperature", "outdoor temperature"]:
-            return UnitOfTemperature.CELSIUS
-        if self.home_variable == "solar percentage":
-            return PERCENTAGE
-        if self.home_variable == "weather condition":
-            return None
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        if self.home_variable == "outdoor temperature":
-            return SensorDeviceClass.TEMPERATURE
-        return None
-
-    @property
-    def state_class(self):
-        """Return the state class."""
-        if self.home_variable in ["outdoor temperature", "solar percentage"]:
-            return SensorStateClass.MEASUREMENT
-        return None
-
     @callback
     def _async_update_callback(self):
         """Update and write state."""
@@ -169,46 +218,37 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     def _async_update_home_data(self):
         """Handle update callbacks."""
         try:
-            self._tado_weather_data = self._tado.data["weather"]
+            tado_weather_data = self._tado.data["weather"]
         except KeyError:
             return
 
-        if self.home_variable == "outdoor temperature":
-            self._state = self._tado_weather_data["outsideTemperature"]["celsius"]
-            self._state_attributes = {
-                "time": self._tado_weather_data["outsideTemperature"]["timestamp"],
-            }
-
-        elif self.home_variable == "solar percentage":
-            self._state = self._tado_weather_data["solarIntensity"]["percentage"]
-            self._state_attributes = {
-                "time": self._tado_weather_data["solarIntensity"]["timestamp"],
-            }
-
-        elif self.home_variable == "weather condition":
-            self._state = format_condition(
-                self._tado_weather_data["weatherState"]["value"]
+        self._attr_native_value = self.entity_description.state_fn(tado_weather_data)
+        if self.entity_description.attributes_fn is not None:
+            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
+                tado_weather_data
             )
-            self._state_attributes = {
-                "time": self._tado_weather_data["weatherState"]["timestamp"]
-            }
 
 
 class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, tado, zone_name, zone_id, zone_variable):
+    entity_description: TadoSensorEntityDescription
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        tado,
+        zone_name,
+        zone_id,
+        entity_description: TadoSensorEntityDescription,
+    ) -> None:
         """Initialize of the Tado Sensor."""
+        self.entity_description = entity_description
         self._tado = tado
         super().__init__(zone_name, tado.home_id, zone_id)
 
-        self.zone_variable = zone_variable
-
-        self._unique_id = f"{zone_variable} {zone_id} {tado.home_id}"
-
-        self._state = None
-        self._state_attributes = None
-        self._tado_zone_data = None
+        self._attr_unique_id = f"{entity_description.key} {zone_id} {tado.home_id}"
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
@@ -224,54 +264,6 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         )
         self._async_update_zone_data()
 
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.zone_name} {self.zone_variable}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._state_attributes
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if self.zone_variable == "temperature":
-            return UnitOfTemperature.CELSIUS
-        if self.zone_variable == "humidity":
-            return PERCENTAGE
-        if self.zone_variable == "heating":
-            return PERCENTAGE
-        if self.zone_variable == "ac":
-            return None
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        if self.zone_variable == "humidity":
-            return SensorDeviceClass.HUMIDITY
-        if self.zone_variable == "temperature":
-            return SensorDeviceClass.TEMPERATURE
-        return None
-
-    @property
-    def state_class(self):
-        """Return the state class."""
-        if self.zone_variable in ["heating", "humidity", "temperature"]:
-            return SensorStateClass.MEASUREMENT
-        return None
-
     @callback
     def _async_update_callback(self):
         """Update and write state."""
@@ -282,32 +274,12 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     def _async_update_zone_data(self):
         """Handle update callbacks."""
         try:
-            self._tado_zone_data = self._tado.data["zone"][self.zone_id]
+            tado_zone_data = self._tado.data["zone"][self.zone_id]
         except KeyError:
             return
 
-        if self.zone_variable == "temperature":
-            self._state = self._tado_zone_data.current_temp
-            self._state_attributes = {
-                "time": self._tado_zone_data.current_temp_timestamp,
-                "setting": 0,  # setting is used in climate device
-            }
-
-        elif self.zone_variable == "humidity":
-            self._state = self._tado_zone_data.current_humidity
-            self._state_attributes = {
-                "time": self._tado_zone_data.current_humidity_timestamp
-            }
-
-        elif self.zone_variable == "heating":
-            self._state = self._tado_zone_data.heating_power_percentage
-            self._state_attributes = {
-                "time": self._tado_zone_data.heating_power_timestamp
-            }
-
-        elif self.zone_variable == "ac":
-            self._state = self._tado_zone_data.ac_power
-            self._state_attributes = {"time": self._tado_zone_data.ac_power_timestamp}
-
-        elif self.zone_variable == "tado mode":
-            self._state = self._tado_zone_data.tado_mode
+        self._attr_native_value = self.entity_description.state_fn(tado_zone_data)
+        if self.entity_description.attributes_fn is not None:
+            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
+                tado_zone_data
+            )

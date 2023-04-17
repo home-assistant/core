@@ -1,9 +1,21 @@
 {
   "title": "Input boolean",
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::input_boolean::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        }
+      }
     }
   }
 }

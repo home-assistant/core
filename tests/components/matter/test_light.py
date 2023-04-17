@@ -14,6 +14,8 @@ from .common import (
 )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
@@ -90,6 +92,8 @@ async def test_on_off_light(
     matter_client.send_device_command.reset_mock()
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
@@ -144,6 +148,8 @@ async def test_dimmable_light(
     matter_client.send_device_command.reset_mock()
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
@@ -208,6 +214,8 @@ async def test_color_temperature_light(
     matter_client.send_device_command.reset_mock()
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [

@@ -4,12 +4,12 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Uninstall pre-installed formatting and linting tools
 # They would conflict with our pinned versions
-RUN pipx uninstall black
-RUN pipx uninstall flake8
-RUN pipx uninstall pydocstyle
-RUN pipx uninstall pycodestyle
-RUN pipx uninstall mypy
-RUN pipx uninstall pylint
+RUN \
+    pipx uninstall black \
+    && pipx uninstall pydocstyle \
+    && pipx uninstall pycodestyle \
+    && pipx uninstall mypy \
+    && pipx uninstall pylint
 
 RUN \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \

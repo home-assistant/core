@@ -545,7 +545,7 @@ async def test_status_sensor_state_via_mqtt(
     entity = hass.data["entity_components"]["sensor"].get_entity(
         "sensor.tasmota_status"
     )
-    assert entity.force_update
+    assert not entity.force_update
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])

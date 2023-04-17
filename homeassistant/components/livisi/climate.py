@@ -1,10 +1,9 @@
 """Code to handle a Livisi Virtual Climate Control."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
-from aiolivisi.const import CAPABILITY_MAP
+from aiolivisi.const import CAPABILITY_CONFIG
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -16,13 +15,10 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
-    LIVISI_REACHABILITY_CHANGE,
     LIVISI_STATE_CHANGE,
     LOGGER,
     MAX_TEMPERATURE,
@@ -30,6 +26,7 @@ from .const import (
     VRCC_DEVICE_TYPE,
 )
 from .coordinator import LivisiDataUpdateCoordinator
+from .entity import LivisiEntity
 
 
 async def async_setup_entry(
@@ -50,8 +47,8 @@ async def async_setup_entry(
                 device["type"] == VRCC_DEVICE_TYPE
                 and device["id"] not in coordinator.devices
             ):
-                livisi_climate: ClimateEntity = create_entity(
-                    config_entry, device, coordinator
+                livisi_climate: ClimateEntity = LivisiClimate(
+                    config_entry, coordinator, device
                 )
                 LOGGER.debug("Include device type: %s", device.get("type"))
                 coordinator.devices.add(device["id"])
@@ -63,73 +60,32 @@ async def async_setup_entry(
     )
 
 
-def create_entity(
-    config_entry: ConfigEntry,
-    device: dict[str, Any],
-    coordinator: LivisiDataUpdateCoordinator,
-) -> ClimateEntity:
-    """Create Climate Entity."""
-    capabilities: Mapping[str, Any] = device[CAPABILITY_MAP]
-    config_details: Mapping[str, Any] = device["config"]
-    room_id: str = device["location"]
-    room_name: str = coordinator.rooms[room_id]
-    livisi_climate = LivisiClimate(
-        config_entry,
-        coordinator,
-        unique_id=device["id"],
-        manufacturer=device["manufacturer"],
-        device_type=device["type"],
-        target_temperature_capability=capabilities["RoomSetpoint"],
-        temperature_capability=capabilities["RoomTemperature"],
-        humidity_capability=capabilities["RoomHumidity"],
-        room=room_name,
-        name=config_details["name"],
-    )
-    return livisi_climate
-
-
-class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntity):
+class LivisiClimate(LivisiEntity, ClimateEntity):
     """Represents the Livisi Climate."""
 
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_hvac_mode = HVACMode.HEAT
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_high = MAX_TEMPERATURE
-    _attr_target_temperature_low = MIN_TEMPERATURE
-    _attr_has_entity_name = True
 
     def __init__(
         self,
         config_entry: ConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
-        unique_id: str,
-        manufacturer: str,
-        device_type: str,
-        target_temperature_capability: str,
-        temperature_capability: str,
-        humidity_capability: str,
-        room: str,
-        name: str,
+        device: dict[str, Any],
     ) -> None:
         """Initialize the Livisi Climate."""
-        self.config_entry = config_entry
-        self._attr_unique_id = unique_id
-        self._target_temperature_capability = target_temperature_capability
-        self._temperature_capability = temperature_capability
-        self._humidity_capability = humidity_capability
-        self.aio_livisi = coordinator.aiolivisi
-        self._attr_available = False
-        self._attr_name = name
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            manufacturer=manufacturer,
-            model=device_type,
-            name=room,
-            suggested_area=room,
-            via_device=(DOMAIN, config_entry.entry_id),
+        super().__init__(
+            config_entry, coordinator, device, use_room_as_device_name=True
         )
-        super().__init__(coordinator)
+
+        self._target_temperature_capability = self.capabilities["RoomSetpoint"]
+        self._temperature_capability = self.capabilities["RoomTemperature"]
+        self._humidity_capability = self.capabilities["RoomHumidity"]
+
+        config = device.get(CAPABILITY_CONFIG, {}).get("RoomSetpoint", {})
+        self._attr_max_temp = config.get("maxTemperature", MAX_TEMPERATURE)
+        self._attr_min_temp = config.get("minTemperature", MIN_TEMPERATURE)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -142,19 +98,20 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
             self._attr_available = False
             raise HomeAssistantError(f"Failed to turn off {self._attr_name}")
 
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Do nothing as LIVISI devices do not support changing the hvac mode."""
-
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        target_temperature = await self.coordinator.async_get_vrcc_target_temperature(
-            self._target_temperature_capability
+
+        await super().async_added_to_hass()
+
+        target_temperature = await self.coordinator.async_get_device_state(
+            self._target_temperature_capability,
+            "setpointTemperature" if self.coordinator.is_avatar else "pointTemperature",
         )
-        temperature = await self.coordinator.async_get_vrcc_temperature(
-            self._temperature_capability
+        temperature = await self.coordinator.async_get_device_state(
+            self._temperature_capability, "temperature"
         )
-        humidity = await self.coordinator.async_get_vrcc_humidity(
-            self._humidity_capability
+        humidity = await self.coordinator.async_get_device_state(
+            self._humidity_capability, "humidity"
         )
         if temperature is None:
             self._attr_current_temperature = None
@@ -184,13 +141,9 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
                 self.update_humidity,
             )
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{LIVISI_REACHABILITY_CHANGE}_{self.unique_id}",
-                self.update_reachability,
-            )
-        )
+
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Do nothing as LIVISI devices do not support changing the hvac mode."""
 
     @callback
     def update_target_temperature(self, target_temperature: float) -> None:
@@ -206,12 +159,6 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
 
     @callback
     def update_humidity(self, humidity: int) -> None:
-        """Update the humidity temperature of the climate device."""
+        """Update the humidity of the climate device."""
         self._attr_current_humidity = humidity
-        self.async_write_ha_state()
-
-    @callback
-    def update_reachability(self, is_reachable: bool) -> None:
-        """Update the reachability of the climate device."""
-        self._attr_available = is_reachable
         self.async_write_ha_state()

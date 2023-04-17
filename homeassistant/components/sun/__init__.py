@@ -12,6 +12,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import event
@@ -97,15 +98,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # we will create entities before firing EVENT_COMPONENT_LOADED
     await async_process_integration_platform_for_component(hass, DOMAIN)
     hass.data[DOMAIN] = Sun(hass)
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    sun = hass.data.pop(DOMAIN)
-    sun.remove_listeners()
-    hass.states.async_remove(sun.entity_id)
-    return True
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry, [Platform.SENSOR]
+    ):
+        sun: Sun = hass.data.pop(DOMAIN)
+        sun.remove_listeners()
+        hass.states.async_remove(sun.entity_id)
+    return unload_ok
 
 
 class Sun(Entity):
