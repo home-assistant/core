@@ -31,29 +31,23 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
-    LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    LENGTH_MILLIMETERS,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_PA,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.speed import convert as convert_speed
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
+)
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
@@ -66,15 +60,15 @@ class MockWeatherEntity(WeatherEntity):
         """Initiate Entity."""
         super().__init__()
         self._attr_condition = ATTR_CONDITION_SUNNY
-        self._attr_native_precipitation_unit = LENGTH_MILLIMETERS
+        self._attr_native_precipitation_unit = UnitOfLength.MILLIMETERS
         self._attr_native_pressure = 10
-        self._attr_native_pressure_unit = PRESSURE_HPA
+        self._attr_native_pressure_unit = UnitOfPressure.HPA
         self._attr_native_temperature = 20
-        self._attr_native_temperature_unit = TEMP_CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_native_visibility = 30
-        self._attr_native_visibility_unit = LENGTH_KILOMETERS
+        self._attr_native_visibility_unit = UnitOfLength.KILOMETERS
         self._attr_native_wind_speed = 3
-        self._attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
+        self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
         self._attr_forecast = [
             Forecast(
                 datetime=datetime(2022, 6, 20, 20, 00, 00),
@@ -92,7 +86,7 @@ class MockWeatherEntityPrecision(WeatherEntity):
         super().__init__()
         self._attr_condition = ATTR_CONDITION_SUNNY
         self._attr_native_temperature = 20.3
-        self._attr_native_temperature_unit = TEMP_CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_precision = PRECISION_HALVES
 
 
@@ -103,15 +97,15 @@ class MockWeatherEntityCompat(WeatherEntity):
         """Initiate Entity."""
         super().__init__()
         self._attr_condition = ATTR_CONDITION_SUNNY
-        self._attr_precipitation_unit = LENGTH_MILLIMETERS
+        self._attr_precipitation_unit = UnitOfLength.MILLIMETERS
         self._attr_pressure = 10
-        self._attr_pressure_unit = PRESSURE_HPA
+        self._attr_pressure_unit = UnitOfPressure.HPA
         self._attr_temperature = 20
-        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_visibility = 30
-        self._attr_visibility_unit = LENGTH_KILOMETERS
+        self._attr_visibility_unit = UnitOfLength.KILOMETERS
         self._attr_wind_speed = 3
-        self._attr_wind_speed_unit = SPEED_METERS_PER_SECOND
+        self._attr_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
         self._attr_forecast = [
             Forecast(
                 datetime=datetime(2022, 6, 20, 20, 00, 00),
@@ -140,10 +134,15 @@ async def create_entity(hass: HomeAssistant, **kwargs):
     return entity0
 
 
-@pytest.mark.parametrize("native_unit", (TEMP_FAHRENHEIT, TEMP_CELSIUS))
+@pytest.mark.parametrize(
+    "native_unit", (UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS)
+)
 @pytest.mark.parametrize(
     "state_unit, unit_system",
-    ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, US_CUSTOMARY_SYSTEM)),
+    (
+        (UnitOfTemperature.CELSIUS, METRIC_SYSTEM),
+        (UnitOfTemperature.FAHRENHEIT, US_CUSTOMARY_SYSTEM),
+    ),
 )
 async def test_temperature(
     hass: HomeAssistant,
@@ -155,7 +154,7 @@ async def test_temperature(
     """Test temperature."""
     hass.config.units = unit_system
     native_value = 38
-    state_value = convert_temperature(native_value, native_unit, state_unit)
+    state_value = TemperatureConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_temperature=native_value, native_temperature_unit=native_unit
@@ -176,7 +175,10 @@ async def test_temperature(
 @pytest.mark.parametrize("native_unit", (None,))
 @pytest.mark.parametrize(
     "state_unit, unit_system",
-    ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, US_CUSTOMARY_SYSTEM)),
+    (
+        (UnitOfTemperature.CELSIUS, METRIC_SYSTEM),
+        (UnitOfTemperature.FAHRENHEIT, US_CUSTOMARY_SYSTEM),
+    ),
 )
 async def test_temperature_no_unit(
     hass: HomeAssistant,
@@ -206,10 +208,10 @@ async def test_temperature_no_unit(
     assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == approx(expected, rel=0.1)
 
 
-@pytest.mark.parametrize("native_unit", (PRESSURE_INHG, PRESSURE_INHG))
+@pytest.mark.parametrize("native_unit", (UnitOfPressure.INHG, UnitOfPressure.INHG))
 @pytest.mark.parametrize(
     "state_unit, unit_system",
-    ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, US_CUSTOMARY_SYSTEM)),
+    ((UnitOfPressure.HPA, METRIC_SYSTEM), (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM)),
 )
 async def test_pressure(
     hass: HomeAssistant,
@@ -221,7 +223,7 @@ async def test_pressure(
     """Test pressure."""
     hass.config.units = unit_system
     native_value = 30
-    state_value = convert_pressure(native_value, native_unit, state_unit)
+    state_value = PressureConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_pressure=native_value, native_pressure_unit=native_unit
@@ -237,7 +239,7 @@ async def test_pressure(
 @pytest.mark.parametrize("native_unit", (None,))
 @pytest.mark.parametrize(
     "state_unit, unit_system",
-    ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, US_CUSTOMARY_SYSTEM)),
+    ((UnitOfPressure.HPA, METRIC_SYSTEM), (UnitOfPressure.INHG, US_CUSTOMARY_SYSTEM)),
 )
 async def test_pressure_no_unit(
     hass: HomeAssistant,
@@ -264,13 +266,17 @@ async def test_pressure_no_unit(
 
 @pytest.mark.parametrize(
     "native_unit",
-    (SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR, SPEED_METERS_PER_SECOND),
+    (
+        UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.METERS_PER_SECOND,
+    ),
 )
 @pytest.mark.parametrize(
     "state_unit, unit_system",
     (
-        (SPEED_KILOMETERS_PER_HOUR, METRIC_SYSTEM),
-        (SPEED_MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
+        (UnitOfSpeed.KILOMETERS_PER_HOUR, METRIC_SYSTEM),
+        (UnitOfSpeed.MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_wind_speed(
@@ -283,7 +289,7 @@ async def test_wind_speed(
     """Test wind speed."""
     hass.config.units = unit_system
     native_value = 10
-    state_value = convert_speed(native_value, native_unit, state_unit)
+    state_value = SpeedConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_wind_speed=native_value, native_wind_speed_unit=native_unit
@@ -303,8 +309,8 @@ async def test_wind_speed(
 @pytest.mark.parametrize(
     "state_unit, unit_system",
     (
-        (SPEED_KILOMETERS_PER_HOUR, METRIC_SYSTEM),
-        (SPEED_MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
+        (UnitOfSpeed.KILOMETERS_PER_HOUR, METRIC_SYSTEM),
+        (UnitOfSpeed.MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_wind_speed_no_unit(
@@ -333,12 +339,12 @@ async def test_wind_speed_no_unit(
     assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == approx(expected, rel=1e-2)
 
 
-@pytest.mark.parametrize("native_unit", (LENGTH_MILES, LENGTH_KILOMETERS))
+@pytest.mark.parametrize("native_unit", (UnitOfLength.MILES, UnitOfLength.KILOMETERS))
 @pytest.mark.parametrize(
     "state_unit, unit_system",
     (
-        (LENGTH_KILOMETERS, METRIC_SYSTEM),
-        (LENGTH_MILES, US_CUSTOMARY_SYSTEM),
+        (UnitOfLength.KILOMETERS, METRIC_SYSTEM),
+        (UnitOfLength.MILES, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_visibility(
@@ -351,7 +357,7 @@ async def test_visibility(
     """Test visibility."""
     hass.config.units = unit_system
     native_value = 10
-    state_value = convert_distance(native_value, native_unit, state_unit)
+    state_value = DistanceConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_visibility=native_value, native_visibility_unit=native_unit
@@ -368,8 +374,8 @@ async def test_visibility(
 @pytest.mark.parametrize(
     "state_unit, unit_system",
     (
-        (LENGTH_KILOMETERS, METRIC_SYSTEM),
-        (LENGTH_MILES, US_CUSTOMARY_SYSTEM),
+        (UnitOfLength.KILOMETERS, METRIC_SYSTEM),
+        (UnitOfLength.MILES, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_visibility_no_unit(
@@ -395,12 +401,12 @@ async def test_visibility_no_unit(
     )
 
 
-@pytest.mark.parametrize("native_unit", (LENGTH_INCHES, LENGTH_MILLIMETERS))
+@pytest.mark.parametrize("native_unit", (UnitOfLength.INCHES, UnitOfLength.MILLIMETERS))
 @pytest.mark.parametrize(
     "state_unit, unit_system",
     (
-        (LENGTH_MILLIMETERS, METRIC_SYSTEM),
-        (LENGTH_INCHES, US_CUSTOMARY_SYSTEM),
+        (UnitOfLength.MILLIMETERS, METRIC_SYSTEM),
+        (UnitOfLength.INCHES, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_precipitation(
@@ -413,7 +419,7 @@ async def test_precipitation(
     """Test precipitation."""
     hass.config.units = unit_system
     native_value = 30
-    state_value = convert_distance(native_value, native_unit, state_unit)
+    state_value = DistanceConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_precipitation=native_value, native_precipitation_unit=native_unit
@@ -430,8 +436,8 @@ async def test_precipitation(
 @pytest.mark.parametrize(
     "state_unit, unit_system",
     (
-        (LENGTH_MILLIMETERS, METRIC_SYSTEM),
-        (LENGTH_INCHES, US_CUSTOMARY_SYSTEM),
+        (UnitOfLength.MILLIMETERS, METRIC_SYSTEM),
+        (UnitOfLength.INCHES, US_CUSTOMARY_SYSTEM),
     ),
 )
 async def test_precipitation_no_unit(
@@ -482,11 +488,11 @@ async def test_none_forecast(
     entity0 = await create_entity(
         hass,
         native_pressure=None,
-        native_pressure_unit=PRESSURE_INHG,
+        native_pressure_unit=UnitOfPressure.INHG,
         native_wind_speed=None,
-        native_wind_speed_unit=SPEED_METERS_PER_SECOND,
+        native_wind_speed_unit=UnitOfSpeed.METERS_PER_SECOND,
         native_precipitation=None,
-        native_precipitation_unit=LENGTH_MILLIMETERS,
+        native_precipitation_unit=UnitOfLength.MILLIMETERS,
     )
 
     state = hass.states.get(entity0.entity_id)
@@ -500,22 +506,22 @@ async def test_none_forecast(
 async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> None:
     """Test custom unit."""
     wind_speed_value = 5
-    wind_speed_unit = SPEED_METERS_PER_SECOND
+    wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     pressure_value = 110
-    pressure_unit = PRESSURE_HPA
+    pressure_unit = UnitOfPressure.HPA
     temperature_value = 20
-    temperature_unit = TEMP_CELSIUS
+    temperature_unit = UnitOfTemperature.CELSIUS
     visibility_value = 11
-    visibility_unit = LENGTH_KILOMETERS
+    visibility_unit = UnitOfLength.KILOMETERS
     precipitation_value = 1.1
-    precipitation_unit = LENGTH_MILLIMETERS
+    precipitation_unit = UnitOfLength.MILLIMETERS
 
     set_options = {
-        "wind_speed_unit": SPEED_MILES_PER_HOUR,
-        "precipitation_unit": LENGTH_INCHES,
-        "pressure_unit": PRESSURE_INHG,
-        "temperature_unit": TEMP_FAHRENHEIT,
-        "visibility_unit": LENGTH_MILES,
+        "wind_speed_unit": UnitOfSpeed.MILES_PER_HOUR,
+        "precipitation_unit": UnitOfLength.INCHES,
+        "pressure_unit": UnitOfPressure.INHG,
+        "temperature_unit": UnitOfTemperature.FAHRENHEIT,
+        "visibility_unit": UnitOfLength.MILES,
     }
 
     entity_registry = er.async_get(hass)
@@ -554,22 +560,28 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected_wind_speed = round(
-        convert_speed(wind_speed_value, wind_speed_unit, SPEED_MILES_PER_HOUR),
+        SpeedConverter.convert(
+            wind_speed_value, wind_speed_unit, UnitOfSpeed.MILES_PER_HOUR
+        ),
         ROUNDING_PRECISION,
     )
-    expected_temperature = convert_temperature(
-        temperature_value, temperature_unit, TEMP_FAHRENHEIT
+    expected_temperature = TemperatureConverter.convert(
+        temperature_value, temperature_unit, UnitOfTemperature.FAHRENHEIT
     )
     expected_pressure = round(
-        convert_pressure(pressure_value, pressure_unit, PRESSURE_INHG),
+        PressureConverter.convert(pressure_value, pressure_unit, UnitOfPressure.INHG),
         ROUNDING_PRECISION,
     )
     expected_visibility = round(
-        convert_distance(visibility_value, visibility_unit, LENGTH_MILES),
+        DistanceConverter.convert(
+            visibility_value, visibility_unit, UnitOfLength.MILES
+        ),
         ROUNDING_PRECISION,
     )
     expected_precipitation = round(
-        convert_distance(precipitation_value, precipitation_unit, LENGTH_INCHES),
+        DistanceConverter.convert(
+            precipitation_value, precipitation_unit, UnitOfLength.INCHES
+        ),
         ROUNDING_PRECISION,
     )
 
@@ -609,15 +621,15 @@ async def test_backwards_compatibility(
 ) -> None:
     """Test backwards compatibility."""
     wind_speed_value = 5
-    wind_speed_unit = SPEED_METERS_PER_SECOND
+    wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     pressure_value = 110000
-    pressure_unit = PRESSURE_PA
+    pressure_unit = UnitOfPressure.PA
     temperature_value = 20
-    temperature_unit = TEMP_CELSIUS
+    temperature_unit = UnitOfTemperature.CELSIUS
     visibility_value = 11
-    visibility_unit = LENGTH_KILOMETERS
+    visibility_unit = UnitOfLength.KILOMETERS
     precipitation_value = 1
-    precipitation_unit = LENGTH_MILLIMETERS
+    precipitation_unit = UnitOfLength.MILLIMETERS
 
     hass.config.units = METRIC_SYSTEM
 
@@ -672,36 +684,44 @@ async def test_backwards_compatibility(
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(
         wind_speed_value * 3.6
     )
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == SPEED_KILOMETERS_PER_HOUR
+    assert (
+        state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT]
+        == UnitOfSpeed.KILOMETERS_PER_HOUR
+    )
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
         temperature_value, rel=0.1
     )
-    assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == UnitOfTemperature.CELSIUS
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(
         pressure_value / 100
     )
-    assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == PRESSURE_HPA
+    assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == UnitOfPressure.HPA
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(visibility_value)
-    assert state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == LENGTH_KILOMETERS
+    assert state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == UnitOfLength.KILOMETERS
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(
         precipitation_value, rel=1e-2
     )
-    assert state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == LENGTH_MILLIMETERS
+    assert state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == UnitOfLength.MILLIMETERS
 
     assert float(state1.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(wind_speed_value)
-    assert state1.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == SPEED_KILOMETERS_PER_HOUR
+    assert (
+        state1.attributes[ATTR_WEATHER_WIND_SPEED_UNIT]
+        == UnitOfSpeed.KILOMETERS_PER_HOUR
+    )
     assert float(state1.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
         temperature_value, rel=0.1
     )
-    assert state1.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == TEMP_CELSIUS
+    assert state1.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == UnitOfTemperature.CELSIUS
     assert float(state1.attributes[ATTR_WEATHER_PRESSURE]) == approx(pressure_value)
-    assert state1.attributes[ATTR_WEATHER_PRESSURE_UNIT] == PRESSURE_HPA
+    assert state1.attributes[ATTR_WEATHER_PRESSURE_UNIT] == UnitOfPressure.HPA
     assert float(state1.attributes[ATTR_WEATHER_VISIBILITY]) == approx(visibility_value)
-    assert state1.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == LENGTH_KILOMETERS
+    assert state1.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == UnitOfLength.KILOMETERS
     assert float(forecast1[ATTR_FORECAST_PRECIPITATION]) == approx(
         precipitation_value, rel=1e-2
     )
-    assert state1.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == LENGTH_MILLIMETERS
+    assert (
+        state1.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == UnitOfLength.MILLIMETERS
+    )
 
 
 async def test_backwards_compatibility_convert_values(
@@ -709,15 +729,15 @@ async def test_backwards_compatibility_convert_values(
 ) -> None:
     """Test backward compatibility for converting values."""
     wind_speed_value = 5
-    wind_speed_unit = SPEED_METERS_PER_SECOND
+    wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     pressure_value = 110000
-    pressure_unit = PRESSURE_PA
+    pressure_unit = UnitOfPressure.PA
     temperature_value = 20
-    temperature_unit = TEMP_CELSIUS
+    temperature_unit = UnitOfTemperature.CELSIUS
     visibility_value = 11
-    visibility_unit = LENGTH_KILOMETERS
+    visibility_unit = UnitOfLength.KILOMETERS
     precipitation_value = 1
-    precipitation_unit = LENGTH_MILLIMETERS
+    precipitation_unit = UnitOfLength.MILLIMETERS
 
     hass.config.units = US_CUSTOMARY_SYSTEM
 
@@ -750,22 +770,28 @@ async def test_backwards_compatibility_convert_values(
     state = hass.states.get(entity0.entity_id)
 
     expected_wind_speed = round(
-        convert_speed(wind_speed_value, wind_speed_unit, SPEED_MILES_PER_HOUR),
+        SpeedConverter.convert(
+            wind_speed_value, wind_speed_unit, UnitOfSpeed.MILES_PER_HOUR
+        ),
         ROUNDING_PRECISION,
     )
-    expected_temperature = convert_temperature(
-        temperature_value, temperature_unit, TEMP_FAHRENHEIT
+    expected_temperature = TemperatureConverter.convert(
+        temperature_value, temperature_unit, UnitOfTemperature.FAHRENHEIT
     )
     expected_pressure = round(
-        convert_pressure(pressure_value, pressure_unit, PRESSURE_INHG),
+        PressureConverter.convert(pressure_value, pressure_unit, UnitOfPressure.INHG),
         ROUNDING_PRECISION,
     )
     expected_visibility = round(
-        convert_distance(visibility_value, visibility_unit, LENGTH_MILES),
+        DistanceConverter.convert(
+            visibility_value, visibility_unit, UnitOfLength.MILES
+        ),
         ROUNDING_PRECISION,
     )
     expected_precipitation = round(
-        convert_distance(precipitation_value, precipitation_unit, LENGTH_INCHES),
+        DistanceConverter.convert(
+            precipitation_value, precipitation_unit, UnitOfLength.INCHES
+        ),
         ROUNDING_PRECISION,
     )
 
@@ -781,15 +807,15 @@ async def test_backwards_compatibility_convert_values(
             }
         ],
         ATTR_FRIENDLY_NAME: "Test",
-        ATTR_WEATHER_PRECIPITATION_UNIT: LENGTH_INCHES,
+        ATTR_WEATHER_PRECIPITATION_UNIT: UnitOfLength.INCHES,
         ATTR_WEATHER_PRESSURE: approx(expected_pressure, rel=0.1),
-        ATTR_WEATHER_PRESSURE_UNIT: PRESSURE_INHG,
+        ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.INHG,
         ATTR_WEATHER_TEMPERATURE: approx(expected_temperature, rel=0.1),
-        ATTR_WEATHER_TEMPERATURE_UNIT: TEMP_FAHRENHEIT,
+        ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         ATTR_WEATHER_VISIBILITY: approx(expected_visibility, rel=0.1),
-        ATTR_WEATHER_VISIBILITY_UNIT: LENGTH_MILES,
+        ATTR_WEATHER_VISIBILITY_UNIT: UnitOfLength.MILES,
         ATTR_WEATHER_WIND_SPEED: approx(expected_wind_speed, rel=0.1),
-        ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_MILES_PER_HOUR,
+        ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.MILES_PER_HOUR,
     }
 
 
@@ -809,20 +835,20 @@ async def test_attr(hass: HomeAssistant) -> None:
     weather.hass = hass
 
     assert weather.condition == ATTR_CONDITION_SUNNY
-    assert weather.native_precipitation_unit == LENGTH_MILLIMETERS
-    assert weather._precipitation_unit == LENGTH_MILLIMETERS
+    assert weather.native_precipitation_unit == UnitOfLength.MILLIMETERS
+    assert weather._precipitation_unit == UnitOfLength.MILLIMETERS
     assert weather.native_pressure == 10
-    assert weather.native_pressure_unit == PRESSURE_HPA
-    assert weather._pressure_unit == PRESSURE_HPA
+    assert weather.native_pressure_unit == UnitOfPressure.HPA
+    assert weather._pressure_unit == UnitOfPressure.HPA
     assert weather.native_temperature == 20
-    assert weather.native_temperature_unit == TEMP_CELSIUS
-    assert weather._temperature_unit == TEMP_CELSIUS
+    assert weather.native_temperature_unit == UnitOfTemperature.CELSIUS
+    assert weather._temperature_unit == UnitOfTemperature.CELSIUS
     assert weather.native_visibility == 30
-    assert weather.native_visibility_unit == LENGTH_KILOMETERS
-    assert weather._visibility_unit == LENGTH_KILOMETERS
+    assert weather.native_visibility_unit == UnitOfLength.KILOMETERS
+    assert weather._visibility_unit == UnitOfLength.KILOMETERS
     assert weather.native_wind_speed == 3
-    assert weather.native_wind_speed_unit == SPEED_METERS_PER_SECOND
-    assert weather._wind_speed_unit == SPEED_KILOMETERS_PER_HOUR
+    assert weather.native_wind_speed_unit == UnitOfSpeed.METERS_PER_SECOND
+    assert weather._wind_speed_unit == UnitOfSpeed.KILOMETERS_PER_HOUR
 
 
 async def test_attr_compatibility(hass: HomeAssistant) -> None:
@@ -832,15 +858,15 @@ async def test_attr_compatibility(hass: HomeAssistant) -> None:
     weather.hass = hass
 
     assert weather.condition == ATTR_CONDITION_SUNNY
-    assert weather._precipitation_unit == LENGTH_MILLIMETERS
+    assert weather._precipitation_unit == UnitOfLength.MILLIMETERS
     assert weather.pressure == 10
-    assert weather._pressure_unit == PRESSURE_HPA
+    assert weather._pressure_unit == UnitOfPressure.HPA
     assert weather.temperature == 20
-    assert weather._temperature_unit == TEMP_CELSIUS
+    assert weather._temperature_unit == UnitOfTemperature.CELSIUS
     assert weather.visibility == 30
-    assert weather.visibility_unit == LENGTH_KILOMETERS
+    assert weather.visibility_unit == UnitOfLength.KILOMETERS
     assert weather.wind_speed == 3
-    assert weather._wind_speed_unit == SPEED_KILOMETERS_PER_HOUR
+    assert weather._wind_speed_unit == UnitOfSpeed.KILOMETERS_PER_HOUR
 
     forecast_entry = [
         Forecast(
@@ -855,14 +881,14 @@ async def test_attr_compatibility(hass: HomeAssistant) -> None:
     assert weather.state_attributes == {
         ATTR_FORECAST: forecast_entry,
         ATTR_WEATHER_PRESSURE: 10.0,
-        ATTR_WEATHER_PRESSURE_UNIT: PRESSURE_HPA,
+        ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.HPA,
         ATTR_WEATHER_TEMPERATURE: 20.0,
-        ATTR_WEATHER_TEMPERATURE_UNIT: TEMP_CELSIUS,
+        ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_WEATHER_VISIBILITY: 30.0,
-        ATTR_WEATHER_VISIBILITY_UNIT: LENGTH_KILOMETERS,
+        ATTR_WEATHER_VISIBILITY_UNIT: UnitOfLength.KILOMETERS,
         ATTR_WEATHER_WIND_SPEED: 3.0 * 3.6,
-        ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_KILOMETERS_PER_HOUR,
-        ATTR_WEATHER_PRECIPITATION_UNIT: LENGTH_MILLIMETERS,
+        ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.KILOMETERS_PER_HOUR,
+        ATTR_WEATHER_PRECIPITATION_UNIT: UnitOfLength.MILLIMETERS,
     }
 
 
@@ -874,7 +900,7 @@ async def test_precision_for_temperature(hass: HomeAssistant) -> None:
 
     assert weather.condition == ATTR_CONDITION_SUNNY
     assert weather.native_temperature == 20.3
-    assert weather._temperature_unit == TEMP_CELSIUS
+    assert weather._temperature_unit == UnitOfTemperature.CELSIUS
     assert weather.precision == PRECISION_HALVES
 
     assert weather.state_attributes[ATTR_WEATHER_TEMPERATURE] == 20.5

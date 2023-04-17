@@ -454,7 +454,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 class AqaraMotionDetectionInterval(
     ZHANumberConfigurationEntity, id_suffix="detection_interval"
 ):
-    """Representation of a ZHA on off transition time configuration entity."""
+    """Representation of a ZHA motion detection interval configuration entity."""
 
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 65535
@@ -577,7 +577,7 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="ikea_airpurifier")
 class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time"):
-    """Representation of a ZHA timer duration configuration entity."""
+    """Representation of a ZHA filter lifetime configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]

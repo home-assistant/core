@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "Activa l'agent de conversa",
                     "language_code": "Codi d'idioma"
-                }
+                },
+                "description": "Defineix l'idioma de les interaccions amb Google Assisant i tria si voleu activar l'agent de conversa."
             }
         }
     }

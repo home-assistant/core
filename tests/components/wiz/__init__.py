@@ -1,9 +1,9 @@
 """Tests for the WiZ Platform integration."""
 
+from collections.abc import Callable
 from contextlib import contextmanager
 from copy import deepcopy
 import json
-from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pywizlight import SCENES, BulbType, PilotParser, wizlight

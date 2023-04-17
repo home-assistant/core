@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import Any, Generic, TypeVar, Union, cast
+from typing import Any, Generic, TypeVar, cast
 
 from pyunifiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
@@ -15,7 +15,7 @@ from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=Union[ProtectAdoptableDeviceModel, NVR])
+T = TypeVar("T", bound=ProtectAdoptableDeviceModel | NVR)
 
 
 class PermRequired(int, Enum):

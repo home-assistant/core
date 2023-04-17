@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import json
 import logging
+import time
 from typing import TypedDict, overload
 
 from sqlalchemy import (
@@ -89,6 +90,8 @@ DOUBLE_TYPE = (
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
+TIMESTAMP_TYPE = DOUBLE_TYPE
+
 
 class Events(Base):  # type: ignore
     """Event history data."""
@@ -108,6 +111,9 @@ class Events(Base):  # type: ignore
         SmallInteger
     )  # *** Not originally in v23, only added for recorder to startup ok
     time_fired = Column(DATETIME_TYPE, index=True)
+    time_fired_ts = Column(
+        TIMESTAMP_TYPE, index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
@@ -197,7 +203,13 @@ class States(Base):  # type: ignore
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
     last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    last_updated_ts = Column(
+        TIMESTAMP_TYPE, default=time.time
+    )  # *** Not originally in v23, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    last_updated_ts = Column(
+        TIMESTAMP_TYPE, default=time.time, index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     event = relationship("Events", uselist=False)

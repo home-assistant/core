@@ -9,7 +9,7 @@ import subprocess
 from icmplib import async_multiping
 import voluptuous as vol
 
-from homeassistant import const, util
+from homeassistant import util
 from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
@@ -17,6 +17,7 @@ from homeassistant.components.device_tracker import (
     AsyncSeeCallback,
     SourceType,
 )
+from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -34,7 +35,7 @@ CONCURRENT_PING_LIMIT = 6
 
 PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(const.CONF_HOSTS): {cv.slug: cv.string},
+        vol.Required(CONF_HOSTS): {cv.slug: cv.string},
         vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,
     }
 )
@@ -87,7 +88,7 @@ async def async_setup_scanner(
     """Set up the Host objects and return the update function."""
 
     privileged = hass.data[DOMAIN][PING_PRIVS]
-    ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[const.CONF_HOSTS].items()}
+    ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[CONF_HOSTS].items()}
     interval = config.get(
         CONF_SCAN_INTERVAL,
         timedelta(seconds=len(ip_to_dev_id) * config[CONF_PING_COUNT]) + SCAN_INTERVAL,
@@ -101,7 +102,7 @@ async def async_setup_scanner(
     if privileged is None:
         hosts = [
             HostSubProcess(ip, dev_id, hass, config, privileged)
-            for (dev_id, ip) in config[const.CONF_HOSTS].items()
+            for (dev_id, ip) in config[CONF_HOSTS].items()
         ]
 
         async def async_update(now):

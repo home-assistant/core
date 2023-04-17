@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Sidumine on juba k\u00e4imas",
-            "error_pairing": "\u00dchendatud LG webOS teleriga kuid pole seotud"
+            "error_pairing": "\u00dchendatud LG webOS teleriga kuid pole seotud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "reauth_unsuccessful": "Taastuvastamine eba\u00f5nnestus. L\u00fclita teler sisse ja proovi uuesti."
         },
         "error": {
             "cannot_connect": "\u00dchenduse loomine nurjus,  l\u00fclita teler sisse v\u00f5i kontrolli IP-aadressi"
@@ -11,6 +13,10 @@
         "flow_title": "LG webOS Smart TV",
         "step": {
             "pairing": {
+                "description": "Kl\u00f5psa nuppu submit ja n\u00f5ustu oma teleri paaritamisn\u00f5udega.\n\n![Image](/static/images/config_webos.png)",
+                "title": "webOS TV sidumine"
+            },
+            "reauth_confirm": {
                 "description": "Kl\u00f5psa nuppu submit ja n\u00f5ustu oma teleri paaritamisn\u00f5udega.\n\n![Image](/static/images/config_webos.png)",
                 "title": "webOS TV sidumine"
             },
@@ -31,8 +37,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Allikate loendit ei saa tuua. Veendu, et seade on sisse l\u00fclitatud",
-            "script_not_found": "Skripti ei leitud"
+            "cannot_retrieve": "Allikate loendit ei saa tuua. Veendu, et seade on sisse l\u00fclitatud"
         },
         "step": {
             "init": {

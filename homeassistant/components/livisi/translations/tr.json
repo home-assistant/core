@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "wrong_ip_address": "IP adresi yanl\u0131\u015f veya SHC'ye yerel olarak ula\u015f\u0131lam\u0131yor.",
+            "wrong_password": "\u015eifre yanl\u0131\u015f."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP Adresi",
+                    "password": "Parola"
+                },
+                "description": "SHC'nin IP adresini ve (yerel) parolas\u0131n\u0131 girin."
+            }
+        }
+    }
+}

@@ -169,7 +169,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
-    pt2262_devices: list[str] = []
+    pt2262_devices: set[str] = set()
 
     device_registry = dr.async_get(hass)
 
@@ -203,7 +203,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
         if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
             find_possible_pt2262_device(pt2262_devices, event.device.id_string)
-            pt2262_devices.append(event.device.id_string)
+            pt2262_devices.add(event.device.id_string)
 
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, *device_id)},  # type: ignore[arg-type]
@@ -393,7 +393,7 @@ def get_device_data_bits(
     return data_bits
 
 
-def find_possible_pt2262_device(device_ids: list[str], device_id: str) -> str | None:
+def find_possible_pt2262_device(device_ids: set[str], device_id: str) -> str | None:
     """Look for the device which id matches the given device_id parameter."""
     for dev_id in device_ids:
         if len(dev_id) == len(device_id):
@@ -441,7 +441,7 @@ def get_device_tuple_from_identifiers(
     identifiers: set[tuple[str, str]]
 ) -> DeviceTuple | None:
     """Calculate the device tuple from a device entry."""
-    identifier = next((x for x in identifiers if x[0] == DOMAIN), None)
+    identifier = next((x for x in identifiers if x[0] == DOMAIN and len(x) == 4), None)
     if not identifier:
         return None
     # work around legacy identifier, being a multi tuple value

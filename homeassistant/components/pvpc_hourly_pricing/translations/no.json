@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Kontrahert effekt (kW)",
-                    "power_p3": "Kontrahert kraft for dalperioden P3 (kW)",
-                    "tariff": "Gjeldende tariff etter geografisk sone"
+                    "power_p3": "Kontraktstr\u00f8m for dalperiode P3 (kW)"
                 }
             }
         }

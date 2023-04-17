@@ -59,7 +59,7 @@ CONF_EXPIRE_AFTER = "expire_after"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -69,7 +69,8 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Binary sensors under the binary_sensor platform key was deprecated in HA Core 2022.6
+# Configuring MQTT Binary sensors under the binary_sensor platform key was deprecated in
+# HA Core 2022.6
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(binary_sensor.DOMAIN),
@@ -83,7 +84,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT binary sensor through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT binary sensor through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

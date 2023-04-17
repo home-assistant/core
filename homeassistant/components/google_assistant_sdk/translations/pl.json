@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "W\u0142\u0105cz agenta konwersacji",
                     "language_code": "Kod j\u0119zyka"
-                }
+                },
+                "description": "Ustaw j\u0119zyk interakcji z Asystentem Google i czy chcesz w\u0142\u0105czy\u0107 agenta konwersacji."
             }
         }
     }

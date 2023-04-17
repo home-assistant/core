@@ -5,11 +5,15 @@
             "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
+            "identifier_exists": "Account al geregistreerd",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
             "user": {
+                "data": {
+                    "auth_code": "Authorisatie Code"
+                },
                 "description": "Voer uw gebruikersnaam en wachtwoord in."
             }
         }

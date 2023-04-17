@@ -4,8 +4,8 @@ from __future__ import annotations
 import contextlib
 from typing import Any, Final
 
-import aioshelly
 from aioshelly.block_device import BlockDevice
+from aioshelly.common import ConnectionOptions
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from aioshelly.rpc_device import RpcDevice, UpdateType
 import voluptuous as vol
@@ -14,8 +14,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get as dr_async_get,
+    format_mac,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -116,32 +121,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly block based device from a config entry."""
-    options = aioshelly.common.ConnectionOptions(
+    options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
+        device_mac=entry.unique_id,
     )
 
     coap_context = await get_coap_context(hass)
 
     device = await BlockDevice.create(
-        aiohttp_client.async_get_clientsession(hass),
+        async_get_clientsession(hass),
         coap_context,
         options,
         False,
     )
 
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr_async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
             identifiers=set(),
-            connections={
-                (
-                    device_registry.CONNECTION_NETWORK_MAC,
-                    device_registry.format_mac(entry.unique_id),
-                )
-            },
+            connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
@@ -150,8 +151,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
-    @callback
-    def _async_block_device_setup() -> None:
+    async def _async_block_device_setup() -> None:
         """Set up a block based device that is online."""
         shelly_entry_data.block = ShellyBlockCoordinator(hass, entry, device)
         shelly_entry_data.block.async_setup()
@@ -162,7 +162,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             shelly_entry_data.rest = ShellyRestCoordinator(hass, device, entry)
             platforms = BLOCK_PLATFORMS
 
-        hass.config_entries.async_setup_platforms(entry, platforms)
+        await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     @callback
     def _async_device_online(_: Any) -> None:
@@ -175,7 +175,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
-        _async_block_device_setup()
+        hass.async_create_task(_async_block_device_setup())
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
@@ -187,7 +187,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
 
-        _async_block_device_setup()
+        await _async_block_device_setup()
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
         shelly_entry_data.device = device
@@ -198,39 +198,35 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline block device %s", entry.title)
-        _async_block_device_setup()
+        await _async_block_device_setup()
 
     return True
 
 
 async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly RPC based device from a config entry."""
-    options = aioshelly.common.ConnectionOptions(
+    options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
+        device_mac=entry.unique_id,
     )
 
     ws_context = await get_ws_context(hass)
 
     device = await RpcDevice.create(
-        aiohttp_client.async_get_clientsession(hass),
+        async_get_clientsession(hass),
         ws_context,
         options,
         False,
     )
 
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr_async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
             identifiers=set(),
-            connections={
-                (
-                    device_registry.CONNECTION_NETWORK_MAC,
-                    device_registry.format_mac(entry.unique_id),
-                )
-            },
+            connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
@@ -239,8 +235,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
-    @callback
-    def _async_rpc_device_setup() -> None:
+    async def _async_rpc_device_setup() -> None:
         """Set up a RPC based device that is online."""
         shelly_entry_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         shelly_entry_data.rpc.async_setup()
@@ -253,7 +248,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             )
             platforms = RPC_PLATFORMS
 
-        hass.config_entries.async_setup_platforms(entry, platforms)
+        await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     @callback
     def _async_device_online(_: Any, update_type: UpdateType) -> None:
@@ -265,7 +260,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             data[CONF_SLEEP_PERIOD] = get_rpc_device_sleep_period(device.config)
             hass.config_entries.async_update_entry(entry, data=data)
 
-        _async_rpc_device_setup()
+        hass.async_create_task(_async_rpc_device_setup())
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
@@ -277,7 +272,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
 
-        _async_rpc_device_setup()
+        await _async_rpc_device_setup()
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
         shelly_entry_data.device = device
@@ -288,7 +283,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline block device %s", entry.title)
-        _async_rpc_device_setup()
+        await _async_rpc_device_setup()
 
     return True
 

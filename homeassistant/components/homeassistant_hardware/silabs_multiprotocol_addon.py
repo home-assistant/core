@@ -236,16 +236,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
-        return self.async_abort(
-            reason="disabled_due_to_bug",
-            description_placeholders={
-                "url": "https://developers.home-assistant.io/blog/2022/12/08/multi-pan-rollback"
-            },
-        )
-
-        # pylint: disable=unreachable
-
-        return await self.async_step_on_supervisor()  # type: ignore[unreachable]
+        return await self.async_step_on_supervisor()
 
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None

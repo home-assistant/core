@@ -42,7 +42,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
-    ENERGY_KILO_WATT_HOUR,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
     STATE_CLOSED,
@@ -55,8 +54,8 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNLOCKED,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfEnergy,
+    UnitOfTemperature,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import entity_registry
@@ -898,7 +897,7 @@ async def sensor_fixture(hass, registry):
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_1",
-        unit_of_measurement=TEMP_CELSIUS,
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
         original_device_class=SensorDeviceClass.TEMPERATURE,
         suggested_object_id="outside_temperature",
         original_name="Outside Temperature",
@@ -924,7 +923,7 @@ async def sensor_fixture(hass, registry):
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_3",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         original_device_class=SensorDeviceClass.POWER,
         suggested_object_id="radio_energy",
         original_name="Radio Energy",
@@ -940,7 +939,7 @@ async def sensor_fixture(hass, registry):
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_4",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_object_id="television_energy",
         original_name="Television Energy",
     )
@@ -951,7 +950,7 @@ async def sensor_fixture(hass, registry):
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_5",
-        unit_of_measurement=f"SEK/{ENERGY_KILO_WATT_HOUR}",
+        unit_of_measurement=f"SEK/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_object_id="electricity_price",
         original_name="Electricity price",
     )
@@ -1015,7 +1014,7 @@ async def sensor_fixture(hass, registry):
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_11",
-        unit_of_measurement=TEMP_FAHRENHEIT,
+        unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         original_device_class=SensorDeviceClass.TEMPERATURE,
         suggested_object_id="fahrenheit",
         original_name="Fahrenheit",
@@ -1035,7 +1034,7 @@ async def climate_fixture(hass, registry):
         domain=climate.DOMAIN,
         platform="test",
         unique_id="climate_1",
-        unit_of_measurement=TEMP_CELSIUS,
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_object_id="heatpump",
         original_name="HeatPump",
     )
@@ -1054,7 +1053,7 @@ async def climate_fixture(hass, registry):
         domain=climate.DOMAIN,
         platform="test",
         unique_id="climate_2",
-        unit_of_measurement=TEMP_CELSIUS,
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_object_id="ecobee",
         original_name="Ecobee",
     )
@@ -1075,7 +1074,7 @@ async def climate_fixture(hass, registry):
         domain=climate.DOMAIN,
         platform="test",
         unique_id="climate_3",
-        unit_of_measurement=TEMP_CELSIUS,
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_object_id="fritzdect",
         original_name="Fritz!DECT",
     )
@@ -1275,7 +1274,7 @@ async def input_number_fixture(hass, registry):
         unique_id="input_number_3",
         suggested_object_id="target_temperature",
         original_name="Target temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
     )
     set_state_with_entry(hass, input_number_3, 22.7)
     data["input_number_3"] = input_number_3

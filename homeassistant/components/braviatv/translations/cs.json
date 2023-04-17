@@ -12,9 +12,6 @@
         },
         "step": {
             "authorize": {
-                "data": {
-                    "pin": "PIN k\u00f3d"
-                },
                 "description": "Zadejte PIN k\u00f3d zobrazen\u00fd na televizi Sony Bravia.\n\nPokud se PIN k\u00f3d nezobraz\u00ed, je t\u0159eba zru\u0161it registraci Home Assistant na televizi, p\u0159ejd\u011bte na: Nastaven\u00ed -> S\u00ed\u0165 -> Nastaven\u00ed vzd\u00e1len\u00e9ho za\u0159\u00edzen\u00ed -> Zru\u0161it registraci vzd\u00e1len\u00e9ho za\u0159\u00edzen\u00ed.",
                 "title": "Autorizujte televizi Sony Bravia"
             },

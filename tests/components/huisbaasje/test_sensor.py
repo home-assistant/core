@@ -15,9 +15,9 @@ from homeassistant.const import (
     CONF_ID,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    VOLUME_CUBIC_METERS,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 
@@ -65,7 +65,9 @@ async def test_setup_entry(hass: HomeAssistant):
             current_power.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.MEASUREMENT
         )
-        assert current_power.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+        assert (
+            current_power.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
+        )
 
         current_power_in = hass.states.get("sensor.huisbaasje_current_power_in_peak")
         assert current_power_in.state == "1012.0"
@@ -78,7 +80,10 @@ async def test_setup_entry(hass: HomeAssistant):
             current_power_in.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.MEASUREMENT
         )
-        assert current_power_in.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+        assert (
+            current_power_in.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            == UnitOfPower.WATT
+        )
 
         current_power_in_low = hass.states.get(
             "sensor.huisbaasje_current_power_in_off_peak"
@@ -94,7 +99,8 @@ async def test_setup_entry(hass: HomeAssistant):
             is SensorStateClass.MEASUREMENT
         )
         assert (
-            current_power_in_low.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+            current_power_in_low.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            == UnitOfPower.WATT
         )
 
         current_power_out = hass.states.get("sensor.huisbaasje_current_power_out_peak")
@@ -108,7 +114,10 @@ async def test_setup_entry(hass: HomeAssistant):
             current_power_out.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.MEASUREMENT
         )
-        assert current_power_out.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+        assert (
+            current_power_out.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            == UnitOfPower.WATT
+        )
 
         current_power_out_low = hass.states.get(
             "sensor.huisbaasje_current_power_out_off_peak"
@@ -124,7 +133,8 @@ async def test_setup_entry(hass: HomeAssistant):
             is SensorStateClass.MEASUREMENT
         )
         assert (
-            current_power_out_low.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+            current_power_out_low.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            == UnitOfPower.WATT
         )
 
         energy_consumption_peak_today = hass.states.get(
@@ -145,7 +155,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == ENERGY_KILO_WATT_HOUR
+            == UnitOfEnergy.KILO_WATT_HOUR
         )
 
         energy_consumption_off_peak_today = hass.states.get(
@@ -166,7 +176,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             energy_consumption_off_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == ENERGY_KILO_WATT_HOUR
+            == UnitOfEnergy.KILO_WATT_HOUR
         )
 
         energy_production_peak_today = hass.states.get(
@@ -187,7 +197,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             energy_production_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == ENERGY_KILO_WATT_HOUR
+            == UnitOfEnergy.KILO_WATT_HOUR
         )
 
         energy_production_off_peak_today = hass.states.get(
@@ -208,7 +218,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             energy_production_off_peak_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == ENERGY_KILO_WATT_HOUR
+            == UnitOfEnergy.KILO_WATT_HOUR
         )
 
         energy_today = hass.states.get("sensor.huisbaasje_energy_today")
@@ -223,7 +233,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             energy_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == ENERGY_KILO_WATT_HOUR
+            == UnitOfEnergy.KILO_WATT_HOUR
         )
 
         energy_this_week = hass.states.get("sensor.huisbaasje_energy_this_week")
@@ -239,7 +249,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             energy_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == ENERGY_KILO_WATT_HOUR
+            == UnitOfEnergy.KILO_WATT_HOUR
         )
 
         energy_this_month = hass.states.get("sensor.huisbaasje_energy_this_month")
@@ -255,7 +265,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             energy_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == ENERGY_KILO_WATT_HOUR
+            == UnitOfEnergy.KILO_WATT_HOUR
         )
 
         energy_this_year = hass.states.get("sensor.huisbaasje_energy_this_year")
@@ -271,7 +281,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             energy_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == ENERGY_KILO_WATT_HOUR
+            == UnitOfEnergy.KILO_WATT_HOUR
         )
 
         current_gas = hass.states.get("sensor.huisbaasje_current_gas")
@@ -294,7 +304,10 @@ async def test_setup_entry(hass: HomeAssistant):
             gas_today.attributes.get(ATTR_STATE_CLASS)
             is SensorStateClass.TOTAL_INCREASING
         )
-        assert gas_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+        assert (
+            gas_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            == UnitOfVolume.CUBIC_METERS
+        )
 
         gas_this_week = hass.states.get("sensor.huisbaasje_gas_this_week")
         assert gas_this_week.state == "5.6"
@@ -306,7 +319,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             gas_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == VOLUME_CUBIC_METERS
+            == UnitOfVolume.CUBIC_METERS
         )
 
         gas_this_month = hass.states.get("sensor.huisbaasje_gas_this_month")
@@ -319,7 +332,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             gas_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == VOLUME_CUBIC_METERS
+            == UnitOfVolume.CUBIC_METERS
         )
 
         gas_this_year = hass.states.get("sensor.huisbaasje_gas_this_year")
@@ -332,7 +345,7 @@ async def test_setup_entry(hass: HomeAssistant):
         )
         assert (
             gas_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            == VOLUME_CUBIC_METERS
+            == UnitOfVolume.CUBIC_METERS
         )
 
         # Assert mocks are called

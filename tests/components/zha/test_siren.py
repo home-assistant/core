@@ -30,7 +30,7 @@ from tests.common import async_fire_time_changed, mock_coro
 
 @pytest.fixture(autouse=True)
 def siren_platform_only():
-    """Only setup the siren and required base platforms to speed up tests."""
+    """Only set up the siren and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (

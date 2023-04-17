@@ -60,7 +60,7 @@ class LircInterface(threading.Thread):
     def run(self):
         """Run the loop of the LIRC interface thread."""
         _LOGGER.debug("LIRC interface thread started")
-        while not self.stopped.isSet():
+        while not self.stopped.is_set():
             try:
                 code = lirc.nextcode()  # list; empty if no buttons pressed
             except lirc.NextCodeError:

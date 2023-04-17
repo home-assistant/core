@@ -61,8 +61,6 @@ RESTRICTED_ENTITY_ID = f"{MP_DOMAIN}.restricted_client"
 STANDBY_ENTITY_ID = f"{MP_DOMAIN}.standby_client"
 UNAVAILABLE_ENTITY_ID = f"{MP_DOMAIN}.unavailable_client"
 
-# pylint: disable=redefined-outer-name
-
 
 @fixture
 def mock_now() -> datetime:

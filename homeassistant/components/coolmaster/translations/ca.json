@@ -13,7 +13,8 @@
                     "heat": "Suporta mode escalfar",
                     "heat_cool": "Suporta mode escalfar/refredar autom\u00e0tic",
                     "host": "Amfitri\u00f3",
-                    "off": "Es pot apagar"
+                    "off": "Es pot apagar",
+                    "swing_support": "Controla el mode d'oscil\u00b7laci\u00f3"
                 },
                 "title": "Configuraci\u00f3 de la connexi\u00f3 amb CoolMasterNet."
             }

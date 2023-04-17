@@ -51,7 +51,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(alarms, True)
+    async_add_entities(alarms)
 
     # Set up services
     platform = entity_platform.async_get_current_platform()

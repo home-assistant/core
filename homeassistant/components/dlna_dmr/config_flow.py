@@ -6,7 +6,7 @@ from functools import partial
 from ipaddress import IPv6Address, ip_address
 import logging
 from pprint import pformat
-from typing import Any, Optional, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -36,7 +36,7 @@ from .data import get_domain_data
 
 LOGGER = logging.getLogger(__name__)
 
-FlowInput = Optional[Mapping[str, Any]]
+FlowInput = Mapping[str, Any] | None
 
 
 class ConnectError(IntegrationError):

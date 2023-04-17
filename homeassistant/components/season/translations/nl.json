@@ -10,5 +10,22 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "season": {
+                "state": {
+                    "autumn": "Herfst",
+                    "spring": "Lente",
+                    "summer": "Zomer",
+                    "winter": "Winter"
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "De Season YAML-configuratie is verwijderd"
+        }
     }
 }

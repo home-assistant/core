@@ -3,7 +3,7 @@
 The v23 schema used for these tests has been slightly modified to add the
 EventData table to allow the recorder to startup successfully.
 """
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 import importlib
 import json
 import sys

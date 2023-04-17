@@ -4,7 +4,8 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "mdns_missing_mac": "Indirizzo MAC mancante nelle propriet\u00e0 MDNS.",
-            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "service_received": "Servizio ricevuto"
         },
         "error": {
             "connection_error": "Impossibile connettersi a ESP. Assicurati che il tuo file YAML contenga una riga \"api:\".",
@@ -28,13 +29,13 @@
                 "data": {
                     "noise_psk": "Chiave di cifratura"
                 },
-                "description": "Inserisci la chiave di cifratura che hai impostato nella configurazione per {name}."
+                "description": "Inserisci la chiave di crittografia per {name}. Puoi trovarlo nella plancia di ESPHome o nella configurazione del tuo dispositivo."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Chiave di cifratura"
                 },
-                "description": "Il dispositivo ESPHome {name} ha abilitato la cifratura del trasporto o ha modificato la chiave di cifratura. Inserisci la chiave aggiornata."
+                "description": "Il dispositivo ESPHome {name} ha abilitato la crittografia del trasporto o ha modificato la chiave di crittografia. Inserisci la chiave aggiornata. Puoi trovarlo nella plancia di ESPHome o nella configurazione del tuo dispositivo."
             },
             "user": {
                 "data": {

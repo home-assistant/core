@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Umiestnenie u\u017e je nakonfigurovan\u00e9"
+            "already_configured": "Umiestnenie u\u017e je nakonfigurovan\u00e9",
+            "wrong_location": "V tejto oblasti nie s\u00fa \u017eiadne meracie stanice Airly."
         },
         "error": {
             "invalid_api_key": "Neplatn\u00fd API k\u013e\u00fa\u010d",

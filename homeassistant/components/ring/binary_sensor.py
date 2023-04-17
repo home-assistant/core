@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -70,7 +71,7 @@ async def async_setup_entry(
 class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
     """A binary sensor implementation for Ring device."""
 
-    _active_alert = None
+    _active_alert: dict[str, Any] | None = None
     entity_description: RingBinarySensorEntityDescription
 
     def __init__(

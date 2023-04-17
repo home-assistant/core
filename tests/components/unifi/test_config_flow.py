@@ -12,7 +12,6 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
-    CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -143,14 +142,6 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
         CONF_PORT: 1234,
         CONF_SITE_ID: "site_id",
         CONF_VERIFY_SSL: True,
-        CONF_CONTROLLER: {
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 1234,
-            CONF_SITE_ID: "site_id",
-            CONF_VERIFY_SSL: True,
-        },
     }
 
 

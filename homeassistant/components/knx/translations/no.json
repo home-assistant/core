@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "file_not_found": "Den angitte `.knxkeys`-filen ble ikke funnet i banen config/.storage/knx/",
             "invalid_backbone_key": "Ugyldig ryggradsn\u00f8kkel. 32 heksadesimale tall forventet.",
             "invalid_individual_address": "Verdien samsvarer ikke med m\u00f8nsteret for individuelle KNX-adresser.\n 'area.line.device'",
             "invalid_ip_address": "Ugyldig IPv4-adresse.",
-            "invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "keyfile_invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "keyfile_no_backbone_key": "`.knxkeys`-filen inneholder ikke en ryggradsn\u00f8kkel for sikker ruting.",
             "keyfile_no_tunnel_for_host": "`.knxkeys`-filen inneholder ikke legitimasjon for vert ` {host} `.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "file_not_found": "Den angitte `.knxkeys`-filen ble ikke funnet i banen config/.storage/knx/",
             "invalid_backbone_key": "Ugyldig ryggradsn\u00f8kkel. 32 heksadesimale tall forventet.",
             "invalid_individual_address": "Verdien samsvarer ikke med m\u00f8nsteret for individuelle KNX-adresser.\n 'area.line.device'",
             "invalid_ip_address": "Ugyldig IPv4-adresse.",
-            "invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "keyfile_invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil.",
             "keyfile_no_backbone_key": "`.knxkeys`-filen inneholder ikke en ryggradsn\u00f8kkel for sikker ruting.",
             "keyfile_no_tunnel_for_host": "`.knxkeys`-filen inneholder ikke legitimasjon for vert ` {host} `.",

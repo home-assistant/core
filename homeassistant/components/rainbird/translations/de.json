@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "timeout_connect": "Zeit\u00fcberschreitung beim Verbindungsaufbau"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort"
+                },
+                "description": "Bitte gib die LNK-WLAN-Modulinformationen f\u00fcr dein Rain Bird-Ger\u00e4t ein.",
+                "title": "Rain Bird konfigurieren"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Die Konfiguration von Rain Bird in configuration.yaml wird in Home Assistant 2023.4 entfernt. \n\nDeine Konfiguration wurde automatisch in die Benutzeroberfl\u00e4che importiert, jedoch werden standardm\u00e4\u00dfige Beregnungszeiten pro Zone nicht mehr unterst\u00fctzt. Entferne die Rain Bird YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Rain Bird YAML-Konfiguration wird entfernt"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "duration": "Standard-Bew\u00e4sserungszeit in Minuten"
+                },
+                "title": "Rain Bird konfigurieren"
+            }
+        }
+    }
+}

@@ -209,12 +209,12 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await async_check_credentials(self.hass, self.host, user_input)
             except (ApiError, AuthFailed, ClientConnectorError, asyncio.TimeoutError):
                 return self.async_abort(reason="reauth_unsuccessful")
-            else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry, data={**user_input, CONF_HOST: self.host}
-                )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+
+            self.hass.config_entries.async_update_entry(
+                self.entry, data={**user_input, CONF_HOST: self.host}
+            )
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",

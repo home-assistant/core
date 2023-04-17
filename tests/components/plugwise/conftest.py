@@ -248,6 +248,31 @@ def mock_smile_p1() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
+def mock_smile_p1_2() -> Generator[None, MagicMock, None]:
+    """Create a Mock P1 3-phase DSMR environment for testing exceptions."""
+    chosen_env = "p1v4_3ph"
+    with patch(
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
+    ) as smile_mock:
+        smile = smile_mock.return_value
+
+        smile.gateway_id = "03e65b16e4b247a29ae0d75a78cb492e"
+        smile.heater_id = None
+        smile.smile_version = "4.4.2"
+        smile.smile_type = "power"
+        smile.smile_hostname = "smile98765"
+        smile.smile_model = "Gateway"
+        smile.smile_name = "Smile P1"
+
+        smile.connect.return_value = True
+
+        smile.notifications = _read_json(chosen_env, "notifications")
+        smile.async_update.return_value = _read_json(chosen_env, "all_data")
+
+        yield smile
+
+
+@pytest.fixture
 def mock_stretch() -> Generator[None, MagicMock, None]:
     """Create a Mock Stretch environment for testing exceptions."""
     chosen_env = "stretch_v31"

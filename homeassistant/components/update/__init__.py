@@ -326,16 +326,16 @@ class UpdateEntity(RestoreEntity):
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
 
-        This is suitable for a long changelog that does not fit in the release_summary property.
-        The returned string can contain markdown.
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
         """
         return await self.hass.async_add_executor_job(self.release_notes)
 
     def release_notes(self) -> str | None:
         """Return full release notes.
 
-        This is suitable for a long changelog that does not fit in the release_summary property.
-        The returned string can contain markdown.
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
         """
         raise NotImplementedError()
 

@@ -13,6 +13,10 @@
       "pairing": {
         "title": "webOS TV Pairing",
         "description": "Click submit and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
+      },
+      "reauth_confirm": {
+        "title": "webOS TV Pairing",
+        "description": "Click submit and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
       }
     },
     "error": {
@@ -21,7 +25,9 @@
     "abort": {
       "error_pairing": "Connected to LG webOS TV but not paired",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please turn on your TV and try again."
     }
   },
   "options": {
@@ -35,7 +41,6 @@
       }
     },
     "error": {
-      "script_not_found": "Script not found",
       "cannot_retrieve": "Unable to retrieve the list of sources. Make sure device is switched on"
     }
   },

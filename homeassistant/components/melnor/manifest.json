@@ -1,11 +1,11 @@
 {
-  "after_dependencies": ["bluetooth"],
   "bluetooth": [
     {
       "manufacturer_data_start": [89],
       "manufacturer_id": 13
     }
   ],
+  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@vanstinator"],
   "config_flow": true,
   "domain": "melnor",

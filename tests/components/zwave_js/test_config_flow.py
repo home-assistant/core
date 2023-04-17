@@ -536,6 +536,7 @@ async def test_abort_hassio_discovery_for_other_addon(
 async def test_usb_discovery(
     hass,
     supervisor,
+    addon_not_installed,
     install_addon,
     addon_options,
     get_addon_discovery_info,

@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "p\u00e4eva",
+                "h": "tundi",
+                "min": "minutit",
+                "s": "sekundit"
+            }
+        }
+    },
     "title": "Tuletisandur"
 }

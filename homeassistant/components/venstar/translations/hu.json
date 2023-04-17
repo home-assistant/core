@@ -19,5 +19,18 @@
                 "title": "Csatlakoz\u00e1s a Venstar termoszt\u00e1thoz"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "Nappal",
+                    "evening": "Este",
+                    "inactive": "Inakt\u00edv",
+                    "morning": "Reggel",
+                    "night": "\u00c9jszaka"
+                }
+            }
+        }
     }
 }

@@ -13,9 +13,22 @@
         "sensor": {
             "phase": {
                 "state": {
-                    "full_moon": "Volle maan"
+                    "first_quarter": "Eerste kwartier",
+                    "full_moon": "Volle maan",
+                    "last_quarter": "Laatste kwartier",
+                    "new_moon": "Nieuwe maan",
+                    "waning_crescent": "Afnemende, sikkelvormige maan",
+                    "waning_gibbous": "Afnemende maan",
+                    "waxing_crescent": "Wassende, sikkelvormige maan",
+                    "waxing_gibbous": "Wassende maan"
                 }
             }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Instellen van `moon` via YAML is niet langer een mogelijkheid.\n\nDe bestaande YAML configuratie wordt niet gebruikt door Home Assistant.\n\nVerwijder de YAML configuratie van je configuration.yaml bestand en herstart Home Assistant om dit probleem op te lossen.",
+            "title": "De `moon` YAML configuratie is verwijderd"
         }
     },
     "title": "Maan"

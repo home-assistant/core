@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Kan de lijst met bronnen niet ophalen. Zorg ervoor dat het apparaat is ingeschakeld",
-            "script_not_found": "Script niet gevonden"
+            "cannot_retrieve": "Kan de lijst met bronnen niet ophalen. Zorg ervoor dat het apparaat is ingeschakeld"
         },
         "step": {
             "init": {

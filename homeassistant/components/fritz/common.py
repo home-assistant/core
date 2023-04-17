@@ -34,7 +34,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     update_coordinator,
 )
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import dt as dt_util
 
@@ -302,10 +302,12 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
         """Event specific per FRITZ!Box entry to signal updates in devices."""
         return f"{DOMAIN}-device-update-{self._unique_id}"
 
-    def _update_hosts_info(self) -> list[HostInfo]:
+    async def _async_update_hosts_info(self) -> list[HostInfo]:
         """Retrieve latest hosts information from the FRITZ!Box."""
         try:
-            return self.fritz_hosts.get_hosts_info()  # type: ignore [no-any-return]
+            return await self.hass.async_add_executor_job(
+                self.fritz_hosts.get_hosts_info
+            )
         except Exception as ex:  # pylint: disable=[broad-except]
             if not self.hass.is_stopping:
                 raise HomeAssistantError("Error refreshing hosts info") from ex
@@ -318,14 +320,22 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
         release_url = info.get("NewX_AVM-DE_InfoURL")
         return bool(version), version, release_url
 
-    def _get_wan_access(self, ip_address: str) -> bool | None:
+    async def _async_update_device_info(self) -> tuple[bool, str | None, str | None]:
+        """Retrieve latest device information from the FRITZ!Box."""
+        return await self.hass.async_add_executor_job(self._update_device_info)
+
+    async def _async_get_wan_access(self, ip_address: str) -> bool | None:
         """Get WAN access rule for given IP address."""
         try:
-            return not self.connection.call_action(
-                "X_AVM-DE_HostFilter:1",
-                "GetWANAccessByIP",
-                NewIPv4Address=ip_address,
-            ).get("NewDisallow")
+            wan_access = await self.hass.async_add_executor_job(
+                partial(
+                    self.connection.call_action,
+                    "X_AVM-DE_HostFilter:1",
+                    "GetWANAccessByIP",
+                    NewIPv4Address=ip_address,
+                )
+            )
+            return not wan_access.get("NewDisallow")
         except FRITZ_EXCEPTIONS as ex:
             _LOGGER.debug(
                 (
@@ -336,10 +346,6 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
                 ex,
             )
             return None
-
-    async def async_scan_devices(self, now: datetime | None = None) -> None:
-        """Wrap up FritzboxTools class scan."""
-        await self.hass.async_add_executor_job(self.scan_devices, now)
 
     def manage_device_info(
         self, dev_info: Device, dev_mac: str, consider_home: bool
@@ -356,13 +362,13 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
         self._devices[dev_mac] = device
         return True
 
-    def send_signal_device_update(self, new_device: bool) -> None:
+    async def async_send_signal_device_update(self, new_device: bool) -> None:
         """Signal device data updated."""
-        dispatcher_send(self.hass, self.signal_device_update)
+        async_dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
-            dispatcher_send(self.hass, self.signal_device_new)
+            async_dispatcher_send(self.hass, self.signal_device_new)
 
-    def scan_devices(self, now: datetime | None = None) -> None:
+    async def async_scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
 
         if self.hass.is_stopping:
@@ -374,7 +380,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
             self._update_available,
             self._latest_firmware,
             self._release_url,
-        ) = self._update_device_info()
+        ) = await self._async_update_device_info()
 
         _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
@@ -387,7 +393,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
 
         new_device = False
         hosts = {}
-        for host in self._update_hosts_info():
+        for host in await self._async_update_hosts_info():
             if not host.get("mac"):
                 continue
 
@@ -411,14 +417,18 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
             self.mesh_role = MeshRoles.NONE
             for mac, info in hosts.items():
                 if info.ip_address:
-                    info.wan_access = self._get_wan_access(info.ip_address)
+                    info.wan_access = await self._async_get_wan_access(info.ip_address)
                 if self.manage_device_info(info, mac, consider_home):
                     new_device = True
-            self.send_signal_device_update(new_device)
+            await self.async_send_signal_device_update(new_device)
             return
 
         try:
-            if not (topology := self.fritz_hosts.get_mesh_topology()):
+            if not (
+                topology := await self.hass.async_add_executor_job(
+                    self.fritz_hosts.get_mesh_topology
+                )
+            ):
                 raise Exception("Mesh supported but empty topology reported")
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE
@@ -457,7 +467,9 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
                 dev_info: Device = hosts[dev_mac]
 
                 if dev_info.ip_address:
-                    dev_info.wan_access = self._get_wan_access(dev_info.ip_address)
+                    dev_info.wan_access = await self._async_get_wan_access(
+                        dev_info.ip_address
+                    )
 
                 for link in interf["node_links"]:
                     intf = mesh_intf.get(link["node_interface_1_uid"])
@@ -472,7 +484,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
                 if self.manage_device_info(dev_info, dev_mac, consider_home):
                     new_device = True
 
-        self.send_signal_device_update(new_device)
+        await self.async_send_signal_device_update(new_device)
 
     async def async_trigger_firmware_update(self) -> bool:
         """Trigger firmware update."""
@@ -615,7 +627,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
 class AvmWrapper(FritzBoxTools):
     """Setup AVM wrapper for API calls."""
 
-    def _service_call_action(
+    async def _async_service_call(
         self,
         service_name: str,
         service_suffix: str,
@@ -632,10 +644,13 @@ class AvmWrapper(FritzBoxTools):
             return {}
 
         try:
-            result: dict = self.connection.call_action(
-                f"{service_name}:{service_suffix}",
-                action_name,
-                **kwargs,
+            result: dict = await self.hass.async_add_executor_job(
+                partial(
+                    self.connection.call_action,
+                    f"{service_name}:{service_suffix}",
+                    action_name,
+                    **kwargs,
+                )
             )
             return result
         except FritzSecurityError:
@@ -666,13 +681,15 @@ class AvmWrapper(FritzBoxTools):
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
         """Call X_AVM-DE_UPnP service."""
 
-        return await self.hass.async_add_executor_job(self.get_upnp_configuration)
+        return await self._async_service_call("X_AVM-DE_UPnP", "1", "GetInfo")
 
     async def async_get_wan_link_properties(self) -> dict[str, Any]:
         """Call WANCommonInterfaceConfig service."""
 
-        return await self.hass.async_add_executor_job(
-            partial(self.get_wan_link_properties)
+        return await self._async_service_call(
+            "WANCommonInterfaceConfig",
+            "1",
+            "GetCommonLinkProperties",
         )
 
     async def async_ipv6_active(self) -> bool:
@@ -703,34 +720,49 @@ class AvmWrapper(FritzBoxTools):
         )
         return connection_info
 
+    async def async_get_num_port_mapping(self, con_type: str) -> dict[str, Any]:
+        """Call GetPortMappingNumberOfEntries action."""
+
+        return await self._async_service_call(
+            con_type, "1", "GetPortMappingNumberOfEntries"
+        )
+
     async def async_get_port_mapping(self, con_type: str, index: int) -> dict[str, Any]:
         """Call GetGenericPortMappingEntry action."""
 
-        return await self.hass.async_add_executor_job(
-            partial(self.get_port_mapping, con_type, index)
+        return await self._async_service_call(
+            con_type, "1", "GetGenericPortMappingEntry", NewPortMappingIndex=index
         )
 
     async def async_get_wlan_configuration(self, index: int) -> dict[str, Any]:
         """Call WLANConfiguration service."""
 
-        return await self.hass.async_add_executor_job(
-            partial(self.get_wlan_configuration, index)
+        return await self._async_service_call(
+            "WLANConfiguration", str(index), "GetInfo"
+        )
+
+    async def async_get_ontel_num_deflections(self) -> dict[str, Any]:
+        """Call GetNumberOfDeflections action from X_AVM-DE_OnTel service."""
+
+        return await self._async_service_call(
+            "X_AVM-DE_OnTel", "1", "GetNumberOfDeflections"
         )
 
     async def async_get_ontel_deflections(self) -> dict[str, Any]:
         """Call GetDeflections action from X_AVM-DE_OnTel service."""
 
-        return await self.hass.async_add_executor_job(
-            partial(self.get_ontel_deflections)
-        )
+        return await self._async_service_call("X_AVM-DE_OnTel", "1", "GetDeflections")
 
     async def async_set_wlan_configuration(
         self, index: int, turn_on: bool
     ) -> dict[str, Any]:
         """Call SetEnable action from WLANConfiguration service."""
 
-        return await self.hass.async_add_executor_job(
-            partial(self.set_wlan_configuration, index, turn_on)
+        return await self._async_service_call(
+            "WLANConfiguration",
+            str(index),
+            "SetEnable",
+            NewEnable="1" if turn_on else "0",
         )
 
     async def async_set_deflection_enable(
@@ -738,94 +770,7 @@ class AvmWrapper(FritzBoxTools):
     ) -> dict[str, Any]:
         """Call SetDeflectionEnable service."""
 
-        return await self.hass.async_add_executor_job(
-            partial(self.set_deflection_enable, index, turn_on)
-        )
-
-    async def async_add_port_mapping(
-        self, con_type: str, port_mapping: Any
-    ) -> dict[str, Any]:
-        """Call AddPortMapping service."""
-
-        return await self.hass.async_add_executor_job(
-            partial(
-                self.add_port_mapping,
-                con_type,
-                port_mapping,
-            )
-        )
-
-    async def async_set_allow_wan_access(
-        self, ip_address: str, turn_on: bool
-    ) -> dict[str, Any]:
-        """Call X_AVM-DE_HostFilter service."""
-
-        return await self.hass.async_add_executor_job(
-            partial(self.set_allow_wan_access, ip_address, turn_on)
-        )
-
-    def get_upnp_configuration(self) -> dict[str, Any]:
-        """Call X_AVM-DE_UPnP service."""
-
-        return self._service_call_action("X_AVM-DE_UPnP", "1", "GetInfo")
-
-    def get_ontel_num_deflections(self) -> dict[str, Any]:
-        """Call GetNumberOfDeflections action from X_AVM-DE_OnTel service."""
-
-        return self._service_call_action(
-            "X_AVM-DE_OnTel", "1", "GetNumberOfDeflections"
-        )
-
-    def get_ontel_deflections(self) -> dict[str, Any]:
-        """Call GetDeflections action from X_AVM-DE_OnTel service."""
-
-        return self._service_call_action("X_AVM-DE_OnTel", "1", "GetDeflections")
-
-    def get_default_connection(self) -> dict[str, Any]:
-        """Call Layer3Forwarding service."""
-
-        return self._service_call_action(
-            "Layer3Forwarding", "1", "GetDefaultConnectionService"
-        )
-
-    def get_num_port_mapping(self, con_type: str) -> dict[str, Any]:
-        """Call GetPortMappingNumberOfEntries action."""
-
-        return self._service_call_action(con_type, "1", "GetPortMappingNumberOfEntries")
-
-    def get_port_mapping(self, con_type: str, index: int) -> dict[str, Any]:
-        """Call GetGenericPortMappingEntry action."""
-
-        return self._service_call_action(
-            con_type, "1", "GetGenericPortMappingEntry", NewPortMappingIndex=index
-        )
-
-    def get_wlan_configuration(self, index: int) -> dict[str, Any]:
-        """Call WLANConfiguration service."""
-
-        return self._service_call_action("WLANConfiguration", str(index), "GetInfo")
-
-    def get_wan_link_properties(self) -> dict[str, Any]:
-        """Call WANCommonInterfaceConfig service."""
-
-        return self._service_call_action(
-            "WANCommonInterfaceConfig", "1", "GetCommonLinkProperties"
-        )
-
-    def set_wlan_configuration(self, index: int, turn_on: bool) -> dict[str, Any]:
-        """Call SetEnable action from WLANConfiguration service."""
-
-        return self._service_call_action(
-            "WLANConfiguration",
-            str(index),
-            "SetEnable",
-            NewEnable="1" if turn_on else "0",
-        )
-
-    def set_deflection_enable(self, index: int, turn_on: bool) -> dict[str, Any]:
-        """Call SetDeflectionEnable service."""
-
-        return self._service_call_action(
+        return await self._async_service_call(
             "X_AVM-DE_OnTel",
             "1",
             "SetDeflectionEnable",
@@ -833,17 +778,24 @@ class AvmWrapper(FritzBoxTools):
             NewEnable="1" if turn_on else "0",
         )
 
-    def add_port_mapping(self, con_type: str, port_mapping: Any) -> dict[str, Any]:
+    async def async_add_port_mapping(
+        self, con_type: str, port_mapping: Any
+    ) -> dict[str, Any]:
         """Call AddPortMapping service."""
 
-        return self._service_call_action(
-            con_type, "1", "AddPortMapping", **port_mapping
+        return await self._async_service_call(
+            con_type,
+            "1",
+            "AddPortMapping",
+            **port_mapping,
         )
 
-    def set_allow_wan_access(self, ip_address: str, turn_on: bool) -> dict[str, Any]:
+    async def async_set_allow_wan_access(
+        self, ip_address: str, turn_on: bool
+    ) -> dict[str, Any]:
         """Call X_AVM-DE_HostFilter service."""
 
-        return self._service_call_action(
+        return await self._async_service_call(
             "X_AVM-DE_HostFilter",
             "1",
             "DisallowWANAccessByIP",

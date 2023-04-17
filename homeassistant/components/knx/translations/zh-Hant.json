@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "file_not_found": "\u8def\u5f91 config/.storage/knx/ \u5167\u627e\u4e0d\u5230\u6307\u5b9a `.knxkeys` \u6a94\u6848",
             "invalid_backbone_key": "Backbone \u91d1\u9470\u7121\u6548\u3002\u61c9\u70ba 32 \u500b\u5341\u516d\u9032\u4f4d\u6578\u5b57\u3002",
             "invalid_individual_address": "\u6578\u503c\u8207 KNX \u500b\u5225\u4f4d\u5740\u4e0d\u76f8\u7b26\u3002\n'area.line.device'",
             "invalid_ip_address": "IPv4 \u4f4d\u5740\u7121\u6548\u3002",
-            "invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
             "keyfile_invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
             "keyfile_no_backbone_key": "`.knxkeys` \u6a94\u6848\u672a\u5305\u542b\u7528\u65bc\u52a0\u5bc6\u8def\u7531\u7684\u9aa8\u5e79\u91d1\u9470\u3002",
             "keyfile_no_tunnel_for_host": "`.knxkeys` \u6a94\u6848\u672a\u5305\u542b\u4e3b\u6a5f `{host}` \u6191\u8b49\u3002",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "file_not_found": "\u8def\u5f91 config/.storage/knx/ \u5167\u627e\u4e0d\u5230\u6307\u5b9a `.knxkeys` \u6a94\u6848",
             "invalid_backbone_key": "Backbone \u91d1\u9470\u7121\u6548\u3002\u61c9\u70ba 32 \u500b\u5341\u516d\u9032\u4f4d\u6578\u5b57\u3002",
             "invalid_individual_address": "\u6578\u503c\u8207 KNX \u500b\u5225\u4f4d\u5740\u4e0d\u76f8\u7b26\u3002\n'area.line.device'",
             "invalid_ip_address": "IPv4 \u4f4d\u5740\u7121\u6548\u3002",
-            "invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
             "keyfile_invalid_signature": "\u52a0\u5bc6 `.knxkeys` \u6a94\u6848\u5bc6\u78bc\u932f\u8aa4\u3002",
             "keyfile_no_backbone_key": "`.knxkeys` \u6a94\u6848\u672a\u5305\u542b\u7528\u65bc\u52a0\u5bc6\u8def\u7531\u7684\u9aa8\u5e79\u91d1\u9470\u3002",
             "keyfile_no_tunnel_for_host": "`.knxkeys` \u6a94\u6848\u672a\u5305\u542b\u4e3b\u6a5f `{host}` \u6191\u8b49\u3002",

@@ -144,8 +144,10 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     await setup_test_entities(
         hass,
         {
-            "command": 'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
-                \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }',
+            "command": (
+                'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
+                '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+            ),
             "json_attributes": ["key", "another_key", "key_three"],
         },
     )
@@ -218,8 +220,10 @@ async def test_update_with_missing_json_attrs(
     await setup_test_entities(
         hass,
         {
-            "command": 'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
-                \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }',
+            "command": (
+                'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
+                '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+            ),
             "json_attributes": ["key", "another_key", "key_three", "missing_key"],
         },
     )
@@ -239,8 +243,10 @@ async def test_update_with_unnecessary_json_attrs(
     await setup_test_entities(
         hass,
         {
-            "command": 'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
-                \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }',
+            "command": (
+                'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
+                '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+            ),
             "json_attributes": ["key", "another_key"],
         },
     )

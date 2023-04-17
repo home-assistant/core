@@ -1,6 +1,5 @@
 """Test pushbullet integration."""
-from collections.abc import Awaitable
-from typing import Callable
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
 import aiohttp

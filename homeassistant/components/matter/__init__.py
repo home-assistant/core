@@ -69,8 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             "Unknown error connecting to the Matter server"
         ) from err
-    else:
-        async_delete_issue(hass, DOMAIN, "invalid_server_version")
+
+    async_delete_issue(hass, DOMAIN, "invalid_server_version")
 
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""

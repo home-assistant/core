@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Actualitzat m\u00e9s recentment",
+                "max": "M\u00e0xim",
+                "mean": "Mitjana aritm\u00e8tica",
+                "median": "Mitjana",
+                "min": "M\u00ednim",
+                "range": "Rang estad\u00edstic",
+                "sum": "Suma"
+            }
+        }
+    },
     "title": "Combina l'estat de diversos sensors"
 }

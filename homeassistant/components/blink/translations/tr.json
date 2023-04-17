@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "\u0130ki ad\u0131ml\u0131 kimlik do\u011frulama kodu"
                 },
-                "description": "E-postan\u0131za g\u00f6nderilen PIN kodunu girin",
+                "description": "E-posta veya SMS yoluyla g\u00f6nderilen PIN'i girin",
                 "title": "\u0130ki fakt\u00f6rl\u00fc kimlik do\u011frulama"
             },
             "user": {

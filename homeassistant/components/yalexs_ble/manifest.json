@@ -3,8 +3,8 @@
   "name": "Yale Access Bluetooth",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yalexs_ble",
-  "requirements": ["yalexs-ble==1.12.5"],
-  "dependencies": ["bluetooth"],
+  "requirements": ["yalexs-ble==1.12.8"],
+  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@bdraco"],
   "bluetooth": [
     {

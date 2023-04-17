@@ -11,7 +11,7 @@
         "flow_title": "{name} - {model} ({ip_address})",
         "step": {
             "discovery_confirm": {
-                "description": "{name} - {model} ( {ip_address} ) kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} - {model} ( {ip_address} ) kurmak istiyor musunuz?"
             },
             "user": {
                 "data": {

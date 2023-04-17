@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "file_not_found": "Die angegebene `.knxkeys` Datei wurde im Pfad config/.storage/knx/ nicht gefunden.",
             "invalid_backbone_key": "Ung\u00fcltiger Backbone-Schl\u00fcssel. 32 Hexadezimalzahlen erwartet.",
             "invalid_individual_address": "Wert ist keine g\u00fcltige physikalische Adresse. 'Bereich.Linie.Teilnehmer'",
             "invalid_ip_address": "Ung\u00fcltige IPv4 Adresse.",
-            "invalid_signature": "Das Passwort zum Entschl\u00fcsseln der `.knxkeys` Datei ist ung\u00fcltig.",
             "keyfile_invalid_signature": "Das Passwort f\u00fcr die `.knxkeys` Datei ist falsch.",
             "keyfile_no_backbone_key": "Die `.knxkeys` Datei enth\u00e4lt keinen Backbone-Schl\u00fcssel f\u00fcr Secure Routing.",
             "keyfile_no_tunnel_for_host": "Die `.knxkeys` Datei enth\u00e4lt keine Verbindungsinformationen f\u00fcr Host `{host}`.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "file_not_found": "Die angegebene `.knxkeys` Datei wurde im Pfad config/.storage/knx/ nicht gefunden.",
             "invalid_backbone_key": "Ung\u00fcltiger Backbone-Schl\u00fcssel. 32 Hexadezimalzahlen erwartet.",
             "invalid_individual_address": "Wert ist keine g\u00fcltige physikalische Adresse. 'Bereich.Linie.Teilnehmer'",
             "invalid_ip_address": "Ung\u00fcltige IPv4 Adresse.",
-            "invalid_signature": "Das Passwort zum Entschl\u00fcsseln der `.knxkeys` Datei ist ung\u00fcltig.",
             "keyfile_invalid_signature": "Das Passwort f\u00fcr die `.knxkeys` Datei ist falsch.",
             "keyfile_no_backbone_key": "Die `.knxkeys` Datei enth\u00e4lt keinen Backbone-Schl\u00fcssel f\u00fcr Secure Routing.",
             "keyfile_no_tunnel_for_host": "Die `.knxkeys` Datei enth\u00e4lt keine Verbindungsinformationen f\u00fcr Host `{host}`.",

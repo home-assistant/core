@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "file_not_found": "Il file `.knxkeys` specificato non \u00e8 stato trovato nel percorso config/.storage/knx/",
             "invalid_backbone_key": "Chiave backbone non valida. Previsti 32 numeri esadecimali.",
             "invalid_individual_address": "Il valore non corrisponde al modello per l'indirizzo individuale KNX. 'area.line.device'",
             "invalid_ip_address": "Indirizzo IPv4 non valido.",
-            "invalid_signature": "La password per decifrare il file `.knxkeys` \u00e8 errata.",
             "keyfile_invalid_signature": "La password per decifrare il file `.knxkeys` \u00e8 errata.",
             "keyfile_no_backbone_key": "Il file `.knxkeys` non contiene una chiave backbone per l'instradamento sicuro.",
             "keyfile_no_tunnel_for_host": "Il file `.knxkeys` non contiene le credenziali per l'host `{host}`.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "file_not_found": "Il file `.knxkeys` specificato non \u00e8 stato trovato nel percorso config/.storage/knx/",
             "invalid_backbone_key": "Chiave backbone non valida. Previsti 32 numeri esadecimali.",
             "invalid_individual_address": "Il valore non corrisponde al modello per l'indirizzo individuale KNX. 'area.line.device'",
             "invalid_ip_address": "Indirizzo IPv4 non valido.",
-            "invalid_signature": "La password per decifrare il file `.knxkeys` \u00e8 errata.",
             "keyfile_invalid_signature": "La password per decifrare il file `.knxkeys` \u00e8 errata.",
             "keyfile_no_backbone_key": "Il file `.knxkeys` non contiene una chiave backbone per l'instradamento sicuro.",
             "keyfile_no_tunnel_for_host": "Il file `.knxkeys` non contiene le credenziali per l'host `{host}`.",

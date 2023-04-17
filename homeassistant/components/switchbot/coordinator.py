@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import async_timeout
 import switchbot
@@ -25,9 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_STARTUP_TIMEOUT = 30
 
 
-class SwitchbotDataUpdateCoordinator(
-    ActiveBluetoothDataUpdateCoordinator[dict[str, Any]]
-):
+class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
     """Class to manage fetching switchbot data."""
 
     def __init__(
@@ -79,9 +77,9 @@ class SwitchbotDataUpdateCoordinator(
 
     async def _async_update(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
-    ) -> dict[str, Any]:
+    ) -> None:
         """Poll the device."""
-        return await self.device.update()
+        await self.device.update()
 
     @callback
     def _async_handle_unavailable(

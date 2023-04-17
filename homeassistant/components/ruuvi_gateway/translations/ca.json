@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3 (adre\u00e7a IP o nom del DNS)",
+                    "token": "Token del portador (configurat durant la configuraci\u00f3 de la passarel\u00b7la)"
+                }
+            }
+        }
+    }
+}

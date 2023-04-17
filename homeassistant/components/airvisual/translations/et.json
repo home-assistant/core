@@ -30,14 +30,6 @@
                 "description": "Kasuta AirVisual pilve API-t linna/osariigi/riigi j\u00e4lgimiseks.",
                 "title": "Seadista Geography sidumine"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "\u00dcksuse IP-aadress / hostinimi",
-                    "password": "Salas\u00f5na"
-                },
-                "description": "J\u00e4lgige isiklikku AirVisual-seadet. Parooli saab hankida seadme kasutajaliidese kaudu.",
-                "title": "Seadistage AirVisual Node / Pro"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API v\u00f5ti"

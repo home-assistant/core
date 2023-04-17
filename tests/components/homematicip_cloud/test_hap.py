@@ -23,6 +23,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .helper import HAPID, HAPPIN
 
+from tests.common import MockConfigEntry
+
 
 async def test_auth_setup(hass):
     """Test auth setup for client registration."""
@@ -71,18 +73,19 @@ async def test_auth_auth_check_and_register_with_exception(hass):
         assert await hmip_auth.async_register() is False
 
 
-async def test_hap_setup_works():
+async def test_hap_setup_works(hass):
     """Test a successful setup of a accesspoint."""
-    hass = Mock()
-    entry = Mock()
+    # This test should not be accessing the integration internals
+    entry = MockConfigEntry(
+        domain=HMIPC_DOMAIN,
+        data={HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"},
+    )
     home = Mock()
-    entry.data = {HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"}
     hap = HomematicipHAP(hass, entry)
     with patch.object(hap, "get_hap", return_value=home):
         assert await hap.async_setup()
 
     assert hap.home is home
-    assert len(hass.config_entries.async_setup_platforms.mock_calls) == 1
 
 
 async def test_hap_setup_connection_error():

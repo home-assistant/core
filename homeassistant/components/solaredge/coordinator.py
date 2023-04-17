@@ -24,7 +24,7 @@ from .const import (
 class SolarEdgeDataService(ABC):
     """Get and update the latest data."""
 
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[None]
 
     def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
         """Initialize the data object."""

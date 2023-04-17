@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
         "error": {
             "cannot_connect": "\u00dchendus nurjus"
         },

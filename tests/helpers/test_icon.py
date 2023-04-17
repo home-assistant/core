@@ -16,7 +16,7 @@ def test_battery_icon():
 
     iconbase = "mdi:battery"
     for level in range(0, 100, 5):
-        print(
+        print(  # noqa: T201
             "Level: %d. icon: %s, charging: %s"
             % (
                 level,

@@ -71,5 +71,14 @@
                 "description": "Skanowanie Bluetooth mo\u017ce by\u0107 aktywne lub pasywne. Gdy jest aktywne, Shelly \u017c\u0105da danych z pobliskich urz\u0105dze\u0144; z pasywnym Shelly otrzymuje niechciane dane z pobliskich urz\u0105dze\u0144."
             }
         }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "aktywny",
+                "disabled": "wy\u0142\u0105czony",
+                "passive": "pasywny"
+            }
+        }
     }
 }

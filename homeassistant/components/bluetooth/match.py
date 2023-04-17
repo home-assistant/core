@@ -282,7 +282,10 @@ class BluetoothMatcherIndex(BluetoothMatcherIndexBase[BluetoothMatcher]):
 class BluetoothCallbackMatcherIndex(
     BluetoothMatcherIndexBase[BluetoothCallbackMatcherWithCallback]
 ):
-    """Bluetooth matcher for the bluetooth integration that supports matching on addresses."""
+    """Bluetooth matcher for the bluetooth integration.
+
+    Supports matching on addresses.
+    """
 
     def __init__(self) -> None:
         """Initialize the matcher index."""

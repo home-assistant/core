@@ -1,5 +1,5 @@
 """Tests for pylint hass_imports plugin."""
-# pylint:disable=protected-access
+
 from __future__ import annotations
 
 import astroid

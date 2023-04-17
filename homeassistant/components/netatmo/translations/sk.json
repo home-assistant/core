@@ -36,7 +36,7 @@
             "person": "{entity_name} rozpoznala osobu",
             "person_away": "{entity_name} zistila, \u017ee osoba odi\u0161la",
             "set_point": "Cie\u013eov\u00e1 teplota {entity_name} nastaven\u00e1 manu\u00e1lne",
-            "therm_mode": "{entity_name} prepnut\u00e9 na \u201e{subtype}\u201c",
+            "therm_mode": "{entity_name} prepnut\u00e9 na \"{subtype}\"",
             "turned_off": "{entity_name} vypnut\u00e1",
             "turned_on": "{entity_name} zapnut\u00e1",
             "vehicle": "{entity_name} rozpoznal vozidlo"

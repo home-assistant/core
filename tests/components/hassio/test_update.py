@@ -542,8 +542,8 @@ async def test_setting_up_core_update_when_addon_fails(hass, caplog):
             "hassio",
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
-        assert result
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
+    assert result
 
     # Verify that the core update entity does exist
     state = hass.states.get("update.home_assistant_core_update")

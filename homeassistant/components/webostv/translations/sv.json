@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Det gick inte att h\u00e4mta k\u00e4lllistan. Se till att enheten \u00e4r p\u00e5slagen",
-            "script_not_found": "Skriptet hittades inte"
+            "cannot_retrieve": "Det gick inte att h\u00e4mta k\u00e4lllistan. Se till att enheten \u00e4r p\u00e5slagen"
         },
         "step": {
             "init": {

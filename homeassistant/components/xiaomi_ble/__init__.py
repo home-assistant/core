@@ -8,6 +8,7 @@ from xiaomi_ble.parser import EncryptionScheme
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
+    DOMAIN as BLUETOOTH_DOMAIN,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
@@ -18,8 +19,9 @@ from homeassistant.components.bluetooth.active_update_processor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry, async_get
 
-from .const import DOMAIN
+from .const import DOMAIN, XIAOMI_BLE_EVENT, XiaomiBleEvent
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -31,9 +33,35 @@ def process_service_info(
     entry: config_entries.ConfigEntry,
     data: XiaomiBluetoothDeviceData,
     service_info: BluetoothServiceInfoBleak,
+    device_registry: DeviceRegistry,
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     update = data.update(service_info)
+    if update.events:
+        address = service_info.device.address
+        for device_key, event in update.events.items():
+            sensor_device_info = update.devices[device_key.device_id]
+            device = device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(BLUETOOTH_DOMAIN, address)},
+                manufacturer=sensor_device_info.manufacturer,
+                model=sensor_device_info.model,
+                name=sensor_device_info.name,
+                sw_version=sensor_device_info.sw_version,
+                hw_version=sensor_device_info.hw_version,
+            )
+
+            hass.bus.async_fire(
+                XIAOMI_BLE_EVENT,
+                dict(
+                    XiaomiBleEvent(
+                        device_id=device.id,
+                        address=address,
+                        event_type=event.event_type,
+                        event_properties=event.event_properties,
+                    )
+                ),
+            )
 
     # If device isn't pending we know it has seen at least one broadcast with a payload
     # If that payload was encrypted and the bindkey was not verified then we need to reauth
@@ -91,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         return await data.async_poll(connectable_device)
 
+    device_registry = async_get(hass)
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
     ] = ActiveBluetoothProcessorCoordinator(
@@ -99,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         address=address,
         mode=BluetoothScanningMode.PASSIVE,
         update_method=lambda service_info: process_service_info(
-            hass, entry, data, service_info
+            hass, entry, data, service_info, device_registry
         ),
         needs_poll_method=_needs_poll,
         poll_method=_async_poll,

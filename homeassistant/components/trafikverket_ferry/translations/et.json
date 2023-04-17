@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "Reede",
+                "mon": "Esmasp\u00e4ev",
+                "sat": "Laup\u00e4ev",
+                "sun": "P\u00fchap\u00e4ev",
+                "thu": "Neljap\u00e4ev",
+                "tue": "Teisip\u00e4ev",
+                "wed": "Kolmap\u00e4ev"
+            }
+        }
     }
 }

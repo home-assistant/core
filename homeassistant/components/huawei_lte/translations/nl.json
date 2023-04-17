@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Geen Huawei LTE-apparaat",
-            "reauth_successful": "Herauthenticatie geslaagd"
+            "reauth_successful": "Herauthenticatie geslaagd",
+            "unsupported_device": "Niet-ondersteund apparaat"
         },
         "error": {
             "connection_timeout": "Time-out van de verbinding",

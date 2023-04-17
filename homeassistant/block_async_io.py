@@ -8,7 +8,9 @@ from .util.async_ import protect_loop
 def enable() -> None:
     """Enable the detection of blocking calls in the event loop."""
     # Prevent urllib3 and requests doing I/O in event loop
-    HTTPConnection.putrequest = protect_loop(HTTPConnection.putrequest)  # type: ignore[assignment]
+    HTTPConnection.putrequest = protect_loop(  # type: ignore[assignment]
+        HTTPConnection.putrequest
+    )
 
     # Prevent sleeping in event loop. Non-strict since 2022.02
     time.sleep = protect_loop(time.sleep, strict=False)

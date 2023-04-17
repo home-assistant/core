@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "api_not_enabled": "De API is niet ingeschakeld. Activeer API in de HomeWizard Energy App onder instellingen",
             "device_not_supported": "Dit apparaat wordt niet ondersteund",
             "invalid_discovery_parameters": "Niet-ondersteunde API-versie gedetecteerd",
             "reauth_successful": "De API is succesvol ingeschakeld",

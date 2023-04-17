@@ -6,7 +6,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.lock import DOMAIN, PLATFORM_SCHEMA, LockEntity
+from homeassistant.components.lock import (
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    LockEntity,
+    LockEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -100,6 +105,7 @@ class LockGroup(GroupEntity, LockEntity):
     ) -> None:
         """Initialize a lock group."""
         self._entity_ids = entity_ids
+        self._attr_supported_features = LockEntityFeature.OPEN
 
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}

@@ -127,7 +127,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Any, Optional, cast
+from typing import Any, cast
 import uuid
 
 from aiohttp import web
@@ -159,7 +159,7 @@ from . import indieauth, login_flow, mfa_setup_flow
 DOMAIN = "auth"
 
 StoreResultType = Callable[[str, Credentials], str]
-RetrieveResultType = Callable[[str, str], Optional[Credentials]]
+RetrieveResultType = Callable[[str, str], Credentials | None]
 
 
 @bind_hass

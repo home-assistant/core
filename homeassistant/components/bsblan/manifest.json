@@ -3,7 +3,7 @@
   "name": "BSB-Lan",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bsblan",
-  "requirements": ["python-bsblan==0.5.8"],
+  "requirements": ["python-bsblan==0.5.9"],
   "codeowners": ["@liudger"],
   "iot_class": "local_polling",
   "loggers": ["bsblan"]

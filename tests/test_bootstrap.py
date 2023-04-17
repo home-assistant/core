@@ -1,5 +1,5 @@
 """Test the bootstrapping."""
-# pylint: disable=protected-access
+
 import asyncio
 import glob
 import os

@@ -31,5 +31,16 @@
                 "title": "Wykryto drukark\u0119"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "bezczynny",
+                    "printing": "drukowanie",
+                    "stopped": "zatrzymane"
+                }
+            }
+        }
     }
 }

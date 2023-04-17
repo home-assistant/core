@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional, cast
+from typing import cast
 
 from whois import Domain
 
@@ -155,7 +155,7 @@ async def async_setup_entry(
 
 
 class WhoisSensorEntity(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[Domain]]], SensorEntity
+    CoordinatorEntity[DataUpdateCoordinator[Domain | None]], SensorEntity
 ):
     """Implementation of a WHOIS sensor."""
 

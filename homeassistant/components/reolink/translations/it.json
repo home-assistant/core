@@ -1,15 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "api_error": "Si \u00e8 verificato un errore API: {error}",
+            "api_error": "Si \u00e8 verificato un errore di API",
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "unknown": "Errore imprevisto: {error}"
+            "not_admin": "L'utente deve essere un amministratore, l'utente \"{username}\" ha il livello di autorizzazione \"{userlevel}\"",
+            "unknown": "Errore imprevisto"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "L'integrazione Reolink ha bisogno di riautenticare i dettagli della tua connessione",
+                "title": "Autentica nuovamente l'integrazione"
+            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -17,7 +23,8 @@
                     "port": "Porta",
                     "use_https": "Abilita HTTPS",
                     "username": "Nome utente"
-                }
+                },
+                "description": "{error}"
             }
         }
     },

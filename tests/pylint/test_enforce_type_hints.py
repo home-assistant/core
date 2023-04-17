@@ -1,5 +1,5 @@
 """Tests for pylint hass_enforce_type_hints plugin."""
-# pylint:disable=protected-access
+
 from __future__ import annotations
 
 import re

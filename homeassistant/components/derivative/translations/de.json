@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "Tage",
+                "h": "Stunden",
+                "min": "Minuten",
+                "s": "Sekunden"
+            }
+        }
+    },
     "title": "Ableitungssensor"
 }

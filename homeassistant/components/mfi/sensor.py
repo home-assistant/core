@@ -133,14 +133,14 @@ class MfiSensor(SensorEntity):
         try:
             tag = self._port.tag
         except ValueError:
-            return "State"
+            return None
 
         if tag == "temperature":
             return UnitOfTemperature.CELSIUS
         if tag == "active_pwr":
             return "Watts"
         if self._port.model == "Input Digital":
-            return "State"
+            return None
         return tag
 
     def update(self) -> None:

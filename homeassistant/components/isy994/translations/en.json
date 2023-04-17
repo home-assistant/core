@@ -32,6 +32,23 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`.",
+                        "title": "The {deprecated_service} service will be removed"
+                    },
+                    "deprecated_yaml": {
+                        "description": "Configuring Universal Devices ISY/IoX using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `isy994` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+                        "title": "The ISY/IoX YAML configuration is being removed"
+                    }
+                }
+            },
+            "title": "The {deprecated_service} service will be removed"
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -48,7 +48,6 @@
             "carbon_monoxide": "{entity_name} vingugaasi tase muutus",
             "current": "{entity_name} voolutugevus muutub",
             "data_rate": "{entity_name} andmeedastuskiirus muutub",
-            "data_size": "{entity_name} andmemahu muutused",
             "distance": "{entity_name} kaugus muutub",
             "energy": "{entity_name} v\u00f5imsus muutub",
             "frequency": "{entity_name} sagedus muutub",

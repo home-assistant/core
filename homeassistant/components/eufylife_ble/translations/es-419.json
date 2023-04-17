@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Dispositivo"
+                },
+                "description": "Escoja un dispositivo para configurar"
+            }
+        }
+    }
+}

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Platsen \u00e4r redan konfigurerad"
+            "already_configured": "Platsen \u00e4r redan konfigurerad",
+            "reauth_successful": "Reautentisering lyckades"
         },
         "error": {
             "invalid_api_key": "Ogiltigt API-l\u00f6senord"

@@ -80,11 +80,18 @@
                 },
                 "description": "\u00c4ndere die Verbindungsinformationen des Insteon-Hubs. Du musst Home Assistant neu starten, nachdem du diese \u00c4nderung vorgenommen hast. Dies \u00e4ndert nicht die Konfiguration des Hubs selbst. Um die Konfiguration im Hub zu \u00e4ndern, verwende die Hub-App."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "USB-Ger\u00e4te-Pfad"
+                },
+                "description": "\u00c4ndere die Insteon PLM-Verbindungsinformationen. Du musst Home Assistant neu starten, nachdem du diese \u00c4nderung vorgenommen hast. An der Konfiguration des PLM selbst \u00e4ndert sich dadurch nichts."
+            },
             "init": {
                 "data": {
                     "add_override": "F\u00fcge eine Ger\u00e4te\u00fcberschreibung hinzu.",
                     "add_x10": "F\u00fcge ein X10-Ger\u00e4t hinzu.",
                     "change_hub_config": "\u00c4ndere die Konfiguration des Hubs.",
+                    "change_plm_config": "\u00c4ndern der PLM-Konfiguration.",
                     "remove_override": "Entferne eine Ger\u00e4te\u00fcbersteuerung.",
                     "remove_x10": "Entferne ein X10-Ger\u00e4t."
                 }

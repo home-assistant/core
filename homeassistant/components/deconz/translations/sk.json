@@ -18,7 +18,7 @@
                 "title": "Br\u00e1na deCONZ Zigbee prostredn\u00edctvom doplnku Home Assistant"
             },
             "link": {
-                "description": "Odomknite svoju br\u00e1nu deCONZ a zaregistrujte sa v aplik\u00e1cii Home Assistant. \n\n 1. Cho\u010fte do deCONZ Settings - > Gateway - > Advanced\n 2. Stla\u010dte tla\u010didlo \u201eAutentifik\u00e1cia aplik\u00e1cie\u201c.",
+                "description": "Odomknite svoju br\u00e1nu deCONZ a zaregistrujte sa v aplik\u00e1cii Home Assistant. \n\n 1. Cho\u010fte do deCONZ Settings - > Gateway - > Advanced\n 2. Stla\u010dte tla\u010didlo \"Autentifik\u00e1cia aplik\u00e1cie\".",
                 "title": "Prepojenie s deCONZ"
             },
             "manual_input": {
@@ -64,17 +64,17 @@
         },
         "trigger_type": {
             "remote_awakened": "Zariadenie sa prebudilo",
-            "remote_button_double_press": "dvojklik na tla\u010didlo \u201e{subtype}\u201c",
-            "remote_button_long_press": "Trvalo stla\u010den\u00e9 tla\u010didlo \"{subtype}\"",
-            "remote_button_long_release": "Tla\u010didlo \"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed",
-            "remote_button_quadruple_press": "Tla\u010didlo \"{subtype}\" kliknut\u00e9 \u0161tyrikr\u00e1t",
-            "remote_button_quintuple_press": "Tla\u010didlo \"{subtype}\" kliknut\u00e9 p\u00e4\u0165kr\u00e1t",
-            "remote_button_rotated": "Oto\u010den\u00e9 tla\u010didlo \u201e{subtype}\u201c",
-            "remote_button_rotated_fast": "Tla\u010didlo sa r\u00fdchlo ot\u00e1\u010dalo \u201e{subtype}\u201c",
+            "remote_button_double_press": "\"{subtype}\" kliknut\u00e9 dvakr\u00e1t",
+            "remote_button_long_press": "\"{subtype}\" trvalo stla\u010den\u00e9",
+            "remote_button_long_release": "\"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed",
+            "remote_button_quadruple_press": "\"{subtype}\" kliknut\u00e9 \u0161tyrikr\u00e1t",
+            "remote_button_quintuple_press": "\"{subtype}\" kliknut\u00e9 p\u00e4\u0165kr\u00e1t",
+            "remote_button_rotated": "Oto\u010den\u00e9 tla\u010didlo \"{subtype}\"",
+            "remote_button_rotated_fast": "Tla\u010didlo sa r\u00fdchlo ot\u00e1\u010dalo \"{subtype}\"",
             "remote_button_rotation_stopped": "Oto\u010denie tla\u010didla \"{subtype}\" bolo zastaven\u00e9",
-            "remote_button_short_press": "Stla\u010den\u00e9 tla\u010didlo \"{subtype}\"",
-            "remote_button_short_release": "Tla\u010didlo \"{subtype}\" bolo uvo\u013enen\u00e9",
-            "remote_button_triple_press": "Trojklik na tla\u010didlo \"{subtype}\"",
+            "remote_button_short_press": "\"{subtype}\" stla\u010den\u00e9",
+            "remote_button_short_release": "\"{subtype}\" bolo uvo\u013enen\u00e9",
+            "remote_button_triple_press": "\"{subtype}\" trojn\u00e1sobne kliknut\u00e9",
             "remote_double_tap": "Zariadenie \"{subtype}\" dvojit\u00e9 klepnutie",
             "remote_double_tap_any_side": "Zariadenie dvakr\u00e1t klepnut\u00e9 na \u013eubovo\u013en\u00fa stranu",
             "remote_falling": "Zariadenie vo vo\u013enom p\u00e1de",

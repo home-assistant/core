@@ -8,13 +8,13 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} 'i kurmak istiyor musunuz?"
             },
             "user": {
                 "data": {
                     "address": "Cihaz"
                 },
-                "description": "Kurulum i\u00e7in bir cihaz se\u00e7in"
+                "description": "Kurmak i\u00e7in bir cihaz se\u00e7in"
             }
         }
     }

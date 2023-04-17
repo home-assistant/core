@@ -1,4 +1,12 @@
 {
+    "issues": {
+        "unhealthy": {
+            "title": "Ongezond systeem - {reason}"
+        },
+        "unsupported": {
+            "title": "Niet-ondersteund systeem - {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "Agent-versie",

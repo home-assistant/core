@@ -8,10 +8,11 @@
             "bad_birth": "Ge\u00e7ersiz do\u011fum konusu",
             "bad_certificate": "CA sertifikas\u0131 ge\u00e7ersiz",
             "bad_client_cert": "Ge\u00e7ersiz m\u00fc\u015fteri sertifikas\u0131, PEM kodlu bir dosyan\u0131n sa\u011fland\u0131\u011f\u0131ndan emin olun",
-            "bad_client_cert_key": "\u0130stemci sertifikas\u0131 ve \u00f6zel ge\u00e7erli bir \u00e7ift de\u011fil",
+            "bad_client_cert_key": "\u0130stemci sertifikas\u0131 ve \u00f6zel anahtar ge\u00e7erli bir \u00e7ift de\u011fil",
             "bad_client_key": "Ge\u00e7ersiz \u00f6zel anahtar, PEM kodlu bir dosyan\u0131n parola olmadan sa\u011fland\u0131\u011f\u0131ndan emin olun",
             "bad_discovery_prefix": "Ge\u00e7ersiz ke\u015fif \u00f6neki",
             "bad_will": "Ge\u00e7ersiz irade konusu",
+            "bad_ws_headers": "JSON nesnesi olarak ge\u00e7erli HTTP ba\u015fl\u0131klar\u0131 sa\u011flay\u0131n",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_inclusion": "\u0130stemci sertifikas\u0131 ve \u00f6zel anahtar birlikte yap\u0131land\u0131r\u0131lmal\u0131d\u0131r"
         },
@@ -20,10 +21,10 @@
                 "data": {
                     "advanced_options": "Geli\u015fmi\u015f se\u00e7enekler",
                     "broker": "Broker",
-                    "certificate": "\u00d6zel CA sertifika dosyas\u0131n\u0131n yolu",
-                    "client_cert": "\u0130stemci sertifika dosyas\u0131n\u0131n yolu",
+                    "certificate": "\u00d6zel CA sertifika dosyas\u0131 y\u00fckleyin",
+                    "client_cert": "\u0130stemci sertifikas\u0131 dosyas\u0131n\u0131 y\u00fckle",
                     "client_id": "M\u00fc\u015fteri Kimli\u011fi (rastgele olu\u015fturulmu\u015f olana kadar bo\u015f b\u0131rak\u0131n)",
-                    "client_key": "\u00d6zel anahtar dosyas\u0131n\u0131n yolu",
+                    "client_key": "\u00d6zel anahtar dosyas\u0131n\u0131 y\u00fckleyin",
                     "keepalive": "Canl\u0131 tutma mesajlar\u0131 g\u00f6nderme aras\u0131ndaki s\u00fcre",
                     "password": "Parola",
                     "port": "Port",
@@ -31,7 +32,10 @@
                     "set_ca_cert": "Arac\u0131 sertifikas\u0131 do\u011frulama",
                     "set_client_cert": "\u0130stemci sertifikas\u0131 kullan",
                     "tls_insecure": "Arac\u0131 sertifika do\u011frulamas\u0131n\u0131 yoksay",
-                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                    "transport": "MQTT aktar\u0131m\u0131",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
+                    "ws_headers": "JSON format\u0131nda WebSocket ba\u015fl\u0131klar\u0131",
+                    "ws_path": "WebSocket yolu"
                 },
                 "description": "L\u00fctfen MQTT brokerinizin ba\u011flant\u0131 bilgilerini girin."
             },
@@ -78,13 +82,14 @@
     },
     "options": {
         "error": {
-            "bad_birth": "Ge\u00e7ersiz do\u011fum konusu.",
+            "bad_birth": "Ge\u00e7ersiz do\u011fum konusu",
             "bad_certificate": "CA sertifikas\u0131 ge\u00e7ersiz",
             "bad_client_cert": "Ge\u00e7ersiz m\u00fc\u015fteri sertifikas\u0131, PEM kodlu bir dosyan\u0131n sa\u011fland\u0131\u011f\u0131ndan emin olun",
-            "bad_client_cert_key": "\u0130stemci sertifikas\u0131 ve \u00f6zel ge\u00e7erli bir \u00e7ift de\u011fil",
+            "bad_client_cert_key": "\u0130stemci sertifikas\u0131 ve \u00f6zel anahtar ge\u00e7erli bir \u00e7ift de\u011fil",
             "bad_client_key": "Ge\u00e7ersiz \u00f6zel anahtar, PEM kodlu bir dosyan\u0131n parola olmadan sa\u011fland\u0131\u011f\u0131ndan emin olun",
             "bad_discovery_prefix": "Ge\u00e7ersiz ke\u015fif \u00f6neki",
-            "bad_will": "Ge\u00e7ersiz olacak konu",
+            "bad_will": "Ge\u00e7ersiz irade konusu",
+            "bad_ws_headers": "JSON nesnesi olarak ge\u00e7erli HTTP ba\u015fl\u0131klar\u0131 sa\u011flay\u0131n",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_inclusion": "\u0130stemci sertifikas\u0131 ve \u00f6zel anahtar birlikte yap\u0131land\u0131r\u0131lmal\u0131d\u0131r"
         },
@@ -94,7 +99,7 @@
                     "advanced_options": "Geli\u015fmi\u015f se\u00e7enekler",
                     "broker": "Broker",
                     "certificate": "\u00d6zel CA sertifika dosyas\u0131 y\u00fckleyin",
-                    "client_cert": "\u0130stemci sertifika dosyas\u0131n\u0131 y\u00fckleyin",
+                    "client_cert": "\u0130stemci sertifikas\u0131 dosyas\u0131n\u0131 y\u00fckle",
                     "client_id": "M\u00fc\u015fteri Kimli\u011fi (rastgele olu\u015fturulmu\u015f olana kadar bo\u015f b\u0131rak\u0131n)",
                     "client_key": "\u00d6zel anahtar dosyas\u0131n\u0131 y\u00fckleyin",
                     "keepalive": "Canl\u0131 tutma mesajlar\u0131 g\u00f6nderme aras\u0131ndaki s\u00fcre",
@@ -104,7 +109,10 @@
                     "set_ca_cert": "Arac\u0131 sertifikas\u0131 do\u011frulama",
                     "set_client_cert": "\u0130stemci sertifikas\u0131 kullan",
                     "tls_insecure": "Arac\u0131 sertifika do\u011frulamas\u0131n\u0131 yoksay",
-                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                    "transport": "MQTT aktar\u0131m\u0131",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
+                    "ws_headers": "JSON format\u0131nda WebSocket ba\u015fl\u0131klar\u0131",
+                    "ws_path": "WebSocket yolu"
                 },
                 "description": "L\u00fctfen MQTT brokerinizin ba\u011flant\u0131 bilgilerini girin.",
                 "title": "Broker se\u00e7enekleri"

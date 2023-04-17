@@ -12,6 +12,7 @@ from homeassistant.components.insteon.config_flow import (
     STEP_ADD_OVERRIDE,
     STEP_ADD_X10,
     STEP_CHANGE_HUB_CONFIG,
+    STEP_CHANGE_PLM_CONFIG,
     STEP_HUB_V2,
     STEP_REMOVE_OVERRIDE,
     STEP_REMOVE_X10,
@@ -332,6 +333,28 @@ async def test_options_change_hub_config(hass: HomeAssistant):
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {}
     assert config_entry.data == {**user_input, CONF_HUB_VERSION: 2}
+
+
+async def test_options_change_plm_config(hass: HomeAssistant):
+    """Test changing PLM config."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="abcde12345",
+        data=MOCK_USER_INPUT_PLM,
+        options={},
+    )
+
+    config_entry.add_to_hass(hass)
+    result = await _options_init_form(
+        hass, config_entry.entry_id, STEP_CHANGE_PLM_CONFIG
+    )
+
+    user_input = {CONF_DEVICE: "/dev/some_other_device"}
+    result, _ = await _options_form(hass, result["flow_id"], user_input)
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {}
+    assert config_entry.data == user_input
 
 
 async def test_options_add_device_override(hass: HomeAssistant):

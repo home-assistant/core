@@ -10,6 +10,7 @@ from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from . import CONF_NOISE_PSK, DomainData
+from .dashboard import async_get_dashboard
 
 CONF_MAC_ADDRESS = "mac_address"
 
@@ -38,5 +39,8 @@ async def async_get_config_entry_diagnostics(
             "connections_limit": entry_data.ble_connections_limit,
             "scanner": await scanner.async_diagnostics(),
         }
+
+    if dashboard := async_get_dashboard(hass):
+        diag["dashboard"] = dashboard.addon_slug
 
     return async_redact_data(diag, REDACT_KEYS)

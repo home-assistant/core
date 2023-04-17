@@ -21,10 +21,11 @@ from .coordinator import SwitchbotDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
+class SwitchbotEntity(
+    PassiveBluetoothCoordinatorEntity[SwitchbotDataUpdateCoordinator]
+):
     """Generic entity encapsulating common features of Switchbot device."""
 
-    coordinator: SwitchbotDataUpdateCoordinator
     _device: SwitchbotDevice
     _attr_has_entity_name = True
 

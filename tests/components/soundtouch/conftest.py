@@ -20,9 +20,6 @@ DEVICE_1_ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.my_soundtouch_1"
 DEVICE_2_ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.my_soundtouch_2"
 
 
-# pylint: disable=redefined-outer-name
-
-
 @pytest.fixture
 def device1_config() -> MockConfigEntry:
     """Mock SoundTouch device 1 config entry."""

@@ -17,10 +17,10 @@ from homeassistant.const import (
     PERCENTAGE,
     UV_INDEX,
     UnitOfLength,
-    UnitOfPrecipitationDepth,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -290,11 +290,11 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Precipitation",
-        device_class=SensorDeviceClass.PRECIPITATION,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         name="Precipitation",
         state_class=SensorStateClass.MEASUREMENT,
-        metric_unit=UnitOfPrecipitationDepth.MILLIMETERS,
-        us_customary_unit=UnitOfPrecipitationDepth.INCHES,
+        metric_unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        us_customary_unit=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         value_fn=lambda data, unit: cast(float, data[unit][ATTR_VALUE]),
         attr_fn=lambda data: {"type": data["PrecipitationType"]},
     ),
@@ -452,7 +452,7 @@ def _get_sensor_data(
         return sensors[ATTR_FORECAST][forecast_day][kind]
 
     if kind == "Precipitation":
-        return sensors["PrecipitationSummary"][kind]
+        return sensors["PrecipitationSummary"]["PastHour"]
 
     return sensors[kind]
 

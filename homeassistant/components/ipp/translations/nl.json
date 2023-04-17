@@ -31,5 +31,14 @@
                 "title": "Gedetecteerde printer"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Inactief"
+                }
+            }
+        }
     }
 }

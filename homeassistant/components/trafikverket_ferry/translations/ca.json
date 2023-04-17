@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "Divendres",
+                "mon": "Dilluns",
+                "sat": "Dissabte",
+                "sun": "Diumenge",
+                "thu": "Dijous",
+                "tue": "Dimarts",
+                "wed": "Dimecres"
+            }
+        }
     }
 }

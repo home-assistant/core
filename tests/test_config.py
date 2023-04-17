@@ -1,5 +1,5 @@
 """Test config utils."""
-# pylint: disable=protected-access
+
 from collections import OrderedDict
 import contextlib
 import copy
@@ -754,7 +754,6 @@ async def test_async_hass_config_yaml_merge(merge_log_err, hass):
     assert len(conf["light"]) == 1
 
 
-# pylint: disable=redefined-outer-name
 @pytest.fixture
 def merge_log_err(hass):
     """Patch _merge_log_error from packages."""
@@ -1177,9 +1176,9 @@ async def test_component_config_exceptions(hass, caplog):
     ) == {"test_domain": []}
     assert "ValueError: broken" in caplog.text
     assert (
-        "Unknown error validating test_platform platform config with test_domain component platform schema"
-        in caplog.text
-    )
+        "Unknown error validating test_platform platform config "
+        "with test_domain component platform schema"
+    ) in caplog.text
 
     # platform.PLATFORM_SCHEMA
     caplog.clear()
@@ -1204,8 +1203,8 @@ async def test_component_config_exceptions(hass, caplog):
         ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"
-            in caplog.text
+            "Unknown error validating config for test_platform platform for test_domain"
+            " component with PLATFORM_SCHEMA" in caplog.text
         )
 
     # get_platform("config") raising
@@ -1219,7 +1218,10 @@ async def test_component_config_exceptions(hass, caplog):
                 domain="test_domain",
                 get_platform=Mock(
                     side_effect=ImportError(
-                        "ModuleNotFoundError: No module named 'not_installed_something'",
+                        (
+                            "ModuleNotFoundError: No module named"
+                            " 'not_installed_something'"
+                        ),
                         name="not_installed_something",
                     )
                 ),
@@ -1228,8 +1230,8 @@ async def test_component_config_exceptions(hass, caplog):
         is None
     )
     assert (
-        "Error importing config platform test_domain: ModuleNotFoundError: No module named 'not_installed_something'"
-        in caplog.text
+        "Error importing config platform test_domain: ModuleNotFoundError: No module"
+        " named 'not_installed_something'" in caplog.text
     )
 
     # get_component raising

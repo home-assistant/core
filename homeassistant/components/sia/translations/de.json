@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
         "error": {
             "invalid_account_format": "Das Konto ist kein Hex-Wert. Bitte verwende nur 0\u20139 und A\u2013F.",
             "invalid_account_length": "Das Konto hat nicht die richtige L\u00e4nge. Es muss zwischen 3 und 16 Zeichen lang sein.",

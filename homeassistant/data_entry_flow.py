@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import abc
-import asyncio
 from collections.abc import Iterable, Mapping
 import copy
 from dataclasses import dataclass
@@ -55,7 +54,7 @@ class BaseServiceInfo:
 
 
 class FlowError(HomeAssistantError):
-    """Error while configuring an account."""
+    """Base class for data entry errors."""
 
 
 class UnknownHandler(FlowError):
@@ -137,17 +136,8 @@ class FlowManager(abc.ABC):
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
-        self._initializing: dict[str, list[asyncio.Future]] = {}
-        self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
         self._progress: dict[str, FlowHandler] = {}
         self._handler_progress_index: dict[str, set[str]] = {}
-
-    async def async_wait_init_flow_finish(self, handler: str) -> None:
-        """Wait till all flows in progress are initialized."""
-        if not (current := self._initializing.get(handler)):
-            return
-
-        await asyncio.wait(current)
 
     @abc.abstractmethod
     async def async_create_flow(
@@ -166,7 +156,7 @@ class FlowManager(abc.ABC):
     async def async_finish_flow(
         self, flow: FlowHandler, result: FlowResult
     ) -> FlowResult:
-        """Finish a config flow and add an entry."""
+        """Finish a data entry flow."""
 
     async def async_post_init(self, flow: FlowHandler, result: FlowResult) -> None:
         """Entry has finished executing its first step asynchronously."""
@@ -175,7 +165,10 @@ class FlowManager(abc.ABC):
     def async_has_matching_flow(
         self, handler: str, context: dict[str, Any], data: Any
     ) -> bool:
-        """Check if an existing matching flow is in progress with the same handler, context, and data."""
+        """Check if an existing matching flow is in progress.
+
+        A flow with the same handler, context, and data.
+        """
         return any(
             flow
             for flow in self._async_progress_by_handler(handler)
@@ -216,35 +209,9 @@ class FlowManager(abc.ABC):
     async def async_init(
         self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
     ) -> FlowResult:
-        """Start a configuration flow."""
+        """Start a data entry flow."""
         if context is None:
             context = {}
-
-        init_done: asyncio.Future = asyncio.Future()
-        self._initializing.setdefault(handler, []).append(init_done)
-
-        task = asyncio.create_task(self._async_init(init_done, handler, context, data))
-        self._initialize_tasks.setdefault(handler, []).append(task)
-
-        try:
-            flow, result = await task
-        finally:
-            self._initialize_tasks[handler].remove(task)
-            self._initializing[handler].remove(init_done)
-
-        if result["type"] != FlowResultType.ABORT:
-            await self.async_post_init(flow, result)
-
-        return result
-
-    async def _async_init(
-        self,
-        init_done: asyncio.Future,
-        handler: str,
-        context: dict,
-        data: Any,
-    ) -> tuple[FlowHandler, FlowResult]:
-        """Run the init in a task to allow it to be canceled at shutdown."""
         flow = await self.async_create_flow(handler, context=context, data=data)
         if not flow:
             raise UnknownFlow("Flow was not created")
@@ -254,19 +221,18 @@ class FlowManager(abc.ABC):
         flow.context = context
         flow.init_data = data
         self._async_add_flow_progress(flow)
-        result = await self._async_handle_step(flow, flow.init_step, data, init_done)
-        return flow, result
 
-    async def async_shutdown(self) -> None:
-        """Cancel any initializing flows."""
-        for task_list in self._initialize_tasks.values():
-            for task in task_list:
-                task.cancel()
+        result = await self._async_handle_step(flow, flow.init_step, data)
+
+        if result["type"] != FlowResultType.ABORT:
+            await self.async_post_init(flow, result)
+
+        return result
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
     ) -> FlowResult:
-        """Continue a configuration flow."""
+        """Continue a data entry flow."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
 
@@ -351,22 +317,16 @@ class FlowManager(abc.ABC):
         try:
             flow.async_remove()
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error removing %s config flow: %s", flow.handler, err)
+            _LOGGER.exception("Error removing %s flow: %s", flow.handler, err)
 
     async def _async_handle_step(
-        self,
-        flow: FlowHandler,
-        step_id: str,
-        user_input: dict | BaseServiceInfo | None,
-        step_done: asyncio.Future | None = None,
+        self, flow: FlowHandler, step_id: str, user_input: dict | BaseServiceInfo | None
     ) -> FlowResult:
         """Handle a step of a flow."""
         method = f"async_step_{step_id}"
 
         if not hasattr(flow, method):
             self._async_remove_flow_progress(flow.flow_id)
-            if step_done:
-                step_done.set_result(None)
             raise UnknownStep(
                 f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
@@ -377,13 +337,6 @@ class FlowManager(abc.ABC):
             result = _create_abort_data(
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
             )
-
-        # Mark the step as done.
-        # We do this before calling async_finish_flow because config entries will hit a
-        # circular dependency where async_finish_flow sets up new entry, which needs the
-        # integration to be set up, which is waiting for init to be done.
-        if step_done:
-            step_done.set_result(None)
 
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
@@ -421,7 +374,7 @@ class FlowManager(abc.ABC):
 
 
 class FlowHandler:
-    """Handle the configuration flow of a component."""
+    """Handle a data entry flow."""
 
     # Set by flow manager
     cur_step: FlowResult | None = None
@@ -454,7 +407,7 @@ class FlowHandler:
         return self.context.get("show_advanced_options", False)
 
     def add_suggested_values_to_schema(
-        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any]
+        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
     ) -> vol.Schema:
         """Make a copy of the schema, populated with suggested values.
 
@@ -474,7 +427,11 @@ class FlowHandler:
                     continue
 
             new_key = key
-            if key in suggested_values and isinstance(key, vol.Marker):
+            if (
+                suggested_values
+                and key in suggested_values
+                and isinstance(key, vol.Marker)
+            ):
                 # Copy the marker to not modify the flow schema
                 new_key = copy.copy(key)
                 new_key.description = {"suggested_value": suggested_values[key]}
@@ -512,7 +469,7 @@ class FlowHandler:
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
-        """Finish config flow and create a config entry."""
+        """Finish flow."""
         flow_result = FlowResult(
             version=self.VERSION,
             type=FlowResultType.CREATE_ENTRY,
@@ -534,7 +491,7 @@ class FlowHandler:
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
-        """Abort the config flow."""
+        """Abort the flow."""
         return _create_abort_data(
             self.flow_id, self.handler, reason, description_placeholders
         )
@@ -619,7 +576,7 @@ class FlowHandler:
 
     @callback
     def async_remove(self) -> None:
-        """Notification that the config flow has been removed."""
+        """Notification that the flow has been removed."""
 
 
 @callback

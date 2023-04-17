@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
+import datetime
 import functools
 import gc
 import itertools
@@ -34,7 +35,6 @@ from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
-from homeassistant.components import mqtt, recorder
 from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -44,7 +44,11 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    event,
+    recorder as recorder_helper,
+)
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -67,9 +71,6 @@ from tests.common import (  # noqa: E402, isort:skip
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
-from tests.components.recorder.common import (  # noqa: E402, isort:skip
-    async_recorder_block_till_done,
-)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +78,15 @@ _LOGGER = logging.getLogger(__name__)
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
+
+
+def _utcnow():
+    """Make utcnow patchable by freezegun."""
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+dt_util.utcnow = _utcnow
+event.time_tracker_utcnow = _utcnow
 
 
 def pytest_addoption(parser):
@@ -89,7 +99,7 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
-    if config.getoption("verbose"):
+    if config.getoption("verbose") > 0:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
@@ -191,6 +201,26 @@ location.async_detect_location_info = check_real(location.async_detect_location_
 util.get_local_ip = lambda: "127.0.0.1"
 
 
+@pytest.fixture(name="caplog")
+def caplog_fixture(caplog):
+    """Set log level to debug for tests using the caplog fixture."""
+    caplog.set_level(logging.DEBUG)
+    yield caplog
+
+
+@pytest.fixture(autouse=True, scope="module")
+def garbage_collection():
+    """Run garbage collection at known locations.
+
+    This is to mimic the behavior of pytest-aiohttp, and is
+    required to avoid warnings during garbage collection from
+    spilling over into next test case. We run it per module which
+    handles the most common cases and let each module override
+    to run per test case if needed.
+    """
+    gc.collect()
+
+
 @pytest.fixture(autouse=True)
 def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     """Verify that the test has cleaned up resources correctly."""
@@ -206,10 +236,6 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
             inst.stop()
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
-    threads = frozenset(threading.enumerate()) - threads_before
-    for thread in threads:
-        assert isinstance(thread, threading._DummyThread)
-
     # Warn and clean-up lingering tasks and timers
     # before moving on to the next test.
     tasks = asyncio.all_tasks(event_loop) - tasks_before
@@ -219,16 +245,17 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:  # pylint: disable=protected-access
+    for handle in event_loop._scheduled:
         if not handle.cancelled():
             _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
 
-    # Make sure garbage collect run in same test as allocation
-    # this is to mimic the behavior of pytest-aiohttp, and is
-    # required to avoid warnings from spilling over into next
-    # test case.
-    gc.collect()
+    # Verify no threads where left behind.
+    threads = frozenset(threading.enumerate()) - threads_before
+    for thread in threads:
+        assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
+            "waitpid-"
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -457,8 +484,10 @@ def mock_device_tracker_conf():
         devices.append(entity)
 
     with patch(
-        "homeassistant.components.device_tracker.legacy"
-        ".DeviceTracker.async_update_config",
+        (
+            "homeassistant.components.device_tracker.legacy"
+            ".DeviceTracker.async_update_config"
+        ),
         side_effect=mock_update_config,
     ), patch(
         "homeassistant.components.device_tracker.legacy.async_load_config",
@@ -609,7 +638,7 @@ def current_request():
             "GET",
             "/some/request",
             headers={"Host": "example.com"},
-            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT),
         )
         mock_request_context.get.return_value = mocked_request
         yield mock_request_context
@@ -727,6 +756,10 @@ async def mqtt_mock(
 @asynccontextmanager
 async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
     """Fixture to mock a delayed setup of the MQTT config entry."""
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+    from homeassistant.components import mqtt
+
     if mqtt_config_entry_data is None:
         mqtt_config_entry_data = {
             mqtt.CONF_BROKER: "mock-broker",
@@ -946,6 +979,10 @@ def hass_recorder(
     hass_storage,
 ):
     """Home Assistant fixture with in-memory recorder."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
@@ -987,6 +1024,10 @@ def hass_recorder(
 
 async def _async_init_recorder_component(hass, add_config=None, db_url=None):
     """Initialize the recorder asynchronously."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = db_url
@@ -1016,6 +1057,12 @@ async def async_setup_recorder_instance(
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
     assert not hass_fixture_setup
+
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
+    from tests.components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None

@@ -26,6 +26,21 @@
         }
     },
     "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Malam",
+                            "away": "Keluar",
+                            "home": "Di Rumah",
+                            "no_frost": "Anti beku",
+                            "vacation": "Liburan"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "dhw_mode": {
                 "state": {

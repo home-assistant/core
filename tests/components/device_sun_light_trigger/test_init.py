@@ -1,5 +1,5 @@
 """The tests device sun light trigger component."""
-# pylint: disable=protected-access
+
 from datetime import datetime
 from unittest.mock import patch
 

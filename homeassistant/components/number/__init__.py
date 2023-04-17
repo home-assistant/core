@@ -24,7 +24,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 
 from .const import (
     ATTR_MAX,
@@ -36,7 +35,10 @@ from .const import (
     DEFAULT_STEP,
     DOMAIN,
     SERVICE_SET_VALUE,
+    UNIT_CONVERTERS,
+    NumberDeviceClass,
 )
+from .websocket_api import async_setup as async_setup_ws_api
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -45,297 +47,6 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class NumberDeviceClass(StrEnum):
-    """Device class for numbers."""
-
-    # NumberDeviceClass should be aligned with SensorDeviceClass
-
-    APPARENT_POWER = "apparent_power"
-    """Apparent power.
-
-    Unit of measurement: `VA`
-    """
-
-    AQI = "aqi"
-    """Air Quality Index.
-
-    Unit of measurement: `None`
-    """
-
-    ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
-    """Atmospheric pressure.
-
-    Unit of measurement: `UnitOfPressure` units
-    """
-
-    BATTERY = "battery"
-    """Percentage of battery that is left.
-
-    Unit of measurement: `%`
-    """
-
-    CO = "carbon_monoxide"
-    """Carbon Monoxide gas concentration.
-
-    Unit of measurement: `ppm` (parts per million)
-    """
-
-    CO2 = "carbon_dioxide"
-    """Carbon Dioxide gas concentration.
-
-    Unit of measurement: `ppm` (parts per million)
-    """
-
-    CURRENT = "current"
-    """Current.
-
-    Unit of measurement: `A`,  `mA`
-    """
-
-    DATA_RATE = "data_rate"
-    """Data rate.
-
-    Unit of measurement: UnitOfDataRate
-    """
-
-    DATA_SIZE = "data_size"
-    """Data size.
-
-    Unit of measurement: UnitOfInformation
-    """
-
-    DISTANCE = "distance"
-    """Generic distance.
-
-    Unit of measurement: `LENGTH_*` units
-    - SI /metric: `mm`, `cm`, `m`, `km`
-    - USCS / imperial: `in`, `ft`, `yd`, `mi`
-    """
-
-    ENERGY = "energy"
-    """Energy.
-
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`
-    """
-
-    FREQUENCY = "frequency"
-    """Frequency.
-
-    Unit of measurement: `Hz`, `kHz`, `MHz`, `GHz`
-    """
-
-    GAS = "gas"
-    """Gas.
-
-    Unit of measurement:
-    - SI / metric: `m³`
-    - USCS / imperial: `ft³`, `CCF`
-    """
-
-    HUMIDITY = "humidity"
-    """Relative humidity.
-
-    Unit of measurement: `%`
-    """
-
-    ILLUMINANCE = "illuminance"
-    """Illuminance.
-
-    Unit of measurement: `lx`
-    """
-
-    IRRADIANCE = "irradiance"
-    """Irradiance.
-
-    Unit of measurement:
-    - SI / metric: `W/m²`
-    - USCS / imperial: `BTU/(h⋅ft²)`
-    """
-
-    MOISTURE = "moisture"
-    """Moisture.
-
-    Unit of measurement: `%`
-    """
-
-    MONETARY = "monetary"
-    """Amount of money.
-
-    Unit of measurement: ISO4217 currency code
-
-    See https://en.wikipedia.org/wiki/ISO_4217#Active_codes for active codes
-    """
-
-    NITROGEN_DIOXIDE = "nitrogen_dioxide"
-    """Amount of NO2.
-
-    Unit of measurement: `µg/m³`
-    """
-
-    NITROGEN_MONOXIDE = "nitrogen_monoxide"
-    """Amount of NO.
-
-    Unit of measurement: `µg/m³`
-    """
-
-    NITROUS_OXIDE = "nitrous_oxide"
-    """Amount of N2O.
-
-    Unit of measurement: `µg/m³`
-    """
-
-    OZONE = "ozone"
-    """Amount of O3.
-
-    Unit of measurement: `µg/m³`
-    """
-
-    PM1 = "pm1"
-    """Particulate matter <= 0.1 μm.
-
-    Unit of measurement: `µg/m³`
-    """
-
-    PM10 = "pm10"
-    """Particulate matter <= 10 μm.
-
-    Unit of measurement: `µg/m³`
-    """
-
-    PM25 = "pm25"
-    """Particulate matter <= 2.5 μm.
-
-    Unit of measurement: `µg/m³`
-    """
-
-    POWER_FACTOR = "power_factor"
-    """Power factor.
-
-    Unit of measurement: `%`
-    """
-
-    POWER = "power"
-    """Power.
-
-    Unit of measurement: `W`, `kW`
-    """
-
-    PRECIPITATION = "precipitation"
-    """Precipitation.
-
-    Unit of measurement: UnitOfPrecipitationDepth
-    - SI / metric: `cm`, `mm`
-    - USCS / imperial: `in`
-    """
-
-    PRECIPITATION_INTENSITY = "precipitation_intensity"
-    """Precipitation intensity.
-
-    Unit of measurement: UnitOfVolumetricFlux
-    - SI /metric: `mm/d`, `mm/h`
-    - USCS / imperial: `in/d`, `in/h`
-    """
-
-    PRESSURE = "pressure"
-    """Pressure.
-
-    Unit of measurement:
-    - `mbar`, `cbar`, `bar`
-    - `Pa`, `hPa`, `kPa`
-    - `inHg`
-    - `psi`
-    """
-
-    REACTIVE_POWER = "reactive_power"
-    """Reactive power.
-
-    Unit of measurement: `var`
-    """
-
-    SIGNAL_STRENGTH = "signal_strength"
-    """Signal strength.
-
-    Unit of measurement: `dB`, `dBm`
-    """
-
-    SOUND_PRESSURE = "sound_pressure"
-    """Sound pressure.
-
-    Unit of measurement: `dB`, `dBA`
-    """
-
-    SPEED = "speed"
-    """Generic speed.
-
-    Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
-    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
-    - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
-    - Nautical: `kn`
-    """
-
-    SULPHUR_DIOXIDE = "sulphur_dioxide"
-    """Amount of SO2.
-
-    Unit of measurement: `µg/m³`
-    """
-
-    TEMPERATURE = "temperature"
-    """Temperature.
-
-    Unit of measurement: `°C`, `°F`
-    """
-
-    VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
-    """Amount of VOC.
-
-    Unit of measurement: `µg/m³`
-    """
-
-    VOLTAGE = "voltage"
-    """Voltage.
-
-    Unit of measurement: `V`, `mV`
-    """
-
-    VOLUME = "volume"
-    """Generic volume.
-
-    Unit of measurement: `VOLUME_*` units
-    - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
-    """
-
-    WATER = "water"
-    """Water.
-
-    Unit of measurement:
-    - SI / metric: `m³`, `L`
-    - USCS / imperial: `ft³`, `CCF`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
-    """
-
-    WEIGHT = "weight"
-    """Generic weight, represents a measurement of an object's mass.
-
-    Weight is used instead of mass to fit with every day language.
-
-    Unit of measurement: `MASS_*` units
-    - SI / metric: `µg`, `mg`, `g`, `kg`
-    - USCS / imperial: `oz`, `lb`
-    """
-
-    WIND_SPEED = "wind_speed"
-    """Wind speed.
-
-    Unit of measurement: `SPEED_*` units
-    - SI /metric: `m/s`, `km/h`
-    - USCS / imperial: `ft/s`, `mph`
-    - Nautical: `kn`
-    """
-
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 
@@ -348,10 +59,6 @@ class NumberMode(StrEnum):
     SLIDER = "slider"
 
 
-UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
-    NumberDeviceClass.TEMPERATURE: TemperatureConverter,
-}
-
 # mypy: disallow-any-generics
 
 
@@ -360,6 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[NumberEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
+    async_setup_ws_api(hass)
     await component.async_setup(config)
 
     component.async_register_entity_service(
@@ -424,7 +132,9 @@ class NumberEntityDescription(EntityDescription):
             or self.step is not None
             or self.unit_of_measurement is not None
         ):
-            if self.__class__.__name__ == "NumberEntityDescription":  # type: ignore[unreachable]
+            if (  # type: ignore[unreachable]
+                self.__class__.__name__ == "NumberEntityDescription"
+            ):
                 caller = inspect.stack()[2]
                 module = inspect.getmodule(caller[0])
             else:
@@ -668,7 +378,9 @@ class NumberEntity(Entity):
             hasattr(self, "entity_description")
             and self.entity_description.unit_of_measurement is not None
         ):
-            return self.entity_description.unit_of_measurement  # type: ignore[unreachable]
+            return (  # type: ignore[unreachable]
+                self.entity_description.unit_of_measurement
+            )
 
         native_unit_of_measurement = self.native_unit_of_measurement
 

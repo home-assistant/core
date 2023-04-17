@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "api_not_enabled": "Die API ist nicht aktiviert. Aktiviere die API in der HomeWizard Energy App unter Einstellungen",
             "device_not_supported": "Dieses Ger\u00e4t wird nicht unterst\u00fctzt",
             "invalid_discovery_parameters": "Nicht unterst\u00fctzte API-Version erkannt",
             "reauth_successful": "Das Aktivieren der API war erfolgreich",

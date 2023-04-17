@@ -48,7 +48,6 @@
             "carbon_monoxide": "{entity_name} endringer i konsentrasjonen av karbonmonoksid",
             "current": "{entity_name} gjeldende endringer",
             "data_rate": "Datahastighetendringer {entity_name}",
-            "data_size": "Datast\u00f8rrelsen {entity_name} endres",
             "distance": "{entity_name} avstandsendringer",
             "energy": "{entity_name} effektendringer",
             "frequency": "{entity_name} frekvensendringer",

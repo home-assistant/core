@@ -1,7 +1,7 @@
 """Generic Hue Entity Model."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, TypeAlias
 
 from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from aiohue.v2.models.light_level import LightLevel
     from aiohue.v2.models.motion import Motion
 
-    HueResource = Union[Light, DevicePower, GroupedLight, LightLevel, Motion]
+    HueResource: TypeAlias = Light | DevicePower | GroupedLight | LightLevel | Motion
 
 
 RESOURCE_TYPE_NAMES = {
@@ -71,11 +71,11 @@ class HueBaseEntity(Entity):
             # creating a pretty name for device-less entities (e.g. groups/scenes)
             # should be handled in the platform instead
             return self.resource.type.value
-        # if resource is a light, use the name from metadata
-        if self.resource.type == ResourceTypes.LIGHT:
-            return self.resource.name
-        # for sensors etc, use devicename + pretty name of type
         dev_name = self.device.metadata.name
+        # if resource is a light, use the device name itself
+        if self.resource.type == ResourceTypes.LIGHT:
+            return dev_name
+        # for sensors etc, use devicename + pretty name of type
         type_title = RESOURCE_TYPE_NAMES.get(
             self.resource.type, self.resource.type.value.replace("_", " ").title()
         )

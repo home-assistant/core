@@ -1,5 +1,5 @@
 """The tests for the Script component."""
-# pylint: disable=protected-access
+
 import asyncio
 from datetime import timedelta
 from unittest.mock import Mock, patch

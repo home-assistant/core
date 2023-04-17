@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 def sensor_device_info_to_hass_device_info(
     sensor_device_info: SensorDeviceInfo,
 ) -> DeviceInfo:
-    """Convert a sensor_state_data sensor device info to a Home Assistant device info."""
+    """Convert a sensor_state_data sensor device info to a HA device info."""
     device_info = DeviceInfo()
     if sensor_device_info.name is not None:
         device_info[const.ATTR_NAME] = sensor_device_info.name

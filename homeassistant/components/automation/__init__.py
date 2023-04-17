@@ -870,7 +870,7 @@ async def _async_process_if(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["condition", str(index)]):
-                    if not check(hass, variables):
+                    if check(hass, variables) is False:
                         return False
             except ConditionError as ex:
                 errors.append(

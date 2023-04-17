@@ -233,9 +233,9 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
     ):
         await analytics.send_analytics()
     assert (
-        "'addons': [{'slug': 'test_addon', 'protected': True, 'version': '1', 'auto_update': False}]"
-        in caplog.text
-    )
+        "'addons': [{'slug': 'test_addon', 'protected': True, 'version': '1',"
+        " 'auto_update': False}]"
+    ) in caplog.text
     assert "'addon_count':" not in caplog.text
 
 
@@ -251,9 +251,9 @@ async def test_send_statistics(hass, caplog, aioclient_mock):
     with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
     assert (
-        "'state_count': 0, 'automation_count': 0, 'integration_count': 1, 'user_count': 0"
-        in caplog.text
-    )
+        "'state_count': 0, 'automation_count': 0, 'integration_count': 1,"
+        " 'user_count': 0"
+    ) in caplog.text
     assert "'integrations':" not in caplog.text
 
 
@@ -406,9 +406,9 @@ async def test_dev_url_error(hass, aioclient_mock, caplog):
     payload = aioclient_mock.mock_calls[0]
     assert str(payload[1]) == ANALYTICS_ENDPOINT_URL_DEV
     assert (
-        f"Sending analytics failed with statuscode 400 from {ANALYTICS_ENDPOINT_URL_DEV}"
-        in caplog.text
-    )
+        "Sending analytics failed with statuscode 400 from"
+        f" {ANALYTICS_ENDPOINT_URL_DEV}"
+    ) in caplog.text
 
 
 async def test_nightly_endpoint(hass, aioclient_mock):

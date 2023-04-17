@@ -60,9 +60,9 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """Optional property to identify next step.
 
     - If `next_step` is a function, it is called if the schema validates successfully or
-    if no schema is defined. The `next_step` function is passed the union of config entry
-    options and user input from previous steps. If the function returns None, the flow is
-    ended with `FlowResultType.CREATE_ENTRY`.
+      if no schema is defined. The `next_step` function is passed the union of
+      config entry options and user input from previous steps. If the function returns
+      None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
     - If `next_step` is None, the flow is ended with `FlowResultType.CREATE_ENTRY`.
     """
 
@@ -71,11 +71,11 @@ class SchemaFlowFormStep(SchemaFlowStep):
     ] | None | UndefinedType = UNDEFINED
     """Optional property to populate suggested values.
 
-    - If `suggested_values` is UNDEFINED, each key in the schema will get a suggested value
-    from an option with the same key.
+    - If `suggested_values` is UNDEFINED, each key in the schema will get a suggested
+      value from an option with the same key.
 
-    Note: if a step is retried due to a validation failure, then the user input will have
-    priority over the suggested values.
+    Note: if a step is retried due to a validation failure, then the user input will
+    have priority over the suggested values.
     """
 
 
@@ -331,8 +331,8 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
     ) -> None:
         """Take necessary actions after the options flow is finished, if needed.
 
-        The options parameter contains config entry options, which is the union of stored
-        options and user input from the options flow steps.
+        The options parameter contains config entry options, which is the union of
+        stored options and user input from the options flow steps.
         """
 
     @callback

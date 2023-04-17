@@ -4,7 +4,8 @@
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "mdns_missing_mac": "Manglende MAC-adresse i MDNS-egenskaper.",
-            "reauth_successful": "Re-autentisering var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket",
+            "service_received": "Service mottatt"
         },
         "error": {
             "connection_error": "Kan ikke koble til ESP. Kontroller at YAML filen din inneholder en \"api:\" linje.",
@@ -28,13 +29,13 @@
                 "data": {
                     "noise_psk": "Krypteringsn\u00f8kkel"
                 },
-                "description": "Skriv inn krypteringsn\u00f8kkelen du angav i konfigurasjonen for {name} ."
+                "description": "Skriv inn krypteringsn\u00f8kkelen for {name} . Du finner den i ESPHome-dashbordet eller i enhetskonfigurasjonen."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Krypteringsn\u00f8kkel"
                 },
-                "description": "ESPHome -enheten {name} aktiverte transportkryptering eller endret krypteringsn\u00f8kkelen. Skriv inn den oppdaterte n\u00f8kkelen."
+                "description": "ESPHome-enheten {name} aktiverte transportkryptering eller endret krypteringsn\u00f8kkelen. Vennligst skriv inn den oppdaterte n\u00f8kkelen. Du finner den i ESPHome-dashbordet eller i enhetskonfigurasjonen."
             },
             "user": {
                 "data": {

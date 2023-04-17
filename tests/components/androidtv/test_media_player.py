@@ -78,8 +78,14 @@ ADB_PATCH_KEY = "patch_key"
 TEST_ENTITY_NAME = "entity_name"
 
 MSG_RECONNECT = {
-    patchers.KEY_PYTHON: f"ADB connection to {HOST}:{DEFAULT_PORT} successfully established",
-    patchers.KEY_SERVER: f"ADB connection to {HOST}:{DEFAULT_PORT} via ADB server {patchers.ADB_SERVER_HOST}:{DEFAULT_ADB_SERVER_PORT} successfully established",
+    patchers.KEY_PYTHON: (
+        f"ADB connection to {HOST}:{DEFAULT_PORT} successfully established"
+    ),
+    patchers.KEY_SERVER: (
+        f"ADB connection to {HOST}:{DEFAULT_PORT} via ADB server"
+        f" {patchers.ADB_SERVER_HOST}:{DEFAULT_ADB_SERVER_PORT} successfully"
+        " established"
+    ),
 }
 
 SHELL_RESPONSE_OFF = ""

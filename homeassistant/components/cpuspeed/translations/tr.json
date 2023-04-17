@@ -6,7 +6,7 @@
         },
         "step": {
             "user": {
-                "description": "Kuruluma ba\u015flamak ister misiniz?",
+                "description": "Kurulumu ba\u015flatmak istiyor musunuz?",
                 "title": "\u0130\u015flemci h\u0131z\u0131"
             }
         }

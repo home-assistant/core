@@ -36,10 +36,10 @@
                 "title": "Seri Ba\u011flant\u0131 Noktas\u0131 Se\u00e7in"
             },
             "confirm": {
-                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} 'i kurmak istiyor musunuz?"
             },
             "confirm_hardware": {
-                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} 'i kurmak istiyor musunuz?"
             },
             "manual_pick_radio_type": {
                 "data": {

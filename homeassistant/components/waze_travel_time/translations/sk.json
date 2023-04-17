@@ -31,7 +31,7 @@
                     "units": "Jednotky",
                     "vehicle_type": "Typ vozidla"
                 },
-                "description": "Vstupy \u201epodre\u0165azca\u201c v\u00e1m umo\u017enia prin\u00fati\u0165 integr\u00e1ciu pou\u017ei\u0165 konkr\u00e9tnu trasu alebo sa vyhn\u00fa\u0165 konkr\u00e9tnej trase pri v\u00fdpo\u010dte cestovania v \u010dase."
+                "description": "Vstupy `podre\u0165azca` v\u00e1m umo\u017enia prin\u00fati\u0165 integr\u00e1ciu pou\u017ei\u0165 konkr\u00e9tnu trasu alebo sa vyhn\u00fa\u0165 konkr\u00e9tnej trase pri v\u00fdpo\u010dte cestovania v \u010dase."
             }
         }
     },

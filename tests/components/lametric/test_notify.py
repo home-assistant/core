@@ -35,7 +35,9 @@ async def test_notification_defaults(
         NOTIFY_DOMAIN,
         NOTIFY_SERVICE,
         {
-            ATTR_MESSAGE: "Try not to become a man of success. Rather become a man of value",
+            ATTR_MESSAGE: (
+                "Try not to become a man of success. Rather become a man of value"
+            ),
         },
         blocking=True,
     )
@@ -118,7 +120,7 @@ async def test_notification_error(
             NOTIFY_DOMAIN,
             NOTIFY_SERVICE,
             {
-                ATTR_MESSAGE: "It's failure that gives you the proper perspective on success",
+                ATTR_MESSAGE: "It's failure that gives you the proper perspective",
             },
             blocking=True,
         )

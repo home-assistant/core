@@ -55,12 +55,6 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_reset_properties)
 
 
-def get_entrypoint(is_dev):
-    """Get the entry point for the frontend."""
-    if is_dev:
-        return "entrypoint.js"
-
-
 async def async_register_insteon_frontend(hass: HomeAssistant):
     """Register the Insteon frontend configuration panel."""
     # Add to sidepanel if needed

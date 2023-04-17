@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "\u201cHomeKit E\u015fle\u015ftirme\u201d alt\u0131ndaki \u201cBildirimler\u201d b\u00f6l\u00fcm\u00fcndeki talimatlar\u0131 izleyerek e\u015fle\u015ftirmeyi tamamlamak i\u00e7in.",
+                "description": "E\u015fle\u015ftirmeyi tamamlamak i\u00e7in \"HomeKit E\u015fle\u015ftirme\" alt\u0131ndaki \"Bildirimler\" b\u00f6l\u00fcm\u00fcndeki talimatlar\u0131 izleyin.",
                 "title": "HomeKit'i E\u015fle\u015ftir"
             },
             "user": {

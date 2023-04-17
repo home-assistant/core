@@ -1,5 +1,5 @@
 """The tests for the Home Assistant API component."""
-# pylint: disable=protected-access
+
 from http import HTTPStatus
 import json
 from unittest.mock import patch

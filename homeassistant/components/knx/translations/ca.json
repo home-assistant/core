@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "file_not_found": "No s'ha trobat el fitxer `.knxkeys` especificat a la ruta config/.storage/knx/",
             "invalid_backbone_key": "Clau troncal inv\u00e0lida. S'esperen 32 nombres hexadecimals.",
             "invalid_individual_address": "El valor no coincideix amb el patr\u00f3 d'adre\u00e7a KNX individual.\n'area.line.device'",
             "invalid_ip_address": "Adre\u00e7a IPv4 inv\u00e0lida.",
-            "invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "keyfile_invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "keyfile_no_backbone_key": "El fitxer `.knxkeys` no cont\u00e9 una clau de 'backbone' per a l'encaminament segur.",
             "keyfile_no_tunnel_for_host": "El fitxer `.knxkeys` no cont\u00e9 credencials per a l'amfitri\u00f3 `{host}`.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "file_not_found": "No s'ha trobat el fitxer `.knxkeys` especificat a la ruta config/.storage/knx/",
             "invalid_backbone_key": "Clau troncal inv\u00e0lida. S'esperen 32 nombres hexadecimals.",
             "invalid_individual_address": "El valor no coincideix amb el patr\u00f3 d'adre\u00e7a KNX individual.\n'area.line.device'",
             "invalid_ip_address": "Adre\u00e7a IPv4 inv\u00e0lida.",
-            "invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "keyfile_invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "keyfile_no_backbone_key": "El fitxer `.knxkeys` no cont\u00e9 una clau de 'backbone' per a l'encaminament segur.",
             "keyfile_no_tunnel_for_host": "El fitxer `.knxkeys` no cont\u00e9 credencials per a l'amfitri\u00f3 `{host}`.",

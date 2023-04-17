@@ -11,7 +11,7 @@ from homeassistant.components.srp_energy.const import (
     SRP_ENERGY_DOMAIN,
 )
 from homeassistant.components.srp_energy.sensor import SrpEntity, async_setup_entry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import UnitOfEnergy
 
 
 async def test_async_setup_entry(hass):
@@ -89,7 +89,7 @@ async def test_srp_entity(hass):
     assert srp_entity.name == f"{DEFAULT_NAME} {SENSOR_NAME}"
     assert srp_entity.unique_id == SENSOR_TYPE
     assert srp_entity.state is None
-    assert srp_entity.unit_of_measurement == ENERGY_KILO_WATT_HOUR
+    assert srp_entity.unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
     assert srp_entity.icon == ICON
     assert srp_entity.usage == "2.00"
     assert srp_entity.should_poll is False

@@ -232,9 +232,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "triggered - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "triggered "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -251,9 +254,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "disarmed - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "disarmed "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -270,9 +276,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "armed_home - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "armed_home "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -289,9 +298,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "armed_away - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "armed_away "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -308,9 +320,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "armed_night - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "armed_night "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -327,9 +342,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "armed_vacation - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                                "armed_vacation "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ trigger.from_state.state }} "
+                                "- {{ trigger.to_state.state }} "
+                                "- {{ trigger.for }}"
                             )
                         },
                     },
@@ -344,7 +362,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 1
     assert (
         calls[0].data["some"]
-        == "triggered - device - alarm_control_panel.entity - pending - triggered - None"
+        == "triggered - device - alarm_control_panel.entity - pending - triggered -"
+        " None"
     )
 
     # Fake that the entity is disarmed.
@@ -353,7 +372,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 2
     assert (
         calls[1].data["some"]
-        == "disarmed - device - alarm_control_panel.entity - triggered - disarmed - None"
+        == "disarmed - device - alarm_control_panel.entity - triggered - disarmed -"
+        " None"
     )
 
     # Fake that the entity is armed home.
@@ -362,7 +382,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 3
     assert (
         calls[2].data["some"]
-        == "armed_home - device - alarm_control_panel.entity - disarmed - armed_home - None"
+        == "armed_home - device - alarm_control_panel.entity - disarmed - armed_home -"
+        " None"
     )
 
     # Fake that the entity is armed away.
@@ -371,7 +392,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 4
     assert (
         calls[3].data["some"]
-        == "armed_away - device - alarm_control_panel.entity - armed_home - armed_away - None"
+        == "armed_away - device - alarm_control_panel.entity - armed_home - armed_away"
+        " - None"
     )
 
     # Fake that the entity is armed night.
@@ -380,7 +402,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 5
     assert (
         calls[4].data["some"]
-        == "armed_night - device - alarm_control_panel.entity - armed_away - armed_night - None"
+        == "armed_night - device - alarm_control_panel.entity - armed_away -"
+        " armed_night - None"
     )
 
     # Fake that the entity is armed vacation.
@@ -389,7 +412,8 @@ async def test_if_fires_on_state_change(hass, calls):
     assert len(calls) == 6
     assert (
         calls[5].data["some"]
-        == "armed_vacation - device - alarm_control_panel.entity - armed_night - armed_vacation - None"
+        == "armed_vacation - device - alarm_control_panel.entity - armed_night -"
+        " armed_vacation - None"
     )
 
 

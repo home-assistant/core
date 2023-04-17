@@ -62,9 +62,8 @@ TEST_DATA = [
             "state": "poor",
             "entity_category": None,
             "device_class": None,
-            "state_class": SensorStateClass.MEASUREMENT,
+            "state_class": None,
             "attributes": {
-                "state_class": "measurement",
                 "friendly_name": "BOSCH Air quality sensor",
             },
             "websocket_event": {"state": {"airquality": "excellent"}},

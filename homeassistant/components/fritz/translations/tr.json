@@ -20,8 +20,8 @@
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
-                "description": "Bulunan FRITZ!Box: {name} \n\n {name} kontrol etmek i\u00e7in FRITZ!Box Tools'u kurun",
-                "title": "FRITZ!Box Tools Kurulumu"
+                "description": "FRITZ!Box'\u0131 ke\u015ffetti: {name} \n\n {name} kontrol etmek i\u00e7in FRITZ!Box Ara\u00e7lar\u0131n\u0131 kurun",
+                "title": "FRITZ!Box Ara\u00e7lar\u0131'n\u0131 kurun"
             },
             "reauth_confirm": {
                 "data": {
@@ -38,8 +38,8 @@
                     "port": "Port",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
-                "description": "FRITZ!Box'\u0131n\u0131z\u0131 kontrol etmek i\u00e7in FRITZ!Box Tools'u kurun.\n Minimum gerekli: kullan\u0131c\u0131 ad\u0131, \u015fifre.",
-                "title": "FRITZ!Box Tools Kurulumu"
+                "description": "FRITZ!Box'\u0131n\u0131z\u0131 kontrol etmek i\u00e7in FRITZ!Box Ara\u00e7lar\u0131n\u0131 kurun.\n Gereken minimum: kullan\u0131c\u0131 ad\u0131, \u015fifre.",
+                "title": "FRITZ!Box Ara\u00e7lar\u0131'n\u0131 kurun"
             }
         }
     },

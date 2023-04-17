@@ -9,9 +9,7 @@ import functools
 import logging
 import threading
 from traceback import extract_stack
-from typing import Any, TypeVar
-
-from typing_extensions import ParamSpec
+from typing import Any, ParamSpec, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 

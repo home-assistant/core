@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
             "service_unavailable_error": "API-en er for \u00f8yeblikket utilgjengelig, pr\u00f8v igjen senere.",

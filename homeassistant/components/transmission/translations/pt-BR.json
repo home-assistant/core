@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Atualize quaisquer automa\u00e7\u00f5es ou scripts que usam esse servi\u00e7o e substitua a chave de nome pela chave entry_id.",
-                        "title": "A chave de nome nos servi\u00e7os de transmiss\u00e3o est\u00e1 sendo removida"
-                    }
-                }
-            },
-            "title": "A chave de nome nos servi\u00e7os de transmiss\u00e3o est\u00e1 sendo removida"
-        }
-    },
     "options": {
         "step": {
             "init": {

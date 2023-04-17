@@ -116,7 +116,10 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_step_choice_enter_manual_or_fetch_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the user's choice of entering the manual credentials or fetching the cloud credentials."""
+        """Handle the user's choice.
+
+        Either enter the manual credentials or fetch the cloud credentials.
+        """
         return self.async_show_menu(
             step_id="choice_enter_manual_or_fetch_cloud",
             menu_options=["pick_implementation", "manual_entry"],

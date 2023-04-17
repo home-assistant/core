@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Moc zakontraktowana (kW)",
-                    "power_p3": "Moc zakontraktowana dla okresu zni\u017ckowego P3 (kW)",
-                    "tariff": "Obowi\u0105zuj\u0105ca taryfa wed\u0142ug strefy geograficznej"
+                    "power_p3": "Moc zakontraktowana dla okresu zni\u017ckowego P3 (kW)"
                 }
             }
         }

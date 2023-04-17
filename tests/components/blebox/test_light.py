@@ -557,9 +557,9 @@ async def test_wlightbox_on_effect(wlightbox, hass):
         )
 
     assert (
-        f"Turning on with effect '{feature_mock.full_name}' failed: NOT IN LIST not in effect list."
-        in str(info.value)
-    )
+        f"Turning on with effect '{feature_mock.full_name}' failed: "
+        "NOT IN LIST not in effect list."
+    ) in str(info.value)
 
     await hass.services.async_call(
         "light",

@@ -1,5 +1,5 @@
 """The tests for the Script component."""
-# pylint: disable=protected-access
+
 import asyncio
 from contextlib import contextmanager
 from datetime import timedelta
@@ -4633,14 +4633,12 @@ async def test_breakpoints_2(hass):
 async def test_platform_async_validate_action_config(hass):
     """Test platform.async_validate_action_config will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test"}
-    platform = AsyncMock()
     with patch(
-        "homeassistant.components.device_automation.action.async_get_device_automation_platform",
-        return_value=platform,
-    ):
-        platform.async_validate_action_config.return_value = config
+        "homeassistant.components.device_automation.action.async_validate_action_config",
+        return_value=AsyncMock(),
+    ) as device_automation_validate_action_mock:
         await script.async_validate_action_config(hass, config)
-        platform.async_validate_action_config.assert_awaited()
+        device_automation_validate_action_mock.assert_awaited()
 
 
 async def test_stop_action(hass, caplog):

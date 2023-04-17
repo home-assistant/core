@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung/Authentifizierung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Passwort (Standard: PIN-Code auf der R\u00fcckseite)",
+                    "use_legacy_protocol": "Legacy-Protokoll verwenden",
+                    "username": "Benutzername"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort (Standard: PIN-Code auf der R\u00fcckseite)",
+                    "use_legacy_protocol": "Legacy-Protokoll verwenden",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Die Konfiguration des D-Link Smart Plug mittels YAML wird entfernt.\n\nDeine bestehende YAML-Konfiguration wurde automatisch in die Benutzeroberfl\u00e4che importiert.\n\nEntferne die D-Link Power Plug YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die D-Link Smart Plug YAML-Konfiguration wird entfernt"
+        }
+    }
+}

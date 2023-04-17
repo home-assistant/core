@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
         "error": {
             "bad_station_id": "Station ID is invalid, missing, or not found in the station ID database",
             "cannot_connect": "Failed to connect",

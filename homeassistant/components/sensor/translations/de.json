@@ -48,7 +48,6 @@
             "carbon_monoxide": "{entity_name} Kohlenstoffmonoxid-Konzentrations\u00e4nderung",
             "current": "{entity_name} Stromver\u00e4nderung",
             "data_rate": "\u00c4nderung der Datenrate von {entity_name}",
-            "data_size": "\u00c4nderung der Datengr\u00f6\u00dfe von {entity_name}",
             "distance": "Abstand zu {entity_name} \u00e4ndert sich",
             "energy": "{entity_name} Energie\u00e4nderungen",
             "frequency": "{entity_name} Frequenz\u00e4nderungen",

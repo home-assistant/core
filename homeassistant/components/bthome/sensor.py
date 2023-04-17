@@ -1,8 +1,6 @@
 """Support for BTHome sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
 
 from homeassistant import config_entries
@@ -332,9 +330,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a BTHome BLE sensor."""

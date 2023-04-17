@@ -19,5 +19,18 @@
                 "title": "Connect to the Venstar Thermostat"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "Day",
+                    "evening": "Evening",
+                    "inactive": "Inactive",
+                    "morning": "Morning",
+                    "night": "Night"
+                }
+            }
+        }
     }
 }

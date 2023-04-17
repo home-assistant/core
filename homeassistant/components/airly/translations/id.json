@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Lokasi sudah dikonfigurasi"
+            "already_configured": "Lokasi sudah dikonfigurasi",
+            "wrong_location": "Tidak ada stasiun pengukur Airly di daerah ini."
         },
         "error": {
             "invalid_api_key": "Kunci API tidak valid",

@@ -85,6 +85,17 @@
         }
     },
     "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "V\u00e4rskenda k\u00f5iki automatiseerimisi v\u00f5i skripte, mis kasutavad seda olemit teenusek\u00f5nedes, kasutades teenust ` {deprecated_service} , et kasutada selle asemel teenust ` {alternate_service} , mille siht\u00fcksuse ID on ` {alternate_target} .",
+                        "title": "\u00dcksus {deprecated_entity} eemaldatakse"
+                    }
+                }
+            },
+            "title": "\u00dcksus {deprecated_entity} eemaldatakse"
+        },
         "deprecated_service": {
             "fix_flow": {
                 "step": {

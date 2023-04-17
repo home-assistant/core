@@ -20,5 +20,22 @@
                 "title": "Typ Plugwise"
             }
         }
+    },
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Noc",
+                            "away": "Pry\u010d",
+                            "home": "Doma",
+                            "no_frost": "Proti mrazu",
+                            "vacation": "Pr\u00e1zdniny"
+                        }
+                    }
+                }
+            }
+        }
     }
 }

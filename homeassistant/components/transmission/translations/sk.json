@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Aktualizujte v\u0161etky automatiz\u00e1cie alebo skripty, ktor\u00e9 pou\u017e\u00edvaj\u00fa t\u00fato slu\u017ebu, a nahra\u010fte k\u013e\u00fa\u010d n\u00e1zvu k\u013e\u00fa\u010dom entry_id.",
-                        "title": "K\u013e\u00fa\u010d s n\u00e1zvom v slu\u017eb\u00e1ch prenosu sa odstra\u0148uje"
-                    }
-                }
-            },
-            "title": "K\u013e\u00fa\u010d s n\u00e1zvom v slu\u017eb\u00e1ch prenosu sa odstra\u0148uje"
-        }
-    },
     "options": {
         "step": {
             "init": {

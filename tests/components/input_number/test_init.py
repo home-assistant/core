@@ -1,5 +1,5 @@
 """The tests for the Input number component."""
-# pylint: disable=protected-access
+
 from unittest.mock import patch
 
 import pytest

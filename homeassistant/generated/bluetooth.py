@@ -43,6 +43,26 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb",
     },
     {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9140",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9146",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9147",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9148",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9149",
+    },
+    {
         "connectable": False,
         "domain": "fjaraskupan",
         "manufacturer_data_start": [
@@ -200,6 +220,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "keymitt_ble",
         "local_name": "mib*",
+    },
+    {
+        "domain": "ld2410_ble",
+        "local_name": "HLK-LD2410B_*",
     },
     {
         "domain": "led_ble",

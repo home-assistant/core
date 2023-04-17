@@ -163,6 +163,12 @@ def calc_allowed_references(integration: Integration) -> set[str]:
         | set(manifest.get("dependencies", []))
         | set(manifest.get("after_dependencies", []))
     )
+    # bluetooth_adapters is a wrapper to ensure
+    # that all the integrations that provide bluetooth
+    # adapters are setup before loading integrations
+    # that use them.
+    if "bluetooth_adapters" in allowed_references:
+        allowed_references.add("bluetooth")
 
     # Discovery requirements are ok if referenced in manifest
     for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():

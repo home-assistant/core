@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from asyncio import gather
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
@@ -85,7 +85,7 @@ def _get_registry_entries(
 class AbstractConfig(ABC):
     """Hold the configuration for Google Assistant."""
 
-    _unsub_report_state = None
+    _unsub_report_state: Callable[[], None] | None = None
 
     def __init__(self, hass):
         """Initialize abstract config."""
@@ -197,7 +197,7 @@ class AbstractConfig(ABC):
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from .report_state import async_enable_report_state
 
         if self._unsub_report_state is None:
@@ -338,7 +338,7 @@ class AbstractConfig(ABC):
     async def _handle_local_webhook(self, hass, webhook_id, request):
         """Handle an incoming local SDK message."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import smart_home
 
         self._local_last_active = utcnow()

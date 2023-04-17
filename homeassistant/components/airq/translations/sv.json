@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP-adress",
+                    "password": "L\u00f6senord"
+                }
+            }
+        }
+    }
+}

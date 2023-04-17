@@ -160,6 +160,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         result = await hass.config_entries.options.async_init(entry.entry_id)
         await hass.async_block_till_done()
 
+    with patch_interface(), patch(
+        "homeassistant.components.steam_online.async_setup_entry",
+        return_value=True,
+    ):
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
@@ -167,6 +171,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_ACCOUNTS: [ACCOUNT_1, ACCOUNT_2]},
         )
+        await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
 

@@ -1,4 +1,4 @@
-"""Test zha lock."""
+"""Test ZHA lock."""
 from unittest.mock import patch
 
 import pytest
@@ -29,7 +29,7 @@ SET_USER_STATUS = 9
 
 @pytest.fixture(autouse=True)
 def lock_platform_only():
-    """Only setup the lock and required base platforms to speed up tests."""
+    """Only set up the lock and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -60,7 +60,7 @@ async def lock(hass, zigpy_device_mock, zha_device_joined_restored):
 
 
 async def test_lock(hass, lock):
-    """Test zha lock platform."""
+    """Test ZHA lock platform."""
 
     zha_device, cluster = lock
     entity_id = await find_entity_id(Platform.LOCK, zha_device, hass)

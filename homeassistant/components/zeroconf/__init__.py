@@ -141,7 +141,7 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
 
 @callback
 def _async_zc_has_functional_dual_stack() -> bool:
-    """Return true for platforms that not support IP_ADD_MEMBERSHIP on an AF_INET6 socket.
+    """Return true for platforms not supporting IP_ADD_MEMBERSHIP on an AF_INET6 socket.
 
     Zeroconf only supports a single listen socket at this time.
     """
@@ -275,7 +275,8 @@ async def _async_register_hass_zc_service(
     adapters = await network.async_get_adapters(hass)
 
     # Puts the default IPv4 address first in the list to preserve compatibility,
-    # because some mDNS implementations ignores anything but the first announced address.
+    # because some mDNS implementations ignores anything but the first announced
+    # address.
     host_ip = await async_get_source_ip(hass, target_ip=MDNS_TARGET_IP)
     host_ip_pton = None
     if host_ip:
@@ -429,15 +430,17 @@ class ZeroconfDiscovery:
                 integration: Integration = await async_get_integration(
                     self.hass, domain
                 )
-                # Since we prefer local control, if the integration that is being discovered
-                # is cloud AND the homekit device is UNPAIRED we still want to discovery it.
+                # Since we prefer local control, if the integration that is being
+                # discovered is cloud AND the homekit device is UNPAIRED we still
+                # want to discovery it.
                 #
-                # Additionally if the integration is polling, HKC offers a local push
-                # experience for the user to control the device so we want to offer that
-                # as well.
+                # Additionally if the integration is polling, HKC offers a local
+                # push experience for the user to control the device so we want
+                # to offer that as well.
                 #
-                # As soon as the device becomes paired, the config flow will be dismissed
-                # in the event the user does not want to pair with Home Assistant.
+                # As soon as the device becomes paired, the config flow will be
+                # dismissed in the event the user does not want to pair
+                # with Home Assistant.
                 #
                 if not integration.iot_class or (
                     not integration.iot_class.startswith("cloud")
@@ -468,7 +471,8 @@ class ZeroconfDiscovery:
                 "source": config_entries.SOURCE_ZEROCONF,
             }
             if domain:
-                # Domain of integration that offers alternative API to handle this device.
+                # Domain of integration that offers alternative API to handle
+                # this device.
                 context["alternative_domain"] = domain
 
             discovery_flow.async_create_flow(

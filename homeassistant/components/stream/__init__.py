@@ -220,7 +220,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     filter_libav_logging()
 
     # Keep import here so that we can import stream integration without installing reqs
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .recorder import async_setup_recorder
 
     hass.data[DOMAIN] = {}
@@ -405,7 +405,7 @@ class Stream:
     def _run_worker(self) -> None:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from .worker import StreamState, StreamWorkerError, stream_worker
 
         stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
@@ -501,7 +501,7 @@ class Stream:
         """Make a .mp4 recording from a provided stream."""
 
         # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from .recorder import RecorderOutput
 
         # Check for file access

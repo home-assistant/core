@@ -264,7 +264,10 @@ def warn_for_legacy_schema(domain: str) -> Callable[[ConfigType], ConfigType]:
             severity=IssueSeverity.ERROR,
             translation_key="deprecated_yaml",
             translation_placeholders={
-                "more_info_url": f"https://www.home-assistant.io/integrations/{domain}.mqtt/#new_format",
+                "more_info_url": (
+                    "https://www.home-assistant.io"
+                    f"/integrations/{domain}.mqtt/#new_format"
+                ),
                 "platform": domain,
             },
         )
@@ -600,7 +603,11 @@ class MqttAvailability(Entity):
 async def cleanup_device_registry(
     hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
 ) -> None:
-    """Remove MQTT from the device registry entry if there are no remaining entities, triggers or tags."""
+    """Clean up the device registry after MQTT removal.
+
+    Remove MQTT from the device registry entry if there are no remaining
+    entities, triggers or tags.
+    """
     # Local import to avoid circular dependencies
     # pylint: disable-next=import-outside-toplevel
     from . import device_trigger, tag
@@ -649,7 +656,11 @@ def stop_discovery_updates(
 async def async_remove_discovery_payload(
     hass: HomeAssistant, discovery_data: DiscoveryInfoType
 ) -> None:
-    """Clear retained discovery topic in broker to avoid rediscovery after a restart of HA."""
+    """Clear retained discovery payload.
+
+    Remove discovery topic in broker to avoid rediscovery
+    after a restart of Home Assistant.
+    """
     discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
     await async_publish(hass, discovery_topic, "", retain=True)
 
@@ -829,8 +840,9 @@ class MqttDiscoveryUpdate(Entity):
         ) -> None:
             """Remove entity's state and entity registry entry.
 
-            Remove entity from entity registry if it is registered, this also removes the state.
-            If the entity is not in the entity registry, just remove the state.
+            Remove entity from entity registry if it is registered,
+            this also removes the state. If the entity is not in the entity
+            registry, just remove the state.
             """
             entity_registry = er.async_get(self.hass)
             if entity_entry := entity_registry.async_get(self.entity_id):
@@ -843,7 +855,7 @@ class MqttDiscoveryUpdate(Entity):
 
         async def discovery_callback(payload: MQTTDiscoveryPayload) -> None:
             """Handle discovery update."""
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Got update for entity with hash: %s '%s'",
                 discovery_hash,
                 payload,
@@ -864,7 +876,7 @@ class MqttDiscoveryUpdate(Entity):
                     await self._discovery_update(payload)
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
-                    _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
+                    _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
             send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
@@ -872,7 +884,8 @@ class MqttDiscoveryUpdate(Entity):
             debug_info.add_entity_discovery_data(
                 self.hass, self._discovery_data, self.entity_id
             )
-            # Set in case the entity has been removed and is re-added, for example when changing entity_id
+            # Set in case the entity has been removed and is re-added,
+            # for example when changing entity_id
             set_discovery_hash(self.hass, discovery_hash)
             self._remove_discovery_updated = async_dispatcher_connect(
                 self.hass,
@@ -883,11 +896,12 @@ class MqttDiscoveryUpdate(Entity):
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
         if not self._removed_from_hass and self._discovery_data is not None:
-            # Stop subscribing to discovery updates to not trigger when we clear the
-            # discovery topic
+            # Stop subscribing to discovery updates to not trigger when we
+            # clear the discovery topic
             self._cleanup_discovery_on_remove()
 
-            # Clear the discovery topic so the entity is not rediscovered after a restart
+            # Clear the discovery topic so the entity is not
+            # rediscovered after a restart
             await async_remove_discovery_payload(self.hass, self._discovery_data)
 
     @callback

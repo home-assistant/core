@@ -31,5 +31,20 @@
         }
       }
     }
+  },
+  "selector": {
+    "cycle": {
+      "options": {
+        "none": "No cycle",
+        "quarter-hourly": "Every 15 minutes",
+        "hourly": "Hourly",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "bimonthly": "Every two months",
+        "quarterly": "Quarterly",
+        "yearly": "Yearly"
+      }
+    }
   }
 }

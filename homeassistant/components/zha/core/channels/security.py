@@ -76,7 +76,7 @@ class IasAce(ZigbeeChannel):
         self.armed_state: AceCluster.PanelStatus = AceCluster.PanelStatus.Panel_Disarmed
         self.invalid_tries: int = 0
 
-        # These will all be setup by the entity from zha configuration
+        # These will all be setup by the entity from ZHA configuration
         self.panel_code: str = "1234"
         self.code_required_arm_actions = False
         self.max_invalid_tries: int = 3

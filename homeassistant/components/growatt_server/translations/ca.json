@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
             "no_plants": "No s'ha trobat cap planta en aquest compte"
         },
         "error": {

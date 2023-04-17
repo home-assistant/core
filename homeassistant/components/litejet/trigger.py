@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from pylitejet import LiteJet
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
@@ -104,7 +105,7 @@ async def async_attach_trigger(
         ):
             hass.add_job(call_action)
 
-    system = hass.data[DOMAIN]
+    system: LiteJet = hass.data[DOMAIN]
 
     system.on_switch_pressed(number, pressed)
     system.on_switch_released(number, released)

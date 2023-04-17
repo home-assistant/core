@@ -5,7 +5,7 @@
             "not_forked_daapd": "Az eszk\u00f6z nem Owntone-kiszolg\u00e1l\u00f3."
         },
         "error": {
-            "forbidden": "Nem siker\u00fclt csatlakozni. K\u00e9rj\u00fck, ellen\u0151rizze az Owntone h\u00e1l\u00f3zati enged\u00e9lyeit.",
+            "forbidden": "Nem siker\u00fclt csatlakozni. K\u00e9rem, ellen\u0151rizze az Owntone h\u00e1l\u00f3zati enged\u00e9lyeit.",
             "unknown_error": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
             "websocket_not_enabled": "Az Owntone server websocket nincs enged\u00e9lyezve.",
             "wrong_host_or_port": "A csatlakoz\u00e1s sikertelen. K\u00e9rem, ellen\u0151rizze a c\u00edmet \u00e9s a portot.",

@@ -30,14 +30,6 @@
                 "description": "Use a API de nuvem AirVisual para monitorar uma cidade/estado/pa\u00eds.",
                 "title": "Configurar uma geografia"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Nome do host",
-                    "password": "Senha"
-                },
-                "description": "Monitore uma unidade AirVisual pessoal. A senha pode ser recuperada da interface do usu\u00e1rio da unidade.",
-                "title": "Configurar um n\u00f3/pro AirVisual"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Chave da API"

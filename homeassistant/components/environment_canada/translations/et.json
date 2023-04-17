@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
         "error": {
             "bad_station_id": "Jaama ID ei sobi, puudub v\u00f5i seda ei leitud jaamade ID andmebaasist",
             "cannot_connect": "\u00dchendamine nurjus",

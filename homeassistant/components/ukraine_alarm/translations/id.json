@@ -5,7 +5,7 @@
             "cannot_connect": "Gagal terhubung",
             "max_regions": "Maksimal 5 wilayah dapat dikonfigurasi",
             "rate_limit": "Terlalu banyak permintaan",
-            "timeout": "Tenggang waktu membuat koneksi habis",
+            "timeout": "Tenggang waktu pembuatan koneksi habis",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada"
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada",
+            "wrong_location": "No hay estaciones de medici\u00f3n Airly en esta \u00e1rea."
         },
         "error": {
             "invalid_api_key": "Clave API no v\u00e1lida",

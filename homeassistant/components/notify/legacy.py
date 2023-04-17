@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from functools import partial
-from typing import Any, Optional, Protocol, cast
+from typing import Any, Protocol, cast
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -71,7 +71,7 @@ def async_setup_legacy(
             p_config = {}
 
         platform = cast(
-            Optional[LegacyNotifyPlatform],
+            LegacyNotifyPlatform | None,
             await async_prepare_setup_platform(hass, config, DOMAIN, integration_name),
         )
 

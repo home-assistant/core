@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
         "error": {
             "cannot_connect": "Failed to connect"
         },

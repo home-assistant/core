@@ -18,7 +18,7 @@ async def _async_manipulate_security_zones(
     hass, home, internal_active=False, external_active=False, alarm_triggered=False
 ):
     """Set new values on hmip security zones."""
-    json = home._rawJSONData  # pylint: disable=protected-access
+    json = home._rawJSONData
     json["functionalHomes"]["SECURITY_AND_ALARM"]["alarmActive"] = alarm_triggered
     external_zone_id = json["functionalHomes"]["SECURITY_AND_ALARM"]["securityZones"][
         "EXTERNAL"

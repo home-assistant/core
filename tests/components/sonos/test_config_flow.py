@@ -62,8 +62,12 @@ async def test_user_form(
 async def test_user_form_already_created(hass: core.HomeAssistant):
     """Ensure we abort a flow if the entry is already created from config."""
     config = {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: "192.168.4.2"}}}
-    await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.sonos.async_setup_entry",
+        return_value=True,
+    ):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

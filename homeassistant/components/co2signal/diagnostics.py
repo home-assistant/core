@@ -1,6 +1,8 @@
 """Diagnostics support for CO2Signal."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -13,7 +15,7 @@ TO_REDACT = {CONF_API_KEY}
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: CO2SignalCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 

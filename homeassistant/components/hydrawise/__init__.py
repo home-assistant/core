@@ -28,7 +28,7 @@ DATA_HYDRAWISE = "hydrawise"
 DOMAIN = "hydrawise"
 DEFAULT_WATERING_TIME = 15
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"
 

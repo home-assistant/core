@@ -91,6 +91,8 @@ LIGHT_TYPES: dict[SensorType, set[ValueType]] = {
 
 NOTIFY_TYPES: dict[SensorType, set[ValueType]] = {"S_INFO": {"V_TEXT"}}
 
+REMOTE_TYPES: dict[SensorType, set[ValueType]] = {"S_IR": {"V_IR_SEND"}}
+
 SENSOR_TYPES: dict[SensorType, set[ValueType]] = {
     "S_SOUND": {"V_LEVEL"},
     "S_VIBRATION": {"V_LEVEL"},
@@ -107,7 +109,7 @@ SENSOR_TYPES: dict[SensorType, set[ValueType]] = {
     "S_POWER": {"V_WATT", "V_KWH", "V_VAR", "V_VA", "V_POWER_FACTOR"},
     "S_DISTANCE": {"V_DISTANCE"},
     "S_LIGHT_LEVEL": {"V_LIGHT_LEVEL", "V_LEVEL"},
-    "S_IR": {"V_IR_RECEIVE"},
+    "S_IR": {"V_IR_RECEIVE", "V_IR_RECORD"},
     "S_WATER": {"V_FLOW", "V_VOLUME"},
     "S_CUSTOM": {"V_VAR1", "V_VAR2", "V_VAR3", "V_VAR4", "V_VAR5", "V_CUSTOM"},
     "S_SCENE_CONTROLLER": {"V_SCENE_ON", "V_SCENE_OFF"},
@@ -144,6 +146,7 @@ PLATFORM_TYPES: dict[Platform, dict[SensorType, set[ValueType]]] = {
     Platform.DEVICE_TRACKER: DEVICE_TRACKER_TYPES,
     Platform.LIGHT: LIGHT_TYPES,
     Platform.NOTIFY: NOTIFY_TYPES,
+    Platform.REMOTE: REMOTE_TYPES,
     Platform.SENSOR: SENSOR_TYPES,
     Platform.SWITCH: SWITCH_TYPES,
     Platform.TEXT: TEXT_TYPES,

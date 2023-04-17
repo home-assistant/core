@@ -1,11 +1,18 @@
 """The tests for the calendar component."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
+from homeassistant.components.calendar import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
@@ -157,3 +164,165 @@ async def test_unsupported_websocket(hass, hass_ws_client, payload, code):
     assert resp.get("id") == 1
     assert resp.get("error")
     assert resp["error"].get("code") == code
+
+
+async def test_unsupported_create_event_service(hass):
+    """Test unsupported service call."""
+
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="does not support this service"):
+        await hass.services.async_call(
+            DOMAIN,
+            "create_event",
+            {
+                "start_date_time": "1997-07-14T17:00:00+00:00",
+                "end_date_time": "1997-07-15T04:00:00+00:00",
+                "summary": "Bastille Day Party",
+            },
+            target={"entity_id": "calendar.calendar_1"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "date_fields,expected_error,error_match",
+    [
+        (
+            {},
+            vol.error.MultipleInvalid,
+            "must contain at least one of start_date, start_date_time, in",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
+        ),
+        (
+            {
+                "end_date": "2022-04-02",
+            },
+            vol.error.MultipleInvalid,
+            "must contain at least one of start_date, start_date_time, in.",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T06:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end datetimes must both be specified",
+        ),
+        (
+            {
+                "end_date_time": "2022-04-02T07:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "must contain at least one of start_date, start_date_time, in.",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "start_date_time": "2022-04-01T06:00:00",
+                "end_date_time": "2022-04-02T07:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "must contain at most one of start_date, start_date_time, in.",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T06:00:00",
+                "end_date_time": "2022-04-01T07:00:00",
+                "end_date": "2022-04-02",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "end_date_time": "2022-04-02T07:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T07:00:00",
+                "end_date": "2022-04-02",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
+        ),
+        (
+            {
+                "in": {
+                    "days": 2,
+                    "weeks": 2,
+                }
+            },
+            vol.error.MultipleInvalid,
+            "two or more values in the same group of exclusion 'event_types'",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "end_date": "2022-04-02",
+                "in": {
+                    "days": 2,
+                },
+            },
+            vol.error.MultipleInvalid,
+            "must contain at most one of start_date, start_date_time, in.",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T07:00:00",
+                "end_date_time": "2022-04-01T07:00:00",
+                "in": {
+                    "days": 2,
+                },
+            },
+            vol.error.MultipleInvalid,
+            "must contain at most one of start_date, start_date_time, in.",
+        ),
+    ],
+    ids=[
+        "missing_all",
+        "missing_end_date",
+        "missing_start_date",
+        "missing_end_datetime",
+        "missing_start_datetime",
+        "multiple_start",
+        "multiple_end",
+        "missing_end_date",
+        "missing_end_date_time",
+        "multiple_in",
+        "unexpected_in_with_date",
+        "unexpected_in_with_datetime",
+    ],
+)
+async def test_create_event_service_invalid_params(
+    hass: HomeAssistant,
+    date_fields: dict[str, Any],
+    expected_error: type[Exception],
+    error_match: str | None,
+):
+    """Test creating an event using the create_event service."""
+
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    with pytest.raises(expected_error, match=error_match):
+        await hass.services.async_call(
+            "calendar",
+            "create_event",
+            {
+                "summary": "Bastille Day Party",
+                **date_fields,
+            },
+            target={"entity_id": "calendar.calendar_1"},
+            blocking=True,
+        )

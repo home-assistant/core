@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "wrong_password": "L\u00f6senordet \u00e4r felaktigt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP-adress",
+                    "password": "L\u00f6senord"
+                }
+            }
+        }
+    }
+}

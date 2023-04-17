@@ -158,12 +158,16 @@ class EntityPlatform:
     ) -> asyncio.Semaphore | None:
         """Get or create a semaphore for parallel updates.
 
-        Semaphore will be created on demand because we base it off if update method is async or not.
+        Semaphore will be created on demand because we base it off if update
+        method is async or not.
 
-        If parallel updates is set to 0, we skip the semaphore.
-        If parallel updates is set to a number, we initialize the semaphore to that number.
-        The default value for parallel requests is decided based on the first entity that is added to Home Assistant.
-        It's 0 if the entity defines the async_update method, else it's 1.
+        - If parallel updates is set to 0, we skip the semaphore.
+        - If parallel updates is set to a number, we initialize the semaphore
+          to that number.
+
+        The default value for parallel requests is decided based on the first
+        entity that is added to Home Assistant. It's 0 if the entity defines
+        the async_update method, else it's 1.
         """
         if self.parallel_updates_created:
             return self.parallel_updates
@@ -566,7 +570,9 @@ class EntityPlatform:
                     "via_device",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[literal-required]
+                        processed_dev_info[key] = device_info[
+                            key  # type: ignore[literal-required]
+                        ]
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:
@@ -586,7 +592,9 @@ class EntityPlatform:
                             )
 
                 try:
-                    device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
+                    device = device_registry.async_get_or_create(
+                        **processed_dev_info  # type: ignore[arg-type]
+                    )
                     device_id = device.id
                 except RequiredParameterMissing:
                     pass

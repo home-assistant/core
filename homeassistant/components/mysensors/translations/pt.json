@@ -15,5 +15,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_entity": {
+            "title": "A entidade {deprecated_entity}  ir\u00e1 ser removida"
+        }
     }
 }

@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Auto Update deaktiv\u00e9ieren",
-                    "scan_interval": "Intervalle vun de Mise \u00e0 jour (Minutten)",
                     "server_name": "Test Server auswielen"
                 }
             }

@@ -118,7 +118,10 @@ def _color_mode_to_ha(mode: int) -> str:
 def _filter_color_modes(
     supported: list[int], features: LightColorCapability
 ) -> list[int]:
-    """Filter the given supported color modes, excluding all values that don't have the requested features."""
+    """Filter the given supported color modes.
+
+    Excluding all values that don't have the requested features.
+    """
     return [mode for mode in supported if mode & features]
 
 
@@ -161,7 +164,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             try_keep_current_mode = False
 
         if (rgbw_ha := kwargs.get(ATTR_RGBW_COLOR)) is not None:
-            # pylint: disable=invalid-name
+            # pylint: disable-next=invalid-name
             *rgb, w = tuple(x / 255 for x in rgbw_ha)  # type: ignore[assignment]
             color_bri = max(rgb)
             # normalize rgb
@@ -174,7 +177,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             try_keep_current_mode = False
 
         if (rgbww_ha := kwargs.get(ATTR_RGBWW_COLOR)) is not None:
-            # pylint: disable=invalid-name
+            # pylint: disable-next=invalid-name
             *rgb, cw, ww = tuple(x / 255 for x in rgbww_ha)  # type: ignore[assignment]
             color_bri = max(rgb)
             # normalize rgb
@@ -226,7 +229,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
         if (white_ha := kwargs.get(ATTR_WHITE)) is not None:
             # ESPHome multiplies brightness and white together for final brightness
-            # HA only sends `white` in turn_on, and reads total brightness through brightness property
+            # HA only sends `white` in turn_on, and reads total brightness
+            # through brightness property.
             data["brightness"] = white_ha / 255
             data["white"] = 1.0
             color_modes = _filter_color_modes(
@@ -244,8 +248,10 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 # if possible, stay with the color mode that is already set
                 data["color_mode"] = self._state.color_mode
             else:
-                # otherwise try the color mode with the least complexity (fewest capabilities set)
-                # popcount with bin() function because it appears to be the best way: https://stackoverflow.com/a/9831671
+                # otherwise try the color mode with the least complexity
+                # (fewest capabilities set)
+                # popcount with bin() function because it appears
+                # to be the best way: https://stackoverflow.com/a/9831671
                 color_modes.sort(key=lambda mode: bin(mode).count("1"))
                 data["color_mode"] = color_modes[0]
 
@@ -332,9 +338,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def color_temp(self) -> float | None:  # type: ignore[override]
+    def color_temp(self) -> int:
         """Return the CT color value in mireds."""
-        return self._state.color_temperature
+        return round(self._state.color_temperature)
 
     @property
     @esphome_state_property
@@ -377,11 +383,11 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         return self._static_info.effects
 
     @property
-    def min_mireds(self) -> float:  # type: ignore[override]
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
-        return self._static_info.min_mireds
+        return round(self._static_info.min_mireds)
 
     @property
-    def max_mireds(self) -> float:  # type: ignore[override]
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
-        return self._static_info.max_mireds
+        return round(self._static_info.max_mireds)

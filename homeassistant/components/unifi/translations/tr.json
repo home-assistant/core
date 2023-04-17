@@ -27,7 +27,7 @@
     },
     "options": {
         "abort": {
-            "integration_not_setup": "UniFi entegrasyonu kurulmad\u0131"
+            "integration_not_setup": "UniFi entegrasyonu kurulmam\u0131\u015f"
         },
         "step": {
             "client_control": {

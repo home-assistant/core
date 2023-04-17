@@ -80,11 +80,18 @@
                 },
                 "description": "Zme\u0148te inform\u00e1cie o pripojen\u00ed Insteon Hub. Po vykonan\u00ed tejto zmeny mus\u00edte Home Assistant re\u0161tartova\u0165. Toto nemen\u00ed konfigur\u00e1ciu samotn\u00e9ho Hubu. Ak chcete zmeni\u0165 konfigur\u00e1ciu v Hub, pou\u017eite aplik\u00e1ciu Hub."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "Cesta k zariadeniu USB"
+                },
+                "description": "Zme\u0148te inform\u00e1cie o pripojen\u00ed Insteon PLM. Po vykonan\u00ed tejto zmeny mus\u00edte Home Assistant re\u0161tartova\u0165. Toto nemen\u00ed konfigur\u00e1ciu samotn\u00e9ho PLM."
+            },
             "init": {
                 "data": {
                     "add_override": "Pridanie prep\u00edsania zariadenia.",
                     "add_x10": "Pridajte zariadenie X10.",
                     "change_hub_config": "Zme\u0148te konfigur\u00e1ciu hubu.",
+                    "change_plm_config": "Zmena konfigur\u00e1cie PLM.",
                     "remove_override": "Odstr\u00e1nenie prep\u00edsania zariadenia.",
                     "remove_x10": "Odstr\u00e1\u0148te zariadenie X10."
                 }

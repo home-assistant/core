@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import callback, is_callback
 import homeassistant.util.logging as logging_util
 
@@ -66,17 +65,16 @@ async def test_logging_with_queue_handler():
 async def test_migrate_log_handler(hass):
     """Test migrating log handlers."""
 
-    original_handlers = logging.root.handlers
-
     logging_util.async_activate_log_queue_handler(hass)
 
     assert len(logging.root.handlers) == 1
     assert isinstance(logging.root.handlers[0], logging_util.HomeAssistantQueueHandler)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-    await hass.async_block_till_done()
-
-    assert logging.root.handlers == original_handlers
+    # Test that the close hook shuts down the queue handler's thread
+    listener_thread = logging.root.handlers[0].listener._thread
+    assert listener_thread.is_alive()
+    logging.root.handlers[0].close()
+    assert not listener_thread.is_alive()
 
 
 @pytest.mark.no_fail_on_log_exception

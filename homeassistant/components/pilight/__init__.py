@@ -7,10 +7,9 @@ import functools
 import logging
 import socket
 import threading
-from typing import Any
+from typing import Any, ParamSpec
 
 from pilight import pilight
-from typing_extensions import ParamSpec
 import voluptuous as vol
 
 from homeassistant.const import (

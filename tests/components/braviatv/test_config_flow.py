@@ -2,10 +2,10 @@
 from unittest.mock import patch
 
 from pybravia import (
-    BraviaTVAuthError,
-    BraviaTVConnectionError,
-    BraviaTVError,
-    BraviaTVNotSupported,
+    BraviaAuthError,
+    BraviaConnectionError,
+    BraviaError,
+    BraviaNotSupported,
 )
 import pytest
 
@@ -13,7 +13,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.braviatv.const import (
     CONF_CLIENT_ID,
-    CONF_IGNORED_SOURCES,
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
@@ -21,7 +20,6 @@ from homeassistant.components.braviatv.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import instance_id
 
 from tests.common import MockConfigEntry
@@ -107,10 +105,10 @@ async def test_ssdp_discovery(hass):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
-    with patch("pybravia.BraviaTV.connect"), patch("pybravia.BraviaTV.pair"), patch(
-        "pybravia.BraviaTV.set_wol_mode"
-    ), patch(
-        "pybravia.BraviaTV.get_system_info",
+    with patch("pybravia.BraviaClient.connect"), patch(
+        "pybravia.BraviaClient.pair"
+    ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
+        "pybravia.BraviaClient.get_system_info",
         return_value=BRAVIA_SYSTEM_INFO,
     ), patch(
         "homeassistant.components.braviatv.async_setup_entry", return_value=True
@@ -195,17 +193,17 @@ async def test_user_invalid_host(hass):
 @pytest.mark.parametrize(
     "side_effect, error_message",
     [
-        (BraviaTVAuthError, "invalid_auth"),
-        (BraviaTVNotSupported, "unsupported_model"),
-        (BraviaTVConnectionError, "cannot_connect"),
+        (BraviaAuthError, "invalid_auth"),
+        (BraviaNotSupported, "unsupported_model"),
+        (BraviaConnectionError, "cannot_connect"),
     ],
 )
 async def test_pin_form_error(hass, side_effect, error_message):
     """Test that PIN form errors are correct."""
     with patch(
-        "pybravia.BraviaTV.connect",
+        "pybravia.BraviaClient.connect",
         side_effect=side_effect,
-    ), patch("pybravia.BraviaTV.pair"):
+    ), patch("pybravia.BraviaClient.pair"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
         )
@@ -222,15 +220,15 @@ async def test_pin_form_error(hass, side_effect, error_message):
 @pytest.mark.parametrize(
     "side_effect, error_message",
     [
-        (BraviaTVAuthError, "invalid_auth"),
-        (BraviaTVNotSupported, "unsupported_model"),
-        (BraviaTVConnectionError, "cannot_connect"),
+        (BraviaAuthError, "invalid_auth"),
+        (BraviaNotSupported, "unsupported_model"),
+        (BraviaConnectionError, "cannot_connect"),
     ],
 )
 async def test_psk_form_error(hass, side_effect, error_message):
     """Test that PSK form errors are correct."""
     with patch(
-        "pybravia.BraviaTV.connect",
+        "pybravia.BraviaClient.connect",
         side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -248,7 +246,7 @@ async def test_psk_form_error(hass, side_effect, error_message):
 
 async def test_no_ip_control(hass):
     """Test that error are shown when IP Control is disabled on the TV."""
-    with patch("pybravia.BraviaTV.pair", side_effect=BraviaTVError):
+    with patch("pybravia.BraviaClient.pair", side_effect=BraviaError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
         )
@@ -274,10 +272,10 @@ async def test_duplicate_error(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch("pybravia.BraviaTV.connect"), patch("pybravia.BraviaTV.pair"), patch(
-        "pybravia.BraviaTV.set_wol_mode"
-    ), patch(
-        "pybravia.BraviaTV.get_system_info",
+    with patch("pybravia.BraviaClient.connect"), patch(
+        "pybravia.BraviaClient.pair"
+    ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
+        "pybravia.BraviaClient.get_system_info",
         return_value=BRAVIA_SYSTEM_INFO,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -298,10 +296,10 @@ async def test_create_entry(hass):
     """Test that entry is added correctly with PIN auth."""
     uuid = await instance_id.async_get(hass)
 
-    with patch("pybravia.BraviaTV.connect"), patch("pybravia.BraviaTV.pair"), patch(
-        "pybravia.BraviaTV.set_wol_mode"
-    ), patch(
-        "pybravia.BraviaTV.get_system_info",
+    with patch("pybravia.BraviaClient.connect"), patch(
+        "pybravia.BraviaClient.pair"
+    ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
+        "pybravia.BraviaClient.get_system_info",
         return_value=BRAVIA_SYSTEM_INFO,
     ), patch(
         "homeassistant.components.braviatv.async_setup_entry", return_value=True
@@ -339,10 +337,10 @@ async def test_create_entry(hass):
 
 async def test_create_entry_psk(hass):
     """Test that entry is added correctly with PSK auth."""
-    with patch("pybravia.BraviaTV.connect"), patch(
-        "pybravia.BraviaTV.set_wol_mode"
+    with patch("pybravia.BraviaClient.connect"), patch(
+        "pybravia.BraviaClient.set_wol_mode"
     ), patch(
-        "pybravia.BraviaTV.get_system_info",
+        "pybravia.BraviaClient.get_system_info",
         return_value=BRAVIA_SYSTEM_INFO,
     ), patch(
         "homeassistant.components.braviatv.async_setup_entry", return_value=True
@@ -376,97 +374,6 @@ async def test_create_entry_psk(hass):
         }
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="very_unique_string",
-        data={
-            CONF_HOST: "bravia-host",
-            CONF_PIN: "1234",
-            CONF_MAC: "AA:BB:CC:DD:EE:FF",
-        },
-        title="TV-Model",
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch("pybravia.BraviaTV.connect"), patch(
-        "pybravia.BraviaTV.get_power_status",
-        return_value="active",
-    ), patch(
-        "pybravia.BraviaTV.get_external_status",
-        return_value=BRAVIA_SOURCES,
-    ), patch(
-        "pybravia.BraviaTV.send_rest_req",
-        return_value={},
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_IGNORED_SOURCES: ["HDMI 1", "HDMI 2"]}
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {CONF_IGNORED_SOURCES: ["HDMI 1", "HDMI 2"]}
-
-        # Test that saving with missing sources is ok
-        with patch(
-            "pybravia.BraviaTV.get_external_status",
-            return_value=BRAVIA_SOURCES[1:],
-        ):
-            result = await hass.config_entries.options.async_init(config_entry.entry_id)
-            result = await hass.config_entries.options.async_configure(
-                result["flow_id"], user_input={CONF_IGNORED_SOURCES: ["HDMI 1"]}
-            )
-            await hass.async_block_till_done()
-            assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-            assert config_entry.options == {CONF_IGNORED_SOURCES: ["HDMI 1"]}
-
-
-async def test_options_flow_error(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="very_unique_string",
-        data={
-            CONF_HOST: "bravia-host",
-            CONF_PIN: "1234",
-            CONF_MAC: "AA:BB:CC:DD:EE:FF",
-        },
-        title="TV-Model",
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch("pybravia.BraviaTV.connect"), patch(
-        "pybravia.BraviaTV.get_power_status",
-        return_value="active",
-    ), patch(
-        "pybravia.BraviaTV.get_external_status",
-        return_value=BRAVIA_SOURCES,
-    ), patch(
-        "pybravia.BraviaTV.send_rest_req",
-        return_value={},
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    with patch(
-        "pybravia.BraviaTV.send_rest_req",
-        side_effect=BraviaTVError,
-    ):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "failed_update"
-
-
 @pytest.mark.parametrize(
     "use_psk, new_pin",
     [
@@ -488,14 +395,14 @@ async def test_reauth_successful(hass, use_psk, new_pin):
     )
     config_entry.add_to_hass(hass)
 
-    with patch("pybravia.BraviaTV.connect"), patch(
-        "pybravia.BraviaTV.get_power_status",
+    with patch("pybravia.BraviaClient.connect"), patch(
+        "pybravia.BraviaClient.get_power_status",
         return_value="active",
     ), patch(
-        "pybravia.BraviaTV.get_external_status",
+        "pybravia.BraviaClient.get_external_status",
         return_value=BRAVIA_SOURCES,
     ), patch(
-        "pybravia.BraviaTV.send_rest_req",
+        "pybravia.BraviaClient.send_rest_req",
         return_value={},
     ):
         result = await hass.config_entries.flow.async_init(

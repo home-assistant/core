@@ -7,7 +7,7 @@
         },
         "xiaomi_miio__led_brightness": {
             "bright": "Brillante",
-            "dim": "Fioca",
+            "dim": "Attenuata",
             "off": "Spento"
         },
         "xiaomi_miio__ptc_level": {

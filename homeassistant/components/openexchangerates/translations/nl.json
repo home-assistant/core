@@ -15,7 +15,8 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API-sleutel"
+                    "api_key": "API-sleutel",
+                    "base": "Basisvaluta"
                 }
             }
         }

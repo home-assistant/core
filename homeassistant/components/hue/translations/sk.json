@@ -54,15 +54,15 @@
             "turn_on": "Zapn\u00fa\u0165"
         },
         "trigger_type": {
-            "double_short_release": "Obe \u201e{subtype}\u201c boli uvo\u013enen\u00e9",
+            "double_short_release": "Obe \"{subtype}\" boli uvo\u013enen\u00e9",
             "initial_press": "\"{subtype}\" stla\u010den\u00fd na za\u010diatku",
             "long_release": "\"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed",
             "remote_button_long_release": "\"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed",
             "remote_button_short_press": "\"{subtype}\" stla\u010den\u00e9",
-            "remote_button_short_release": "\u201c{subtype}\u201c uvo\u013enen\u00e9",
+            "remote_button_short_release": "\"{subtype}\" uvo\u013enen\u00e9",
             "remote_double_button_long_press": "Obe \"{subtype}\" uvo\u013enen\u00e9 po dlhom stla\u010den\u00ed",
-            "remote_double_button_short_press": "Obe \u201e{subtype}\u201c boli uvo\u013enen\u00e9",
-            "repeat": "\u201e{subtype}\u201c podr\u017ean\u00e9",
+            "remote_double_button_short_press": "Obe \"{subtype}\" boli uvo\u013enen\u00e9",
+            "repeat": "\"{subtype}\" podr\u017ean\u00e9",
             "short_release": "\"{subtype}\" uvo\u013enen\u00e9 po kr\u00e1tkom stla\u010den\u00ed",
             "start": "\"{subtype}\" stla\u010den\u00fd na za\u010diatku"
         }

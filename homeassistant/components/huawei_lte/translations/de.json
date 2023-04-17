@@ -1,8 +1,10 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Kein Huawei LTE-Ger\u00e4t",
-            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "unsupported_device": "Nicht unterst\u00fctztes Ger\u00e4t"
         },
         "error": {
             "connection_timeout": "Verbindungszeit\u00fcberschreitung",

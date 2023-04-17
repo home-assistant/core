@@ -73,7 +73,7 @@
         },
         "trigger_type": {
             "press": "\"{subtype}\" stla\u010den\u00e9",
-            "release": "\u201c{subtype}\u201c uvo\u013enen\u00e9"
+            "release": "\"{subtype}\" uvo\u013enen\u00e9"
         }
     }
 }

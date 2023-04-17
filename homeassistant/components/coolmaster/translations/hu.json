@@ -13,7 +13,8 @@
                     "heat": "T\u00e1mogatott f\u0171t\u00e9si m\u00f3d(ok)",
                     "heat_cool": "T\u00e1mogatott f\u0171t\u00e9si/h\u0171t\u00e9si m\u00f3d(ok)",
                     "host": "C\u00edm",
-                    "off": "Ki lehet kapcsolni"
+                    "off": "Ki lehet kapcsolni",
+                    "swing_support": "Forg\u00e1si m\u00f3d be\u00e1ll\u00edt\u00e1sa"
                 },
                 "title": "\u00c1ll\u00edtsa be a CoolMasterNet kapcsolat r\u00e9szleteit."
             }

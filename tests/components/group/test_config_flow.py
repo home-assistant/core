@@ -22,6 +22,15 @@ from tests.common import MockConfigEntry
         ("light", "on", "on", {}, {}, {}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
+        (
+            "sensor",
+            "20.0",
+            "10",
+            {},
+            {"type": "sum"},
+            {"type": "sum"},
+            {},
+        ),
         ("switch", "on", "on", {}, {}, {}, {}),
     ),
 )
@@ -171,19 +180,25 @@ def get_suggested(schema, key):
 
 
 @pytest.mark.parametrize(
-    "group_type,member_state,extra_options",
+    "group_type,member_state,extra_options,options_options",
     (
-        ("binary_sensor", "on", {"all": False}),
-        ("cover", "open", {}),
-        ("fan", "on", {}),
-        ("light", "on", {"all": False}),
-        ("lock", "locked", {}),
-        ("media_player", "on", {}),
-        ("switch", "on", {"all": False}),
+        ("binary_sensor", "on", {"all": False}, {}),
+        ("cover", "open", {}, {}),
+        ("fan", "on", {}, {}),
+        ("light", "on", {"all": False}, {}),
+        ("lock", "locked", {}, {}),
+        ("media_player", "on", {}, {}),
+        (
+            "sensor",
+            "10",
+            {"ignore_non_numeric": False, "type": "sum"},
+            {"ignore_non_numeric": False, "type": "sum"},
+        ),
+        ("switch", "on", {"all": False}, {}),
     ),
 )
 async def test_options(
-    hass: HomeAssistant, group_type, member_state, extra_options
+    hass: HomeAssistant, group_type, member_state, extra_options, options_options
 ) -> None:
     """Test reconfiguring."""
     members1 = [f"{group_type}.one", f"{group_type}.two"]
@@ -226,9 +241,7 @@ async def test_options(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            "entities": members2,
-        },
+        user_input={"entities": members2, **options_options},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {

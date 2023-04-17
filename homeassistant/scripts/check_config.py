@@ -40,7 +40,7 @@ ERROR_STR = "General Errors"
 
 def color(the_color, *args, reset=None):
     """Color helper."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from colorlog.escape_codes import escape_codes, parse_colors
 
     try:

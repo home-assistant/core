@@ -19,5 +19,18 @@
                 "title": "Hubungkan ke Termostat Venstar"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "Siang",
+                    "evening": "Sore",
+                    "inactive": "Tidak aktif",
+                    "morning": "Pagi",
+                    "night": "Malam"
+                }
+            }
+        }
     }
 }

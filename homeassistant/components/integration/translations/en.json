@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "Left Riemann sum",
+                "right": "Right Riemann sum",
+                "trapezoidal": "Trapezoidal rule"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "Days",
+                "h": "Hours",
+                "min": "Minutes",
+                "s": "Seconds"
+            }
+        }
+    },
     "title": "Integration - Riemann sum integral sensor"
 }

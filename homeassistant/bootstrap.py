@@ -346,7 +346,7 @@ def async_enable_logging(
 
     if not log_no_color:
         try:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from colorlog import ColoredFormatter
 
             # basicConfig must be called after importing colorlog in order to
@@ -385,7 +385,11 @@ def async_enable_logging(
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",
-        exc_info=(args.exc_type, args.exc_value, args.exc_traceback),  # type: ignore[arg-type]
+        exc_info=(  # type: ignore[arg-type]
+            args.exc_type,
+            args.exc_value,
+            args.exc_traceback,
+        ),
     )
 
     # Log errors to a file if we have write access to file or config dir
@@ -403,7 +407,10 @@ def async_enable_logging(
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
 
-        err_handler: logging.handlers.RotatingFileHandler | logging.handlers.TimedRotatingFileHandler
+        err_handler: (
+            logging.handlers.RotatingFileHandler
+            | logging.handlers.TimedRotatingFileHandler
+        )
         if log_rotate_days:
             err_handler = logging.handlers.TimedRotatingFileHandler(
                 err_log_path, when="midnight", backupCount=log_rotate_days
@@ -462,7 +469,10 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 
 
 async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
-    """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
+    """Periodic log of setups that are pending.
+
+    Pending for longer than LOG_SLOW_STARTUP_INTERVAL.
+    """
     loop_count = 0
     setup_started: dict[str, datetime] = hass.data[DATA_SETUP_STARTED]
     previous_was_empty = True

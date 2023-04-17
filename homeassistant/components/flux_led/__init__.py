@@ -111,7 +111,7 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
         new_unique_id = None
         if entity_unique_id.startswith(entry_id):
             # Old format {entry_id}....., New format {unique_id}....
-            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+            new_unique_id = f"{unique_id}{entity_unique_id.removeprefix(entry_id)}"
         elif (
             ":" in entity_mac
             and entity_mac != unique_id

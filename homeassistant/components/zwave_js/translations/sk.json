@@ -84,7 +84,7 @@
         "trigger_type": {
             "event.notification.entry_control": "Odosla\u0165 ozn\u00e1menie o riaden\u00ed vstupu",
             "event.notification.notification": "Odosla\u0165 ozn\u00e1menie",
-            "event.value_notification.basic": "Z\u00e1kladn\u00e1 ud\u00e1los\u0165 CC na {subtype}",
+            "event.value_notification.basic": "Z\u00e1kladn\u00e1 udalos\u0165 CC na {subtype}",
             "event.value_notification.central_scene": "Akcia centr\u00e1lnej sc\u00e9ny na {subtype}",
             "event.value_notification.scene_activation": "Aktiv\u00e1cia sc\u00e9ny na {subtype}",
             "state.node_status": "Stav uzlov zmenen\u00fd",

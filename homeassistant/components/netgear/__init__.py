@@ -29,8 +29,8 @@ from .router import NetgearRouter
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
-SPEED_TEST_INTERVAL = timedelta(seconds=1800)
-SCAN_INTERVAL_FIRMWARE = timedelta(seconds=18000)
+SPEED_TEST_INTERVAL = timedelta(hours=2)
+SCAN_INTERVAL_FIRMWARE = timedelta(hours=5)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

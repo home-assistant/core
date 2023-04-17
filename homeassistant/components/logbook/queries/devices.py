@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime as dt
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt, select
@@ -29,8 +28,8 @@ from .common import (
 
 
 def _select_device_id_context_ids_sub_query(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     json_quotable_device_ids: list[str],
 ) -> CompoundSelect:
@@ -43,8 +42,8 @@ def _select_device_id_context_ids_sub_query(
 
 def _apply_devices_context_union(
     query: Query,
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     json_quotable_device_ids: list[str],
 ) -> CompoundSelect:
@@ -70,8 +69,8 @@ def _apply_devices_context_union(
 
 
 def devices_stmt(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     json_quotable_device_ids: list[str],
 ) -> StatementLambdaElement:
@@ -85,7 +84,7 @@ def devices_stmt(
             end_day,
             event_types,
             json_quotable_device_ids,
-        ).order_by(Events.time_fired)
+        ).order_by(Events.time_fired_ts)
     )
     return stmt
 

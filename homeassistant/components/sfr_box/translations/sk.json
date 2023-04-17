@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "line_status": {
+                "state": {
+                    "loss_of_power": "Strata nap\u00e1jania",
+                    "loss_of_signal": "Strata sign\u00e1lu",
+                    "loss_of_signal_quality": "Strata kvality sign\u00e1lu",
+                    "no_defect": "Bez defektu",
+                    "of_frame": "Of Frame",
+                    "unknown": "Nezn\u00e1me"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Nezn\u00e1my"
+                }
+            },
+            "training": {
+                "state": {
+                    "g_922_channel_analysis": "G.922 Anal\u00fdza kan\u00e1lov",
+                    "g_992_message_exchange": "G.992 V\u00fdmena spr\u00e1v",
+                    "g_992_started": "G.992 Spusten\u00e9",
+                    "g_993_channel_analysis": "G.993 Anal\u00fdza kan\u00e1lov",
+                    "g_993_message_exchange": "G.993 V\u00fdmena spr\u00e1v",
+                    "g_993_started": "G.993 Spusten\u00e9",
+                    "g_994_training": "G.994 \u0160kolenie",
+                    "idle": "Ne\u010dinn\u00fd",
+                    "showtime": "Showtime",
+                    "unknown": "Nezn\u00e1me"
+                }
+            }
+        }
+    }
+}

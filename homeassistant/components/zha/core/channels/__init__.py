@@ -87,7 +87,7 @@ class Channels:
 
     @property
     def zha_device(self) -> ZHADevice:
-        """Return parent zha device."""
+        """Return parent ZHA device."""
         return self._zha_device
 
     @property

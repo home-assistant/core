@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "\u6bcf\u5169\u500b\u6708",
+                "daily": "\u6bcf\u5929",
+                "hourly": "\u6bcf\u5c0f\u6642",
+                "monthly": "\u6bcf\u6708",
+                "none": "\u4e0d\u91cd\u8907",
+                "quarter-hourly": "\u6bcf 15 \u5206\u9418",
+                "quarterly": "\u6bcf\u5b63",
+                "weekly": "\u6bcf\u9031",
+                "yearly": "\u6bcf\u5e74"
+            }
+        }
+    },
     "title": "\u529f\u8017\u8868"
 }

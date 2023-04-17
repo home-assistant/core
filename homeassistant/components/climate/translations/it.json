@@ -2,7 +2,7 @@
     "device_automation": {
         "action_type": {
             "set_hvac_mode": "Cambia modalit\u00e0 HVAC su {entity_name}",
-            "set_preset_mode": "Modifica preimpostazione su {entity_name}"
+            "set_preset_mode": "Modifica modalit\u00e0 su {entity_name}"
         },
         "condition_type": {
             "is_hvac_mode": "{entity_name} \u00e8 impostato su una modalit\u00e0 HVAC specifica",
@@ -97,7 +97,7 @@
                 }
             },
             "preset_modes": {
-                "name": "Preimpostazioni"
+                "name": "Modalit\u00e0"
             },
             "swing_mode": {
                 "name": "Modalit\u00e0 di oscillazione",
@@ -122,7 +122,7 @@
                 "name": "passo di temperatura obiettivo"
             },
             "temperature": {
-                "name": "Temperatura obiettivo"
+                "name": "Temperatura desiderata"
             }
         }
     },

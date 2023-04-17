@@ -26,5 +26,14 @@
         "haos_outdated": {
             "title": "Update naar het Home Assistant-besturingssysteem versie 9.0 of hoger"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "passive": "Passief scannen"
+                }
+            }
+        }
     }
 }

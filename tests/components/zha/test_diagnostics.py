@@ -31,7 +31,7 @@ CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only setup the required platform and required base platforms to speed up tests."""
+    """Only set up the required platform and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS", (Platform.ALARM_CONTROL_PANEL,)
     ):

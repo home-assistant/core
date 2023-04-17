@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Service is already configured",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {

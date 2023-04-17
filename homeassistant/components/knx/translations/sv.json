@@ -6,10 +6,8 @@
         },
         "error": {
             "cannot_connect": "Det gick inte att ansluta.",
-            "file_not_found": "Den angivna `.knxkeys`-filen hittades inte i s\u00f6kv\u00e4gen config/.storage/knx/",
             "invalid_individual_address": "V\u00e4rdet matchar inte m\u00f6nstret f\u00f6r en individuell adress i KNX.\n'area.line.device'",
-            "invalid_ip_address": "Ogiltig IPv4-adress.",
-            "invalid_signature": "L\u00f6senordet f\u00f6r att dekryptera `.knxkeys`-filen \u00e4r fel."
+            "invalid_ip_address": "Ogiltig IPv4-adress."
         },
         "step": {
             "manual_tunnel": {
@@ -56,6 +54,11 @@
                 },
                 "description": "V\u00e4lj en gateway fr\u00e5n listan."
             }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_ip_address": "Ogiltig IPv4-adress."
         }
     }
 }

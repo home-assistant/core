@@ -212,7 +212,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_triggered - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_triggered "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -230,7 +234,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_disarmed - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_disarmed "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -248,7 +256,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_home - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_home "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -266,7 +278,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_away - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_away "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -284,7 +300,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_night - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_night "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -302,7 +322,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_vacation - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_vacation "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -320,7 +344,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_custom_bypass - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_custom_bypass "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

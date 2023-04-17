@@ -3,10 +3,20 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypedDict
 
 from homeassistant.core import Context
 from homeassistant.helpers import intent
+
+
+@dataclass
+class ConversationInput:
+    """User input to be processed."""
+
+    text: str
+    context: Context
+    conversation_id: str | None
+    language: str
 
 
 @dataclass
@@ -24,28 +34,27 @@ class ConversationResult:
         }
 
 
+class Attribution(TypedDict):
+    """Attribution for a conversation agent."""
+
+    name: str
+    url: str
+
+
 class AbstractConversationAgent(ABC):
     """Abstract conversation agent."""
 
     @property
-    def attribution(self):
+    def attribution(self) -> Attribution | None:
         """Return the attribution."""
         return None
 
-    async def async_get_onboarding(self):
-        """Get onboard data."""
-        return None
-
-    async def async_set_onboarding(self, shown):
-        """Set onboard data."""
-        return True
-
     @abstractmethod
-    async def async_process(
-        self,
-        text: str,
-        context: Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
-    ) -> ConversationResult | None:
+    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
+
+    async def async_reload(self, language: str | None = None) -> None:
+        """Clear cached intents for a language."""
+
+    async def async_prepare(self, language: str | None = None) -> None:
+        """Load intents for a language."""

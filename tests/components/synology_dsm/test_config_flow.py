@@ -1,5 +1,5 @@
 """Tests for the Synology DSM config flow."""
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from synology_dsm.exceptions import (
@@ -11,7 +11,7 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant import data_entry_flow
-from homeassistant.components import ssdp
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
     CONF_SNAPSHOT_QUALITY,
@@ -25,7 +25,12 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_SSDP,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -59,60 +64,89 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="service")
 def mock_controller_service():
     """Mock a successful service."""
-    with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
-    ) as service_mock:
-        service_mock.return_value.information.serial = SERIAL
-        service_mock.return_value.utilisation.cpu_user_load = 1
-        service_mock.return_value.storage.disks_ids = ["sda", "sdb", "sdc"]
-        service_mock.return_value.storage.volumes_ids = ["volume_1"]
-        service_mock.return_value.network.macs = MACS
-        yield service_mock
+    with patch("homeassistant.components.synology_dsm.config_flow.SynologyDSM") as dsm:
+
+        dsm.login = AsyncMock(return_value=True)
+        dsm.update = AsyncMock(return_value=True)
+
+        dsm.surveillance_station.update = AsyncMock(return_value=True)
+        dsm.upgrade.update = AsyncMock(return_value=True)
+        dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
+        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.storage = Mock(
+            disks_ids=["sda", "sdb", "sdc"],
+            volumes_ids=["volume_1"],
+            update=AsyncMock(return_value=True),
+        )
+        dsm.information = Mock(serial=SERIAL)
+
+        yield dsm
 
 
 @pytest.fixture(name="service_2sa")
 def mock_controller_service_2sa():
     """Mock a successful service with 2SA login."""
-    with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
-    ) as service_mock:
-        service_mock.return_value.login = Mock(
+    with patch("homeassistant.components.synology_dsm.config_flow.SynologyDSM") as dsm:
+        dsm.login = AsyncMock(
             side_effect=SynologyDSMLogin2SARequiredException(USERNAME)
         )
-        service_mock.return_value.information.serial = SERIAL
-        service_mock.return_value.utilisation.cpu_user_load = 1
-        service_mock.return_value.storage.disks_ids = ["sda", "sdb", "sdc"]
-        service_mock.return_value.storage.volumes_ids = ["volume_1"]
-        service_mock.return_value.network.macs = MACS
-        yield service_mock
+        dsm.update = AsyncMock(return_value=True)
+
+        dsm.surveillance_station.update = AsyncMock(return_value=True)
+        dsm.upgrade.update = AsyncMock(return_value=True)
+        dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
+        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.storage = Mock(
+            disks_ids=["sda", "sdb", "sdc"],
+            volumes_ids=["volume_1"],
+            update=AsyncMock(return_value=True),
+        )
+        dsm.information = Mock(serial=SERIAL)
+        yield dsm
 
 
 @pytest.fixture(name="service_vdsm")
 def mock_controller_service_vdsm():
     """Mock a successful service."""
-    with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
-    ) as service_mock:
-        service_mock.return_value.information.serial = SERIAL
-        service_mock.return_value.utilisation.cpu_user_load = 1
-        service_mock.return_value.storage.disks_ids = []
-        service_mock.return_value.storage.volumes_ids = ["volume_1"]
-        service_mock.return_value.network.macs = MACS
-        yield service_mock
+    with patch("homeassistant.components.synology_dsm.config_flow.SynologyDSM") as dsm:
+
+        dsm.login = AsyncMock(return_value=True)
+        dsm.update = AsyncMock(return_value=True)
+
+        dsm.surveillance_station.update = AsyncMock(return_value=True)
+        dsm.upgrade.update = AsyncMock(return_value=True)
+        dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
+        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.storage = Mock(
+            disks_ids=[],
+            volumes_ids=["volume_1"],
+            update=AsyncMock(return_value=True),
+        )
+        dsm.information = Mock(serial=SERIAL)
+
+        yield dsm
 
 
 @pytest.fixture(name="service_failed")
 def mock_controller_service_failed():
     """Mock a failed service."""
-    with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
-    ) as service_mock:
-        service_mock.return_value.information.serial = None
-        service_mock.return_value.utilisation.cpu_user_load = None
-        service_mock.return_value.storage.disks_ids = []
-        service_mock.return_value.storage.volumes_ids = []
-        service_mock.return_value.network.macs = []
-        yield service_mock
+    with patch("homeassistant.components.synology_dsm.config_flow.SynologyDSM") as dsm:
+
+        dsm.login = AsyncMock(return_value=True)
+        dsm.update = AsyncMock(return_value=True)
+
+        dsm.surveillance_station.update = AsyncMock(return_value=True)
+        dsm.upgrade.update = AsyncMock(return_value=True)
+        dsm.utilisation = Mock(cpu_user_load=None, update=AsyncMock(return_value=True))
+        dsm.network = Mock(update=AsyncMock(return_value=True), macs=[])
+        dsm.storage = Mock(
+            disks_ids=[],
+            volumes_ids=[],
+            update=AsyncMock(return_value=True),
+        )
+        dsm.information = Mock(serial=None)
+
+        yield dsm
 
 
 async def test_user(hass: HomeAssistant, service: MagicMock):
@@ -123,19 +157,23 @@ async def test_user(hass: HomeAssistant, service: MagicMock):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # test with all provided
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: USE_SSL,
-            CONF_VERIFY_SSL: VERIFY_SSL,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-        },
-    )
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
+        # test with all provided
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
@@ -150,19 +188,23 @@ async def test_user(hass: HomeAssistant, service: MagicMock):
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
 
-    service.return_value.information.serial = SERIAL_2
-    # test without port + False SSL
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_HOST: HOST,
-            CONF_SSL: False,
-            CONF_VERIFY_SSL: VERIFY_SSL,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-        },
-    )
+    service.information.serial = SERIAL_2
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
+        # test without port + False SSL
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL_2
     assert result["title"] == HOST
@@ -180,11 +222,15 @@ async def test_user(hass: HomeAssistant, service: MagicMock):
 
 async def test_user_2sa(hass: HomeAssistant, service_2sa: MagicMock):
     """Test user with 2sa authentication config."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_2sa,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "2sa"
 
@@ -200,11 +246,16 @@ async def test_user_2sa(hass: HomeAssistant, service_2sa: MagicMock):
     assert result["errors"] == {CONF_OTP_CODE: "otp_failed"}
 
     # Successful login with 2SA code
-    service_2sa.return_value.login = Mock(return_value=True)
-    service_2sa.return_value.device_token = DEVICE_TOKEN
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_OTP_CODE: "123456"}
-    )
+    service_2sa.login = AsyncMock(return_value=True)
+    service_2sa.device_token = DEVICE_TOKEN
+
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_2sa,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_OTP_CODE: "123456"}
+        )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
@@ -223,25 +274,33 @@ async def test_user_2sa(hass: HomeAssistant, service_2sa: MagicMock):
 
 async def test_user_vdsm(hass: HomeAssistant, service_vdsm: MagicMock):
     """Test user config."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=None
-    )
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_vdsm,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=None
+        )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # test with all provided
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_HOST: HOST,
-            CONF_PORT: PORT,
-            CONF_SSL: USE_SSL,
-            CONF_VERIFY_SSL: VERIFY_SSL,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-        },
-    )
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_vdsm,
+    ):
+        # test with all provided
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
@@ -289,9 +348,13 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
                 CONF_PASSWORD: PASSWORD,
             },
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -299,8 +362,8 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
                 CONF_PASSWORD: PASSWORD,
             },
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reconfig_user(hass: HomeAssistant, service: MagicMock):
@@ -318,6 +381,9 @@ async def test_reconfig_user(hass: HomeAssistant, service: MagicMock):
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload",
         return_value=True,
+    ), patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -375,11 +441,15 @@ async def test_unknown_failed(hass: HomeAssistant, service: MagicMock):
 
 async def test_missing_data_after_login(hass: HomeAssistant, service_failed: MagicMock):
     """Test when we have errors during connection."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_failed,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "missing_data"}
 
@@ -404,9 +474,13 @@ async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
     assert result["step_id"] == "link"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-    )
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
@@ -560,3 +634,70 @@ async def test_options_flow(hass: HomeAssistant, service: MagicMock):
     assert config_entry.options[CONF_SCAN_INTERVAL] == 2
     assert config_entry.options[CONF_TIMEOUT] == 30
     assert config_entry.options[CONF_SNAPSHOT_QUALITY] == 0
+
+
+async def test_discovered_via_zeroconf(hass: HomeAssistant, service: MagicMock):
+    """Test we can setup from zeroconf."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.5",
+            addresses=["192.168.1.5"],
+            port=5000,
+            hostname="mydsm.local.",
+            type="_http._tcp.local.",
+            name="mydsm._http._tcp.local.",
+            properties={
+                "mac_address": "00:11:32:XX:XX:99|00:11:22:33:44:55",  # MAC address, but SSDP does not have `-`
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "link"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+    assert result["title"] == "mydsm"
+    assert result["data"][CONF_HOST] == "192.168.1.5"
+    assert result["data"][CONF_PORT] == 5001
+    assert result["data"][CONF_SSL] == DEFAULT_USE_SSL
+    assert result["data"][CONF_VERIFY_SSL] == DEFAULT_VERIFY_SSL
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_MAC] == MACS
+    assert result["data"].get("device_token") is None
+    assert result["data"].get(CONF_DISKS) is None
+    assert result["data"].get(CONF_VOLUMES) is None
+
+
+async def test_discovered_via_zeroconf_missing_mac(
+    hass: HomeAssistant, service: MagicMock
+):
+    """Test we abort if the mac address is missing."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.5",
+            addresses=["192.168.1.5"],
+            port=5000,
+            hostname="mydsm.local.",
+            type="_http._tcp.local.",
+            name="mydsm._http._tcp.local.",
+            properties={},
+        ),
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "no_mac_address"

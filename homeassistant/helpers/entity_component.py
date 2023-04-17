@@ -90,11 +90,11 @@ class EntityComponent(Generic[_EntityT]):
 
     @property
     def entities(self) -> Iterable[_EntityT]:
-        """
-        Return an iterable that returns all entities.
+        """Return an iterable that returns all entities.
 
-        As the underlying dicts may change when async context is lost, callers that
-        iterate over this asynchronously should make a copy using list() before iterating.
+        As the underlying dicts may change when async context is lost,
+        callers that iterate over this asynchronously should make a copy
+        using list() before iterating.
         """
         return chain.from_iterable(
             platform.entities.values()  # type: ignore[misc]

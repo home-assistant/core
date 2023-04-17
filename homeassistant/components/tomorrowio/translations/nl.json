@@ -21,13 +21,16 @@
         "sensor": {
             "health_concern": {
                 "state": {
-                    "good": "Goed"
+                    "good": "Goed",
+                    "hazardous": "Gevaarlijk",
+                    "unhealthy": "Ongezond"
                 }
             },
             "pollen_index": {
                 "state": {
                     "high": "Hoog",
                     "low": "Laag",
+                    "medium": "Medium",
                     "none": "Geen"
                 }
             },

@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Alle zwei Monate",
+                "daily": "T\u00e4glich",
+                "hourly": "St\u00fcndlich",
+                "monthly": "Monatlich",
+                "none": "Kein Zyklus",
+                "quarter-hourly": "Alle 15 Minuten",
+                "quarterly": "Viertelj\u00e4hrlich",
+                "weekly": "W\u00f6chentlich",
+                "yearly": "J\u00e4hrlich"
+            }
+        }
+    },
     "title": "Verbrauchsz\u00e4hler"
 }

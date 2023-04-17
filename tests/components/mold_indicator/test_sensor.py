@@ -10,7 +10,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.setup import async_setup_component
 
@@ -19,10 +19,10 @@ from homeassistant.setup import async_setup_component
 def init_sensors_fixture(hass):
     """Set up things to be run when tests are started."""
     hass.states.async_set(
-        "test.indoortemp", "20", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "20", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
-        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
         "test.indoorhumidity", "50", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
@@ -53,10 +53,10 @@ async def test_setup(hass):
 async def test_invalidcalib(hass):
     """Test invalid sensor values."""
     hass.states.async_set(
-        "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
-        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
         "test.indoorhumidity", "0", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
@@ -88,10 +88,10 @@ async def test_invalidcalib(hass):
 async def test_invalidhum(hass):
     """Test invalid sensor values."""
     hass.states.async_set(
-        "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
-        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
         "test.indoorhumidity", "-1", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
@@ -131,7 +131,9 @@ async def test_invalidhum(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
     hass.states.async_set(
-        "test.indoorhumidity", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoorhumidity",
+        "10",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
@@ -199,7 +201,9 @@ async def test_unknown_sensor(hass):
     await hass.async_start()
 
     hass.states.async_set(
-        "test.indoortemp", STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp",
+        STATE_UNKNOWN,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
@@ -209,10 +213,12 @@ async def test_unknown_sensor(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
     hass.states.async_set(
-        "test.indoortemp", "30", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "30", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
-        "test.outdoortemp", STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp",
+        STATE_UNKNOWN,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
@@ -222,7 +228,7 @@ async def test_unknown_sensor(hass):
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
     hass.states.async_set(
-        "test.outdoortemp", "25", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "25", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     hass.states.async_set(
         "test.indoorhumidity",
@@ -273,13 +279,13 @@ async def test_sensor_changed(hass):
     await hass.async_start()
 
     hass.states.async_set(
-        "test.indoortemp", "30", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.indoortemp", "30", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mold_indicator").state == "90"
 
     hass.states.async_set(
-        "test.outdoortemp", "25", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "test.outdoortemp", "25", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.mold_indicator").state == "57"

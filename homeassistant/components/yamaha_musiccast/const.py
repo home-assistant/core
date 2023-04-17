@@ -55,3 +55,12 @@ TRANSLATION_KEY_MAPPING = {
     "zone_LINK_CONTROL": "zone_link_control",
     "zone_LINK_AUDIO_DELAY": "zone_link_audio_delay",
 }
+
+ZONE_SLEEP_STATE_MAPPING = {
+    "off": "off",
+    "30 min": "30_min",
+    "60 min": "60_min",
+    "90 min": "90_min",
+    "120 min": "120_min",
+}
+STATE_ZONE_SLEEP_MAPPING = {val: key for key, val in ZONE_SLEEP_STATE_MAPPING.items()}

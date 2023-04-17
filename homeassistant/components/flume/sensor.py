@@ -130,10 +130,8 @@ async def async_setup_entry(
     async_add_entities(flume_entity_list)
 
 
-class FlumeSensor(FlumeEntity, SensorEntity):
+class FlumeSensor(FlumeEntity[FlumeDeviceDataUpdateCoordinator], SensorEntity):
     """Representation of the Flume sensor."""
-
-    coordinator: FlumeDeviceDataUpdateCoordinator
 
     @property
     def native_value(self):

@@ -21,8 +21,8 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
     Platform,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -816,7 +816,7 @@ async def test_all_subscriptions_run_when_decode_fails(
     await mqtt.async_subscribe(hass, "test-topic", record_calls, encoding="ascii")
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
 
-    async_fire_mqtt_message(hass, "test-topic", TEMP_CELSIUS)
+    async_fire_mqtt_message(hass, "test-topic", UnitOfTemperature.CELSIUS)
 
     await hass.async_block_till_done()
     assert len(calls) == 1

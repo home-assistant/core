@@ -7,8 +7,10 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
-            "invalid_setup": "Anna'n\u0131z yerine Adam'\u0131n\u0131z\u0131 ekleyin, daha fazla bilgi i\u00e7in Home Assistant Plugwise entegrasyon belgelerine bak\u0131n",
-            "unknown": "Beklenmeyen hata"
+            "invalid_setup": "Anna'n\u0131z yerine Adam'\u0131n\u0131z\u0131 ekleyin, belgelere bak\u0131n",
+            "response_error": "Ge\u00e7ersiz XML verileri veya al\u0131nan hata g\u00f6stergesi",
+            "unknown": "Beklenmeyen hata",
+            "unsupported": "Desteklenmeyen \u00fcr\u00fcn yaz\u0131l\u0131m\u0131na sahip cihaz"
         },
         "step": {
             "user": {
@@ -20,6 +22,42 @@
                 },
                 "description": "L\u00fctfen girin",
                 "title": "Smile'a Ba\u011flan\u0131n"
+            }
+        }
+    },
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Gece",
+                            "away": "D\u0131\u015far\u0131da",
+                            "home": "Evde",
+                            "no_frost": "Anti-don",
+                            "vacation": "Tatil"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Otomatik",
+                    "boost": "G\u00fc\u00e7l\u00fc",
+                    "comfort": "Konfor",
+                    "off": "Kapal\u0131"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "So\u011futma",
+                    "bleeding_hot": "Is\u0131tma",
+                    "cooling": "So\u011futuluyor",
+                    "heating": "Is\u0131t\u0131l\u0131yor",
+                    "off": "Kapal\u0131"
+                }
             }
         }
     }

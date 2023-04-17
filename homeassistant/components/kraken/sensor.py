@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
@@ -90,7 +89,7 @@ async def async_setup_entry(
 
 
 class KrakenSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[KrakenResponse]]], SensorEntity
+    CoordinatorEntity[DataUpdateCoordinator[KrakenResponse | None]], SensorEntity
 ):
     """Define a Kraken sensor."""
 

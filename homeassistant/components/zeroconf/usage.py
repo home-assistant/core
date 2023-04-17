@@ -10,7 +10,10 @@ from .models import HaZeroconf
 
 
 def install_multiple_zeroconf_catcher(hass_zc: HaZeroconf) -> None:
-    """Wrap the Zeroconf class to return the shared instance if multiple instances are detected."""
+    """Wrap the Zeroconf class to return the shared instance.
+
+    Only if if multiple instances are detected.
+    """
 
     def new_zeroconf_new(self: zeroconf.Zeroconf, *k: Any, **kw: Any) -> HaZeroconf:
         report(

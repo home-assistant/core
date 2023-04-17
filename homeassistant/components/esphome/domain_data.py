@@ -13,10 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 
+from .const import DOMAIN
 from .entry_data import RuntimeEntryData
 
 STORAGE_VERSION = 1
-DOMAIN = "esphome"
 MAX_CACHED_SERVICES = 128
 
 _DomainDataSelfT = TypeVar("_DomainDataSelfT", bound="DomainData")

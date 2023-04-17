@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    UnitOfEnergy,
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
@@ -590,6 +591,21 @@ class DSMREntity(SensorEntity):
     def available(self) -> bool:
         """Entity is only available if there is a telegram."""
         return self.telegram is not None
+
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return the device class of this entity."""
+        device_class = super().device_class
+
+        # Override device class for gas sensors providing energy units, like
+        # kWh, MWh, GJ, etc. In those cases, the class should be energy, not gas
+        with suppress(ValueError):
+            if device_class == SensorDeviceClass.GAS and UnitOfEnergy(
+                str(self.native_unit_of_measurement)
+            ):
+                return SensorDeviceClass.ENERGY
+
+        return device_class
 
     @property
     def native_value(self) -> StateType:

@@ -14,6 +14,7 @@ from homeassistant.components.bluetooth.advertisement_tracker import (
     ADVERTISING_TIMES_NEEDED,
 )
 from homeassistant.components.bluetooth.const import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
@@ -370,7 +371,21 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         )
         await hass.async_block_till_done()
 
-    assert switchbot_device_went_unavailable is True
+    assert switchbot_device_went_unavailable is False
+
+    # Now that the scanner is gone we should go back to the stack default timeout
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS),
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is False
 
     switchbot_device_unavailable_cancel()
 

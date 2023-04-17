@@ -11,7 +11,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
-                "description": "Configuration.yaml'den i\u00e7e aktar\u0131lan k\u00f6pr\u00fc (ana bilgisayar: {host}) kurulamad\u0131.",
+                "description": "Configuration.yaml'den i\u00e7e aktar\u0131lan k\u00f6pr\u00fc (host: {host} ) kurulamad\u0131.",
                 "title": "Cas\u00e9ta k\u00f6pr\u00fc yap\u0131land\u0131rmas\u0131 i\u00e7e aktar\u0131lamad\u0131."
             },
             "link": {

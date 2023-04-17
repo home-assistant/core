@@ -59,7 +59,6 @@ SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
     GiosSensorEntityDescription(
         key=ATTR_AQI,
         name="AQI",
-        device_class=SensorDeviceClass.AQI,
         value=None,
     ),
     GiosSensorEntityDescription(
