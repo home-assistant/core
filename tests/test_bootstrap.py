@@ -852,26 +852,28 @@ async def test_bootstrap_dependencies(
     integrations = {integration}
 
     calls: list[str] = []
+    assertions: list[bool] = []
 
     async def async_mqtt_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Assert the mqtt config entry was set up."""
         calls.append("mqtt")
         # assert the integration is not yet set up
-        assert hass.data["setup_done"][integration].is_set() is False
-        assert hass.data["setup_done"]["mqtt"].is_set() is False
-        assert dependencies in hass.config.components
-        assert integration not in hass.config.components
+        assertions.append(hass.data["setup_done"][integration].is_set() is False)
+        assertions.append(
+            all(dependency in hass.config.components for dependency in dependencies)
+        )
+        assertions.append(integration not in hass.config.components)
         return True
 
     async def async_integration_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Assert the mqtt config entry was set up."""
         calls.append(integration)
         # assert mqtt was already set up
-        assert (
+        assertions.append(
             "mqtt" not in hass.data["setup_done"]
             or hass.data["setup_done"]["mqtt"].is_set()
         )
-        assert integration in hass.config.components
+        assertions.append("mqtt" in hass.config.components)
         return True
 
     with patch(
@@ -884,6 +886,9 @@ async def test_bootstrap_dependencies(
         bootstrap.async_set_domains_to_be_loaded(hass, integrations)
         await bootstrap.async_setup_multi_components(hass, integrations, {})
         await hass.async_block_till_done()
+
+    for assertion in assertions:
+        assert assertion
 
     assert calls == ["mqtt", integration]
 
