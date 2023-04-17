@@ -202,6 +202,9 @@ class RuntimeEntryData:
         if async_get_dashboard(hass):
             needed_platforms.add(Platform.UPDATE)
 
+        if self.device_info is not None and self.device_info.voice_assistant_version:
+            needed_platforms.add(Platform.BINARY_SENSOR)
+
         for info in infos:
             for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
                 if isinstance(info, info_type):
