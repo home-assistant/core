@@ -629,7 +629,7 @@ async def _async_set_up_integrations(
         - stage_1_domains
     )
 
-    # Enables after dependencies stage 1 domains
+    # Enables after dependencies when setting up stage 1 domains
     async_set_domains_to_be_loaded(hass, stage_1_domains)
 
     # Start setup
@@ -643,7 +643,7 @@ async def _async_set_up_integrations(
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
-    # Add after dependencies stage 2 domains
+    # Add after dependencies when setting up stage 2 domains
     async_set_domains_to_be_loaded(hass, stage_2_domains)
 
     if stage_2_domains:
