@@ -29,6 +29,7 @@ from .const import (
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
+from .models import AdvantageAirData
 
 ADVANTAGE_AIR_HVAC_MODES = {
     "heat": HVACMode.HEAT,
@@ -69,10 +70,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up AdvantageAir climate platform."""
 
-    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[ClimateEntity] = []
-    if aircons := instance["coordinator"].data.get("aircons"):
+    if aircons := instance.coordinator.data.get("aircons"):
         for ac_key, ac_device in aircons.items():
             entities.append(AdvantageAirAC(instance, ac_key, config_entry))
             for zone_key, zone in ac_device["zones"].items():
@@ -92,9 +93,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_min_temp = 16
     _attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
 
-    def __init__(
-        self, instance: dict[str, Any], ac_key: str, config_entry: ConfigEntry
-    ) -> None:
+    def __init__(self, instance: AdvantageAirData, ac_key: str, config_entry: ConfigEntry) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
         self._config_entry = config_entry
@@ -280,7 +279,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     _attr_max_temp = 32
     _attr_min_temp = 16
 
-    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
+    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]

@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ADVANTAGE_AIR_STATE_ON, DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity, AdvantageAirThingEntity
+from .models import AdvantageAirData
 
 
 async def async_setup_entry(
@@ -18,16 +19,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up AdvantageAir light platform."""
 
-    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[LightEntity] = []
-    if my_lights := instance["coordinator"].data.get("myLights"):
+    if my_lights := instance.coordinator.data.get("myLights"):
         for light in my_lights["lights"].values():
             if light.get("relay"):
                 entities.append(AdvantageAirLight(instance, light))
             else:
                 entities.append(AdvantageAirLightDimmable(instance, light))
-    if things := instance["coordinator"].data.get("myThings"):
+    if things := instance.coordinator.data.get("myThings"):
         for thing in things["things"].values():
             if thing["channelDipState"] == 4:  # 4 = "Light (on/off)""
                 entities.append(AdvantageAirThingLight(instance, thing))
@@ -41,7 +42,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(self, instance: dict[str, Any], light: dict[str, Any]) -> None:
+    def __init__(self, instance: AdvantageAirData, light: dict[str, Any]) -> None:
         """Initialize an Advantage Air Light."""
         super().__init__(instance)
 
@@ -55,7 +56,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
             name=light["name"],
         )
         self.async_update_state = self.update_handle_factory(
-            instance["api"].lights.async_update_state, self._id
+            instance.api.lights.async_update_state, self._id
         )
 
     @property
@@ -82,11 +83,11 @@ class AdvantageAirLightDimmable(AdvantageAirLight):
 
     _attr_supported_color_modes = {ColorMode.ONOFF, ColorMode.BRIGHTNESS}
 
-    def __init__(self, instance: dict[str, Any], light: dict[str, Any]) -> None:
+    def __init__(self, instance: AdvantageAirData, light: dict[str, Any]) -> None:
         """Initialize an Advantage Air Dimmable Light."""
         super().__init__(instance, light)
         self.async_update_value = self.update_handle_factory(
-            instance["api"].lights.async_update_value, self._id
+            instance.api.lights.async_update_value, self._id
         )
 
     @property
