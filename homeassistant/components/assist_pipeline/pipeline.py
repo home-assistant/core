@@ -85,21 +85,13 @@ class PipelineEventType(StrEnum):
     ERROR = "error"
 
 
-@dataclass
+@dataclass(frozen=True)
 class PipelineEvent:
     """Events emitted during a pipeline run."""
 
     type: PipelineEventType
     data: dict[str, Any] | None = None
     timestamp: str = field(default_factory=lambda: dt_util.utcnow().isoformat())
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of the event."""
-        return {
-            "type": self.type,
-            "timestamp": self.timestamp,
-            "data": self.data or {},
-        }
 
 
 PipelineEventCallback = Callable[[PipelineEvent], None]
