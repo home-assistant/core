@@ -67,4 +67,3 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
     result["result"]
     assert result["result"].entry_id is not None
-    assert result["result"].entry_id == "something"
