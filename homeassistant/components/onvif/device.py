@@ -101,7 +101,7 @@ class ONVIFDevice:
 
         # Create event manager
         assert self.config_entry.unique_id
-        self.events = EventManager(self.hass, self.device, self.config_entry.unique_id)
+        self.events = EventManager(self.hass, self.device, self.config_entry, self.name)
 
         # Fetch basic device info and capabilities
         self.info = await self.async_get_device_info()
@@ -159,10 +159,10 @@ class ONVIFDevice:
 
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
-        LOGGER.debug("Setting up the ONVIF device management service")
+        LOGGER.debug("%s: Setting up the ONVIF device management service", self.name)
         device_mgmt = self.device.create_devicemgmt_service()
 
-        LOGGER.debug("Retrieving current device date/time")
+        LOGGER.debug("%s: Retrieving current device date/time", self.name)
         try:
             system_date = dt_util.utcnow()
             device_time = await device_mgmt.GetSystemDateAndTime()
@@ -174,7 +174,7 @@ class ONVIFDevice:
                 )
                 return
 
-            LOGGER.debug("Device time: %s", device_time)
+            LOGGER.debug("%s: Device time: %s", self.name, device_time)
 
             tzone = dt_util.DEFAULT_TIME_ZONE
             cdate = device_time.LocalDateTime
@@ -185,7 +185,9 @@ class ONVIFDevice:
                 tzone = dt_util.get_time_zone(device_time.TimeZone.TZ) or tzone
 
             if cdate is None:
-                LOGGER.warning("Could not retrieve date/time on this camera")
+                LOGGER.warning(
+                    "%s: Could not retrieve date/time on this camera", self.name
+                )
             else:
                 cam_date = dt.datetime(
                     cdate.Date.Year,
@@ -201,7 +203,8 @@ class ONVIFDevice:
                 cam_date_utc = cam_date.astimezone(dt_util.UTC)
 
                 LOGGER.debug(
-                    "Device date/time: %s | System date/time: %s",
+                    "%s: Device date/time: %s | System date/time: %s",
+                    self.name,
                     cam_date_utc,
                     system_date,
                 )
@@ -266,10 +269,6 @@ class ONVIFDevice:
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
 
-        pullpoint = False
-        with suppress(ONVIFError, Fault, RequestError, XMLParseError):
-            pullpoint = await self.events.async_start()
-
         ptz = False
         with suppress(ONVIFError, Fault, RequestError):
             self.device.get_definition("ptz")
@@ -280,7 +279,11 @@ class ONVIFDevice:
             self.device.create_imaging_service()
             imaging = True
 
-        return Capabilities(snapshot, pullpoint, ptz, imaging)
+        events = False
+        with suppress(ONVIFError, Fault, RequestError, XMLParseError):
+            events = await self.events.async_start()
+
+        return Capabilities(snapshot, events, ptz, imaging)
 
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
