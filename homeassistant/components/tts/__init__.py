@@ -10,7 +10,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from aiohttp import web
 import mutagen
@@ -711,7 +711,7 @@ def websocket_list_engines(
         provider_info: dict[str, Any] = {"engine_id": engine_id}
         if language:
             provider_info["language_supported"] = bool(
-                language_util.matches(language, provider.supported_languages)  # type: ignore[arg-type]
+                language_util.matches(language, provider.supported_languages)
             )
         providers.append(provider_info)
 
