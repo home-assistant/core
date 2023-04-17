@@ -211,6 +211,12 @@ class EventManager:
         LOGGER.debug("%s: Switching to webhook for events", self.name)
         self.pullpoint_manager.async_pause()
 
+    @callback
+    def async_mark_events_stale(self) -> None:
+        """Mark all events as stale when the subscriptions fail since we are out of sync."""
+        self._events.clear()
+        self.async_callback_listeners()
+
 
 class PullPointManager:
     """ONVIF PullPoint Manager.
@@ -433,10 +439,18 @@ class PullPointManager:
             # The first time we renew, we may get a Fault error so we
             # suppress it. The subscription will be restarted in
             # async_restart later.
-            await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            try:
+                await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            except RemoteProtocolError:
+                # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
+                # to close the connection at any time, we treat this as a normal and try again
+                # once since we do not want to mark events as stale
+                # if it just happened to close the connection at the wrong time.
+                await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
             LOGGER.debug("%s: Renewed PullPoint subscription", self._name)
             return True
         except RENEW_ERRORS as err:
+            self._event_manager.async_mark_events_stale()
             LOGGER.debug(
                 "%s: Failed to renew PullPoint subscription; %s",
                 self._name,
@@ -662,10 +676,18 @@ class WebHookManager:
         if not self._webhook_subscription:
             return False
         try:
-            await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            try:
+                await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            except RemoteProtocolError:
+                # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
+                # to close the connection at any time, we treat this as a normal and try again
+                # once since we do not want to mark events as stale
+                # if it just happened to close the connection at the wrong time.
+                await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
             LOGGER.debug("%s: Renewed Webhook subscription", self._name)
             return True
         except RENEW_ERRORS as err:
+            self._event_manager.async_mark_events_stale()
             LOGGER.debug(
                 "%s: Failed to renew webhook subscription %s",
                 self._name,
