@@ -7,6 +7,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.tts import _get_cache_files
+from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
+
+from .common import MockTTS
+
+from tests.common import MockModule, mock_integration, mock_platform
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -71,3 +77,19 @@ def mutagen_mock():
         side_effect=lambda *args: args[1],
     ) as mock_write_tags:
         yield mock_write_tags
+
+
+@pytest.fixture(autouse=True)
+async def internal_url_mock(hass: HomeAssistant) -> None:
+    """Mock internal URL of the instance."""
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
+
+
+@pytest.fixture
+async def mock_tts(hass: HomeAssistant) -> None:
+    """Mock TTS."""
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.tts", MockTTS())
