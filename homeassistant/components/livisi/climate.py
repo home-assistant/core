@@ -122,8 +122,6 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
             self._attr_current_temperature = temperature
             self._attr_current_humidity = humidity
 
-        self._update_hvac_state()
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -149,25 +147,25 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as LIVISI devices do not support changing the hvac mode."""
 
-    def _update_hvac_state(self) -> None:
+    @property
+    def hvac_action(self) -> HVACAction | None:
         """Calculate current hvac state based on target and current temperature."""
         if (
             self._attr_current_temperature is None
             or self._attr_target_temperature is None
         ):
-            self._attr_hvac_action = HVACAction.OFF
+            return HVACAction.OFF
         elif self._attr_target_temperature > self._attr_current_temperature:
-            self._attr_hvac_action = HVACAction.HEATING
+            return HVACAction.HEATING
         elif self._attr_target_temperature == self._attr_min_temp:
-            self._attr_hvac_action = HVACAction.OFF
+            return HVACAction.OFF
         else:
-            self._attr_hvac_action = HVACAction.IDLE
+            return HVACAction.IDLE
 
     @callback
     def update_target_temperature(self, target_temperature: float) -> None:
         """Update the target temperature of the climate device."""
         self._attr_target_temperature = target_temperature
-        self._update_hvac_state()
         self.async_write_ha_state()
 
     @callback
