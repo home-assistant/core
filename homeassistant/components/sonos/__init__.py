@@ -278,6 +278,11 @@ class SonosDiscoveryManager:
             """Create SonosSpeakers when subscription callbacks successfully arrive."""
             _LOGGER.debug("Subscription to %s succeeded", ip_address)
             cancel_failure_callback()
+            ir.async_delete_issue(
+                self.hass,
+                DOMAIN,
+                SUB_FAIL_ISSUE_ID,
+            )
             _async_add_visible_zones(subscription_succeeded=True)
 
         sub.callback = _async_subscription_succeeded
