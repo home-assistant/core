@@ -11,6 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
+from .models import AdvantageAirData
 
 ADVANTAGE_AIR_SYNC_INTERVAL = 15
 PLATFORMS = [
@@ -55,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {"coordinator": coordinator, "api": api}
+    hass.data[DOMAIN][entry.entry_id] = AdvantageAirData(coordinator, api)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
