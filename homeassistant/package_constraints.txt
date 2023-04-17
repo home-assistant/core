@@ -154,6 +154,10 @@ pyOpenSSL>=23.1.0
 # Limit this to Python 3.10, to not block Python 3.11 dev for now
 uamqp==1.6.0;python_version<'3.11'
 
+# protobuf must be in package constraints for the wheel
+# builder to build binary wheels
+protobuf==4.22.3
+
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
