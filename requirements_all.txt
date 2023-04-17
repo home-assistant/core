@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.5
+PySwitchbot==0.37.6
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -71,7 +71,7 @@ WSDiscovery==2.0.0
 WazeRouteCalculator==0.14
 
 # homeassistant.components.accuweather
-accuweather==0.5.0
+accuweather==0.5.1
 
 # homeassistant.components.adax
 adax==0.2.0
@@ -86,7 +86,7 @@ adext==0.4.2
 adguardhome==0.6.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.4.2
+advantage_air==0.4.4
 
 # homeassistant.components.frontier_silicon
 afsapi==0.2.7
@@ -258,7 +258,7 @@ aiorecollect==1.0.8
 aioridwell==2023.01.0
 
 # homeassistant.components.ruuvi_gateway
-aioruuvigateway==0.0.2
+aioruuvigateway==0.1.0
 
 # homeassistant.components.senseme
 aiosenseme==0.6.1
@@ -465,9 +465,10 @@ bluetooth-adapters==0.15.3
 bluetooth-auto-recovery==1.0.3
 
 # homeassistant.components.bluetooth
+# homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==0.3.1
+bluetooth-data-tools==0.4.0
 
 # homeassistant.components.bond
 bond-async==0.1.23
@@ -661,7 +662,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.32
+env_canada==0.5.33
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -1195,7 +1196,7 @@ nextcloudmonitor==1.4.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.3.0
+nextdns==1.4.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.1.4
@@ -1260,7 +1261,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.2.3
+onvif-zeep-async==1.2.11
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -2150,7 +2151,7 @@ pytrafikverket==0.2.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.7.0
+pyunifiprotect==4.8.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2220,6 +2221,9 @@ radiotherm==2.1.0
 
 # homeassistant.components.raincloud
 raincloudy==0.0.7
+
+# homeassistant.components.rapt_ble
+rapt-ble==0.1.0
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
@@ -2378,6 +2382,9 @@ solax==0.3.0
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
 
+# homeassistant.components.sonos
+sonos-websocket==0.0.5
+
 # homeassistant.components.marytts
 speak2mary==1.4.0
 
@@ -2518,7 +2525,7 @@ total_connect_client==2023.2
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.1.4
+tplink-omada-client==1.2.3
 
 # homeassistant.components.transmission
 transmission-rpc==4.1.5
@@ -2671,7 +2678,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.1.14
 
 # homeassistant.components.august
-yalexs==1.2.7
+yalexs==1.3.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.10

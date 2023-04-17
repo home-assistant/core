@@ -794,6 +794,19 @@ async def test_controlling_state_via_topic_with_templates(
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "xy"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", '{"hello": 100}')
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 100
+
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", '{"hello": 50}')
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 50
+
+    # test zero brightness received is ignored
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", '{"hello": 0}')
+    state = hass.states.get("light.test")
+    assert state.attributes.get("brightness") == 50
+
 
 @pytest.mark.parametrize(
     "hass_config",
