@@ -9,6 +9,8 @@ from ipaddress import IPv4Address
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
+from tempfile import gettempdir
+from pathlib import Path
 
 import pytest
 from pyunifiprotect import ProtectApiClient
@@ -105,6 +107,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.bootstrap = bootstrap
     client._bootstrap = bootstrap
     client.api_path = "/api"
+    client.cache_dir = Path(gettempdir()) / "ufp_cache"
     # functionality from API client tests actually need
     client._stream_response = partial(ProtectApiClient._stream_response, client)
     client.get_camera_video = partial(ProtectApiClient.get_camera_video, client)
