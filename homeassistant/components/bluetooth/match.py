@@ -61,7 +61,7 @@ class BluetoothCallbackMatcherWithCallback(
     """Callback matcher for the bluetooth integration that stores the callback."""
 
 
-@dataclass(frozen=False)
+@dataclass(slots=True, frozen=False)
 class IntegrationMatchHistory:
     """Track which fields have been seen."""
 

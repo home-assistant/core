@@ -7,5 +7,5 @@
   "iot_class": "cloud_push",
   "loggers": ["homematicip"],
   "quality_scale": "silver",
-  "requirements": ["homematicip==1.0.13"]
+  "requirements": ["homematicip==1.0.14"]
 }

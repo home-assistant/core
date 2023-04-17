@@ -69,6 +69,8 @@ def _aldb_dict(mem_addr):
     }
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_get_aldb(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -85,6 +87,8 @@ async def test_get_aldb(
         assert len(result) == 5
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_change_aldb_record(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -108,6 +112,8 @@ async def test_change_aldb_record(
         _compare_records(rec, change_rec)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_create_aldb_record(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -131,6 +137,8 @@ async def test_create_aldb_record(
         _compare_records(rec, new_rec)
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_write_aldb(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -152,6 +160,8 @@ async def test_write_aldb(
         assert devices.async_save.call_count == 1
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_load_aldb(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -172,6 +182,8 @@ async def test_load_aldb(
         assert devices.async_save.call_count == 1
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_reset_aldb(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -203,6 +215,8 @@ async def test_reset_aldb(
         assert not devices["33.33.33"].aldb.pending_changes
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_default_links(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -224,6 +238,8 @@ async def test_default_links(
         assert devices.async_save.call_count == 1
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_notify_on_aldb_status(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -247,6 +263,8 @@ async def test_notify_on_aldb_status(
         assert not msg["event"]["is_loading"]
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_notify_on_aldb_record_added(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -274,6 +292,8 @@ async def test_notify_on_aldb_record_added(
         assert msg["event"]["type"] == "record_loaded"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_bad_address(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:

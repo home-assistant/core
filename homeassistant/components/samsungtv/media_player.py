@@ -33,13 +33,16 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_component
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_component,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.util import dt as dt_util
 
 from .bridge import SamsungTVBridge, SamsungTVWSBridge
@@ -51,6 +54,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .triggers.turn_on import async_get_turn_on_trigger
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
@@ -112,6 +116,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._ssdp_rendering_control_location: str | None = config_entry.data.get(
             CONF_SSDP_RENDERING_CONTROL_LOCATION
         )
+        self._turn_on = PluggableAction(self.async_write_ha_state)
         self._on_script = on_script
         # Assume that the TV is in Play mode
         self._playing: bool = True
@@ -126,7 +131,8 @@ class SamsungTVDevice(MediaPlayerEntity):
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
         if self._on_script or self._mac:
-            # Add turn-on if on_script or mac is available
+            # (deprecated) add turn-on if on_script YAML or mac is available
+            # Triggers have not yet been registered so this is adjusted in the property
             self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
@@ -140,7 +146,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             self._attr_device_info["identifiers"] = {(DOMAIN, self.unique_id)}
         if self._mac:
             self._attr_device_info["connections"] = {
-                (CONNECTION_NETWORK_MAC, self._mac)
+                (dr.CONNECTION_NETWORK_MAC, self._mac)
             }
 
         # Mark the end of a shutdown command (need to wait 15 seconds before
@@ -153,6 +159,15 @@ class SamsungTVDevice(MediaPlayerEntity):
 
         self._dmr_device: DmrDevice | None = None
         self._upnp_server: AiohttpNotifyServer | None = None
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        # `turn_on` triggers are not yet registered during initialisation,
+        # so this property needs to be dynamic
+        if self._turn_on:
+            return self._attr_supported_features | MediaPlayerEntityFeature.TURN_ON
+        return self._attr_supported_features
 
     def _update_sources(self) -> None:
         self._attr_source_list = list(SOURCES)
@@ -359,10 +374,22 @@ class SamsungTVDevice(MediaPlayerEntity):
             return False
         return (
             self.state == MediaPlayerState.ON
+            or bool(self._turn_on)
             or self._on_script is not None
             or self._mac is not None
             or self._power_off_in_progress()
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Connect and subscribe to dispatcher signals and state updates."""
+        await super().async_added_to_hass()
+
+        if (entry := self.registry_entry) and entry.device_id:
+            self.async_on_remove(
+                self._turn_on.async_register(
+                    self.hass, async_get_turn_on_trigger(entry.device_id)
+                )
+            )
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
@@ -417,7 +444,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         await self._async_send_keys(["KEY_CHDOWN"])
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
         if media_type == MediaType.APP:
@@ -448,7 +475,10 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        if self._on_script:
+        if self._turn_on:
+            await self._turn_on.async_run(self.hass, self._context)
+        elif self._on_script:
+            # YAML on_script is deprecated - replaced by turn_on trigger
             await self._on_script.async_run(context=self._context)
         elif self._mac:
             await self.hass.async_add_executor_job(self._wake_on_lan)

@@ -1,5 +1,4 @@
 """Tests for Shelly utils."""
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.shelly.utils import (
@@ -150,7 +149,7 @@ async def test_get_block_device_sleep_period(settings, sleep_period) -> None:
     assert get_block_device_sleep_period(settings) == sleep_period
 
 
-@freeze_time("2019-01-10 18:43:00+00:00")
+@pytest.mark.freeze_time("2019-01-10 18:43:00+00:00")
 async def test_get_device_uptime() -> None:
     """Test block test get device uptime."""
     assert get_device_uptime(

@@ -138,7 +138,7 @@ class TractiveActivitySensor(TractiveSensor):
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_BATTERY_LEVEL,
-        name="Tracker battery level",
+        translation_key="tracker_battery_level",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         entity_class=TractiveHardwareSensor,
@@ -148,20 +148,19 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         # Currently, only state operational and not_reporting are used
         # More states are available by polling the data
         key=ATTR_TRACKER_STATE,
-        name="Tracker state",
         translation_key="tracker_state",
         entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,
-        name="Minutes active",
+        translation_key="minutes_active",
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveActivitySensor,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,
-        name="Daily goal",
+        translation_key="daily_goal",
         icon="mdi:flag-checkered",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_class=TractiveActivitySensor,

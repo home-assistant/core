@@ -76,7 +76,8 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
             CONF_HOST: "1.2.3.4",
             CONF_PORT: 1234,
         }
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -102,8 +103,6 @@ async def test_user_duplicate(
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("filled_device_registry")

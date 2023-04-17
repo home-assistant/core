@@ -372,7 +372,10 @@ DISCOVERY_SCHEMAS = [
             clusters.ColorControl.Attributes.CurrentY,
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
         ),
-        # restrict device type to prevent discovery in switch platform
-        not_device_type=(device_types.OnOffPlugInUnit,),
+        # restrict device type to prevent discovery by the wrong platform
+        not_device_type=(
+            device_types.OnOffPlugInUnit,
+            device_types.DoorLock,
+        ),
     ),
 ]

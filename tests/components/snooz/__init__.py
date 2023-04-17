@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from unittest.mock import patch
 
-from bleak import BLEDevice
 from pysnooz.commands import SnoozCommandData
 from pysnooz.testing import MockSnoozDevice
 
@@ -14,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import generate_ble_device
 
 TEST_ADDRESS = "00:00:00:00:AB:CD"
 TEST_SNOOZ_LOCAL_NAME = "Snooz-ABCD"
@@ -90,7 +90,7 @@ async def create_mock_snooz_config_entry(
         "homeassistant.components.snooz.SnoozDevice", return_value=device
     ), patch(
         "homeassistant.components.snooz.async_ble_device_from_address",
-        return_value=BLEDevice(device.address, device.name),
+        return_value=generate_ble_device(device.address, device.name),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
