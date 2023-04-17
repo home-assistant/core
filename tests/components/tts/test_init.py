@@ -32,7 +32,7 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 
@@ -1018,3 +1018,64 @@ async def test_fetching_in_async(
         "mp3",
         b"test 2",
     )
+
+
+async def test_ws_list_engines(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_tts
+) -> None:
+    """Test streaming audio and getting response."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"providers": [{"engine_id": "test"}]}
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "smurfish"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "language_supported": False}]
+    }
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "en"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "language_supported": True}]
+    }
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "en-UK"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "language_supported": True}]
+    }
+
+
+async def test_ws_list_voices(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_tts
+) -> None:
+    """Test streaming audio and getting response."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id(
+        {
+            "type": "tts/engine/voices",
+            "engine_id": "smurf",
+            "language": "smurfish",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "voices": [
+            {"voice_id": "voice_1", "name": "James Earl Jones"},
+            {"voice_id": "voice_2", "name": "Fran Drescher"},
+        ]
+    }
