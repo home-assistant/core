@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from copy import copy
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
-import pytest
 from pyunifiprotect.data import (
     Camera,
     DoorbellMessageType,
@@ -22,11 +20,7 @@ from pyunifiprotect.data import (
 from pyunifiprotect.data.nvr import DoorbellMessage
 
 from homeassistant.components.select import ATTR_OPTIONS
-from homeassistant.components.unifiprotect.const import (
-    ATTR_DURATION,
-    ATTR_MESSAGE,
-    DEFAULT_ATTRIBUTION,
-)
+from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.select import (
     CAMERA_SELECTS,
     LIGHT_MODE_OFF,
@@ -35,7 +29,6 @@ from homeassistant.components.unifiprotect.select import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
