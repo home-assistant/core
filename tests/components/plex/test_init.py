@@ -360,3 +360,19 @@ async def test_trigger_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_setup_with_deauthorized_token(
+    hass: HomeAssistant, entry, setup_plex_server
+) -> None:
+    """Test setup with a deauthorized token."""
+    with patch(
+        "plexapi.server.PlexServer",
+        side_effect=plexapi.exceptions.BadRequest(const.INVALID_TOKEN_MESSAGE),
+    ):
+        entry.add_to_hass(hass)
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
