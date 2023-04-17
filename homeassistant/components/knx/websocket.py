@@ -7,6 +7,7 @@ from typing import Final
 from knx_frontend import get_build_id, locate_dir
 import voluptuous as vol
 from xknx.dpt import DPTArray
+from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
@@ -20,6 +21,7 @@ from .const import (
     KNXBusMonitorMessage,
     MessageCallbackType,
 )
+from .project import KNXProject
 
 URL_BASE: Final = "/knx_static"
 
@@ -27,6 +29,7 @@ URL_BASE: Final = "/knx_static"
 async def register_panel(hass: HomeAssistant) -> None:
     """Register the KNX Panel and Websocket API."""
     websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_group_monitor_info)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
@@ -72,6 +75,25 @@ def ws_info(
 
 @websocket_api.websocket_command(
     {
+        vol.Required("type"): "knx/group_monitor_info",
+    }
+)
+@callback
+def ws_group_monitor_info(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get info command of group monitor."""
+    project_loaded = hass.data[DOMAIN].project.loaded
+    connection.send_result(
+        msg["id"],
+        {"project_data": bool(project_loaded)},
+    )
+
+
+@websocket_api.websocket_command(
+    {
         vol.Required("type"): "knx/subscribe_telegrams",
     }
 )
@@ -82,15 +104,18 @@ def ws_subscribe_telegram(
     msg: dict,
 ) -> None:
     """Subscribe to incoming and outgoing KNX telegrams."""
+    project: KNXProject = hass.data[DOMAIN].project
 
     async def forward_telegrams(telegram: Telegram) -> None:
         """Forward events to websocket."""
         payload: str
+        dpt_payload = None
         if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
-            if isinstance(telegram.payload.value, DPTArray):
-                payload = f"0x{bytes(telegram.payload.value.value).hex()}"
+            dpt_payload = telegram.payload.value
+            if isinstance(dpt_payload, DPTArray):
+                payload = f"0x{bytes(dpt_payload.value).hex()}"
             else:
-                payload = f"0b{telegram.payload.value.value:06b}"
+                payload = f"0b{dpt_payload.value:06b}"
         elif isinstance(telegram.payload, GroupValueRead):
             payload = ""
         else:
@@ -98,17 +123,42 @@ def ws_subscribe_telegram(
 
         direction = (
             "group_monitor_incoming"
-            if telegram.direction == TelegramDirection.INCOMING
+            if telegram.direction is TelegramDirection.INCOMING
             else "group_monitor_outgoing"
         )
+        _dst = str(telegram.destination_address)
+        _src = str(telegram.source_address)
         bus_message: KNXBusMonitorMessage = KNXBusMonitorMessage(
-            destination_address=str(telegram.destination_address),
+            destination_address=_dst,
+            destination_text=None,
             payload=payload,
             type=str(telegram.payload.__class__.__name__),
-            source_address=str(telegram.source_address),
+            value=None,
+            source_address=_src,
+            source_text=None,
             direction=direction,
             timestamp=dt_util.as_local(dt_util.utcnow()).strftime("%H:%M:%S.%f")[:-3],
         )
+        if project.loaded:
+            if ga_infos := project.group_addresses.get(_dst):
+                bus_message["destination_text"] = ga_infos["name"]
+                if (
+                    dpt_payload is not None
+                    and (transcoder := ga_infos.get("transcoder")) is not None
+                ):
+                    try:
+                        value = transcoder.from_knx(dpt_payload)
+                    except XKNXException:
+                        bus_message["value"] = "Error decoding value"
+                    else:
+                        unit = (
+                            f" {transcoder.unit}" if transcoder.unit is not None else ""
+                        )
+                        bus_message["value"] = f"{value}{unit}"
+            if ia_infos := project.devices.get(_src):
+                bus_message[
+                    "source_text"
+                ] = f"{ia_infos['manufacturer_name']} {ia_infos['name']}"
 
         connection.send_message(
             websocket_api.event_message(

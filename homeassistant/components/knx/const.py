@@ -111,9 +111,12 @@ class KNXBusMonitorMessage(TypedDict):
     """KNX bus monitor message."""
 
     destination_address: str
+    destination_text: str | None
     payload: str
     type: str
+    value: str | None
     source_address: str
+    source_text: str | None
     direction: str
     timestamp: str
 

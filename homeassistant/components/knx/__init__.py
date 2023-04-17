@@ -71,6 +71,7 @@ from .const import (
 )
 from .device import KNXInterfaceDevice
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
+from .project import KNXProject
 from .schema import (
     BinarySensorSchema,
     ButtonSchema,
@@ -372,6 +373,8 @@ class KNXModule:
         self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
         self.entry = entry
 
+        self.project = KNXProject(hass=hass, entry=entry)
+
         self.xknx = XKNX(
             connection_config=self.connection_config(),
             rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
@@ -397,6 +400,7 @@ class KNXModule:
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
+        await self.project.load_project()
         await self.xknx.start()
 
     async def stop(self, event: Event | None = None) -> None:
