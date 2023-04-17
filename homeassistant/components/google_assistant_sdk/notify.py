@@ -25,8 +25,7 @@ LANG_TO_BROADCAST_COMMAND = {
 
 
 def broadcast_commands(language_code: str):
-    """
-    Get the commands for broadcasting a message for the given language code.
+    """Get the commands for broadcasting a message for the given language code.
 
     Return type is a tuple where [0] is for broadcasting to your entire home,
     while [1] is for broadcasting to a specific target.

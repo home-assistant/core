@@ -1,5 +1,4 @@
-"""
-Test against characteristics captured from a Velux Gateway.
+"""Test against characteristics captured from a Velux Gateway.
 
 https://github.com/home-assistant/core/issues/44314
 """

@@ -1,5 +1,4 @@
-"""
-Regression tests for Ecobee 3.
+"""Regression tests for Ecobee 3.
 
 https://github.com/home-assistant/core/issues/15336
 """

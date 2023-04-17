@@ -72,7 +72,12 @@ async def async_setup_entry(
     child_nodes: list[
         tuple[Node, BinarySensorDeviceClass | None, str | None, DeviceInfo | None]
     ] = []
-    entity: ISYInsteonBinarySensorEntity | ISYBinarySensorEntity | ISYBinarySensorHeartbeat | ISYBinarySensorProgramEntity
+    entity: (
+        ISYInsteonBinarySensorEntity
+        | ISYBinarySensorEntity
+        | ISYBinarySensorHeartbeat
+        | ISYBinarySensorProgramEntity
+    )
 
     isy_data = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices

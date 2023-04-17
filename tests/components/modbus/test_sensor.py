@@ -213,7 +213,7 @@ async def test_config_sensor(hass, mock_modbus):
                     },
                 ]
             },
-            f"Error in sensor {TEST_ENTITY_NAME}. The `structure` field can not be empty",
+            f"Error in sensor {TEST_ENTITY_NAME}. The `structure` field cannot be empty",
         ),
         (
             {

@@ -1441,8 +1441,7 @@ async def test_no_restore_state(hass):
 
 
 async def test_restore_state_uncoherence_case(hass):
-    """
-    Test restore from a strange state.
+    """Test restore from a strange state.
 
     - Turn the generic hygrostat off
     - Restart HA and restore state from DB

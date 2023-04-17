@@ -2,7 +2,7 @@
   "domain": "upb",
   "name": "Universal Powerline Bus (UPB)",
   "documentation": "https://www.home-assistant.io/integrations/upb",
-  "requirements": ["upb_lib==0.4.12"],
+  "requirements": ["upb_lib==0.5.3"],
   "codeowners": ["@gwww"],
   "config_flow": true,
   "iot_class": "local_push",

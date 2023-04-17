@@ -859,8 +859,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     @_async_cmd
     async def async_set_scene(self, scene_class, *args):
-        """
-        Set the light directly to the specified state.
+        """Set the light directly to the specified state.
 
         If the light is off, it will first be turned on.
         """

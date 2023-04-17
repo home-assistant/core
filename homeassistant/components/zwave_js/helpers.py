@@ -94,8 +94,7 @@ def value_matches_matcher(
 
 @callback
 def get_value_id_from_unique_id(unique_id: str) -> str | None:
-    """
-    Get the value ID and optional state key from a unique ID.
+    """Get the value ID and optional state key from a unique ID.
 
     Raises ValueError
     """
@@ -176,8 +175,7 @@ def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None
 def get_home_and_node_id_from_device_entry(
     device_entry: dr.DeviceEntry,
 ) -> tuple[str, int] | None:
-    """
-    Get home ID and node ID for Z-Wave device registry entry.
+    """Get home ID and node ID for Z-Wave device registry entry.
 
     Returns (home_id, node_id) or None if not found.
     """
@@ -199,8 +197,7 @@ def get_home_and_node_id_from_device_entry(
 def async_get_node_from_device_id(
     hass: HomeAssistant, device_id: str, dev_reg: dr.DeviceRegistry | None = None
 ) -> ZwaveNode:
-    """
-    Get node from a device ID.
+    """Get node from a device ID.
 
     Raises ValueError if device is invalid or node can't be found.
     """
@@ -253,8 +250,7 @@ def async_get_node_from_entity_id(
     ent_reg: er.EntityRegistry | None = None,
     dev_reg: dr.DeviceRegistry | None = None,
 ) -> ZwaveNode:
-    """
-    Get node from an entity ID.
+    """Get node from an entity ID.
 
     Raises ValueError if entity is invalid.
     """
@@ -319,8 +315,7 @@ def async_get_nodes_from_targets(
     dev_reg: dr.DeviceRegistry | None = None,
     logger: logging.Logger = LOGGER,
 ) -> set[ZwaveNode]:
-    """
-    Get nodes for all targets.
+    """Get nodes for all targets.
 
     Supports entity_id with group expansion, area_id, and device_id.
     """

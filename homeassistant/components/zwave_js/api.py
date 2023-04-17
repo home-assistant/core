@@ -424,7 +424,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_firmware_update_status
     )
     websocket_api.async_register_command(
-        hass, websocket_get_firmware_update_capabilities
+        hass, websocket_get_node_firmware_update_capabilities
     )
     websocket_api.async_register_command(
         hass, websocket_is_any_ota_firmware_update_in_progress
@@ -484,7 +484,9 @@ async def websocket_network_status(
             "type": controller.controller_type,
             "own_node_id": controller.own_node_id,
             "is_primary": controller.is_primary,
-            "is_using_home_id_from_other_network": controller.is_using_home_id_from_other_network,
+            "is_using_home_id_from_other_network": (
+                controller.is_using_home_id_from_other_network
+            ),
             "is_sis_present": controller.is_SIS_present,
             "was_real_primary": controller.was_real_primary,
             "is_suc": controller.is_suc,
@@ -498,6 +500,7 @@ async def websocket_network_status(
             "supports_timers": controller.supports_timers,
             "is_heal_network_active": controller.is_heal_network_active,
             "inclusion_state": controller.inclusion_state,
+            "rf_region": controller.rf_region,
             "nodes": [node_status(node) for node in driver.controller.nodes.values()],
         },
     }
@@ -1984,20 +1987,20 @@ async def websocket_subscribe_firmware_update_status(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_firmware_update_capabilities",
+        vol.Required(TYPE): "zwave_js/get_node_firmware_update_capabilities",
         vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_node
-async def websocket_get_firmware_update_capabilities(
+async def websocket_get_node_firmware_update_capabilities(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
     node: Node,
 ) -> None:
-    """Abort a firmware update."""
+    """Get a node's firmware update capabilities."""
     capabilities = await node.async_get_firmware_update_capabilities()
     connection.send_result(msg[ID], capabilities.to_dict())
 

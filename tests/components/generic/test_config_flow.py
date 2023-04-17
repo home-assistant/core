@@ -650,8 +650,7 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_create_stream
 
 
 async def test_slug(hass, caplog):
-    """
-    Test that the slug function generates an error in case of invalid template.
+    """Test that the slug function generates an error in case of invalid template.
 
     Other paths in the slug function are already tested by other tests.
     """

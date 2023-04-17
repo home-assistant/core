@@ -36,7 +36,7 @@ from .const import DISPATCH_DETECTION, DOMAIN
 
 
 class UnableToConnect(HomeAssistantError):
-    """Exception to indicate that we can not connect to device."""
+    """Exception to indicate that we cannot connect to device."""
 
 
 PLATFORMS = [

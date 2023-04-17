@@ -1,5 +1,4 @@
-"""
-Regression tests for Netamo Smart CO Alarm.
+"""Regression tests for Netamo Smart CO Alarm.
 
 https://github.com/home-assistant/core/issues/78903
 """

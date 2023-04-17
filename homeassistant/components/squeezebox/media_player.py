@@ -211,8 +211,7 @@ async def async_setup_entry(
 
 
 class SqueezeBoxEntity(MediaPlayerEntity):
-    """
-    Representation of a SqueezeBox device.
+    """Representation of a SqueezeBox device.
 
     Wraps a pysqueezebox.Player() object.
     """
@@ -547,8 +546,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_clear_playlist()
 
     async def async_call_method(self, command, parameters=None):
-        """
-        Call Squeezebox JSON/RPC method.
+        """Call Squeezebox JSON/RPC method.
 
         Additional parameters are added to the command to form the list of
         positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
@@ -560,8 +558,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_query(*all_params)
 
     async def async_call_query(self, command, parameters=None):
-        """
-        Call Squeezebox JSON/RPC method where we care about the result.
+        """Call Squeezebox JSON/RPC method where we care about the result.
 
         Additional parameters are added to the command to form the list of
         positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
@@ -574,8 +571,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         _LOGGER.debug("call_query got result %s", self._query_result)
 
     async def async_join_players(self, group_members: list[str]) -> None:
-        """
-        Add other Squeezebox players to this player's sync group.
+        """Add other Squeezebox players to this player's sync group.
 
         If the other player is a member of a sync group, it will leave the current sync group
         without asking.

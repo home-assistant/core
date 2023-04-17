@@ -399,8 +399,7 @@ def build_item_response(  # noqa: C901
 
 
 def item_payload(item: dict[str, Any], *, can_play_artist: bool) -> BrowseMedia:
-    """
-    Create response payload for a single media item.
+    """Create response payload for a single media item.
 
     Used by async_browse_media.
     """
@@ -445,8 +444,7 @@ def item_payload(item: dict[str, Any], *, can_play_artist: bool) -> BrowseMedia:
 
 
 def library_payload(*, can_play_artist: bool) -> BrowseMedia:
-    """
-    Create response payload to describe contents of a specific library.
+    """Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """

@@ -44,9 +44,9 @@ async def async_setup_entry(
     async def async_add_player(player: SlimClient) -> None:
         """Add MediaPlayerEntity from SlimClient."""
         # we delay adding the player a small bit because the player name may be received
-        # just a bit after connect. This way we can create a device reg entry with the correct name
-        # the name will either be available within a few milliseconds after connect or not at all
-        # (its an optional data packet)
+        # just a bit after connect. This way we can create a device reg entry with the
+        # correct name the name will either be available within a few milliseconds after
+        # connect or not at all (its an optional data packet)
         for _ in range(10):
             if player.player_id not in player.name:
                 break

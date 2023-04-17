@@ -28,8 +28,8 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 3
-  PIP_CACHE_VERSION: 3
+  CACHE_VERSION: 4
+  PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 3
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
@@ -575,7 +575,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.4" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<23.1" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements_all.txt --use-deprecated=legacy-resolver
           pip install --cache-dir=$PIP_CACHE -r requirements_test.txt --use-deprecated=legacy-resolver
           pip install -e .

@@ -55,8 +55,7 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
 
 
 def thread_node_capability_to_str(char: Characteristic) -> str:
-    """
-    Return the thread device type as a string.
+    """Return the thread device type as a string.
 
     The underlying value is a bitmask, but we want to turn that to
     a human readable string. Some devices will have multiple capabilities.
@@ -93,8 +92,7 @@ def thread_node_capability_to_str(char: Characteristic) -> str:
 
 
 def thread_status_to_str(char: Characteristic) -> str:
-    """
-    Return the thread status as a string.
+    """Return the thread status as a string.
 
     The underlying value is a bitmask, but we want to turn that to
     a human readable string. So we check the flags in order. E.g. BORDER_ROUTER implies
@@ -501,8 +499,7 @@ class HomeKitBatterySensor(HomeKitSensor):
 
 
 class SimpleSensor(CharacteristicEntity, SensorEntity):
-    """
-    A simple sensor for a single characteristic.
+    """A simple sensor for a single characteristic.
 
     This may be an additional secondary entity that is part of another service. An
     example is a switch that has an energy sensor.

@@ -114,8 +114,7 @@ ia_validator = vol.Any(
 
 
 def ip_v4_validator(value: Any, multicast: bool | None = None) -> str:
-    """
-    Validate that value is parsable as IPv4 address.
+    """Validate that value is parsable as IPv4 address.
 
     Optionally check if address is in a reserved multicast block or is explicitly not.
     """

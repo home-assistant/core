@@ -179,7 +179,7 @@ async def async_setup_entry(
 
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
-        if not thermostat["modelNumber"] in ECOBEE_MODEL_TO_NAME:
+        if thermostat["modelNumber"] not in ECOBEE_MODEL_TO_NAME:
             _LOGGER.error(
                 (
                     "Model number for ecobee thermostat %s not recognized. "

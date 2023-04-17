@@ -169,6 +169,11 @@ jobs:
             python -m script.gen_requirements_all
           fi
 
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+
       - name: Write meta info file
         shell: bash
         run: |

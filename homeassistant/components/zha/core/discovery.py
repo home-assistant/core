@@ -210,7 +210,8 @@ class ProbeEndpoint:
         for component, ent_n_chan_list in matches.items():
             for entity_and_channel in ent_n_chan_list:
                 if component == cmpt_by_dev_type:
-                    # for well known device types, like thermostats we'll take only 1st class
+                    # for well known device types, like thermostats
+                    # we'll take only 1st class
                     channel_pool.async_new_entity(
                         component,
                         entity_and_channel.entity_class,

@@ -273,7 +273,7 @@ async def async_setup_platform(
 
 
 def _process_scenes_config(
-    hass, async_add_entities: AddEntitiesCallback, config: dict[str, Any]
+    hass: HomeAssistant, async_add_entities: AddEntitiesCallback, config: dict[str, Any]
 ) -> None:
     """Process multiple scenes and add them."""
     # Check empty list

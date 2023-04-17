@@ -537,7 +537,12 @@ class LutronCasetaDevice(Entity):
             # here. Since it would be a breaking change to change the identifier
             # we are ignoring the type error here until it can be migrated to
             # a string in a future release.
-            identifiers={(DOMAIN, self._handle_none_serial(self.serial))},  # type: ignore[arg-type]
+            identifiers={
+                (
+                    DOMAIN,
+                    self._handle_none_serial(self.serial),  # type: ignore[arg-type]
+                )
+            },
             manufacturer=MANUFACTURER,
             model=f"{device['model']} ({device['type']})",
             name=full_name,

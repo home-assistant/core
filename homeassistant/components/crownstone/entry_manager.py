@@ -52,8 +52,7 @@ class CrownstoneEntryManager:
         self.usb_sphere_id: str | None = None
 
     async def async_setup(self) -> bool:
-        """
-        Set up a Crownstone config entry.
+        """Set up a Crownstone config entry.
 
         Returns True if the setup was successful.
         """

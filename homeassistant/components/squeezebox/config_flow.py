@@ -95,8 +95,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data_schema = _base_schema(self.discovery_info)
 
     async def _validate_input(self, data):
-        """
-        Validate the user input allows us to connect.
+        """Validate the user input allows us to connect.
 
         Retrieve unique id and abort if already configured.
         """

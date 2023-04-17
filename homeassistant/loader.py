@@ -1,5 +1,4 @@
-"""
-The methods for loading Home Assistant integrations.
+"""The methods for loading Home Assistant integrations.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
@@ -120,8 +119,7 @@ class USBMatcher(USBMatcherRequired, USBMatcherOptional):
 
 
 class Manifest(TypedDict, total=False):
-    """
-    Integration manifest.
+    """Integration manifest.
 
     Note that none of the attributes are marked Optional here. However, some of
     them may be optional in manifest.json in the sense that they can be omitted

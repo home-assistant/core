@@ -115,8 +115,7 @@ class HomeFactory:
 
 
 class HomeTemplate(Home):
-    """
-    Home template as builder for home mock.
+    """Home template as builder for home mock.
 
     It is based on the upstream libs home class to generate hmip devices
     and groups based on the given homematicip_cloud.json.
@@ -187,8 +186,7 @@ class HomeTemplate(Home):
         return self.init_json_state
 
     def get_async_home_mock(self):
-        """
-        Create Mock for Async_Home. based on template to be used for testing.
+        """Create Mock for Async_Home. based on template to be used for testing.
 
         It adds collections of mocked devices and groups to the home objects,
         and sets required attributes.

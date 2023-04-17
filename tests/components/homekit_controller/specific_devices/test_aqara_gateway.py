@@ -1,5 +1,4 @@
-"""
-Regression tests for Aqara Gateway V3.
+"""Regression tests for Aqara Gateway V3.
 
 https://github.com/home-assistant/core/issues/20957
 """

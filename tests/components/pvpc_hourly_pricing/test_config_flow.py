@@ -23,8 +23,7 @@ _MOCK_TIME_VALID_RESPONSES = datetime(2023, 1, 6, 12, 0, tzinfo=date_util.UTC)
 
 
 async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
-    """
-    Test config flow for pvpc_hourly_pricing.
+    """Test config flow for pvpc_hourly_pricing.
 
     - Create a new entry with tariff "2.0TD (Ceuta/Melilla)"
     - Check state and attributes

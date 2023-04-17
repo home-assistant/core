@@ -817,8 +817,8 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
     @callback
     def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
         position_shade = hass_position_to_hd(target_hass_position, MAX_POSITION)
-        # note we set POS_KIND_VANE: MIN_POSITION here even with shades without tilt so no additional
-        # override is required for differences between type 8/9/10
+        # note we set POS_KIND_VANE: MIN_POSITION here even with shades without
+        # tilt so no additional override is required for differences between type 8/9/10
         # this just stores the value in the coordinator for future reference
         if target_hass_position <= 50:
             target_hass_position = target_hass_position * 2
@@ -846,11 +846,14 @@ class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
 
     This equates to two shades being controlled by one motor.
     The front shade must be completely down before the rear shade will move.
-    Sibling Class: PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedRear
-    API Class: ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
+    Sibling Class:
+        PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedRear
+    API Class:
+        ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
 
     Type 8 - Duolite (front and rear shades)
-    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear opaque (non-tilting) shade)
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts
+             plus a rear opaque (non-tilting) shade)
     Type 10 - Duolite with 180° Tilt
     """
 
@@ -907,11 +910,14 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
 
     This equates to two shades being controlled by one motor.
     The front shade must be completely down before the rear shade will move.
-    Sibling Class: PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedFront
-    API Class: ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
+    Sibling Class:
+        PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedFront
+    API Class:
+        ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
 
     Type 8 - Duolite (front and rear shades)
-    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear opaque (non-tilting) shade)
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus
+             a rear opaque (non-tilting) shade)
     Type 10 - Duolite with 180° Tilt
     """
 

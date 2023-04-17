@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Quickly check if branch is up to PR standards.
+"""Quickly check if branch is up to PR standards.
 
 This is NOT a full CI/linting replacement, only a quick check during development.
 """

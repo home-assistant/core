@@ -92,8 +92,7 @@ def _strict_module_in_ignore_list(
 
 
 def _sort_within_sections(line_iter: Iterable[str]) -> Iterable[str]:
-    """
-    Sort lines within sections.
+    """Sort lines within sections.
 
     Sections are defined as anything not delimited by a blank line
     or an octothorpe-prefixed comment line.

@@ -232,7 +232,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         await self._finished_event.wait()
         assert self._result is not None
 
-        # If the update was not successful, we should throw an error to let the user know
+        # If the update was not successful, we should throw an error
+        # to let the user know
         if not self._result.success:
             error_msg = self._result.status.name.replace("_", " ").title()
             self._unsub_firmware_events_and_reset_progress()

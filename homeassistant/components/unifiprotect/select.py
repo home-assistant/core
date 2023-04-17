@@ -384,7 +384,8 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
 
-        # entities with categories are not exposed for voice and safe to update dynamically
+        # entities with categories are not exposed for voice
+        # and safe to update dynamically
         if (
             self.entity_description.entity_category is not None
             and self.entity_description.ufp_options_fn is not None
@@ -443,7 +444,10 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_placeholders={
-                "link": "https://www.home-assistant.io/integrations/text#service-textset_value"
+                "link": (
+                    "https://www.home-assistant.io/integrations"
+                    "/text#service-textset_value"
+                )
             },
             translation_key="deprecated_service_set_doorbell_message",
         )

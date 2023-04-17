@@ -1,5 +1,4 @@
-"""
-Test for setup methods for the SDM API.
+"""Test for setup methods for the SDM API.
 
 The tests fake out the subscriber/devicemanager and simulate setup behavior
 and failure modes.

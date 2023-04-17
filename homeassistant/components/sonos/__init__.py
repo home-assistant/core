@@ -11,6 +11,7 @@ import socket
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
+from aiohttp import ClientError
 from requests.exceptions import Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
@@ -229,6 +230,10 @@ class SonosDiscoveryManager:
             )
             try:
                 await sub.unsubscribe()
+            except (ClientError, OSError, Timeout) as ex:
+                _LOGGER.debug("Unsubscription from %s failed: %s", ip_address, ex)
+
+            try:
                 await self.hass.async_add_executor_job(soco.zone_group_state.poll, soco)
             except (OSError, SoCoException, Timeout) as ex:
                 _LOGGER.warning(

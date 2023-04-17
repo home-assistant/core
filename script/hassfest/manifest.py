@@ -298,8 +298,7 @@ CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
 
 
 def validate_version(integration: Integration) -> None:
-    """
-    Validate the version of the integration.
+    """Validate the version of the integration.
 
     Will be removed when the version key is no longer optional for custom integrations.
     """

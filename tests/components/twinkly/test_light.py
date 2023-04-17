@@ -289,8 +289,7 @@ async def test_turn_off(hass: HomeAssistant):
 
 
 async def test_update_name(hass: HomeAssistant):
-    """
-    Validate device's name update behavior.
+    """Validate device's name update behavior.
 
     Validate that if device name is changed from the Twinkly app,
     then the name of the entity is updated and it's also persisted,

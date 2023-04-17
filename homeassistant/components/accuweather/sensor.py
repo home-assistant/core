@@ -249,7 +249,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         metric_unit=UnitOfLength.METERS,
         us_customary_unit=UnitOfLength.FEET,
         value_fn=lambda data, unit: cast(float, data[unit][ATTR_VALUE]),
-        native_precision=0,
+        suggested_display_precision=0,
     ),
     AccuWeatherSensorDescription(
         key="CloudCover",

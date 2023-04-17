@@ -183,8 +183,7 @@ class MailNotificationService(BaseNotificationService):
         return True
 
     def send_message(self, message="", **kwargs):
-        """
-        Build and send a message to a user.
+        """Build and send a message to a user.
 
         Will send plain text normally, or will build a multipart HTML message
         with inline image attachments if images config is defined, or will

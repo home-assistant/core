@@ -102,6 +102,7 @@ FLOWS = {
         "dunehd",
         "dynalite",
         "eafm",
+        "easyenergy",
         "ecobee",
         "econet",
         "ecowitt",

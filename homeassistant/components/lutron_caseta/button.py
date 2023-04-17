@@ -52,7 +52,8 @@ async def async_setup_entry(
                 .title()
             )
 
-        # Append the child device name to the end of the parent keypad name to create the entity name
+        # Append the child device name to the end of the parent keypad
+        # name to create the entity name
         full_name = f'{parent_device_info.get("name")} {device_name}'
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device

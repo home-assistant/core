@@ -1,5 +1,4 @@
-"""
-Support for getting statistical data from a DWD Weather Warnings.
+"""Support for getting statistical data from a DWD Weather Warnings.
 
 Data is fetched from DWD:
 https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html

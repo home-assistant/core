@@ -1,0 +1,13 @@
+{
+    "config": {
+        "error": {
+            "old_firmware": "Firmware antiguo no compatible en el dispositivo Bond: actualice antes de continuar"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "confirm": {
+                "description": "\u00bfDesea configurar {name}?"
+            }
+        }
+    }
+}

@@ -136,8 +136,7 @@ def make_playlist(
 async def test_hls_stream(
     hass, setup_component, hls_stream, stream_worker_sync, h264_video
 ):
-    """
-    Test hls stream.
+    """Test hls stream.
 
     Purposefully not mocking anything here to test full
     integration with the stream component.
@@ -527,8 +526,7 @@ async def test_remove_incomplete_segment_on_exit(
 async def test_hls_stream_rotate(
     hass, setup_component, hls_stream, stream_worker_sync, h264_video
 ):
-    """
-    Test hls stream with rotation applied.
+    """Test hls stream with rotation applied.
 
     Purposefully not mocking anything here to test full
     integration with the stream component.

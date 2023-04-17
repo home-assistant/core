@@ -164,8 +164,7 @@ async def test_async_step_user_no_devices_found(hass):
 
 
 async def test_async_step_user_no_devices_found_2(hass):
-    """
-    Test setup from service info cache with no devices found.
+    """Test setup from service info cache with no devices found.
 
     This variant tests with a non-BTHome device known to us.
     """
@@ -532,8 +531,7 @@ async def test_async_step_reauth_wrong_key(hass):
 
 
 async def test_async_step_reauth_abort_early(hass):
-    """
-    Test we can abort the reauth if there is no encryption.
+    """Test we can abort the reauth if there is no encryption.
 
     (This can't currently happen in practice).
     """

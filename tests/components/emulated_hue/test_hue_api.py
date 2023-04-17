@@ -465,8 +465,9 @@ async def test_discover_full_state(hue_client):
 
     # Make sure array is correct size
     assert len(result_json) == 2
-    assert len(config_json) == 6
+    assert len(config_json) == 7
     assert len(lights_json) >= 1
+    assert "name" in config_json
 
     # Make sure the config wrapper added to the config is there
     assert "mac" in config_json
@@ -505,7 +506,8 @@ async def test_discover_config(hue_client):
     config_json = await result.json()
 
     # Make sure array is correct size
-    assert len(config_json) == 6
+    assert len(config_json) == 7
+    assert "name" in config_json
 
     # Make sure the config wrapper added to the config is there
     assert "mac" in config_json

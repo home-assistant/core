@@ -187,8 +187,7 @@ class MinioEventThread(threading.Thread):
 
 
 def iterate_objects(event):
-    """
-    Iterate over file records of notification event.
+    """Iterate over file records of notification event.
 
     Most of the time it should still be only one record.
     """

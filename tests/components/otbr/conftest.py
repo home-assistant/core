@@ -5,9 +5,9 @@ import pytest
 
 from homeassistant.components import otbr
 
-from tests.common import MockConfigEntry
+from . import CONFIG_ENTRY_DATA, DATASET
 
-CONFIG_ENTRY_DATA = {"url": "http://core-silabs-multiprotocol:8081"}
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="otbr_config_entry")
@@ -20,5 +20,5 @@ async def otbr_config_entry_fixture(hass):
         title="Open Thread Border Router",
     )
     config_entry.add_to_hass(hass)
-    with patch("python_otbr_api.OTBR.get_active_dataset_tlvs"):
+    with patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

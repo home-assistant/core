@@ -186,14 +186,14 @@ async def test_platform_not_ready(hass):
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    await component.async_setup({DOMAIN: {"platform": "mod1"}})
-    await hass.async_block_till_done()
-    assert len(platform1_setup.mock_calls) == 1
-    assert "test_domain.mod1" not in hass.config.components
-
     utcnow = dt_util.utcnow()
 
     with freeze_time(utcnow):
+        await component.async_setup({DOMAIN: {"platform": "mod1"}})
+        await hass.async_block_till_done()
+        assert len(platform1_setup.mock_calls) == 1
+        assert "test_domain.mod1" not in hass.config.components
+
         # Should not trigger attempt 2
         async_fire_time_changed(hass, utcnow + timedelta(seconds=29))
         await hass.async_block_till_done()

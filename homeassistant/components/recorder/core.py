@@ -770,7 +770,7 @@ class Recorder(threading.Thread):
                     _LOGGER.warning(
                         "Database queue backlog reached more than 90% of maximum queue "
                         "length while waiting for backup to finish; recorder will now "
-                        "resume writing to database. The backup can not be trusted and "
+                        "resume writing to database. The backup cannot be trusted and "
                         "must be restarted"
                     )
                     task.queue_overflow = True

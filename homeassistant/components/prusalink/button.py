@@ -39,6 +39,7 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
         PrusaLinkButtonEntityDescription[PrinterInfo](
             key="printer.cancel_job",
             name="Cancel Job",
+            icon="mdi:cancel",
             press_fn=lambda api: cast(Coroutine, api.cancel_job()),
             available_fn=lambda data: any(
                 data["state"]["flags"][flag]
@@ -48,6 +49,7 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
         PrusaLinkButtonEntityDescription[PrinterInfo](
             key="job.pause_job",
             name="Pause Job",
+            icon="mdi:pause",
             press_fn=lambda api: cast(Coroutine, api.pause_job()),
             available_fn=lambda data: (
                 data["state"]["flags"]["printing"]
@@ -57,6 +59,7 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
         PrusaLinkButtonEntityDescription[PrinterInfo](
             key="job.resume_job",
             name="Resume Job",
+            icon="mdi:play",
             press_fn=lambda api: cast(Coroutine, api.resume_job()),
             available_fn=lambda data: cast(bool, data["state"]["flags"]["paused"]),
         ),

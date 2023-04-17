@@ -252,7 +252,8 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
         new_data.update(
             {
                 CONF_SUBSCRIBER_ID: config[CONF_SUBSCRIBER_ID],
-                CONF_SUBSCRIBER_ID_IMPORTED: True,  # Don't delete user managed subscriber
+                # Don't delete user managed subscriber
+                CONF_SUBSCRIBER_ID_IMPORTED: True,
             }
         )
     hass.config_entries.async_update_entry(

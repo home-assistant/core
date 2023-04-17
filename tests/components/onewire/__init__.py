@@ -178,5 +178,9 @@ def _setup_owproxy_mock_device_reads(
 
     # Setup sub-device reads
     device_sensors = mock_device.get(platform, [])
+    if platform is Platform.SENSOR and device_id.startswith("12"):
+        # We need to check if there is TAI8570 plugged in
+        for expected_sensor in device_sensors:
+            sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
     for expected_sensor in device_sensors:
         sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])

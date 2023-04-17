@@ -78,8 +78,7 @@ class CiscoMEDeviceScanner(DeviceScanner):
         return name
 
     def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+        """Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
         include SSID, PT (eg 802.11ac), devtype (eg iPhone 7) among others.

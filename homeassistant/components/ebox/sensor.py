@@ -1,5 +1,4 @@
-"""
-Support for EBox.
+"""Support for EBox.
 
 Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
 """

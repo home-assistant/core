@@ -349,8 +349,7 @@ def get_significant_states_with_session(
     no_attributes: bool = False,
     compressed_state_format: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
-    """
-    Return states changes during UTC period start_time - end_time.
+    """Return states changes during UTC period start_time - end_time.
 
     entity_ids is an optional iterable of entities to include in the results.
 

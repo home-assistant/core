@@ -8,8 +8,7 @@ from .common import get_next_aid, setup_test_component
 
 
 def create_fan_service(accessory):
-    """
-    Define fan v1 characteristics as per HAP spec.
+    """Define fan v1 characteristics as per HAP spec.
 
     This service is no longer documented in R2 of the public HAP spec but existing
     devices out there use it (like the SIMPLEconnect fan)

@@ -17,6 +17,8 @@ from homeassistant.components.recorder.statistics import (
     get_metadata,
     list_statistic_ids,
 )
+from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
+from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -122,6 +124,15 @@ VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
     "state_class": "total",
     "unit_of_measurement": "m³",
 }
+
+
+def test_converters_align_with_sensor():
+    """Ensure UNIT_SCHEMA is aligned with sensor UNIT_CONVERTERS."""
+    for converter in UNIT_CONVERTERS.values():
+        assert converter.UNIT_CLASS in UNIT_SCHEMA.schema
+
+    for unit_class in UNIT_SCHEMA.schema:
+        assert any(c for c in UNIT_CONVERTERS.values() if unit_class == c.UNIT_CLASS)
 
 
 async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
