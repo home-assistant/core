@@ -26,6 +26,29 @@ set_schedule:
       selector:
         text:
 
+set_preset_mode_with_end_datetime:
+  name: Set preset mode with an end datetime
+  description: Set preset mode for Netatmo climate device with end datetime.
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    preset_mode:
+      name: Preset mode
+      description: New value of preset mode.
+      required: true
+      example: "away"
+      selector:
+        text:
+    end_datetime:
+      name: End date & time
+      description: The end date & time of the preset mode.
+      required: true
+      example: '"2019-04-20 05:04:20"'
+      selector:
+        text:
+
 set_persons_home:
   target:
     entity:
