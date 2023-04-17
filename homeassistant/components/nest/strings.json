@@ -61,7 +61,7 @@
     },
     "error": {
       "timeout": "Timeout validating code",
-      "invalid_pin": "Invalid [%key:common::config_flow::data::pin%]",
+      "invalid_pin": "Invalid PIN",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "internal_error": "Internal error validating code",
       "bad_project_id": "Please enter a valid Cloud Project ID (check Cloud Console)",
@@ -97,6 +97,16 @@
     "removed_app_auth": {
       "title": "Nest Authentication Credentials must be updated",
       "description": "To improve security and reduce phishing risk Google has deprecated the authentication method used by Home Assistant.\n\n**This requires action by you to resolve** ([more info]({more_info_url}))\n\n1.  Visit the integrations page\n1. Click Reconfigure on the Nest integration.\n1. Home Assistant will walk you through the steps to upgrade to Web Authentication.\n\nSee the Nest [integration instructions]({documentation_url}) for troubleshooting information."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      }
     }
   }
 }

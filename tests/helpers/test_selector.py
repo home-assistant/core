@@ -69,10 +69,9 @@ def _test_selector(
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
-    assert (
-        selector.selector(selector_instance.serialize()["selector"]).config
-        == selector_instance.config
-    )
+    assert selector_instance.serialize() == {
+        "selector": {selector_type: selector_instance.config}
+    }
     # Test serialized selector can be dumped to YAML
     yaml.dump(selector_instance.serialize())
 
@@ -227,11 +226,53 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
             ("light.abc123", "binary_sensor.abc123", FAKE_UUID),
             (None,),
         ),
+        (
+            {
+                "filter": [
+                    {"supported_features": ["light.LightEntityFeature.EFFECT"]},
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "supported_features": [
+                            "light.LightEntityFeature.EFFECT",
+                            "light.LightEntityFeature.TRANSITION",
+                        ]
+                    },
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
     ),
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test entity selector."""
     _test_selector("entity", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        # Feature should be string specifying an enum member, not an int
+        {"filter": [{"supported_features": [1]}]},
+        # Invalid feature
+        {"filter": [{"supported_features": ["blah"]}]},
+        # Unknown feature enum
+        {"filter": [{"supported_features": ["blah.FooEntityFeature.blah"]}]},
+        # Unknown feature enum member
+        {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
+    ),
+)
+def test_entity_selector_schema_error(schema) -> None:
+    """Test number selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"entity": schema})
 
 
 @pytest.mark.parametrize(
@@ -359,7 +400,7 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> 
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    (({}, (1, "one", None), ()),),  # Everything can be coarced to bool
+    (({}, (1, "one", None), ()),),  # Everything can be coerced to bool
 )
 def test_boolean_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test boolean selector."""
@@ -836,3 +877,57 @@ def test_file_selector_schema(schema, valid_selections, invalid_selections) -> N
     """Test file selector."""
 
     _test_selector("file", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {"value": True, "label": "Blah"},
+            (True, 1),
+            (None, False, 0, "abc", "def"),
+        ),
+        (
+            {"value": False},
+            (False, 0),
+            (None, True, 1, "abc", "def"),
+        ),
+        (
+            {"value": 0},
+            (0, False),
+            (None, True, 1, "abc", "def"),
+        ),
+        (
+            {"value": 1},
+            (1, True),
+            (None, False, 0, "abc", "def"),
+        ),
+        (
+            {"value": 4},
+            (4,),
+            (None, False, True, 0, 1, "abc", "def"),
+        ),
+        (
+            {"value": "dog"},
+            ("dog",),
+            (None, False, True, 0, 1, "abc", "def"),
+        ),
+    ),
+)
+def test_constant_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test constant selector."""
+    _test_selector("constant", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        {},  # Value is mandatory
+        {"value": []},  # Value must be str, int or bool
+        {"value": 123, "label": 123},  # Label must be str
+    ),
+)
+def test_constant_selector_schema_error(schema) -> None:
+    """Test constant selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"constant": schema})

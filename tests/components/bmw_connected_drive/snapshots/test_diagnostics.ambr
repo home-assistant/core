@@ -1,0 +1,4625 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'data': list([
+      dict({
+        'available_attributes': list([
+          'gps_position',
+          'vin',
+          'remaining_range_total',
+          'mileage',
+          'charging_time_remaining',
+          'charging_start_time',
+          'charging_end_time',
+          'charging_time_label',
+          'charging_status',
+          'connection_status',
+          'remaining_battery_percent',
+          'remaining_range_electric',
+          'last_charging_end_result',
+          'ac_current_limit',
+          'charging_target',
+          'charging_mode',
+          'charging_preferences',
+          'is_pre_entry_climatization_enabled',
+          'condition_based_services',
+          'check_control_messages',
+          'door_lock_state',
+          'timestamp',
+          'lids',
+          'windows',
+        ]),
+        'brand': 'bmw',
+        'charging_profile': dict({
+          'ac_available_limits': list([
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            20,
+            32,
+          ]),
+          'ac_current_limit': 16,
+          'charging_mode': 'IMMEDIATE_CHARGING',
+          'charging_preferences': 'NO_PRESELECTION',
+          'charging_preferences_service_pack': 'WAVE_01',
+          'departure_times': list([
+            dict({
+              '_timer_dict': dict({
+                'action': 'DEACTIVATE',
+                'id': 1,
+                'timeStamp': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'timerWeekDays': list([
+                ]),
+              }),
+              'action': 'DEACTIVATE',
+              'start_time': '00:00:00',
+              'timer_id': 1,
+              'weekdays': list([
+              ]),
+            }),
+            dict({
+              '_timer_dict': dict({
+                'action': 'DEACTIVATE',
+                'id': 2,
+                'timeStamp': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'timerWeekDays': list([
+                ]),
+              }),
+              'action': 'DEACTIVATE',
+              'start_time': '00:00:00',
+              'timer_id': 2,
+              'weekdays': list([
+              ]),
+            }),
+            dict({
+              '_timer_dict': dict({
+                'action': 'DEACTIVATE',
+                'id': 3,
+                'timeStamp': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'timerWeekDays': list([
+                ]),
+              }),
+              'action': 'DEACTIVATE',
+              'start_time': '00:00:00',
+              'timer_id': 3,
+              'weekdays': list([
+              ]),
+            }),
+            dict({
+              '_timer_dict': dict({
+                'action': 'DEACTIVATE',
+                'id': 4,
+                'timeStamp': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'timerWeekDays': list([
+                ]),
+              }),
+              'action': 'DEACTIVATE',
+              'start_time': '00:00:00',
+              'timer_id': 4,
+              'weekdays': list([
+              ]),
+            }),
+          ]),
+          'is_pre_entry_climatization_enabled': False,
+          'preferred_charging_window': dict({
+            '_window_dict': dict({
+            }),
+            'end_time': '00:00:00',
+            'start_time': '00:00:00',
+          }),
+          'timer_type': 'WEEKLY_PLANNER',
+        }),
+        'check_control_messages': dict({
+          'has_check_control_messages': False,
+          'messages': list([
+            dict({
+              'description_long': None,
+              'description_short': 'TIRE_PRESSURE',
+              'state': 'LOW',
+            }),
+          ]),
+        }),
+        'condition_based_services': dict({
+          'is_service_required': False,
+          'messages': list([
+            dict({
+              'due_date': '2024-12-01T00:00:00+00:00',
+              'due_distance': list([
+                50000,
+                'km',
+              ]),
+              'service_type': 'BRAKE_FLUID',
+              'state': 'OK',
+            }),
+            dict({
+              'due_date': '2024-12-01T00:00:00+00:00',
+              'due_distance': list([
+                50000,
+                'km',
+              ]),
+              'service_type': 'VEHICLE_TUV',
+              'state': 'OK',
+            }),
+            dict({
+              'due_date': '2024-12-01T00:00:00+00:00',
+              'due_distance': list([
+                50000,
+                'km',
+              ]),
+              'service_type': 'VEHICLE_CHECK',
+              'state': 'OK',
+            }),
+            dict({
+              'due_date': None,
+              'due_distance': list([
+                None,
+                None,
+              ]),
+              'service_type': 'TIRE_WEAR_REAR',
+              'state': 'OK',
+            }),
+            dict({
+              'due_date': None,
+              'due_distance': list([
+                None,
+                None,
+              ]),
+              'service_type': 'TIRE_WEAR_FRONT',
+              'state': 'OK',
+            }),
+          ]),
+        }),
+        'data': dict({
+          'appVehicleType': 'DEMO',
+          'attributes': dict({
+            'a4aType': 'NOT_SUPPORTED',
+            'bodyType': 'G26',
+            'brand': 'BMW',
+            'color': 4284245350,
+            'countryOfOrigin': 'DE',
+            'driveTrain': 'ELECTRIC',
+            'driverGuideInfo': dict({
+              'androidAppScheme': 'com.bmwgroup.driversguide.row',
+              'androidStoreUrl': 'https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row',
+              'iosAppScheme': 'bmwdriversguide:///open',
+              'iosStoreUrl': 'https://apps.apple.com/de/app/id714042749?mt=8',
+            }),
+            'headUnitRaw': 'HU_MGU',
+            'headUnitType': 'MGU',
+            'hmiVersion': 'ID8',
+            'lastFetched': '2023-01-04T14:57:06.019Z',
+            'model': 'i4 eDrive40',
+            'softwareVersionCurrent': dict({
+              'iStep': 470,
+              'puStep': dict({
+                'month': 11,
+                'year': 21,
+              }),
+              'seriesCluster': 'G026',
+            }),
+            'softwareVersionExFactory': dict({
+              'iStep': 470,
+              'puStep': dict({
+                'month': 11,
+                'year': 21,
+              }),
+              'seriesCluster': 'G026',
+            }),
+            'telematicsUnit': 'WAVE01',
+            'year': 2021,
+          }),
+          'capabilities': dict({
+            'a4aType': 'NOT_SUPPORTED',
+            'checkSustainabilityDPP': False,
+            'climateFunction': 'AIR_CONDITIONING',
+            'climateNow': True,
+            'digitalKey': dict({
+              'bookedServicePackage': 'SMACC_1_5',
+              'readerGraphics': 'readerGraphics',
+              'state': 'ACTIVATED',
+            }),
+            'horn': True,
+            'isBmwChargingSupported': True,
+            'isCarSharingSupported': False,
+            'isChargeNowForBusinessSupported': True,
+            'isChargingHistorySupported': True,
+            'isChargingHospitalityEnabled': True,
+            'isChargingLoudnessEnabled': True,
+            'isChargingPlanSupported': True,
+            'isChargingPowerLimitEnabled': True,
+            'isChargingSettingsEnabled': True,
+            'isChargingTargetSocEnabled': True,
+            'isClimateTimerWeeklyActive': False,
+            'isCustomerEsimSupported': True,
+            'isDCSContractManagementSupported': True,
+            'isDataPrivacyEnabled': False,
+            'isEasyChargeEnabled': True,
+            'isEvGoChargingSupported': False,
+            'isMiniChargingSupported': False,
+            'isNonLscFeatureEnabled': False,
+            'isPersonalPictureUploadSupported': False,
+            'isRemoteEngineStartSupported': False,
+            'isRemoteHistoryDeletionSupported': False,
+            'isRemoteHistorySupported': True,
+            'isRemoteParkingSupported': False,
+            'isRemoteServicesActivationRequired': False,
+            'isRemoteServicesBookingRequired': False,
+            'isScanAndChargeSupported': True,
+            'isSustainabilityAccumulatedViewEnabled': False,
+            'isSustainabilitySupported': False,
+            'isWifiHotspotServiceSupported': False,
+            'lastStateCallState': 'ACTIVATED',
+            'lights': True,
+            'lock': True,
+            'remote360': True,
+            'remoteChargingCommands': dict({
+            }),
+            'remoteSoftwareUpgrade': True,
+            'sendPoi': True,
+            'specialThemeSupport': list([
+            ]),
+            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexaSDK': False,
+            'unlock': True,
+            'vehicleFinder': True,
+            'vehicleStateSource': 'LAST_STATE_CALL',
+          }),
+          'charging_settings': dict({
+            'chargeAndClimateSettings': dict({
+              'chargeAndClimateTimer': dict({
+                'chargingMode': 'Sofort laden',
+                'chargingModeSemantics': 'Sofort laden',
+                'departureTimer': list([
+                  'Aus',
+                ]),
+                'departureTimerSemantics': 'Aus',
+                'preconditionForDeparture': 'Aus',
+                'showDepartureTimers': False,
+              }),
+              'chargingFlap': dict({
+                'permanentlyUnlockLabel': 'Aus',
+              }),
+              'chargingSettings': dict({
+                'acCurrentLimitLabel': '16A',
+                'acCurrentLimitLabelSemantics': '16 Ampere',
+                'chargingTargetLabel': '80%',
+                'dcLoudnessLabel': 'Nicht begrenzt',
+                'unlockCableAutomaticallyLabel': 'Aus',
+              }),
+            }),
+            'chargeAndClimateTimerDetail': dict({
+              'chargingMode': dict({
+                'chargingPreference': 'NO_PRESELECTION',
+                'endTimeSlot': '0001-01-01T00:00:00',
+                'startTimeSlot': '0001-01-01T00:00:00',
+                'type': 'CHARGING_IMMEDIATELY',
+              }),
+              'departureTimer': dict({
+                'type': 'WEEKLY_DEPARTURE_TIMER',
+                'weeklyTimers': list([
+                  dict({
+                    'daysOfTheWeek': list([
+                    ]),
+                    'id': 1,
+                    'time': '0001-01-01T00:00:00',
+                    'timerAction': 'DEACTIVATE',
+                  }),
+                  dict({
+                    'daysOfTheWeek': list([
+                    ]),
+                    'id': 2,
+                    'time': '0001-01-01T00:00:00',
+                    'timerAction': 'DEACTIVATE',
+                  }),
+                  dict({
+                    'daysOfTheWeek': list([
+                    ]),
+                    'id': 3,
+                    'time': '0001-01-01T00:00:00',
+                    'timerAction': 'DEACTIVATE',
+                  }),
+                  dict({
+                    'daysOfTheWeek': list([
+                    ]),
+                    'id': 4,
+                    'time': '0001-01-01T00:00:00',
+                    'timerAction': 'DEACTIVATE',
+                  }),
+                ]),
+              }),
+              'isPreconditionForDepartureActive': False,
+            }),
+            'chargingFlapDetail': dict({
+              'isPermanentlyUnlock': False,
+            }),
+            'chargingSettingsDetail': dict({
+              'acLimit': dict({
+                'current': dict({
+                  'unit': 'A',
+                  'value': 16,
+                }),
+                'isUnlimited': False,
+                'max': 32,
+                'min': 6,
+                'values': list([
+                  6,
+                  7,
+                  8,
+                  9,
+                  10,
+                  11,
+                  12,
+                  13,
+                  14,
+                  15,
+                  16,
+                  20,
+                  32,
+                ]),
+              }),
+              'chargingTarget': 80,
+              'dcLoudness': 'UNLIMITED_LOUD',
+              'isUnlockCableActive': False,
+              'minChargingTargetToWarning': 0,
+            }),
+            'servicePack': 'WAVE_01',
+          }),
+          'fetched_at': '2022-07-10T11:00:00+00:00',
+          'is_metric': True,
+          'mappingInfo': dict({
+            'isAssociated': False,
+            'isLmmEnabled': False,
+            'isPrimaryUser': True,
+            'lmmStatusReasons': list([
+            ]),
+            'mappingStatus': 'CONFIRMED',
+          }),
+          'state': dict({
+            'chargingProfile': dict({
+              'chargingControlType': 'WEEKLY_PLANNER',
+              'chargingMode': 'IMMEDIATE_CHARGING',
+              'chargingPreference': 'NO_PRESELECTION',
+              'chargingSettings': dict({
+                'acCurrentLimit': 16,
+                'hospitality': 'NO_ACTION',
+                'idcc': 'UNLIMITED_LOUD',
+                'targetSoc': 80,
+              }),
+              'departureTimes': list([
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 1,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 2,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 3,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 4,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+              ]),
+            }),
+            'checkControlMessages': list([
+              dict({
+                'severity': 'LOW',
+                'type': 'TIRE_PRESSURE',
+              }),
+            ]),
+            'climateControlState': dict({
+              'activity': 'STANDBY',
+            }),
+            'climateTimers': list([
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': False,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+            ]),
+            'combustionFuelLevel': dict({
+            }),
+            'currentMileage': 1121,
+            'doorsState': dict({
+              'combinedSecurityState': 'LOCKED',
+              'combinedState': 'CLOSED',
+              'hood': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+              'trunk': 'CLOSED',
+            }),
+            'driverPreferences': dict({
+              'lscPrivacyMode': 'OFF',
+            }),
+            'electricChargingState': dict({
+              'chargingConnectionType': 'UNKNOWN',
+              'chargingLevelPercent': 80,
+              'chargingStatus': 'INVALID',
+              'chargingTarget': 80,
+              'isChargerConnected': False,
+              'range': 472,
+              'remainingChargingMinutes': 10,
+            }),
+            'isLeftSteering': True,
+            'isLscSupported': True,
+            'lastFetched': '2023-01-04T14:57:06.386Z',
+            'lastUpdatedAt': '2023-01-04T14:57:06.407Z',
+            'location': dict({
+              'address': dict({
+                'formatted': '**REDACTED**',
+              }),
+              'coordinates': dict({
+                'latitude': '**REDACTED**',
+                'longitude': '**REDACTED**',
+              }),
+              'heading': '**REDACTED**',
+            }),
+            'range': 472,
+            'requiredServices': list([
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'BRAKE_FLUID',
+              }),
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'VEHICLE_TUV',
+              }),
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'VEHICLE_CHECK',
+              }),
+              dict({
+                'status': 'OK',
+                'type': 'TIRE_WEAR_REAR',
+              }),
+              dict({
+                'status': 'OK',
+                'type': 'TIRE_WEAR_FRONT',
+              }),
+            ]),
+            'tireState': dict({
+              'frontLeft': dict({
+                'details': dict({
+                  'dimension': '225/35 R20 90Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 4021,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461756',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 241,
+                  'pressureStatus': 0,
+                  'targetPressure': 269,
+                  'wearStatus': 0,
+                }),
+              }),
+              'frontRight': dict({
+                'details': dict({
+                  'dimension': '225/35 R20 90Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 2419,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461756',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 255,
+                  'pressureStatus': 0,
+                  'targetPressure': 269,
+                  'wearStatus': 0,
+                }),
+              }),
+              'rearLeft': dict({
+                'details': dict({
+                  'dimension': '255/30 R20 92Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 1219,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461757',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 324,
+                  'pressureStatus': 0,
+                  'targetPressure': 303,
+                  'wearStatus': 0,
+                }),
+              }),
+              'rearRight': dict({
+                'details': dict({
+                  'dimension': '255/30 R20 92Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 1219,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461757',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 331,
+                  'pressureStatus': 0,
+                  'targetPressure': 303,
+                  'wearStatus': 0,
+                }),
+              }),
+            }),
+            'windowsState': dict({
+              'combinedState': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+            }),
+          }),
+          'vin': '**REDACTED**',
+        }),
+        'doors_and_windows': dict({
+          'all_lids_closed': True,
+          'all_windows_closed': True,
+          'door_lock_state': 'LOCKED',
+          'lids': list([
+            dict({
+              'is_closed': True,
+              'name': 'hood',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'leftFront',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'leftRear',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'rightFront',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'rightRear',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'trunk',
+              'state': 'CLOSED',
+            }),
+          ]),
+          'open_lids': list([
+          ]),
+          'open_windows': list([
+          ]),
+          'windows': list([
+            dict({
+              'is_closed': True,
+              'name': 'leftFront',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'leftRear',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'rear',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'rightFront',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'rightRear',
+              'state': 'CLOSED',
+            }),
+          ]),
+        }),
+        'drive_train': 'ELECTRIC',
+        'drive_train_attributes': list([
+          'remaining_range_total',
+          'mileage',
+          'charging_time_remaining',
+          'charging_start_time',
+          'charging_end_time',
+          'charging_time_label',
+          'charging_status',
+          'connection_status',
+          'remaining_battery_percent',
+          'remaining_range_electric',
+          'last_charging_end_result',
+          'ac_current_limit',
+          'charging_target',
+          'charging_mode',
+          'charging_preferences',
+          'is_pre_entry_climatization_enabled',
+        ]),
+        'fuel_and_battery': dict({
+          'account_timezone': dict({
+            '_dst_offset': '0:00:00',
+            '_dst_saved': '0:00:00',
+            '_hasdst': False,
+            '_std_offset': '0:00:00',
+            '_tznames': list([
+              'UTC',
+              'UTC',
+            ]),
+          }),
+          'charging_end_time': '2022-07-10T11:10:00+00:00',
+          'charging_start_time': None,
+          'charging_start_time_no_tz': None,
+          'charging_status': 'NOT_CHARGING',
+          'charging_target': 80,
+          'is_charger_connected': False,
+          'remaining_battery_percent': 80,
+          'remaining_fuel': list([
+            None,
+            None,
+          ]),
+          'remaining_fuel_percent': None,
+          'remaining_range_electric': list([
+            472,
+            'km',
+          ]),
+          'remaining_range_fuel': list([
+            None,
+            None,
+          ]),
+          'remaining_range_total': list([
+            472,
+            'km',
+          ]),
+        }),
+        'has_combustion_drivetrain': False,
+        'has_electric_drivetrain': True,
+        'is_charging_plan_supported': True,
+        'is_lsc_enabled': True,
+        'is_remote_charge_start_enabled': False,
+        'is_remote_charge_stop_enabled': False,
+        'is_remote_climate_start_enabled': True,
+        'is_remote_climate_stop_enabled': True,
+        'is_remote_horn_enabled': True,
+        'is_remote_lights_enabled': True,
+        'is_remote_lock_enabled': True,
+        'is_remote_sendpoi_enabled': True,
+        'is_remote_set_ac_limit_enabled': True,
+        'is_remote_set_target_soc_enabled': True,
+        'is_remote_unlock_enabled': True,
+        'is_vehicle_active': False,
+        'is_vehicle_tracking_enabled': True,
+        'lsc_type': 'ACTIVATED',
+        'mileage': list([
+          1121,
+          'km',
+        ]),
+        'name': 'i4 eDrive40',
+        'timestamp': '2023-01-04T14:57:06+00:00',
+        'vehicle_location': dict({
+          'account_region': 'row',
+          'heading': '**REDACTED**',
+          'location': dict({
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+          }),
+          'remote_service_position': None,
+          'vehicle_update_timestamp': '2023-01-04T14:57:06+00:00',
+        }),
+        'vin': '**REDACTED**',
+      }),
+      dict({
+        'available_attributes': list([
+          'gps_position',
+          'vin',
+          'remaining_range_total',
+          'mileage',
+          'charging_time_remaining',
+          'charging_start_time',
+          'charging_end_time',
+          'charging_time_label',
+          'charging_status',
+          'connection_status',
+          'remaining_battery_percent',
+          'remaining_range_electric',
+          'last_charging_end_result',
+          'ac_current_limit',
+          'charging_target',
+          'charging_mode',
+          'charging_preferences',
+          'is_pre_entry_climatization_enabled',
+          'remaining_fuel',
+          'remaining_range_fuel',
+          'remaining_fuel_percent',
+          'condition_based_services',
+          'check_control_messages',
+          'door_lock_state',
+          'timestamp',
+          'lids',
+          'windows',
+        ]),
+        'brand': 'bmw',
+        'charging_profile': dict({
+          'ac_available_limits': None,
+          'ac_current_limit': None,
+          'charging_mode': 'DELAYED_CHARGING',
+          'charging_preferences': 'CHARGING_WINDOW',
+          'charging_preferences_service_pack': 'TCB1',
+          'departure_times': list([
+            dict({
+              '_timer_dict': dict({
+                'action': 'DEACTIVATE',
+                'id': 1,
+                'timeStamp': dict({
+                  'hour': 7,
+                  'minute': 35,
+                }),
+                'timerWeekDays': list([
+                  'MONDAY',
+                  'TUESDAY',
+                  'WEDNESDAY',
+                  'THURSDAY',
+                  'FRIDAY',
+                ]),
+              }),
+              'action': 'DEACTIVATE',
+              'start_time': '07:35:00',
+              'timer_id': 1,
+              'weekdays': list([
+                'MONDAY',
+                'TUESDAY',
+                'WEDNESDAY',
+                'THURSDAY',
+                'FRIDAY',
+              ]),
+            }),
+            dict({
+              '_timer_dict': dict({
+                'action': 'DEACTIVATE',
+                'id': 2,
+                'timeStamp': dict({
+                  'hour': 18,
+                  'minute': 0,
+                }),
+                'timerWeekDays': list([
+                  'MONDAY',
+                  'TUESDAY',
+                  'WEDNESDAY',
+                  'THURSDAY',
+                  'FRIDAY',
+                  'SATURDAY',
+                  'SUNDAY',
+                ]),
+              }),
+              'action': 'DEACTIVATE',
+              'start_time': '18:00:00',
+              'timer_id': 2,
+              'weekdays': list([
+                'MONDAY',
+                'TUESDAY',
+                'WEDNESDAY',
+                'THURSDAY',
+                'FRIDAY',
+                'SATURDAY',
+                'SUNDAY',
+              ]),
+            }),
+            dict({
+              '_timer_dict': dict({
+                'action': 'DEACTIVATE',
+                'id': 3,
+                'timeStamp': dict({
+                  'hour': 7,
+                  'minute': 0,
+                }),
+                'timerWeekDays': list([
+                ]),
+              }),
+              'action': 'DEACTIVATE',
+              'start_time': '07:00:00',
+              'timer_id': 3,
+              'weekdays': list([
+              ]),
+            }),
+            dict({
+              '_timer_dict': dict({
+                'action': 'DEACTIVATE',
+                'id': 4,
+                'timerWeekDays': list([
+                ]),
+              }),
+              'action': 'DEACTIVATE',
+              'start_time': None,
+              'timer_id': 4,
+              'weekdays': list([
+              ]),
+            }),
+          ]),
+          'is_pre_entry_climatization_enabled': False,
+          'preferred_charging_window': dict({
+            '_window_dict': dict({
+              'end': dict({
+                'hour': 1,
+                'minute': 30,
+              }),
+              'start': dict({
+                'hour': 18,
+                'minute': 1,
+              }),
+            }),
+            'end_time': '01:30:00',
+            'start_time': '18:01:00',
+          }),
+          'timer_type': 'WEEKLY_PLANNER',
+        }),
+        'check_control_messages': dict({
+          'has_check_control_messages': False,
+          'messages': list([
+          ]),
+        }),
+        'condition_based_services': dict({
+          'is_service_required': False,
+          'messages': list([
+            dict({
+              'due_date': '2022-10-01T00:00:00+00:00',
+              'due_distance': list([
+                None,
+                None,
+              ]),
+              'service_type': 'BRAKE_FLUID',
+              'state': 'OK',
+            }),
+            dict({
+              'due_date': '2023-05-01T00:00:00+00:00',
+              'due_distance': list([
+                None,
+                None,
+              ]),
+              'service_type': 'VEHICLE_CHECK',
+              'state': 'OK',
+            }),
+            dict({
+              'due_date': '2023-05-01T00:00:00+00:00',
+              'due_distance': list([
+                None,
+                None,
+              ]),
+              'service_type': 'VEHICLE_TUV',
+              'state': 'OK',
+            }),
+          ]),
+        }),
+        'data': dict({
+          'appVehicleType': 'CONNECTED',
+          'attributes': dict({
+            'a4aType': 'USB_ONLY',
+            'bodyType': 'I01',
+            'brand': 'BMW_I',
+            'color': 4284110934,
+            'countryOfOrigin': 'CZ',
+            'driveTrain': 'ELECTRIC_WITH_RANGE_EXTENDER',
+            'driverGuideInfo': dict({
+              'androidAppScheme': 'com.bmwgroup.driversguide.row',
+              'androidStoreUrl': 'https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row',
+              'iosAppScheme': 'bmwdriversguide:///open',
+              'iosStoreUrl': 'https://apps.apple.com/de/app/id714042749?mt=8',
+            }),
+            'headUnitType': 'NBT',
+            'hmiVersion': 'ID4',
+            'lastFetched': '2022-07-10T09:25:53.104Z',
+            'model': 'i3 (+ REX)',
+            'softwareVersionCurrent': dict({
+              'iStep': 510,
+              'puStep': dict({
+                'month': 11,
+                'year': 21,
+              }),
+              'seriesCluster': 'I001',
+            }),
+            'softwareVersionExFactory': dict({
+              'iStep': 502,
+              'puStep': dict({
+                'month': 3,
+                'year': 15,
+              }),
+              'seriesCluster': 'I001',
+            }),
+            'year': 2015,
+          }),
+          'capabilities': dict({
+            'climateFunction': 'AIR_CONDITIONING',
+            'climateNow': True,
+            'climateTimerTrigger': 'DEPARTURE_TIMER',
+            'horn': True,
+            'isBmwChargingSupported': True,
+            'isCarSharingSupported': False,
+            'isChargeNowForBusinessSupported': False,
+            'isChargingHistorySupported': True,
+            'isChargingHospitalityEnabled': False,
+            'isChargingLoudnessEnabled': False,
+            'isChargingPlanSupported': True,
+            'isChargingPowerLimitEnabled': False,
+            'isChargingSettingsEnabled': False,
+            'isChargingTargetSocEnabled': False,
+            'isClimateTimerSupported': True,
+            'isCustomerEsimSupported': False,
+            'isDCSContractManagementSupported': True,
+            'isDataPrivacyEnabled': False,
+            'isEasyChargeEnabled': False,
+            'isEvGoChargingSupported': False,
+            'isMiniChargingSupported': False,
+            'isNonLscFeatureEnabled': False,
+            'isRemoteEngineStartSupported': False,
+            'isRemoteHistoryDeletionSupported': False,
+            'isRemoteHistorySupported': True,
+            'isRemoteParkingSupported': False,
+            'isRemoteServicesActivationRequired': False,
+            'isRemoteServicesBookingRequired': False,
+            'isScanAndChargeSupported': False,
+            'isSustainabilitySupported': False,
+            'isWifiHotspotServiceSupported': False,
+            'lastStateCallState': 'ACTIVATED',
+            'lights': True,
+            'lock': True,
+            'remoteChargingCommands': dict({
+            }),
+            'sendPoi': True,
+            'specialThemeSupport': list([
+            ]),
+            'unlock': True,
+            'vehicleFinder': False,
+            'vehicleStateSource': 'LAST_STATE_CALL',
+          }),
+          'charging_settings': dict({
+            'chargeAndClimateSettings': dict({
+              'chargeAndClimateTimer': dict({
+                'showDepartureTimers': False,
+              }),
+            }),
+            'chargeAndClimateTimerDetail': dict({
+              'chargingMode': dict({
+                'chargingPreference': 'CHARGING_WINDOW',
+                'endTimeSlot': '0001-01-01T01:30:00',
+                'startTimeSlot': '0001-01-01T18:01:00',
+                'type': 'TIME_SLOT',
+              }),
+              'departureTimer': dict({
+                'type': 'WEEKLY_DEPARTURE_TIMER',
+                'weeklyTimers': list([
+                  dict({
+                    'daysOfTheWeek': list([
+                      'MONDAY',
+                      'TUESDAY',
+                      'WEDNESDAY',
+                      'THURSDAY',
+                      'FRIDAY',
+                    ]),
+                    'id': 1,
+                    'time': '0001-01-01T07:35:00',
+                    'timerAction': 'DEACTIVATE',
+                  }),
+                  dict({
+                    'daysOfTheWeek': list([
+                      'MONDAY',
+                      'TUESDAY',
+                      'WEDNESDAY',
+                      'THURSDAY',
+                      'FRIDAY',
+                      'SATURDAY',
+                      'SUNDAY',
+                    ]),
+                    'id': 2,
+                    'time': '0001-01-01T18:00:00',
+                    'timerAction': 'DEACTIVATE',
+                  }),
+                  dict({
+                    'daysOfTheWeek': list([
+                    ]),
+                    'id': 3,
+                    'time': '0001-01-01T07:00:00',
+                    'timerAction': 'DEACTIVATE',
+                  }),
+                  dict({
+                    'daysOfTheWeek': list([
+                    ]),
+                    'id': 4,
+                    'time': '0001-01-01T00:00:00',
+                    'timerAction': 'DEACTIVATE',
+                  }),
+                ]),
+              }),
+              'isPreconditionForDepartureActive': False,
+            }),
+            'servicePack': 'TCB1',
+          }),
+          'fetched_at': '2022-07-10T11:00:00+00:00',
+          'is_metric': True,
+          'mappingInfo': dict({
+            'isAssociated': False,
+            'isLmmEnabled': False,
+            'isPrimaryUser': True,
+            'mappingStatus': 'CONFIRMED',
+          }),
+          'state': dict({
+            'chargingProfile': dict({
+              'chargingControlType': 'WEEKLY_PLANNER',
+              'chargingMode': 'DELAYED_CHARGING',
+              'chargingPreference': 'CHARGING_WINDOW',
+              'chargingSettings': dict({
+                'hospitality': 'NO_ACTION',
+                'idcc': 'NO_ACTION',
+                'targetSoc': 100,
+              }),
+              'climatisationOn': False,
+              'departureTimes': list([
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 1,
+                  'timeStamp': dict({
+                    'hour': 7,
+                    'minute': 35,
+                  }),
+                  'timerWeekDays': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 2,
+                  'timeStamp': dict({
+                    'hour': 18,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                    'SUNDAY',
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 3,
+                  'timeStamp': dict({
+                    'hour': 7,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 4,
+                  'timerWeekDays': list([
+                  ]),
+                }),
+              ]),
+              'reductionOfChargeCurrent': dict({
+                'end': dict({
+                  'hour': 1,
+                  'minute': 30,
+                }),
+                'start': dict({
+                  'hour': 18,
+                  'minute': 1,
+                }),
+              }),
+            }),
+            'checkControlMessages': list([
+            ]),
+            'climateTimers': list([
+              dict({
+                'departureTime': dict({
+                  'hour': 6,
+                  'minute': 40,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'ACTIVATE',
+                'timerWeekDays': list([
+                  'THURSDAY',
+                  'SUNDAY',
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 12,
+                  'minute': 50,
+                }),
+                'isWeeklyTimer': False,
+                'timerAction': 'ACTIVATE',
+                'timerWeekDays': list([
+                  'MONDAY',
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 18,
+                  'minute': 59,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                  'WEDNESDAY',
+                ]),
+              }),
+            ]),
+            'combustionFuelLevel': dict({
+              'range': 105,
+              'remainingFuelLiters': 6,
+              'remainingFuelPercent': 65,
+            }),
+            'currentMileage': 137009,
+            'doorsState': dict({
+              'combinedSecurityState': 'UNLOCKED',
+              'combinedState': 'CLOSED',
+              'hood': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+              'trunk': 'CLOSED',
+            }),
+            'driverPreferences': dict({
+              'lscPrivacyMode': 'OFF',
+            }),
+            'electricChargingState': dict({
+              'chargingConnectionType': 'CONDUCTIVE',
+              'chargingLevelPercent': 82,
+              'chargingStatus': 'WAITING_FOR_CHARGING',
+              'chargingTarget': 100,
+              'isChargerConnected': True,
+              'range': 174,
+            }),
+            'isLeftSteering': True,
+            'isLscSupported': True,
+            'lastFetched': '2022-06-22T14:24:23.982Z',
+            'lastUpdatedAt': '2022-06-22T13:58:52Z',
+            'range': 174,
+            'requiredServices': list([
+              dict({
+                'dateTime': '2022-10-01T00:00:00.000Z',
+                'description': 'Next service due by the specified date.',
+                'status': 'OK',
+                'type': 'BRAKE_FLUID',
+              }),
+              dict({
+                'dateTime': '2023-05-01T00:00:00.000Z',
+                'description': 'Next vehicle check due after the specified distance or date.',
+                'status': 'OK',
+                'type': 'VEHICLE_CHECK',
+              }),
+              dict({
+                'dateTime': '2023-05-01T00:00:00.000Z',
+                'description': 'Next state inspection due by the specified date.',
+                'status': 'OK',
+                'type': 'VEHICLE_TUV',
+              }),
+            ]),
+            'roofState': dict({
+              'roofState': 'CLOSED',
+              'roofStateType': 'SUN_ROOF',
+            }),
+            'windowsState': dict({
+              'combinedState': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'rightFront': 'CLOSED',
+            }),
+          }),
+          'vin': '**REDACTED**',
+        }),
+        'doors_and_windows': dict({
+          'all_lids_closed': True,
+          'all_windows_closed': True,
+          'door_lock_state': 'UNLOCKED',
+          'lids': list([
+            dict({
+              'is_closed': True,
+              'name': 'hood',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'leftFront',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'leftRear',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'rightFront',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'rightRear',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'trunk',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'sunRoof',
+              'state': 'CLOSED',
+            }),
+          ]),
+          'open_lids': list([
+          ]),
+          'open_windows': list([
+          ]),
+          'windows': list([
+            dict({
+              'is_closed': True,
+              'name': 'leftFront',
+              'state': 'CLOSED',
+            }),
+            dict({
+              'is_closed': True,
+              'name': 'rightFront',
+              'state': 'CLOSED',
+            }),
+          ]),
+        }),
+        'drive_train': 'ELECTRIC_WITH_RANGE_EXTENDER',
+        'drive_train_attributes': list([
+          'remaining_range_total',
+          'mileage',
+          'charging_time_remaining',
+          'charging_start_time',
+          'charging_end_time',
+          'charging_time_label',
+          'charging_status',
+          'connection_status',
+          'remaining_battery_percent',
+          'remaining_range_electric',
+          'last_charging_end_result',
+          'ac_current_limit',
+          'charging_target',
+          'charging_mode',
+          'charging_preferences',
+          'is_pre_entry_climatization_enabled',
+          'remaining_fuel',
+          'remaining_range_fuel',
+          'remaining_fuel_percent',
+        ]),
+        'fuel_and_battery': dict({
+          'account_timezone': dict({
+            '_dst_offset': '0:00:00',
+            '_dst_saved': '0:00:00',
+            '_hasdst': False,
+            '_std_offset': '0:00:00',
+            '_tznames': list([
+              'UTC',
+              'UTC',
+            ]),
+          }),
+          'charging_end_time': None,
+          'charging_start_time': '2022-07-10T18:01:00+00:00',
+          'charging_start_time_no_tz': '2022-07-10T18:01:00',
+          'charging_status': 'WAITING_FOR_CHARGING',
+          'charging_target': 100,
+          'is_charger_connected': True,
+          'remaining_battery_percent': 82,
+          'remaining_fuel': list([
+            6,
+            'L',
+          ]),
+          'remaining_fuel_percent': 65,
+          'remaining_range_electric': list([
+            174,
+            'km',
+          ]),
+          'remaining_range_fuel': list([
+            105,
+            'km',
+          ]),
+          'remaining_range_total': list([
+            279,
+            'km',
+          ]),
+        }),
+        'has_combustion_drivetrain': True,
+        'has_electric_drivetrain': True,
+        'is_charging_plan_supported': True,
+        'is_lsc_enabled': True,
+        'is_remote_charge_start_enabled': False,
+        'is_remote_charge_stop_enabled': False,
+        'is_remote_climate_start_enabled': True,
+        'is_remote_climate_stop_enabled': False,
+        'is_remote_horn_enabled': True,
+        'is_remote_lights_enabled': True,
+        'is_remote_lock_enabled': True,
+        'is_remote_sendpoi_enabled': True,
+        'is_remote_set_ac_limit_enabled': False,
+        'is_remote_set_target_soc_enabled': False,
+        'is_remote_unlock_enabled': True,
+        'is_vehicle_active': False,
+        'is_vehicle_tracking_enabled': False,
+        'lsc_type': 'ACTIVATED',
+        'mileage': list([
+          137009,
+          'km',
+        ]),
+        'name': 'i3 (+ REX)',
+        'timestamp': '2022-07-10T09:25:53+00:00',
+        'vehicle_location': dict({
+          'account_region': 'row',
+          'heading': None,
+          'location': None,
+          'remote_service_position': None,
+          'vehicle_update_timestamp': '2022-07-10T09:25:53+00:00',
+        }),
+        'vin': '**REDACTED**',
+      }),
+    ]),
+    'fingerprint': list([
+      dict({
+        'content': list([
+          dict({
+            'appVehicleType': 'DEMO',
+            'attributes': dict({
+              'a4aType': 'NOT_SUPPORTED',
+              'bodyType': 'G26',
+              'brand': 'BMW',
+              'color': 4284245350,
+              'countryOfOrigin': 'DE',
+              'driveTrain': 'ELECTRIC',
+              'driverGuideInfo': dict({
+                'androidAppScheme': 'com.bmwgroup.driversguide.row',
+                'androidStoreUrl': 'https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row',
+                'iosAppScheme': 'bmwdriversguide:///open',
+                'iosStoreUrl': 'https://apps.apple.com/de/app/id714042749?mt=8',
+              }),
+              'headUnitRaw': 'HU_MGU',
+              'headUnitType': 'MGU',
+              'hmiVersion': 'ID8',
+              'lastFetched': '2023-01-04T14:57:06.019Z',
+              'model': 'i4 eDrive40',
+              'softwareVersionCurrent': dict({
+                'iStep': 470,
+                'puStep': dict({
+                  'month': 11,
+                  'year': 21,
+                }),
+                'seriesCluster': 'G026',
+              }),
+              'softwareVersionExFactory': dict({
+                'iStep': 470,
+                'puStep': dict({
+                  'month': 11,
+                  'year': 21,
+                }),
+                'seriesCluster': 'G026',
+              }),
+              'telematicsUnit': 'WAVE01',
+              'year': 2021,
+            }),
+            'mappingInfo': dict({
+              'isAssociated': False,
+              'isLmmEnabled': False,
+              'isPrimaryUser': True,
+              'lmmStatusReasons': list([
+              ]),
+              'mappingStatus': 'CONFIRMED',
+            }),
+            'vin': '**REDACTED**',
+          }),
+          dict({
+            'appVehicleType': 'CONNECTED',
+            'attributes': dict({
+              'a4aType': 'USB_ONLY',
+              'bodyType': 'I01',
+              'brand': 'BMW_I',
+              'color': 4284110934,
+              'countryOfOrigin': 'CZ',
+              'driveTrain': 'ELECTRIC_WITH_RANGE_EXTENDER',
+              'driverGuideInfo': dict({
+                'androidAppScheme': 'com.bmwgroup.driversguide.row',
+                'androidStoreUrl': 'https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row',
+                'iosAppScheme': 'bmwdriversguide:///open',
+                'iosStoreUrl': 'https://apps.apple.com/de/app/id714042749?mt=8',
+              }),
+              'headUnitType': 'NBT',
+              'hmiVersion': 'ID4',
+              'lastFetched': '2022-07-10T09:25:53.104Z',
+              'model': 'i3 (+ REX)',
+              'softwareVersionCurrent': dict({
+                'iStep': 510,
+                'puStep': dict({
+                  'month': 11,
+                  'year': 21,
+                }),
+                'seriesCluster': 'I001',
+              }),
+              'softwareVersionExFactory': dict({
+                'iStep': 502,
+                'puStep': dict({
+                  'month': 3,
+                  'year': 15,
+                }),
+                'seriesCluster': 'I001',
+              }),
+              'year': 2015,
+            }),
+            'mappingInfo': dict({
+              'isAssociated': False,
+              'isLmmEnabled': False,
+              'isPrimaryUser': True,
+              'mappingStatus': 'CONFIRMED',
+            }),
+            'vin': '**REDACTED**',
+          }),
+        ]),
+        'filename': 'bmw-eadrax-vcs_v4_vehicles.json',
+      }),
+      dict({
+        'content': list([
+        ]),
+        'filename': 'mini-eadrax-vcs_v4_vehicles.json',
+      }),
+      dict({
+        'content': dict({
+          'capabilities': dict({
+            'a4aType': 'NOT_SUPPORTED',
+            'checkSustainabilityDPP': False,
+            'climateFunction': 'AIR_CONDITIONING',
+            'climateNow': True,
+            'digitalKey': dict({
+              'bookedServicePackage': 'SMACC_1_5',
+              'readerGraphics': 'readerGraphics',
+              'state': 'ACTIVATED',
+            }),
+            'horn': True,
+            'isBmwChargingSupported': True,
+            'isCarSharingSupported': False,
+            'isChargeNowForBusinessSupported': True,
+            'isChargingHistorySupported': True,
+            'isChargingHospitalityEnabled': True,
+            'isChargingLoudnessEnabled': True,
+            'isChargingPlanSupported': True,
+            'isChargingPowerLimitEnabled': True,
+            'isChargingSettingsEnabled': True,
+            'isChargingTargetSocEnabled': True,
+            'isClimateTimerWeeklyActive': False,
+            'isCustomerEsimSupported': True,
+            'isDCSContractManagementSupported': True,
+            'isDataPrivacyEnabled': False,
+            'isEasyChargeEnabled': True,
+            'isEvGoChargingSupported': False,
+            'isMiniChargingSupported': False,
+            'isNonLscFeatureEnabled': False,
+            'isPersonalPictureUploadSupported': False,
+            'isRemoteEngineStartSupported': False,
+            'isRemoteHistoryDeletionSupported': False,
+            'isRemoteHistorySupported': True,
+            'isRemoteParkingSupported': False,
+            'isRemoteServicesActivationRequired': False,
+            'isRemoteServicesBookingRequired': False,
+            'isScanAndChargeSupported': True,
+            'isSustainabilityAccumulatedViewEnabled': False,
+            'isSustainabilitySupported': False,
+            'isWifiHotspotServiceSupported': False,
+            'lastStateCallState': 'ACTIVATED',
+            'lights': True,
+            'lock': True,
+            'remote360': True,
+            'remoteChargingCommands': dict({
+            }),
+            'remoteSoftwareUpgrade': True,
+            'sendPoi': True,
+            'specialThemeSupport': list([
+            ]),
+            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexaSDK': False,
+            'unlock': True,
+            'vehicleFinder': True,
+            'vehicleStateSource': 'LAST_STATE_CALL',
+          }),
+          'state': dict({
+            'chargingProfile': dict({
+              'chargingControlType': 'WEEKLY_PLANNER',
+              'chargingMode': 'IMMEDIATE_CHARGING',
+              'chargingPreference': 'NO_PRESELECTION',
+              'chargingSettings': dict({
+                'acCurrentLimit': 16,
+                'hospitality': 'NO_ACTION',
+                'idcc': 'UNLIMITED_LOUD',
+                'targetSoc': 80,
+              }),
+              'departureTimes': list([
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 1,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 2,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 3,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 4,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+              ]),
+            }),
+            'checkControlMessages': list([
+              dict({
+                'severity': 'LOW',
+                'type': 'TIRE_PRESSURE',
+              }),
+            ]),
+            'climateControlState': dict({
+              'activity': 'STANDBY',
+            }),
+            'climateTimers': list([
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': False,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+            ]),
+            'combustionFuelLevel': dict({
+            }),
+            'currentMileage': 1121,
+            'doorsState': dict({
+              'combinedSecurityState': 'LOCKED',
+              'combinedState': 'CLOSED',
+              'hood': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+              'trunk': 'CLOSED',
+            }),
+            'driverPreferences': dict({
+              'lscPrivacyMode': 'OFF',
+            }),
+            'electricChargingState': dict({
+              'chargingConnectionType': 'UNKNOWN',
+              'chargingLevelPercent': 80,
+              'chargingStatus': 'INVALID',
+              'chargingTarget': 80,
+              'isChargerConnected': False,
+              'range': 472,
+              'remainingChargingMinutes': 10,
+            }),
+            'isLeftSteering': True,
+            'isLscSupported': True,
+            'lastFetched': '2023-01-04T14:57:06.386Z',
+            'lastUpdatedAt': '2023-01-04T14:57:06.407Z',
+            'location': dict({
+              'address': dict({
+                'formatted': '**REDACTED**',
+              }),
+              'coordinates': dict({
+                'latitude': '**REDACTED**',
+                'longitude': '**REDACTED**',
+              }),
+              'heading': '**REDACTED**',
+            }),
+            'range': 472,
+            'requiredServices': list([
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'BRAKE_FLUID',
+              }),
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'VEHICLE_TUV',
+              }),
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'VEHICLE_CHECK',
+              }),
+              dict({
+                'status': 'OK',
+                'type': 'TIRE_WEAR_REAR',
+              }),
+              dict({
+                'status': 'OK',
+                'type': 'TIRE_WEAR_FRONT',
+              }),
+            ]),
+            'tireState': dict({
+              'frontLeft': dict({
+                'details': dict({
+                  'dimension': '225/35 R20 90Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 4021,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461756',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 241,
+                  'pressureStatus': 0,
+                  'targetPressure': 269,
+                  'wearStatus': 0,
+                }),
+              }),
+              'frontRight': dict({
+                'details': dict({
+                  'dimension': '225/35 R20 90Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 2419,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461756',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 255,
+                  'pressureStatus': 0,
+                  'targetPressure': 269,
+                  'wearStatus': 0,
+                }),
+              }),
+              'rearLeft': dict({
+                'details': dict({
+                  'dimension': '255/30 R20 92Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 1219,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461757',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 324,
+                  'pressureStatus': 0,
+                  'targetPressure': 303,
+                  'wearStatus': 0,
+                }),
+              }),
+              'rearRight': dict({
+                'details': dict({
+                  'dimension': '255/30 R20 92Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 1219,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461757',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 331,
+                  'pressureStatus': 0,
+                  'targetPressure': 303,
+                  'wearStatus': 0,
+                }),
+              }),
+            }),
+            'windowsState': dict({
+              'combinedState': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+            }),
+          }),
+        }),
+        'filename': 'bmw-eadrax-vcs_v4_vehicles_state_WBA0FINGERPRINT01.json',
+      }),
+      dict({
+        'content': dict({
+          'chargeAndClimateSettings': dict({
+            'chargeAndClimateTimer': dict({
+              'chargingMode': 'Sofort laden',
+              'chargingModeSemantics': 'Sofort laden',
+              'departureTimer': list([
+                'Aus',
+              ]),
+              'departureTimerSemantics': 'Aus',
+              'preconditionForDeparture': 'Aus',
+              'showDepartureTimers': False,
+            }),
+            'chargingFlap': dict({
+              'permanentlyUnlockLabel': 'Aus',
+            }),
+            'chargingSettings': dict({
+              'acCurrentLimitLabel': '16A',
+              'acCurrentLimitLabelSemantics': '16 Ampere',
+              'chargingTargetLabel': '80%',
+              'dcLoudnessLabel': 'Nicht begrenzt',
+              'unlockCableAutomaticallyLabel': 'Aus',
+            }),
+          }),
+          'chargeAndClimateTimerDetail': dict({
+            'chargingMode': dict({
+              'chargingPreference': 'NO_PRESELECTION',
+              'endTimeSlot': '0001-01-01T00:00:00',
+              'startTimeSlot': '0001-01-01T00:00:00',
+              'type': 'CHARGING_IMMEDIATELY',
+            }),
+            'departureTimer': dict({
+              'type': 'WEEKLY_DEPARTURE_TIMER',
+              'weeklyTimers': list([
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 1,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 2,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 3,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 4,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+              ]),
+            }),
+            'isPreconditionForDepartureActive': False,
+          }),
+          'chargingFlapDetail': dict({
+            'isPermanentlyUnlock': False,
+          }),
+          'chargingSettingsDetail': dict({
+            'acLimit': dict({
+              'current': dict({
+                'unit': 'A',
+                'value': 16,
+              }),
+              'isUnlimited': False,
+              'max': 32,
+              'min': 6,
+              'values': list([
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                20,
+                32,
+              ]),
+            }),
+            'chargingTarget': 80,
+            'dcLoudness': 'UNLIMITED_LOUD',
+            'isUnlockCableActive': False,
+            'minChargingTargetToWarning': 0,
+          }),
+          'servicePack': 'WAVE_01',
+        }),
+        'filename': 'bmw-eadrax-crccs_v2_vehicles_WBA0FINGERPRINT01.json',
+      }),
+      dict({
+        'content': dict({
+          'capabilities': dict({
+            'climateFunction': 'AIR_CONDITIONING',
+            'climateNow': True,
+            'climateTimerTrigger': 'DEPARTURE_TIMER',
+            'horn': True,
+            'isBmwChargingSupported': True,
+            'isCarSharingSupported': False,
+            'isChargeNowForBusinessSupported': False,
+            'isChargingHistorySupported': True,
+            'isChargingHospitalityEnabled': False,
+            'isChargingLoudnessEnabled': False,
+            'isChargingPlanSupported': True,
+            'isChargingPowerLimitEnabled': False,
+            'isChargingSettingsEnabled': False,
+            'isChargingTargetSocEnabled': False,
+            'isClimateTimerSupported': True,
+            'isCustomerEsimSupported': False,
+            'isDCSContractManagementSupported': True,
+            'isDataPrivacyEnabled': False,
+            'isEasyChargeEnabled': False,
+            'isEvGoChargingSupported': False,
+            'isMiniChargingSupported': False,
+            'isNonLscFeatureEnabled': False,
+            'isRemoteEngineStartSupported': False,
+            'isRemoteHistoryDeletionSupported': False,
+            'isRemoteHistorySupported': True,
+            'isRemoteParkingSupported': False,
+            'isRemoteServicesActivationRequired': False,
+            'isRemoteServicesBookingRequired': False,
+            'isScanAndChargeSupported': False,
+            'isSustainabilitySupported': False,
+            'isWifiHotspotServiceSupported': False,
+            'lastStateCallState': 'ACTIVATED',
+            'lights': True,
+            'lock': True,
+            'remoteChargingCommands': dict({
+            }),
+            'sendPoi': True,
+            'specialThemeSupport': list([
+            ]),
+            'unlock': True,
+            'vehicleFinder': False,
+            'vehicleStateSource': 'LAST_STATE_CALL',
+          }),
+          'state': dict({
+            'chargingProfile': dict({
+              'chargingControlType': 'WEEKLY_PLANNER',
+              'chargingMode': 'DELAYED_CHARGING',
+              'chargingPreference': 'CHARGING_WINDOW',
+              'chargingSettings': dict({
+                'hospitality': 'NO_ACTION',
+                'idcc': 'NO_ACTION',
+                'targetSoc': 100,
+              }),
+              'climatisationOn': False,
+              'departureTimes': list([
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 1,
+                  'timeStamp': dict({
+                    'hour': 7,
+                    'minute': 35,
+                  }),
+                  'timerWeekDays': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 2,
+                  'timeStamp': dict({
+                    'hour': 18,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                    'SUNDAY',
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 3,
+                  'timeStamp': dict({
+                    'hour': 7,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 4,
+                  'timerWeekDays': list([
+                  ]),
+                }),
+              ]),
+              'reductionOfChargeCurrent': dict({
+                'end': dict({
+                  'hour': 1,
+                  'minute': 30,
+                }),
+                'start': dict({
+                  'hour': 18,
+                  'minute': 1,
+                }),
+              }),
+            }),
+            'checkControlMessages': list([
+            ]),
+            'climateTimers': list([
+              dict({
+                'departureTime': dict({
+                  'hour': 6,
+                  'minute': 40,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'ACTIVATE',
+                'timerWeekDays': list([
+                  'THURSDAY',
+                  'SUNDAY',
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 12,
+                  'minute': 50,
+                }),
+                'isWeeklyTimer': False,
+                'timerAction': 'ACTIVATE',
+                'timerWeekDays': list([
+                  'MONDAY',
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 18,
+                  'minute': 59,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                  'WEDNESDAY',
+                ]),
+              }),
+            ]),
+            'combustionFuelLevel': dict({
+              'range': 105,
+              'remainingFuelLiters': 6,
+              'remainingFuelPercent': 65,
+            }),
+            'currentMileage': 137009,
+            'doorsState': dict({
+              'combinedSecurityState': 'UNLOCKED',
+              'combinedState': 'CLOSED',
+              'hood': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+              'trunk': 'CLOSED',
+            }),
+            'driverPreferences': dict({
+              'lscPrivacyMode': 'OFF',
+            }),
+            'electricChargingState': dict({
+              'chargingConnectionType': 'CONDUCTIVE',
+              'chargingLevelPercent': 82,
+              'chargingStatus': 'WAITING_FOR_CHARGING',
+              'chargingTarget': 100,
+              'isChargerConnected': True,
+              'range': 174,
+            }),
+            'isLeftSteering': True,
+            'isLscSupported': True,
+            'lastFetched': '2022-06-22T14:24:23.982Z',
+            'lastUpdatedAt': '2022-06-22T13:58:52Z',
+            'range': 174,
+            'requiredServices': list([
+              dict({
+                'dateTime': '2022-10-01T00:00:00.000Z',
+                'description': 'Next service due by the specified date.',
+                'status': 'OK',
+                'type': 'BRAKE_FLUID',
+              }),
+              dict({
+                'dateTime': '2023-05-01T00:00:00.000Z',
+                'description': 'Next vehicle check due after the specified distance or date.',
+                'status': 'OK',
+                'type': 'VEHICLE_CHECK',
+              }),
+              dict({
+                'dateTime': '2023-05-01T00:00:00.000Z',
+                'description': 'Next state inspection due by the specified date.',
+                'status': 'OK',
+                'type': 'VEHICLE_TUV',
+              }),
+            ]),
+            'roofState': dict({
+              'roofState': 'CLOSED',
+              'roofStateType': 'SUN_ROOF',
+            }),
+            'windowsState': dict({
+              'combinedState': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'rightFront': 'CLOSED',
+            }),
+          }),
+        }),
+        'filename': 'bmw-eadrax-vcs_v4_vehicles_state_WBY0FINGERPRINT02.json',
+      }),
+      dict({
+        'content': dict({
+          'chargeAndClimateSettings': dict({
+            'chargeAndClimateTimer': dict({
+              'showDepartureTimers': False,
+            }),
+          }),
+          'chargeAndClimateTimerDetail': dict({
+            'chargingMode': dict({
+              'chargingPreference': 'CHARGING_WINDOW',
+              'endTimeSlot': '0001-01-01T01:30:00',
+              'startTimeSlot': '0001-01-01T18:01:00',
+              'type': 'TIME_SLOT',
+            }),
+            'departureTimer': dict({
+              'type': 'WEEKLY_DEPARTURE_TIMER',
+              'weeklyTimers': list([
+                dict({
+                  'daysOfTheWeek': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                  ]),
+                  'id': 1,
+                  'time': '0001-01-01T07:35:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                    'SUNDAY',
+                  ]),
+                  'id': 2,
+                  'time': '0001-01-01T18:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 3,
+                  'time': '0001-01-01T07:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 4,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+              ]),
+            }),
+            'isPreconditionForDepartureActive': False,
+          }),
+          'servicePack': 'TCB1',
+        }),
+        'filename': 'bmw-eadrax-crccs_v2_vehicles_WBY0FINGERPRINT02.json',
+      }),
+    ]),
+    'info': dict({
+      'password': '**REDACTED**',
+      'refresh_token': '**REDACTED**',
+      'region': 'rest_of_world',
+      'username': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_device_diagnostics
+  dict({
+    'data': dict({
+      'available_attributes': list([
+        'gps_position',
+        'vin',
+        'remaining_range_total',
+        'mileage',
+        'charging_time_remaining',
+        'charging_start_time',
+        'charging_end_time',
+        'charging_time_label',
+        'charging_status',
+        'connection_status',
+        'remaining_battery_percent',
+        'remaining_range_electric',
+        'last_charging_end_result',
+        'ac_current_limit',
+        'charging_target',
+        'charging_mode',
+        'charging_preferences',
+        'is_pre_entry_climatization_enabled',
+        'remaining_fuel',
+        'remaining_range_fuel',
+        'remaining_fuel_percent',
+        'condition_based_services',
+        'check_control_messages',
+        'door_lock_state',
+        'timestamp',
+        'lids',
+        'windows',
+      ]),
+      'brand': 'bmw',
+      'charging_profile': dict({
+        'ac_available_limits': None,
+        'ac_current_limit': None,
+        'charging_mode': 'DELAYED_CHARGING',
+        'charging_preferences': 'CHARGING_WINDOW',
+        'charging_preferences_service_pack': 'TCB1',
+        'departure_times': list([
+          dict({
+            '_timer_dict': dict({
+              'action': 'DEACTIVATE',
+              'id': 1,
+              'timeStamp': dict({
+                'hour': 7,
+                'minute': 35,
+              }),
+              'timerWeekDays': list([
+                'MONDAY',
+                'TUESDAY',
+                'WEDNESDAY',
+                'THURSDAY',
+                'FRIDAY',
+              ]),
+            }),
+            'action': 'DEACTIVATE',
+            'start_time': '07:35:00',
+            'timer_id': 1,
+            'weekdays': list([
+              'MONDAY',
+              'TUESDAY',
+              'WEDNESDAY',
+              'THURSDAY',
+              'FRIDAY',
+            ]),
+          }),
+          dict({
+            '_timer_dict': dict({
+              'action': 'DEACTIVATE',
+              'id': 2,
+              'timeStamp': dict({
+                'hour': 18,
+                'minute': 0,
+              }),
+              'timerWeekDays': list([
+                'MONDAY',
+                'TUESDAY',
+                'WEDNESDAY',
+                'THURSDAY',
+                'FRIDAY',
+                'SATURDAY',
+                'SUNDAY',
+              ]),
+            }),
+            'action': 'DEACTIVATE',
+            'start_time': '18:00:00',
+            'timer_id': 2,
+            'weekdays': list([
+              'MONDAY',
+              'TUESDAY',
+              'WEDNESDAY',
+              'THURSDAY',
+              'FRIDAY',
+              'SATURDAY',
+              'SUNDAY',
+            ]),
+          }),
+          dict({
+            '_timer_dict': dict({
+              'action': 'DEACTIVATE',
+              'id': 3,
+              'timeStamp': dict({
+                'hour': 7,
+                'minute': 0,
+              }),
+              'timerWeekDays': list([
+              ]),
+            }),
+            'action': 'DEACTIVATE',
+            'start_time': '07:00:00',
+            'timer_id': 3,
+            'weekdays': list([
+            ]),
+          }),
+          dict({
+            '_timer_dict': dict({
+              'action': 'DEACTIVATE',
+              'id': 4,
+              'timerWeekDays': list([
+              ]),
+            }),
+            'action': 'DEACTIVATE',
+            'start_time': None,
+            'timer_id': 4,
+            'weekdays': list([
+            ]),
+          }),
+        ]),
+        'is_pre_entry_climatization_enabled': False,
+        'preferred_charging_window': dict({
+          '_window_dict': dict({
+            'end': dict({
+              'hour': 1,
+              'minute': 30,
+            }),
+            'start': dict({
+              'hour': 18,
+              'minute': 1,
+            }),
+          }),
+          'end_time': '01:30:00',
+          'start_time': '18:01:00',
+        }),
+        'timer_type': 'WEEKLY_PLANNER',
+      }),
+      'check_control_messages': dict({
+        'has_check_control_messages': False,
+        'messages': list([
+        ]),
+      }),
+      'condition_based_services': dict({
+        'is_service_required': False,
+        'messages': list([
+          dict({
+            'due_date': '2022-10-01T00:00:00+00:00',
+            'due_distance': list([
+              None,
+              None,
+            ]),
+            'service_type': 'BRAKE_FLUID',
+            'state': 'OK',
+          }),
+          dict({
+            'due_date': '2023-05-01T00:00:00+00:00',
+            'due_distance': list([
+              None,
+              None,
+            ]),
+            'service_type': 'VEHICLE_CHECK',
+            'state': 'OK',
+          }),
+          dict({
+            'due_date': '2023-05-01T00:00:00+00:00',
+            'due_distance': list([
+              None,
+              None,
+            ]),
+            'service_type': 'VEHICLE_TUV',
+            'state': 'OK',
+          }),
+        ]),
+      }),
+      'data': dict({
+        'appVehicleType': 'CONNECTED',
+        'attributes': dict({
+          'a4aType': 'USB_ONLY',
+          'bodyType': 'I01',
+          'brand': 'BMW_I',
+          'color': 4284110934,
+          'countryOfOrigin': 'CZ',
+          'driveTrain': 'ELECTRIC_WITH_RANGE_EXTENDER',
+          'driverGuideInfo': dict({
+            'androidAppScheme': 'com.bmwgroup.driversguide.row',
+            'androidStoreUrl': 'https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row',
+            'iosAppScheme': 'bmwdriversguide:///open',
+            'iosStoreUrl': 'https://apps.apple.com/de/app/id714042749?mt=8',
+          }),
+          'headUnitType': 'NBT',
+          'hmiVersion': 'ID4',
+          'lastFetched': '2022-07-10T09:25:53.104Z',
+          'model': 'i3 (+ REX)',
+          'softwareVersionCurrent': dict({
+            'iStep': 510,
+            'puStep': dict({
+              'month': 11,
+              'year': 21,
+            }),
+            'seriesCluster': 'I001',
+          }),
+          'softwareVersionExFactory': dict({
+            'iStep': 502,
+            'puStep': dict({
+              'month': 3,
+              'year': 15,
+            }),
+            'seriesCluster': 'I001',
+          }),
+          'year': 2015,
+        }),
+        'capabilities': dict({
+          'climateFunction': 'AIR_CONDITIONING',
+          'climateNow': True,
+          'climateTimerTrigger': 'DEPARTURE_TIMER',
+          'horn': True,
+          'isBmwChargingSupported': True,
+          'isCarSharingSupported': False,
+          'isChargeNowForBusinessSupported': False,
+          'isChargingHistorySupported': True,
+          'isChargingHospitalityEnabled': False,
+          'isChargingLoudnessEnabled': False,
+          'isChargingPlanSupported': True,
+          'isChargingPowerLimitEnabled': False,
+          'isChargingSettingsEnabled': False,
+          'isChargingTargetSocEnabled': False,
+          'isClimateTimerSupported': True,
+          'isCustomerEsimSupported': False,
+          'isDCSContractManagementSupported': True,
+          'isDataPrivacyEnabled': False,
+          'isEasyChargeEnabled': False,
+          'isEvGoChargingSupported': False,
+          'isMiniChargingSupported': False,
+          'isNonLscFeatureEnabled': False,
+          'isRemoteEngineStartSupported': False,
+          'isRemoteHistoryDeletionSupported': False,
+          'isRemoteHistorySupported': True,
+          'isRemoteParkingSupported': False,
+          'isRemoteServicesActivationRequired': False,
+          'isRemoteServicesBookingRequired': False,
+          'isScanAndChargeSupported': False,
+          'isSustainabilitySupported': False,
+          'isWifiHotspotServiceSupported': False,
+          'lastStateCallState': 'ACTIVATED',
+          'lights': True,
+          'lock': True,
+          'remoteChargingCommands': dict({
+          }),
+          'sendPoi': True,
+          'specialThemeSupport': list([
+          ]),
+          'unlock': True,
+          'vehicleFinder': False,
+          'vehicleStateSource': 'LAST_STATE_CALL',
+        }),
+        'charging_settings': dict({
+          'chargeAndClimateSettings': dict({
+            'chargeAndClimateTimer': dict({
+              'showDepartureTimers': False,
+            }),
+          }),
+          'chargeAndClimateTimerDetail': dict({
+            'chargingMode': dict({
+              'chargingPreference': 'CHARGING_WINDOW',
+              'endTimeSlot': '0001-01-01T01:30:00',
+              'startTimeSlot': '0001-01-01T18:01:00',
+              'type': 'TIME_SLOT',
+            }),
+            'departureTimer': dict({
+              'type': 'WEEKLY_DEPARTURE_TIMER',
+              'weeklyTimers': list([
+                dict({
+                  'daysOfTheWeek': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                  ]),
+                  'id': 1,
+                  'time': '0001-01-01T07:35:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                    'SUNDAY',
+                  ]),
+                  'id': 2,
+                  'time': '0001-01-01T18:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 3,
+                  'time': '0001-01-01T07:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 4,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+              ]),
+            }),
+            'isPreconditionForDepartureActive': False,
+          }),
+          'servicePack': 'TCB1',
+        }),
+        'fetched_at': '2022-07-10T11:00:00+00:00',
+        'is_metric': True,
+        'mappingInfo': dict({
+          'isAssociated': False,
+          'isLmmEnabled': False,
+          'isPrimaryUser': True,
+          'mappingStatus': 'CONFIRMED',
+        }),
+        'state': dict({
+          'chargingProfile': dict({
+            'chargingControlType': 'WEEKLY_PLANNER',
+            'chargingMode': 'DELAYED_CHARGING',
+            'chargingPreference': 'CHARGING_WINDOW',
+            'chargingSettings': dict({
+              'hospitality': 'NO_ACTION',
+              'idcc': 'NO_ACTION',
+              'targetSoc': 100,
+            }),
+            'climatisationOn': False,
+            'departureTimes': list([
+              dict({
+                'action': 'DEACTIVATE',
+                'id': 1,
+                'timeStamp': dict({
+                  'hour': 7,
+                  'minute': 35,
+                }),
+                'timerWeekDays': list([
+                  'MONDAY',
+                  'TUESDAY',
+                  'WEDNESDAY',
+                  'THURSDAY',
+                  'FRIDAY',
+                ]),
+              }),
+              dict({
+                'action': 'DEACTIVATE',
+                'id': 2,
+                'timeStamp': dict({
+                  'hour': 18,
+                  'minute': 0,
+                }),
+                'timerWeekDays': list([
+                  'MONDAY',
+                  'TUESDAY',
+                  'WEDNESDAY',
+                  'THURSDAY',
+                  'FRIDAY',
+                  'SATURDAY',
+                  'SUNDAY',
+                ]),
+              }),
+              dict({
+                'action': 'DEACTIVATE',
+                'id': 3,
+                'timeStamp': dict({
+                  'hour': 7,
+                  'minute': 0,
+                }),
+                'timerWeekDays': list([
+                ]),
+              }),
+              dict({
+                'action': 'DEACTIVATE',
+                'id': 4,
+                'timerWeekDays': list([
+                ]),
+              }),
+            ]),
+            'reductionOfChargeCurrent': dict({
+              'end': dict({
+                'hour': 1,
+                'minute': 30,
+              }),
+              'start': dict({
+                'hour': 18,
+                'minute': 1,
+              }),
+            }),
+          }),
+          'checkControlMessages': list([
+          ]),
+          'climateTimers': list([
+            dict({
+              'departureTime': dict({
+                'hour': 6,
+                'minute': 40,
+              }),
+              'isWeeklyTimer': True,
+              'timerAction': 'ACTIVATE',
+              'timerWeekDays': list([
+                'THURSDAY',
+                'SUNDAY',
+              ]),
+            }),
+            dict({
+              'departureTime': dict({
+                'hour': 12,
+                'minute': 50,
+              }),
+              'isWeeklyTimer': False,
+              'timerAction': 'ACTIVATE',
+              'timerWeekDays': list([
+                'MONDAY',
+              ]),
+            }),
+            dict({
+              'departureTime': dict({
+                'hour': 18,
+                'minute': 59,
+              }),
+              'isWeeklyTimer': True,
+              'timerAction': 'DEACTIVATE',
+              'timerWeekDays': list([
+                'WEDNESDAY',
+              ]),
+            }),
+          ]),
+          'combustionFuelLevel': dict({
+            'range': 105,
+            'remainingFuelLiters': 6,
+            'remainingFuelPercent': 65,
+          }),
+          'currentMileage': 137009,
+          'doorsState': dict({
+            'combinedSecurityState': 'UNLOCKED',
+            'combinedState': 'CLOSED',
+            'hood': 'CLOSED',
+            'leftFront': 'CLOSED',
+            'leftRear': 'CLOSED',
+            'rightFront': 'CLOSED',
+            'rightRear': 'CLOSED',
+            'trunk': 'CLOSED',
+          }),
+          'driverPreferences': dict({
+            'lscPrivacyMode': 'OFF',
+          }),
+          'electricChargingState': dict({
+            'chargingConnectionType': 'CONDUCTIVE',
+            'chargingLevelPercent': 82,
+            'chargingStatus': 'WAITING_FOR_CHARGING',
+            'chargingTarget': 100,
+            'isChargerConnected': True,
+            'range': 174,
+          }),
+          'isLeftSteering': True,
+          'isLscSupported': True,
+          'lastFetched': '2022-06-22T14:24:23.982Z',
+          'lastUpdatedAt': '2022-06-22T13:58:52Z',
+          'range': 174,
+          'requiredServices': list([
+            dict({
+              'dateTime': '2022-10-01T00:00:00.000Z',
+              'description': 'Next service due by the specified date.',
+              'status': 'OK',
+              'type': 'BRAKE_FLUID',
+            }),
+            dict({
+              'dateTime': '2023-05-01T00:00:00.000Z',
+              'description': 'Next vehicle check due after the specified distance or date.',
+              'status': 'OK',
+              'type': 'VEHICLE_CHECK',
+            }),
+            dict({
+              'dateTime': '2023-05-01T00:00:00.000Z',
+              'description': 'Next state inspection due by the specified date.',
+              'status': 'OK',
+              'type': 'VEHICLE_TUV',
+            }),
+          ]),
+          'roofState': dict({
+            'roofState': 'CLOSED',
+            'roofStateType': 'SUN_ROOF',
+          }),
+          'windowsState': dict({
+            'combinedState': 'CLOSED',
+            'leftFront': 'CLOSED',
+            'rightFront': 'CLOSED',
+          }),
+        }),
+        'vin': '**REDACTED**',
+      }),
+      'doors_and_windows': dict({
+        'all_lids_closed': True,
+        'all_windows_closed': True,
+        'door_lock_state': 'UNLOCKED',
+        'lids': list([
+          dict({
+            'is_closed': True,
+            'name': 'hood',
+            'state': 'CLOSED',
+          }),
+          dict({
+            'is_closed': True,
+            'name': 'leftFront',
+            'state': 'CLOSED',
+          }),
+          dict({
+            'is_closed': True,
+            'name': 'leftRear',
+            'state': 'CLOSED',
+          }),
+          dict({
+            'is_closed': True,
+            'name': 'rightFront',
+            'state': 'CLOSED',
+          }),
+          dict({
+            'is_closed': True,
+            'name': 'rightRear',
+            'state': 'CLOSED',
+          }),
+          dict({
+            'is_closed': True,
+            'name': 'trunk',
+            'state': 'CLOSED',
+          }),
+          dict({
+            'is_closed': True,
+            'name': 'sunRoof',
+            'state': 'CLOSED',
+          }),
+        ]),
+        'open_lids': list([
+        ]),
+        'open_windows': list([
+        ]),
+        'windows': list([
+          dict({
+            'is_closed': True,
+            'name': 'leftFront',
+            'state': 'CLOSED',
+          }),
+          dict({
+            'is_closed': True,
+            'name': 'rightFront',
+            'state': 'CLOSED',
+          }),
+        ]),
+      }),
+      'drive_train': 'ELECTRIC_WITH_RANGE_EXTENDER',
+      'drive_train_attributes': list([
+        'remaining_range_total',
+        'mileage',
+        'charging_time_remaining',
+        'charging_start_time',
+        'charging_end_time',
+        'charging_time_label',
+        'charging_status',
+        'connection_status',
+        'remaining_battery_percent',
+        'remaining_range_electric',
+        'last_charging_end_result',
+        'ac_current_limit',
+        'charging_target',
+        'charging_mode',
+        'charging_preferences',
+        'is_pre_entry_climatization_enabled',
+        'remaining_fuel',
+        'remaining_range_fuel',
+        'remaining_fuel_percent',
+      ]),
+      'fuel_and_battery': dict({
+        'account_timezone': dict({
+          '_dst_offset': '0:00:00',
+          '_dst_saved': '0:00:00',
+          '_hasdst': False,
+          '_std_offset': '0:00:00',
+          '_tznames': list([
+            'UTC',
+            'UTC',
+          ]),
+        }),
+        'charging_end_time': None,
+        'charging_start_time': '2022-07-10T18:01:00+00:00',
+        'charging_start_time_no_tz': '2022-07-10T18:01:00',
+        'charging_status': 'WAITING_FOR_CHARGING',
+        'charging_target': 100,
+        'is_charger_connected': True,
+        'remaining_battery_percent': 82,
+        'remaining_fuel': list([
+          6,
+          'L',
+        ]),
+        'remaining_fuel_percent': 65,
+        'remaining_range_electric': list([
+          174,
+          'km',
+        ]),
+        'remaining_range_fuel': list([
+          105,
+          'km',
+        ]),
+        'remaining_range_total': list([
+          279,
+          'km',
+        ]),
+      }),
+      'has_combustion_drivetrain': True,
+      'has_electric_drivetrain': True,
+      'is_charging_plan_supported': True,
+      'is_lsc_enabled': True,
+      'is_remote_charge_start_enabled': False,
+      'is_remote_charge_stop_enabled': False,
+      'is_remote_climate_start_enabled': True,
+      'is_remote_climate_stop_enabled': False,
+      'is_remote_horn_enabled': True,
+      'is_remote_lights_enabled': True,
+      'is_remote_lock_enabled': True,
+      'is_remote_sendpoi_enabled': True,
+      'is_remote_set_ac_limit_enabled': False,
+      'is_remote_set_target_soc_enabled': False,
+      'is_remote_unlock_enabled': True,
+      'is_vehicle_active': False,
+      'is_vehicle_tracking_enabled': False,
+      'lsc_type': 'ACTIVATED',
+      'mileage': list([
+        137009,
+        'km',
+      ]),
+      'name': 'i3 (+ REX)',
+      'timestamp': '2022-07-10T09:25:53+00:00',
+      'vehicle_location': dict({
+        'account_region': 'row',
+        'heading': None,
+        'location': None,
+        'remote_service_position': None,
+        'vehicle_update_timestamp': '2022-07-10T09:25:53+00:00',
+      }),
+      'vin': '**REDACTED**',
+    }),
+    'fingerprint': list([
+      dict({
+        'content': list([
+          dict({
+            'appVehicleType': 'DEMO',
+            'attributes': dict({
+              'a4aType': 'NOT_SUPPORTED',
+              'bodyType': 'G26',
+              'brand': 'BMW',
+              'color': 4284245350,
+              'countryOfOrigin': 'DE',
+              'driveTrain': 'ELECTRIC',
+              'driverGuideInfo': dict({
+                'androidAppScheme': 'com.bmwgroup.driversguide.row',
+                'androidStoreUrl': 'https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row',
+                'iosAppScheme': 'bmwdriversguide:///open',
+                'iosStoreUrl': 'https://apps.apple.com/de/app/id714042749?mt=8',
+              }),
+              'headUnitRaw': 'HU_MGU',
+              'headUnitType': 'MGU',
+              'hmiVersion': 'ID8',
+              'lastFetched': '2023-01-04T14:57:06.019Z',
+              'model': 'i4 eDrive40',
+              'softwareVersionCurrent': dict({
+                'iStep': 470,
+                'puStep': dict({
+                  'month': 11,
+                  'year': 21,
+                }),
+                'seriesCluster': 'G026',
+              }),
+              'softwareVersionExFactory': dict({
+                'iStep': 470,
+                'puStep': dict({
+                  'month': 11,
+                  'year': 21,
+                }),
+                'seriesCluster': 'G026',
+              }),
+              'telematicsUnit': 'WAVE01',
+              'year': 2021,
+            }),
+            'mappingInfo': dict({
+              'isAssociated': False,
+              'isLmmEnabled': False,
+              'isPrimaryUser': True,
+              'lmmStatusReasons': list([
+              ]),
+              'mappingStatus': 'CONFIRMED',
+            }),
+            'vin': '**REDACTED**',
+          }),
+          dict({
+            'appVehicleType': 'CONNECTED',
+            'attributes': dict({
+              'a4aType': 'USB_ONLY',
+              'bodyType': 'I01',
+              'brand': 'BMW_I',
+              'color': 4284110934,
+              'countryOfOrigin': 'CZ',
+              'driveTrain': 'ELECTRIC_WITH_RANGE_EXTENDER',
+              'driverGuideInfo': dict({
+                'androidAppScheme': 'com.bmwgroup.driversguide.row',
+                'androidStoreUrl': 'https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row',
+                'iosAppScheme': 'bmwdriversguide:///open',
+                'iosStoreUrl': 'https://apps.apple.com/de/app/id714042749?mt=8',
+              }),
+              'headUnitType': 'NBT',
+              'hmiVersion': 'ID4',
+              'lastFetched': '2022-07-10T09:25:53.104Z',
+              'model': 'i3 (+ REX)',
+              'softwareVersionCurrent': dict({
+                'iStep': 510,
+                'puStep': dict({
+                  'month': 11,
+                  'year': 21,
+                }),
+                'seriesCluster': 'I001',
+              }),
+              'softwareVersionExFactory': dict({
+                'iStep': 502,
+                'puStep': dict({
+                  'month': 3,
+                  'year': 15,
+                }),
+                'seriesCluster': 'I001',
+              }),
+              'year': 2015,
+            }),
+            'mappingInfo': dict({
+              'isAssociated': False,
+              'isLmmEnabled': False,
+              'isPrimaryUser': True,
+              'mappingStatus': 'CONFIRMED',
+            }),
+            'vin': '**REDACTED**',
+          }),
+        ]),
+        'filename': 'bmw-eadrax-vcs_v4_vehicles.json',
+      }),
+      dict({
+        'content': list([
+        ]),
+        'filename': 'mini-eadrax-vcs_v4_vehicles.json',
+      }),
+      dict({
+        'content': dict({
+          'capabilities': dict({
+            'a4aType': 'NOT_SUPPORTED',
+            'checkSustainabilityDPP': False,
+            'climateFunction': 'AIR_CONDITIONING',
+            'climateNow': True,
+            'digitalKey': dict({
+              'bookedServicePackage': 'SMACC_1_5',
+              'readerGraphics': 'readerGraphics',
+              'state': 'ACTIVATED',
+            }),
+            'horn': True,
+            'isBmwChargingSupported': True,
+            'isCarSharingSupported': False,
+            'isChargeNowForBusinessSupported': True,
+            'isChargingHistorySupported': True,
+            'isChargingHospitalityEnabled': True,
+            'isChargingLoudnessEnabled': True,
+            'isChargingPlanSupported': True,
+            'isChargingPowerLimitEnabled': True,
+            'isChargingSettingsEnabled': True,
+            'isChargingTargetSocEnabled': True,
+            'isClimateTimerWeeklyActive': False,
+            'isCustomerEsimSupported': True,
+            'isDCSContractManagementSupported': True,
+            'isDataPrivacyEnabled': False,
+            'isEasyChargeEnabled': True,
+            'isEvGoChargingSupported': False,
+            'isMiniChargingSupported': False,
+            'isNonLscFeatureEnabled': False,
+            'isPersonalPictureUploadSupported': False,
+            'isRemoteEngineStartSupported': False,
+            'isRemoteHistoryDeletionSupported': False,
+            'isRemoteHistorySupported': True,
+            'isRemoteParkingSupported': False,
+            'isRemoteServicesActivationRequired': False,
+            'isRemoteServicesBookingRequired': False,
+            'isScanAndChargeSupported': True,
+            'isSustainabilityAccumulatedViewEnabled': False,
+            'isSustainabilitySupported': False,
+            'isWifiHotspotServiceSupported': False,
+            'lastStateCallState': 'ACTIVATED',
+            'lights': True,
+            'lock': True,
+            'remote360': True,
+            'remoteChargingCommands': dict({
+            }),
+            'remoteSoftwareUpgrade': True,
+            'sendPoi': True,
+            'specialThemeSupport': list([
+            ]),
+            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexaSDK': False,
+            'unlock': True,
+            'vehicleFinder': True,
+            'vehicleStateSource': 'LAST_STATE_CALL',
+          }),
+          'state': dict({
+            'chargingProfile': dict({
+              'chargingControlType': 'WEEKLY_PLANNER',
+              'chargingMode': 'IMMEDIATE_CHARGING',
+              'chargingPreference': 'NO_PRESELECTION',
+              'chargingSettings': dict({
+                'acCurrentLimit': 16,
+                'hospitality': 'NO_ACTION',
+                'idcc': 'UNLIMITED_LOUD',
+                'targetSoc': 80,
+              }),
+              'departureTimes': list([
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 1,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 2,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 3,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 4,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+              ]),
+            }),
+            'checkControlMessages': list([
+              dict({
+                'severity': 'LOW',
+                'type': 'TIRE_PRESSURE',
+              }),
+            ]),
+            'climateControlState': dict({
+              'activity': 'STANDBY',
+            }),
+            'climateTimers': list([
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': False,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+            ]),
+            'combustionFuelLevel': dict({
+            }),
+            'currentMileage': 1121,
+            'doorsState': dict({
+              'combinedSecurityState': 'LOCKED',
+              'combinedState': 'CLOSED',
+              'hood': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+              'trunk': 'CLOSED',
+            }),
+            'driverPreferences': dict({
+              'lscPrivacyMode': 'OFF',
+            }),
+            'electricChargingState': dict({
+              'chargingConnectionType': 'UNKNOWN',
+              'chargingLevelPercent': 80,
+              'chargingStatus': 'INVALID',
+              'chargingTarget': 80,
+              'isChargerConnected': False,
+              'range': 472,
+              'remainingChargingMinutes': 10,
+            }),
+            'isLeftSteering': True,
+            'isLscSupported': True,
+            'lastFetched': '2023-01-04T14:57:06.386Z',
+            'lastUpdatedAt': '2023-01-04T14:57:06.407Z',
+            'location': dict({
+              'address': dict({
+                'formatted': '**REDACTED**',
+              }),
+              'coordinates': dict({
+                'latitude': '**REDACTED**',
+                'longitude': '**REDACTED**',
+              }),
+              'heading': '**REDACTED**',
+            }),
+            'range': 472,
+            'requiredServices': list([
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'BRAKE_FLUID',
+              }),
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'VEHICLE_TUV',
+              }),
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'VEHICLE_CHECK',
+              }),
+              dict({
+                'status': 'OK',
+                'type': 'TIRE_WEAR_REAR',
+              }),
+              dict({
+                'status': 'OK',
+                'type': 'TIRE_WEAR_FRONT',
+              }),
+            ]),
+            'tireState': dict({
+              'frontLeft': dict({
+                'details': dict({
+                  'dimension': '225/35 R20 90Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 4021,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461756',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 241,
+                  'pressureStatus': 0,
+                  'targetPressure': 269,
+                  'wearStatus': 0,
+                }),
+              }),
+              'frontRight': dict({
+                'details': dict({
+                  'dimension': '225/35 R20 90Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 2419,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461756',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 255,
+                  'pressureStatus': 0,
+                  'targetPressure': 269,
+                  'wearStatus': 0,
+                }),
+              }),
+              'rearLeft': dict({
+                'details': dict({
+                  'dimension': '255/30 R20 92Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 1219,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461757',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 324,
+                  'pressureStatus': 0,
+                  'targetPressure': 303,
+                  'wearStatus': 0,
+                }),
+              }),
+              'rearRight': dict({
+                'details': dict({
+                  'dimension': '255/30 R20 92Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 1219,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461757',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 331,
+                  'pressureStatus': 0,
+                  'targetPressure': 303,
+                  'wearStatus': 0,
+                }),
+              }),
+            }),
+            'windowsState': dict({
+              'combinedState': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+            }),
+          }),
+        }),
+        'filename': 'bmw-eadrax-vcs_v4_vehicles_state_WBA0FINGERPRINT01.json',
+      }),
+      dict({
+        'content': dict({
+          'chargeAndClimateSettings': dict({
+            'chargeAndClimateTimer': dict({
+              'chargingMode': 'Sofort laden',
+              'chargingModeSemantics': 'Sofort laden',
+              'departureTimer': list([
+                'Aus',
+              ]),
+              'departureTimerSemantics': 'Aus',
+              'preconditionForDeparture': 'Aus',
+              'showDepartureTimers': False,
+            }),
+            'chargingFlap': dict({
+              'permanentlyUnlockLabel': 'Aus',
+            }),
+            'chargingSettings': dict({
+              'acCurrentLimitLabel': '16A',
+              'acCurrentLimitLabelSemantics': '16 Ampere',
+              'chargingTargetLabel': '80%',
+              'dcLoudnessLabel': 'Nicht begrenzt',
+              'unlockCableAutomaticallyLabel': 'Aus',
+            }),
+          }),
+          'chargeAndClimateTimerDetail': dict({
+            'chargingMode': dict({
+              'chargingPreference': 'NO_PRESELECTION',
+              'endTimeSlot': '0001-01-01T00:00:00',
+              'startTimeSlot': '0001-01-01T00:00:00',
+              'type': 'CHARGING_IMMEDIATELY',
+            }),
+            'departureTimer': dict({
+              'type': 'WEEKLY_DEPARTURE_TIMER',
+              'weeklyTimers': list([
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 1,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 2,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 3,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 4,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+              ]),
+            }),
+            'isPreconditionForDepartureActive': False,
+          }),
+          'chargingFlapDetail': dict({
+            'isPermanentlyUnlock': False,
+          }),
+          'chargingSettingsDetail': dict({
+            'acLimit': dict({
+              'current': dict({
+                'unit': 'A',
+                'value': 16,
+              }),
+              'isUnlimited': False,
+              'max': 32,
+              'min': 6,
+              'values': list([
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                20,
+                32,
+              ]),
+            }),
+            'chargingTarget': 80,
+            'dcLoudness': 'UNLIMITED_LOUD',
+            'isUnlockCableActive': False,
+            'minChargingTargetToWarning': 0,
+          }),
+          'servicePack': 'WAVE_01',
+        }),
+        'filename': 'bmw-eadrax-crccs_v2_vehicles_WBA0FINGERPRINT01.json',
+      }),
+      dict({
+        'content': dict({
+          'capabilities': dict({
+            'climateFunction': 'AIR_CONDITIONING',
+            'climateNow': True,
+            'climateTimerTrigger': 'DEPARTURE_TIMER',
+            'horn': True,
+            'isBmwChargingSupported': True,
+            'isCarSharingSupported': False,
+            'isChargeNowForBusinessSupported': False,
+            'isChargingHistorySupported': True,
+            'isChargingHospitalityEnabled': False,
+            'isChargingLoudnessEnabled': False,
+            'isChargingPlanSupported': True,
+            'isChargingPowerLimitEnabled': False,
+            'isChargingSettingsEnabled': False,
+            'isChargingTargetSocEnabled': False,
+            'isClimateTimerSupported': True,
+            'isCustomerEsimSupported': False,
+            'isDCSContractManagementSupported': True,
+            'isDataPrivacyEnabled': False,
+            'isEasyChargeEnabled': False,
+            'isEvGoChargingSupported': False,
+            'isMiniChargingSupported': False,
+            'isNonLscFeatureEnabled': False,
+            'isRemoteEngineStartSupported': False,
+            'isRemoteHistoryDeletionSupported': False,
+            'isRemoteHistorySupported': True,
+            'isRemoteParkingSupported': False,
+            'isRemoteServicesActivationRequired': False,
+            'isRemoteServicesBookingRequired': False,
+            'isScanAndChargeSupported': False,
+            'isSustainabilitySupported': False,
+            'isWifiHotspotServiceSupported': False,
+            'lastStateCallState': 'ACTIVATED',
+            'lights': True,
+            'lock': True,
+            'remoteChargingCommands': dict({
+            }),
+            'sendPoi': True,
+            'specialThemeSupport': list([
+            ]),
+            'unlock': True,
+            'vehicleFinder': False,
+            'vehicleStateSource': 'LAST_STATE_CALL',
+          }),
+          'state': dict({
+            'chargingProfile': dict({
+              'chargingControlType': 'WEEKLY_PLANNER',
+              'chargingMode': 'DELAYED_CHARGING',
+              'chargingPreference': 'CHARGING_WINDOW',
+              'chargingSettings': dict({
+                'hospitality': 'NO_ACTION',
+                'idcc': 'NO_ACTION',
+                'targetSoc': 100,
+              }),
+              'climatisationOn': False,
+              'departureTimes': list([
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 1,
+                  'timeStamp': dict({
+                    'hour': 7,
+                    'minute': 35,
+                  }),
+                  'timerWeekDays': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 2,
+                  'timeStamp': dict({
+                    'hour': 18,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                    'SUNDAY',
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 3,
+                  'timeStamp': dict({
+                    'hour': 7,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 4,
+                  'timerWeekDays': list([
+                  ]),
+                }),
+              ]),
+              'reductionOfChargeCurrent': dict({
+                'end': dict({
+                  'hour': 1,
+                  'minute': 30,
+                }),
+                'start': dict({
+                  'hour': 18,
+                  'minute': 1,
+                }),
+              }),
+            }),
+            'checkControlMessages': list([
+            ]),
+            'climateTimers': list([
+              dict({
+                'departureTime': dict({
+                  'hour': 6,
+                  'minute': 40,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'ACTIVATE',
+                'timerWeekDays': list([
+                  'THURSDAY',
+                  'SUNDAY',
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 12,
+                  'minute': 50,
+                }),
+                'isWeeklyTimer': False,
+                'timerAction': 'ACTIVATE',
+                'timerWeekDays': list([
+                  'MONDAY',
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 18,
+                  'minute': 59,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                  'WEDNESDAY',
+                ]),
+              }),
+            ]),
+            'combustionFuelLevel': dict({
+              'range': 105,
+              'remainingFuelLiters': 6,
+              'remainingFuelPercent': 65,
+            }),
+            'currentMileage': 137009,
+            'doorsState': dict({
+              'combinedSecurityState': 'UNLOCKED',
+              'combinedState': 'CLOSED',
+              'hood': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+              'trunk': 'CLOSED',
+            }),
+            'driverPreferences': dict({
+              'lscPrivacyMode': 'OFF',
+            }),
+            'electricChargingState': dict({
+              'chargingConnectionType': 'CONDUCTIVE',
+              'chargingLevelPercent': 82,
+              'chargingStatus': 'WAITING_FOR_CHARGING',
+              'chargingTarget': 100,
+              'isChargerConnected': True,
+              'range': 174,
+            }),
+            'isLeftSteering': True,
+            'isLscSupported': True,
+            'lastFetched': '2022-06-22T14:24:23.982Z',
+            'lastUpdatedAt': '2022-06-22T13:58:52Z',
+            'range': 174,
+            'requiredServices': list([
+              dict({
+                'dateTime': '2022-10-01T00:00:00.000Z',
+                'description': 'Next service due by the specified date.',
+                'status': 'OK',
+                'type': 'BRAKE_FLUID',
+              }),
+              dict({
+                'dateTime': '2023-05-01T00:00:00.000Z',
+                'description': 'Next vehicle check due after the specified distance or date.',
+                'status': 'OK',
+                'type': 'VEHICLE_CHECK',
+              }),
+              dict({
+                'dateTime': '2023-05-01T00:00:00.000Z',
+                'description': 'Next state inspection due by the specified date.',
+                'status': 'OK',
+                'type': 'VEHICLE_TUV',
+              }),
+            ]),
+            'roofState': dict({
+              'roofState': 'CLOSED',
+              'roofStateType': 'SUN_ROOF',
+            }),
+            'windowsState': dict({
+              'combinedState': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'rightFront': 'CLOSED',
+            }),
+          }),
+        }),
+        'filename': 'bmw-eadrax-vcs_v4_vehicles_state_WBY0FINGERPRINT02.json',
+      }),
+      dict({
+        'content': dict({
+          'chargeAndClimateSettings': dict({
+            'chargeAndClimateTimer': dict({
+              'showDepartureTimers': False,
+            }),
+          }),
+          'chargeAndClimateTimerDetail': dict({
+            'chargingMode': dict({
+              'chargingPreference': 'CHARGING_WINDOW',
+              'endTimeSlot': '0001-01-01T01:30:00',
+              'startTimeSlot': '0001-01-01T18:01:00',
+              'type': 'TIME_SLOT',
+            }),
+            'departureTimer': dict({
+              'type': 'WEEKLY_DEPARTURE_TIMER',
+              'weeklyTimers': list([
+                dict({
+                  'daysOfTheWeek': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                  ]),
+                  'id': 1,
+                  'time': '0001-01-01T07:35:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                    'SUNDAY',
+                  ]),
+                  'id': 2,
+                  'time': '0001-01-01T18:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 3,
+                  'time': '0001-01-01T07:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 4,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+              ]),
+            }),
+            'isPreconditionForDepartureActive': False,
+          }),
+          'servicePack': 'TCB1',
+        }),
+        'filename': 'bmw-eadrax-crccs_v2_vehicles_WBY0FINGERPRINT02.json',
+      }),
+    ]),
+    'info': dict({
+      'password': '**REDACTED**',
+      'refresh_token': '**REDACTED**',
+      'region': 'rest_of_world',
+      'username': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_device_diagnostics_vehicle_not_found
+  dict({
+    'data': None,
+    'fingerprint': list([
+      dict({
+        'content': list([
+          dict({
+            'appVehicleType': 'DEMO',
+            'attributes': dict({
+              'a4aType': 'NOT_SUPPORTED',
+              'bodyType': 'G26',
+              'brand': 'BMW',
+              'color': 4284245350,
+              'countryOfOrigin': 'DE',
+              'driveTrain': 'ELECTRIC',
+              'driverGuideInfo': dict({
+                'androidAppScheme': 'com.bmwgroup.driversguide.row',
+                'androidStoreUrl': 'https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row',
+                'iosAppScheme': 'bmwdriversguide:///open',
+                'iosStoreUrl': 'https://apps.apple.com/de/app/id714042749?mt=8',
+              }),
+              'headUnitRaw': 'HU_MGU',
+              'headUnitType': 'MGU',
+              'hmiVersion': 'ID8',
+              'lastFetched': '2023-01-04T14:57:06.019Z',
+              'model': 'i4 eDrive40',
+              'softwareVersionCurrent': dict({
+                'iStep': 470,
+                'puStep': dict({
+                  'month': 11,
+                  'year': 21,
+                }),
+                'seriesCluster': 'G026',
+              }),
+              'softwareVersionExFactory': dict({
+                'iStep': 470,
+                'puStep': dict({
+                  'month': 11,
+                  'year': 21,
+                }),
+                'seriesCluster': 'G026',
+              }),
+              'telematicsUnit': 'WAVE01',
+              'year': 2021,
+            }),
+            'mappingInfo': dict({
+              'isAssociated': False,
+              'isLmmEnabled': False,
+              'isPrimaryUser': True,
+              'lmmStatusReasons': list([
+              ]),
+              'mappingStatus': 'CONFIRMED',
+            }),
+            'vin': '**REDACTED**',
+          }),
+          dict({
+            'appVehicleType': 'CONNECTED',
+            'attributes': dict({
+              'a4aType': 'USB_ONLY',
+              'bodyType': 'I01',
+              'brand': 'BMW_I',
+              'color': 4284110934,
+              'countryOfOrigin': 'CZ',
+              'driveTrain': 'ELECTRIC_WITH_RANGE_EXTENDER',
+              'driverGuideInfo': dict({
+                'androidAppScheme': 'com.bmwgroup.driversguide.row',
+                'androidStoreUrl': 'https://play.google.com/store/apps/details?id=com.bmwgroup.driversguide.row',
+                'iosAppScheme': 'bmwdriversguide:///open',
+                'iosStoreUrl': 'https://apps.apple.com/de/app/id714042749?mt=8',
+              }),
+              'headUnitType': 'NBT',
+              'hmiVersion': 'ID4',
+              'lastFetched': '2022-07-10T09:25:53.104Z',
+              'model': 'i3 (+ REX)',
+              'softwareVersionCurrent': dict({
+                'iStep': 510,
+                'puStep': dict({
+                  'month': 11,
+                  'year': 21,
+                }),
+                'seriesCluster': 'I001',
+              }),
+              'softwareVersionExFactory': dict({
+                'iStep': 502,
+                'puStep': dict({
+                  'month': 3,
+                  'year': 15,
+                }),
+                'seriesCluster': 'I001',
+              }),
+              'year': 2015,
+            }),
+            'mappingInfo': dict({
+              'isAssociated': False,
+              'isLmmEnabled': False,
+              'isPrimaryUser': True,
+              'mappingStatus': 'CONFIRMED',
+            }),
+            'vin': '**REDACTED**',
+          }),
+        ]),
+        'filename': 'bmw-eadrax-vcs_v4_vehicles.json',
+      }),
+      dict({
+        'content': list([
+        ]),
+        'filename': 'mini-eadrax-vcs_v4_vehicles.json',
+      }),
+      dict({
+        'content': dict({
+          'capabilities': dict({
+            'a4aType': 'NOT_SUPPORTED',
+            'checkSustainabilityDPP': False,
+            'climateFunction': 'AIR_CONDITIONING',
+            'climateNow': True,
+            'digitalKey': dict({
+              'bookedServicePackage': 'SMACC_1_5',
+              'readerGraphics': 'readerGraphics',
+              'state': 'ACTIVATED',
+            }),
+            'horn': True,
+            'isBmwChargingSupported': True,
+            'isCarSharingSupported': False,
+            'isChargeNowForBusinessSupported': True,
+            'isChargingHistorySupported': True,
+            'isChargingHospitalityEnabled': True,
+            'isChargingLoudnessEnabled': True,
+            'isChargingPlanSupported': True,
+            'isChargingPowerLimitEnabled': True,
+            'isChargingSettingsEnabled': True,
+            'isChargingTargetSocEnabled': True,
+            'isClimateTimerWeeklyActive': False,
+            'isCustomerEsimSupported': True,
+            'isDCSContractManagementSupported': True,
+            'isDataPrivacyEnabled': False,
+            'isEasyChargeEnabled': True,
+            'isEvGoChargingSupported': False,
+            'isMiniChargingSupported': False,
+            'isNonLscFeatureEnabled': False,
+            'isPersonalPictureUploadSupported': False,
+            'isRemoteEngineStartSupported': False,
+            'isRemoteHistoryDeletionSupported': False,
+            'isRemoteHistorySupported': True,
+            'isRemoteParkingSupported': False,
+            'isRemoteServicesActivationRequired': False,
+            'isRemoteServicesBookingRequired': False,
+            'isScanAndChargeSupported': True,
+            'isSustainabilityAccumulatedViewEnabled': False,
+            'isSustainabilitySupported': False,
+            'isWifiHotspotServiceSupported': False,
+            'lastStateCallState': 'ACTIVATED',
+            'lights': True,
+            'lock': True,
+            'remote360': True,
+            'remoteChargingCommands': dict({
+            }),
+            'remoteSoftwareUpgrade': True,
+            'sendPoi': True,
+            'specialThemeSupport': list([
+            ]),
+            'speechThirdPartyAlexa': False,
+            'speechThirdPartyAlexaSDK': False,
+            'unlock': True,
+            'vehicleFinder': True,
+            'vehicleStateSource': 'LAST_STATE_CALL',
+          }),
+          'state': dict({
+            'chargingProfile': dict({
+              'chargingControlType': 'WEEKLY_PLANNER',
+              'chargingMode': 'IMMEDIATE_CHARGING',
+              'chargingPreference': 'NO_PRESELECTION',
+              'chargingSettings': dict({
+                'acCurrentLimit': 16,
+                'hospitality': 'NO_ACTION',
+                'idcc': 'UNLIMITED_LOUD',
+                'targetSoc': 80,
+              }),
+              'departureTimes': list([
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 1,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 2,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 3,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 4,
+                  'timeStamp': dict({
+                    'hour': 0,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+              ]),
+            }),
+            'checkControlMessages': list([
+              dict({
+                'severity': 'LOW',
+                'type': 'TIRE_PRESSURE',
+              }),
+            ]),
+            'climateControlState': dict({
+              'activity': 'STANDBY',
+            }),
+            'climateTimers': list([
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': False,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 0,
+                  'minute': 0,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                ]),
+              }),
+            ]),
+            'combustionFuelLevel': dict({
+            }),
+            'currentMileage': 1121,
+            'doorsState': dict({
+              'combinedSecurityState': 'LOCKED',
+              'combinedState': 'CLOSED',
+              'hood': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+              'trunk': 'CLOSED',
+            }),
+            'driverPreferences': dict({
+              'lscPrivacyMode': 'OFF',
+            }),
+            'electricChargingState': dict({
+              'chargingConnectionType': 'UNKNOWN',
+              'chargingLevelPercent': 80,
+              'chargingStatus': 'INVALID',
+              'chargingTarget': 80,
+              'isChargerConnected': False,
+              'range': 472,
+              'remainingChargingMinutes': 10,
+            }),
+            'isLeftSteering': True,
+            'isLscSupported': True,
+            'lastFetched': '2023-01-04T14:57:06.386Z',
+            'lastUpdatedAt': '2023-01-04T14:57:06.407Z',
+            'location': dict({
+              'address': dict({
+                'formatted': '**REDACTED**',
+              }),
+              'coordinates': dict({
+                'latitude': '**REDACTED**',
+                'longitude': '**REDACTED**',
+              }),
+              'heading': '**REDACTED**',
+            }),
+            'range': 472,
+            'requiredServices': list([
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'BRAKE_FLUID',
+              }),
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'VEHICLE_TUV',
+              }),
+              dict({
+                'dateTime': '2024-12-01T00:00:00.000Z',
+                'description': '',
+                'mileage': 50000,
+                'status': 'OK',
+                'type': 'VEHICLE_CHECK',
+              }),
+              dict({
+                'status': 'OK',
+                'type': 'TIRE_WEAR_REAR',
+              }),
+              dict({
+                'status': 'OK',
+                'type': 'TIRE_WEAR_FRONT',
+              }),
+            ]),
+            'tireState': dict({
+              'frontLeft': dict({
+                'details': dict({
+                  'dimension': '225/35 R20 90Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 4021,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461756',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 241,
+                  'pressureStatus': 0,
+                  'targetPressure': 269,
+                  'wearStatus': 0,
+                }),
+              }),
+              'frontRight': dict({
+                'details': dict({
+                  'dimension': '225/35 R20 90Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 2419,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461756',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 255,
+                  'pressureStatus': 0,
+                  'targetPressure': 269,
+                  'wearStatus': 0,
+                }),
+              }),
+              'rearLeft': dict({
+                'details': dict({
+                  'dimension': '255/30 R20 92Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 1219,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461757',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 324,
+                  'pressureStatus': 0,
+                  'targetPressure': 303,
+                  'wearStatus': 0,
+                }),
+              }),
+              'rearRight': dict({
+                'details': dict({
+                  'dimension': '255/30 R20 92Y XL',
+                  'isOptimizedForOemBmw': True,
+                  'manufacturer': 'Pirelli',
+                  'manufacturingWeek': 1219,
+                  'mountingDate': '2022-03-07T00:00:00.000Z',
+                  'partNumber': '2461757',
+                  'season': 2,
+                  'speedClassification': dict({
+                    'atLeast': False,
+                    'speedRating': 300,
+                  }),
+                  'treadDesign': 'P-ZERO',
+                }),
+                'status': dict({
+                  'currentPressure': 331,
+                  'pressureStatus': 0,
+                  'targetPressure': 303,
+                  'wearStatus': 0,
+                }),
+              }),
+            }),
+            'windowsState': dict({
+              'combinedState': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+            }),
+          }),
+        }),
+        'filename': 'bmw-eadrax-vcs_v4_vehicles_state_WBA0FINGERPRINT01.json',
+      }),
+      dict({
+        'content': dict({
+          'chargeAndClimateSettings': dict({
+            'chargeAndClimateTimer': dict({
+              'chargingMode': 'Sofort laden',
+              'chargingModeSemantics': 'Sofort laden',
+              'departureTimer': list([
+                'Aus',
+              ]),
+              'departureTimerSemantics': 'Aus',
+              'preconditionForDeparture': 'Aus',
+              'showDepartureTimers': False,
+            }),
+            'chargingFlap': dict({
+              'permanentlyUnlockLabel': 'Aus',
+            }),
+            'chargingSettings': dict({
+              'acCurrentLimitLabel': '16A',
+              'acCurrentLimitLabelSemantics': '16 Ampere',
+              'chargingTargetLabel': '80%',
+              'dcLoudnessLabel': 'Nicht begrenzt',
+              'unlockCableAutomaticallyLabel': 'Aus',
+            }),
+          }),
+          'chargeAndClimateTimerDetail': dict({
+            'chargingMode': dict({
+              'chargingPreference': 'NO_PRESELECTION',
+              'endTimeSlot': '0001-01-01T00:00:00',
+              'startTimeSlot': '0001-01-01T00:00:00',
+              'type': 'CHARGING_IMMEDIATELY',
+            }),
+            'departureTimer': dict({
+              'type': 'WEEKLY_DEPARTURE_TIMER',
+              'weeklyTimers': list([
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 1,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 2,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 3,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 4,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+              ]),
+            }),
+            'isPreconditionForDepartureActive': False,
+          }),
+          'chargingFlapDetail': dict({
+            'isPermanentlyUnlock': False,
+          }),
+          'chargingSettingsDetail': dict({
+            'acLimit': dict({
+              'current': dict({
+                'unit': 'A',
+                'value': 16,
+              }),
+              'isUnlimited': False,
+              'max': 32,
+              'min': 6,
+              'values': list([
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                20,
+                32,
+              ]),
+            }),
+            'chargingTarget': 80,
+            'dcLoudness': 'UNLIMITED_LOUD',
+            'isUnlockCableActive': False,
+            'minChargingTargetToWarning': 0,
+          }),
+          'servicePack': 'WAVE_01',
+        }),
+        'filename': 'bmw-eadrax-crccs_v2_vehicles_WBA0FINGERPRINT01.json',
+      }),
+      dict({
+        'content': dict({
+          'capabilities': dict({
+            'climateFunction': 'AIR_CONDITIONING',
+            'climateNow': True,
+            'climateTimerTrigger': 'DEPARTURE_TIMER',
+            'horn': True,
+            'isBmwChargingSupported': True,
+            'isCarSharingSupported': False,
+            'isChargeNowForBusinessSupported': False,
+            'isChargingHistorySupported': True,
+            'isChargingHospitalityEnabled': False,
+            'isChargingLoudnessEnabled': False,
+            'isChargingPlanSupported': True,
+            'isChargingPowerLimitEnabled': False,
+            'isChargingSettingsEnabled': False,
+            'isChargingTargetSocEnabled': False,
+            'isClimateTimerSupported': True,
+            'isCustomerEsimSupported': False,
+            'isDCSContractManagementSupported': True,
+            'isDataPrivacyEnabled': False,
+            'isEasyChargeEnabled': False,
+            'isEvGoChargingSupported': False,
+            'isMiniChargingSupported': False,
+            'isNonLscFeatureEnabled': False,
+            'isRemoteEngineStartSupported': False,
+            'isRemoteHistoryDeletionSupported': False,
+            'isRemoteHistorySupported': True,
+            'isRemoteParkingSupported': False,
+            'isRemoteServicesActivationRequired': False,
+            'isRemoteServicesBookingRequired': False,
+            'isScanAndChargeSupported': False,
+            'isSustainabilitySupported': False,
+            'isWifiHotspotServiceSupported': False,
+            'lastStateCallState': 'ACTIVATED',
+            'lights': True,
+            'lock': True,
+            'remoteChargingCommands': dict({
+            }),
+            'sendPoi': True,
+            'specialThemeSupport': list([
+            ]),
+            'unlock': True,
+            'vehicleFinder': False,
+            'vehicleStateSource': 'LAST_STATE_CALL',
+          }),
+          'state': dict({
+            'chargingProfile': dict({
+              'chargingControlType': 'WEEKLY_PLANNER',
+              'chargingMode': 'DELAYED_CHARGING',
+              'chargingPreference': 'CHARGING_WINDOW',
+              'chargingSettings': dict({
+                'hospitality': 'NO_ACTION',
+                'idcc': 'NO_ACTION',
+                'targetSoc': 100,
+              }),
+              'climatisationOn': False,
+              'departureTimes': list([
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 1,
+                  'timeStamp': dict({
+                    'hour': 7,
+                    'minute': 35,
+                  }),
+                  'timerWeekDays': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 2,
+                  'timeStamp': dict({
+                    'hour': 18,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                    'SUNDAY',
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 3,
+                  'timeStamp': dict({
+                    'hour': 7,
+                    'minute': 0,
+                  }),
+                  'timerWeekDays': list([
+                  ]),
+                }),
+                dict({
+                  'action': 'DEACTIVATE',
+                  'id': 4,
+                  'timerWeekDays': list([
+                  ]),
+                }),
+              ]),
+              'reductionOfChargeCurrent': dict({
+                'end': dict({
+                  'hour': 1,
+                  'minute': 30,
+                }),
+                'start': dict({
+                  'hour': 18,
+                  'minute': 1,
+                }),
+              }),
+            }),
+            'checkControlMessages': list([
+            ]),
+            'climateTimers': list([
+              dict({
+                'departureTime': dict({
+                  'hour': 6,
+                  'minute': 40,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'ACTIVATE',
+                'timerWeekDays': list([
+                  'THURSDAY',
+                  'SUNDAY',
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 12,
+                  'minute': 50,
+                }),
+                'isWeeklyTimer': False,
+                'timerAction': 'ACTIVATE',
+                'timerWeekDays': list([
+                  'MONDAY',
+                ]),
+              }),
+              dict({
+                'departureTime': dict({
+                  'hour': 18,
+                  'minute': 59,
+                }),
+                'isWeeklyTimer': True,
+                'timerAction': 'DEACTIVATE',
+                'timerWeekDays': list([
+                  'WEDNESDAY',
+                ]),
+              }),
+            ]),
+            'combustionFuelLevel': dict({
+              'range': 105,
+              'remainingFuelLiters': 6,
+              'remainingFuelPercent': 65,
+            }),
+            'currentMileage': 137009,
+            'doorsState': dict({
+              'combinedSecurityState': 'UNLOCKED',
+              'combinedState': 'CLOSED',
+              'hood': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'leftRear': 'CLOSED',
+              'rightFront': 'CLOSED',
+              'rightRear': 'CLOSED',
+              'trunk': 'CLOSED',
+            }),
+            'driverPreferences': dict({
+              'lscPrivacyMode': 'OFF',
+            }),
+            'electricChargingState': dict({
+              'chargingConnectionType': 'CONDUCTIVE',
+              'chargingLevelPercent': 82,
+              'chargingStatus': 'WAITING_FOR_CHARGING',
+              'chargingTarget': 100,
+              'isChargerConnected': True,
+              'range': 174,
+            }),
+            'isLeftSteering': True,
+            'isLscSupported': True,
+            'lastFetched': '2022-06-22T14:24:23.982Z',
+            'lastUpdatedAt': '2022-06-22T13:58:52Z',
+            'range': 174,
+            'requiredServices': list([
+              dict({
+                'dateTime': '2022-10-01T00:00:00.000Z',
+                'description': 'Next service due by the specified date.',
+                'status': 'OK',
+                'type': 'BRAKE_FLUID',
+              }),
+              dict({
+                'dateTime': '2023-05-01T00:00:00.000Z',
+                'description': 'Next vehicle check due after the specified distance or date.',
+                'status': 'OK',
+                'type': 'VEHICLE_CHECK',
+              }),
+              dict({
+                'dateTime': '2023-05-01T00:00:00.000Z',
+                'description': 'Next state inspection due by the specified date.',
+                'status': 'OK',
+                'type': 'VEHICLE_TUV',
+              }),
+            ]),
+            'roofState': dict({
+              'roofState': 'CLOSED',
+              'roofStateType': 'SUN_ROOF',
+            }),
+            'windowsState': dict({
+              'combinedState': 'CLOSED',
+              'leftFront': 'CLOSED',
+              'rightFront': 'CLOSED',
+            }),
+          }),
+        }),
+        'filename': 'bmw-eadrax-vcs_v4_vehicles_state_WBY0FINGERPRINT02.json',
+      }),
+      dict({
+        'content': dict({
+          'chargeAndClimateSettings': dict({
+            'chargeAndClimateTimer': dict({
+              'showDepartureTimers': False,
+            }),
+          }),
+          'chargeAndClimateTimerDetail': dict({
+            'chargingMode': dict({
+              'chargingPreference': 'CHARGING_WINDOW',
+              'endTimeSlot': '0001-01-01T01:30:00',
+              'startTimeSlot': '0001-01-01T18:01:00',
+              'type': 'TIME_SLOT',
+            }),
+            'departureTimer': dict({
+              'type': 'WEEKLY_DEPARTURE_TIMER',
+              'weeklyTimers': list([
+                dict({
+                  'daysOfTheWeek': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                  ]),
+                  'id': 1,
+                  'time': '0001-01-01T07:35:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                    'SUNDAY',
+                  ]),
+                  'id': 2,
+                  'time': '0001-01-01T18:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 3,
+                  'time': '0001-01-01T07:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+                dict({
+                  'daysOfTheWeek': list([
+                  ]),
+                  'id': 4,
+                  'time': '0001-01-01T00:00:00',
+                  'timerAction': 'DEACTIVATE',
+                }),
+              ]),
+            }),
+            'isPreconditionForDepartureActive': False,
+          }),
+          'servicePack': 'TCB1',
+        }),
+        'filename': 'bmw-eadrax-crccs_v2_vehicles_WBY0FINGERPRINT02.json',
+      }),
+    ]),
+    'info': dict({
+      'password': '**REDACTED**',
+      'refresh_token': '**REDACTED**',
+      'region': 'rest_of_world',
+      'username': '**REDACTED**',
+    }),
+  })
+# ---

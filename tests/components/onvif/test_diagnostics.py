@@ -63,7 +63,10 @@ async def test_diagnostics(
                     "index": 0,
                     "token": "dummy",
                     "name": "profile1",
-                    "video": None,
+                    "video": {
+                        "encoding": "any",
+                        "resolution": {"width": 640, "height": 480},
+                    },
                     "ptz": None,
                     "video_source_token": None,
                 }

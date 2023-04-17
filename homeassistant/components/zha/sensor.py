@@ -955,3 +955,15 @@ class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
     _attr_native_unit_of_measurement = UnitOfMass.GRAMS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_icon: str = "mdi:weight-gram"
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
+class AqaraSmokeDensityDbm(Sensor, id_suffix="smoke_density_dbm"):
+    """Sensor that displays the smoke density of an Aqara smoke sensor in dB/m."""
+
+    SENSOR_ATTR = "smoke_density_dbm"
+    _attr_name: str = "Smoke density"
+    _attr_native_unit_of_measurement = "dB/m"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_icon: str = "mdi:google-circles-communities"
+    _attr_suggested_display_precision: int = 3

@@ -95,7 +95,11 @@ class ProbeEndpoint:
         if component and component in zha_const.PLATFORMS:
             channels = channel_pool.unclaimed_channels()
             entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
-                component, channel_pool.manufacturer, channel_pool.model, channels
+                component,
+                channel_pool.manufacturer,
+                channel_pool.model,
+                channels,
+                channel_pool.quirk_class,
             )
             if entity_class is None:
                 return
@@ -145,7 +149,11 @@ class ProbeEndpoint:
         unique_id = f"{ep_channels.unique_id}-{channel.cluster.cluster_id}"
 
         entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
-            component, ep_channels.manufacturer, ep_channels.model, channel_list
+            component,
+            ep_channels.manufacturer,
+            ep_channels.model,
+            channel_list,
+            ep_channels.quirk_class,
         )
         if entity_class is None:
             return
@@ -190,12 +198,14 @@ class ProbeEndpoint:
                 channel_pool.manufacturer,
                 channel_pool.model,
                 list(channel_pool.all_channels.values()),
+                channel_pool.quirk_class,
             )
         else:
             matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
                 channel_pool.manufacturer,
                 channel_pool.model,
                 channel_pool.unclaimed_channels(),
+                channel_pool.quirk_class,
             )
 
         channel_pool.claim_channels(claimed)
@@ -210,8 +220,7 @@ class ProbeEndpoint:
         for component, ent_n_chan_list in matches.items():
             for entity_and_channel in ent_n_chan_list:
                 if component == cmpt_by_dev_type:
-                    # for well known device types, like thermostats
-                    # we'll take only 1st class
+                    # for well known device types, like thermostats we'll take only 1st class
                     channel_pool.async_new_entity(
                         component,
                         entity_and_channel.entity_class,
