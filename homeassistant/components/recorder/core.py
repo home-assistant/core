@@ -11,7 +11,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 import async_timeout
 import psutil_home_assistant as ha_psutil
@@ -361,7 +361,12 @@ class Recorder(threading.Thread):
         )
         self._async_stop_queue_watcher_and_event_listener()
 
-    @callback
+    def _available_memory(self) -> int:
+        """Return the available memory in bytes."""
+        if not self._psutil:
+            self._psutil = ha_psutil.PsutilWrapper()
+        return cast(int, self._psutil.psutil.virtual_memory().available)
+
     def _reached_max_backlog_percentage(self, percentage: int) -> bool:
         """Check if the system has reached the max queue backlog and return the maximum if it has."""
         percentage_modifier = percentage / 100
@@ -372,12 +377,9 @@ class Recorder(threading.Thread):
         # If they have more RAM available, keep filling the backlog
         # since we do not want to stop recording events or give the
         # user a bad backup when they have plenty of RAM available.
-        if not self._psutil:
-            self._psutil = ha_psutil.PsutilWrapper()
-        available = self._psutil.psutil.virtual_memory().available
         max_queue_backlog = int(
             QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY
-            * (available / ESTIMATED_QUEUE_ITEM_SIZE)
+            * (self._available_memory() / ESTIMATED_QUEUE_ITEM_SIZE)
         )
         self.max_backlog = max(max_queue_backlog, MAX_QUEUE_BACKLOG_MIN_VALUE)
         if current_backlog < (max_queue_backlog * percentage_modifier):
