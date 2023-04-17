@@ -64,7 +64,7 @@ class PoolSenseEntity(CoordinatorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, coordinator, email, description: EntityDescription):
+    def __init__(self, coordinator, email, description: EntityDescription) -> None:
         """Initialize poolsense sensor."""
         super().__init__(coordinator)
         self.entity_description = description

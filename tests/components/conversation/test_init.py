@@ -1,25 +1,31 @@
 """The tests for the Conversation component."""
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.cover import SERVICE_OPEN_COVER
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
-    area_registry,
-    device_registry,
-    entity_registry,
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
     intent,
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_mock_service
+from . import expose_entity, expose_new
 
-AGENT_ID_OPTIONS = [None, conversation.AgentManager.HOME_ASSISTANT_AGENT]
+from tests.common import MockConfigEntry, MockUser, async_mock_service
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+AGENT_ID_OPTIONS = [None, conversation.HOME_ASSISTANT_AGENT]
 
 
 class OrderBeerIntentHandler(intent.IntentHandler):
@@ -45,22 +51,30 @@ async def init_components(hass):
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 async def test_http_processing_intent(
-    hass, init_components, hass_client, hass_admin_user, agent_id
-):
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    agent_id,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test processing intent via HTTP API."""
     # Add an alias
-    entities = entity_registry.async_get(hass)
-    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
-    entities.async_update_entity("light.kitchen", aliases={"my cool light"})
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
     hass.states.async_set("light.kitchen", "off")
 
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
-    data = {"text": "turn on my cool light"}
+    data: dict[str, Any] = {"text": "turn on my cool light"}
     if agent_id:
         data["agent_id"] = agent_id
     resp = await client.post("/api/conversation/process", json=data)
 
     assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
     data = await resp.json()
 
     assert data == {
@@ -70,7 +84,7 @@ async def test_http_processing_intent(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on my cool light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -87,15 +101,22 @@ async def test_http_processing_intent(
 
 
 async def test_http_processing_intent_target_ha_agent(
-    hass, init_components, hass_client, hass_admin_user, mock_agent
-):
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    mock_agent,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test processing intent can be processed via HTTP API with picking agent."""
     # Add an alias
-    entities = entity_registry.async_get(hass)
-    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
-    entities.async_update_entity("light.kitchen", aliases={"my cool light"})
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
     hass.states.async_set("light.kitchen", "off")
 
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
     resp = await client.post(
         "/api/conversation/process",
@@ -103,6 +124,7 @@ async def test_http_processing_intent_target_ha_agent(
     )
 
     assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
     data = await resp.json()
 
     assert data == {
@@ -112,7 +134,7 @@ async def test_http_processing_intent_target_ha_agent(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on my cool light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -128,25 +150,32 @@ async def test_http_processing_intent_target_ha_agent(
     }
 
 
-async def test_http_processing_intent_entity_added(
-    hass, init_components, hass_client, hass_admin_user
-):
+async def test_http_processing_intent_entity_added_removed(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test processing intent via HTTP API with entities added later.
 
     We want to ensure that adding an entity later busts the cache
     so that the new entity is available as well as any aliases.
     """
-    er = entity_registry.async_get(hass)
-    er.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
-    er.async_update_entity("light.kitchen", aliases={"my cool light"})
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
     hass.states.async_set("light.kitchen", "off")
 
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
     resp = await client.post(
         "/api/conversation/process", json={"text": "turn on my cool light"}
     )
 
     assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
     data = await resp.json()
 
     assert data == {
@@ -156,7 +185,7 @@ async def test_http_processing_intent_entity_added(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on my cool light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -171,8 +200,14 @@ async def test_http_processing_intent_entity_added(
         "conversation_id": None,
     }
 
-    # Add an alias
-    er.async_get_or_create("light", "demo", "5678", suggested_object_id="late")
+    # Add an entity
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "5678",
+        suggested_object_id="late",
+        original_name="friendly light",
+    )
     hass.states.async_set("light.late", "off", {"friendly_name": "friendly light"})
 
     client = await hass_client()
@@ -190,7 +225,7 @@ async def test_http_processing_intent_entity_added(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on friendly light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -206,7 +241,7 @@ async def test_http_processing_intent_entity_added(
     }
 
     # Now add an alias
-    er.async_update_entity("light.late", aliases={"late added light"})
+    entity_registry.async_update_entity("light.late", aliases={"late added light"})
 
     client = await hass_client()
     resp = await client.post(
@@ -223,7 +258,7 @@ async def test_http_processing_intent_entity_added(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on late added light",
+                    "speech": "Turned on light",
                 }
             },
             "language": hass.config.language,
@@ -239,7 +274,7 @@ async def test_http_processing_intent_entity_added(
     }
 
     # Now delete the entity
-    er.async_remove("light.late")
+    entity_registry.async_remove("light.late")
 
     client = await hass_client()
     resp = await client.post(
@@ -258,19 +293,611 @@ async def test_http_processing_intent_entity_added(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Sorry, I couldn't understand " "that",
+                    "speech": "Sorry, I couldn't understand that",
                 }
             },
         },
     }
 
 
+async def test_http_processing_intent_alias_added_removed(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test processing intent via HTTP API with aliases added later.
+
+    We want to ensure that adding an alias later busts the cache
+    so that the new alias is available.
+    """
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+        suggested_object_id="kitchen",
+        original_name="kitchen light",
+    )
+    hass.states.async_set("light.kitchen", "off", {"friendly_name": "kitchen light"})
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    # Add an alias
+    entity_registry.async_update_entity("light.kitchen", aliases={"late added alias"})
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on late added alias"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    # Now remove the alieas
+    entity_registry.async_update_entity("light.kitchen", aliases={})
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on late added alias"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+
+async def test_http_processing_intent_entity_renamed(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test processing intent via HTTP API with entities renamed later.
+
+    We want to ensure that renaming an entity later busts the cache
+    so that the new name is used.
+    """
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    entity = platform.MockLight("kitchen light", "on")
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    platform.ENTITIES.append(entity)
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    # Rename the entity
+    entity_registry.async_update_entity("light.kitchen", name="renamed light")
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on renamed light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "renamed light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+    # Now clear the custom name
+    entity_registry.async_update_entity("light.kitchen", name=None)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on renamed light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+
+async def test_http_processing_intent_entity_exposed(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test processing intent via HTTP API with manual expose.
+
+    We want to ensure that manually exposing an entity later busts the cache
+    so that the new setting is used.
+    """
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    entity = platform.MockLight("kitchen light", "on")
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    platform.ENTITIES.append(entity)
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on my cool light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    # Unexpose the entity
+    expose_entity(hass, "light.kitchen", False)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on my cool light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+    # Now expose the entity
+    expose_entity(hass, "light.kitchen", True)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on my cool light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+
+async def test_http_processing_intent_conversion_not_expose_new(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test processing intent via HTTP API when not exposing new entities."""
+    # Disable exposing new entities to the default agent
+    expose_new(hass, False)
+
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    entity = platform.MockLight("kitchen light", "on")
+    entity._attr_unique_id = "1234"
+    entity.entity_id = "light.kitchen"
+    platform.ENTITIES.append(entity)
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {LIGHT_DOMAIN: [{"platform": "test"}]},
+    )
+    await hass.async_block_till_done()
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand that",
+                }
+            },
+        },
+    }
+
+    # Expose the entity
+    expose_entity(hass, "light.kitchen", True)
+    await hass.async_block_till_done()
+
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on kitchen light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert len(calls) == 1
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Turned on light",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [
+                    {"id": "light.kitchen", "name": "kitchen light", "type": "entity"}
+                ],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
-async def test_turn_on_intent(hass, init_components, sentence, agent_id):
+async def test_turn_on_intent(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+    sentence,
+    agent_id,
+) -> None:
     """Test calling the turn on intent."""
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+        suggested_object_id="kitchen",
+        original_name="kitchen",
+    )
     hass.states.async_set("light.kitchen", "off")
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     data = {conversation.ATTR_TEXT: sentence}
     if agent_id is not None:
@@ -280,16 +907,25 @@ async def test_turn_on_intent(hass, init_components, sentence, agent_id):
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": "light.kitchen"}
+    assert call.data == {"entity_id": ["light.kitchen"]}
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
-async def test_turn_off_intent(hass, init_components, sentence):
+async def test_turn_off_intent(
+    hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry, sentence
+) -> None:
     """Test calling the turn on intent."""
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+        suggested_object_id="kitchen",
+        original_name="kitchen",
+    )
     hass.states.async_set("light.kitchen", "on")
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_off")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
     await hass.services.async_call(
         "conversation", "process", {conversation.ATTR_TEXT: sentence}
@@ -298,12 +934,14 @@ async def test_turn_off_intent(hass, init_components, sentence):
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_off"
-    assert call.data == {"entity_id": "light.kitchen"}
+    assert call.data == {"entity_id": ["light.kitchen"]}
 
 
-async def test_http_api_no_match(hass, init_components, hass_client):
+async def test_http_api_no_match(
+    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
+) -> None:
     """Test the HTTP conversation API with an intent match failure."""
     client = await hass_client()
 
@@ -330,10 +968,22 @@ async def test_http_api_no_match(hass, init_components, hass_client):
     }
 
 
-async def test_http_api_handle_failure(hass, init_components, hass_client):
+async def test_http_api_handle_failure(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test the HTTP conversation API with an error during handling."""
     client = await hass_client()
 
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+        suggested_object_id="kitchen",
+        original_name="kitchen",
+    )
     hass.states.async_set("light.kitchen", "off")
 
     # Raise an error during intent handling
@@ -367,10 +1017,22 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
     }
 
 
-async def test_http_api_unexpected_failure(hass, init_components, hass_client):
+async def test_http_api_unexpected_failure(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test the HTTP conversation API with an unexpected error during handling."""
     client = await hass_client()
 
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+        suggested_object_id="kitchen",
+        original_name="kitchen",
+    )
     hass.states.async_set("light.kitchen", "off")
 
     # Raise an "unexpected" error during intent handling
@@ -404,7 +1066,9 @@ async def test_http_api_unexpected_failure(hass, init_components, hass_client):
     }
 
 
-async def test_http_api_wrong_data(hass, init_components, hass_client):
+async def test_http_api_wrong_data(
+    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
+) -> None:
     """Test the HTTP conversation API."""
     client = await hass_client()
 
@@ -416,7 +1080,13 @@ async def test_http_api_wrong_data(hass, init_components, hass_client):
 
 
 @pytest.mark.parametrize("agent_id", (None, "mock-entry"))
-async def test_custom_agent(hass, hass_client, hass_admin_user, mock_agent, agent_id):
+async def test_custom_agent(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    mock_agent,
+    agent_id,
+) -> None:
     """Test a custom conversation agent."""
     assert await async_setup_component(hass, "conversation", {})
 
@@ -488,7 +1158,9 @@ async def test_custom_agent(hass, hass_client, hass_admin_user, mock_agent, agen
         },
     ],
 )
-async def test_ws_api(hass, hass_ws_client, payload):
+async def test_ws_api(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, payload
+) -> None:
     """Test the Websocket conversation API."""
     assert await async_setup_component(hass, "conversation", {})
     client = await hass_ws_client(hass)
@@ -516,7 +1188,9 @@ async def test_ws_api(hass, hass_ws_client, payload):
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
-async def test_ws_prepare(hass, hass_ws_client, agent_id):
+async def test_ws_prepare(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, agent_id
+) -> None:
     """Test the Websocket prepare conversation API."""
     assert await async_setup_component(hass, "conversation", {})
     agent = await conversation._get_agent_manager(hass).async_get_agent()
@@ -544,7 +1218,9 @@ async def test_ws_prepare(hass, hass_ws_client, agent_id):
     assert agent._lang_intents.get(hass.config.language)
 
 
-async def test_custom_sentences(hass, hass_client, hass_admin_user):
+async def test_custom_sentences(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
     """Test custom sentences with a custom intent."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
@@ -553,12 +1229,18 @@ async def test_custom_sentences(hass, hass_client, hass_admin_user):
     # Expecting testing_config/custom_sentences/en/beer.yaml
     intent.async_register(hass, OrderBeerIntentHandler())
 
+    # Don't use "en" to test loading custom sentences with language variants.
+    language = "en-us"
+
     # Invoke intent via HTTP API
     client = await hass_client()
     for beer_style in ("stout", "lager"):
         resp = await client.post(
             "/api/conversation/process",
-            json={"text": f"I'd like to order a {beer_style}, please"},
+            json={
+                "text": f"I'd like to order a {beer_style}, please",
+                "language": language,
+            },
         )
         assert resp.status == HTTPStatus.OK
         data = await resp.json()
@@ -572,7 +1254,7 @@ async def test_custom_sentences(hass, hass_client, hass_admin_user):
                         "speech": f"You ordered a {beer_style}",
                     }
                 },
-                "language": hass.config.language,
+                "language": language,
                 "response_type": "action_done",
                 "data": {
                     "targets": [],
@@ -584,7 +1266,9 @@ async def test_custom_sentences(hass, hass_client, hass_admin_user):
         }
 
 
-async def test_custom_sentences_config(hass, hass_client, hass_admin_user):
+async def test_custom_sentences_config(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
     """Test custom sentences with a custom intent in config."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
@@ -633,7 +1317,7 @@ async def test_custom_sentences_config(hass, hass_client, hass_admin_user):
     }
 
 
-async def test_prepare_reload(hass):
+async def test_prepare_reload(hass: HomeAssistant) -> None:
     """Test calling the reload service."""
     language = hass.config.language
     assert await async_setup_component(hass, "conversation", {})
@@ -654,7 +1338,7 @@ async def test_prepare_reload(hass):
     assert not agent._lang_intents.get(language)
 
 
-async def test_prepare_fail(hass):
+async def test_prepare_fail(hass: HomeAssistant) -> None:
     """Test calling prepare with a non-existent language."""
     assert await async_setup_component(hass, "conversation", {})
 
@@ -667,10 +1351,19 @@ async def test_prepare_fail(hass):
     assert not agent._lang_intents.get("not-a-language")
 
 
-async def test_language_region(hass, init_components):
+async def test_language_region(
+    hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry
+) -> None:
     """Test calling the turn on intent."""
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+        suggested_object_id="kitchen",
+        original_name="kitchen",
+    )
     hass.states.async_set("light.kitchen", "off")
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     # Add fake region
     language = f"{hass.config.language}-YZ"
@@ -686,12 +1379,12 @@ async def test_language_region(hass, init_components):
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": "light.kitchen"}
+    assert call.data == {"entity_id": ["light.kitchen"]}
 
 
-async def test_reload_on_new_component(hass):
+async def test_reload_on_new_component(hass: HomeAssistant) -> None:
     """Test intents being reloaded when a new component is loaded."""
     language = hass.config.language
     assert await async_setup_component(hass, "conversation", {})
@@ -716,10 +1409,19 @@ async def test_reload_on_new_component(hass):
     assert {"light"} == (lang_intents.loaded_components - loaded_components)
 
 
-async def test_non_default_response(hass, init_components):
+async def test_non_default_response(
+    hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry
+) -> None:
     """Test intent response that is not the default."""
+    entity_registry.async_get_or_create(
+        "cover",
+        "demo",
+        "1234",
+        suggested_object_id="front_door",
+        original_name="front door",
+    )
     hass.states.async_set("cover.front_door", "closed")
-    async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+    calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
     agent = await conversation._get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
@@ -732,31 +1434,37 @@ async def test_non_default_response(hass, init_components):
             language=hass.config.language,
         )
     )
-    assert result.response.speech["plain"]["speech"] == "Opened front door"
+    assert len(calls) == 1
+    assert result.response.speech["plain"]["speech"] == "Opened"
 
 
-async def test_turn_on_area(hass, init_components):
+async def test_turn_on_area(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test turning on an area."""
-    er = entity_registry.async_get(hass)
-    dr = device_registry.async_get(hass)
-    ar = area_registry.async_get(hass)
     entry = MockConfigEntry(domain="test")
 
-    device = dr.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    kitchen_area = ar.async_create("kitchen")
-    dr.async_update_device(device.id, area_id=kitchen_area.id)
+    kitchen_area = area_registry.async_create("kitchen")
+    device_registry.async_update_device(device.id, area_id=kitchen_area.id)
 
-    er.async_get_or_create("light", "demo", "1234", suggested_object_id="stove")
-    er.async_update_entity(
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="stove"
+    )
+    entity_registry.async_update_entity(
         "light.stove", aliases={"my stove light"}, area_id=kitchen_area.id
     )
     hass.states.async_set("light.stove", "off")
 
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     await hass.services.async_call(
         "conversation",
@@ -767,13 +1475,13 @@ async def test_turn_on_area(hass, init_components):
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": "light.stove"}
+    assert call.data == {"entity_id": ["light.stove"]}
 
-    basement_area = ar.async_create("basement")
-    dr.async_update_device(device.id, area_id=basement_area.id)
-    er.async_update_entity("light.stove", area_id=basement_area.id)
+    basement_area = area_registry.async_create("basement")
+    device_registry.async_update_device(device.id, area_id=basement_area.id)
+    entity_registry.async_update_entity("light.stove", area_id=basement_area.id)
     calls.clear()
 
     # Test that the area is updated
@@ -796,43 +1504,50 @@ async def test_turn_on_area(hass, init_components):
 
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": "light.stove"}
+    assert call.data == {"entity_id": ["light.stove"]}
 
 
-async def test_light_area_same_name(hass, init_components):
+async def test_light_area_same_name(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test turning on a light with the same name as an area."""
-    entities = entity_registry.async_get(hass)
-    devices = device_registry.async_get(hass)
-    areas = area_registry.async_get(hass)
     entry = MockConfigEntry(domain="test")
 
-    device = devices.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    kitchen_area = areas.async_create("kitchen")
-    devices.async_update_device(device.id, area_id=kitchen_area.id)
+    kitchen_area = area_registry.async_create("kitchen")
+    device_registry.async_update_device(device.id, area_id=kitchen_area.id)
 
-    kitchen_light = entities.async_get_or_create(
+    kitchen_light = entity_registry.async_get_or_create(
         "light", "demo", "1234", original_name="kitchen light"
     )
-    entities.async_update_entity(kitchen_light.entity_id, area_id=kitchen_area.id)
+    entity_registry.async_update_entity(
+        kitchen_light.entity_id, area_id=kitchen_area.id
+    )
     hass.states.async_set(
         kitchen_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
     )
 
-    ceiling_light = entities.async_get_or_create(
+    ceiling_light = entity_registry.async_get_or_create(
         "light", "demo", "5678", original_name="ceiling light"
     )
-    entities.async_update_entity(ceiling_light.entity_id, area_id=kitchen_area.id)
+    entity_registry.async_update_entity(
+        ceiling_light.entity_id, area_id=kitchen_area.id
+    )
     hass.states.async_set(
         ceiling_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "ceiling light"}
     )
 
-    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
     await hass.services.async_call(
         "conversation",
@@ -844,20 +1559,26 @@ async def test_light_area_same_name(hass, init_components):
     # Should only turn on one light instead of all lights in the kitchen
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": kitchen_light.entity_id}
+    assert call.data == {"entity_id": [kitchen_light.entity_id]}
 
 
-async def test_agent_id_validator_invalid_agent(hass):
+async def test_agent_id_validator_invalid_agent(hass: HomeAssistant) -> None:
     """Test validating agent id."""
     with pytest.raises(vol.Invalid):
         conversation.agent_id_validator("invalid_agent")
 
-    conversation.agent_id_validator(conversation.AgentManager.HOME_ASSISTANT_AGENT)
+    conversation.agent_id_validator(conversation.HOME_ASSISTANT_AGENT)
 
 
-async def test_get_agent_list(hass, init_components, mock_agent, hass_ws_client):
+async def test_get_agent_list(
+    hass: HomeAssistant,
+    init_components,
+    mock_agent,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test getting agent info."""
     client = await hass_ws_client(hass)
 
@@ -867,10 +1588,17 @@ async def test_get_agent_list(hass, init_components, mock_agent, hass_ws_client)
     assert msg["id"] == 5
     assert msg["type"] == "result"
     assert msg["success"]
-    assert msg["result"] == {
-        "agents": [
-            {"id": "homeassistant", "name": "Home Assistant"},
-            {"id": "mock-entry", "name": "Mock Title"},
-        ],
-        "default_agent": "mock-entry",
-    }
+    assert msg["result"] == snapshot
+
+
+async def test_get_agent_info(
+    hass: HomeAssistant, init_components, mock_agent, snapshot: SnapshotAssertion
+) -> None:
+    """Test get agent info."""
+    agent_info = conversation.async_get_agent_info(hass)
+    # Test it's the default
+    assert agent_info["id"] == mock_agent.agent_id
+    assert agent_info == snapshot
+    assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
+    assert conversation.async_get_agent_info(hass, mock_agent.agent_id) == snapshot
+    assert conversation.async_get_agent_info(hass, "not exist") is None

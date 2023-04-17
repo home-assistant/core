@@ -2,14 +2,17 @@
 import logging
 from unittest.mock import mock_open, patch
 
+import pytest
+
 from homeassistant.components.python_script import DOMAIN, FOLDER, execute
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 
 from tests.common import patch_yaml_files
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test we can discover scripts."""
     scripts = [
         "/some/config/dir/python_scripts/hello.py",
@@ -42,7 +45,9 @@ async def test_setup(hass):
     assert data == {"some": "data"}
 
 
-async def test_setup_fails_on_no_dir(hass, caplog):
+async def test_setup_fails_on_no_dir(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we fail setup when no dir found."""
     with patch(
         "homeassistant.components.python_script.os.path.isdir", return_value=False
@@ -53,7 +58,9 @@ async def test_setup_fails_on_no_dir(hass, caplog):
     assert "Folder python_scripts not found in configuration folder" in caplog.text
 
 
-async def test_execute_with_data(hass, caplog):
+async def test_execute_with_data(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test executing a script."""
     caplog.set_level(logging.WARNING)
     source = """
@@ -69,7 +76,9 @@ hass.states.set('test.entity', data.get('name', 'not set'))
     assert caplog.text == ""
 
 
-async def test_execute_warns_print(hass, caplog):
+async def test_execute_warns_print(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test print triggers warning."""
     caplog.set_level(logging.WARNING)
     source = """
@@ -82,7 +91,9 @@ print("This triggers warning.")
     assert "Don't use print() inside scripts." in caplog.text
 
 
-async def test_execute_logging(hass, caplog):
+async def test_execute_logging(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test logging works."""
     caplog.set_level(logging.INFO)
     source = """
@@ -95,7 +106,9 @@ logger.info('Logging from inside script')
     assert "Logging from inside script" in caplog.text
 
 
-async def test_execute_compile_error(hass, caplog):
+async def test_execute_compile_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)
     source = """
@@ -108,7 +121,9 @@ this is not valid Python
     assert "Error loading script test.py" in caplog.text
 
 
-async def test_execute_runtime_error(hass, caplog):
+async def test_execute_runtime_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)
     source = """
@@ -121,7 +136,9 @@ raise Exception('boom')
     assert "Error executing script: boom" in caplog.text
 
 
-async def test_accessing_async_methods(hass, caplog):
+async def test_accessing_async_methods(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)
     source = """
@@ -134,7 +151,9 @@ hass.async_stop()
     assert "Not allowed to access async methods" in caplog.text
 
 
-async def test_using_complex_structures(hass, caplog):
+async def test_using_complex_structures(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that dicts and lists work."""
     caplog.set_level(logging.INFO)
     source = """
@@ -149,7 +168,9 @@ logger.info('Logging from inside script: %s %s' % (mydict["a"], mylist[2]))
     assert "Logging from inside script: 1 3" in caplog.text
 
 
-async def test_accessing_forbidden_methods(hass, caplog):
+async def test_accessing_forbidden_methods(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)
 
@@ -165,7 +186,7 @@ async def test_accessing_forbidden_methods(hass, caplog):
         assert f"Not allowed to access {name}" in caplog.text
 
 
-async def test_iterating(hass):
+async def test_iterating(hass: HomeAssistant) -> None:
     """Test compile error logs error."""
     source = """
 for i in [1, 2]:
@@ -179,7 +200,7 @@ for i in [1, 2]:
     assert hass.states.is_state("hello.2", "world")
 
 
-async def test_using_enumerate(hass):
+async def test_using_enumerate(hass: HomeAssistant) -> None:
     """Test that enumerate is accepted and executed."""
     source = """
 for index, value in enumerate(["earth", "mars"]):
@@ -193,7 +214,9 @@ for index, value in enumerate(["earth", "mars"]):
     assert hass.states.is_state("hello.1", "mars")
 
 
-async def test_unpacking_sequence(hass, caplog):
+async def test_unpacking_sequence(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)
     source = """
@@ -215,7 +238,9 @@ hass.states.set('hello.ab_list', '{}'.format(ab_list))
     assert caplog.text == ""
 
 
-async def test_execute_sorted(hass, caplog):
+async def test_execute_sorted(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test sorted() function."""
     caplog.set_level(logging.ERROR)
     source = """
@@ -235,7 +260,9 @@ hass.states.set('hello.c', a[2])
     assert caplog.text == ""
 
 
-async def test_exposed_modules(hass, caplog):
+async def test_exposed_modules(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test datetime and time modules exposed."""
     caplog.set_level(logging.ERROR)
     source = """
@@ -257,7 +284,9 @@ hass.states.set('module.datetime',
     assert caplog.text == ""
 
 
-async def test_execute_functions(hass, caplog):
+async def test_execute_functions(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test functions defined in script can call one another."""
     caplog.set_level(logging.ERROR)
     source = """
@@ -279,7 +308,7 @@ b()
     assert caplog.text == ""
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Test we can re-discover scripts."""
     scripts = [
         "/some/config/dir/python_scripts/hello.py",
@@ -310,7 +339,7 @@ async def test_reload(hass):
     assert hass.services.has_service("python_script", "reload")
 
 
-async def test_service_descriptions(hass):
+async def test_service_descriptions(hass: HomeAssistant) -> None:
     """Test that service descriptions are loaded and reloaded correctly."""
     # Test 1: no user-provided services.yaml file
     scripts1 = [
@@ -409,7 +438,9 @@ async def test_service_descriptions(hass):
     )
 
 
-async def test_sleep_warns_one(hass, caplog):
+async def test_sleep_warns_one(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test time.sleep warns once."""
     caplog.set_level(logging.WARNING)
     source = """

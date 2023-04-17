@@ -20,7 +20,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Freebox config flow."""
         self._host = None
         self._port = None
@@ -77,7 +77,6 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Check permissions
             await fbx.system.get_config()
             await fbx.lan.get_hosts_list()
-            await self.hass.async_block_till_done()
 
             # Close connection
             await fbx.close()

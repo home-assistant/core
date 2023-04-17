@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.coolmaster.config_flow import AVAILABLE_MODES
 from homeassistant.components.coolmaster.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 
 def _flow_data():
@@ -14,7 +15,7 @@ def _flow_data():
     return options
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -45,7 +46,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_timeout(hass):
+async def test_form_timeout(hass: HomeAssistant) -> None:
     """Test we handle a connection timeout."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -63,7 +64,7 @@ async def test_form_timeout(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_connection_refused(hass):
+async def test_form_connection_refused(hass: HomeAssistant) -> None:
     """Test we handle a connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -81,7 +82,7 @@ async def test_form_connection_refused(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_no_units(hass):
+async def test_form_no_units(hass: HomeAssistant) -> None:
     """Test we handle no units found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -279,7 +279,7 @@ class DeviceBroker:
         smart_app,
         devices: Iterable,
         scenes: Iterable,
-    ):
+    ) -> None:
         """Create a new instance of the DeviceBroker."""
         self._hass = hass
         self._entry = entry

@@ -12,12 +12,14 @@ from homeassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
 from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
     mutagen_mock,
 )
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 URL = "https://tts.voicetech.yandex.net/generate?"
 
@@ -40,7 +42,7 @@ def cleanup_cache(hass):
         shutil.rmtree(default_tts)
 
 
-async def test_setup_component(hass):
+async def test_setup_component(hass: HomeAssistant) -> None:
     """Test setup component."""
     config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
 
@@ -49,7 +51,7 @@ async def test_setup_component(hass):
         await hass.async_block_till_done()
 
 
-async def test_setup_component_without_api_key(hass):
+async def test_setup_component_without_api_key(hass: HomeAssistant) -> None:
     """Test setup component without api key."""
     config = {tts.DOMAIN: {"platform": "yandextts"}}
 
@@ -58,7 +60,9 @@ async def test_setup_component_without_api_key(hass):
         await hass.async_block_till_done()
 
 
-async def test_service_say(hass, aioclient_mock):
+async def test_service_say(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -90,7 +94,9 @@ async def test_service_say(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_say_russian_config(hass, aioclient_mock):
+async def test_service_say_russian_config(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -129,7 +135,9 @@ async def test_service_say_russian_config(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_say_russian_service(hass, aioclient_mock):
+async def test_service_say_russian_service(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -165,7 +173,9 @@ async def test_service_say_russian_service(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_say_timeout(hass, aioclient_mock):
+async def test_service_say_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -205,7 +215,9 @@ async def test_service_say_timeout(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_say_http_error(hass, aioclient_mock):
+async def test_service_say_http_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -243,7 +255,9 @@ async def test_service_say_http_error(hass, aioclient_mock):
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
 
 
-async def test_service_say_specified_speaker(hass, aioclient_mock):
+async def test_service_say_specified_speaker(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -281,7 +295,9 @@ async def test_service_say_specified_speaker(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_say_specified_emotion(hass, aioclient_mock):
+async def test_service_say_specified_emotion(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -320,7 +336,9 @@ async def test_service_say_specified_emotion(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_say_specified_low_speed(hass, aioclient_mock):
+async def test_service_say_specified_low_speed(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -355,7 +373,9 @@ async def test_service_say_specified_low_speed(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_say_specified_speed(hass, aioclient_mock):
+async def test_service_say_specified_speed(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -388,7 +408,9 @@ async def test_service_say_specified_speed(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_service_say_specified_options(hass, aioclient_mock):
+async def test_service_say_specified_options(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test service call say with options."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 

@@ -14,6 +14,7 @@ import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.ports import Ports
+from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
 from aiounifi.models.port import Port
 
@@ -23,17 +24,16 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfInformation, UnitOfPower
+from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 from .entity import (
-    DataT,
     HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
@@ -45,17 +45,17 @@ from .entity import (
 @callback
 def async_client_rx_value_fn(controller: UniFiController, client: Client) -> float:
     """Calculate receiving data transfer value."""
-    if client.mac not in controller.wireless_clients:
-        return client.wired_rx_bytes_r / 1000000
-    return client.rx_bytes_r / 1000000
+    if controller.wireless_clients.is_wireless(client):
+        return client.rx_bytes_r / 1000000
+    return client.wired_rx_bytes_r / 1000000
 
 
 @callback
 def async_client_tx_value_fn(controller: UniFiController, client: Client) -> float:
     """Calculate transmission data transfer value."""
-    if client.mac not in controller.wireless_clients:
-        return client.wired_tx_bytes_r / 1000000
-    return client.tx_bytes_r / 1000000
+    if controller.wireless_clients.is_wireless(client):
+        return client.tx_bytes_r / 1000000
+    return client.wired_tx_bytes_r / 1000000
 
 
 @callback
@@ -80,17 +80,17 @@ def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
 
 
 @dataclass
-class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, DataT]):
+class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
-    value_fn: Callable[[UniFiController, DataT], datetime | float | str | None]
+    value_fn: Callable[[UniFiController, ApiItemT], datetime | float | str | None]
 
 
 @dataclass
 class UnifiSensorEntityDescription(
     SensorEntityDescription,
-    UnifiEntityDescription[HandlerT, DataT],
-    UnifiSensorEntityDescriptionMixin[HandlerT, DataT],
+    UnifiEntityDescription[HandlerT, ApiItemT],
+    UnifiSensorEntityDescriptionMixin[HandlerT, ApiItemT],
 ):
     """Class describing UniFi sensor entity."""
 
@@ -182,10 +182,10 @@ async def async_setup_entry(
     )
 
 
-class UnifiSensorEntity(UnifiEntity[HandlerT, DataT], SensorEntity):
+class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
     """Base representation of a UniFi sensor."""
 
-    entity_description: UnifiSensorEntityDescription[HandlerT, DataT]
+    entity_description: UnifiSensorEntityDescription[HandlerT, ApiItemT]
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

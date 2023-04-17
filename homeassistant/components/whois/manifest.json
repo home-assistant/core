@@ -1,11 +1,11 @@
 {
   "domain": "whois",
   "name": "Whois",
-  "documentation": "https://www.home-assistant.io/integrations/whois",
-  "requirements": ["whois==0.9.27"],
-  "config_flow": true,
   "codeowners": ["@frenck"],
-  "iot_class": "cloud_polling",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/whois",
   "integration_type": "service",
-  "loggers": ["whois"]
+  "iot_class": "cloud_polling",
+  "loggers": ["whois"],
+  "requirements": ["whois==0.9.27"]
 }

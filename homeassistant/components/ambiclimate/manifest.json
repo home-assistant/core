@@ -1,11 +1,11 @@
 {
   "domain": "ambiclimate",
   "name": "Ambiclimate",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/ambiclimate",
-  "requirements": ["ambiclimate==0.2.1"],
-  "dependencies": ["http"],
   "codeowners": ["@danielhiversen"],
+  "config_flow": true,
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/ambiclimate",
   "iot_class": "cloud_polling",
-  "loggers": ["ambiclimate"]
+  "loggers": ["ambiclimate"],
+  "requirements": ["ambiclimate==0.2.1"]
 }

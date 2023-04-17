@@ -63,7 +63,7 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
-    "hidden_by_before,hidden_by_after",
+    ("hidden_by_before", "hidden_by_after"),
     (
         (er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
         (None, er.RegistryEntryHider.INTEGRATION),

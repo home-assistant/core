@@ -5,12 +5,15 @@ from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, dashboard
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import VALID_NOISE_PSK
 
 
-async def test_new_info_reload_config_entries(hass, init_integration, mock_dashboard):
+async def test_new_info_reload_config_entries(
+    hass: HomeAssistant, init_integration, mock_dashboard
+) -> None:
     """Test config entries are reloaded when new info is set."""
     assert init_integration.state == ConfigEntryState.LOADED
 
@@ -28,8 +31,8 @@ async def test_new_info_reload_config_entries(hass, init_integration, mock_dashb
 
 
 async def test_new_dashboard_fix_reauth(
-    hass, mock_client, mock_config_entry, mock_dashboard
-):
+    hass: HomeAssistant, mock_client, mock_config_entry, mock_dashboard
+) -> None:
     """Test config entries waiting for reauth are triggered."""
     mock_client.device_info.side_effect = (
         InvalidAuthAPIError,
@@ -75,7 +78,7 @@ async def test_new_dashboard_fix_reauth(
     assert mock_config_entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
 
-async def test_dashboard_supports_update(hass, mock_dashboard):
+async def test_dashboard_supports_update(hass: HomeAssistant, mock_dashboard) -> None:
     """Test dashboard supports update."""
     dash = dashboard.async_get_dashboard(hass)
 

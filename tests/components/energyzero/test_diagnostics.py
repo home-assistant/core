@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 from energyzero import EnergyZeroNoDataError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.const import ATTR_ENTITY_ID
@@ -13,43 +14,28 @@ from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
+pytestmark = pytest.mark.freeze_time("2022-12-07 15:00:00")
 
-@pytest.mark.freeze_time("2022-12-07 15:00:00")
+
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, init_integration
-    ) == {
-        "entry": {
-            "title": "energy",
-        },
-        "energy": {
-            "current_hour_price": 0.49,
-            "next_hour_price": 0.55,
-            "average_price": 0.37,
-            "max_price": 0.55,
-            "min_price": 0.26,
-            "highest_price_time": "2022-12-07T16:00:00+00:00",
-            "lowest_price_time": "2022-12-07T02:00:00+00:00",
-            "percentage_of_max": 89.09,
-        },
-        "gas": {
-            "current_hour_price": 1.47,
-            "next_hour_price": 1.47,
-        },
-    }
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+        == snapshot
+    )
 
 
-@pytest.mark.freeze_time("2022-12-07 15:00:00")
 async def test_diagnostics_no_gas_today(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_energyzero: MagicMock,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics, no gas sensors available."""
     await async_setup_component(hass, "homeassistant", {})
@@ -63,24 +49,7 @@ async def test_diagnostics_no_gas_today(
     )
     await hass.async_block_till_done()
 
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, init_integration
-    ) == {
-        "entry": {
-            "title": "energy",
-        },
-        "energy": {
-            "current_hour_price": 0.49,
-            "next_hour_price": 0.55,
-            "average_price": 0.37,
-            "max_price": 0.55,
-            "min_price": 0.26,
-            "highest_price_time": "2022-12-07T16:00:00+00:00",
-            "lowest_price_time": "2022-12-07T02:00:00+00:00",
-            "percentage_of_max": 89.09,
-        },
-        "gas": {
-            "current_hour_price": None,
-            "next_hour_price": None,
-        },
-    }
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+        == snapshot
+    )

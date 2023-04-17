@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, create_autospec, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 from asyncsleepiq import (
     Side,
@@ -38,6 +38,15 @@ SLEEPIQ_CONFIG = {
     CONF_USERNAME: "user@email.com",
     CONF_PASSWORD: "password",
 }
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.sleepiq.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture

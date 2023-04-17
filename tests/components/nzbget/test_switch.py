@@ -7,13 +7,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import init_integration
 
 
-async def test_download_switch(hass, nzbget_api) -> None:
+async def test_download_switch(hass: HomeAssistant, nzbget_api) -> None:
     """Test the creation and values of the download switch."""
     instance = nzbget_api.return_value
 
@@ -41,7 +42,7 @@ async def test_download_switch(hass, nzbget_api) -> None:
     assert state.state == STATE_OFF
 
 
-async def test_download_switch_services(hass, nzbget_api) -> None:
+async def test_download_switch_services(hass: HomeAssistant, nzbget_api) -> None:
     """Test download switch services."""
     instance = nzbget_api.return_value
 

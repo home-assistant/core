@@ -8,11 +8,12 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.nuki.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
+from homeassistant.core import HomeAssistant
 
 from .mock import HOST, MAC, MOCK_INFO, NAME, setup_nuki_integration
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -48,7 +49,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +72,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -94,7 +95,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_exception(hass):
+async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -117,7 +118,7 @@ async def test_form_unknown_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
     await setup_nuki_integration(hass)
     result = await hass.config_entries.flow.async_init(
@@ -141,7 +142,7 @@ async def test_form_already_configured(hass):
         assert result2["reason"] == "already_configured"
 
 
-async def test_dhcp_flow(hass):
+async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Test that DHCP discovery for new bridge works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -180,7 +181,7 @@ async def test_dhcp_flow(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_flow_already_configured(hass):
+async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
     """Test that DHCP doesn't setup already configured devices."""
     await setup_nuki_integration(hass)
     result = await hass.config_entries.flow.async_init(
@@ -193,7 +194,7 @@ async def test_dhcp_flow_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth_success(hass):
+async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow."""
     entry = await setup_nuki_integration(hass)
 
@@ -221,7 +222,7 @@ async def test_reauth_success(hass):
         assert entry.data[CONF_TOKEN] == "new-token"
 
 
-async def test_reauth_invalid_auth(hass):
+async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow with invalid auth."""
     entry = await setup_nuki_integration(hass)
 
@@ -245,7 +246,7 @@ async def test_reauth_invalid_auth(hass):
         assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth_cannot_connect(hass):
+async def test_reauth_cannot_connect(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow with cannot connect."""
     entry = await setup_nuki_integration(hass)
 
@@ -269,7 +270,7 @@ async def test_reauth_cannot_connect(hass):
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth_unknown_exception(hass):
+async def test_reauth_unknown_exception(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow with an unknown exception."""
     entry = await setup_nuki_integration(hass)
 

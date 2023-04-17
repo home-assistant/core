@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import async_timeout
 from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
+from typing_extensions import Self
 
 from homeassistant import config_entries
 from homeassistant.components import network, ssdp
@@ -35,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 class YeelightScanner:
     """Scan for Yeelight devices."""
 
-    _scanner: YeelightScanner | None = None
+    _scanner: Self | None = None
 
     @classmethod
     @callback

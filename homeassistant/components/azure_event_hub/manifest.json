@@ -1,10 +1,10 @@
 {
   "domain": "azure_event_hub",
   "name": "Azure Event Hub",
-  "documentation": "https://www.home-assistant.io/integrations/azure_event_hub",
-  "requirements": ["azure-eventhub==5.11.1"],
   "codeowners": ["@eavanvalkenburg"],
-  "iot_class": "cloud_push",
   "config_flow": true,
-  "loggers": ["azure"]
+  "documentation": "https://www.home-assistant.io/integrations/azure_event_hub",
+  "iot_class": "cloud_push",
+  "loggers": ["azure"],
+  "requirements": ["azure-eventhub==5.11.1"]
 }

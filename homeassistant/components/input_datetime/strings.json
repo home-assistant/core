@@ -1,1 +1,38 @@
-{ "title": "Input datetime" }
+{
+  "title": "Input datetime",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::input_datetime::title%]",
+      "state_attributes": {
+        "day": {
+          "name": "Day"
+        },
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "hour": {
+          "name": "Hour"
+        },
+        "minute": {
+          "name": "Minute"
+        },
+        "month": {
+          "name": "Month"
+        },
+        "second": {
+          "name": "Second"
+        },
+        "timestamp": {
+          "name": "Timestamp"
+        },
+        "year": {
+          "name": "Year"
+        }
+      }
+    }
+  }
+}

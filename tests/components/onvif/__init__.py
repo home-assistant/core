@@ -6,7 +6,13 @@ from zeep.exceptions import Fault
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
 from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
-from homeassistant.components.onvif.models import Capabilities, DeviceInfo, Profile
+from homeassistant.components.onvif.models import (
+    Capabilities,
+    DeviceInfo,
+    Profile,
+    Resolution,
+    Video,
+)
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
 
 from tests.common import MockConfigEntry
@@ -100,7 +106,7 @@ def setup_mock_device(mock_device):
         index=0,
         token="dummy",
         name="profile1",
-        video=None,
+        video=Video("any", Resolution(640, 480)),
         ptz=None,
         video_source_token=None,
     )
@@ -120,7 +126,7 @@ async def setup_onvif_integration(
     unique_id=MAC,
     entry_id="1",
     source=config_entries.SOURCE_USER,
-):
+) -> tuple[MockConfigEntry, MagicMock, MagicMock]:
     """Create an ONVIF config entry."""
     if not config:
         config = {

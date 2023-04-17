@@ -1,12 +1,12 @@
 """The button tests for the august platform."""
-
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 
 from .mocks import _create_august_api_with_devices, _mock_lock_from_fixture
 
 
-async def test_wake_lock(hass):
+async def test_wake_lock(hass: HomeAssistant) -> None:
     """Test creation of a lock and wake it."""
     lock_one = await _mock_lock_from_fixture(
         hass, "get_lock.online_with_doorsense.json"

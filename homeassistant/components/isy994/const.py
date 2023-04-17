@@ -118,7 +118,6 @@ SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 # (they can turn off, and report their state)
 ISY_GROUP_PLATFORM = Platform.SWITCH
 
-ISY_CONF_NETWORKING = "Networking Module"
 ISY_CONF_UUID = "uuid"
 ISY_CONF_NAME = "name"
 ISY_CONF_MODEL = "model"
@@ -336,8 +335,8 @@ UOM_FRIENDLY_NAME = {
     "18": UnitOfLength.FEET,
     "19": UnitOfTime.HOURS,
     "20": UnitOfTime.HOURS,
-    "21": "%AH",
-    "22": "%RH",
+    "21": PERCENTAGE,
+    "22": PERCENTAGE,
     "23": UnitOfPressure.INHG,
     "24": UnitOfVolumetricFlux.INCHES_PER_HOUR,
     UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value

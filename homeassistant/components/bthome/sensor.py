@@ -23,6 +23,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -37,7 +38,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
@@ -117,7 +117,17 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.ENERGY}_{Units.ENERGY_KILO_WATT_HOUR}",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    # Gas (m3)
+    (
+        BTHomeSensorDeviceClass.GAS,
+        Units.VOLUME_CUBIC_METERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.GAS}_{Units.VOLUME_CUBIC_METERS}",
+        device_class=SensorDeviceClass.GAS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        state_class=SensorStateClass.TOTAL,
     ),
     # Humidity in (percent)
     (BTHomeSensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
@@ -286,6 +296,16 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.VOLUME_FLOW_RATE}_{Units.VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Water (L)
+    (
+        BTHomeSensorDeviceClass.WATER,
+        Units.VOLUME_LITERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.WATER}_{Units.VOLUME_LITERS}",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.TOTAL,
     ),
 }
 

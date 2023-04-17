@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import queue
-from ssl import PROTOCOL_TLS, SSLContext, SSLError
+from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import Any
 
@@ -28,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
     FileSelector,
@@ -44,9 +44,9 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .client import MqttClientSetup
-from .config_integration import CONFIG_SCHEMA_ENTRY
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -368,7 +368,6 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 updated_config = {}
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
-                CONFIG_SCHEMA_ENTRY(updated_config)
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=updated_config,
@@ -587,7 +586,7 @@ async def async_get_broker_settings(
         current_user = user_input_basic.get(CONF_USERNAME)
         current_pass = user_input_basic.get(CONF_PASSWORD)
     else:
-        # Get default settings from entry or yaml (if any)
+        # Get default settings from entry (if any)
         current_broker = current_config.get(CONF_BROKER)
         current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
         current_user = current_config.get(CONF_USERNAME)
@@ -788,7 +787,7 @@ def check_certicate_chain() -> str | None:
         except (TypeError, ValueError):
             return "bad_client_key"
     # Check the certificate chain
-    context = SSLContext(PROTOCOL_TLS)
+    context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:
         try:
             context.load_cert_chain(client_certificate, private_key)

@@ -91,7 +91,9 @@ class ComedHourlyPricingSensor(SensorEntity):
 
     _attr_attribution = "Data provided by ComEd Hourly Pricing service"
 
-    def __init__(self, websession, offset, name, description: SensorEntityDescription):
+    def __init__(
+        self, websession, offset, name, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.websession = websession

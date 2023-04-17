@@ -1,10 +1,12 @@
 {
   "domain": "litejet",
   "name": "LiteJet",
-  "documentation": "https://www.home-assistant.io/integrations/litejet",
-  "requirements": ["pylitejet==0.5.0"],
   "codeowners": ["@joncar"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/litejet",
+  "integration_type": "hub",
   "iot_class": "local_push",
-  "loggers": ["pylitejet"]
+  "loggers": ["pylitejet"],
+  "quality_scale": "platinum",
+  "requirements": ["pylitejet==0.5.0"]
 }

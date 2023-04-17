@@ -1,5 +1,4 @@
 """Make sure that existing Koogeek LS1 support isn't broken."""
-
 from datetime import timedelta
 from unittest import mock
 
@@ -8,7 +7,8 @@ from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakePairing
 import pytest
 
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from ..common import (
@@ -26,7 +26,7 @@ from tests.common import async_fire_time_changed
 LIGHT_ON = ("lightbulb", "on")
 
 
-async def test_koogeek_ls1_setup(hass):
+async def test_koogeek_ls1_setup(hass: HomeAssistant) -> None:
     """Test that a Koogeek LS1 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
     await setup_test_accessories(hass, accessories)
@@ -64,7 +64,7 @@ async def test_koogeek_ls1_setup(hass):
 
 
 @pytest.mark.parametrize("failure_cls", [AccessoryDisconnectedError, EncryptionError])
-async def test_recover_from_failure(hass, utcnow, failure_cls):
+async def test_recover_from_failure(hass: HomeAssistant, utcnow, failure_cls) -> None:
     """Test that entity actually recovers from a network connection drop.
 
     See https://github.com/home-assistant/core/issues/18949

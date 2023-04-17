@@ -1,6 +1,7 @@
 """Test the Melnor sensors."""
-
 from __future__ import annotations
+
+from homeassistant.core import HomeAssistant
 
 from .conftest import (
     mock_config_entry,
@@ -10,7 +11,7 @@ from .conftest import (
 )
 
 
-async def test_manual_watering_minutes(hass):
+async def test_manual_watering_minutes(hass: HomeAssistant) -> None:
     """Test the manual watering switch."""
 
     entry = mock_config_entry(hass)

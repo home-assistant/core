@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.select import (
@@ -155,7 +156,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         InputSelectStore(
             hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
         ),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -167,7 +167,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
@@ -231,7 +231,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class InputSelectStorageCollection(collection.StorageCollection):
+class InputSelectStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_select))
@@ -246,11 +246,11 @@ class InputSelectStorageCollection(collection.StorageCollection):
         return cast(str, info[CONF_NAME])
 
     async def _update_data(
-        self, data: dict[str, Any], update_data: dict[str, Any]
+        self, item: dict[str, Any], update_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
-        return {CONF_ID: data[CONF_ID]} | update_data
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
 class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
@@ -268,14 +268,14 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> InputSelect:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_select = cls(config)
         input_select.editable = True
         return input_select
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> InputSelect:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

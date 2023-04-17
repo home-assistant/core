@@ -1,5 +1,4 @@
 """The tests for the calendar component."""
-
 from __future__ import annotations
 
 from datetime import timedelta
@@ -16,8 +15,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-async def test_events_http_api(hass, hass_client):
+
+async def test_events_http_api(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the calendar demo view."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -25,16 +28,16 @@ async def test_events_http_api(hass, hass_client):
     start = dt_util.now()
     end = start + timedelta(days=1)
     response = await client.get(
-        "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-            start.isoformat(), end.isoformat()
-        )
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
     )
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert events[0]["summary"] == "Future Event"
 
 
-async def test_events_http_api_missing_fields(hass, hass_client):
+async def test_events_http_api_missing_fields(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the calendar demo view."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -43,7 +46,9 @@ async def test_events_http_api_missing_fields(hass, hass_client):
     assert response.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_events_http_api_error(hass, hass_client):
+async def test_events_http_api_error(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the calendar demo view."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -56,15 +61,30 @@ async def test_events_http_api_error(hass, hass_client):
         side_effect=HomeAssistantError("Failure"),
     ):
         response = await client.get(
-            "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-                start.isoformat(), end.isoformat()
-            )
+            f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
         )
         assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
         assert await response.json() == {"message": "Error reading events: Failure"}
 
 
-async def test_calendars_http_api(hass, hass_client):
+async def test_events_http_api_dates_wrong_order(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the calendar demo view."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+    client = await hass_client()
+    start = dt_util.now()
+    end = start + timedelta(days=-1)
+    response = await client.get(
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_calendars_http_api(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the calendar demo view."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -79,7 +99,7 @@ async def test_calendars_http_api(hass, hass_client):
 
 
 @pytest.mark.parametrize(
-    "payload,code",
+    ("payload", "code"),
     [
         (
             {
@@ -149,7 +169,9 @@ async def test_calendars_http_api(hass, hass_client):
         ),
     ],
 )
-async def test_unsupported_websocket(hass, hass_ws_client, payload, code):
+async def test_unsupported_websocket(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, payload, code
+) -> None:
     """Test unsupported websocket command."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -166,7 +188,7 @@ async def test_unsupported_websocket(hass, hass_ws_client, payload, code):
     assert resp["error"].get("code") == code
 
 
-async def test_unsupported_create_event_service(hass):
+async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     """Test unsupported service call."""
 
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
@@ -187,7 +209,7 @@ async def test_unsupported_create_event_service(hass):
 
 
 @pytest.mark.parametrize(
-    "date_fields,expected_error,error_match",
+    ("date_fields", "expected_error", "error_match"),
     [
         (
             {},
@@ -288,6 +310,38 @@ async def test_unsupported_create_event_service(hass):
             vol.error.MultipleInvalid,
             "must contain at most one of start_date, start_date_time, in.",
         ),
+        (
+            {
+                "start_date_time": "2022-04-01T06:00:00+00:00",
+                "end_date_time": "2022-04-01T07:00:00+01:00",
+            },
+            vol.error.MultipleInvalid,
+            "Expected all values to have the same timezone",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T07:00:00",
+                "end_date_time": "2022-04-01T06:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "Expected minimum event duration",
+        ),
+        (
+            {
+                "start_date": "2022-04-02",
+                "end_date": "2022-04-01",
+            },
+            vol.error.MultipleInvalid,
+            "Expected minimum event duration",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "end_date": "2022-04-01",
+            },
+            vol.error.MultipleInvalid,
+            "Expected minimum event duration",
+        ),
     ],
     ids=[
         "missing_all",
@@ -302,6 +356,10 @@ async def test_unsupported_create_event_service(hass):
         "multiple_in",
         "unexpected_in_with_date",
         "unexpected_in_with_datetime",
+        "inconsistent_timezone",
+        "incorrect_date_order",
+        "incorrect_datetime_order",
+        "dates_not_exclusive",
     ],
 )
 async def test_create_event_service_invalid_params(

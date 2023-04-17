@@ -79,17 +79,22 @@ async def async_setup_platform(
     )
 
 
+_FuncType = Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
+_ReturnFuncType = Callable[
+    Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]
+]
+
+
 def catch_request_errors() -> (
     Callable[
-        [Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]],
-        Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]],
+        [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
     ]
 ):
     """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(
-        func: Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]
-    ) -> Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]]:
+        func: _FuncType[_OpenhomeDeviceT, _P, _R]
+    ) -> _ReturnFuncType[_OpenhomeDeviceT, _P, _R]:
         """Call wrapper for decorator."""
 
         @functools.wraps(func)
@@ -206,7 +211,7 @@ class OpenhomeDevice(MediaPlayerEntity):
 
     @catch_request_errors()
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         if media_source.is_media_source_id(media_id):
@@ -342,7 +347,9 @@ class OpenhomeDevice(MediaPlayerEntity):
         await self._device.set_mute(mute)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

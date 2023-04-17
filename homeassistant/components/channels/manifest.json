@@ -1,9 +1,9 @@
 {
   "domain": "channels",
   "name": "Channels",
-  "documentation": "https://www.home-assistant.io/integrations/channels",
-  "requirements": ["pychannels==1.2.3"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/channels",
   "iot_class": "local_polling",
-  "loggers": ["pychannels"]
+  "loggers": ["pychannels"],
+  "requirements": ["pychannels==1.2.3"]
 }

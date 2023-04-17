@@ -3,11 +3,15 @@ import asyncio
 
 from homeassistant.components.kmtronic.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_unload_config_entry(hass, aioclient_mock):
+async def test_unload_config_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test entry unloading."""
 
     config_entry = MockConfigEntry(
@@ -35,7 +39,9 @@ async def test_unload_config_entry(hass, aioclient_mock):
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_config_entry_not_ready(hass, aioclient_mock):
+async def test_config_entry_not_ready(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Tests configuration entry not ready."""
 
     aioclient_mock.get(

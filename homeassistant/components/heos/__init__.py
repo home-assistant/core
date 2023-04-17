@@ -392,7 +392,7 @@ class SourceManager:
         *,
         retry_delay: int = COMMAND_RETRY_DELAY,
         max_retry_attempts: int = COMMAND_RETRY_ATTEMPTS,
-    ):
+    ) -> None:
         """Init input manager."""
         self.retry_delay = retry_delay
         self.max_retry_attempts = max_retry_attempts

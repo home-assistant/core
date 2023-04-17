@@ -114,6 +114,10 @@ tests: &tests
   - tests/auth/**
   - tests/backports/**
   - tests/common.py
+  - tests/components/history/**
+  - tests/components/logbook/**
+  - tests/components/recorder/**
+  - tests/components/sensor/**
   - tests/conftest.py
   - tests/hassfest/**
   - tests/helpers/**
@@ -121,6 +125,7 @@ tests: &tests
   - tests/mock/**
   - tests/pylint/**
   - tests/scripts/**
+  - tests/syrupy.py
   - tests/test_util/**
   - tests/testing_config/**
   - tests/util/**
