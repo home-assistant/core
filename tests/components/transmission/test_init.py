@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from transmission_rpc.error import TransmissionError
+from transmission_rpc.error import TransmissionAuthError, TransmissionConnectError
 
 from homeassistant.components.transmission.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -40,7 +40,7 @@ async def test_setup_failed_connection_error(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
 
-    mock_api.side_effect = TransmissionError("111: Connection refused")
+    mock_api.side_effect = TransmissionConnectError()
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.SETUP_RETRY
@@ -54,7 +54,7 @@ async def test_setup_failed_auth_error(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
 
-    mock_api.side_effect = TransmissionError("401: Unauthorized")
+    mock_api.side_effect = TransmissionAuthError()
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.SETUP_ERROR
