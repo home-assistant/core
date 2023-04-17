@@ -18,10 +18,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
+from .const import HOME_ASSISTANT_AGENT
 from .default_agent import DefaultAgent
 
 __all__ = [
     "DOMAIN",
+    "HOME_ASSISTANT_AGENT",
     "async_converse",
     "async_get_agent_info",
     "async_set_agent",
@@ -333,8 +335,6 @@ async def async_converse(
 class AgentManager:
     """Class to manage conversation agents."""
 
-    HOME_ASSISTANT_AGENT = "homeassistant"
-
     default_agent: str = HOME_ASSISTANT_AGENT
     _builtin_agent: AbstractConversationAgent | None = None
 
@@ -351,7 +351,7 @@ class AgentManager:
         if agent_id is None:
             agent_id = self.default_agent
 
-        if agent_id == AgentManager.HOME_ASSISTANT_AGENT:
+        if agent_id == HOME_ASSISTANT_AGENT:
             if self._builtin_agent is not None:
                 return self._builtin_agent
 
@@ -376,7 +376,7 @@ class AgentManager:
         """List all agents."""
         agents: list[AgentInfo] = [
             {
-                "id": AgentManager.HOME_ASSISTANT_AGENT,
+                "id": HOME_ASSISTANT_AGENT,
                 "name": "Home Assistant",
             }
         ]
@@ -401,18 +401,18 @@ class AgentManager:
     @core.callback
     def async_is_valid_agent_id(self, agent_id: str) -> bool:
         """Check if the agent id is valid."""
-        return agent_id in self._agents or agent_id == AgentManager.HOME_ASSISTANT_AGENT
+        return agent_id in self._agents or agent_id == HOME_ASSISTANT_AGENT
 
     @core.callback
     def async_set_agent(self, agent_id: str, agent: AbstractConversationAgent) -> None:
         """Set the agent."""
         self._agents[agent_id] = agent
-        if self.default_agent == AgentManager.HOME_ASSISTANT_AGENT:
+        if self.default_agent == HOME_ASSISTANT_AGENT:
             self.default_agent = agent_id
 
     @core.callback
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
         if self.default_agent == agent_id:
-            self.default_agent = AgentManager.HOME_ASSISTANT_AGENT
+            self.default_agent = HOME_ASSISTANT_AGENT
         self._agents.pop(agent_id, None)

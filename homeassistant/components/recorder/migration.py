@@ -48,6 +48,7 @@ from .const import SupportedDialect
 from .db_schema import (
     CONTEXT_ID_BIN_MAX_LENGTH,
     DOUBLE_PRECISION_TYPE_SQL,
+    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
     LEGACY_STATES_EVENT_ID_INDEX,
     MYSQL_COLLATE,
     MYSQL_DEFAULT_CHARSET,
@@ -1263,7 +1264,7 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE events SET "
                         "time_fired_ts= "
-                        "(case when time_fired is NULL then 0 else EXTRACT(EPOCH FROM time_fired) end) "
+                        "(case when time_fired is NULL then 0 else EXTRACT(EPOCH FROM time_fired::timestamptz) end) "
                         "WHERE event_id IN ( "
                         "SELECT event_id FROM events where time_fired_ts is NULL LIMIT 250000 "
                         " );"
@@ -1275,8 +1276,8 @@ def _migrate_columns_to_timestamp(
                 result = session.connection().execute(
                     text(
                         "UPDATE states set last_updated_ts="
-                        "(case when last_updated is NULL then 0 else EXTRACT(EPOCH FROM last_updated) end), "
-                        "last_changed_ts=EXTRACT(EPOCH FROM last_changed) "
+                        "(case when last_updated is NULL then 0 else EXTRACT(EPOCH FROM last_updated::timestamptz) end), "
+                        "last_changed_ts=EXTRACT(EPOCH FROM last_changed::timestamptz) "
                         "where state_id IN ( "
                         "SELECT state_id FROM states where last_updated_ts is NULL LIMIT 250000 "
                         " );"
@@ -1343,12 +1344,12 @@ def _migrate_statistics_columns_to_timestamp(
                     result = session.connection().execute(
                         text(
                             f"UPDATE {table} set start_ts="  # nosec
-                            "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start) end), "
-                            "created_ts=EXTRACT(EPOCH FROM created), "
-                            "last_reset_ts=EXTRACT(EPOCH FROM last_reset) "
-                            "where id IN ( "
-                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000 "
-                            " );"
+                            "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start::timestamptz) end), "
+                            "created_ts=EXTRACT(EPOCH FROM created::timestamptz), "
+                            "last_reset_ts=EXTRACT(EPOCH FROM last_reset::timestamptz) "
+                            "where id IN ("
+                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000"
+                            ");"
                         )
                     )
 
@@ -1586,7 +1587,7 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
 
     if is_done:
         # Drop the old indexes since they are no longer needed
-        _drop_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
+        _drop_index(session_maker, "states", LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX)
 
     _LOGGER.debug("Cleanup legacy entity_ids done=%s", is_done)
     return is_done

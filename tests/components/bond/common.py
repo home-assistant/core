@@ -127,7 +127,12 @@ def patch_bond_version(
         return nullcontext()
 
     if return_value is None:
-        return_value = {"bondid": "ZXXX12345"}
+        return_value = {
+            "bondid": "ZXXX12345",
+            "target": "test-model",
+            "fw_ver": "test-version",
+            "mcu_ver": "test-hw-version",
+        }
 
     return patch(
         "homeassistant.components.bond.Bond.version",
