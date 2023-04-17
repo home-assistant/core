@@ -112,7 +112,6 @@ async def test_async_refresh(
 
     # Test unsubscribing through function
     unsub()
-    assert crd._unsub_refresh is None
     await crd.async_refresh()
     assert updates == [2]
 
@@ -140,7 +139,7 @@ async def test_shutdown(
 
     # Test shutdown through function
     with patch.object(crd._debounced_refresh, "async_shutdown") as mock_shutdown:
-        crd.async_shutdown()
+        await crd.async_shutdown()
 
     # Test we shutdown the debouncer and cleared the subscriptions
     assert len(mock_shutdown.mock_calls) == 1

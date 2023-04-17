@@ -130,7 +130,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator: Coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.async_cleanup_and_shutdown()
+        await coordinator.async_shutdown()
 
     return unload_ok
 
@@ -295,12 +295,12 @@ class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
 
         return result
 
-    async def async_cleanup_and_shutdown(self) -> None:
+    async def async_shutdown(self) -> None:
         """Make sure a coordinator is shut down as well as it's connection."""
         if self.task:
             self.task.cancel()
             await asyncio.wait((self.task,))
-        self.async_shutdown()
+        await super().async_shutdown()
         await self.connection.stop()
 
 
