@@ -10,7 +10,7 @@ from .const import _LOGGER
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.info("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1:
         config_entry.version = 2
@@ -35,7 +35,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the config entry."""
 
-    _LOGGER.warning("==> Running async_setup_entry from pjlink__init__")
+    _LOGGER.debug("==> Running async_setup_entry from pjlink__init__")
 
     await hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(

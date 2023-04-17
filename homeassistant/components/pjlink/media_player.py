@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -17,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -134,7 +136,7 @@ class PjLinkDevice(MediaPlayerEntity):
 
     def __init__(self, host, port, name, encoding, password, unique_id):
         """Iinitialize the PJLink device."""
-        _LOGGER.debug("===> Initializing PjLinkDevice <===")
+        _LOGGER.debug("===> Initializing PjLinkDevice unique_id: %s <===", unique_id)
         self._host = host
         self._port = port
         self._password = password
@@ -146,6 +148,8 @@ class PjLinkDevice(MediaPlayerEntity):
         self._attr_source = None
         self._attr_source_list = []
         self._attr_available = False
+        self._manufacturer = None
+        self._model = None
         self._unique_id = unique_id
 
     def _force_off(self):
@@ -158,6 +162,10 @@ class PjLinkDevice(MediaPlayerEntity):
             with self.projector() as projector:
                 if not self._attr_name:
                     self._attr_name = projector.get_name()
+                if not self._manufacturer:
+                    self._manufacturer = projector.get_manufacturer()
+                if not self._model:
+                    self._model = projector.get_product_name()
                 inputs = projector.get_inputs()
         except ProjectorError as err:
             if str(err) == ERR_PROJECTOR_UNAVAILABLE:
@@ -232,3 +240,49 @@ class PjLinkDevice(MediaPlayerEntity):
         source = self._source_name_mapping[source]
         with self.projector() as projector:
             projector.set_input(*source)
+
+    @property
+    def device_class(self) -> MediaPlayerDeviceClass:
+        """Return the class of this device."""
+        return MediaPlayerDeviceClass.TV
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Device info to create a device."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": self.manufacturer,
+            "model": self.model,
+            "via_device": (DOMAIN, self.unique_id),
+        }
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the device."""
+        return self._attr_name
+
+    @property
+    def manufacturer(self) -> str | None:
+        """Return the manufacturer of the device."""
+        return self._manufacturer
+
+    @property
+    def model(self):
+        """Return the model of the device."""
+        return self._model
+
+    @property
+    def state(self) -> MediaPlayerState | None:
+        """Return the state of the player."""
+        return self._attr_state
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        return self._attr_supported_features
+
+    @property
+    def unique_id(self) -> str:
+        """The unique ID for this device."""
+        return self._unique_id

@@ -9,7 +9,6 @@ from homeassistant.components.pjlink.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
 
 NO_AUTH_RESPONSE = "PJLINK 0\r"
 
@@ -47,7 +46,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     mock_user_input_data = {
         "host": "1.2.3.4",
         "port": 1234,
-        "name": "new thing",
+        "name": "New PJLink Projector",
     }
 
     with patch.object(
@@ -63,9 +62,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         "encoding": "utf-8",
         "host": "1.2.3.4",
         "port": 1234,
-        "name": "new thing",
+        "name": "New PJLink Projector",
     }
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("media_player.new_thing")
-    assert entry.unique_id == entry.config_entry_id
+    result["result"]
+    assert result["result"].entry_id is not None
+    assert result["result"].entry_id == "something"
