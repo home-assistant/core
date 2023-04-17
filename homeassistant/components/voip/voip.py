@@ -15,10 +15,13 @@ from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
     async_pipeline_from_audio_stream,
+    select as pipeline_select,
 )
 from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from .devices import VoIPDevice, VoIPDevices
@@ -151,7 +154,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                         channel=stt.AudioChannels.CHANNEL_MONO,
                     ),
                     stt_stream=stt_stream(),
-                    language=self.language,
+                    pipeline_id=pipeline_select.get_chosen_pipeline(
+                        self.hass, DOMAIN, self.voip_device.voip_id
+                    ),
                     conversation_id=self._conversation_id,
                     tts_options={tts.ATTR_AUDIO_OUTPUT: "raw"},
                 )

@@ -19,6 +19,7 @@ from .voip import HassVoipDatagramProtocol
 
 PLATFORMS = (
     Platform.BINARY_SENSOR,
+    Platform.SELECT,
     Platform.SWITCH,
 )
 _LOGGER = logging.getLogger(__name__)
