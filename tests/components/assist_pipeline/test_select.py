@@ -82,7 +82,11 @@ async def test_select_entity_changing_pipelines(
     state = hass.states.get("select.assist_pipeline_test_pipeline")
     assert state is not None
     assert state.state == "preferred"
-    assert state.attributes["options"] == ["preferred", pipeline_1.name]
+    assert state.attributes["options"] == [
+        "preferred",
+        pipeline_1.name,
+        pipeline_2.name,
+    ]
 
     # Change select to new pipeline
     await hass.services.async_call(
