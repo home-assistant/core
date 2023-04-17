@@ -364,9 +364,11 @@ class Recorder(threading.Thread):
     @callback
     def _reached_max_backlog(self, percentage: float | None = None) -> bool:
         """Check if the system has reached the max queue backlog and return the maximum if it has."""
+        if percentage is None:
+            percentage = 100.0
         current_backlog = self.backlog
         # First check the minimum value since its cheap
-        if current_backlog < MAX_QUEUE_BACKLOG_MIN_VALUE:
+        if current_backlog < (MAX_QUEUE_BACKLOG_MIN_VALUE * percentage):
             return False
         # If they have more RAM available, keep filling the backlog
         # since we do not want to stop recording events or give the
@@ -379,7 +381,7 @@ class Recorder(threading.Thread):
             * (available / ESTIMATED_QUEUE_ITEM_SIZE)
         )
         self.max_backlog = max(max_queue_backlog, MAX_QUEUE_BACKLOG_MIN_VALUE)
-        if current_backlog < max_queue_backlog:
+        if current_backlog < (max_queue_backlog * percentage):
             return False
         return True
 
@@ -979,7 +981,7 @@ class Recorder(threading.Thread):
                         "length while waiting for backup to finish; recorder will now "
                         "resume writing to database. The backup cannot be trusted and "
                         "must be restarted",
-                        self.backlog,
+                        int(self.backlog * 0.90),
                     )
                     task.queue_overflow = True
                     break
