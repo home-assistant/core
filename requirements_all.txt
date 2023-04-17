@@ -2222,6 +2222,9 @@ radiotherm==2.1.0
 # homeassistant.components.raincloud
 raincloudy==0.0.7
 
+# homeassistant.components.rapt_ble
+rapt-ble==0.1.0
+
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
 
