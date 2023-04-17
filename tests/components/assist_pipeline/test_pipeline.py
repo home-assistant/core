@@ -5,6 +5,7 @@ from homeassistant.components.assist_pipeline.const import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
+    PipelineData,
     PipelineStorageCollection,
 )
 from homeassistant.core import HomeAssistant
@@ -42,7 +43,8 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
     ]
     pipeline_ids = []
 
-    store1: PipelineStorageCollection = hass.data[DOMAIN]
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store1 = pipeline_data.pipeline_store
     for pipeline in pipelines:
         pipeline_ids.append((await store1.async_create_item(pipeline)).id)
     assert len(store1.data) == 3
@@ -103,6 +105,7 @@ async def test_loading_datasets_from_storage(
 
     assert await async_setup_component(hass, "assist_pipeline", {})
 
-    store: PipelineStorageCollection = hass.data[DOMAIN]
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
     assert len(store.data) == 3
     assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"
