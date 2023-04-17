@@ -39,11 +39,11 @@ STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS = {
-    vol.Optional("conversation_engine", default=None): vol.In([str, None]),
+    vol.Optional("conversation_engine", default=None): vol.Any(str, None),
     vol.Required("language"): str,
     vol.Required("name"): str,
-    vol.Optional("stt_engine", default=None): vol.In([str, None]),
-    vol.Optional("tts_engine", default=None): vol.In([str, None]),
+    vol.Optional("stt_engine", default=None): vol.Any(str, None),
+    vol.Optional("tts_engine", default=None): vol.Any(str, None),
 }
 
 SAVE_DELAY = 10
