@@ -53,7 +53,7 @@ async def test_text_only_pipeline(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] == {}
+    assert msg["event"]["data"] is None
 
 
 async def test_audio_pipeline(
@@ -118,7 +118,7 @@ async def test_audio_pipeline(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] == {}
+    assert msg["event"]["data"] is None
 
 
 async def test_intent_timeout(
