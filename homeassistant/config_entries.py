@@ -310,7 +310,7 @@ class ConfigEntry:
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
-        # Hold list for functions to call on unload.
+        # Hold list for actions to call on unload.
         self._on_unload: list[
             Callable[[], Coroutine[Any, Any, None] | None]
         ] | None = None
