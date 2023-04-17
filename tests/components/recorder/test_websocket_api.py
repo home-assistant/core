@@ -2204,6 +2204,8 @@ async def test_recorder_info_migration_queue_exhausted(
         new=create_engine_test,
     ), patch.object(
         recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1
+    ), patch.object(
+        recorder.core, "ESTIMATED_QUEUE_ITEM_SIZE", 2**64
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
         wraps=stalled_migration,

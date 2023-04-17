@@ -450,7 +450,7 @@ async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
 
     await async_wait_recording_done(hass)
 
-    with patch.object(instance, "db_retry_wait", 0.05), patch.object(
+    with patch.object(instance, "db_retry_wait", 0.01), patch.object(
         instance.event_session,
         "flush",
         side_effect=OperationalError(
@@ -1757,7 +1757,7 @@ async def test_database_lock_and_unlock(
 
     # Recording can't be finished while lock is held
     with pytest.raises(asyncio.TimeoutError):
-        await asyncio.wait_for(asyncio.shield(task), timeout=1)
+        await asyncio.wait_for(asyncio.shield(task), timeout=0.25)
         db_events = await hass.async_add_executor_job(_get_db_events)
         assert len(db_events) == 0
 
@@ -1787,10 +1787,6 @@ async def test_database_lock_and_overflow(
         recorder.CONF_COMMIT_INTERVAL: 0,
         recorder.CONF_DB_URL: recorder_db_url,
     }
-    await async_setup_recorder_instance(hass, config)
-    await hass.async_block_till_done()
-    event_type = "EVENT_TEST"
-    event_types = (event_type,)
 
     def _get_db_events():
         with session_scope(hass=hass, read_only=True) as session:
@@ -1800,11 +1796,16 @@ async def test_database_lock_and_overflow(
                 )
             )
 
-    instance = get_instance(hass)
-
     with patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
         recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.01
-    ):
+    ), patch.object(recorder.core, "ESTIMATED_QUEUE_ITEM_SIZE", 2**64):
+        await async_setup_recorder_instance(hass, config)
+        await hass.async_block_till_done()
+        event_type = "EVENT_TEST"
+        event_types = (event_type,)
+
+        instance = get_instance(hass)
+
         await instance.lock_database()
 
         event_data = {"test_attr": 5, "test_attr_10": "nice"}
