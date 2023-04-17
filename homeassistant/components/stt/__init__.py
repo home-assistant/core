@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, language as language_util
 
 from .const import (
     DATA_PROVIDERS,
@@ -189,9 +189,18 @@ class SpeechToTextEntity(RestoreEntity):
     @callback
     def check_metadata(self, metadata: SpeechMetadata) -> bool:
         """Check if given metadata supported by this provider."""
+        if metadata.language not in self.supported_languages:
+            language_matches = language_util.matches(
+                metadata.language,
+                self.supported_languages,
+            )
+            if language_matches:
+                metadata.language = language_matches[0]
+            else:
+                return False
+
         if (
-            metadata.language not in self.supported_languages
-            or metadata.format not in self.supported_formats
+            metadata.format not in self.supported_formats
             or metadata.codec not in self.supported_codecs
             or metadata.bit_rate not in self.supported_bit_rates
             or metadata.sample_rate not in self.supported_sample_rates

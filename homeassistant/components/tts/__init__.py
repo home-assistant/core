@@ -46,6 +46,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util import language as language_util
 from homeassistant.util.network import normalize_url
 from homeassistant.util.yaml import load_yaml
 
@@ -415,12 +416,19 @@ class SpeechManager:
 
         # Languages
         language = language or provider.default_language
-        if (
-            language is None
-            or provider.supported_languages is None
-            or language not in provider.supported_languages
-        ):
+
+        if language is None or provider.supported_languages is None:
             raise HomeAssistantError(f"Not supported language {language}")
+
+        if language not in provider.supported_languages:
+            language_matches = language_util.matches(
+                language, provider.supported_languages
+            )
+            if language_matches:
+                # Choose best match
+                language = language_matches[0]
+            else:
+                raise HomeAssistantError(f"Not supported language {language}")
 
         # Options
         if (default_options := provider.default_options) and options:

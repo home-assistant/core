@@ -3,8 +3,8 @@
   list([
     dict({
       'data': dict({
-        'language': 'en-US',
-        'pipeline': 'en-US',
+        'language': 'en',
+        'pipeline': 'en',
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -47,7 +47,7 @@
             'data': dict({
               'code': 'no_intent_match',
             }),
-            'language': 'en-US',
+            'language': 'en',
             'response_type': 'error',
             'speech': dict({
               'plain': dict({
@@ -70,7 +70,7 @@
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US",
+          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en",
           'mime_type': 'audio/mpeg',
           'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
         }),

@@ -55,10 +55,6 @@ async def async_pipeline_from_audio_stream(
     if language is None:
         language = hass.config.language
 
-    # Temporary workaround for language codes
-    if language == "en":
-        language = "en-US"
-
     if stt_metadata.language == "":
         stt_metadata.language = language
 
