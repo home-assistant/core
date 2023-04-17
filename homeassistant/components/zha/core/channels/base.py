@@ -49,8 +49,8 @@ _LOGGER = logging.getLogger(__name__)
 class AttrReportConfig(TypedDict, total=True):
     """Configuration to report for the attributes."""
 
-    # Could be either an attribute name or attribute id
-    attr: str | int
+    # An attribute name
+    attr: str
     # The config for the attribute reporting configuration consists of a tuple for
     # (minimum_reported_time_interval_s, maximum_reported_time_interval_s, value_delta)
     config: tuple[int, int, int | float]
@@ -130,15 +130,13 @@ class ZigbeeChannel(LogMixin):
         unique_id = ch_pool.unique_id.replace("-", ":")
         self._unique_id = f"{unique_id}:0x{cluster.cluster_id:04x}"
         if not hasattr(self, "_value_attribute") and self.REPORT_CONFIG:
-            attr = self.REPORT_CONFIG[0].get("attr")
-            if isinstance(attr, str):
-                attribute: ZCLAttributeDef = self.cluster.attributes_by_name.get(attr)
-                if attribute is not None:
-                    self.value_attribute = attribute.id
-                else:
-                    self.value_attribute = None
+            attr_def: ZCLAttributeDef | None = self.cluster.attributes_by_name.get(
+                self.REPORT_CONFIG[0]["attr"]
+            )
+            if attr_def is not None:
+                self.value_attribute = attr_def.id
             else:
-                self.value_attribute = attr
+                self.value_attribute = None
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
         self.data_cache: dict[str, Enum] = {}
@@ -233,7 +231,12 @@ class ZigbeeChannel(LogMixin):
 
         for attr_report in self.REPORT_CONFIG:
             attr, config = attr_report["attr"], attr_report["config"]
-            attr_name = self.cluster.attributes.get(attr, [attr])[0]
+
+            try:
+                attr_name = self.cluster.find_attribute(attr).name
+            except KeyError:
+                attr_name = attr
+
             event_data[attr_name] = {
                 "min": config[0],
                 "max": config[1],
@@ -282,7 +285,7 @@ class ZigbeeChannel(LogMixin):
         )
 
     def _configure_reporting_status(
-        self, attrs: dict[int | str, tuple[int, int, float | int]], res: list | tuple
+        self, attrs: dict[str, tuple[int, int, float | int]], res: list | tuple
     ) -> None:
         """Parse configure reporting result."""
         if isinstance(res, (Exception, ConfigureReportingResponseRecord)):
@@ -304,14 +307,14 @@ class ZigbeeChannel(LogMixin):
             return
 
         failed = [
-            self.cluster.attributes.get(r.attrid, [r.attrid])[0]
-            for r in res
-            if r.status != Status.SUCCESS
+            self.cluster.find_attribute(record.attrid).name
+            for record in res
+            if record.status != Status.SUCCESS
         ]
-        attributes = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
+
         self.debug(
             "Successfully configured reporting for '%s' on '%s' cluster",
-            attributes - set(failed),
+            set(attrs) - set(failed),
             self.name,
         )
         self.debug(
