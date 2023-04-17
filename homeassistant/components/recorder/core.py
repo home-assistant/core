@@ -348,7 +348,7 @@ class Recorder(threading.Thread):
         """
         size = self.backlog
         _LOGGER.debug("Recorder queue size is: %s", size)
-        if not self._reached_max_backlog_percentage(100.0):
+        if not self._reached_max_backlog_percentage(100):
             return
         _LOGGER.error(
             (
@@ -976,10 +976,11 @@ class Recorder(threading.Thread):
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
                 if self._reached_max_backlog_percentage(90):
                     _LOGGER.warning(
-                        "Database queue backlog reached more than 90% (%s events) of maximum queue "
+                        "Database queue backlog reached more than %s (%s events) of maximum queue "
                         "length while waiting for backup to finish; recorder will now "
                         "resume writing to database. The backup cannot be trusted and "
                         "must be restarted",
+                        "90%",
                         self.backlog,
                     )
                     task.queue_overflow = True
