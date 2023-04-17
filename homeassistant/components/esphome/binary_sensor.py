@@ -6,6 +6,7 @@ from aioesphomeapi import BinarySensorInfo, BinarySensorState
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ async def async_setup_entry(
     entry_data = DomainData.get(hass).get_entry_data(entry)
     assert entry_data.device_info is not None
     if entry_data.device_info.voice_assistant_version:
-        async_add_entities([EsphomeAssistActiveBinarySensor(entry_data)])
+        async_add_entities([EsphomeCallActiveBinarySensor(entry_data)])
 
 
 class EsphomeBinarySensor(
@@ -67,18 +68,15 @@ class EsphomeBinarySensor(
         return super().available
 
 
-class EsphomeAssistActiveBinarySensor(EsphomeAssistEntity, BinarySensorEntity):
+class EsphomeCallActiveBinarySensor(EsphomeAssistEntity, BinarySensorEntity):
     """A binary sensor implementation for ESPHome for use with assist_pipeline."""
 
-    _attr_name = "Assist Active"
-    _attr_has_entity_name = True
+    entity_description = BinarySensorEntityDescription(
+        key="call_active",
+        translation_key="call_active",
+    )
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._entry_data.assist_pipeline_state
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique id identifying the entity."""
-        return f"{self._device_info.mac_address}_assist_pipeline_active"

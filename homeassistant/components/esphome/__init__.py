@@ -902,9 +902,15 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 class EsphomeAssistEntity(Entity):
     """Define a base entity for Assist Pipeline entities."""
 
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
     def __init__(self, entry_data: RuntimeEntryData) -> None:
         """Initialize the binary sensor."""
         self._entry_data: RuntimeEntryData = entry_data
+        self._attr_unique_id = (
+            f"{self._device_info.mac_address}-{self.entity_description.key}"
+        )
 
     @property
     def _device_info(self) -> EsphomeDeviceInfo:
