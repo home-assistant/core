@@ -164,7 +164,7 @@ async def websocket_run(
         pipeline=pipeline,
         start_stage=start_stage,
         end_stage=end_stage,
-        event_callback=lambda event: connection.send_event(msg["id"], event.as_dict()),
+        event_callback=lambda event: connection.send_event(msg["id"], event),
         runner_data={
             "stt_binary_handler_id": handler_id,
             "timeout": timeout,
