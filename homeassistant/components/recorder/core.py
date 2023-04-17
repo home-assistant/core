@@ -362,7 +362,7 @@ class Recorder(threading.Thread):
         self._async_stop_queue_watcher_and_event_listener()
 
     @callback
-    def _reached_max_backlog(self) -> bool:
+    def _reached_max_backlog(self, percentage: float | None = None) -> bool:
         """Check if the system has reached the max queue backlog and return the maximum if it has."""
         current_backlog = self.backlog
         # First check the minimum value since its cheap
