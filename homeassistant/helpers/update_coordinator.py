@@ -151,13 +151,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         await self._debounced_refresh.async_shutdown()
 
     @callback
-    def _unschedule_refresh(self) -> None:
+    def _unschedule_refresh(self, *, cancel_debouncer: bool = True) -> None:
         """Unschedule any pending refresh since there is no longer any listeners."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
-
-        self._debounced_refresh.async_cancel()
+        if cancel_debouncer:
+            self._debounced_refresh.async_cancel()
 
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
@@ -176,9 +176,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
 
         # We do not cancel the debouncer here. If the refresh interval is shorter
         # than the debouncer cooldown, this would cause the debounce to never be called
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
+        self._unschedule_refresh(cancel_debouncer=False)
 
         # We _floor_ utcnow to create a schedule on a rounded second,
         # minimizing the time between the point and the real activation.
@@ -242,11 +240,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
-        self._debounced_refresh.async_cancel()
+        self._unschedule_refresh()
 
         if self._shutdown_requested or scheduled and self.hass.is_stopping:
             return
@@ -361,11 +355,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
     @callback
     def async_set_updated_data(self, data: _T) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
-        self._debounced_refresh.async_cancel()
+        self._unschedule_refresh()
 
         self.data = data
         self.last_update_success = True
