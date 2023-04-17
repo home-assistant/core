@@ -5,14 +5,17 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.tts import (
     CONF_LANG,
     PLATFORM_SCHEMA,
     Provider,
+    TextToSpeechEntity,
     TtsAudioType,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockPlatform
 
@@ -22,13 +25,21 @@ TEST_LANGUAGES = ["de", "en"]
 DEFAULT_LANG = "en_US"
 
 
-class MockProvider(Provider):
+async def get_media_source_url(hass: HomeAssistant, media_content_id: str) -> str:
+    """Get the media source url."""
+    if media_source.DOMAIN not in hass.config.components:
+        assert await async_setup_component(hass, media_source.DOMAIN, {})
+
+    resolved = await media_source.async_resolve_media(hass, media_content_id, None)
+    return resolved.url
+
+
+class BaseProvider:
     """Test speech API provider."""
 
     def __init__(self, lang: str) -> None:
         """Initialize test provider."""
         self._lang = lang
-        self.name = "Test"
 
     @property
     def default_language(self) -> str:
@@ -59,6 +70,24 @@ class MockProvider(Provider):
         return ("mp3", b"")
 
 
+class MockProvider(BaseProvider, Provider):
+    """Test speech API provider."""
+
+    def __init__(self, lang: str) -> None:
+        """Initialize test provider."""
+        super().__init__(lang)
+        self.name = "Test"
+
+
+class MockTTSEntity(BaseProvider, TextToSpeechEntity):
+    """Test speech API provider."""
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return "Test"
+
+
 class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
@@ -70,13 +99,9 @@ class MockTTS(MockPlatform):
         }
     )
 
-    def __init__(
-        self, provider: type[MockProvider] | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, provider: MockProvider, **kwargs: Any) -> None:
         """Initialize."""
         super().__init__(**kwargs)
-        if provider is None:
-            provider = MockProvider
         self._provider = provider
 
     async def async_get_engine(
@@ -86,4 +111,4 @@ class MockTTS(MockPlatform):
         discovery_info: DiscoveryInfoType | None = None,
     ) -> Provider | None:
         """Set up a mock speech component."""
-        return self._provider(config.get(CONF_LANG, DEFAULT_LANG))
+        return self._provider
