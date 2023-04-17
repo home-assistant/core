@@ -295,12 +295,12 @@ class Coordinator(ContextCoordinator[dict[int, CoilData], int]):
 
         return result
 
-    async def async_shutdown(self) -> None:
+    async def async_shutdown(self):
         """Make sure a coordinator is shut down as well as it's connection."""
         if self.task:
             self.task.cancel()
             await asyncio.wait((self.task,))
-        await super().async_shutdown()
+        self._unschedule_refresh()
         await self.connection.stop()
 
 
