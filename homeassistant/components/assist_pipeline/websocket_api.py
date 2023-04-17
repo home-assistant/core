@@ -1,7 +1,7 @@
 """Assist pipeline Websocket API."""
 import asyncio
 import audioop  # pylint: disable=deprecated-module
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 import logging
 from typing import Any
 
@@ -114,7 +114,7 @@ async def websocket_run(
         audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
         incoming_sample_rate = msg["input"]["sample_rate"]
 
-        async def stt_stream():
+        async def stt_stream() -> AsyncGenerator[bytes, None]:
             state = None
             segmenter = VoiceCommandSegmenter()
 
@@ -129,7 +129,11 @@ async def websocket_run(
 
                 yield chunk
 
-        def handle_binary(_hass, _connection, data: bytes):
+        def handle_binary(
+            _hass: HomeAssistant,
+            _connection: websocket_api.ActiveConnection,
+            data: bytes,
+        ) -> None:
             # Forward to STT audio stream
             audio_queue.put_nowait(data)
 

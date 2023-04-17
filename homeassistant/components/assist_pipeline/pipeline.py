@@ -179,7 +179,7 @@ class PipelineRun:
     tts_engine: str | None = None
     tts_options: dict | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set language for pipeline."""
         self.language = self.pipeline.language or self.hass.config.language
 
@@ -189,7 +189,7 @@ class PipelineRun:
         ):
             raise InvalidPipelineStagesError(self.start_stage, self.end_stage)
 
-    def start(self):
+    def start(self) -> None:
         """Emit run start event."""
         data = {
             "pipeline": self.pipeline.name,
@@ -200,7 +200,7 @@ class PipelineRun:
 
         self.event_callback(PipelineEvent(PipelineEventType.RUN_START, data))
 
-    def end(self):
+    def end(self) -> None:
         """Emit run end event."""
         self.event_callback(
             PipelineEvent(
@@ -349,7 +349,9 @@ class PipelineRun:
             )
         )
 
-        speech = conversation_result.response.speech.get("plain", {}).get("speech", "")
+        speech: str = conversation_result.response.speech.get("plain", {}).get(
+            "speech", ""
+        )
 
         return speech
 
@@ -453,7 +455,7 @@ class PipelineInput:
 
     conversation_id: str | None = None
 
-    async def execute(self):
+    async def execute(self) -> None:
         """Run pipeline."""
         self.run.start()
         current_stage = self.run.start_stage
@@ -496,7 +498,7 @@ class PipelineInput:
 
         self.run.end()
 
-    async def validate(self):
+    async def validate(self) -> None:
         """Validate pipeline input against start stage."""
         if self.run.start_stage == PipelineStage.STT:
             if self.stt_metadata is None:
@@ -524,7 +526,8 @@ class PipelineInput:
         prepare_tasks = []
 
         if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.STT):
-            prepare_tasks.append(self.run.prepare_speech_to_text(self.stt_metadata))
+            # self.stt_metadata can't be None or we'd raise above
+            prepare_tasks.append(self.run.prepare_speech_to_text(self.stt_metadata))  # type: ignore[arg-type]
 
         if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.INTENT):
             prepare_tasks.append(self.run.prepare_recognize_intent())
@@ -696,7 +699,7 @@ class PipelineStorageCollectionWebsocket(
         connection.send_result(msg["id"])
 
 
-async def async_setup_pipeline_store(hass):
+async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
     """Set up the pipeline storage collection."""
     pipeline_store = PipelineStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY)

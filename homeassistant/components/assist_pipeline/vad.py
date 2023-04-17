@@ -48,14 +48,14 @@ class VoiceCommandSegmenter:
     _bytes_per_chunk: int = 480 * 2  # 16-bit samples
     _seconds_per_chunk: float = 0.03  # 30 ms
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize VAD."""
         self._vad = webrtcvad.Vad(self.vad_mode)
         self._bytes_per_chunk = self.vad_frames * 2
         self._seconds_per_chunk = self.vad_frames / _SAMPLE_RATE
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset all counters and state."""
         self._audio_buffer = b""
         self._speech_seconds_left = self.speech_seconds
