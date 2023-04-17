@@ -24,7 +24,7 @@
         "data": {
           "entities": "Entities"
         },
-        "description": "All “{domains}” entities will be included unless specific entities are selected.",
+        "description": "Select entities from each domain in “{domains}”. The include will cover the entire domain if you do not select any entities for a given domain.",
         "title": "Select the entities to be included"
       },
       "exclude": {

@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please enter your server connection details",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "title": "Connect"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Snapcast YAML configuration is being removed",
+      "description": "Configuring Snapcast using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Snapcast YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

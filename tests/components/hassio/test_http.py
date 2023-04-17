@@ -288,6 +288,8 @@ async def test_forward_request_not_onboarded_unallowed_paths(
         ("backups/1234abcd/info", True),
         ("supervisor/logs", True),
         ("addons/bl_b392/logs", True),
+        ("addons/bl_b392/changelog", True),
+        ("addons/bl_b392/documentation", True),
     ],
 )
 async def test_forward_request_admin_get(

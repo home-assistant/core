@@ -4,9 +4,11 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
-from functools import partial, wraps
+from enum import Enum
+from functools import cache, partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar
+from types import ModuleType
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
 
 import voluptuous as vol
 
@@ -42,6 +44,7 @@ from . import (
     entity_registry,
     template,
 )
+from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
@@ -56,6 +59,112 @@ CONF_SERVICE_ENTITY_ID = "entity_id"
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+
+
+@cache
+def _base_components() -> dict[str, ModuleType]:
+    """Return a cached lookup of base components."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components import (
+        alarm_control_panel,
+        calendar,
+        camera,
+        climate,
+        cover,
+        fan,
+        humidifier,
+        light,
+        lock,
+        media_player,
+        remote,
+        siren,
+        update,
+        vacuum,
+        water_heater,
+    )
+
+    return {
+        "alarm_control_panel": alarm_control_panel,
+        "calendar": calendar,
+        "camera": camera,
+        "climate": climate,
+        "cover": cover,
+        "fan": fan,
+        "humidifier": humidifier,
+        "light": light,
+        "lock": lock,
+        "media_player": media_player,
+        "remote": remote,
+        "siren": siren,
+        "update": update,
+        "vacuum": vacuum,
+        "water_heater": water_heater,
+    }
+
+
+def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
+    """Validate attribute option or supported feature."""
+    try:
+        domain, enum, option = option_or_feature.split(".", 2)
+    except ValueError as exc:
+        raise vol.Invalid(
+            f"Invalid {label} '{option_or_feature}', expected "
+            "<domain>.<enum>.<member>"
+        ) from exc
+
+    base_components = _base_components()
+    if not (base_component := base_components.get(domain)):
+        raise vol.Invalid(f"Unknown base component '{domain}'")
+
+    try:
+        attribute_enum = getattr(base_component, enum)
+    except AttributeError as exc:
+        raise vol.Invalid(f"Unknown {label} enum '{domain}.{enum}'") from exc
+
+    if not issubclass(attribute_enum, Enum):
+        raise vol.Invalid(f"Expected {label} '{domain}.{enum}' to be an enum")
+
+    try:
+        return getattr(attribute_enum, option).value
+    except AttributeError as exc:
+        raise vol.Invalid(f"Unknown {label} '{enum}.{option}'") from exc
+
+
+def validate_attribute_option(attribute_option: str) -> Any:
+    """Validate attribute option."""
+    return _validate_option_or_feature(attribute_option, "attribute option")
+
+
+def validate_supported_feature(supported_feature: str) -> Any:
+    """Validate supported feature."""
+    return _validate_option_or_feature(supported_feature, "supported feature")
+
+
+# Basic schemas which translate attribute and supported feature enum names
+# to their values. Full validation is done by hassfest.services
+_FIELD_SCHEMA = vol.Schema(
+    {
+        vol.Optional("filter"): {
+            vol.Optional("attribute"): {
+                vol.Required(str): [vol.All(str, validate_attribute_option)],
+            },
+            vol.Optional("supported_features"): [
+                vol.All(str, validate_supported_feature)
+            ],
+        },
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+_SERVICES_SCHEMA = vol.Schema({cv.slug: _SERVICE_SCHEMA})
 
 
 class ServiceParams(TypedDict):
@@ -90,7 +199,7 @@ class ServiceTargetSelector:
         return bool(self.entity_ids or self.device_ids or self.area_ids)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class SelectedEntities:
     """Class to hold the selected entities."""
 
@@ -421,13 +530,16 @@ async def async_extract_config_entry_ids(
 def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
     """Load services file for an integration."""
     try:
-        return load_yaml(str(integration.file_path / "services.yaml"))
+        return cast(
+            JSON_TYPE,
+            _SERVICES_SCHEMA(load_yaml(str(integration.file_path / "services.yaml"))),
+        )
     except FileNotFoundError:
         _LOGGER.warning(
             "Unable to find services.yaml for the %s integration", integration.domain
         )
         return {}
-    except HomeAssistantError:
+    except (HomeAssistantError, vol.Invalid):
         _LOGGER.warning(
             "Unable to parse services.yaml for the %s integration", integration.domain
         )
