@@ -1798,7 +1798,7 @@ async def test_database_lock_and_overflow(
 
     with patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
         recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.01
-    ), patch.object(recorder.core, "ESTIMATED_QUEUE_ITEM_SIZE", 2**64):
+    ), patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0):
         await async_setup_recorder_instance(hass, config)
         await hass.async_block_till_done()
         event_type = "EVENT_TEST"
