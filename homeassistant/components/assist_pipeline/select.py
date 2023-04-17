@@ -84,7 +84,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         """Handle pipeline update."""
         pipeline_store: PipelineStorageCollection = self.hass.data[DOMAIN]
         options = [OPTION_PREFERRED]
-        options.extend([item.name for item in pipeline_store.async_items()])
+        options.extend(sorted(item.name for item in pipeline_store.async_items()))
         self._attr_options = options
 
         if self._attr_current_option not in options:
