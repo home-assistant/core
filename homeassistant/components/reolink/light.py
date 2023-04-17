@@ -57,6 +57,7 @@ LIGHT_ENTITIES = (
         key="ir_lights",
         name="Infra red lights in night mode",
         icon="mdi:led-off",
+        entity_category=EntityCategory.CONFIG,
         supported_fn=lambda api, ch: api.supported(ch, "ir_lights"),
         is_on_fn=lambda api, ch: api.ir_enabled(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_ir_lights(ch, value),
