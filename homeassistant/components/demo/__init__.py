@@ -36,6 +36,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
+    Platform.STT,
     Platform.SWITCH,
     Platform.TEXT,
     Platform.UPDATE,

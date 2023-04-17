@@ -166,9 +166,9 @@ class DebouncedEntryReloader:
         await self._debounced_reload.async_call()
 
     @callback
-    def async_cancel(self) -> None:
+    def async_shutdown(self) -> None:
         """Cancel any pending reload."""
-        self._debounced_reload.async_cancel()
+        self._debounced_reload.async_shutdown()
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
@@ -228,7 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # will be a race where the config flow will see the entry
     # as not loaded and may reload it
     debounced_reloader = DebouncedEntryReloader(hass, entry)
-    entry.async_on_unload(debounced_reloader.async_cancel)
+    entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
     hass.data[DOMAIN][entry.entry_id] = bridge

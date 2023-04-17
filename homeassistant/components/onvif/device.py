@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -55,6 +56,7 @@ class ONVIFDevice:
         self.capabilities: Capabilities = Capabilities()
         self.profiles: list[Profile] = []
         self.max_resolution: int = 0
+        self.platforms: list[Platform] = []
 
         self._dt_diff_seconds: float = 0
 
@@ -83,7 +85,7 @@ class ONVIFDevice:
         """Return the password of this device."""
         return self.config_entry.data[CONF_PASSWORD]
 
-    async def async_setup(self) -> bool:
+    async def async_setup(self) -> None:
         """Set up the device."""
         self.device = get_device(
             self.hass,
@@ -94,57 +96,34 @@ class ONVIFDevice:
         )
 
         # Get all device info
-        try:
-            await self.device.update_xaddrs()
-            await self.async_check_date_and_time()
+        await self.device.update_xaddrs()
+        await self.async_check_date_and_time()
 
-            # Create event manager
-            assert self.config_entry.unique_id
-            self.events = EventManager(
-                self.hass, self.device, self.config_entry.unique_id
-            )
+        # Create event manager
+        assert self.config_entry.unique_id
+        self.events = EventManager(self.hass, self.device, self.config_entry.unique_id)
 
-            # Fetch basic device info and capabilities
-            self.info = await self.async_get_device_info()
-            LOGGER.debug("Camera %s info = %s", self.name, self.info)
-            self.capabilities = await self.async_get_capabilities()
-            LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
-            self.profiles = await self.async_get_profiles()
-            LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
+        # Fetch basic device info and capabilities
+        self.info = await self.async_get_device_info()
+        LOGGER.debug("Camera %s info = %s", self.name, self.info)
+        self.capabilities = await self.async_get_capabilities()
+        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
+        self.profiles = await self.async_get_profiles()
+        LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
 
-            # No camera profiles to add
-            if not self.profiles:
-                return False
+        # No camera profiles to add
+        if not self.profiles:
+            raise ONVIFError("No camera profiles found")
 
-            if self.capabilities.ptz:
-                self.device.create_ptz_service()
+        if self.capabilities.ptz:
+            self.device.create_ptz_service()
 
-            # Determine max resolution from profiles
-            self.max_resolution = max(
-                profile.video.resolution.width
-                for profile in self.profiles
-                if profile.video.encoding == "H264"
-            )
-        except RequestError as err:
-            LOGGER.warning(
-                "Couldn't connect to camera '%s', but will retry later. Error: %s",
-                self.name,
-                err,
-            )
-            self.available = False
-            await self.device.close()
-        except Fault as err:
-            LOGGER.error(
-                (
-                    "Couldn't connect to camera '%s', please verify "
-                    "that the credentials are correct. Error: %s"
-                ),
-                self.name,
-                err,
-            )
-            return False
-
-        return True
+        # Determine max resolution from profiles
+        self.max_resolution = max(
+            profile.video.resolution.width
+            for profile in self.profiles
+            if profile.video.encoding == "H264"
+        )
 
     async def async_stop(self, event=None):
         """Shut it all down."""
