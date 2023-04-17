@@ -105,7 +105,7 @@ class Pipeline:
     """A voice assistant pipeline."""
 
     conversation_engine: str | None
-    language: str | None
+    language: str
     name: str
     stt_engine: str | None
     tts_engine: str | None
