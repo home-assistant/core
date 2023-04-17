@@ -717,7 +717,7 @@ class PipelineStorageCollectionWebsocket(
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
-    pipeline_runs: dict
+    pipeline_runs: dict[str, LimitedSizeDict[str, list[PipelineEvent]]]
     pipeline_store: PipelineStorageCollection
 
 
