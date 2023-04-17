@@ -980,7 +980,7 @@ class Recorder(threading.Thread):
                         "length while waiting for backup to finish; recorder will now "
                         "resume writing to database. The backup cannot be trusted and "
                         "must be restarted",
-                        len(self.backlog),
+                        self.backlog,
                     )
                     task.queue_overflow = True
                     break
