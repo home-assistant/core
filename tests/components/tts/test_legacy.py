@@ -19,6 +19,18 @@ from tests.common import (
 )
 
 
+async def test_default_provider_attributes() -> None:
+    """Test default provider properties."""
+    provider = Provider()
+
+    assert provider.hass is None
+    assert provider.name is None
+    assert provider.default_language is None
+    assert provider.supported_languages is None
+    assert provider.supported_options is None
+    assert provider.default_options is None
+
+
 async def test_deprecated_platform(hass: HomeAssistant) -> None:
     """Test deprecated google platform."""
     with assert_setup_component(0, DOMAIN):
