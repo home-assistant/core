@@ -47,6 +47,7 @@ from .const import (
     SONOS_REBOOTED,
     SONOS_SPEAKER_ACTIVITY,
     SONOS_VANISHED,
+    SUB_FAIL_ISSUE_ID,
     SUB_FAIL_URL,
     SUBSCRIPTION_TIMEOUT,
     UPNP_ST,
@@ -237,7 +238,7 @@ class SonosDiscoveryManager:
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                "subscriptions_failed",
+                SUB_FAIL_ISSUE_ID,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="subscriptions_failed",
