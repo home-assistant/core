@@ -1,8 +1,8 @@
 """Support to interface with Sonos players."""
 from __future__ import annotations
 
-from asyncio import run_coroutine_threadsafe
 import datetime
+from functools import partial
 import logging
 from typing import Any
 
@@ -14,11 +14,13 @@ from soco.core import (
     PLAY_MODES,
 )
 from soco.data_structures import DidlFavorite
+from sonos_websocket.exception import SonosWebsocketError
 import voluptuous as vol
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ENQUEUE,
     BrowseMedia,
     MediaPlayerDeviceClass,
@@ -303,7 +305,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return PLAY_MODES[self.media.play_mode][0]
 
     @property
-    def repeat(self) -> str | None:
+    def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         sonos_repeat = PLAY_MODES[self.media.play_mode][1]
         return SONOS_TO_REPEAT[sonos_repeat]
@@ -491,9 +493,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Clear players playlist."""
         self.coordinator.soco.clear_queue()
 
-    @soco_error()
-    def play_media(  # noqa: C901
-        self, media_type: str, media_id: str, **kwargs: Any
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player.
 
@@ -505,8 +506,21 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
         """
-        # Use 'replace' as the default enqueue option
-        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
+        if kwargs.get(ATTR_MEDIA_ANNOUNCE):
+            volume = kwargs.get("extra", {}).get("volume")
+            _LOGGER.debug("Playing %s using websocket audioclip", media_id)
+            try:
+                assert self.speaker.websocket
+                response, _ = await self.speaker.websocket.play_clip(
+                    media_id,
+                    volume=volume,
+                )
+            except SonosWebsocketError as exc:
+                raise HomeAssistantError(
+                    f"Error when calling Sonos websocket: {exc}"
+                ) from exc
+            if response["success"]:
+                return
 
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
@@ -517,16 +531,21 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if media_source.is_media_source_id(media_id):
             is_radio = media_id.startswith("media-source://radio_browser/")
             media_type = MediaType.MUSIC
-            media_id = (
-                run_coroutine_threadsafe(
-                    media_source.async_resolve_media(
-                        self.hass, media_id, self.entity_id
-                    ),
-                    self.hass.loop,
-                )
-                .result()
-                .url
+            media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
             )
+            media_id = media.url
+
+        await self.hass.async_add_executor_job(
+            partial(self._play_media, media_type, media_id, is_radio, **kwargs)
+        )
+
+    @soco_error()
+    def _play_media(
+        self, media_type: MediaType | str, media_id: str, is_radio: bool, **kwargs: Any
+    ) -> None:
+        """Wrap sync calls to async_play_media."""
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
 
         if media_type == "favorite_item_id":
             favorite = self.speaker.favorites.lookup_by_item_id(media_id)
@@ -691,7 +710,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
@@ -712,7 +731,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return (None, None)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_browser.async_browse_media(

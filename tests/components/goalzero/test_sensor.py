@@ -1,5 +1,4 @@
 """Sensor tests for the Goalzero integration."""
-from unittest.mock import AsyncMock
 
 from homeassistant.components.goalzero.const import DEFAULT_NAME
 from homeassistant.components.sensor import (
@@ -29,7 +28,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test we get sensor data."""
     await async_init_integration(hass, aioclient_mock)

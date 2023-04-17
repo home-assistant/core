@@ -4,11 +4,10 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
-from bleak.backends.device import BLEDevice
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 
-from tests.components.bluetooth import generate_advertisement_data
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
 def patch_async_setup_entry(return_value=True):
@@ -45,7 +44,7 @@ WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_data={},
     service_uuids=["b42e1c08-ade7-11e4-89d3-123b93f75cba"],
     source="local",
-    device=BLEDevice(
+    device=generate_ble_device(
         "cc:cc:cc:cc:cc:cc",
         "cc-cc-cc-cc-cc-cc",
     ),
@@ -65,7 +64,7 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_data={},
     service_uuids=[],
     source="local",
-    device=BLEDevice(
+    device=generate_ble_device(
         "cc:cc:cc:cc:cc:cc",
         "unknown",
     ),

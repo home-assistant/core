@@ -356,4 +356,10 @@ class WebDavCalendarData:
         else:
             enddate = obj.dtstart.value + timedelta(days=1)
 
+        # End date for an all day event is exclusive. This fixes the case where
+        # an all day event has a start and end values are the same, or the event
+        # has a zero duration.
+        if not isinstance(enddate, datetime) and obj.dtstart.value == enddate:
+            enddate += timedelta(days=1)
+
         return enddate
