@@ -155,12 +155,11 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
             or self._attr_target_temperature is None
         ):
             return HVACAction.OFF
-        elif self._attr_target_temperature > self._attr_current_temperature:
+        if self._attr_target_temperature > self._attr_current_temperature:
             return HVACAction.HEATING
-        elif self._attr_target_temperature == self._attr_min_temp:
+        if self._attr_target_temperature == self._attr_min_temp:
             return HVACAction.OFF
-        else:
-            return HVACAction.IDLE
+        return HVACAction.IDLE
 
     @callback
     def update_target_temperature(self, target_temperature: float) -> None:
