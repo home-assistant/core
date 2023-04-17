@@ -1773,6 +1773,7 @@ async def test_database_lock_and_overflow(
     hass: HomeAssistant,
     recorder_db_url: str,
     tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
@@ -1809,16 +1810,106 @@ async def test_database_lock_and_overflow(
         await instance.lock_database()
 
         event_data = {"test_attr": 5, "test_attr_10": "nice"}
-        hass.bus.fire(event_type, event_data)
+        hass.bus.async_fire(event_type, event_data)
 
         # Check that this causes the queue to overflow and write succeeds
         # even before unlocking.
         await async_wait_recording_done(hass)
 
-        db_events = await hass.async_add_executor_job(_get_db_events)
+        db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) == 1
 
+        assert (
+            "Database queue backlog reached more than 90% of available memory"
+            in caplog.text
+        )
+
         assert not instance.unlock_database()
+
+
+async def test_database_lock_and_overflow_checks_available_memory(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test writing events during lock leading to overflow the queue causes the database to unlock."""
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # Database locking is only used for SQLite
+        return
+
+    # Use file DB, in memory DB cannot do write locks.
+    if recorder_db_url == "sqlite://":
+        # Use file DB, in memory DB cannot do write locks.
+        recorder_db_url = "sqlite:///" + str(tmp_path / "pytest.db")
+    config = {
+        recorder.CONF_COMMIT_INTERVAL: 0,
+        recorder.CONF_DB_URL: recorder_db_url,
+    }
+
+    def _get_db_events():
+        with session_scope(hass=hass, read_only=True) as session:
+            return list(
+                session.query(Events).filter(
+                    Events.event_type_id.in_(select_event_type_ids(event_types))
+                )
+            )
+
+    await async_setup_recorder_instance(hass, config)
+    await hass.async_block_till_done()
+    event_type = "EVENT_TEST"
+    event_types = (event_type,)
+    await async_wait_recording_done(hass)
+
+    with patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
+        recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 1
+    ), patch.object(recorder.core, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.01), patch.object(
+        recorder.core.Recorder,
+        "_available_memory",
+        return_value=recorder.core.ESTIMATED_QUEUE_ITEM_SIZE * 4,
+    ):
+        instance = get_instance(hass)
+
+        await instance.lock_database()
+
+        # Record up to the extended limit (which takes into account the available memory)
+        for _ in range(2):
+            event_data = {"test_attr": 5, "test_attr_10": "nice"}
+            hass.bus.async_fire(event_type, event_data)
+
+        def _wait_database_unlocked():
+            return instance._database_lock_task.database_unlock.wait(0.2)
+
+        databack_unlocked = await hass.async_add_executor_job(_wait_database_unlocked)
+        assert not databack_unlocked
+
+        db_events = await instance.async_add_executor_job(_get_db_events)
+        assert len(db_events) == 0
+
+        assert (
+            "Database queue backlog reached more than 90% of available memory"
+            not in caplog.text
+        )
+
+        # Record beyond the extended limit (which takes into account the available memory)
+        for _ in range(20):
+            event_data = {"test_attr": 5, "test_attr_10": "nice"}
+            hass.bus.async_fire(event_type, event_data)
+
+        # Check that this causes the queue to overflow and write succeeds
+        # even before unlocking.
+        await async_wait_recording_done(hass)
+
+        assert not instance.unlock_database()
+
+        assert (
+            "Database queue backlog reached more than 90% of available memory"
+            in caplog.text
+        )
+
+        db_events = await instance.async_add_executor_job(_get_db_events)
+        assert len(db_events) >= 2
 
 
 async def test_database_lock_timeout(
