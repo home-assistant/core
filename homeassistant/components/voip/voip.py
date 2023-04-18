@@ -95,9 +95,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
         if self._pipeline_task is None:
-            # Clear audio queue
-            while not self._audio_queue.empty():
-                self._audio_queue.get_nowait()
+            self._clear_audio_queue()
 
             # Run pipeline until voice command finishes, then start over
             self._pipeline_task = self.hass.async_create_background_task(
@@ -138,6 +136,8 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 if self.transport is not None:
                     self.transport.close()
                     self.transport = None
+            finally:
+                self._clear_audio_queue()
 
         try:
             # Run pipeline with a timeout
@@ -171,6 +171,10 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         finally:
             # Allow pipeline to run again
             self._pipeline_task = None
+
+    def _clear_audio_queue(self) -> None:
+        while not self._audio_queue.empty():
+            self._audio_queue.get_nowait()
 
     def _event_callback(self, event: PipelineEvent):
         if not event.data:
