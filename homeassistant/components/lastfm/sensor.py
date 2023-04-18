@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from typing import Final
 
 from pylast import SIZE_SMALL, LastFMNetwork, Track, User, WSError
 import voluptuous as vol
