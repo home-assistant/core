@@ -3,11 +3,27 @@ from http.client import HTTPException
 from unittest.mock import patch
 
 from homeassistant import config_entries
+from homeassistant.components.epic_games_store.config_flow import get_default_locale
 from homeassistant.components.epic_games_store.const import CONF_LOCALE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DATA_ERROR_WRONG_COUNTRY, DATA_FREE_GAMES, MOCK_LOCALE
+
+
+async def test_default_locale(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+    hass.config.language = "fr"
+    hass.config.country = "FR"
+    assert get_default_locale(hass) == "fr"
+
+    hass.config.language = "es"
+    hass.config.country = "ES"
+    assert get_default_locale(hass) == "es-ES"
+
+    hass.config.language = "en"
+    hass.config.country = "AZ"
+    assert get_default_locale(hass) == "en-US"
 
 
 async def test_form(hass: HomeAssistant) -> None:
