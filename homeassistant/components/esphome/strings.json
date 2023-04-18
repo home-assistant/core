@@ -51,6 +51,14 @@
       "call_active": {
         "name": "Call Active"
       }
+    },
+    "select": {
+      "pipeline": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      }
     }
   },
   "issues": {
