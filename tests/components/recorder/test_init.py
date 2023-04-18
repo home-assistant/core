@@ -1832,8 +1832,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
 ) -> None:
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # Database locking is only used for SQLite
-        return
+        return pytest.skip("Database locking is only used for SQLite")
 
     # Use file DB, in memory DB cannot do write locks.
     if recorder_db_url == "sqlite://":
