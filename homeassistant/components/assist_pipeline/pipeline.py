@@ -40,11 +40,15 @@ STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS = {
-    vol.Optional("conversation_engine", default=None): vol.Any(str, None),
+    vol.Required("conversation_engine"): str,
+    vol.Required("conversation_language"): str,
     vol.Required("language"): str,
     vol.Required("name"): str,
-    vol.Optional("stt_engine", default=None): vol.Any(str, None),
-    vol.Optional("tts_engine", default=None): vol.Any(str, None),
+    vol.Required("stt_engine"): vol.Any(str, None),
+    vol.Required("stt_language"): vol.Any(str, None),
+    vol.Required("tts_engine"): vol.Any(str, None),
+    vol.Required("tts_language"): vol.Any(str, None),
+    vol.Required("tts_voice"): vol.Any(str, None),
 }
 
 STORED_PIPELINE_RUNS = 10
@@ -67,11 +71,15 @@ async def async_get_pipeline(
         # configured language
         return await pipeline_data.pipeline_store.async_create_item(
             {
-                "name": hass.config.language,
+                "conversation_engine": None,
+                "conversation_language": None,
                 "language": hass.config.language,
-                "stt_engine": None,  # first engine
-                "conversation_engine": None,  # first agent
-                "tts_engine": None,  # first engine
+                "name": hass.config.language,
+                "stt_engine": None,
+                "stt_language": None,
+                "tts_engine": None,
+                "tts_language": None,
+                "tts_voice": None,
             }
         )
 
@@ -108,11 +116,15 @@ PipelineEventCallback = Callable[[PipelineEvent], None]
 class Pipeline:
     """A voice assistant pipeline."""
 
-    conversation_engine: str | None
+    conversation_engine: str
+    conversation_language: str
     language: str
     name: str
     stt_engine: str | None
+    stt_language: str | None
     tts_engine: str | None
+    tts_language: str | None
+    tts_voice: str | None
 
     id: str = field(default_factory=ulid_util.ulid)
 
@@ -120,11 +132,15 @@ class Pipeline:
         """Return a JSON serializable representation for storage."""
         return {
             "conversation_engine": self.conversation_engine,
+            "conversation_language": self.conversation_language,
             "id": self.id,
             "language": self.language,
             "name": self.name,
             "stt_engine": self.stt_engine,
+            "stt_language": self.stt_language,
             "tts_engine": self.tts_engine,
+            "tts_language": self.tts_language,
+            "tts_voice": self.tts_voice,
         }
 
 
