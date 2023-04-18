@@ -24,6 +24,16 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def get_default_locale(hass: HomeAssistant) -> str:
+    """Get default locale code based on Home Assistant config."""
+    locale_code = f"{hass.config.language}-{hass.config.country}"
+    if locale_code in CONF_SUPPORTED_LOCALES:
+        return locale_code
+    if hass.config.language in CONF_SUPPORTED_LOCALES:
+        return hass.config.language
+    return "en-US"
+
+
 async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, Any]:
@@ -52,10 +62,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        data_schema = self.add_suggested_values_to_schema(
+            STEP_USER_DATA_SCHEMA,
+            user_input or {CONF_LOCALE: get_default_locale(self.hass)},
+        )
         if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+            return self.async_show_form(step_id="user", data_schema=data_schema)
 
         await self.async_set_unique_id(user_input[CONF_LOCALE])
         self._abort_if_unique_id_configured()
@@ -75,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
 
