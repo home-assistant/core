@@ -29,7 +29,7 @@ async def async_setup_entry(
 
     entities = [
         description.cls(config_entry.entry_id, device, description)
-        for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams")
+        for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams", "other")
         for description in SENSOR_TYPES
         if device_type in description.category
         for device in devices[device_type]
@@ -63,6 +63,12 @@ class RingSensor(RingEntityMixin, SensorEntity):
         sensor_type = self.entity_description.key
         if sensor_type == "volume":
             return self._device.volume
+        if sensor_type == "doorbell_volume":
+            return self._device.doorbell_volume
+        if sensor_type == "mic_volume":
+            return self._device.mic_volume
+        if sensor_type == "voice_volume":
+            return self._device.voice_volume
 
         if sensor_type == "battery":
             return self._device.battery_life
@@ -205,7 +211,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     RingSensorEntityDescription(
         key="battery",
         name="Battery",
-        category=["doorbots", "authorized_doorbots", "stickup_cams"],
+        category=["doorbots", "authorized_doorbots", "stickup_cams", "other"],
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         cls=RingSensor,
@@ -240,6 +246,27 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         key="volume",
         name="Volume",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
+        icon="mdi:bell-ring",
+        cls=RingSensor,
+    ),
+    RingSensorEntityDescription(
+        key="doorbell_volume",
+        name="Doorbell Volume",
+        category=["other"],
+        icon="mdi:bell-ring",
+        cls=RingSensor,
+    ),
+    RingSensorEntityDescription(
+        key="mic_volume",
+        name="Mic Volume",
+        category=["other"],
+        icon="mdi:bell-ring",
+        cls=RingSensor,
+    ),
+    RingSensorEntityDescription(
+        key="voice_volume",
+        name="Voice Volume",
+        category=["other"],
         icon="mdi:bell-ring",
         cls=RingSensor,
     ),
