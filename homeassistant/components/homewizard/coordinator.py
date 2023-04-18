@@ -52,12 +52,15 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 if self.supports_system(data.device):
                     data.system = await self.api.system()
 
+                raise UnsupportedError("state is not supported")
+
             except UnsupportedError as ex:
                 # Old firmware, ignore
                 if not self._unsupported_error:
                     self._unsupported_error = True
                     _LOGGER.warning(
-                        "Feature not supported, make sure your device is up-to-date: %s",
+                        "%s is running an outdated firmware version (%s). Contact HomeWizard support to update your device",
+                        self.entry.title,
                         ex,
                     )
 
