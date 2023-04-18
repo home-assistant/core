@@ -10,6 +10,7 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -128,11 +129,12 @@ async def test_ssl_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry, reolink_ONVIF_wait: MagicMock
 ) -> None:
     """Test repairs issue is raised when global ssl certificate is used."""
+    assert await async_setup_component(hass, "webhook", {})
+    hass.config.api.use_ssl = True
+
     await async_process_ha_core_config(
         hass, {"country": "GB", "internal_url": "http://test_homeassistant_address"}
     )
-
-    hass.config.api = Mock(use_ssl=True)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
