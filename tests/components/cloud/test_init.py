@@ -1,5 +1,5 @@
 """Test the cloud component."""
-
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -8,12 +8,14 @@ from homeassistant.components import cloud
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockUser
 
-async def test_constructor_loads_info_from_config(hass):
+
+async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     """Test non-dev mode loads info from SERVERS constant."""
     with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(
@@ -26,13 +28,13 @@ async def test_constructor_loads_info_from_config(hass):
                     "cognito_client_id": "test-cognito_client_id",
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
-                    "relayer": "test-relayer",
-                    "subscription_info_url": "http://test-subscription-info-url",
-                    "cloudhook_create_url": "http://test-cloudhook_create_url",
-                    "remote_api_url": "http://test-remote_api_url",
-                    "alexa_access_token_url": "http://test-alexa-token-url",
-                    "acme_directory_server": "http://test-acme-directory-server",
-                    "google_actions_report_state_url": "http://test-google-actions-report-state-url",
+                    "relayer_server": "test-relayer-server",
+                    "accounts_server": "test-acounts-server",
+                    "cloudhook_server": "test-cloudhook-server",
+                    "remote_sni_server": "test-remote-sni-server",
+                    "alexa_server": "test-alexa-server",
+                    "acme_server": "test-acme-server",
+                    "remotestate_server": "test-remotestate-server",
                 },
             },
         )
@@ -43,19 +45,18 @@ async def test_constructor_loads_info_from_config(hass):
     assert cl.cognito_client_id == "test-cognito_client_id"
     assert cl.user_pool_id == "test-user_pool_id"
     assert cl.region == "test-region"
-    assert cl.relayer == "test-relayer"
-    assert cl.subscription_info_url == "http://test-subscription-info-url"
-    assert cl.cloudhook_create_url == "http://test-cloudhook_create_url"
-    assert cl.remote_api_url == "http://test-remote_api_url"
-    assert cl.alexa_access_token_url == "http://test-alexa-token-url"
-    assert cl.acme_directory_server == "http://test-acme-directory-server"
-    assert (
-        cl.google_actions_report_state_url
-        == "http://test-google-actions-report-state-url"
-    )
+    assert cl.relayer_server == "test-relayer-server"
+    assert cl.iot.ws_server_url == "wss://test-relayer-server/websocket"
+    assert cl.accounts_server == "test-acounts-server"
+    assert cl.cloudhook_server == "test-cloudhook-server"
+    assert cl.alexa_server == "test-alexa-server"
+    assert cl.acme_server == "test-acme-server"
+    assert cl.remotestate_server == "test-remotestate-server"
 
 
-async def test_remote_services(hass, mock_cloud_fixture, hass_read_only_user):
+async def test_remote_services(
+    hass: HomeAssistant, mock_cloud_fixture, hass_read_only_user: MockUser
+) -> None:
     """Setup cloud component and test services."""
     cloud = hass.data[DOMAIN]
 
@@ -96,7 +97,7 @@ async def test_remote_services(hass, mock_cloud_fixture, hass_read_only_user):
     assert mock_disconnect.called is False
 
 
-async def test_startup_shutdown_events(hass, mock_cloud_fixture):
+async def test_startup_shutdown_events(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test if the cloud will start on startup event."""
     with patch("hass_nabucasa.Cloud.stop") as mock_stop:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -105,7 +106,9 @@ async def test_startup_shutdown_events(hass, mock_cloud_fixture):
     assert mock_stop.called
 
 
-async def test_setup_existing_cloud_user(hass, hass_storage):
+async def test_setup_existing_cloud_user(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test setup with API push default data."""
     user = await hass.auth.async_create_system_user("Cloud test")
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": user.id}}
@@ -120,7 +123,7 @@ async def test_setup_existing_cloud_user(hass, hass_storage):
                     "cognito_client_id": "test-cognito_client_id",
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
-                    "relayer": "test-relayer",
+                    "relayer_server": "test-relayer-serer",
                 },
             },
         )
@@ -129,7 +132,7 @@ async def test_setup_existing_cloud_user(hass, hass_storage):
     assert hass_storage[STORAGE_KEY]["data"]["cloud_user"] == user.id
 
 
-async def test_on_connect(hass, mock_cloud_fixture):
+async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test cloud on connect triggers."""
     cl = hass.data["cloud"]
 
@@ -169,7 +172,7 @@ async def test_on_connect(hass, mock_cloud_fixture):
     assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
 
 
-async def test_remote_ui_url(hass, mock_cloud_fixture):
+async def test_remote_ui_url(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test getting remote ui url."""
     cl = hass.data["cloud"]
 

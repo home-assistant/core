@@ -34,8 +34,22 @@ async def test_sensor(hass: HomeAssistant) -> None:
     registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
+        "xyz12_doh3_queries",
+        suggested_object_id="fake_profile_dns_over_http_3_queries",
+        disabled_by=None,
+    )
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
         "xyz12_doh_queries_ratio",
         suggested_object_id="fake_profile_dns_over_https_queries_ratio",
+        disabled_by=None,
+    )
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "xyz12_doh3_queries_ratio",
+        suggested_object_id="fake_profile_dns_over_http_3_queries_ratio",
         disabled_by=None,
     )
     registry.async_get_or_create(
@@ -212,13 +226,33 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.fake_profile_dns_over_https_queries_ratio")
     assert state
-    assert state.state == "20.0"
+    assert state.state == "17.4"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.fake_profile_dns_over_https_queries_ratio")
     assert entry
     assert entry.unique_id == "xyz12_doh_queries_ratio"
+
+    state = hass.states.get("sensor.fake_profile_dns_over_http_3_queries")
+    assert state
+    assert state.state == "15"
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
+
+    entry = registry.async_get("sensor.fake_profile_dns_over_http_3_queries")
+    assert entry
+    assert entry.unique_id == "xyz12_doh3_queries"
+
+    state = hass.states.get("sensor.fake_profile_dns_over_http_3_queries_ratio")
+    assert state
+    assert state.state == "13.0"
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+
+    entry = registry.async_get("sensor.fake_profile_dns_over_http_3_queries_ratio")
+    assert entry
+    assert entry.unique_id == "xyz12_doh3_queries_ratio"
 
     state = hass.states.get("sensor.fake_profile_dns_over_quic_queries")
     assert state
@@ -232,7 +266,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.fake_profile_dns_over_quic_queries_ratio")
     assert state
-    assert state.state == "10.0"
+    assert state.state == "8.7"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
@@ -252,7 +286,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.fake_profile_dns_over_tls_queries_ratio")
     assert state
-    assert state.state == "30.0"
+    assert state.state == "26.1"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
@@ -382,7 +416,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.fake_profile_udp_queries_ratio")
     assert state
-    assert state.state == "40.0"
+    assert state.state == "34.8"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 

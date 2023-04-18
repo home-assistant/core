@@ -15,11 +15,56 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Follow the documentation to get your api key"
         }
       },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::sensibo::config::step::user::data_description::api_key%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "sensitivity": {
+        "state": {
+          "n": "Normal",
+          "s": "Sensitive"
+        }
+      },
+      "smart_type": {
+        "state": {
+          "temperature": "Temperature",
+          "feelslike": "Feels like",
+          "humidity": "Humidity"
+        }
+      }
+    },
+    "select": {
+      "horizontalswing": {
+        "state": {
+          "stopped": "Stopped",
+          "fixedleft": "Fixed left",
+          "fixedcenterleft": "Fixed center left",
+          "fixedcenter": "Fixed center",
+          "fixedcenterright": "Fixed center right",
+          "fixedright": "Fixed right",
+          "fixedleftright": "Fixed left right",
+          "rangecenter": "Range center",
+          "rangefull": "Range full"
+        }
+      },
+      "light": {
+        "state": {
+          "on": "On",
+          "dim": "Dim",
+          "off": "Off"
         }
       }
     }

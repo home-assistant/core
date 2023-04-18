@@ -1,4 +1,4 @@
-"""A entity class for BraviaTV integration."""
+"""A entity class for Bravia TV integration."""
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

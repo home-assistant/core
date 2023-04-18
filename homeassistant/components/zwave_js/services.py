@@ -1,4 +1,4 @@
-"""Methods and classes related to executing Z-Wave commands and publishing these to hass."""
+"""Methods and classes related to executing Z-Wave commands."""
 from __future__ import annotations
 
 import asyncio
@@ -12,7 +12,7 @@ from zwave_js_server.const import CommandClass, CommandStatus
 from zwave_js_server.exceptions import SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import ValueDataType, get_value_id
+from zwave_js_server.model.value import ValueDataType, get_value_id_str
 from zwave_js_server.util.multicast import async_multicast_set_value
 from zwave_js_server.util.node import (
     async_bulk_set_partial_config_parameters,
@@ -88,18 +88,22 @@ def raise_exceptions_from_results(
     if errors := [
         tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
     ]:
-        lines = (
-            f"{len(errors)} error(s):",
+        lines = [
             *(
                 f"{zwave_object} - {error.__class__.__name__}: {error.args[0]}"
                 for zwave_object, error in errors
-            ),
-        )
+            )
+        ]
+        if len(lines) > 1:
+            lines.insert(0, f"{len(errors)} error(s):")
         raise HomeAssistantError("\n".join(lines))
 
 
 class ZWaveServices:
-    """Class that holds our services (Zwave Commands) that should be published to hass."""
+    """Class that holds our services (Zwave Commands).
+
+    Services that should be published to hass.
+    """
 
     def __init__(
         self,
@@ -156,8 +160,8 @@ class ZWaveServices:
             if first_node and not all(node.client.driver is not None for node in nodes):
                 raise vol.Invalid(f"Driver not ready for all nodes: {nodes}")
 
-            # If any nodes don't have matching home IDs, we can't run the command because
-            # we can't multicast across multiple networks
+            # If any nodes don't have matching home IDs, we can't run the command
+            # because we can't multicast across multiple networks
             if (
                 first_node
                 and first_node.client.driver  # We checked the driver was ready above.
@@ -497,7 +501,7 @@ class ZWaveServices:
 
         coros = []
         for node in nodes:
-            value_id = get_value_id(
+            value_id = get_value_id_str(
                 node,
                 command_class,
                 property_,
@@ -582,13 +586,15 @@ class ZWaveServices:
             first_node = next(
                 node
                 for node in client.driver.controller.nodes.values()
-                if get_value_id(node, command_class, property_, endpoint, property_key)
+                if get_value_id_str(
+                    node, command_class, property_, endpoint, property_key
+                )
                 in node.values
             )
 
         # If value has a string type but the new value is not a string, we need to
         # convert it to one
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             first_node, command_class, property_, endpoint, property_key
         )
         if (

@@ -1,7 +1,6 @@
 """Support for Plum Lightpad lights."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from plumlightpad import Plum
@@ -42,8 +41,7 @@ async def async_setup_entry(
             logical_load = plum.get_load(device["llid"])
             entities.append(PlumLight(load=logical_load))
 
-        if entities:
-            async_add_entities(entities)
+        async_add_entities(entities)
 
     async def new_load(device):
         setup_entities(device)
@@ -52,18 +50,22 @@ async def async_setup_entry(
         setup_entities(device)
 
     device_web_session = async_get_clientsession(hass, verify_ssl=False)
-    asyncio.create_task(
+    entry.async_create_background_task(
+        hass,
         plum.discover(
             hass.loop,
             loadListener=new_load,
             lightpadListener=new_lightpad,
             websession=device_web_session,
-        )
+        ),
+        "plum.light-discover",
     )
 
 
 class PlumLight(LightEntity):
     """Representation of a Plum Lightpad dimmer."""
+
+    _attr_should_poll = False
 
     def __init__(self, load):
         """Initialize the light."""
@@ -78,11 +80,6 @@ class PlumLight(LightEntity):
         """Change event handler updating the brightness."""
         self._brightness = event["level"]
         self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):
@@ -142,6 +139,7 @@ class GlowRing(LightEntity):
     """Representation of a Plum Lightpad dimmer glow ring."""
 
     _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, lightpad):
@@ -177,11 +175,6 @@ class GlowRing(LightEntity):
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
         return color_util.color_RGB_to_hs(self._red, self._green, self._blue)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):

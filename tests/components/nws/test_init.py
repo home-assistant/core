@@ -2,12 +2,14 @@
 from homeassistant.components.nws.const import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+
+from .const import NWS_CONFIG
 
 from tests.common import MockConfigEntry
-from tests.components.nws.const import NWS_CONFIG
 
 
-async def test_unload_entry(hass, mock_simple_nws):
+async def test_unload_entry(hass: HomeAssistant, mock_simple_nws) -> None:
     """Test that nws setup with config yaml."""
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -9,11 +9,12 @@ from yarl import URL
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import SynologyDSMCentralUpdateCoordinator
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 from .models import SynologyDSMData
 
@@ -29,7 +30,7 @@ UPDATE_ENTITIES: Final = [
     SynologyDSMUpdateEntityEntityDescription(
         api_key=SynoCoreUpgrade.API_KEY,
         key="update",
-        name="DSM Update",
+        translation_key="update",
         entity_category=EntityCategory.DIAGNOSTIC,
     )
 ]
@@ -46,11 +47,18 @@ async def async_setup_entry(
     )
 
 
-class SynoDSMUpdateEntity(SynologyDSMBaseEntity, UpdateEntity):
+class SynoDSMUpdateEntity(
+    SynologyDSMBaseEntity[SynologyDSMCentralUpdateCoordinator], UpdateEntity
+):
     """Mixin for update entity specific attributes."""
 
     entity_description: SynologyDSMUpdateEntityEntityDescription
     _attr_title = "Synology DSM"
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self._api.upgrade)
 
     @property
     def installed_version(self) -> str | None:

@@ -10,11 +10,10 @@ from bleak import BleakClient, BleakError
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-)
-from homeassistant.components.device_tracker.const import (
     CONF_TRACK_NEW,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     SourceType,
 )
@@ -71,6 +70,7 @@ async def async_setup_scanner(  # noqa: C901
     yaml_path = hass.config.path(YAML_DEVICES)
     devs_to_track: set[str] = set()
     devs_no_track: set[str] = set()
+    devs_advertise_time: dict[str, float] = {}
     devs_track_battery = {}
     interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     # if track new devices is true discover new devices
@@ -139,12 +139,24 @@ async def async_setup_scanner(  # noqa: C901
     ) -> None:
         """Lookup Bluetooth LE devices and update status."""
         battery = None
+        # We need one we can connect to since the tracker will
+        # accept devices from non-connectable sources
+        if service_info.connectable:
+            device = service_info.device
+        elif connectable_device := bluetooth.async_ble_device_from_address(
+            hass, service_info.device.address, True
+        ):
+            device = connectable_device
+        else:
+            # The device can be seen by a passive tracker but we
+            # don't have a route to make a connection
+            return
         try:
-            async with BleakClient(service_info.device) as client:
+            async with BleakClient(device) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
         except asyncio.TimeoutError:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Timeout when trying to get battery status for %s", service_info.name
             )
         # Bleak currently has a few places where checking dbus attributes
@@ -167,6 +179,7 @@ async def async_setup_scanner(  # noqa: C901
         """Update from a ble callback."""
         mac = service_info.address
         if mac in devs_to_track:
+            devs_advertise_time[mac] = service_info.time
             now = dt_util.utcnow()
             hass.async_create_task(async_see_device(mac, service_info.name))
             if (
@@ -174,8 +187,9 @@ async def async_setup_scanner(  # noqa: C901
                 and now > devs_track_battery[mac] + battery_track_interval
             ):
                 devs_track_battery[mac] = now
-                asyncio.create_task(
-                    _async_see_update_ble_battery(mac, now, service_info)
+                hass.async_create_background_task(
+                    _async_see_update_ble_battery(mac, now, service_info),
+                    "bluetooth_le_tracker.device_tracker-see_update_ble_battery",
                 )
 
         if track_new:
@@ -192,12 +206,19 @@ async def async_setup_scanner(  # noqa: C901
         # interval so they do not get set to not_home when
         # there have been no callbacks because the RSSI or
         # other properties have not changed.
-        for service_info in bluetooth.async_discovered_service_info(hass):
-            _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
+        for service_info in bluetooth.async_discovered_service_info(hass, False):
+            # Only call _async_update_ble if the advertisement time has changed
+            if service_info.time != devs_advertise_time.get(service_info.address):
+                _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
 
     cancels = [
         bluetooth.async_register_callback(
-            hass, _async_update_ble, None, bluetooth.BluetoothScanningMode.ACTIVE
+            hass,
+            _async_update_ble,
+            BluetoothCallbackMatcher(
+                connectable=False
+            ),  # We will take data from any source
+            bluetooth.BluetoothScanningMode.ACTIVE,
         ),
         async_track_time_interval(hass, _async_refresh_ble, interval),
     ]

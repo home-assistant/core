@@ -30,6 +30,7 @@ class _BaseFlowManagerView(HomeAssistantView):
             data = result.copy()
             data.pop("result")
             data.pop("data")
+            data.pop("context")
             return data
 
         if "data_schema" not in result:

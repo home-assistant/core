@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.logbook.const import (
+from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,

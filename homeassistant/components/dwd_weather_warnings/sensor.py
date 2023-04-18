@@ -1,5 +1,4 @@
-"""
-Support for getting statistical data from a DWD Weather Warnings.
+"""Support for getting statistical data from a DWD Weather Warnings.
 
 Data is fetched from DWD:
 https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html
@@ -11,9 +10,6 @@ Wetterwarnungen (Stufe 1)
 """
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-
 from dwdwfsapi import DwdWeatherWarningsAPI
 import voluptuous as vol
 
@@ -22,41 +18,35 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by DWD"
-ATTR_REGION_NAME = "region_name"
-ATTR_REGION_ID = "region_id"
-ATTR_LAST_UPDATE = "last_update"
-ATTR_WARNING_COUNT = "warning_count"
-
-API_ATTR_WARNING_NAME = "event"
-API_ATTR_WARNING_TYPE = "event_code"
-API_ATTR_WARNING_LEVEL = "level"
-API_ATTR_WARNING_HEADLINE = "headline"
-API_ATTR_WARNING_DESCRIPTION = "description"
-API_ATTR_WARNING_INSTRUCTION = "instruction"
-API_ATTR_WARNING_START = "start_time"
-API_ATTR_WARNING_END = "end_time"
-API_ATTR_WARNING_PARAMETERS = "parameters"
-API_ATTR_WARNING_COLOR = "color"
-
-DEFAULT_NAME = "DWD-Weather-Warnings"
-
-CONF_REGION_NAME = "region_name"
-
-CURRENT_WARNING_SENSOR = "current_warning_level"
-ADVANCE_WARNING_SENSOR = "advance_warning_level"
-
-SCAN_INTERVAL = timedelta(minutes=15)
-
+from .const import (
+    ADVANCE_WARNING_SENSOR,
+    API_ATTR_WARNING_COLOR,
+    API_ATTR_WARNING_DESCRIPTION,
+    API_ATTR_WARNING_END,
+    API_ATTR_WARNING_HEADLINE,
+    API_ATTR_WARNING_INSTRUCTION,
+    API_ATTR_WARNING_LEVEL,
+    API_ATTR_WARNING_NAME,
+    API_ATTR_WARNING_PARAMETERS,
+    API_ATTR_WARNING_START,
+    API_ATTR_WARNING_TYPE,
+    ATTR_LAST_UPDATE,
+    ATTR_REGION_ID,
+    ATTR_REGION_NAME,
+    ATTR_WARNING_COUNT,
+    CONF_REGION_NAME,
+    CURRENT_WARNING_SENSOR,
+    DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    LOGGER,
+)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -108,12 +98,14 @@ def setup_platform(
 class DwdWeatherWarningsSensor(SensorEntity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
+    _attr_attribution = "Data provided by DWD"
+
     def __init__(
         self,
         api,
         name,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize a DWD-Weather-Warnings sensor."""
         self._api = api
         self.entity_description = description
@@ -130,7 +122,6 @@ class DwdWeatherWarningsSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
         data = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_REGION_NAME: self._api.api.warncell_name,
             ATTR_REGION_ID: self._api.api.warncell_id,
             ATTR_LAST_UPDATE: self._api.api.last_update,
@@ -164,13 +155,13 @@ class DwdWeatherWarningsSensor(SensorEntity):
         return data
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._api.api.data_valid
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the DWD-Weather-Warnings API."""
-        _LOGGER.debug(
+        LOGGER.debug(
             "Update requested for %s (%s) by %s",
             self._api.api.warncell_name,
             self._api.api.warncell_id,
@@ -186,8 +177,8 @@ class WrappedDwDWWAPI:
         """Initialize a DWD-Weather-Warnings wrapper."""
         self.api = api
 
-    @Throttle(SCAN_INTERVAL)
+    @Throttle(DEFAULT_SCAN_INTERVAL)
     def update(self):
         """Get the latest data from the DWD-Weather-Warnings API."""
         self.api.update()
-        _LOGGER.debug("Update performed")
+        LOGGER.debug("Update performed")

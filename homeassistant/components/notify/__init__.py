@@ -1,12 +1,15 @@
 """Provides functionality to notify people."""
 from __future__ import annotations
 
+import asyncio
+
 import voluptuous as vol
 
 import homeassistant.components.persistent_notification as pn
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
@@ -40,21 +43,28 @@ PLATFORM_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the notify services."""
 
+    platform_setups = async_setup_legacy(hass, config)
+
     # We need to add the component here break the deadlock
     # when setting up integrations from config entries as
     # they would otherwise wait for notify to be
     # setup and thus the config entries would not be able to
-    # setup their platforms.
+    # setup their platforms, but we need to do it after
+    # the dispatcher is connected so we don't miss integrations
+    # that are registered before the dispatcher is connected
     hass.config.components.add(DOMAIN)
-    await async_setup_legacy(hass, config)
+
+    if platform_setups:
+        await asyncio.wait([asyncio.create_task(setup) for setup in platform_setups])
 
     async def persistent_notification(service: ServiceCall) -> None:
-        """Send notification via the built-in persistsent_notify integration."""
-        message = service.data[ATTR_MESSAGE]
+        """Send notification via the built-in persistent_notify integration."""
+        message: Template = service.data[ATTR_MESSAGE]
         message.hass = hass
         check_templates_warn(hass, message)
 
         title = None
+        title_tpl: Template | None
         if title_tpl := service.data.get(ATTR_TITLE):
             check_templates_warn(hass, title_tpl)
             title_tpl.hass = hass

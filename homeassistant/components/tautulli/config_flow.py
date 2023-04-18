@@ -24,10 +24,9 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         errors = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             if (error := await self.validate_input(user_input)) is None:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,

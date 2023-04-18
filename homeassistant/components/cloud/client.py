@@ -10,12 +10,12 @@ from typing import Any
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
-from homeassistant.components import persistent_notification, webhook
+from homeassistant.components import google_assistant, persistent_notification, webhook
 from homeassistant.components.alexa import (
     errors as alexa_errors,
     smart_home as alexa_smart_home,
 )
-from homeassistant.components.google_assistant import const as gc, smart_home as ga
+from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -47,6 +47,7 @@ class CloudClient(Interface):
         self._google_config: google_config.CloudGoogleConfig | None = None
         self._alexa_config_init_lock = asyncio.Lock()
         self._google_config_init_lock = asyncio.Lock()
+        self._relayer_region: str | None = None
 
     @property
     def base_path(self) -> Path:
@@ -83,6 +84,11 @@ class CloudClient(Interface):
     def remote_autostart(self) -> bool:
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
+
+    @property
+    def relayer_region(self) -> str | None:
+        """Return the connected relayer region."""
+        return self._relayer_region
 
     async def get_alexa_config(self) -> alexa_config.CloudAlexaConfig:
         """Return Alexa config."""
@@ -142,7 +148,10 @@ class CloudClient(Interface):
             except aiohttp.ClientError as err:  # If no internet available yet
                 if self._hass.is_running:
                     logging.getLogger(__package__).warning(
-                        "Unable to activate Alexa Report State: %s. Retrying in 30 seconds",
+                        (
+                            "Unable to activate Alexa Report State: %s. Retrying in 30"
+                            " seconds"
+                        ),
                         err,
                     )
                 async_call_later(self._hass, 30, enable_alexa)
@@ -216,7 +225,7 @@ class CloudClient(Interface):
             return ga.api_disabled_response(payload, gconf.agent_user_id)
 
         return await ga.async_handle_message(
-            self._hass, gconf, gconf.cloud_user, payload, gc.SOURCE_CLOUD
+            self._hass, gconf, gconf.cloud_user, payload, google_assistant.SOURCE_CLOUD
         )
 
     async def async_webhook_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
@@ -252,6 +261,11 @@ class CloudClient(Interface):
             "status": response_dict["status"],
             "headers": {"Content-Type": response.content_type},
         }
+
+    async def async_system_message(self, payload: dict[Any, Any] | None) -> None:
+        """Handle system messages."""
+        if payload and (region := payload.get("region")):
+            self._relayer_region = region
 
     async def async_cloudhooks_update(self, data: dict[str, dict[str, str]]) -> None:
         """Update local list of cloudhooks."""

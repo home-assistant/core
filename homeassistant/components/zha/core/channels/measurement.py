@@ -1,4 +1,9 @@
 """Measurement channels module for Zigbee Home Automation."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import zigpy.zcl
 from zigpy.zcl.clusters import measurement
 
 from .. import registries
@@ -9,6 +14,10 @@ from ..const import (
     REPORT_CONFIG_MIN_INT,
 )
 from .base import AttrReportConfig, ZigbeeChannel
+from .helpers import is_hue_motion_sensor
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.FlowMeasurement.cluster_id)
@@ -49,6 +58,15 @@ class OccupancySensing(ZigbeeChannel):
     REPORT_CONFIG = (
         AttrReportConfig(attr="occupancy", config=REPORT_CONFIG_IMMEDIATE),
     )
+
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
+        """Initialize Occupancy channel."""
+        super().__init__(cluster, ch_pool)
+        if is_hue_motion_sensor(self):
+            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
+                self.ZCL_INIT_ATTRS.copy()
+            )
+            self.ZCL_INIT_ATTRS["sensitivity"] = True
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.PressureMeasurement.cluster_id)

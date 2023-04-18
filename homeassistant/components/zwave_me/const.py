@@ -10,6 +10,7 @@ class ZWaveMePlatform(StrEnum):
     """Included ZWaveMe platforms."""
 
     BINARY_SENSOR = "sensorBinary"
+    BRIGHTNESS_LIGHT = "lightMultilevel"
     BUTTON = "toggleButton"
     CLIMATE = "thermostat"
     COVER = "motor"

@@ -110,7 +110,7 @@ class WorldTidesInfoSensor(SensorEntity):
             return None
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from WorldTidesInfo API."""
         start = int(time.time())
         resource = (

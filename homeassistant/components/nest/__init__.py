@@ -27,13 +27,8 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.camera import Image, img_util
-from homeassistant.components.http.const import KEY_HASS_USER
+from homeassistant.components.http import KEY_HASS_USER
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.components.repairs import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
@@ -57,6 +52,11 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
@@ -252,7 +252,8 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
         new_data.update(
             {
                 CONF_SUBSCRIBER_ID: config[CONF_SUBSCRIBER_ID],
-                CONF_SUBSCRIBER_ID_IMPORTED: True,  # Don't delete user managed subscriber
+                # Don't delete user managed subscriber
+                CONF_SUBSCRIBER_ID_IMPORTED: True,
             }
         )
     hass.config_entries.async_update_entry(
@@ -270,7 +271,9 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
             severity=IssueSeverity.ERROR,
             translation_key="removed_app_auth",
             translation_placeholders={
-                "more_info_url": "https://www.home-assistant.io/more-info/nest-auth-deprecation",
+                "more_info_url": (
+                    "https://www.home-assistant.io/more-info/nest-auth-deprecation"
+                ),
                 "documentation_url": "https://www.home-assistant.io/integrations/nest/",
             },
         )
@@ -333,7 +336,10 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await subscriber.delete_subscription()
     except (AuthException, SubscriberException) as err:
         _LOGGER.warning(
-            "Unable to delete subscription '%s'; Will be automatically cleaned up by cloud console: %s",
+            (
+                "Unable to delete subscription '%s'; Will be automatically cleaned up"
+                " by cloud console: %s"
+            ),
             subscriber.subscriber_id,
             err,
         )

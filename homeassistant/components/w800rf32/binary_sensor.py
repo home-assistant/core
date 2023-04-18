@@ -54,7 +54,6 @@ async def async_setup_platform(
     # device_id --> "c1 or a3" X10 device. entity (type dictionary)
     # --> name, device_class etc
     for device_id, entity in config[CONF_DEVICES].items():
-
         _LOGGER.debug(
             "Add %s w800rf32.binary_sensor (class %s)",
             entity[CONF_NAME],
@@ -76,6 +75,8 @@ async def async_setup_platform(
 class W800rf32BinarySensor(BinarySensorEntity):
     """A representation of a w800rf32 binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, device_id, name, device_class=None, off_delay=None):
         """Initialize the w800rf32 sensor."""
         self._signal = W800RF32_DEVICE.format(device_id)
@@ -95,11 +96,6 @@ class W800rf32BinarySensor(BinarySensorEntity):
     def name(self):
         """Return the device name."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_class(self):
@@ -131,7 +127,6 @@ class W800rf32BinarySensor(BinarySensorEntity):
             self.update_state(is_on)
 
         if self.is_on and self._off_delay is not None and self._delay_listener is None:
-
             self._delay_listener = evt.async_track_point_in_time(
                 self.hass, self._off_delay_listener, dt_util.utcnow() + self._off_delay
             )
@@ -141,6 +136,6 @@ class W800rf32BinarySensor(BinarySensorEntity):
         self._state = state
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         async_dispatcher_connect(self.hass, self._signal, self.binary_sensor_update)

@@ -5,16 +5,16 @@ from typing import Any
 
 from tololib.const import Calefaction
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_OFF,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -55,7 +55,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         | ClimateEntityFeature.FAN_MODE
     )
     _attr_target_temperature_step = 1
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
@@ -130,9 +130,9 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         """Set fan mode."""
         self.coordinator.client.set_fan_on(fan_mode == FAN_ON)
 
-    def set_humidity(self, humidity: float) -> None:
+    def set_humidity(self, humidity: int) -> None:
         """Set desired target humidity."""
-        self.coordinator.client.set_target_humidity(round(humidity))
+        self.coordinator.client.set_target_humidity(humidity)
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set desired target temperature."""

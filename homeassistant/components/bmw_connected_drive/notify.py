@@ -52,11 +52,18 @@ def get_service(
 class BMWNotificationService(BaseNotificationService):
     """Send Notifications to BMW."""
 
+    vehicle_targets: dict[str, MyBMWVehicle]
+
     def __init__(self, targets: dict[str, MyBMWVehicle]) -> None:
         """Set up the notification service."""
-        self.targets: dict[str, MyBMWVehicle] = targets
+        self.vehicle_targets = targets
 
-    def send_message(self, message: str = "", **kwargs: Any) -> None:
+    @property
+    def targets(self) -> dict[str, Any] | None:
+        """Return a dictionary of registered targets."""
+        return self.vehicle_targets
+
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message or POI to the car."""
         for vehicle in kwargs[ATTR_TARGET]:
             vehicle = cast(MyBMWVehicle, vehicle)
@@ -81,6 +88,6 @@ class BMWNotificationService(BaseNotificationService):
                     }
                 )
 
-                vehicle.remote_services.trigger_send_poi(location_dict)
+                await vehicle.remote_services.trigger_send_poi(location_dict)
             else:
                 raise ValueError(f"'data.{ATTR_LOCATION}' is required.")

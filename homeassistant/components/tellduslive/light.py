@@ -2,13 +2,14 @@
 import logging
 from typing import Any
 
-from homeassistant.components import light, tellduslive
+from homeassistant.components import light
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .. import tellduslive
 from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)

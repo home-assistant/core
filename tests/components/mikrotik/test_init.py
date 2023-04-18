@@ -1,5 +1,5 @@
 """Test Mikrotik setup process."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from librouteros.exceptions import ConnectionClosed, LibRouterosError
 import pytest
@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
 
 from . import MOCK_DATA
 
@@ -23,13 +23,7 @@ def mock_api():
         yield mock_api
 
 
-async def test_setup_with_no_config(hass):
-    """Test that we do not discover anything or try to set up a hub."""
-    assert await async_setup_component(hass, mikrotik.DOMAIN, {}) is True
-    assert mikrotik.DOMAIN not in hass.data
-
-
-async def test_successful_config_entry(hass):
+async def test_successful_config_entry(hass: HomeAssistant) -> None:
     """Test config entry successful setup."""
     entry = MockConfigEntry(
         domain=mikrotik.DOMAIN,
@@ -41,8 +35,8 @@ async def test_successful_config_entry(hass):
     assert entry.state == ConfigEntryState.LOADED
 
 
-async def test_hub_conn_error(hass, mock_api):
-    """Test that a failed setup will not store the hub."""
+async def test_hub_connection_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
+    """Test setup fails due to connection error."""
     entry = MockConfigEntry(
         domain=mikrotik.DOMAIN,
         data=MOCK_DATA,
@@ -56,8 +50,10 @@ async def test_hub_conn_error(hass, mock_api):
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_hub_auth_error(hass, mock_api):
-    """Test that a failed setup will not store the hub."""
+async def test_hub_authentication_error(
+    hass: HomeAssistant, mock_api: MagicMock
+) -> None:
+    """Test setup fails due to authentication error."""
     entry = MockConfigEntry(
         domain=mikrotik.DOMAIN,
         data=MOCK_DATA,
@@ -71,8 +67,8 @@ async def test_hub_auth_error(hass, mock_api):
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_entry(hass) -> None:
-    """Test being able to unload an entry."""
+async def test_unload_entry(hass: HomeAssistant) -> None:
+    """Test unloading an entry."""
     entry = MockConfigEntry(
         domain=mikrotik.DOMAIN,
         data=MOCK_DATA,

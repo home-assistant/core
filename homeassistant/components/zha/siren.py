@@ -9,10 +9,11 @@ from zigpy.zcl.clusters.security import IasWd as WD
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
+    ATTR_TONE,
+    ATTR_VOLUME_LEVEL,
     SirenEntity,
     SirenEntityFeature,
 )
-from homeassistant.components.siren.const import ATTR_TONE, ATTR_VOLUME_LEVEL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback

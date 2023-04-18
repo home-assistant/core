@@ -222,7 +222,7 @@ class AppleTVManager:
                 await self._connect(conf, raise_missing_credentials)
         except exceptions.AuthenticationError:
             self.config_entry.async_start_reauth(self.hass)
-            asyncio.create_task(self.disconnect())
+            await self.disconnect()
             _LOGGER.exception(
                 "Authentication failed for %s, try reconfiguring device",
                 self.config_entry.data[CONF_NAME],
@@ -309,7 +309,8 @@ class AppleTVManager:
             missing_protocols_str = ", ".join(missing_protocols)
             if raise_missing_credentials:
                 raise ConfigEntryNotReady(
-                    f"Protocol(s) {missing_protocols_str} not yet found for {name}, waiting for discovery."
+                    f"Protocol(s) {missing_protocols_str} not yet found for {name},"
+                    " waiting for discovery."
                 )
             _LOGGER.info(
                 "Protocol(s) %s not yet found for %s, trying later",
@@ -343,12 +344,7 @@ class AppleTVManager:
             ATTR_MANUFACTURER: "Apple",
             ATTR_NAME: self.config_entry.data[CONF_NAME],
         }
-
-        area = attrs[ATTR_NAME]
-        name_trailer = f" {DEFAULT_NAME}"
-        if area.endswith(name_trailer):
-            area = area[: -len(name_trailer)]
-        attrs[ATTR_SUGGESTED_AREA] = area
+        attrs[ATTR_SUGGESTED_AREA] = attrs[ATTR_NAME].removesuffix(f" {DEFAULT_NAME}")
 
         if self.atv:
             dev_info = self.atv.device_info

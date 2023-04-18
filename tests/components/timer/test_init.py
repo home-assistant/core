@@ -1,5 +1,4 @@
 """The tests for the timer component."""
-# pylint: disable=protected-access
 from datetime import timedelta
 import logging
 from unittest.mock import patch
@@ -43,7 +42,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import (
@@ -54,7 +53,8 @@ from homeassistant.helpers.restore_state import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import MockUser, async_capture_events, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [None, 1, {}, {"name with space": None}]
 
@@ -100,7 +100,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_config_options(hass):
+async def test_config_options(hass: HomeAssistant) -> None:
     """Test configuration options."""
     count_start = len(hass.states.async_entity_ids())
 
@@ -147,7 +147,7 @@ async def test_config_options(hass):
     )
 
 
-async def test_methods_and_events(hass):
+async def test_methods_and_events(hass: HomeAssistant) -> None:
     """Test methods and events."""
     hass.state = CoreState.starting
 
@@ -202,7 +202,7 @@ async def test_methods_and_events(hass):
             assert len(results) == expectedEvents
 
 
-async def test_start_service(hass):
+async def test_start_service(hass: HomeAssistant) -> None:
     """Test the start/stop service."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -242,7 +242,7 @@ async def test_start_service(hass):
     assert state.attributes[ATTR_REMAINING] == "0:00:15"
 
 
-async def test_wait_till_timer_expires(hass):
+async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     """Test for a timer to end."""
     hass.state = CoreState.starting
 
@@ -286,7 +286,7 @@ async def test_wait_till_timer_expires(hass):
     assert len(results) == 2
 
 
-async def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
@@ -297,7 +297,9 @@ async def test_no_initial_state_and_no_restore_state(hass):
     assert state.state == STATUS_IDLE
 
 
-async def test_config_reload(hass, hass_admin_user, hass_read_only_user):
+async def test_config_reload(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
     ent_reg = er.async_get(hass)
@@ -393,7 +395,7 @@ async def test_config_reload(hass, hass_admin_user, hass_read_only_user):
     assert ATTR_FRIENDLY_NAME not in state_3.attributes
 
 
-async def test_timer_restarted_event(hass):
+async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     """Ensure restarted event is called after starting a paused or running timer."""
     hass.state = CoreState.starting
 
@@ -460,7 +462,7 @@ async def test_timer_restarted_event(hass):
     assert len(results) == 4
 
 
-async def test_state_changed_when_timer_restarted(hass):
+async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     """Ensure timer's state changes when it restarted."""
     hass.state = CoreState.starting
 
@@ -501,7 +503,7 @@ async def test_state_changed_when_timer_restarted(hass):
     assert len(results) == 2
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.timer_from_storage")
@@ -510,7 +512,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(config={DOMAIN: {"from_yaml": None}})
 
@@ -524,7 +526,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert state.state == STATUS_IDLE
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(config={DOMAIN: {"from_yaml": None}})
 
@@ -544,7 +548,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "timer from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -570,7 +576,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) is None
 
 
-async def test_update(hass, hass_ws_client, storage_setup):
+async def test_update(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating timer entity."""
 
     assert await storage_setup()
@@ -585,24 +593,36 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = {
+        CONF_NAME: "timer from storage",
+        CONF_DURATION: 33,
+        CONF_RESTORE: True,
+    }
     await client.send_json(
         {
             "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{timer_id}",
-            CONF_DURATION: 33,
-            CONF_RESTORE: True,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {
+        "id": "from_storage",
+        CONF_DURATION: "0:00:33",
+        CONF_NAME: "timer from storage",
+        CONF_RESTORE: True,
+    }
 
     state = hass.states.get(timer_entity_id)
     assert state.attributes[ATTR_DURATION] == _format_timedelta(cv.time_period(33))
     assert state.attributes[ATTR_RESTORE]
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
@@ -633,7 +653,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
 
 
-async def test_setup_no_config(hass, hass_admin_user):
+async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
     assert await async_setup_component(hass, DOMAIN, {})
@@ -652,7 +672,7 @@ async def test_setup_no_config(hass, hass_admin_user):
     assert count_start == len(hass.states.async_entity_ids())
 
 
-async def test_restore_idle(hass):
+async def test_restore_idle(hass: HomeAssistant) -> None:
     """Test entity restore logic when timer is idle."""
     utc_now = utcnow()
     stored_state = StoredState(
@@ -672,7 +692,7 @@ async def test_restore_idle(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",
@@ -692,7 +712,7 @@ async def test_restore_idle(hass):
     assert entity.extra_state_attributes[ATTR_RESTORE]
 
 
-async def test_restore_paused(hass):
+async def test_restore_paused(hass: HomeAssistant) -> None:
     """Test entity restore logic when timer is paused."""
     utc_now = utcnow()
     stored_state = StoredState(
@@ -712,7 +732,7 @@ async def test_restore_paused(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",
@@ -732,7 +752,7 @@ async def test_restore_paused(hass):
     assert entity.extra_state_attributes[ATTR_RESTORE]
 
 
-async def test_restore_active_resume(hass):
+async def test_restore_active_resume(hass: HomeAssistant) -> None:
     """Test entity restore logic when timer is active and end time is after startup."""
     events = async_capture_events(hass, EVENT_TIMER_RESTARTED)
     assert not events
@@ -756,7 +776,7 @@ async def test_restore_active_resume(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",
@@ -783,7 +803,7 @@ async def test_restore_active_resume(hass):
     assert len(events) == 1
 
 
-async def test_restore_active_finished_outside_grace(hass):
+async def test_restore_active_finished_outside_grace(hass: HomeAssistant) -> None:
     """Test entity restore logic: timer is active, ended while Home Assistant was stopped."""
     events = async_capture_events(hass, EVENT_TIMER_FINISHED)
     assert not events
@@ -807,7 +827,7 @@ async def test_restore_active_finished_outside_grace(hass):
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
 
-    entity = Timer(
+    entity = Timer.from_storage(
         {
             CONF_ID: "test",
             CONF_NAME: "test",

@@ -32,27 +32,29 @@ async def async_setup_entry(
 
     for vehicle in coordinator.account.vehicles:
         if not coordinator.read_only:
-            entities.append(BMWLock(coordinator, vehicle, "lock", "BMW lock"))
+            entities.append(
+                BMWLock(
+                    coordinator,
+                    vehicle,
+                )
+            )
     async_add_entities(entities)
 
 
 class BMWLock(BMWBaseEntity, LockEntity):
     """Representation of a MyBMW vehicle lock."""
 
+    _attr_name = "Lock"
+
     def __init__(
         self,
         coordinator: BMWDataUpdateCoordinator,
         vehicle: MyBMWVehicle,
-        attribute: str,
-        sensor_name: str,
     ) -> None:
         """Initialize the lock."""
         super().__init__(coordinator, vehicle)
 
-        self._attribute = attribute
-        self._attr_name = f"{vehicle.name} {attribute}"
-        self._attr_unique_id = f"{vehicle.vin}-{attribute}"
-        self._sensor_name = sensor_name
+        self._attr_unique_id = f"{vehicle.vin}-lock"
         self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
 
     async def async_lock(self, **kwargs: Any) -> None:
@@ -81,17 +83,17 @@ class BMWLock(BMWBaseEntity, LockEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         _LOGGER.debug("Updating lock data of %s", self.vehicle.name)
+        # Set default attributes
+        self._attr_extra_state_attributes = self._attrs
+
         # Only update the HA state machine if the vehicle reliably reports its lock state
         if self.door_lock_state_available:
             self._attr_is_locked = self.vehicle.doors_and_windows.door_lock_state in {
                 LockState.LOCKED,
                 LockState.SECURED,
             }
-            self._attr_extra_state_attributes = dict(
-                self._attrs,
-                **{
-                    "door_lock_state": self.vehicle.doors_and_windows.door_lock_state.value,
-                },
-            )
+            self._attr_extra_state_attributes[
+                "door_lock_state"
+            ] = self.vehicle.doors_and_windows.door_lock_state.value
 
         super()._handle_coordinator_update()

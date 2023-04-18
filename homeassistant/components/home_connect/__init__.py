@@ -138,11 +138,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Execute calls to services taking a program."""
         program = call.data[ATTR_PROGRAM]
         device_id = call.data[ATTR_DEVICE_ID]
-        options = {
-            ATTR_KEY: call.data.get(ATTR_KEY),
-            ATTR_VALUE: call.data.get(ATTR_VALUE),
-            ATTR_UNIT: call.data.get(ATTR_UNIT),
-        }
+
+        options = []
+
+        option_key = call.data.get(ATTR_KEY)
+        if option_key is not None:
+            option = {ATTR_KEY: option_key, ATTR_VALUE: call.data[ATTR_VALUE]}
+
+            option_unit = call.data.get(ATTR_UNIT)
+            if option_unit is not None:
+                option[ATTR_UNIT] = option_unit
+
+            options.append(option)
 
         appliance = _get_appliance_by_device_id(hass, device_id)
         await hass.async_add_executor_job(getattr(appliance, method), program, options)

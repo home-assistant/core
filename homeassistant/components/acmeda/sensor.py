@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .base import AcmedaBase
 from .const import ACMEDA_HUB_UPDATE, DOMAIN
 from .helpers import async_add_acmeda_entities
+from .hub import PulseHub
 
 
 async def async_setup_entry(
@@ -19,7 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Acmeda Rollers from a config entry."""
-    hub = hass.data[DOMAIN][config_entry.entry_id]
+    hub: PulseHub = hass.data[DOMAIN][config_entry.entry_id]
 
     current: set[int] = set()
 
@@ -41,15 +42,15 @@ async def async_setup_entry(
 class AcmedaBattery(AcmedaBase, SensorEntity):
     """Representation of a Acmeda cover device."""
 
-    device_class = SensorDeviceClass.BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of roller."""
         return f"{super().name} Battery"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | int | None:
         """Return the state of the device."""
         return self.roller.battery

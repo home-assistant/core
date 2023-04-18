@@ -98,13 +98,16 @@ refresh_value:
   description: Force update value(s) for a Z-Wave entity
   fields:
     entity_id:
-      name: Entity
-      description: Entity whose value(s) should be refreshed
+      name: Entities
+      description: Entities to refresh values for.
       required: true
-      example: sensor.family_room_motion
+      example: |
+        - sensor.family_room_motion
+        - switch.kitchen
       selector:
         entity:
           integration: zwave_js
+          multiple: true
     refresh_all_values:
       name: Refresh all values?
       description: Whether to refresh all values (true) or just the primary value (false)

@@ -4,6 +4,9 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from functools import partial
+from typing import Any
+
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -67,7 +70,7 @@ async def async_setup_entry(
 class FibaroLight(FibaroDevice, LightEntity):
     """Representation of a Fibaro Light, including dimmable."""
 
-    def __init__(self, fibaro_device):
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the light."""
         self._update_lock = asyncio.Lock()
 
@@ -76,7 +79,7 @@ class FibaroLight(FibaroDevice, LightEntity):
             or "colorComponents" in fibaro_device.properties
             or "RGB" in fibaro_device.type
             or "rgb" in fibaro_device.type
-            or "color" in fibaro_device.baseType
+            or "color" in fibaro_device.base_type
         ) and (
             "setColor" in fibaro_device.actions
             or "setColorComponents" in fibaro_device.actions
@@ -87,7 +90,7 @@ class FibaroLight(FibaroDevice, LightEntity):
             or "rgbw" in fibaro_device.type
         )
         supports_dimming = (
-            "levelChange" in fibaro_device.interfaces
+            fibaro_device.has_interface("levelChange")
             and "setValue" in fibaro_device.actions
         )
 
@@ -107,7 +110,7 @@ class FibaroLight(FibaroDevice, LightEntity):
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         async with self._update_lock:
             await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
@@ -134,7 +137,7 @@ class FibaroLight(FibaroDevice, LightEntity):
         # The simplest case is left for last. No dimming, just switch on
         self.call_turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         async with self._update_lock:
             await self.hass.async_add_executor_job(partial(self._turn_off, **kwargs))
@@ -152,22 +155,21 @@ class FibaroLight(FibaroDevice, LightEntity):
 
         JSON for HC2 uses always string, HC3 uses int for integers.
         """
-        props = self.fibaro_device.properties
         if self.current_binary_state:
             return True
-        with suppress(ValueError, TypeError):
-            if "brightness" in props and int(props.brightness) != 0:
+        with suppress(TypeError):
+            if self.fibaro_device.brightness != 0:
                 return True
-        with suppress(ValueError, TypeError):
-            if "currentProgram" in props and int(props.currentProgram) != 0:
+        with suppress(TypeError):
+            if self.fibaro_device.current_program != 0:
                 return True
-        with suppress(ValueError, TypeError):
-            if "currentProgramID" in props and int(props.currentProgramID) != 0:
+        with suppress(TypeError):
+            if self.fibaro_device.current_program_id != 0:
                 return True
 
         return False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the state."""
         async with self._update_lock:
             await self.hass.async_add_executor_job(self._update)
@@ -176,21 +178,19 @@ class FibaroLight(FibaroDevice, LightEntity):
         """Really update the state."""
         # Brightness handling
         if brightness_supported(self.supported_color_modes):
-            self._attr_brightness = scaleto255(int(self.fibaro_device.properties.value))
+            self._attr_brightness = scaleto255(self.fibaro_device.value.int_value())
 
         # Color handling
         if (
             color_supported(self.supported_color_modes)
-            and "color" in self.fibaro_device.properties
-            and "," in self.fibaro_device.properties.color
+            and self.fibaro_device.color.has_color
         ):
             # Fibaro communicates the color as an 'R, G, B, W' string
-            rgbw_s = self.fibaro_device.properties.color
-            if rgbw_s == "0,0,0,0" and "lastColorSet" in self.fibaro_device.properties:
-                rgbw_s = self.fibaro_device.properties.lastColorSet
-            rgbw_list = [int(i) for i in rgbw_s.split(",")][:4]
+            rgbw = self.fibaro_device.color.rgbw_color
+            if rgbw == (0, 0, 0, 0) and self.fibaro_device.last_color_set.has_color:
+                rgbw = self.fibaro_device.last_color_set.rgbw_color
 
             if self._attr_color_mode == ColorMode.RGB:
-                self._attr_rgb_color = tuple(rgbw_list[:3])
+                self._attr_rgb_color = rgbw[:3]
             else:
-                self._attr_rgbw_color = tuple(rgbw_list)
+                self._attr_rgbw_color = rgbw

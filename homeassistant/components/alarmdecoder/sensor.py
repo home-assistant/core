@@ -24,7 +24,7 @@ class AlarmDecoderSensor(SensorEntity):
     _attr_name = "Alarm Panel Display"
     _attr_should_poll = False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

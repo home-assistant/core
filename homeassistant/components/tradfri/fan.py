@@ -78,8 +78,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
 
     @property
     def speed_count(self) -> int:
-        """
-        Return the number of speeds the fan supports.
+        """Return the number of speeds the fan supports.
 
         These are the steps:
         0 = Off

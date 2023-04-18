@@ -14,6 +14,8 @@ CONF_SUBSCRIBER_ID = "subscriber_id"
 CONF_SUBSCRIBER_ID_IMPORTED = "subscriber_id_imported"
 CONF_CLOUD_PROJECT_ID = "cloud_project_id"
 
+CONNECTIVITY_TRAIT_OFFLINE = "OFFLINE"
+
 SIGNAL_NEST_UPDATE = "nest_update"
 
 # For the Google Nest Device Access API

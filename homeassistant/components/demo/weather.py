@@ -22,14 +22,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -78,9 +71,9 @@ def setup_platform(
                 92,
                 1099,
                 0.5,
-                TEMP_CELSIUS,
-                PRESSURE_HPA,
-                SPEED_METERS_PER_SECOND,
+                UnitOfTemperature.CELSIUS,
+                UnitOfPressure.HPA,
+                UnitOfSpeed.METERS_PER_SECOND,
                 [
                     [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
                     [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
@@ -98,9 +91,9 @@ def setup_platform(
                 54,
                 987,
                 4.8,
-                TEMP_FAHRENHEIT,
-                PRESSURE_INHG,
-                SPEED_MILES_PER_HOUR,
+                UnitOfTemperature.FAHRENHEIT,
+                UnitOfPressure.INHG,
+                UnitOfSpeed.MILES_PER_HOUR,
                 [
                     [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
                     [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],
@@ -118,6 +111,9 @@ def setup_platform(
 class DemoWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_attribution = "Powered by Home Assistant"
+    _attr_should_poll = False
+
     def __init__(
         self,
         name: str,
@@ -132,7 +128,7 @@ class DemoWeather(WeatherEntity):
         forecast: list[list],
     ) -> None:
         """Initialize the Demo weather."""
-        self._name = name
+        self._attr_name = f"Demo Weather {name}"
         self._condition = condition
         self._native_temperature = temperature
         self._native_temperature_unit = temperature_unit
@@ -142,16 +138,6 @@ class DemoWeather(WeatherEntity):
         self._native_wind_speed = wind_speed
         self._native_wind_speed_unit = wind_speed_unit
         self._forecast = forecast
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"Demo Weather {self._name}"
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo weather condition."""
-        return False
 
     @property
     def native_temperature(self) -> float:
@@ -194,11 +180,6 @@ class DemoWeather(WeatherEntity):
         return [
             k for k, v in CONDITION_CLASSES.items() if self._condition.lower() in v
         ][0]
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return "Powered by Home Assistant"
 
     @property
     def forecast(self) -> list[Forecast]:

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup your Brunt integration",
+        "title": "Set up your Brunt integration",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"

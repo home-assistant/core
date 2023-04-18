@@ -14,8 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-from tests.components.wilight import (
+from . import (
     CONF_COMPONENTS,
     HOST,
     MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTURER,
@@ -25,6 +24,8 @@ from tests.components.wilight import (
     UPNP_SERIAL,
     WILIGHT_ID,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="dummy_get_components_from_model_clear")

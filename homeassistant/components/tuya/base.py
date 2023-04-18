@@ -8,6 +8,7 @@ import struct
 from typing import Any, Literal, overload
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
+from typing_extensions import Self
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -112,12 +113,12 @@ class ElectricityTypeData:
     voltage: str | None = None
 
     @classmethod
-    def from_json(cls, data: str) -> ElectricityTypeData:
+    def from_json(cls, data: str) -> Self:
         """Load JSON string and return a ElectricityTypeData object."""
         return cls(**json.loads(data.lower()))
 
     @classmethod
-    def from_raw(cls, data: str) -> ElectricityTypeData:
+    def from_raw(cls, data: str) -> Self:
         """Decode base64 string and return a ElectricityTypeData object."""
         raw = base64.b64decode(data)
         voltage = struct.unpack(">H", raw[0:2])[0] / 10.0
@@ -189,7 +190,7 @@ class TuyaEntity(Entity):
         dpcodes: str | DPCode | tuple[DPCode, ...] | None,
         *,
         prefer_function: bool = False,
-        dptype: DPType = None,
+        dptype: DPType | None = None,
     ) -> DPCode | EnumTypeData | IntegerTypeData | None:
         """Find a matching DP code available on for this device."""
         if dpcodes is None:

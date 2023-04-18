@@ -1,5 +1,7 @@
 """Property update methods and schemas."""
 
+from typing import Any
+
 from pyinsteon import devices
 from pyinsteon.config import RADIO_BUTTON_GROUPS, RAMP_RATE_IN_SEC, get_usable_value
 from pyinsteon.constants import (
@@ -158,7 +160,7 @@ def update_property(device, prop_name, value):
 async def websocket_get_properties(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -183,7 +185,7 @@ async def websocket_get_properties(
 async def websocket_change_properties_record(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -205,7 +207,7 @@ async def websocket_change_properties_record(
 async def websocket_write_properties(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -235,7 +237,7 @@ async def websocket_write_properties(
 async def websocket_load_properties(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):
@@ -266,7 +268,7 @@ async def websocket_load_properties(
 async def websocket_reset_properties(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Add the default All-Link Database records for an Insteon device."""
     if not (device := devices[msg[DEVICE_ADDRESS]]):

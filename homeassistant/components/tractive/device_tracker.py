@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -39,7 +38,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:paw"
-    _attr_name = "Tracker"
+    _attr_translation_key = "tracker"
 
     def __init__(self, user_id: str, item: Trackables) -> None:
         """Initialize tracker entity."""

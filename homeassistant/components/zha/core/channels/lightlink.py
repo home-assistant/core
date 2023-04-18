@@ -17,7 +17,7 @@ class LightLink(ZigbeeChannel):
     BIND: bool = False
 
     async def async_configure(self) -> None:
-        """Add Coordinator to LightLink group ."""
+        """Add Coordinator to LightLink group."""
 
         if self._ch_pool.skip_configuration:
             self._status = ChannelStatus.CONFIGURED
@@ -25,7 +25,7 @@ class LightLink(ZigbeeChannel):
 
         application = self._ch_pool.endpoint.device.application
         try:
-            coordinator = application.get_device(application.ieee)
+            coordinator = application.get_device(application.state.node_info.ieee)
         except KeyError:
             self.warning("Aborting - unable to locate required coordinator device.")
             return

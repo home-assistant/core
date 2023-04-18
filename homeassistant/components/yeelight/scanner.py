@@ -2,19 +2,22 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, ValuesView
+from collections.abc import Callable, ValuesView
 import contextlib
 from datetime import datetime
 from ipaddress import IPv4Address
 import logging
 from urllib.parse import urlparse
 
+import async_timeout
 from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
+from typing_extensions import Self
 
 from homeassistant import config_entries
 from homeassistant.components import network, ssdp
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .const import (
@@ -33,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 class YeelightScanner:
     """Scan for Yeelight devices."""
 
-    _scanner = None
+    _scanner: Self | None = None
 
     @classmethod
     @callback
@@ -62,10 +65,11 @@ class YeelightScanner:
         for idx, source_ip in enumerate(await self._async_build_source_set()):
             self._connected_events.append(asyncio.Event())
 
-            def _wrap_async_connected_idx(idx) -> Callable[[], Awaitable[None]]:
+            def _wrap_async_connected_idx(idx) -> Callable[[], None]:
                 """Create a function to capture the idx cell variable."""
 
-                async def _async_connected() -> None:
+                @callback
+                def _async_connected() -> None:
                     self._connected_events[idx].set()
 
                 return _async_connected
@@ -73,11 +77,11 @@ class YeelightScanner:
             source = (str(source_ip), 0)
             self._listeners.append(
                 SsdpSearchListener(
-                    async_callback=self._async_process_entry,
-                    service_type=SSDP_ST,
+                    callback=self._async_process_entry,
+                    search_target=SSDP_ST,
                     target=SSDP_TARGET,
                     source=source,
-                    async_connect_callback=_wrap_async_connected_idx(idx),
+                    connect_callback=_wrap_async_connected_idx(idx),
                 )
             )
 
@@ -153,7 +157,8 @@ class YeelightScanner:
             listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
-            await asyncio.wait_for(host_event.wait(), timeout=DISCOVERY_TIMEOUT)
+            async with async_timeout.timeout(DISCOVERY_TIMEOUT):
+                await host_event.wait()
 
         self._host_discovered_events[host].remove(host_event)
         return self._host_capabilities.get(host)
@@ -161,24 +166,24 @@ class YeelightScanner:
     def _async_discovered_by_ssdp(self, response: CaseInsensitiveDict) -> None:
         @callback
         def _async_start_flow(*_) -> None:
-            asyncio.create_task(
-                self._hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_SSDP},
-                    data=ssdp.SsdpServiceInfo(
-                        ssdp_usn="",
-                        ssdp_st=SSDP_ST,
-                        ssdp_headers=response,
-                        upnp={},
-                    ),
-                )
+            discovery_flow.async_create_flow(
+                self._hass,
+                DOMAIN,
+                context={"source": config_entries.SOURCE_SSDP},
+                data=ssdp.SsdpServiceInfo(
+                    ssdp_usn="",
+                    ssdp_st=SSDP_ST,
+                    ssdp_headers=response,
+                    upnp={},
+                ),
             )
 
         # Delay starting the flow in case the discovery is the result
         # of another discovery
         async_call_later(self._hass, 1, _async_start_flow)
 
-    async def _async_process_entry(self, headers: CaseInsensitiveDict) -> None:
+    @callback
+    def _async_process_entry(self, headers: CaseInsensitiveDict) -> None:
         """Process a discovery."""
         _LOGGER.debug("Discovered via SSDP: %s", headers)
         unique_id = headers["id"]

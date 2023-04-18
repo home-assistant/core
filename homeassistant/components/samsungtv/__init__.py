@@ -26,8 +26,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 
@@ -92,6 +96,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.6.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "on_action_url": "https://www.home-assistant.io/integrations/samsungtv/#turn-on-action"
+        },
+        learn_more_url="https://www.home-assistant.io/integrations/samsungtv/#turn-on-action",
+    )
     for entry_config in config[DOMAIN]:
         ip_address = await hass.async_add_executor_job(
             socket.gethostbyname, entry_config[CONF_HOST]
@@ -148,10 +165,9 @@ class DebouncedEntryReloader:
         LOGGER.debug("Calling debouncer to get a reload after cooldown")
         await self._debounced_reload.async_call()
 
-    @callback
-    def async_cancel(self) -> None:
+    async def async_shutdown(self) -> None:
         """Cancel any pending reload."""
-        self._debounced_reload.async_cancel()
+        await self._debounced_reload.async_shutdown()
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
@@ -211,11 +227,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # will be a race where the config flow will see the entry
     # as not loaded and may reload it
     debounced_reloader = DebouncedEntryReloader(hass, entry)
-    entry.async_on_unload(debounced_reloader.async_cancel)
+    entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
     hass.data[DOMAIN][entry.entry_id] = bridge
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -282,8 +298,10 @@ async def _async_create_bridge_with_updated_data(
 
     if model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
         LOGGER.info(
-            "Detected model %s for %s. Some televisions from H and J series use "
-            "an encrypted protocol but you are using %s which may not be supported",
+            (
+                "Detected model %s for %s. Some televisions from H and J series use "
+                "an encrypted protocol but you are using %s which may not be supported"
+            ),
             model,
             host,
             method,
@@ -321,7 +339,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         en_reg.async_clear_config_entry(config_entry.entry_id)
 
         version = config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry)
     LOGGER.debug("Migration to version %s successful", version)
 
     return True

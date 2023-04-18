@@ -1,0 +1,5 @@
+{
+  "domain": "inovelli",
+  "name": "Inovelli",
+  "iot_standards": ["zigbee", "zwave"]
+}

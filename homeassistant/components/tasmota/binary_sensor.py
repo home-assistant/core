@@ -58,16 +58,17 @@ class TasmotaBinarySensor(
 ):
     """Representation a Tasmota binary sensor."""
 
+    _delay_listener: Callable | None = None
+    _on_off_state: bool | None = None
     _tasmota_entity: tasmota_switch.TasmotaSwitch
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize the Tasmota binary sensor."""
-        self._delay_listener: Callable | None = None
-        self._on_off_state: bool | None = None
-
         super().__init__(
             **kwds,
         )
+        if self._tasmota_entity.off_delay is not None:
+            self._attr_force_update = True
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -97,11 +98,6 @@ class TasmotaBinarySensor(
             )
 
         self.async_write_ha_state()
-
-    @property
-    def force_update(self) -> bool:
-        """Force update."""
-        return True
 
     @property
     def is_on(self) -> bool | None:

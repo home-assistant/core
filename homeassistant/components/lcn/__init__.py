@@ -99,8 +99,10 @@ async def async_setup_entry(
         return False
     except pypck.connection.PchkLicenseError:
         _LOGGER.warning(
-            'Maximum number of connections on PCHK "%s" was '
-            "reached. An additional license key is required",
+            (
+                'Maximum number of connections on PCHK "%s" was '
+                "reached. An additional license key is required"
+            ),
             config_entry.title,
         )
         return False
@@ -237,6 +239,8 @@ def _async_fire_send_keys_event(
 class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
     ) -> None:
@@ -267,7 +271,10 @@ class LcnEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         address = f"{'g' if self.address[2] else 'm'}{self.address[0]:03d}{self.address[1]:03d}"
-        model = f"LCN resource ({get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])})"
+        model = (
+            "LCN resource"
+            f" ({get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])})"
+        )
 
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
@@ -279,11 +286,6 @@ class LcnEntity(Entity):
                 generate_unique_id(self.entry_id, self.config[CONF_ADDRESS]),
             ),
         }
-
-    @property
-    def should_poll(self) -> bool:
-        """Lcn device entity pushes its state to HA."""
-        return False
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

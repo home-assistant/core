@@ -100,24 +100,26 @@ async def async_setup_entry(
 class BaseDemoFan(FanEntity):
     """A demonstration fan component that uses legacy fan speeds."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         unique_id: str,
         name: str,
-        supported_features: int,
+        supported_features: FanEntityFeature,
         preset_modes: list[str] | None,
     ) -> None:
         """Initialize the entity."""
         self.hass = hass
         self._unique_id = unique_id
-        self._supported_features = supported_features
+        self._attr_supported_features = supported_features
         self._percentage: int | None = None
         self._preset_modes = preset_modes
         self._preset_mode: str | None = None
         self._oscillating: bool | None = None
         self._direction: str | None = None
-        self._name = name
+        self._attr_name = name
         if supported_features & FanEntityFeature.OSCILLATE:
             self._oscillating = False
         if supported_features & FanEntityFeature.DIRECTION:
@@ -129,16 +131,6 @@ class BaseDemoFan(FanEntity):
         return self._unique_id
 
     @property
-    def name(self) -> str:
-        """Get entity name."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo fan."""
-        return False
-
-    @property
     def current_direction(self) -> str | None:
         """Fan direction."""
         return self._direction
@@ -147,11 +139,6 @@ class BaseDemoFan(FanEntity):
     def oscillating(self) -> bool | None:
         """Oscillating."""
         return self._oscillating
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
 
 class DemoPercentageFan(BaseDemoFan, FanEntity):

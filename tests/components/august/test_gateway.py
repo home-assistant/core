@@ -5,11 +5,12 @@ from yalexs.authenticator_common import AuthenticationState
 
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.components.august.gateway import AugustGateway
+from homeassistant.core import HomeAssistant
 
-from tests.components.august.mocks import _mock_august_authentication, _mock_get_config
+from .mocks import _mock_august_authentication, _mock_get_config
 
 
-async def test_refresh_access_token(hass):
+async def test_refresh_access_token(hass: HomeAssistant) -> None:
     """Test token refreshes."""
     await _patched_refresh_access_token(hass, "new_token", 5678)
 

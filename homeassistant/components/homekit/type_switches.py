@@ -259,7 +259,7 @@ class SelectSwitch(HomeAccessory):
         options = state.attributes[ATTR_OPTIONS]
         for option in options:
             serv_option = self.add_preload_service(
-                SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE]
+                SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE], unique_id=option
             )
             serv_option.configure_char(
                 CHAR_NAME, value=cleanup_name_for_homekit(option)

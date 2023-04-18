@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 import logging
-import socket
 
-import snapcast.control
 from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
 
@@ -12,19 +10,14 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PLAYING,
-    STATE_UNKNOWN,
-)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -32,7 +25,7 @@ from .const import (
     ATTR_MASTER,
     CLIENT_PREFIX,
     CLIENT_SUFFIX,
-    DATA_KEY,
+    DOMAIN,
     GROUP_PREFIX,
     GROUP_SUFFIX,
     SERVICE_JOIN,
@@ -41,6 +34,7 @@ from .const import (
     SERVICE_SNAPSHOT,
     SERVICE_UNJOIN,
 )
+from .server import HomeAssistantSnapcast
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,19 +42,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT): cv.port}
 )
 
+STREAM_STATUS = {
+    "idle": MediaPlayerState.IDLE,
+    "playing": MediaPlayerState.PLAYING,
+    "unknown": None,
+}
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Snapcast platform."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT, CONTROL_PORT)
-
+def register_services():
+    """Register snapcast services."""
     platform = entity_platform.async_get_current_platform()
+
     platform.async_register_entity_service(SERVICE_SNAPSHOT, {}, "snapshot")
     platform.async_register_entity_service(SERVICE_RESTORE, {}, "async_restore")
     platform.async_register_entity_service(
@@ -73,49 +65,82 @@ async def async_setup_platform(
         handle_set_latency,
     )
 
-    try:
-        server = await snapcast.control.create_server(
-            hass.loop, host, port, reconnect=True
-        )
-    except socket.gaierror:
-        _LOGGER.error("Could not connect to Snapcast server at %s:%d", host, port)
-        return
 
-    # Note: Host part is needed, when using multiple snapservers
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the snapcast config entry."""
+    snapcast_data: HomeAssistantSnapcast = hass.data[DOMAIN][config_entry.entry_id]
+
+    register_services()
+
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
     hpid = f"{host}:{port}"
 
-    devices: list[MediaPlayerEntity] = [
-        SnapcastGroupDevice(group, hpid) for group in server.groups
+    snapcast_data.groups = [
+        SnapcastGroupDevice(group, hpid) for group in snapcast_data.server.groups
     ]
-    devices.extend(SnapcastClientDevice(client, hpid) for client in server.clients)
-    hass.data[DATA_KEY] = devices
-    async_add_entities(devices)
+    snapcast_data.clients = [
+        SnapcastClientDevice(client, hpid, config_entry.entry_id)
+        for client in snapcast_data.server.clients
+    ]
+    async_add_entities(snapcast_data.clients + snapcast_data.groups)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Snapcast platform."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.6.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    config[CONF_PORT] = config.get(CONF_PORT, CONTROL_PORT)
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 async def handle_async_join(entity, service_call):
     """Handle the entity service join."""
     if not isinstance(entity, SnapcastClientDevice):
-        raise ValueError("Entity is not a client. Can only join clients.")
+        raise TypeError("Entity is not a client. Can only join clients.")
     await entity.async_join(service_call.data[ATTR_MASTER])
 
 
 async def handle_async_unjoin(entity, service_call):
     """Handle the entity service unjoin."""
     if not isinstance(entity, SnapcastClientDevice):
-        raise ValueError("Entity is not a client. Can only unjoin clients.")
+        raise TypeError("Entity is not a client. Can only unjoin clients.")
     await entity.async_unjoin()
 
 
 async def handle_set_latency(entity, service_call):
     """Handle the entity service set_latency."""
     if not isinstance(entity, SnapcastClientDevice):
-        raise ValueError("Latency can only be set for a Snapcast client.")
+        raise TypeError("Latency can only be set for a Snapcast client.")
     await entity.async_set_latency(service_call.data[ATTR_LATENCY])
 
 
 class SnapcastGroupDevice(MediaPlayerEntity):
     """Representation of a Snapcast group device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -124,18 +149,23 @@ class SnapcastGroupDevice(MediaPlayerEntity):
 
     def __init__(self, group, uid_part):
         """Initialize the Snapcast group device."""
-        group.set_callback(self.schedule_update_ha_state)
         self._group = group
         self._uid = f"{GROUP_PREFIX}{uid_part}_{self._group.identifier}"
 
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to group events."""
+        self._group.set_callback(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect group object when removed."""
+        self._group.set_callback(None)
+
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
-        return {
-            "idle": STATE_IDLE,
-            "playing": STATE_PLAYING,
-            "unknown": STATE_UNKNOWN,
-        }.get(self._group.stream_status, STATE_UNKNOWN)
+        if self.is_volume_muted:
+            return MediaPlayerState.IDLE
+        return STREAM_STATUS.get(self._group.stream_status)
 
     @property
     def unique_id(self):
@@ -173,24 +203,19 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
         return {"friendly_name": name}
 
-    @property
-    def should_poll(self):
-        """Do not poll for state."""
-        return False
-
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Set input source."""
         streams = self._group.streams_by_name()
         if source in streams:
             await self._group.set_stream(streams[source].identifier)
             self.async_write_ha_state()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send the mute command."""
         await self._group.set_muted(mute)
         self.async_write_ha_state()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self._group.set_volume(round(volume * 100))
         self.async_write_ha_state()
@@ -208,22 +233,30 @@ class SnapcastGroupDevice(MediaPlayerEntity):
 class SnapcastClientDevice(MediaPlayerEntity):
     """Representation of a Snapcast client device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, client, uid_part):
+    def __init__(self, client, uid_part, entry_id):
         """Initialize the Snapcast client device."""
-        client.set_callback(self.schedule_update_ha_state)
         self._client = client
         self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
+        self._entry_id = entry_id
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to client events."""
+        self._client.set_callback(self.schedule_update_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect client object when removed."""
+        self._client.set_callback(None)
 
     @property
     def unique_id(self):
-        """
-        Return the ID of this snapcast client.
+        """Return the ID of this snapcast client.
 
         Note: Host part is needed, when using multiple snapservers
         """
@@ -260,11 +293,13 @@ class SnapcastClientDevice(MediaPlayerEntity):
         return list(self._client.group.streams_by_name().keys())
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self._client.connected:
-            return STATE_ON
-        return STATE_OFF
+            if self.is_volume_muted or self._client.group.muted:
+                return MediaPlayerState.IDLE
+            return STREAM_STATUS.get(self._client.group.stream_status)
+        return MediaPlayerState.STANDBY
 
     @property
     def extra_state_attributes(self):
@@ -277,40 +312,36 @@ class SnapcastClientDevice(MediaPlayerEntity):
         return state_attrs
 
     @property
-    def should_poll(self):
-        """Do not poll for state."""
-        return False
-
-    @property
     def latency(self):
         """Latency for Client."""
         return self._client.latency
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Set input source."""
         streams = self._client.group.streams_by_name()
         if source in streams:
             await self._client.group.set_stream(streams[source].identifier)
             self.async_write_ha_state()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send the mute command."""
         await self._client.set_muted(mute)
         self.async_write_ha_state()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self._client.set_volume(round(volume * 100))
         self.async_write_ha_state()
 
     async def async_join(self, master):
         """Join the group of the master player."""
-
         master_entity = next(
-            entity for entity in self.hass.data[DATA_KEY] if entity.entity_id == master
+            entity
+            for entity in self.hass.data[DOMAIN][self._entry_id].clients
+            if entity.entity_id == master
         )
         if not isinstance(master_entity, SnapcastClientDevice):
-            raise ValueError("Master is not a client device. Can only join clients.")
+            raise TypeError("Master is not a client device. Can only join clients.")
 
         master_group = next(
             group

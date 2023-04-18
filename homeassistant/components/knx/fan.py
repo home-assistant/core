@@ -76,9 +76,9 @@ class KNXFan(KnxEntity, FanEntity):
             await self._device.set_speed(percentage)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        flags: int = FanEntityFeature.SET_SPEED
+        flags = FanEntityFeature.SET_SPEED
 
         if self._device.supports_oscillation:
             flags |= FanEntityFeature.OSCILLATE

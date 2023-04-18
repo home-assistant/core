@@ -6,10 +6,6 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -26,9 +22,10 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
-    entity_registry,
+    device_registry as dr,
+    entity_registry as er,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import trigger
@@ -251,9 +248,6 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device triggers for Z-Wave JS devices."""
-    dev_reg = device_registry.async_get(hass)
-    node = async_get_node_from_device_id(hass, device_id, dev_reg)
-
     triggers: list[dict] = []
     base_trigger = {
         CONF_PLATFORM: "device",
@@ -261,8 +255,14 @@ async def async_get_triggers(
         CONF_DOMAIN: DOMAIN,
     }
 
+    dev_reg = dr.async_get(hass)
+    node = async_get_node_from_device_id(hass, device_id, dev_reg)
+
+    if node.client.driver and node.client.driver.controller.own_node == node:
+        return triggers
+
     # We can add a node status trigger if the node status sensor is enabled
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device_id, ent_reg, dev_reg
     )
@@ -366,8 +366,8 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_type = config[CONF_TYPE]
@@ -411,7 +411,7 @@ async def async_attach_trigger(
 
         event_config = event.TRIGGER_SCHEMA(event_config)
         return await event.async_attach_trigger(
-            hass, event_config, action, automation_info, platform_type="device"
+            hass, event_config, action, trigger_info, platform_type="device"
         )
 
     if trigger_platform == "state":
@@ -427,7 +427,7 @@ async def async_attach_trigger(
 
         state_config = await state.async_validate_trigger_config(hass, state_config)
         return await state.async_attach_trigger(
-            hass, state_config, action, automation_info, platform_type="device"
+            hass, state_config, action, trigger_info, platform_type="device"
         )
 
     if trigger_platform == VALUE_UPDATED_PLATFORM_TYPE:
@@ -451,7 +451,7 @@ async def async_attach_trigger(
             hass, zwave_js_config
         )
         return await trigger.async_attach_trigger(
-            hass, zwave_js_config, action, automation_info
+            hass, zwave_js_config, action, trigger_info
         )
 
     raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")

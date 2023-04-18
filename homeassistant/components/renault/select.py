@@ -13,8 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DEVICE_CLASS_CHARGE_MODE, DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
+from .const import DOMAIN
+from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
@@ -24,7 +24,6 @@ class RenaultSelectRequiredKeysMixin:
 
     data_key: str
     icon_lambda: Callable[[RenaultSelectEntity], str]
-    options: list[str]
 
 
 @dataclass
@@ -74,14 +73,9 @@ class RenaultSelectEntity(
         """Icon handling."""
         return self.entity_description.icon_lambda(self)
 
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return self.entity_description.options
-
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.vehicle.vehicle.set_charge_mode(option)
+        await self.vehicle.set_charge_mode(option)
 
 
 def _get_charge_mode_icon(entity: RenaultSelectEntity) -> str:
@@ -96,9 +90,8 @@ SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
         key="charge_mode",
         coordinator="charge_mode",
         data_key="chargeMode",
-        device_class=DEVICE_CLASS_CHARGE_MODE,
+        translation_key="charge_mode",
         icon_lambda=_get_charge_mode_icon,
-        name="Charge mode",
         options=["always", "always_charging", "schedule_mode"],
     ),
 )

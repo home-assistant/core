@@ -8,9 +8,8 @@ import async_timeout
 import axis
 from axis.configuration import Configuration
 from axis.errors import Unauthorized
-from axis.event_stream import OPERATION_INITIALIZED
-from axis.mqtt import mqtt_json_to_event
-from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
+from axis.stream_manager import Signal, State
+from axis.vapix.interfaces.mqtt import mqtt_json_to_event
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
@@ -130,11 +129,6 @@ class AxisNetworkDevice:
         return f"axis_reachable_{self.unique_id}"
 
     @property
-    def signal_new_event(self):
-        """Device specific event to signal new device event available."""
-        return f"axis_new_event_{self.unique_id}"
-
-    @property
     def signal_new_address(self):
         """Device specific event to signal a change in device address."""
         return f"axis_new_address_{self.unique_id}"
@@ -149,15 +143,9 @@ class AxisNetworkDevice:
         Only signal state change if state change is true.
         """
 
-        if self.available != (status == SIGNAL_PLAYING):
+        if self.available != (status == Signal.PLAYING):
             self.available = not self.available
-            async_dispatcher_send(self.hass, self.signal_reachable, True)
-
-    @callback
-    def async_event_callback(self, action, event_id):
-        """Call to configure events when initialized on event stream."""
-        if action == OPERATION_INITIALIZED:
-            async_dispatcher_send(self.hass, self.signal_new_event, event_id)
+            async_dispatcher_send(self.hass, self.signal_reachable)
 
     @staticmethod
     async def async_new_address_callback(
@@ -167,9 +155,9 @@ class AxisNetworkDevice:
 
         Called when config entry is updated.
         This is a static method because a class method (bound method),
-        can not be used with weak references.
+        cannot be used with weak references.
         """
-        device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][entry.unique_id]
+        device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][entry.entry_id]
         device.api.config.host = device.host
         async_dispatcher_send(hass, device.signal_new_address)
 
@@ -208,7 +196,7 @@ class AxisNetworkDevice:
         self.disconnect_from_stream()
 
         event = mqtt_json_to_event(message.payload)
-        self.api.event.update([event])
+        self.api.event.handler(event)
 
     # Setup and teardown methods
 
@@ -219,7 +207,7 @@ class AxisNetworkDevice:
             self.api.stream.connection_status_callback.append(
                 self.async_connection_status_callback
             )
-            self.api.enable_events(event_callback=self.async_event_callback)
+            self.api.enable_events()
             self.api.stream.start()
 
             if self.api.vapix.mqtt:
@@ -228,7 +216,7 @@ class AxisNetworkDevice:
     @callback
     def disconnect_from_stream(self) -> None:
         """Stop stream."""
-        if self.api.stream.state != STATE_STOPPED:
+        if self.api.stream.state != State.STOPPED:
             self.api.stream.connection_status_callback.clear()
             self.api.stream.stop()
 

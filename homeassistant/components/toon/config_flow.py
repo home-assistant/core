@@ -64,7 +64,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_agreement(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select Toon agreement to add."""
         if len(self.agreements) == 1:

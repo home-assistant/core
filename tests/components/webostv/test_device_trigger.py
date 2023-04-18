@@ -8,6 +8,7 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.components.webostv import DOMAIN, device_trigger
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
@@ -18,7 +19,7 @@ from .const import ENTITY_ID, FAKE_UUID
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
-async def test_get_triggers(hass, client):
+async def test_get_triggers(hass: HomeAssistant, client) -> None:
     """Test we get the expected triggers."""
     await setup_webostv(hass)
 
@@ -39,7 +40,7 @@ async def test_get_triggers(hass, client):
     assert turn_on_trigger in triggers
 
 
-async def test_if_fires_on_turn_on_request(hass, calls, client):
+async def test_if_fires_on_turn_on_request(hass: HomeAssistant, calls, client) -> None:
     """Test for turn_on and turn_off triggers firing."""
     await setup_webostv(hass)
 
@@ -98,42 +99,7 @@ async def test_if_fires_on_turn_on_request(hass, calls, client):
     assert calls[1].data["id"] == 0
 
 
-async def test_get_triggers_for_invalid_device_id(hass, caplog):
-    """Test error raised for invalid shelly device_id."""
-    await async_setup_component(hass, "persistent_notification", {})
-
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: [
-                {
-                    "trigger": {
-                        "platform": "device",
-                        "domain": DOMAIN,
-                        "device_id": "invalid_device_id",
-                        "type": "webostv.turn_on",
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.invalid_device }}",
-                            "id": "{{ trigger.id }}",
-                        },
-                    },
-                }
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert (
-        "Invalid config for [automation]: Device invalid_device_id is not a valid webostv device"
-        in caplog.text
-    )
-
-
-async def test_failure_scenarios(hass, client):
+async def test_failure_scenarios(hass: HomeAssistant, client) -> None:
     """Test failure scenarios."""
     await setup_webostv(hass)
 
@@ -173,7 +139,3 @@ async def test_failure_scenarios(hass, client):
     # Test that device id from non webostv domain raises exception
     with pytest.raises(InvalidDeviceAutomationConfig):
         await device_trigger.async_validate_trigger_config(hass, config)
-
-    # Test no exception if device is not loaded
-    await hass.config_entries.async_unload(entry.entry_id)
-    assert await device_trigger.async_validate_trigger_config(hass, config) == config

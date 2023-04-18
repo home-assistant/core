@@ -5,16 +5,16 @@ from datetime import datetime as dt
 import logging
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import PRECISION_TENTHS, TEMP_CELSIUS
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -112,8 +112,10 @@ async def async_setup_platform(
 
         else:
             _LOGGER.warning(
-                "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
-                "report as an issue if you feel this zone type should be supported",
+                (
+                    "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
+                    "report as an issue if you feel this zone type should be supported"
+                ),
                 zone.zoneType,
                 zone.modelType,
                 zone.zoneId,
@@ -126,27 +128,18 @@ async def async_setup_platform(
 class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
-
-    def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a Climate device."""
-        super().__init__(evo_broker, evo_device)
-
-        self._preset_modes = None
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def hvac_modes(self) -> list[str]:
         """Return a list of available hvac operation modes."""
         return list(HA_HVAC_TO_TCS)
 
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        return self._preset_modes
-
 
 class EvoZone(EvoChild, EvoClimateEntity):
     """Base for a Honeywell TCC Zone."""
+
+    _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Honeywell TCC Zone."""
@@ -233,7 +226,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         """
         return self._evo_device.setpointCapabilities["maxHeatSetpoint"]
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         temperature = kwargs["temperature"]
 
@@ -249,7 +242,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             self._evo_device.set_temperature(temperature, until=until)
         )
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a Zone to one of its native EVO_* operating modes.
 
         Zones inherit their _effective_ operating mode from their Controller.
@@ -330,9 +323,8 @@ class EvoController(EvoClimateEntity):
         self._attr_preset_modes = [
             TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
         ]
-        self._attr_supported_features = (
-            ClimateEntityFeature.PRESET_MODE if self._attr_preset_modes else 0
-        )
+        if self._attr_preset_modes:
+            self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
 
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller.
@@ -387,7 +379,7 @@ class EvoController(EvoClimateEntity):
         """Return the current preset mode, e.g., home, away, temp."""
         return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Raise exception as Controllers don't have a target temperature."""
         raise NotImplementedError("Evohome Controllers don't have target temperatures.")
 

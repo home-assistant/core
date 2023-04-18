@@ -10,7 +10,11 @@ import pytest
 from homeassistant.components import media_source, websocket_api
 from homeassistant.components.media_source import const
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockUser
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -27,7 +31,7 @@ async def temp_dir(hass):
         yield str(target_dir)
 
 
-async def test_async_browse_media(hass):
+async def test_async_browse_media(hass: HomeAssistant) -> None:
     """Test browse media."""
     local_media = hass.config.path("media")
     await async_process_ha_core_config(
@@ -83,7 +87,9 @@ async def test_async_browse_media(hass):
     assert media
 
 
-async def test_media_view(hass, hass_client):
+async def test_media_view(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test media view."""
     local_media = hass.config.path("media")
     await async_process_ha_core_config(
@@ -122,10 +128,15 @@ async def test_media_view(hass, hass_client):
     assert resp.status == HTTPStatus.OK
 
 
-async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
+async def test_upload_view(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    temp_dir,
+    hass_admin_user: MockUser,
+) -> None:
     """Allow uploading media."""
 
-    img = (Path(__file__).parent.parent / "image/logo.png").read_bytes()
+    img = (Path(__file__).parent.parent / "image_upload/logo.png").read_bytes()
 
     def get_file(name):
         pic = io.BytesIO(img)
@@ -226,7 +237,12 @@ async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
     assert not (Path(temp_dir) / "no-admin-test.png").is_file()
 
 
-async def test_remove_file(hass, hass_ws_client, temp_dir, hass_admin_user):
+async def test_remove_file(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    temp_dir,
+    hass_admin_user: MockUser,
+) -> None:
     """Allow uploading media."""
 
     msg_count = 0

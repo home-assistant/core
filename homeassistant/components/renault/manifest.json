@@ -1,11 +1,12 @@
 {
   "domain": "renault",
   "name": "Renault",
+  "codeowners": ["@epenet"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/renault",
-  "requirements": ["renault-api==0.1.11"],
-  "codeowners": ["@epenet"],
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["renault_api"],
-  "supported_brands": { "dacia": "Dacia" }
+  "quality_scale": "platinum",
+  "requirements": ["renault-api==0.1.12"]
 }

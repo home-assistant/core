@@ -1,7 +1,11 @@
 {
   "domain": "radarr",
   "name": "Radarr",
+  "codeowners": ["@tkdrob"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/radarr",
-  "codeowners": [],
-  "iot_class": "local_polling"
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "loggers": ["aiopyarr"],
+  "requirements": ["aiopyarr==23.4.0"]
 }

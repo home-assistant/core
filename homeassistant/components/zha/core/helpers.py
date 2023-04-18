@@ -1,5 +1,4 @@
-"""
-Helpers for Zigbee Home Automation.
+"""Helpers for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
@@ -10,6 +9,7 @@ import asyncio
 import binascii
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+import enum
 import functools
 import itertools
 import logging
@@ -22,12 +22,13 @@ import zigpy.exceptions
 import zigpy.types
 import zigpy.util
 import zigpy.zcl
+from zigpy.zcl.foundation import CommandSchema
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import IntegrationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CLUSTER_TYPE_IN,
@@ -120,6 +121,74 @@ async def get_matched_clusters(
     return clusters_to_bind
 
 
+def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
+    """Convert a cluster command schema to a voluptuous schema."""
+    return vol.Schema(
+        {
+            vol.Optional(field.name)
+            if field.optional
+            else vol.Required(field.name): schema_type_to_vol(field.type)
+            for field in schema.fields
+        }
+    )
+
+
+def schema_type_to_vol(field_type: Any) -> Any:
+    """Convert a schema type to a voluptuous type."""
+    if issubclass(field_type, enum.Flag) and field_type.__members__:
+        return cv.multi_select(
+            [key.replace("_", " ") for key in field_type.__members__]
+        )
+    if issubclass(field_type, enum.Enum) and field_type.__members__:
+        return vol.In([key.replace("_", " ") for key in field_type.__members__])
+    if (
+        issubclass(field_type, zigpy.types.FixedIntType)
+        or issubclass(field_type, enum.Flag)
+        or issubclass(field_type, enum.Enum)
+    ):
+        return vol.All(
+            vol.Coerce(int), vol.Range(field_type.min_value, field_type.max_value)
+        )
+    return str
+
+
+def convert_to_zcl_values(
+    fields: dict[str, Any], schema: CommandSchema
+) -> dict[str, Any]:
+    """Convert user input to ZCL values."""
+    converted_fields: dict[str, Any] = {}
+    for field in schema.fields:
+        if field.name not in fields:
+            continue
+        value = fields[field.name]
+        if issubclass(field.type, enum.Flag) and isinstance(value, list):
+            new_value = 0
+
+            for flag in value:
+                if isinstance(flag, str):
+                    new_value |= field.type[flag.replace(" ", "_")]
+                else:
+                    new_value |= flag
+
+            value = field.type(new_value)
+        elif issubclass(field.type, enum.Enum):
+            value = (
+                field.type[value.replace(" ", "_")]
+                if isinstance(value, str)
+                else field.type(value)
+            )
+        else:
+            value = field.type(value)
+        _LOGGER.debug(
+            "Converted ZCL schema field(%s) value from: %s to: %s",
+            field.name,
+            fields[field.name],
+            value,
+        )
+        converted_fields[field.name] = value
+    return converted_fields
+
+
 @callback
 def async_is_bindable_target(source_zha_device, target_zha_device):
     """Determine if target is bindable to source."""
@@ -143,7 +212,7 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 def async_get_zha_config_value(
     config_entry: ConfigEntry, section: str, config_key: str, default: _T
 ) -> _T:
-    """Get the value for the specified configuration from the zha config entry."""
+    """Get the value for the specified configuration from the ZHA config entry."""
     return (
         config_entry.options.get(CUSTOM_CONFIGURATION, {})
         .get(section, {})
@@ -151,11 +220,13 @@ def async_get_zha_config_value(
     )
 
 
-def async_cluster_exists(hass, cluster_id):
+def async_cluster_exists(hass, cluster_id, skip_coordinator=True):
     """Determine if a device containing the specified in cluster is paired."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     zha_devices = zha_gateway.devices.values()
     for zha_device in zha_devices:
+        if skip_coordinator and zha_device.is_coordinator:
+            continue
         clusters_by_endpoint = zha_device.async_get_clusters()
         for clusters in clusters_by_endpoint.values():
             if (
@@ -266,7 +337,6 @@ def retryable_req(
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(channel, *args, **kwargs):
-
             exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
             try_count, errors = 1, []
             for delay in itertools.chain(delays, [None]):
@@ -277,10 +347,7 @@ def retryable_req(
                     if delay:
                         delay = uniform(delay * 0.75, delay * 1.25)
                         channel.debug(
-                            (
-                                "%s: retryable request #%d failed: %s. "
-                                "Retrying in %ss"
-                            ),
+                            "%s: retryable request #%d failed: %s. Retrying in %ss",
                             func.__name__,
                             try_count,
                             ex,

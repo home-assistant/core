@@ -1,44 +1,27 @@
 """Support for the cloud for speech to text service."""
 from __future__ import annotations
 
-from aiohttp import StreamReader
-from hass_nabucasa import Cloud
-from hass_nabucasa.voice import VoiceError
+from collections.abc import AsyncIterable
+import logging
 
-from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
-from homeassistant.components.stt.const import (
+from hass_nabucasa import Cloud
+from hass_nabucasa.voice import STT_LANGUAGES, VoiceError
+
+from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
+    Provider,
+    SpeechMetadata,
+    SpeechResult,
     SpeechResultState,
 )
 
 from .const import DOMAIN
 
-SUPPORT_LANGUAGES = [
-    "da-DK",
-    "de-DE",
-    "en-AU",
-    "en-CA",
-    "en-GB",
-    "en-US",
-    "es-ES",
-    "fi-FI",
-    "fr-CA",
-    "fr-FR",
-    "it-IT",
-    "ja-JP",
-    "nl-NL",
-    "pl-PL",
-    "pt-PT",
-    "ru-RU",
-    "sv-SE",
-    "th-TH",
-    "zh-CN",
-    "zh-HK",
-]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_engine(hass, config, discovery_info=None):
@@ -58,7 +41,7 @@ class CloudProvider(Provider):
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return SUPPORT_LANGUAGES
+        return STT_LANGUAGES
 
     @property
     def supported_formats(self) -> list[AudioFormats]:
@@ -86,17 +69,23 @@ class CloudProvider(Provider):
         return [AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
-        content = f"audio/{metadata.format!s}; codecs=audio/{metadata.codec!s}; samplerate=16000"
+        content_type = (
+            f"audio/{metadata.format!s}; codecs=audio/{metadata.codec!s};"
+            " samplerate=16000"
+        )
 
         # Process STT
         try:
             result = await self.cloud.voice.process_stt(
-                stream, content, metadata.language
+                stream=stream,
+                content_type=content_type,
+                language=metadata.language,
             )
-        except VoiceError:
+        except VoiceError as err:
+            _LOGGER.debug("Voice error: %s", err)
             return SpeechResult(None, SpeechResultState.ERROR)
 
         # Return Speech as Text

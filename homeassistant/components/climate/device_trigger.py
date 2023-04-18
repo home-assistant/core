@@ -3,10 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
@@ -24,7 +20,8 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, const
@@ -65,11 +62,11 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for Climate devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     triggers = []
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
@@ -112,8 +109,8 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if (trigger_type := config[CONF_TYPE]) == "hvac_mode_changed":
@@ -133,7 +130,7 @@ async def async_attach_trigger(
             hass, state_config
         )
         return await state_trigger.async_attach_trigger(
-            hass, state_config, action, automation_info, platform_type="device"
+            hass, state_config, action, trigger_info, platform_type="device"
         )
 
     numeric_state_config = {
@@ -161,7 +158,7 @@ async def async_attach_trigger(
         hass, numeric_state_config
     )
     return await numeric_state_trigger.async_attach_trigger(
-        hass, numeric_state_config, action, automation_info, platform_type="device"
+        hass, numeric_state_config, action, trigger_info, platform_type="device"
     )
 
 
@@ -177,12 +174,15 @@ async def async_get_trigger_capabilities(
     if trigger_type == "hvac_mode_changed":
         return {
             "extra_fields": vol.Schema(
-                {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+                {
+                    vol.Required(state_trigger.CONF_TO): vol.In(const.HVAC_MODES),
+                    vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                }
             )
         }
 
     if trigger_type == "current_temperature_changed":
-        unit_of_measurement = hass.config.units.temperature_unit
+        unit_of_measurement: str = hass.config.units.temperature_unit
     else:
         unit_of_measurement = PERCENTAGE
 

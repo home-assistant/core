@@ -1,7 +1,6 @@
 """Constants for the WLED integration."""
 from datetime import timedelta
 import logging
-from typing import Final
 
 # Integration domain
 DOMAIN = "wled"
@@ -24,6 +23,3 @@ ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_SPEED = "speed"
 ATTR_TARGET_BRIGHTNESS = "target_brightness"
 ATTR_UDP_PORT = "udp_port"
-
-# Device classes
-DEVICE_CLASS_WLED_LIVE_OVERRIDE: Final = "wled__live_override"

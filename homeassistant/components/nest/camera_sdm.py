@@ -18,8 +18,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.camera.const import StreamType
+from homeassistant.components.camera import Camera, CameraEntityFeature, StreamType
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -75,11 +74,6 @@ class NestCamera(Camera):
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
     @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
-
-    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
@@ -101,9 +95,9 @@ class NestCamera(Camera):
         return self._device_info.device_model
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CameraEntityFeature(0)
         if CameraLiveStreamTrait.NAME in self._device.traits:
             supported_features |= CameraEntityFeature.STREAM
         return supported_features
@@ -121,10 +115,11 @@ class NestCamera(Camera):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        # Cameras are marked unavailable on stream errors in #54659 however nest streams have
-        # a high error rate (#60353). Given nest streams are so flaky, marking the stream
-        # unavailable has other side effects like not showing the camera image which sometimes
-        # are still able to work. Until the streams are fixed, just leave the streams as available.
+        # Cameras are marked unavailable on stream errors in #54659 however nest
+        # streams have a high error rate (#60353). Given nest streams are so flaky,
+        # marking the stream unavailable has other side effects like not showing
+        # the camera image which sometimes are still able to work. Until the
+        # streams are fixed, just leave the streams as available.
         return True
 
     async def stream_source(self) -> str | None:

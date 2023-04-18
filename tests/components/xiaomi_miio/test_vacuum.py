@@ -48,6 +48,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TEST_MAC
@@ -220,7 +221,7 @@ def mirobo_is_on_fixture():
         yield mock_vacuum
 
 
-async def test_xiaomi_exceptions(hass, mock_mirobo_is_on):
+async def test_xiaomi_exceptions(hass: HomeAssistant, mock_mirobo_is_on) -> None:
     """Test error logging on exceptions."""
     entity_name = "test_vacuum_cleaner_error"
     entity_id = await setup_component(hass, entity_name)
@@ -251,7 +252,9 @@ async def test_xiaomi_exceptions(hass, mock_mirobo_is_on):
     assert mock_mirobo_is_on.status.call_count == 1
 
 
-async def test_xiaomi_vacuum_services(hass, mock_mirobo_is_got_error):
+async def test_xiaomi_vacuum_services(
+    hass: HomeAssistant, mock_mirobo_is_got_error
+) -> None:
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_1"
     entity_id = await setup_component(hass, entity_name)
@@ -347,11 +350,11 @@ async def test_xiaomi_vacuum_services(hass, mock_mirobo_is_got_error):
 
 
 @pytest.mark.parametrize(
-    "error, status_calls",
+    ("error", "status_calls"),
     [(None, STATUS_CALLS), (DeviceException("dummy exception"), [])],
 )
 @pytest.mark.parametrize(
-    "service, service_data, device_method, device_method_call",
+    ("service", "service_data", "device_method", "device_method_call"),
     [
         (
             SERVICE_START_REMOTE_CONTROL,
@@ -442,7 +445,7 @@ async def test_xiaomi_vacuum_services(hass, mock_mirobo_is_got_error):
     ],
 )
 async def test_xiaomi_specific_services(
-    hass,
+    hass: HomeAssistant,
     mock_mirobo_is_on,
     service,
     service_data,
@@ -450,7 +453,7 @@ async def test_xiaomi_specific_services(
     device_method_call,
     error,
     status_calls,
-):
+) -> None:
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
     entity_id = await setup_component(hass, entity_name)
@@ -490,7 +493,9 @@ async def test_xiaomi_specific_services(
     mock_mirobo_is_on.reset_mock()
 
 
-async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
+async def test_xiaomi_vacuum_fanspeeds(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_mirobo_fanspeeds
+) -> None:
     """Test Xiaomi vacuum fanspeeds."""
     entity_name = "test_vacuum_cleaner_2"
     entity_id = await setup_component(hass, entity_name)

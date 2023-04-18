@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import astuple, dataclass
 from typing import Any
 
 from zwave_js_server.client import Client
@@ -11,7 +10,7 @@ from zwave_js_server.dump import dump_msgs
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.value import ValueDataType
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -19,28 +18,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, USER_AGENT
 from .helpers import (
+    ZwaveValueMatcher,
     get_home_and_node_id_from_device_entry,
     get_state_key_from_unique_id,
     get_value_id_from_unique_id,
+    value_matches_matcher,
 )
-
-
-@dataclass
-class ZwaveValueMatcher:
-    """Class to allow matching a Z-Wave Value."""
-
-    property_: str | int | None = None
-    command_class: int | None = None
-    endpoint: int | None = None
-    property_key: str | int | None = None
-
-    def __post_init__(self) -> None:
-        """Post initialization check."""
-        if all(val is None for val in astuple(self)):
-            raise ValueError("At least one of the fields must be set.")
-
 
 KEYS_TO_REDACT = {"homeId", "location"}
 
@@ -49,27 +34,23 @@ VALUES_TO_REDACT = (
 )
 
 
-def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
-    """Redact value of a Z-Wave value."""
+def _redacted_value(zwave_value: ValueDataType) -> ValueDataType:
+    """Return redacted value of a Z-Wave value."""
+    redacted_value: ValueDataType = deepcopy(zwave_value)
+    redacted_value["value"] = REDACTED
+    return redacted_value
+
+
+def optionally_redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
+    """Redact value of a Z-Wave value if it matches criteria to redact."""
+    # If the value has no value, there is nothing to redact
+    if zwave_value.get("value") in (None, ""):
+        return zwave_value
+    if zwave_value.get("metadata", {}).get("secret"):
+        return _redacted_value(zwave_value)
     for value_to_redact in VALUES_TO_REDACT:
-        command_class = None
-        if "commandClass" in zwave_value:
-            command_class = CommandClass(zwave_value["commandClass"])
-        zwave_value_id = ZwaveValueMatcher(
-            property_=zwave_value.get("property"),
-            command_class=command_class,
-            endpoint=zwave_value.get("endpoint"),
-            property_key=zwave_value.get("propertyKey"),
-        )
-        if all(
-            redacted_field_val is None or redacted_field_val == zwave_value_field_val
-            for redacted_field_val, zwave_value_field_val in zip(
-                astuple(value_to_redact), astuple(zwave_value_id)
-            )
-        ):
-            redacted_value: ValueDataType = deepcopy(zwave_value)
-            redacted_value["value"] = REDACTED
-            return redacted_value
+        if value_matches_matcher(value_to_redact, zwave_value):
+            return _redacted_value(zwave_value)
     return zwave_value
 
 
@@ -77,7 +58,8 @@ def redact_node_state(node_state: NodeDataType) -> NodeDataType:
     """Redact node state."""
     redacted_state: NodeDataType = deepcopy(node_state)
     redacted_state["values"] = [
-        redact_value_of_zwave_value(zwave_value) for zwave_value in node_state["values"]
+        optionally_redact_value_of_zwave_value(zwave_value)
+        for zwave_value in node_state["values"]
     ]
     return redacted_state
 
@@ -123,6 +105,7 @@ def get_device_entities(
             "entity_category": entry.entity_category,
             "supported_features": entry.supported_features,
             "unit_of_measurement": entry.unit_of_measurement,
+            "value_id": value_id,
             "primary_value": primary_value_data,
         }
         entities.append(entity)
@@ -131,23 +114,26 @@ def get_device_entities(
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> list[dict]:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     msgs: list[dict] = async_redact_data(
-        await dump_msgs(config_entry.data[CONF_URL], async_get_clientsession(hass)),
+        await dump_msgs(
+            config_entry.data[CONF_URL], async_get_clientsession(hass), USER_AGENT
+        ),
         KEYS_TO_REDACT,
     )
     handshake_msgs = msgs[:-1]
     network_state = msgs[-1]
     network_state["result"]["state"]["nodes"] = [
-        redact_node_state(node) for node in network_state["result"]["state"]["nodes"]
+        redact_node_state(async_redact_data(node, KEYS_TO_REDACT))
+        for node in network_state["result"]["state"]["nodes"]
     ]
-    return [*handshake_msgs, network_state]
+    return {"messages": [*handshake_msgs, network_state]}
 
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a device."""
     client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     identifiers = get_home_and_node_id_from_device_entry(device)
@@ -159,7 +145,6 @@ async def async_get_device_diagnostics(
     entities = get_device_entities(hass, node, device)
     assert client.version
     node_state = redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT))
-    node_state["statistics"] = node.statistics.data
     return {
         "versionInfo": {
             "driverVersion": client.version.driver_version,

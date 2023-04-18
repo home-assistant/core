@@ -4,18 +4,13 @@ from unittest.mock import patch
 
 from serial import SerialException
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.components.monoprice.const import (
     CONF_NOT_FIRST_RUN,
@@ -33,6 +28,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -94,7 +90,7 @@ class MockMonoprice:
         self.zones[zone.zone] = AttrDict(zone)
 
 
-async def test_cannot_connect(hass):
+async def test_cannot_connect(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     with patch(
@@ -160,7 +156,7 @@ async def _call_monoprice_service(hass, name, data):
     await hass.services.async_call(DOMAIN, name, service_data=data, blocking=True)
 
 
-async def test_service_calls_with_entity_id(hass):
+async def test_service_calls_with_entity_id(hass: HomeAssistant) -> None:
     """Test snapshot save/restore service calls."""
     await _setup_monoprice(hass, MockMonoprice())
 
@@ -204,7 +200,7 @@ async def test_service_calls_with_entity_id(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "one"
 
 
-async def test_service_calls_with_all_entities(hass):
+async def test_service_calls_with_all_entities(hass: HomeAssistant) -> None:
     """Test snapshot save/restore service calls."""
     await _setup_monoprice(hass, MockMonoprice())
 
@@ -237,7 +233,7 @@ async def test_service_calls_with_all_entities(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "one"
 
 
-async def test_service_calls_without_relevant_entities(hass):
+async def test_service_calls_without_relevant_entities(hass: HomeAssistant) -> None:
     """Test snapshot save/restore service calls."""
     await _setup_monoprice(hass, MockMonoprice())
 
@@ -270,7 +266,7 @@ async def test_service_calls_without_relevant_entities(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
-async def test_restore_without_snapshort(hass):
+async def test_restore_without_snapshort(hass: HomeAssistant) -> None:
     """Test restore when snapshot wasn't called."""
     await _setup_monoprice(hass, MockMonoprice())
 
@@ -281,7 +277,7 @@ async def test_restore_without_snapshort(hass):
         assert not method_call.called
 
 
-async def test_update(hass):
+async def test_update(hass: HomeAssistant) -> None:
     """Test updating values from monoprice."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
@@ -306,7 +302,7 @@ async def test_update(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
-async def test_failed_update(hass):
+async def test_failed_update(hass: HomeAssistant) -> None:
     """Test updating failure from monoprice."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
@@ -332,7 +328,7 @@ async def test_failed_update(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "one"
 
 
-async def test_empty_update(hass):
+async def test_empty_update(hass: HomeAssistant) -> None:
     """Test updating with no state from monoprice."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
@@ -358,23 +354,23 @@ async def test_empty_update(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "one"
 
 
-async def test_supported_features(hass):
+async def test_supported_features(hass: HomeAssistant) -> None:
     """Test supported features property."""
     await _setup_monoprice(hass, MockMonoprice())
 
     state = hass.states.get(ZONE_1_ID)
     assert (
-        SUPPORT_VOLUME_MUTE
-        | SUPPORT_VOLUME_SET
-        | SUPPORT_VOLUME_STEP
-        | SUPPORT_TURN_ON
-        | SUPPORT_TURN_OFF
-        | SUPPORT_SELECT_SOURCE
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
         == state.attributes["supported_features"]
     )
 
 
-async def test_source_list(hass):
+async def test_source_list(hass: HomeAssistant) -> None:
     """Test source list property."""
     await _setup_monoprice(hass, MockMonoprice())
 
@@ -383,7 +379,7 @@ async def test_source_list(hass):
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["one", "three"]
 
 
-async def test_source_list_with_options(hass):
+async def test_source_list_with_options(hass: HomeAssistant) -> None:
     """Test source list property."""
     await _setup_monoprice_with_options(hass, MockMonoprice())
 
@@ -392,7 +388,7 @@ async def test_source_list_with_options(hass):
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["two", "four"]
 
 
-async def test_select_source(hass):
+async def test_select_source(hass: HomeAssistant) -> None:
     """Test source selection methods."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
@@ -413,7 +409,7 @@ async def test_select_source(hass):
     assert monoprice.zones[11].source == 3
 
 
-async def test_unknown_source(hass):
+async def test_unknown_source(hass: HomeAssistant) -> None:
     """Test behavior when device has unknown source."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
@@ -428,7 +424,7 @@ async def test_unknown_source(hass):
     assert state.attributes.get(ATTR_INPUT_SOURCE) is None
 
 
-async def test_turn_on_off(hass):
+async def test_turn_on_off(hass: HomeAssistant) -> None:
     """Test turning on the zone."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
@@ -440,7 +436,7 @@ async def test_turn_on_off(hass):
     assert monoprice.zones[11].power
 
 
-async def test_mute_volume(hass):
+async def test_mute_volume(hass: HomeAssistant) -> None:
     """Test mute functionality."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
@@ -459,7 +455,7 @@ async def test_mute_volume(hass):
     assert monoprice.zones[11].mute
 
 
-async def test_volume_up_down(hass):
+async def test_volume_up_down(hass: HomeAssistant) -> None:
     """Test increasing volume by one."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
@@ -493,7 +489,7 @@ async def test_volume_up_down(hass):
     assert monoprice.zones[11].volume == 37
 
 
-async def test_first_run_with_available_zones(hass):
+async def test_first_run_with_available_zones(hass: HomeAssistant) -> None:
     """Test first run with all zones available."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
@@ -504,7 +500,7 @@ async def test_first_run_with_available_zones(hass):
     assert not entry.disabled
 
 
-async def test_first_run_with_failing_zones(hass):
+async def test_first_run_with_failing_zones(hass: HomeAssistant) -> None:
     """Test first run with failed zones."""
     monoprice = MockMonoprice()
 
@@ -521,7 +517,7 @@ async def test_first_run_with_failing_zones(hass):
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_not_first_run_with_failing_zone(hass):
+async def test_not_first_run_with_failing_zone(hass: HomeAssistant) -> None:
     """Test first run with failed zones."""
     monoprice = MockMonoprice()
 

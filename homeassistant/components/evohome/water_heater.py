@@ -12,7 +12,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -60,7 +60,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _attr_name = "DHW controller"
     _attr_icon = "mdi:thermometer-lines"
     _attr_operation_list = list(HA_STATE_TO_EVO)
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize an evohome DHW controller."""
@@ -110,11 +110,11 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
                     self._evo_device.set_dhw_off(until=until)
                 )
 
-    async def async_turn_away_mode_on(self):
+    async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
 
-    async def async_turn_away_mode_off(self):
+    async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
 

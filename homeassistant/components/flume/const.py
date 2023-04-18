@@ -1,53 +1,30 @@
 """The Flume component."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntityDescription
+from datetime import timedelta
+import logging
+
 from homeassistant.const import Platform
 
 DOMAIN = "flume"
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+]
 
 DEFAULT_NAME = "Flume Sensor"
 
+# Flume API limits queries to 120 per hour
+NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=5)
+DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
+DEVICE_CONNECTION_SCAN_INTERVAL = timedelta(minutes=60)
+
+_LOGGER = logging.getLogger(__package__)
+
+FLUME_TYPE_BRIDGE = 1
 FLUME_TYPE_SENSOR = 2
-FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="current_interval",
-        name="Current",
-        native_unit_of_measurement="gal/m",
-    ),
-    SensorEntityDescription(
-        key="month_to_date",
-        name="Current Month",
-        native_unit_of_measurement="gal",
-    ),
-    SensorEntityDescription(
-        key="week_to_date",
-        name="Current Week",
-        native_unit_of_measurement="gal",
-    ),
-    SensorEntityDescription(
-        key="today",
-        name="Current Day",
-        native_unit_of_measurement="gal",
-    ),
-    SensorEntityDescription(
-        key="last_60_min",
-        name="60 Minutes",
-        native_unit_of_measurement="gal/h",
-    ),
-    SensorEntityDescription(
-        key="last_24_hrs",
-        name="24 Hours",
-        native_unit_of_measurement="gal/d",
-    ),
-    SensorEntityDescription(
-        key="last_30_days",
-        name="30 Days",
-        native_unit_of_measurement="gal/mo",
-    ),
-)
+
 
 FLUME_AUTH = "flume_auth"
 FLUME_HTTP_SESSION = "http_session"
@@ -63,3 +40,10 @@ KEY_DEVICE_ID = "id"
 KEY_DEVICE_LOCATION = "location"
 KEY_DEVICE_LOCATION_NAME = "name"
 KEY_DEVICE_LOCATION_TIMEZONE = "tz"
+
+
+NOTIFICATION_HIGH_FLOW = "High Flow Alert"
+NOTIFICATION_BRIDGE_DISCONNECT = "Bridge Disconnection"
+BRIDGE_NOTIFICATION_KEY = "connected"
+BRIDGE_NOTIFICATION_RULE = "Bridge Disconnection"
+NOTIFICATION_LEAK_DETECTED = "Flume Smart Leak Alert"

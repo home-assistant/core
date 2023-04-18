@@ -5,17 +5,15 @@ from logging import Logger, getLogger
 import re
 from typing import Final
 
+from awesomeversion import AwesomeVersion
+
+from homeassistant.backports.enum import StrEnum
+
 DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
-BLOCK: Final = "block"
 DATA_CONFIG_ENTRY: Final = "config_entry"
-DEVICE: Final = "device"
-REST: Final = "rest"
-RPC: Final = "rpc"
-RPC_POLL: Final = "rpc_poll"
-
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
@@ -52,17 +50,11 @@ DUAL_MODE_LIGHT_MODELS: Final = (
     "SHCB-1",
 )
 
-# Used in "_async_update_data" as timeout for polling data from devices.
-POLLING_TIMEOUT_SEC: Final = 18
-
 # Refresh interval for REST sensors
 REST_SENSORS_UPDATE_INTERVAL: Final = 60
 
 # Refresh interval for RPC polling sensors
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
-
-# Timeout used for aioshelly calls
-AIOSHELLY_DEVICE_TIMEOUT_SEC: Final = 10
 
 # Multiplier used to calculate the "update_interval" for sleeping devices.
 SLEEP_PERIOD_MULTIPLIER: Final = 1.2
@@ -110,6 +102,7 @@ RPC_INPUTS_EVENTS_TYPES: Final = {
     "btn_up",
     "single_push",
     "double_push",
+    "triple_push",
     "long_push",
 }
 
@@ -154,7 +147,8 @@ SHBLB_1_RGB_EFFECTS: Final = {
 SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "min": 4,
     "max": 31,
-    "step": 1,
+    "step": 0.5,
+    "default": 20.0,
 }
 
 # Kelvin value for colorTemp
@@ -164,10 +158,19 @@ KELVIN_MIN_VALUE_COLOR: Final = 3000
 
 UPTIME_DEVIATION: Final = 5
 
-# Max RPC switch/input key instances
-MAX_RPC_KEY_INSTANCES = 4
-
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = ["SHGS-1"]
+
+BLE_MIN_VERSION = AwesomeVersion("0.12.0-beta2")
+
+CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
+
+
+class BLEScannerMode(StrEnum):
+    """BLE scanner mode."""
+
+    DISABLED = "disabled"
+    ACTIVE = "active"
+    PASSIVE = "passive"

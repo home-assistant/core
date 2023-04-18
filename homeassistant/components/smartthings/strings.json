@@ -21,13 +21,13 @@
     },
     "abort": {
       "invalid_webhook_url": "Home Assistant is not configured correctly to receive updates from SmartThings. The webhook URL is invalid:\n> {webhook_url}\n\nPlease update your configuration per the [instructions]({component_url}), restart Home Assistant, and try again.",
-      "no_available_locations": "There are no available SmartThings Locations to setup in Home Assistant."
+      "no_available_locations": "There are no available SmartThings Locations to set up in Home Assistant."
     },
     "error": {
       "token_invalid_format": "The token must be in the UID/GUID format",
       "token_unauthorized": "The token is invalid or no longer authorized.",
       "token_forbidden": "The token does not have the required OAuth scopes.",
-      "app_setup_error": "Unable to setup the SmartApp.  Please try again.",
+      "app_setup_error": "Unable to set up the SmartApp.  Please try again.",
       "webhook_error": "SmartThings could not validate the webhook URL. Please ensure the webhook URL is reachable from the internet and try again."
     }
   }

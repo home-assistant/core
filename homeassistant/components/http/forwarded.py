@@ -112,8 +112,10 @@ def async_setup_forwarded(
         # We have X-Forwarded-For, but config does not agree
         if not use_x_forwarded_for:
             _LOGGER.error(
-                "A request from a reverse proxy was received from %s, but your "
-                "HTTP integration is not set-up for reverse proxies",
+                (
+                    "A request from a reverse proxy was received from %s, but your "
+                    "HTTP integration is not set-up for reverse proxies"
+                ),
                 connected_ip,
             )
             raise HTTPBadRequest
@@ -186,7 +188,10 @@ def async_setup_forwarded(
             # of elements as X-Forwarded-For
             if len(forwarded_proto) not in (1, len(forwarded_for)):
                 _LOGGER.error(
-                    "Incorrect number of elements in X-Forward-Proto. Expected 1 or %d, got %d: %s",
+                    (
+                        "Incorrect number of elements in X-Forward-Proto. Expected 1 or"
+                        " %d, got %d: %s"
+                    ),
                     len(forwarded_for),
                     len(forwarded_proto),
                     forwarded_proto_headers[0],

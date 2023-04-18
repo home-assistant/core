@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import math
 
 from pyhap.const import CATEGORY_LIGHTBULB
 
@@ -10,10 +9,10 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
@@ -33,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
     color_temperature_to_hs,
     color_temperature_to_rgbww,
@@ -55,8 +55,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CHANGE_COALESCE_TIME_WINDOW = 0.01
 
-DEFAULT_MIN_MIREDS = 153
-DEFAULT_MAX_MIREDS = 500
+DEFAULT_MIN_COLOR_TEMP = 2000  # 500 mireds
+DEFAULT_MAX_COLOR_TEMP = 6500  # 153 mireds
 
 COLOR_MODES_WITH_WHITES = {ColorMode.RGBW, ColorMode.RGBWW, ColorMode.WHITE}
 
@@ -110,11 +110,11 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            self.min_mireds = math.floor(
-                attributes.get(ATTR_MIN_MIREDS, DEFAULT_MIN_MIREDS)
+            self.min_mireds = color_temperature_kelvin_to_mired(
+                attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
             )
-            self.max_mireds = math.ceil(
-                attributes.get(ATTR_MAX_MIREDS, DEFAULT_MAX_MIREDS)
+            self.max_mireds = color_temperature_kelvin_to_mired(
+                attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
             )
             if not self.color_temp_supported and not self.rgbww_supported:
                 self.max_mireds = self.min_mireds
@@ -190,10 +190,13 @@ class Light(HomeAccessory):
                 ((brightness_pct or self.char_brightness.value) * 255) / 100
             )
             if self.color_temp_supported:
-                params[ATTR_COLOR_TEMP] = temp
+                params[ATTR_COLOR_TEMP_KELVIN] = color_temperature_mired_to_kelvin(temp)
             elif self.rgbww_supported:
                 params[ATTR_RGBWW_COLOR] = color_temperature_to_rgbww(
-                    temp, bright_val, self.min_mireds, self.max_mireds
+                    color_temperature_mired_to_kelvin(temp),
+                    bright_val,
+                    color_temperature_mired_to_kelvin(self.max_mireds),
+                    color_temperature_mired_to_kelvin(self.min_mireds),
                 )
             elif self.rgbw_supported:
                 params[ATTR_RGBW_COLOR] = (*(0,) * 3, bright_val)
@@ -246,7 +249,7 @@ class Light(HomeAccessory):
             # But if it is set to 0, HomeKit will update the brightness to 100 as
             # it thinks 0 is off.
             #
-            # Therefore, if the the brightness is 0 and the device is still on,
+            # Therefore, if the brightness is 0 and the device is still on,
             # the brightness is mapped to 1 otherwise the update is ignored in
             # order to avoid this incorrect behavior.
             if brightness == 0 and state == STATE_ON:
@@ -258,10 +261,8 @@ class Light(HomeAccessory):
         # Handle Color - color must always be set before color temperature
         # or the iOS UI will not display it correctly.
         if self.color_supported:
-            if color_temp := attributes.get(ATTR_COLOR_TEMP):
-                hue, saturation = color_temperature_to_hs(
-                    color_temperature_mired_to_kelvin(color_temp)
-                )
+            if color_temp := attributes.get(ATTR_COLOR_TEMP_KELVIN):
+                hue, saturation = color_temperature_to_hs(color_temp)
             elif color_mode == ColorMode.WHITE:
                 hue, saturation = 0, 0
             else:
@@ -278,7 +279,9 @@ class Light(HomeAccessory):
         if CHAR_COLOR_TEMPERATURE in self.chars:
             color_temp = None
             if self.color_temp_supported:
-                color_temp = attributes.get(ATTR_COLOR_TEMP)
+                color_temp_kelvin = attributes.get(ATTR_COLOR_TEMP_KELVIN)
+                if color_temp_kelvin is not None:
+                    color_temp = color_temperature_kelvin_to_mired(color_temp_kelvin)
             elif color_mode == ColorMode.WHITE:
                 color_temp = self.min_mireds
             if isinstance(color_temp, (int, float)):

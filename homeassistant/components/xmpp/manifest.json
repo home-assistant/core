@@ -1,9 +1,9 @@
 {
   "domain": "xmpp",
   "name": "Jabber (XMPP)",
-  "documentation": "https://www.home-assistant.io/integrations/xmpp",
-  "requirements": ["slixmpp==1.8.2"],
   "codeowners": ["@fabaff", "@flowolf"],
+  "documentation": "https://www.home-assistant.io/integrations/xmpp",
   "iot_class": "cloud_push",
-  "loggers": ["pyasn1", "slixmpp"]
+  "loggers": ["pyasn1", "slixmpp"],
+  "requirements": ["slixmpp==1.8.3"]
 }

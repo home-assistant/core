@@ -10,9 +10,11 @@ from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -48,6 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Remove ozone sensors from registry if they exist
+    ent_reg = er.async_get(hass)
+    for day in range(0, 5):
+        unique_id = f"{coordinator.location_key}-ozone-{day}"
+        if entity_id := ent_reg.async_get_entity_id(SENSOR_PLATFORM, DOMAIN, unique_id):
+            _LOGGER.debug("Removing ozone sensor entity %s", entity_id)
+            ent_reg.async_remove(entity_id)
+
     return True
 
 
@@ -81,7 +91,6 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize."""
         self.location_key = location_key
         self.forecast = forecast
-        self.is_metric = hass.config.units.is_metric
         self.accuweather = AccuWeather(api_key, session, location_key=location_key)
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -116,9 +125,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             async with timeout(10):
                 current = await self.accuweather.async_get_current_conditions()
                 forecast = (
-                    await self.accuweather.async_get_forecast(metric=self.is_metric)
-                    if self.forecast
-                    else {}
+                    await self.accuweather.async_get_forecast() if self.forecast else {}
                 )
         except (
             ApiError,

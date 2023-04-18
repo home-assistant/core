@@ -60,23 +60,18 @@ async def async_setup_entry(
 class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
     """Define a Econet binary sensor."""
 
-    def __init__(self, econet_device, description: BinarySensorEntityDescription):
+    def __init__(
+        self, econet_device, description: BinarySensorEntityDescription
+    ) -> None:
         """Initialize."""
         super().__init__(econet_device)
         self.entity_description = description
-        self._econet = econet_device
+        self._attr_name = f"{econet_device.device_name}_{description.name}"
+        self._attr_unique_id = (
+            f"{econet_device.device_id}_{econet_device.device_name}_{description.name}"
+        )
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         return getattr(self._econet, self.entity_description.key)
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return f"{self._econet.device_name}_{self.entity_description.name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._econet.device_id}_{self._econet.device_name}_{self.entity_description.name}"

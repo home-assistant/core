@@ -15,17 +15,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-)
+from homeassistant.const import LENGTH, PERCENTAGE, VOLUME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_system import UnitSystem
 
 from . import BMWBaseEntity
 from .const import DOMAIN, UNIT_MAP
@@ -39,8 +32,7 @@ class BMWSensorEntityDescription(SensorEntityDescription):
     """Describes BMW sensor entity."""
 
     key_class: str | None = None
-    unit_metric: str | None = None
-    unit_imperial: str | None = None
+    unit_type: str | None = None
     value: Callable = lambda x, y: x
 
 
@@ -63,79 +55,77 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     # --- Generic ---
     "charging_start_time": BMWSensorEntityDescription(
         key="charging_start_time",
+        name="Charging start time",
         key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
     ),
     "charging_end_time": BMWSensorEntityDescription(
         key="charging_end_time",
+        name="Charging end time",
         key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
-    "charging_time_label": BMWSensorEntityDescription(
-        key="charging_time_label",
-        key_class="fuel_and_battery",
-        entity_registry_enabled_default=False,
-    ),
     "charging_status": BMWSensorEntityDescription(
         key="charging_status",
+        name="Charging status",
         key_class="fuel_and_battery",
         icon="mdi:ev-station",
         value=lambda x, y: x.value,
     ),
     "remaining_battery_percent": BMWSensorEntityDescription(
         key="remaining_battery_percent",
+        name="Remaining battery percent",
         key_class="fuel_and_battery",
-        unit_metric=PERCENTAGE,
-        unit_imperial=PERCENTAGE,
+        unit_type=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
     ),
     # --- Specific ---
     "mileage": BMWSensorEntityDescription(
         key="mileage",
+        name="Mileage",
         icon="mdi:speedometer",
-        unit_metric=LENGTH_KILOMETERS,
-        unit_imperial=LENGTH_MILES,
+        unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
     ),
     "remaining_range_total": BMWSensorEntityDescription(
         key="remaining_range_total",
+        name="Remaining range total",
         key_class="fuel_and_battery",
         icon="mdi:map-marker-distance",
-        unit_metric=LENGTH_KILOMETERS,
-        unit_imperial=LENGTH_MILES,
+        unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
     ),
     "remaining_range_electric": BMWSensorEntityDescription(
         key="remaining_range_electric",
+        name="Remaining range electric",
         key_class="fuel_and_battery",
         icon="mdi:map-marker-distance",
-        unit_metric=LENGTH_KILOMETERS,
-        unit_imperial=LENGTH_MILES,
+        unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
     ),
     "remaining_range_fuel": BMWSensorEntityDescription(
         key="remaining_range_fuel",
+        name="Remaining range fuel",
         key_class="fuel_and_battery",
         icon="mdi:map-marker-distance",
-        unit_metric=LENGTH_KILOMETERS,
-        unit_imperial=LENGTH_MILES,
+        unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
     ),
     "remaining_fuel": BMWSensorEntityDescription(
         key="remaining_fuel",
+        name="Remaining fuel",
         key_class="fuel_and_battery",
         icon="mdi:gas-station",
-        unit_metric=VOLUME_LITERS,
-        unit_imperial=VOLUME_GALLONS,
+        unit_type=VOLUME,
         value=lambda x, hass: convert_and_round(x, hass.config.units.volume, 2),
     ),
     "remaining_fuel_percent": BMWSensorEntityDescription(
         key="remaining_fuel_percent",
+        name="Remaining fuel percent",
         key_class="fuel_and_battery",
         icon="mdi:gas-station",
-        unit_metric=PERCENTAGE,
-        unit_imperial=PERCENTAGE,
+        unit_type=PERCENTAGE,
     ),
 }
 
@@ -146,7 +136,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW sensors from config entry."""
-    unit_system = hass.config.units
     coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[BMWSensor] = []
@@ -154,7 +143,7 @@ async def async_setup_entry(
     for vehicle in coordinator.account.vehicles:
         entities.extend(
             [
-                BMWSensor(coordinator, vehicle, description, unit_system)
+                BMWSensor(coordinator, vehicle, description)
                 for attribute_name in vehicle.available_attributes
                 if (description := SENSOR_TYPES.get(attribute_name))
             ]
@@ -173,17 +162,18 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         coordinator: BMWDataUpdateCoordinator,
         vehicle: MyBMWVehicle,
         description: BMWSensorEntityDescription,
-        unit_system: UnitSystem,
     ) -> None:
         """Initialize BMW vehicle sensor."""
         super().__init__(coordinator, vehicle)
         self.entity_description = description
-
-        self._attr_name = f"{vehicle.name} {description.key}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
-        # Force metric system as BMW API apparently only returns metric values now
-        self._attr_native_unit_of_measurement = description.unit_metric
+        # Set the correct unit of measurement based on the unit_type
+        if description.unit_type:
+            self._attr_native_unit_of_measurement = (
+                coordinator.hass.config.units.as_dict().get(description.unit_type)
+                or description.unit_type
+            )
 
     @callback
     def _handle_coordinator_update(self) -> None:

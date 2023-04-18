@@ -269,7 +269,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_get_properties()
             await bulb.async_stop_listening()
         except (asyncio.TimeoutError, yeelight.BulbException) as err:
-            _LOGGER.error("Failed to get properties from %s: %s", host, err)
+            _LOGGER.debug("Failed to get properties from %s: %s", host, err)
             raise CannotConnect from err
         _LOGGER.debug("Get properties: %s", bulb.last_properties)
         return MODEL_UNKNOWN

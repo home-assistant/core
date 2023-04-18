@@ -1,6 +1,7 @@
 """The tests for the Transport NSW (AU) sensor platform."""
 from unittest.mock import patch
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 VALID_CONFIG = {
@@ -29,7 +30,7 @@ def get_departuresMock(_stop_id, route, destination, api_key):
 
 
 @patch("TransportNSW.TransportNSW.get_departures", side_effect=get_departuresMock)
-async def test_transportnsw_config(mocked_get_departures, hass):
+async def test_transportnsw_config(mocked_get_departures, hass: HomeAssistant) -> None:
     """Test minimal TransportNSW configuration."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG)
     await hass.async_block_till_done()

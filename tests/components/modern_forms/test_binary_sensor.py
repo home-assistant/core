@@ -5,7 +5,8 @@ from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.modern_forms import init_integration
+from . import init_integration
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

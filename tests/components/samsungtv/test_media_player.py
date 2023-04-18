@@ -23,20 +23,18 @@ from samsungtvws.exceptions import ConnectionFailure, HttpApiError, Unauthorized
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_URL,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_TURN_ON,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
@@ -294,7 +292,6 @@ async def test_update_off(hass: HomeAssistant, mock_now: datetime) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
-
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)
@@ -528,7 +525,6 @@ async def test_update_unhandled_response(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[exceptions.UnhandledResponse("Boom"), DEFAULT_MOCK],
     ):
-
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)
@@ -549,7 +545,6 @@ async def test_connection_closed_during_update_can_recover(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[exceptions.ConnectionClosed(), DEFAULT_MOCK],
     ):
-
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)
@@ -751,7 +746,8 @@ async def test_supported_features_with_turnon(hass: HomeAssistant) -> None:
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
     assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
     )
 
 
@@ -1120,7 +1116,7 @@ async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
                 ATTR_MEDIA_CONTENT_ID: "576",
             },
             True,
@@ -1149,7 +1145,7 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             True,
@@ -1171,7 +1167,7 @@ async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             True,
@@ -1192,7 +1188,7 @@ async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
                 ATTR_MEDIA_CONTENT_ID: "-4",
             },
             True,
@@ -1247,7 +1243,7 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.APP,
             ATTR_MEDIA_CONTENT_ID: "3201608010191",
         },
         True,

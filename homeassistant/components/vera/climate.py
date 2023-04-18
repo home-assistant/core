@@ -5,20 +5,16 @@ from typing import Any
 
 import pyvera as veraApi
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
     FAN_AUTO,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -88,7 +84,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         """Return a list of available fan modes."""
         return FAN_OPERATION_LIST
 
-    def set_fan_mode(self, fan_mode) -> None:
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target temperature."""
         if fan_mode == FAN_ON:
             self.vera_device.fan_on()
@@ -103,9 +99,9 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         vera_temp_units = self.vera_device.vera_controller.temperature_units
 
         if vera_temp_units == "F":
-            return TEMP_FAHRENHEIT
+            return UnitOfTemperature.FAHRENHEIT
 
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> float | None:

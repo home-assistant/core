@@ -1,10 +1,10 @@
 """Support for Xiaomi Mi Flora BLE plant sensor."""
 from __future__ import annotations
 
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.components.sensor import PLATFORM_SCHEMA_BASE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE

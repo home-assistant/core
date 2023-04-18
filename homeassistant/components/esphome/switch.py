@@ -5,10 +5,11 @@ from typing import Any
 
 from aioesphomeapi import SwitchInfo, SwitchState
 
-from homeassistant.components.switch import DEVICE_CLASSES, SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
@@ -28,10 +29,6 @@ async def async_setup_entry(
     )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
 
@@ -40,17 +37,16 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
         """Return true if we do optimistic updates."""
         return self._static_info.assumed_state
 
+    @property
     @esphome_state_property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         return self._state.state
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SwitchDeviceClass | None:
         """Return the class of this device."""
-        if self._static_info.device_class not in DEVICE_CLASSES:
-            return None
-        return self._static_info.device_class
+        return try_parse_enum(SwitchDeviceClass, self._static_info.device_class)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

@@ -1,6 +1,5 @@
 """Support for the Locative platform."""
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -64,13 +63,13 @@ class LocativeEntity(TrackerEntity):
         """Return the source type, eg gps or router, of the device."""
         return SourceType.GPS
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, TRACKER_UPDATE, self._async_receive_data
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         self._unsub_dispatcher()
 

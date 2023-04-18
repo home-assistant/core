@@ -8,7 +8,7 @@ from homeassistant.components.tankerkoenig.const import (
     CONF_STATIONS,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -47,18 +47,6 @@ MOCK_OPTIONS_DATA = {
     ],
 }
 
-MOCK_IMPORT_DATA = {
-    CONF_API_KEY: "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx",
-    CONF_FUEL_TYPES: ["e5"],
-    CONF_LOCATION: {CONF_LATITUDE: 51.0, CONF_LONGITUDE: 13.0},
-    CONF_RADIUS: 2.0,
-    CONF_STATIONS: [
-        "3bcd61da-yyyy-yyyy-yyyy-19d5523a7ae8",
-        "36b4b812-yyyy-yyyy-yyyy-c51735325858",
-    ],
-    CONF_SHOW_ON_MAP: True,
-}
-
 MOCK_NEARVY_STATIONS_OK = {
     "ok": True,
     "stations": [
@@ -82,7 +70,7 @@ MOCK_NEARVY_STATIONS_OK = {
 }
 
 
-async def test_user(hass: HomeAssistant):
+async def test_user(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -122,7 +110,7 @@ async def test_user(hass: HomeAssistant):
     assert mock_setup_entry.called
 
 
-async def test_user_already_configured(hass: HomeAssistant):
+async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow by user with an already configured region."""
 
     mock_config = MockConfigEntry(
@@ -146,7 +134,7 @@ async def test_user_already_configured(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_exception_security(hass: HomeAssistant):
+async def test_exception_security(hass: HomeAssistant) -> None:
     """Test starting a flow by user with invalid api key."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -158,7 +146,6 @@ async def test_exception_security(hass: HomeAssistant):
         "homeassistant.components.tankerkoenig.config_flow.getNearbyStations",
         side_effect=customException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
@@ -167,7 +154,7 @@ async def test_exception_security(hass: HomeAssistant):
         assert result["errors"][CONF_API_KEY] == "invalid_auth"
 
 
-async def test_user_no_stations(hass: HomeAssistant):
+async def test_user_no_stations(hass: HomeAssistant) -> None:
     """Test starting a flow by user which does not find any station."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -187,38 +174,7 @@ async def test_user_no_stations(hass: HomeAssistant):
         assert result["errors"][CONF_RADIUS] == "no_stations"
 
 
-async def test_import(hass: HomeAssistant):
-    """Test starting a flow by import."""
-    with patch(
-        "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.tankerkoenig.config_flow.getNearbyStations",
-        return_value=MOCK_NEARVY_STATIONS_OK,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_DATA
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_NAME] == "Home"
-        assert result["data"][CONF_API_KEY] == "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx"
-        assert result["data"][CONF_FUEL_TYPES] == ["e5"]
-        assert result["data"][CONF_LOCATION] == {"latitude": 51.0, "longitude": 13.0}
-        assert result["data"][CONF_RADIUS] == 2.0
-        assert result["data"][CONF_STATIONS] == [
-            "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8",
-            "36b4b812-xxxx-xxxx-xxxx-c51735325858",
-            "3bcd61da-yyyy-yyyy-yyyy-19d5523a7ae8",
-            "36b4b812-yyyy-yyyy-yyyy-c51735325858",
-        ]
-        assert result["options"][CONF_SHOW_ON_MAP]
-
-        await hass.async_block_till_done()
-
-    assert mock_setup_entry.called
-
-
-async def test_reauth(hass: HomeAssistant):
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test starting a flow by user to re-auth."""
 
     mock_config = MockConfigEntry(
@@ -271,7 +227,7 @@ async def test_reauth(hass: HomeAssistant):
     assert entry.data[CONF_API_KEY] == "269534f6-aaaa-bbbb-cccc-yyyyzzzzxxxx"
 
 
-async def test_options_flow(hass: HomeAssistant):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options flow."""
 
     mock_config = MockConfigEntry(
