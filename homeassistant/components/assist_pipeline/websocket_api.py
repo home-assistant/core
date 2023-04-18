@@ -274,5 +274,5 @@ def websocket_get_run(
 
     connection.send_result(
         msg["id"],
-        {"events": pipeline_runs[pipeline_run_id]},
+        pipeline_runs[pipeline_run_id],
     )

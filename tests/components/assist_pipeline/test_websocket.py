@@ -70,7 +70,7 @@ async def test_text_only_pipeline(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"events": events}
+    assert msg["result"] == {"events": events, "timestamp": ANY}
 
 
 async def test_audio_pipeline(
@@ -159,7 +159,7 @@ async def test_audio_pipeline(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"events": events}
+    assert msg["result"] == {"events": events, "timestamp": ANY}
 
 
 async def test_intent_timeout(
@@ -224,7 +224,7 @@ async def test_intent_timeout(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"events": events}
+    assert msg["result"] == {"events": events, "timestamp": ANY}
 
 
 async def test_text_pipeline_timeout(
@@ -277,7 +277,7 @@ async def test_text_pipeline_timeout(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"events": events}
+    assert msg["result"] == {"events": events, "timestamp": ANY}
 
 
 async def test_intent_failed(
@@ -338,7 +338,7 @@ async def test_intent_failed(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"events": events}
+    assert msg["result"] == {"events": events, "timestamp": ANY}
 
 
 async def test_audio_pipeline_timeout(
@@ -393,7 +393,7 @@ async def test_audio_pipeline_timeout(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"events": events}
+    assert msg["result"] == {"events": events, "timestamp": ANY}
 
 
 async def test_stt_provider_missing(
@@ -489,7 +489,7 @@ async def test_stt_stream_failed(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"events": events}
+    assert msg["result"] == {"events": events, "timestamp": ANY}
 
 
 async def test_tts_failed(
@@ -550,7 +550,7 @@ async def test_tts_failed(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"events": events}
+    assert msg["result"] == {"events": events, "timestamp": ANY}
 
 
 async def test_invalid_stage_order(
@@ -1033,7 +1033,7 @@ async def test_audio_pipeline_debug(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"events": events}
+    assert msg["result"] == {"events": events, "timestamp": ANY}
 
 
 async def test_pipeline_debug_list_runs_wrong_pipeline(
