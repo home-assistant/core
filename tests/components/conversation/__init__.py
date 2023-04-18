@@ -18,6 +18,11 @@ class MockAgent(conversation.AbstractConversationAgent):
         self.calls = []
         self.response = "Test response"
 
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return a list of supported languages."""
+        return ["smurfish"]
+
     async def async_process(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
