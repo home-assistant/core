@@ -191,8 +191,8 @@ class AugustData(AugustSubscriberMixin):
             # Do not prevent setup as the sync can timeout
             # but it is not a fatal error as the lock
             # will recover automatically when it comes back online.
-            self._config_entry.async_on_unload(
-                asyncio.create_task(self._async_initial_sync()).cancel
+            self._config_entry.async_create_background_task(
+                self._hass, self._async_initial_sync(), "august-initial-sync"
             )
 
     async def _async_initial_sync(self):

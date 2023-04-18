@@ -8,7 +8,7 @@ from homeassistant.components.homekit.iidmanager import (
     get_iid_storage_filename_for_entry_id,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.json import json_loads
+from homeassistant.util.json import json_loads
 from homeassistant.util.uuid import random_uuid_hex
 
 from tests.common import MockConfigEntry, load_fixture

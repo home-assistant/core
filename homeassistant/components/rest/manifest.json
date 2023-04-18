@@ -1,7 +1,7 @@
 {
   "domain": "rest",
   "name": "RESTful",
-  "codeowners": [],
+  "codeowners": ["@epenet"],
   "documentation": "https://www.home-assistant.io/integrations/rest",
   "iot_class": "local_polling",
   "requirements": ["jsonpath==0.82", "xmltodict==0.13.0"]

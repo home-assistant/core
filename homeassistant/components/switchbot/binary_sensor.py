@@ -20,50 +20,50 @@ PARALLEL_UPDATES = 0
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "calibration": BinarySensorEntityDescription(
         key="calibration",
-        name="Calibration",
+        translation_key="calibration",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "motion_detected": BinarySensorEntityDescription(
         key="pir_state",
-        name="Motion detected",
+        translation_key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     "contact_open": BinarySensorEntityDescription(
         key="contact_open",
-        name="Door open",
+        translation_key="door_open",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
     "contact_timeout": BinarySensorEntityDescription(
         key="contact_timeout",
-        name="Door timeout",
+        translation_key="door_timeout",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "is_light": BinarySensorEntityDescription(
         key="is_light",
-        name="Light",
+        translation_key="light",
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
     "door_open": BinarySensorEntityDescription(
         key="door_status",
-        name="Door status",
+        translation_key="door_open",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
     "unclosed_alarm": BinarySensorEntityDescription(
         key="unclosed_alarm",
-        name="Door unclosed alarm",
+        translation_key="door_unclosed_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     "unlocked_alarm": BinarySensorEntityDescription(
         key="unlocked_alarm",
-        name="Door unlocked alarm",
+        translation_key="door_unclosed_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     "auto_lock_paused": BinarySensorEntityDescription(
         key="auto_lock_paused",
-        name="Door auto-lock paused",
+        translation_key="door_auto_lock_paused",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }

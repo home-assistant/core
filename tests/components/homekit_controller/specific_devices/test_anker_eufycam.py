@@ -1,4 +1,5 @@
 """Test against characteristics captured from a eufycam."""
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -10,7 +11,7 @@ from ..common import (
 )
 
 
-async def test_eufycam_setup(hass):
+async def test_eufycam_setup(hass: HomeAssistant) -> None:
     """Test that a eufycam can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "anker_eufycam.json")
     await setup_test_accessories(hass, accessories)

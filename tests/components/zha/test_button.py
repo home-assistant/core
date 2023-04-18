@@ -28,6 +28,7 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import find_entity_id
@@ -120,7 +121,7 @@ async def tuya_water_valve(hass, zigpy_device_mock, zha_device_joined_restored):
 
 
 @freeze_time("2021-11-04 17:37:00", tz_offset=-1)
-async def test_button(hass, contact_sensor):
+async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     """Test ZHA button platform."""
 
     entity_registry = er.async_get(hass)
@@ -160,7 +161,7 @@ async def test_button(hass, contact_sensor):
     assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
 
 
-async def test_frost_unlock(hass, tuya_water_valve):
+async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
     """Test custom frost unlock ZHA button."""
 
     entity_registry = er.async_get(hass)

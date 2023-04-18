@@ -3,21 +3,14 @@ from unittest.mock import MagicMock
 
 from elgato import ElgatoError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    STATE_OFF,
-    EntityCategory,
-)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -28,61 +21,55 @@ pytestmark = [
 ]
 
 
-async def test_battery_bypass(
+@pytest.mark.parametrize(
+    ("entity_id", "method"),
+    [
+        ("switch.frenck_studio_mode", "battery_bypass"),
+        ("switch.frenck_energy_saving", "energy_saving"),
+    ],
+)
+async def test_switches(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_elgato: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_id: str,
+    method: str,
 ) -> None:
-    """Test the Elgato battery bypass switch."""
-    state = hass.states.get("switch.frenck_studio_mode")
-    assert state
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck Studio mode"
-    assert state.attributes.get(ATTR_ICON) == "mdi:battery-off-outline"
-    assert not state.attributes.get(ATTR_DEVICE_CLASS)
+    """Test the Elgato switches."""
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot
 
-    entry = entity_registry.async_get("switch.frenck_studio_mode")
-    assert entry
-    assert entry.unique_id == "GW24L1A02987_bypass"
-    assert entry.entity_category == EntityCategory.CONFIG
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot
 
     assert entry.device_id
-    device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry
-    assert device_entry.configuration_url is None
-    assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
-    }
-    assert device_entry.entry_type is None
-    assert device_entry.identifiers == {(DOMAIN, "GW24L1A02987")}
-    assert device_entry.manufacturer == "Elgato"
-    assert device_entry.model == "Elgato Key Light Mini"
-    assert device_entry.name == "Frenck"
-    assert device_entry.sw_version == "1.0.4 (229)"
-    assert device_entry.hw_version == "202"
+    assert (device_entry := device_registry.async_get(entry.device_id))
+    assert device_entry == snapshot
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.frenck_studio_mode"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    assert len(mock_elgato.battery_bypass.mock_calls) == 1
-    mock_elgato.battery_bypass.assert_called_once_with(on=True)
+    mocked_method = getattr(mock_elgato, method)
+    assert len(mocked_method.mock_calls) == 1
+    mocked_method.assert_called_once_with(on=True)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.frenck_studio_mode"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    assert len(mock_elgato.battery_bypass.mock_calls) == 2
-    mock_elgato.battery_bypass.assert_called_with(on=False)
+    assert len(mocked_method.mock_calls) == 2
+    mocked_method.assert_called_with(on=False)
 
-    mock_elgato.battery_bypass.side_effect = ElgatoError
+    mocked_method.side_effect = ElgatoError
 
     with pytest.raises(
         HomeAssistantError, match="An error occurred while updating the Elgato Light"
@@ -90,12 +77,11 @@ async def test_battery_bypass(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.frenck_studio_mode"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    assert len(mock_elgato.battery_bypass.mock_calls) == 3
+    assert len(mocked_method.mock_calls) == 3
 
     with pytest.raises(
         HomeAssistantError, match="An error occurred while updating the Elgato Light"
@@ -103,48 +89,8 @@ async def test_battery_bypass(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.frenck_studio_mode"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
-    assert len(mock_elgato.battery_bypass.mock_calls) == 4
-
-
-async def test_battery_energy_saving(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_elgato: MagicMock,
-) -> None:
-    """Test the Elgato energy saving switch."""
-    state = hass.states.get("switch.frenck_energy_saving")
-    assert state
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck Energy saving"
-    assert state.attributes.get(ATTR_ICON) == "mdi:leaf"
-    assert not state.attributes.get(ATTR_DEVICE_CLASS)
-
-    entry = entity_registry.async_get("switch.frenck_energy_saving")
-    assert entry
-    assert entry.unique_id == "GW24L1A02987_energy_saving"
-    assert entry.entity_category == EntityCategory.CONFIG
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.frenck_energy_saving"},
-        blocking=True,
-    )
-
-    assert len(mock_elgato.energy_saving.mock_calls) == 1
-    mock_elgato.energy_saving.assert_called_once_with(on=True)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.frenck_energy_saving"},
-        blocking=True,
-    )
-
-    assert len(mock_elgato.energy_saving.mock_calls) == 2
-    mock_elgato.energy_saving.assert_called_with(on=False)
+    assert len(mocked_method.mock_calls) == 4

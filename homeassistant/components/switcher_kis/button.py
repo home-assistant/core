@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -132,9 +132,7 @@ class SwitcherThermostatButtonEntity(
         self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_unique_id = f"{coordinator.mac_address}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
-            }
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
     async def async_press(self) -> None:

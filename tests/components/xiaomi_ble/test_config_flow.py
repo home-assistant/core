@@ -194,8 +194,8 @@ async def test_async_step_bluetooth_valid_device_legacy_encryption_wrong_key(
 
 
 async def test_async_step_bluetooth_valid_device_legacy_encryption_wrong_key_length(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test discovery via bluetooth with a valid device, with legacy encryption and wrong key length."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -640,8 +640,8 @@ async def test_async_step_user_with_found_devices_legacy_encryption(
 
 
 async def test_async_step_user_with_found_devices_legacy_encryption_wrong_key(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test setup from service info cache with devices found, with legacy encryption and wrong key."""
     with patch(
         "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
@@ -685,8 +685,8 @@ async def test_async_step_user_with_found_devices_legacy_encryption_wrong_key(
 
 
 async def test_async_step_user_with_found_devices_legacy_encryption_wrong_key_length(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test setup from service info cache with devices found, with legacy encryption and wrong key length."""
     with patch(
         "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",

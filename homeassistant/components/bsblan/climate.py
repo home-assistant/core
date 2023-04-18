@@ -129,7 +129,7 @@ class BSBLANClimate(
             return PRESET_ECO
         return PRESET_NONE
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         await self.async_set_data(hvac_mode=hvac_mode)
 

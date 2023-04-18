@@ -144,7 +144,7 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_valid_t
     MOCK_ECOBEE_CONF = {ECOBEE_API_KEY: None, ECOBEE_REFRESH_TOKEN: None}
 
     with patch(
-        "homeassistant.components.ecobee.config_flow.load_json",
+        "homeassistant.components.ecobee.config_flow.load_json_object",
         return_value=MOCK_ECOBEE_CONF,
     ), patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
         mock_ecobee = mock_ecobee.return_value
@@ -173,7 +173,7 @@ async def test_import_flow_triggered_with_ecobee_conf_and_invalid_data(
     MOCK_ECOBEE_CONF = {}
 
     with patch(
-        "homeassistant.components.ecobee.config_flow.load_json",
+        "homeassistant.components.ecobee.config_flow.load_json_object",
         return_value=MOCK_ECOBEE_CONF,
     ), patch.object(
         flow, "async_step_user", return_value=mock_coro()
@@ -196,7 +196,7 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_stale_t
     MOCK_ECOBEE_CONF = {ECOBEE_API_KEY: None, ECOBEE_REFRESH_TOKEN: None}
 
     with patch(
-        "homeassistant.components.ecobee.config_flow.load_json",
+        "homeassistant.components.ecobee.config_flow.load_json_object",
         return_value=MOCK_ECOBEE_CONF,
     ), patch(
         "homeassistant.components.ecobee.config_flow.Ecobee"

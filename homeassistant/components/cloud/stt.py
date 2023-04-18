@@ -1,7 +1,9 @@
 """Support for the cloud for speech to text service."""
 from __future__ import annotations
 
-from aiohttp import StreamReader
+from collections.abc import AsyncIterable
+import logging
+
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import VoiceError
 
@@ -18,6 +20,8 @@ from homeassistant.components.stt import (
 )
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_LANGUAGES = [
     "da-DK",
@@ -88,7 +92,7 @@ class CloudProvider(Provider):
         return [AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
         content = (
@@ -101,7 +105,8 @@ class CloudProvider(Provider):
             result = await self.cloud.voice.process_stt(
                 stream, content, metadata.language
             )
-        except VoiceError:
+        except VoiceError as err:
+            _LOGGER.debug("Voice error: %s", err)
             return SpeechResult(None, SpeechResultState.ERROR)
 
         # Return Speech as Text

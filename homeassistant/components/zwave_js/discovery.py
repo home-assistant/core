@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.const import (
@@ -60,6 +60,9 @@ from .discovery_data_template import (
 )
 from .helpers import ZwaveValueID
 
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
+
 
 class ValueType(StrEnum):
     """Enum with all value types."""
@@ -73,7 +76,7 @@ class ValueType(StrEnum):
 class DataclassMustHaveAtLeastOne:
     """A dataclass that must have at least one input parameter that is not None."""
 
-    def __post_init__(self) -> None:
+    def __post_init__(self: DataclassInstance) -> None:
         """Post dataclass initialization."""
         if all(val is None for val in asdict(self).values()):
             raise ValueError("At least one input parameter must not be None")
@@ -389,6 +392,53 @@ DISCOVERY_SCHEMAS = [
         product_id={0x000D},
         product_type={0x0003},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # Merten 507801 Connect Roller Shutter
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="window_shutter",
+        manufacturer_id={0x007A},
+        product_id={0x0001},
+        product_type={0x8003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={0, 1},
+            type={ValueType.NUMBER},
+        ),
+        assumed_state=True,
+    ),
+    # Merten 507801 Connect Roller Shutter.
+    # Disable endpoint 2, as it has no practical function. CC: Switch_Multilevel
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="window_shutter",
+        manufacturer_id={0x007A},
+        product_id={0x0001},
+        product_type={0x8003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        assumed_state=True,
+        entity_registry_enabled_default=False,
+    ),
+    # Merten 507801 Connect Roller Shutter.
+    # Disable endpoint 2, as it has no practical function. CC: Protection
+    ZWaveDiscoverySchema(
+        platform=Platform.SELECT,
+        manufacturer_id={0x007A},
+        product_id={0x0001},
+        product_type={0x8003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.PROTECTION},
+            property={LOCAL_PROPERTY, RF_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
     ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(

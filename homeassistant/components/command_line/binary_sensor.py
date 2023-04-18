@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -51,17 +51,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command line Binary Sensor."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    name: str = config[CONF_NAME]
+    name: str = config.get(CONF_NAME, DEFAULT_NAME)
     command: str = config[CONF_COMMAND]
     payload_off: str = config[CONF_PAYLOAD_OFF]
     payload_on: str = config[CONF_PAYLOAD_ON]
@@ -73,7 +73,7 @@ def setup_platform(
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
 
-    add_entities(
+    async_add_entities(
         [
             CommandBinarySensor(
                 data,
@@ -112,13 +112,16 @@ class CommandBinarySensor(BinarySensorEntity):
         self._value_template = value_template
         self._attr_unique_id = unique_id
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data and updates the state."""
-        self.data.update()
+        await self.hass.async_add_executor_job(self.data.update)
         value = self.data.value
 
         if self._value_template is not None:
-            value = self._value_template.render_with_possible_json_value(value, False)
+            value = self._value_template.async_render_with_possible_json_value(
+                value, None
+            )
+        self._attr_is_on = None
         if value == self._payload_on:
             self._attr_is_on = True
         elif value == self._payload_off:

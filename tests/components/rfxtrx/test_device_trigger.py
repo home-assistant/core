@@ -8,6 +8,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -77,7 +78,12 @@ async def setup_entry(hass, devices):
         ]
     ],
 )
-async def test_get_triggers(hass, device_registry, event: EventTestData, expected):
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    event: EventTestData,
+    expected,
+) -> None:
     """Test we get the expected triggers from a rfxtrx."""
     await setup_entry(hass, {event.code: {}})
 
@@ -109,7 +115,9 @@ async def test_get_triggers(hass, device_registry, event: EventTestData, expecte
         EVENT_FIREALARM_1,
     ],
 )
-async def test_firing_event(hass, device_registry: dr.DeviceRegistry, rfxtrx, event):
+async def test_firing_event(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, rfxtrx, event
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
 
     await setup_entry(hass, {event.code: {"fire_event": True}})
@@ -148,7 +156,11 @@ async def test_firing_event(hass, device_registry: dr.DeviceRegistry, rfxtrx, ev
     assert calls[0].data["some"] == "device"
 
 
-async def test_invalid_trigger(hass, device_registry: dr.DeviceRegistry, caplog):
+async def test_invalid_trigger(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test for invalid actions."""
     event = EVENT_LIGHTING_1
 

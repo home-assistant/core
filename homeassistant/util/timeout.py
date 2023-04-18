@@ -159,6 +159,7 @@ class _GlobalTaskContext:
         self._time_left: float = timeout
         self._expiration_time: float | None = None
         self._timeout_handler: asyncio.Handle | None = None
+        self._on_wait_task: asyncio.Task | None = None
         self._wait_zone: asyncio.Event = asyncio.Event()
         self._state: _State = _State.INIT
         self._cool_down: float = cool_down
@@ -223,7 +224,7 @@ class _GlobalTaskContext:
 
         # Reset timer if zones are running
         if not self._manager.zones_done:
-            asyncio.create_task(self._on_wait())
+            self._on_wait_task = asyncio.create_task(self._on_wait())
         else:
             self._cancel_task()
 
@@ -245,6 +246,7 @@ class _GlobalTaskContext:
         """Wait until zones are done."""
         await self._wait_zone.wait()
         await asyncio.sleep(self._cool_down)  # Allow context switch
+        self._on_wait_task = None
         if self.state != _State.TIMEOUT:
             return
         self._cancel_task()

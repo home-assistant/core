@@ -47,7 +47,6 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .client import MqttClientSetup
-from .config_integration import CONFIG_SCHEMA_ENTRY
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -369,7 +368,6 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 updated_config = {}
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
-                CONFIG_SCHEMA_ENTRY(updated_config)
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=updated_config,
@@ -588,7 +586,7 @@ async def async_get_broker_settings(
         current_user = user_input_basic.get(CONF_USERNAME)
         current_pass = user_input_basic.get(CONF_PASSWORD)
     else:
-        # Get default settings from entry or yaml (if any)
+        # Get default settings from entry (if any)
         current_broker = current_config.get(CONF_BROKER)
         current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
         current_user = current_config.get(CONF_USERNAME)
