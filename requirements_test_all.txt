@@ -497,7 +497,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.2.3
+easyenergy==0.3.0
 
 # homeassistant.components.elgato
 elgato==4.0.1
@@ -670,7 +670,7 @@ ha-philipsjs==3.0.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.64.1
+hass-nabucasa==0.65.0
 
 # homeassistant.components.conversation
 hassil==1.0.6
@@ -1037,6 +1037,7 @@ progettihwsw==0.1.1
 prometheus_client==0.7.1
 
 # homeassistant.components.hardware
+# homeassistant.components.recorder
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.androidtv
