@@ -1,7 +1,8 @@
 """Test the Whirlpool Sixth Sense climate domain."""
 import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+from aiohttp import ClientConnectionError
 import aiosomecomfort
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1020,17 +1021,26 @@ async def test_async_update_errors(
     # "reload integration" test
     device.refresh.side_effect = aiosomecomfort.SomeComfortError
     client.login.side_effect = aiosomecomfort.AuthError
-    with patch("homeassistant.config_entries.ConfigEntries.async_reload") as reload:
-        async_fire_time_changed(
-            hass,
-            utcnow() + SCAN_INTERVAL,
-        )
-        await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
 
-        entity_id = f"climate.{device.name}"
-        state = hass.states.get(entity_id)
-        assert state.state == "unavailable"
-        assert reload.called_once()
+    entity_id = f"climate.{device.name}"
+    state = hass.states.get(entity_id)
+    assert state.state == "unavailable"
+
+    device.refresh.side_effect = ClientConnectionError
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    entity_id = f"climate.{device.name}"
+    state = hass.states.get(entity_id)
+    assert state.state == "unavailable"
 
 
 async def test_aux_heat_off_service_call(

@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.5
+PySwitchbot==0.37.6
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -86,7 +86,7 @@ adext==0.4.2
 adguardhome==0.6.1
 
 # homeassistant.components.advantage_air
-advantage_air==0.4.2
+advantage_air==0.4.4
 
 # homeassistant.components.frontier_silicon
 afsapi==0.2.7
@@ -258,7 +258,7 @@ aiorecollect==1.0.8
 aioridwell==2023.01.0
 
 # homeassistant.components.ruuvi_gateway
-aioruuvigateway==0.0.2
+aioruuvigateway==0.1.0
 
 # homeassistant.components.senseme
 aiosenseme==0.6.1
@@ -465,9 +465,10 @@ bluetooth-adapters==0.15.3
 bluetooth-auto-recovery==1.0.3
 
 # homeassistant.components.bluetooth
+# homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==0.3.1
+bluetooth-data-tools==0.4.0
 
 # homeassistant.components.bond
 bond-async==0.1.23
@@ -625,7 +626,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.2.3
+easyenergy==0.3.0
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -661,7 +662,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.32
+env_canada==0.5.33
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -868,7 +869,7 @@ ha-philipsjs==3.0.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.64.1
+hass-nabucasa==0.65.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -910,7 +911,7 @@ holidays==0.21.13
 home-assistant-frontend==20230411.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.3.29
+home-assistant-intents==2023.4.17-1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1195,7 +1196,7 @@ nextcloudmonitor==1.4.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.3.0
+nextdns==1.4.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.1.4
@@ -1260,7 +1261,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.2.5
+onvif-zeep-async==1.2.11
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1400,6 +1401,7 @@ prometheus_client==0.7.1
 proxmoxer==2.0.1
 
 # homeassistant.components.hardware
+# homeassistant.components.recorder
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
@@ -1618,7 +1620,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.0.9
 
 # homeassistant.components.fibaro
-pyfibaro==0.6.9
+pyfibaro==0.7.0
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -2150,7 +2152,7 @@ pytrafikverket==0.2.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.7.0
+pyunifiprotect==4.8.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2220,6 +2222,9 @@ radiotherm==2.1.0
 
 # homeassistant.components.raincloud
 raincloudy==0.0.7
+
+# homeassistant.components.rapt_ble
+rapt-ble==0.1.0
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
@@ -2521,7 +2526,7 @@ total_connect_client==2023.2
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.1.4
+tplink-omada-client==1.2.3
 
 # homeassistant.components.transmission
 transmission-rpc==4.1.5

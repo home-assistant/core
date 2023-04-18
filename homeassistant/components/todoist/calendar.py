@@ -9,7 +9,7 @@ import uuid
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.endpoints import get_sync_url
 from todoist_api_python.headers import create_headers
-from todoist_api_python.models import Label, Task
+from todoist_api_python.models import Due, Label, Task
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -590,25 +590,19 @@ class TodoistProjectData:
         for task in project_task_data:
             if task.due is None:
                 continue
-            due_date = dt.parse_datetime(
-                task.due.datetime if task.due.datetime else task.due.date
-            )
-            if not due_date:
+            start = get_start(task.due)
+            if start is None:
                 continue
-            due_date = dt.as_utc(due_date)
-            if start_date < due_date < end_date:
-                due_date_value: datetime | date = due_date
-                midnight = dt.start_of_local_day(due_date)
-                if due_date == midnight:
-                    # If the due date has no time data, return just the date so that it
-                    # will render correctly as an all day event on a calendar.
-                    due_date_value = due_date.date()
-                event = CalendarEvent(
-                    summary=task.content,
-                    start=due_date_value,
-                    end=due_date_value + timedelta(days=1),
-                )
-                events.append(event)
+            event = CalendarEvent(
+                summary=task.content,
+                start=start,
+                end=start + timedelta(days=1),
+            )
+            if event.start_datetime_local >= end_date:
+                continue
+            if event.end_datetime_local < start_date:
+                continue
+            events.append(event)
         return events
 
     async def async_update(self) -> None:
@@ -663,3 +657,15 @@ class TodoistProjectData:
             return
         self.event = event
         _LOGGER.debug("Updated %s", self._name)
+
+
+def get_start(due: Due) -> datetime | date | None:
+    """Return the task due date as a start date or date time."""
+    if due.datetime:
+        start = dt.parse_datetime(due.datetime)
+        if not start:
+            return None
+        return dt.as_local(start)
+    if due.date:
+        return dt.parse_date(due.date)
+    return None
