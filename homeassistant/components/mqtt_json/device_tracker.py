@@ -47,7 +47,9 @@ async def async_setup_scanner(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the MQTT JSON tracker."""
-    # Make sure MQTT is available and the client is available
+    # Make sure MQTT integration is enabled and the client is available
+    # We cannot count on dependencies as the device_tracker platform setup
+    # also will be triggered when mqtt is loading the `device_tracker` platform
     if not await mqtt.async_wait_for_mqtt_client(hass):
         _LOGGER.error("MQTT integration is not available")
         return False
