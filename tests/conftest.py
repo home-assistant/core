@@ -532,11 +532,14 @@ async def _hass(
 
     yield hass
 
-    unload_coros = (
-        config_entry.async_unload(hass)
-        for config_entry in hass.config_entries.async_entries()
+    # Config entries are not normally unloaded on HA shutdown. They are unloaded here
+    # to ensure that they could, and to help track lingering tasks and timers.
+    await asyncio.gather(
+        *(
+            config_entry.async_unload(hass)
+            for config_entry in hass.config_entries.async_entries()
+        )
     )
-    await asyncio.gather(*unload_coros)
 
     await hass.async_stop(force=True)
 
