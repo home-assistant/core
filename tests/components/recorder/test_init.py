@@ -1819,11 +1819,7 @@ async def test_database_lock_and_overflow(
         db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) == 1
 
-        assert (
-            "Database queue backlog reached more than 90% of available memory"
-            in caplog.text
-        )
-
+        assert "Database queue backlog reached more than" in caplog.text
         assert not instance.unlock_database()
 
 
@@ -1887,10 +1883,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
         db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) == 0
 
-        assert (
-            "Database queue backlog reached more than 90% of available memory"
-            not in caplog.text
-        )
+        assert "Database queue backlog reached more than" not in caplog.text
 
         # Record beyond the extended limit (which takes into account the available memory)
         for _ in range(20):
@@ -1903,10 +1896,7 @@ async def test_database_lock_and_overflow_checks_available_memory(
 
         assert not instance.unlock_database()
 
-        assert (
-            "Database queue backlog reached more than 90% of available memory"
-            in caplog.text
-        )
+        assert "Database queue backlog reached more than" in caplog.text
 
         db_events = await instance.async_add_executor_job(_get_db_events)
         assert len(db_events) >= 2
