@@ -383,10 +383,12 @@ class AgentManager:
         for agent_id, agent in self._agents.items():
             config_entry = self.hass.config_entries.async_get_entry(agent_id)
 
-            # This is a bug, agent should have been unset when config entry was unloaded
+            # Guard against potential bugs in conversation agents where the agent is not
+            # removed from the manager when the config entry is removed
             if config_entry is None:
                 _LOGGER.warning(
-                    "Agent was still loaded while config entry is gone: %s", agent
+                    "Conversation agent %s is still loaded after config entry removal",
+                    agent,
                 )
                 continue
 

@@ -17,12 +17,13 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.media_source import Unresolvable
-from homeassistant.config import async_process_ha_core_config
+from homeassistant.components.tts.legacy import _valid_base_url
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.network import normalize_url
+
+from .common import MockProvider, MockTTS
 
 from tests.common import (
     MockModule,
@@ -31,12 +32,12 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 
 
-async def get_media_source_url(hass, media_content_id):
+async def get_media_source_url(hass: HomeAssistant, media_content_id: str) -> str:
     """Get the media source url."""
     if media_source.DOMAIN not in hass.config.components:
         assert await async_setup_component(hass, media_source.DOMAIN, {})
@@ -45,88 +46,14 @@ async def get_media_source_url(hass, media_content_id):
     return resolved.url
 
 
-SUPPORT_LANGUAGES = ["de", "en", "en_US"]
-
-DEFAULT_LANG = "en"
-
-
-class MockProvider(tts.Provider):
-    """Test speech API provider."""
-
-    def __init__(self, lang: str) -> None:
-        """Initialize test provider."""
-        self._lang = lang
-        self.name = "Test"
-
-    @property
-    def default_language(self) -> str:
-        """Return the default language."""
-        return self._lang
-
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return list of supported languages."""
-        return SUPPORT_LANGUAGES
-
-    @property
-    def supported_options(self) -> list[str]:
-        """Return list of supported options like voice, emotions."""
-        return ["voice", "age"]
-
-    def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
-    ) -> tts.TtsAudioType:
-        """Load TTS dat."""
-        return ("mp3", b"")
-
-
-class MockTTS:
-    """A mock TTS platform."""
-
-    PLATFORM_SCHEMA = tts.PLATFORM_SCHEMA.extend(
-        {vol.Optional(tts.CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
-    )
-
-    def __init__(self, provider=None) -> None:
-        """Initialize."""
-        if provider is None:
-            provider = MockProvider
-        self._provider = provider
-
-    async def async_get_engine(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        discovery_info: DiscoveryInfoType | None = None,
-    ) -> tts.Provider:
-        """Set up a mock speech component."""
-        return self._provider(config.get(tts.CONF_LANG, DEFAULT_LANG))
-
-
 @pytest.fixture
-def test_provider():
+def mock_provider() -> MockProvider:
     """Test TTS provider."""
-    return MockProvider("en")
-
-
-@pytest.fixture(autouse=True)
-async def internal_url_mock(hass):
-    """Mock internal URL of the instance."""
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
+    return MockProvider("en_US")
 
 
 @pytest.fixture
-async def mock_tts(hass):
-    """Mock TTS."""
-    mock_integration(hass, MockModule(domain="test"))
-    mock_platform(hass, "test.tts", MockTTS())
-
-
-@pytest.fixture
-async def setup_tts(hass, mock_tts):
+async def setup_tts(hass: HomeAssistant, mock_tts: None) -> None:
     """Mock TTS."""
     assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
 
@@ -177,11 +104,11 @@ async def test_setup_component_and_test_service(
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert (
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     )
     await hass.async_block_till_done()
     assert (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     ).is_file()
 
 
@@ -191,6 +118,7 @@ async def test_setup_component_and_test_service_with_config_language(
     """Set up a TTS platform and call service."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
+    # Language de is matched with de_DE
     config = {tts.DOMAIN: {"platform": "test", "language": "de"}}
 
     with assert_setup_component(1, tts.DOMAIN):
@@ -209,11 +137,11 @@ async def test_setup_component_and_test_service_with_config_language(
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert (
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_test.mp3"
+        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_test.mp3"
     )
     await hass.async_block_till_done()
     assert (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_test.mp3"
     ).is_file()
 
 
@@ -270,6 +198,7 @@ async def test_setup_component_and_test_service_with_service_language(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
+    # Language de is matched to de_DE
     await hass.services.async_call(
         tts.DOMAIN,
         "test_say",
@@ -284,11 +213,11 @@ async def test_setup_component_and_test_service_with_service_language(
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert (
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_test.mp3"
+        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_test.mp3"
     )
     await hass.async_block_till_done()
     assert (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_test.mp3"
     ).is_file()
 
 
@@ -331,6 +260,7 @@ async def test_setup_component_and_test_service_with_service_options(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
+    # Language de is matched with de_DE
     await hass.services.async_call(
         tts.DOMAIN,
         "test_say",
@@ -348,12 +278,12 @@ async def test_setup_component_and_test_service_with_service_options(
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert (
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == f"/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_test.mp3"
+        == f"/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_{opt_hash}_test.mp3"
     )
     await hass.async_block_till_done()
     assert (
         empty_cache_dir
-        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_test.mp3"
+        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_{opt_hash}_test.mp3"
     ).is_file()
 
 
@@ -366,6 +296,8 @@ async def test_setup_component_and_test_with_service_options_def(
     config = {tts.DOMAIN: {"platform": "test"}}
 
     class MockProviderWithDefaults(MockProvider):
+        """Mock provider with default options."""
+
         @property
         def default_options(self):
             return {"voice": "alex"}
@@ -376,6 +308,7 @@ async def test_setup_component_and_test_with_service_options_def(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
+        # Language de is matched with de_DE
         await hass.services.async_call(
             tts.DOMAIN,
             "test_say",
@@ -392,12 +325,12 @@ async def test_setup_component_and_test_with_service_options_def(
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
         assert (
             await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-            == f"/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_test.mp3"
+            == f"/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_{opt_hash}_test.mp3"
         )
         await hass.async_block_till_done()
         assert (
             empty_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_test.mp3"
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_{opt_hash}_test.mp3"
         ).is_file()
 
 
@@ -413,6 +346,8 @@ async def test_setup_component_and_test_with_service_options_def_2(
     config = {tts.DOMAIN: {"platform": "test"}}
 
     class MockProviderWithDefaults(MockProvider):
+        """Mock provider with default options."""
+
         @property
         def default_options(self):
             return {"voice": "alex"}
@@ -423,6 +358,7 @@ async def test_setup_component_and_test_with_service_options_def_2(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
+        # Language de is matched with de_DE
         await hass.services.async_call(
             tts.DOMAIN,
             "test_say",
@@ -440,12 +376,12 @@ async def test_setup_component_and_test_with_service_options_def_2(
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
         assert (
             await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-            == f"/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_test.mp3"
+            == f"/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_{opt_hash}_test.mp3"
         )
         await hass.async_block_till_done()
         assert (
             empty_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_test.mp3"
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_{opt_hash}_test.mp3"
         ).is_file()
 
 
@@ -460,6 +396,7 @@ async def test_setup_component_and_test_service_with_service_options_wrong(
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
+    # Language de is matched with de_DE
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             tts.DOMAIN,
@@ -478,7 +415,7 @@ async def test_setup_component_and_test_service_with_service_options_wrong(
     await hass.async_block_till_done()
     assert not (
         empty_cache_dir
-        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_test.mp3"
+        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_{opt_hash}_test.mp3"
     ).is_file()
 
 
@@ -508,7 +445,7 @@ async def test_setup_component_and_test_service_with_base_url_set(
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
         == "http://fnord"
         "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        "_en_-_test.mp3"
+        "_en-us_-_test.mp3"
     )
 
 
@@ -537,7 +474,7 @@ async def test_setup_component_and_test_service_clear_cache(
     await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     await hass.async_block_till_done()
     assert (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     ).is_file()
 
     await hass.services.async_call(
@@ -545,12 +482,15 @@ async def test_setup_component_and_test_service_clear_cache(
     )
 
     assert not (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     ).is_file()
 
 
 async def test_setup_component_and_test_service_with_receive_voice(
-    hass: HomeAssistant, test_provider, hass_client: ClientSessionGenerator, mock_tts
+    hass: HomeAssistant,
+    mock_provider: MockProvider,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
 ) -> None:
     """Set up a TTS platform and call service and receive voice."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
@@ -576,11 +516,13 @@ async def test_setup_component_and_test_service_with_receive_voice(
     url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     client = await hass_client()
     req = await client.get(url)
-    _, tts_data = test_provider.get_tts_audio("bla", "en")
+    # Language en is matched with en_US
+    _, tts_data = mock_provider.get_tts_audio("bla", "en")
+    assert tts_data is not None
     tts_data = tts.SpeechManager.write_tags(
-        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3",
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
         tts_data,
-        test_provider,
+        mock_provider,
         message,
         "en",
         None,
@@ -596,11 +538,15 @@ async def test_setup_component_and_test_service_with_receive_voice(
 
 
 async def test_setup_component_and_test_service_with_receive_voice_german(
-    hass: HomeAssistant, test_provider, hass_client: ClientSessionGenerator, mock_tts
+    hass: HomeAssistant,
+    mock_provider: MockProvider,
+    hass_client: ClientSessionGenerator,
+    mock_tts,
 ) -> None:
     """Set up a TTS platform and call service and receive voice."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
+    # Language de is matched with de_DE
     config = {tts.DOMAIN: {"platform": "test", "language": "de"}}
 
     with assert_setup_component(1, tts.DOMAIN):
@@ -619,11 +565,12 @@ async def test_setup_component_and_test_service_with_receive_voice_german(
     url = await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     client = await hass_client()
     req = await client.get(url)
-    _, tts_data = test_provider.get_tts_audio("bla", "de")
+    _, tts_data = mock_provider.get_tts_audio("bla", "de")
+    assert tts_data is not None
     tts_data = tts.SpeechManager.write_tags(
-        "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_test.mp3",
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_test.mp3",
         tts_data,
-        test_provider,
+        mock_provider,
         "There is someone at the door.",
         "de",
         None,
@@ -643,7 +590,7 @@ async def test_setup_component_and_web_view_wrong_file(
 
     client = await hass_client()
 
-    url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+    url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
 
     req = await client.get(url)
     assert req.status == HTTPStatus.NOT_FOUND
@@ -660,7 +607,7 @@ async def test_setup_component_and_web_view_wrong_filename(
 
     client = await hass_client()
 
-    url = "/api/tts_proxy/265944dsk32c1b2a621be5930510bb2cd_en_-_test.mp3"
+    url = "/api/tts_proxy/265944dsk32c1b2a621be5930510bb2cd_en-us_-_test.mp3"
 
     req = await client.get(url)
     assert req.status == HTTPStatus.NOT_FOUND
@@ -689,7 +636,7 @@ async def test_setup_component_test_without_cache(
     assert len(calls) == 1
     await hass.async_block_till_done()
     assert not (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     ).is_file()
 
 
@@ -717,19 +664,21 @@ async def test_setup_component_test_with_cache_call_service_without_cache(
     assert len(calls) == 1
     await hass.async_block_till_done()
     assert not (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     ).is_file()
 
 
 async def test_setup_component_test_with_cache_dir(
-    hass: HomeAssistant, empty_cache_dir, test_provider
+    hass: HomeAssistant, empty_cache_dir, mock_provider: MockProvider
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-    _, tts_data = test_provider.get_tts_audio("bla", "en")
+    # Language en is matched with en_US
+    _, tts_data = mock_provider.get_tts_audio("bla", "en")
+    assert tts_data is not None
     cache_file = (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     )
 
     with open(cache_file, "wb") as voice_file:
@@ -738,12 +687,14 @@ async def test_setup_component_test_with_cache_dir(
     config = {tts.DOMAIN: {"platform": "test", "cache": True}}
 
     class MockProviderBoom(MockProvider):
+        """Mock provider that blows up."""
+
         def get_tts_audio(
             self, message: str, language: str, options: dict[str, Any] | None = None
         ) -> tts.TtsAudioType:
             """Load TTS dat."""
             # This should not be called, data should be fetched from cache
-            raise Exception("Boom!")
+            raise Exception("Boom!")  # pylint: disable=broad-exception-raised
 
     mock_integration(hass, MockModule(domain="test"))
     mock_platform(hass, "test.tts", MockTTS(MockProviderBoom))
@@ -763,7 +714,7 @@ async def test_setup_component_test_with_cache_dir(
     assert len(calls) == 1
     assert (
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+        == "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     )
     await hass.async_block_till_done()
 
@@ -775,6 +726,8 @@ async def test_setup_component_test_with_error_on_get_tts(hass: HomeAssistant) -
     config = {tts.DOMAIN: {"platform": "test"}}
 
     class MockProviderEmpty(MockProvider):
+        """Mock provider with empty get_tts_audio."""
+
         def get_tts_audio(
             self, message: str, language: str, options: dict[str, Any] | None = None
         ) -> tts.TtsAudioType:
@@ -803,15 +756,17 @@ async def test_setup_component_test_with_error_on_get_tts(hass: HomeAssistant) -
 
 async def test_setup_component_load_cache_retrieve_without_mem_cache(
     hass: HomeAssistant,
-    test_provider,
+    mock_provider: MockProvider,
     empty_cache_dir,
     hass_client: ClientSessionGenerator,
     mock_tts,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
-    _, tts_data = test_provider.get_tts_audio("bla", "en")
+    # Language en is matched with en_US
+    _, tts_data = mock_provider.get_tts_audio("bla", "en")
+    assert tts_data is not None
     cache_file = (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     )
 
     with open(cache_file, "wb") as voice_file:
@@ -824,7 +779,7 @@ async def test_setup_component_load_cache_retrieve_without_mem_cache(
 
     client = await hass_client()
 
-    url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
+    url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
 
     req = await client.get(url)
     assert req.status == HTTPStatus.OK
@@ -848,8 +803,8 @@ async def test_setup_component_and_web_get_url(
     assert req.status == HTTPStatus.OK
     response = await req.json()
     assert response == {
-        "url": "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3",
-        "path": "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3",
+        "url": "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
+        "path": "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3",
     }
 
 
@@ -870,7 +825,7 @@ async def test_setup_component_and_web_get_url_bad_config(
     assert req.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_tags_with_wave(hass: HomeAssistant, test_provider) -> None:
+async def test_tags_with_wave(hass: HomeAssistant, mock_provider: MockProvider) -> None:
     """Set up a TTS platform and call service and receive voice."""
 
     # below data represents an empty wav file
@@ -880,9 +835,9 @@ async def test_tags_with_wave(hass: HomeAssistant, test_provider) -> None:
     )
 
     tagged_data = ORIG_WRITE_TAGS(
-        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.wav",
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.wav",
         tts_data,
-        test_provider,
+        mock_provider,
         "AI person is in front of your door.",
         "en",
         None,
@@ -904,9 +859,9 @@ async def test_tags_with_wave(hass: HomeAssistant, test_provider) -> None:
 )
 def test_valid_base_url(value) -> None:
     """Test we validate base urls."""
-    assert tts.valid_base_url(value) == normalize_url(value)
+    assert _valid_base_url(value) == normalize_url(value)
     # Test we strip trailing `/`
-    assert tts.valid_base_url(value + "/") == normalize_url(value)
+    assert _valid_base_url(value + "/") == normalize_url(value)
 
 
 @pytest.mark.parametrize(
@@ -926,7 +881,7 @@ def test_valid_base_url(value) -> None:
 def test_invalid_base_url(value) -> None:
     """Test we catch bad base urls."""
     with pytest.raises(vol.Invalid):
-        tts.valid_base_url(value)
+        _valid_base_url(value)
 
 
 @pytest.mark.parametrize(
@@ -992,6 +947,7 @@ def test_resolve_engine(hass: HomeAssistant, setup_tts) -> None:
 
 async def test_support_options(hass: HomeAssistant, setup_tts) -> None:
     """Test supporting options."""
+    # Language en is matched with en_US
     assert await tts.async_support_options(hass, "test", "en") is True
     assert await tts.async_support_options(hass, "test", "nl") is False
     assert (
@@ -1000,9 +956,11 @@ async def test_support_options(hass: HomeAssistant, setup_tts) -> None:
     )
 
 
-async def test_fetching_in_async(hass: HomeAssistant, hass_client) -> None:
+async def test_fetching_in_async(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test async fetching of data."""
-    tts_audio = asyncio.Future()
+    tts_audio: asyncio.Future[bytes] = asyncio.Future()
 
     class ProviderWithAsyncFetching(MockProvider):
         """Provider that supports audio output option."""
@@ -1067,4 +1025,68 @@ async def test_fetching_in_async(hass: HomeAssistant, hass_client) -> None:
 
     tts_audio = asyncio.Future()
     tts_audio.set_result(b"test 2")
-    await tts.async_get_media_source_audio(hass, media_source_id) == ("mp3", b"test 2")
+    assert await tts.async_get_media_source_audio(hass, media_source_id) == (
+        "mp3",
+        b"test 2",
+    )
+
+
+async def test_ws_list_engines(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_tts
+) -> None:
+    """Test streaming audio and getting response."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"providers": [{"engine_id": "test"}]}
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "smurfish"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "language_supported": False}]
+    }
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "en"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "language_supported": True}]
+    }
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "en-UK"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "language_supported": True}]
+    }
+
+
+async def test_ws_list_voices(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup_tts
+) -> None:
+    """Test streaming audio and getting response."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id(
+        {
+            "type": "tts/engine/voices",
+            "engine_id": "smurf",
+            "language": "smurfish",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "voices": [
+            {"voice_id": "voice_1", "name": "James Earl Jones"},
+            {"voice_id": "voice_2", "name": "Fran Drescher"},
+        ]
+    }

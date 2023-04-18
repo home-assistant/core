@@ -168,10 +168,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import."""
-        return await self.async_step_user(user_input)
-
     async def _async_set_unique_id_or_update(
         self, isy_mac: str, ip_address: str, port: int | None
     ) -> None:

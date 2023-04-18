@@ -173,25 +173,6 @@ MQTT_PUBLISH_SCHEMA = vol.All(
 )
 
 
-async def _async_setup_discovery(
-    hass: HomeAssistant, conf: ConfigType, config_entry: ConfigEntry
-) -> None:
-    """Try to start the discovery of MQTT devices.
-
-    This method is a coroutine.
-    """
-    await discovery.async_start(
-        hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), config_entry
-    )
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the MQTT protocol service."""
-    websocket_api.async_register_command(hass, websocket_subscribe)
-    websocket_api.async_register_command(hass, websocket_mqtt_info)
-    return True
-
-
 async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle signals of config entry being updated.
 
@@ -212,6 +193,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         mqtt_data.config = mqtt_yaml
         mqtt_data.client = client
     else:
+        # Initial setup
+        websocket_api.async_register_command(hass, websocket_subscribe)
+        websocket_api.async_register_command(hass, websocket_mqtt_info)
         hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
     client.start(mqtt_data)
 
@@ -388,7 +372,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         # Setup discovery
         if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
-            await _async_setup_discovery(hass, conf, entry)
+            await discovery.async_start(
+                hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
+            )
         # Setup reload service after all platforms have loaded
         await async_setup_reload_service()
         # When the entry is reloaded, also reload manual set up items to enable MQTT

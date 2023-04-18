@@ -165,10 +165,9 @@ class DebouncedEntryReloader:
         LOGGER.debug("Calling debouncer to get a reload after cooldown")
         await self._debounced_reload.async_call()
 
-    @callback
-    def async_shutdown(self) -> None:
+    async def async_shutdown(self) -> None:
         """Cancel any pending reload."""
-        self._debounced_reload.async_shutdown()
+        await self._debounced_reload.async_shutdown()
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
