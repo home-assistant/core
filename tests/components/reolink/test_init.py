@@ -132,7 +132,7 @@ async def test_ssl_repair_issue(
         hass, {"country": "GB", "internal_url": "http://test_homeassistant_address"}
     )
 
-    hass.config.api.use_ssl = True
+    hass.config.api = Mock(use_ssl=True)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
