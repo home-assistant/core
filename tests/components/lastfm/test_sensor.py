@@ -49,3 +49,32 @@ async def test_update_playing(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
 
     assert state.state == "Goldband - Noodgeval"
+
+
+async def test_failed_update(hass: HomeAssistant) -> None:
+    """Test that the integration does not break when an unknown user is added."""
+    with patch(
+        "homeassistant.components.lastfm.coordinator.LastFMNetwork",
+        return_value=MockLastFMNetwork(MockUser(MOCK_TRACK)),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                sensor.DOMAIN,
+                {
+                    "sensor": {
+                        "platform": "lastfm",
+                        "api_key": "secret-key",
+                        "users": ["not_existing"],
+                    }
+                },
+            )
+            is True
+        )
+        await hass.async_block_till_done()
+
+    entity_id = "sensor.lastfm_not_existing"
+
+    state = hass.states.get(entity_id)
+
+    assert state.state == "unknown"

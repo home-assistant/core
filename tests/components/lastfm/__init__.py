@@ -2,7 +2,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from pylast import Album, PlayedTrack, TopItem, Track
+from pylast import Album, PlayedTrack, TopItem, Track, WSError
 
 from homeassistant.components.lastfm.const import CONF_USERS, DOMAIN
 from homeassistant.const import CONF_API_KEY
@@ -92,6 +92,8 @@ class MockLastFMNetwork:
 
     def get_user(self, username: str) -> MockUser:
         """Get user mock."""
+        if username == "not_existing":
+            raise WSError(MockNetwork("username"), "404", "User not found")
         return self.user
 
 
