@@ -62,7 +62,6 @@ class LastFmSensor(CoordinatorEntity[LastFmUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self._attr_unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
         self._attr_name = user
-        self._attr_native_value = STATE_NOT_SCROBBLING
         self._user = user
 
     @callback
@@ -84,3 +83,8 @@ class LastFmSensor(CoordinatorEntity[LastFmUpdateCoordinator], SensorEntity):
                 ATTR_TOP_PLAYED: top_played,
             }
         super()._handle_coordinator_update()
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        self._handle_coordinator_update()
+        await super().async_added_to_hass()

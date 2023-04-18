@@ -60,7 +60,7 @@ class MockUser:
 
     def __init__(self, now_playing: Track | None = None) -> None:
         """Initialize the mock."""
-        self._now_playing = now_playing
+        self.now_playing = now_playing
 
     def get_playcount(self) -> int | float:
         """Get mock play count."""
@@ -80,7 +80,7 @@ class MockUser:
 
     def get_now_playing(self) -> Track | None:
         """Get mock now playing."""
-        return self._now_playing
+        return self.now_playing
 
 
 def patch_interface(now_playing: Track | None = None) -> MockUser:
