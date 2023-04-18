@@ -1,7 +1,6 @@
 """Data update coordinator for the LastFM integration."""
 from pylast import LastFMNetwork, User, WSError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
@@ -17,7 +16,7 @@ class LastFmUpdateCoordinator(DataUpdateCoordinator[dict[str, User]]):
         """Initialize the coordinator."""
         super().__init__(hass=hass, logger=LOGGER, name=DOMAIN)
         self._users = config[CONF_USERS]
-        self.lastfm_api = LastFMNetwork(api_key=self._config[CONF_API_KEY])
+        self.lastfm_api = LastFMNetwork(api_key=config[CONF_API_KEY])
 
     def _update(self) -> dict[str, User]:
         response = {}
