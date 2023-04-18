@@ -1,6 +1,6 @@
 """Test the bootstrapping."""
 import asyncio
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 import glob
 import os
 from typing import Any
@@ -10,12 +10,13 @@ import pytest
 
 from homeassistant import bootstrap, runner
 import homeassistant.config as config_util
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import HANDLERS, ConfigEntry
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import Integration
 
 from .common import (
     MockConfigEntry,
@@ -830,26 +831,24 @@ async def test_bootstrap_empty_integrations(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize(
-    ("integration", "dependencies"),
-    [
-        ("mqtt_eventstream", {"file_upload", "http"}),
-        ("mqtt_statestream", {"file_upload", "http"}),
-    ],
-)
+@pytest.mark.parametrize("integration", ["mqtt_eventstream", "mqtt_statestream"])
 @pytest.mark.parametrize("load_registries", [False])
 async def test_bootstrap_dependencies(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     integration: str,
-    dependencies: set[str],
 ) -> None:
     """Test dependencies are set up correctly,."""
+
     # Prepare MQTT config entry
+    @HANDLERS.register("mqtt")
+    class MockConfigFlow:
+        """Mock the MQTT config flow."""
+
+        VERSION = 1
+
     entry = MockConfigEntry(domain="mqtt", data={"broker": "test-broker"})
     entry.add_to_hass(hass)
-
-    integrations = {integration}
 
     calls: list[str] = []
     assertions: list[bool] = []
@@ -860,7 +859,10 @@ async def test_bootstrap_dependencies(
         # assert the integration is not yet set up
         assertions.append(hass.data["setup_done"][integration].is_set() is False)
         assertions.append(
-            all(dependency in hass.config.components for dependency in dependencies)
+            all(
+                dependency in hass.config.components
+                for dependency in integrations[integration]["dependencies"]
+            )
         )
         assertions.append(integration not in hass.config.components)
         return True
@@ -876,15 +878,75 @@ async def test_bootstrap_dependencies(
         assertions.append("mqtt" in hass.config.components)
         return True
 
+    mqtt_integration = mock_integration(
+        hass,
+        MockModule(
+            "mqtt",
+            async_setup_entry=async_mqtt_setup_entry,
+            dependencies=["file_upload", "http"],
+        ),
+    )
+    mqtt_integration._import_platform = Mock()
+    # mqtt_integration.async_migrate = AsyncMock(return_value=False)
+
+    integrations = {
+        "mqtt": {
+            "dependencies": {"file_upload", "http"},
+            "integration": mqtt_integration,
+        },
+        "mqtt_eventstream": {
+            "dependencies": {"mqtt"},
+            "integration": mock_integration(
+                hass,
+                MockModule(
+                    "mqtt_eventstream",
+                    async_setup=async_integration_setup,
+                    dependencies=["mqtt"],
+                ),
+            ),
+        },
+        "mqtt_statestream": {
+            "dependencies": {"mqtt"},
+            "integration": mock_integration(
+                hass,
+                MockModule(
+                    "mqtt_statestream",
+                    async_setup=async_integration_setup,
+                    dependencies=["mqtt"],
+                ),
+            ),
+        },
+        "file_upload": {
+            "dependencies": {"http"},
+            "integration": mock_integration(
+                hass,
+                MockModule(
+                    "file_upload",
+                    dependencies=["http"],
+                ),
+            ),
+        },
+        "http": {
+            "dependencies": set(),
+            "integration": mock_integration(
+                hass,
+                MockModule("http", dependencies=[]),
+            ),
+        },
+    }
+
+    async def mock_async_get_integrations(
+        hass: HomeAssistant, domains: Iterable[str]
+    ) -> dict[str, Integration | Exception]:
+        """Mock integrations."""
+        return {domain: integrations[domain]["integration"] for domain in domains}
+
     with patch(
-        "homeassistant.components.mqtt.async_setup_entry",
-        side_effect=async_mqtt_setup_entry,
-    ), patch(
-        f"homeassistant.components.{integration}.async_setup",
-        side_effect=async_integration_setup,
-    ):
-        bootstrap.async_set_domains_to_be_loaded(hass, integrations)
-        await bootstrap.async_setup_multi_components(hass, integrations, {})
+        "homeassistant.setup.loader.async_get_integrations",
+        side_effect=mock_async_get_integrations,
+    ), patch("homeassistant.config.async_process_component_config", return_value={}):
+        bootstrap.async_set_domains_to_be_loaded(hass, {integration})
+        await bootstrap.async_setup_multi_components(hass, {integration}, {})
         await hass.async_block_till_done()
 
     for assertion in assertions:
