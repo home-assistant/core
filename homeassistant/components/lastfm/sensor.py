@@ -4,12 +4,13 @@ from __future__ import annotations
 import hashlib
 import logging
 
-from pylast import SIZE_SMALL, Track
+from pylast import SIZE_SMALL, Track, WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -40,15 +41,21 @@ def format_track(track: Track) -> str:
     return f"{track.artist} - {track.title}"
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Last.fm sensor platform."""
     coordinator = LastFmUpdateCoordinator(hass, config)
-    add_entities((LastFmSensor(coordinator, user) for user in config[CONF_USERS]), True)
+    try:
+        await coordinator.async_refresh()
+    except WSError as exc:
+        raise PlatformNotReady from exc
+    async_add_entities(
+        (LastFmSensor(coordinator, user) for user in config[CONF_USERS]), True
+    )
 
 
 class LastFmSensor(CoordinatorEntity[LastFmUpdateCoordinator], SensorEntity):
