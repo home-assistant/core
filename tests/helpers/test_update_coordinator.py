@@ -117,6 +117,7 @@ async def test_async_refresh(
 
 
 async def test_shutdown(
+    hass: HomeAssistant,
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
     """Test async_shutdown for update coordinator."""
@@ -140,6 +141,9 @@ async def test_shutdown(
     # Test shutdown through function
     with patch.object(crd._debounced_refresh, "async_shutdown") as mock_shutdown:
         await crd.async_shutdown()
+
+    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    await hass.async_block_till_done()
 
     # Test we shutdown the debouncer and cleared the subscriptions
     assert len(mock_shutdown.mock_calls) == 1
