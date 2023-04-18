@@ -53,7 +53,7 @@ SAVE_DELAY = 10
 
 
 async def async_get_pipeline(
-    hass: HomeAssistant, pipeline_id: str | None = None, language: str | None = None
+    hass: HomeAssistant, pipeline_id: str | None = None
 ) -> Pipeline | None:
     """Get a pipeline by id or create one for a language."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -64,12 +64,11 @@ async def async_get_pipeline(
 
     if pipeline_id is None:
         # There's no preferred pipeline, construct a pipeline for the
-        # required/configured language
-        language = language or hass.config.language
+        # configured language
         return await pipeline_data.pipeline_store.async_create_item(
             {
-                "name": language,
-                "language": language,
+                "name": hass.config.language,
+                "language": hass.config.language,
                 "stt_engine": None,  # first engine
                 "conversation_engine": None,  # first agent
                 "tts_engine": None,  # first engine
