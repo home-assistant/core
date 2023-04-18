@@ -232,7 +232,15 @@ def websocket_list_runs(
 
     pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
 
-    connection.send_result(msg["id"], {"pipeline_runs": list(pipeline_runs)})
+    connection.send_result(
+        msg["id"],
+        {
+            "pipeline_runs": [
+                {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
+                for id, pipeline_run in pipeline_runs.items()
+            ]
+        },
+    )
 
 
 @callback
@@ -274,5 +282,5 @@ def websocket_get_run(
 
     connection.send_result(
         msg["id"],
-        pipeline_runs[pipeline_run_id],
+        {"events": pipeline_runs[pipeline_run_id].events},
     )
