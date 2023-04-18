@@ -1,7 +1,7 @@
 """Assist pipeline Websocket API."""
 import asyncio
 import audioop  # pylint: disable=deprecated-module
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 import logging
 from typing import Any
 
@@ -12,7 +12,9 @@ from homeassistant.components import stt, websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
+from .const import DOMAIN
 from .pipeline import (
+    PipelineData,
     PipelineError,
     PipelineEvent,
     PipelineEventType,
@@ -44,7 +46,6 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     # pylint: disable-next=unnecessary-lambda
                     vol.Required("end_stage"): lambda val: PipelineStage(val),
                     vol.Optional("input"): dict,
-                    vol.Optional("language"): str,
                     vol.Optional("pipeline"): str,
                     vol.Optional("conversation_id"): vol.Any(str, None),
                     vol.Optional("timeout"): vol.Any(float, int),
@@ -69,6 +70,8 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
             ),
         ),
     )
+    websocket_api.async_register_command(hass, websocket_list_runs)
+    websocket_api.async_register_command(hass, websocket_get_run)
 
 
 @websocket_api.async_response
@@ -78,23 +81,13 @@ async def websocket_run(
     msg: dict[str, Any],
 ) -> None:
     """Run a pipeline."""
-    language = msg.get("language", hass.config.language)
-
-    # Temporary workaround for language codes
-    if language == "en":
-        language = "en-US"
-
     pipeline_id = msg.get("pipeline")
-    pipeline = await async_get_pipeline(
-        hass,
-        pipeline_id=pipeline_id,
-        language=language,
-    )
+    pipeline = await async_get_pipeline(hass, pipeline_id=pipeline_id)
     if pipeline is None:
         connection.send_error(
             msg["id"],
             "pipeline-not-found",
-            f"Pipeline not found: id={pipeline_id}, language={language}",
+            f"Pipeline not found: id={pipeline_id}",
         )
         return
 
@@ -114,7 +107,7 @@ async def websocket_run(
         audio_queue: "asyncio.Queue[bytes]" = asyncio.Queue()
         incoming_sample_rate = msg["input"]["sample_rate"]
 
-        async def stt_stream():
+        async def stt_stream() -> AsyncGenerator[bytes, None]:
             state = None
             segmenter = VoiceCommandSegmenter()
 
@@ -129,7 +122,11 @@ async def websocket_run(
 
                 yield chunk
 
-        def handle_binary(_hass, _connection, data: bytes):
+        def handle_binary(
+            _hass: HomeAssistant,
+            _connection: websocket_api.ActiveConnection,
+            data: bytes,
+        ) -> None:
             # Forward to STT audio stream
             audio_queue.put_nowait(data)
 
@@ -139,7 +136,7 @@ async def websocket_run(
 
         # Audio input must be raw PCM at 16Khz with 16-bit mono samples
         input_args["stt_metadata"] = stt.SpeechMetadata(
-            language=language,
+            language=pipeline.language,
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
             bit_rate=stt.AudioBitRates.BITRATE_16,
@@ -160,7 +157,7 @@ async def websocket_run(
         pipeline=pipeline,
         start_stage=start_stage,
         end_stage=end_stage,
-        event_callback=lambda event: connection.send_event(msg["id"], event.as_dict()),
+        event_callback=lambda event: connection.send_event(msg["id"], event),
         runner_data={
             "stt_binary_handler_id": handler_id,
             "timeout": timeout,
@@ -189,14 +186,90 @@ async def websocket_run(
         async with async_timeout.timeout(timeout):
             await run_task
     except asyncio.TimeoutError:
-        connection.send_event(
-            msg["id"],
+        pipeline_input.run.process_event(
             PipelineEvent(
                 PipelineEventType.ERROR,
                 {"code": "timeout", "message": "Timeout running pipeline"},
-            ),
+            )
         )
     finally:
         if unregister_handler is not None:
             # Unregister binary handler
             unregister_handler()
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/pipeline_debug/list",
+        vol.Required("pipeline_id"): str,
+    }
+)
+def websocket_list_runs(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List pipeline runs for which debug data is available."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_id = msg["pipeline_id"]
+
+    if pipeline_id not in pipeline_data.pipeline_runs:
+        connection.send_result(msg["id"], {"pipeline_runs": []})
+        return
+
+    pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
+
+    connection.send_result(
+        msg["id"],
+        {
+            "pipeline_runs": [
+                {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
+                for id, pipeline_run in pipeline_runs.items()
+            ]
+        },
+    )
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/pipeline_debug/get",
+        vol.Required("pipeline_id"): str,
+        vol.Required("pipeline_run_id"): str,
+    }
+)
+def websocket_get_run(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get debug data for a pipeline run."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_id = msg["pipeline_id"]
+    pipeline_run_id = msg["pipeline_run_id"]
+
+    if pipeline_id not in pipeline_data.pipeline_runs:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_FOUND,
+            f"pipeline_id {pipeline_id} not found",
+        )
+        return
+
+    pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
+
+    if pipeline_run_id not in pipeline_runs:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_FOUND,
+            f"pipeline_run_id {pipeline_run_id} not found",
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {"events": pipeline_runs[pipeline_run_id].events},
+    )

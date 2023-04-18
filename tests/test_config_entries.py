@@ -3867,7 +3867,7 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     event = asyncio.Event()
     results = []
 
-    async def test_task():
+    async def test_task() -> None:
         try:
             await event.wait()
             results.append("normal")
@@ -3875,9 +3875,14 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
             results.append("background")
             raise
 
+    async def test_unload() -> None:
+        await event.wait()
+        results.append("on_unload")
+
+    entry.async_on_unload(test_unload)
     entry.async_create_task(hass, test_task())
     entry.async_create_background_task(hass, test_task(), "background-task-name")
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
-    await entry._async_process_on_unload()
-    assert results == ["background", "normal"]
+    await entry._async_process_on_unload(hass)
+    assert results == ["on_unload", "background", "normal"]
