@@ -310,8 +310,10 @@ class ConfigEntry:
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
-        # Hold list for functions to call on unload.
-        self._on_unload: list[CALLBACK_TYPE] | None = None
+        # Hold list for actions to call on unload.
+        self._on_unload: list[
+            Callable[[], Coroutine[Any, Any, None] | None]
+        ] | None = None
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
@@ -395,7 +397,7 @@ class ConfigEntry:
                 self.domain,
                 error_reason,
             )
-            await self._async_process_on_unload()
+            await self._async_process_on_unload(hass)
             result = False
         except ConfigEntryAuthFailed as ex:
             message = str(ex)
@@ -410,7 +412,7 @@ class ConfigEntry:
                 self.domain,
                 auth_message,
             )
-            await self._async_process_on_unload()
+            await self._async_process_on_unload(hass)
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as ex:
@@ -461,7 +463,7 @@ class ConfigEntry:
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
 
-            await self._async_process_on_unload()
+            await self._async_process_on_unload(hass)
             return
         # pylint: disable-next=broad-except
         except (asyncio.CancelledError, SystemExit, Exception):
@@ -544,7 +546,7 @@ class ConfigEntry:
             if result and integration.domain == self.domain:
                 self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
-            await self._async_process_on_unload()
+            await self._async_process_on_unload(hass)
 
             return result
         except Exception as ex:  # pylint: disable=broad-except
@@ -674,17 +676,20 @@ class ConfigEntry:
         }
 
     @callback
-    def async_on_unload(self, func: CALLBACK_TYPE) -> None:
+    def async_on_unload(
+        self, func: Callable[[], Coroutine[Any, Any, None] | None]
+    ) -> None:
         """Add a function to call when config entry is unloaded."""
         if self._on_unload is None:
             self._on_unload = []
         self._on_unload.append(func)
 
-    async def _async_process_on_unload(self) -> None:
+    async def _async_process_on_unload(self, hass: HomeAssistant) -> None:
         """Process the on_unload callbacks and wait for pending tasks."""
         if self._on_unload is not None:
             while self._on_unload:
-                self._on_unload.pop()()
+                if job := self._on_unload.pop()():
+                    self._tasks.add(hass.async_create_task(job))
 
         if not self._tasks and not self._background_tasks:
             return

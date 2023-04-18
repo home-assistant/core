@@ -351,6 +351,7 @@ FLOWS = {
         "rainbird",
         "rainforest_eagle",
         "rainmachine",
+        "rapt_ble",
         "rdw",
         "recollect_waste",
         "renault",

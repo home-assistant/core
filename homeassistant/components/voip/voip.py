@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections import deque
+from collections.abc import AsyncIterable
 import logging
 import time
 from typing import TYPE_CHECKING
@@ -15,14 +17,18 @@ from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
     async_pipeline_from_audio_stream,
+    select as pipeline_select,
 )
 from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 
-if TYPE_CHECKING:
-    from .devices import VoIPDevices
+from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from .devices import VoIPDevice, VoIPDevices
+
+_BUFFERED_CHUNKS_BEFORE_SPEECH = 100  # ~2 seconds
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -41,13 +47,16 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
             protocol_factory=lambda call_info: PipelineRtpDatagramProtocol(
                 hass,
                 hass.config.language,
+                devices.async_get_or_create(call_info),
             ),
         )
+        self.hass = hass
         self.devices = devices
 
     def is_valid_call(self, call_info: CallInfo) -> bool:
         """Filter calls."""
-        return self.devices.async_allow_call(call_info)
+        device = self.devices.async_get_or_create(call_info)
+        return device.async_allow_call(self.hass)
 
 
 class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
@@ -57,6 +66,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self,
         hass: HomeAssistant,
         language: str,
+        voip_device: VoIPDevice,
         pipeline_timeout: float = 30.0,
         audio_timeout: float = 2.0,
     ) -> None:
@@ -66,6 +76,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
         self.hass = hass
         self.language = language
+        self.voip_device = voip_device
         self.pipeline: Pipeline | None = None
         self.pipeline_timeout = pipeline_timeout
         self.audio_timeout = audio_timeout
@@ -76,14 +87,18 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
     def connection_made(self, transport):
         """Server is ready."""
-        self.transport = transport
+        super().connection_made(transport)
+        self.voip_device.set_is_active(True)
+
+    def connection_lost(self, exc):
+        """Handle connection is lost or closed."""
+        super().connection_lost(exc)
+        self.voip_device.set_is_active(False)
 
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
         if self._pipeline_task is None:
-            # Clear audio queue
-            while not self._audio_queue.empty():
-                self._audio_queue.get_nowait()
+            self._clear_audio_queue()
 
             # Run pipeline until voice command finishes, then start over
             self._pipeline_task = self.hass.async_create_background_task(
@@ -100,23 +115,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         _LOGGER.debug("Starting pipeline")
 
         async def stt_stream():
-            segmenter = VoiceCommandSegmenter()
-
             try:
-                # Timeout if no audio comes in for a while.
-                # This means the caller hung up.
-                async with async_timeout.timeout(self.audio_timeout):
-                    chunk = await self._audio_queue.get()
-
-                while chunk:
-                    if not segmenter.process(chunk):
-                        # Voice command is finished
-                        break
-
+                async for chunk in self._segment_audio():
                     yield chunk
-
-                    async with async_timeout.timeout(self.audio_timeout):
-                        chunk = await self._audio_queue.get()
             except asyncio.TimeoutError:
                 # Expected after caller hangs up
                 _LOGGER.debug("Audio timeout")
@@ -124,6 +125,8 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 if self.transport is not None:
                     self.transport.close()
                     self.transport = None
+            finally:
+                self._clear_audio_queue()
 
         try:
             # Run pipeline with a timeout
@@ -140,7 +143,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                         channel=stt.AudioChannels.CHANNEL_MONO,
                     ),
                     stt_stream=stt_stream(),
-                    language=self.language,
+                    pipeline_id=pipeline_select.get_chosen_pipeline(
+                        self.hass, DOMAIN, self.voip_device.voip_id
+                    ),
                     conversation_id=self._conversation_id,
                     tts_options={tts.ATTR_AUDIO_OUTPUT: "raw"},
                 )
@@ -155,6 +160,40 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         finally:
             # Allow pipeline to run again
             self._pipeline_task = None
+
+    async def _segment_audio(self) -> AsyncIterable[bytes]:
+        segmenter = VoiceCommandSegmenter()
+        chunk_buffer: deque[bytes] = deque(maxlen=_BUFFERED_CHUNKS_BEFORE_SPEECH)
+
+        # Timeout if no audio comes in for a while.
+        # This means the caller hung up.
+        async with async_timeout.timeout(self.audio_timeout):
+            chunk = await self._audio_queue.get()
+
+        while chunk:
+            if not segmenter.process(chunk):
+                # Voice command is finished
+                break
+
+            if segmenter.in_command:
+                if chunk_buffer:
+                    # Release audio in buffer first
+                    for buffered_chunk in chunk_buffer:
+                        yield buffered_chunk
+
+                    chunk_buffer.clear()
+
+                yield chunk
+            else:
+                # Buffer until command starts
+                chunk_buffer.append(chunk)
+
+            async with async_timeout.timeout(self.audio_timeout):
+                chunk = await self._audio_queue.get()
+
+    def _clear_audio_queue(self) -> None:
+        while not self._audio_queue.empty():
+            self._audio_queue.get_nowait()
 
     def _event_callback(self, event: PipelineEvent):
         if not event.data:
