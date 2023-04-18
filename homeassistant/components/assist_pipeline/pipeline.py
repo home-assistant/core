@@ -191,7 +191,7 @@ class PipelineRun:
             pipeline_data.pipeline_runs[self.pipeline.id] = LimitedSizeDict(
                 size_limit=STORED_PIPELINE_RUNS
             )
-        pipeline_data.pipeline_runs[self.pipeline.id][self.id] = []
+        pipeline_data.pipeline_runs[self.pipeline.id][self.id] = PipelineRunDebug()
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
@@ -201,7 +201,7 @@ class PipelineRun:
         if self.id not in pipeline_data.pipeline_runs[self.pipeline.id]:
             # This run has been evicted from the logged pipeline runs already
             return
-        pipeline_data.pipeline_runs[self.pipeline.id][self.id].append(event)
+        pipeline_data.pipeline_runs[self.pipeline.id][self.id].events.append(event)
 
     def start(self) -> None:
         """Emit run start event."""
@@ -717,8 +717,19 @@ class PipelineStorageCollectionWebsocket(
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
-    pipeline_runs: dict[str, LimitedSizeDict[str, list[PipelineEvent]]]
+    pipeline_runs: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
     pipeline_store: PipelineStorageCollection
+
+
+@dataclass
+class PipelineRunDebug:
+    """Debug data for a pipelinerun."""
+
+    events: list[PipelineEvent] = field(default_factory=list, init=False)
+    timestamp: str = field(
+        default_factory=lambda: dt_util.utcnow().isoformat(),
+        init=False,
+    )
 
 
 async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
