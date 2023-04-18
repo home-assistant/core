@@ -10,6 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
+from .info import load_wyoming_info
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -33,9 +34,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        host = user_input[CONF_HOST]
-        port = user_input[CONF_PORT]
-
-        return self.async_create_entry(
-            title=f"Wyoming ({host}:{port})", data=user_input
+        wyoming_info = await load_wyoming_info(
+            user_input[CONF_HOST],
+            user_input[CONF_PORT],
         )
+
+        if wyoming_info is None:
+            return self.async_abort(reason="cannot_connect")
+
+        # ASR = automated speech recognition (STT)
+        asr_installed = [asr for asr in wyoming_info.asr if asr.installed]
+        if not asr_installed:
+            return self.async_abort(reason="no_services")
+
+        name = asr_installed[0].name
+        data = {"wyoming": wyoming_info.to_dict(), **user_input}
+
+        return self.async_create_entry(title=f"Wyoming ({name})", data=data)

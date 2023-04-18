@@ -5,7 +5,6 @@ import logging
 from wyoming.asr import Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
-from wyoming.info import Info
 
 from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
+from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 from .error import WyomingError
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,14 +24,27 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Wyoming speech to text."""
-    wyoming_info = hass.data[DOMAIN][config_entry.entry_id]["info"]
+    wyoming_info = config_entry.data["wyoming"]
+    asr_installed = [asr for asr in wyoming_info.get("asr", []) if asr["installed"]]
+    if not asr_installed:
+        # No STT services
+        return
+
+    model_languages: set[str] = set()
+    for asr_program in asr_installed:
+        for asr_model in asr_program["models"]:
+            if not asr_model["installed"]:
+                continue
+
+            model_languages.update(asr_model["languages"])
+
     async_add_entities(
         [
             WyomingSttProvider(
                 hass,
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
-                wyoming_info,
+                list(model_languages),
             )
         ]
     )
@@ -42,27 +54,17 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
     """Wyoming speech to text provider."""
 
     def __init__(
-        self, hass: HomeAssistant, host: str, port: int, wyoming_info: Info
+        self,
+        hass: HomeAssistant,
+        host: str,
+        port: int,
+        supported_languages: list[str],
     ) -> None:
         """Set up provider."""
         self.hass = hass
         self.host = host
         self.port = port
-        self.wyoming_info = wyoming_info
-
-        # Set supported languages
-        model_languages: set[str] = set()
-        for asr_program in wyoming_info.asr:
-            if not asr_program.installed:
-                continue
-
-            for asr_model in asr_program.models:
-                if not asr_model.installed:
-                    continue
-
-                model_languages.update(asr_model.languages)
-
-        self._supported_languages = list(model_languages)
+        self._supported_languages = supported_languages
 
     @property
     def supported_languages(self) -> list[str]:
