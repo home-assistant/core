@@ -14,7 +14,6 @@ from . import DOMAIN
 from .entity import RingEntityMixin
 
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -32,14 +31,17 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
+
 @dataclass
 class RingRequiredKeysMixin:
     category: list[str]
     cls: type[RingButton]
 
+
 @dataclass
 class RingButtonEntityDescription(ButtonEntityDescription, RingRequiredKeysMixin):
     kind: str | None = None
+
 
 class RingDoorButton(RingEntityMixin, ButtonEntity):
     entity_description: RingButtonEntityDescription
@@ -58,6 +60,7 @@ class RingDoorButton(RingEntityMixin, ButtonEntity):
 
     def press(self) -> None:
         self._device.open_door()
+
 
 BUTTON_TYPES: tuple[RingButtonEntityDescription, ...] = (
     RingButtonEntityDescription(

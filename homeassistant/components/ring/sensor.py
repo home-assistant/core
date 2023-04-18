@@ -29,7 +29,13 @@ async def async_setup_entry(
 
     entities = [
         description.cls(config_entry.entry_id, device, description)
-        for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams", "other")
+        for device_type in (
+            "chimes",
+            "doorbots",
+            "authorized_doorbots",
+            "stickup_cams",
+            "other",
+        )
         for description in SENSOR_TYPES
         if device_type in description.category
         for device in devices[device_type]
