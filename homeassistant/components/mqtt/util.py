@@ -11,9 +11,15 @@ from typing import Any
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import (
+    SIGNAL_CONFIG_ENTRY_CHANGED,
+    ConfigEntry,
+    ConfigEntryChange,
+    ConfigEntryState,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -55,7 +61,6 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
     Returns True if the mqtt client is available.
     Returns False when the client is not available.
     """
-
     if not mqtt_config_entry_enabled(hass):
         return False
 
@@ -63,13 +68,35 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
     if entry.state == ConfigEntryState.LOADED:
         return True
 
+    valid_states = {ConfigEntryState.SETUP_IN_PROGRESS, ConfigEntryState.LOADED}
+    state_reached_future: asyncio.Future[None] = asyncio.Future()
+
+    @callback
+    def _async_entry_changed(
+        change: ConfigEntryChange, event_entry: ConfigEntry
+    ) -> None:
+        if event_entry is entry and change is ConfigEntryChange.UPDATED:
+            state_reached_future.set_result(None)
+
+    unsub = async_dispatcher_connect(
+        hass, SIGNAL_CONFIG_ENTRY_CHANGED, _async_entry_changed
+    )
     try:
         async with async_timeout.timeout(AVAILABILITY_TIMEOUT):
-            await hass.data.setdefault(DATA_MQTT_AVAILABLE, asyncio.Event()).wait()
-        return True
-
+            # Make sure setup is in progress
+            if entry.state == ConfigEntryState.NOT_LOADED:
+                await state_reached_future
+            # Bail out if we did not reach a valid state
+            if entry.state not in valid_states:
+                return False
+            if DATA_MQTT_AVAILABLE not in hass.data:
+                hass.data[DATA_MQTT_AVAILABLE] = asyncio.Event()
+            await hass.data[DATA_MQTT_AVAILABLE].wait()
+        return entry.state in valid_states
     except asyncio.TimeoutError:
         return False
+    finally:
+        unsub()
 
 
 def valid_topic(topic: Any) -> str:

@@ -106,6 +106,38 @@ async def test_waiting_for_client_loaded(
     unsub()
 
 
+async def test_waiting_for_client_fails(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test waiting for client where mqtt entry is failing."""
+    hass.state = CoreState.starting
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={"broker": "test-broker"},
+        state=ConfigEntryState.NOT_LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    # Simulate the broker connection fails
+    mqtt_client_mock.connect.return_value = 1
+
+    async def _async_just_in_time_subscribe() -> Callable[[], None]:
+        assert not await mqtt.async_wait_for_mqtt_client(hass)
+
+    # _async_just_in_time_subscribe blocks until entry is loaded
+    hass.async_add_job(_async_just_in_time_subscribe)
+    assert entry.state == ConfigEntryState.NOT_LOADED
+    with patch(
+        "homeassistant.components.mqtt.async_setup_entry",
+        side_effect=Exception,
+    ), pytest.raises(Exception):
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+
+
 @patch("homeassistant.components.mqtt.util.AVAILABILITY_TIMEOUT", 0.01)
 async def test_waiting_for_client_timeout(
     hass: HomeAssistant,

@@ -213,7 +213,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await mqtt_data.client.async_connect()
-    hass.data.setdefault(DATA_MQTT_AVAILABLE, asyncio.Event()).set()
+    if DATA_MQTT_AVAILABLE not in hass.data:
+        hass.data[DATA_MQTT_AVAILABLE] = asyncio.Event()
+    hass.data[DATA_MQTT_AVAILABLE].set()
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
@@ -568,6 +570,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         registry_hooks.popitem()[1]()
     # Wait for all ACKs and stop the loop
     await mqtt_client.async_disconnect()
+
+    if DATA_MQTT_AVAILABLE in hass.data:
+        hass.data[DATA_MQTT_AVAILABLE].clear()
+        del hass.data[DATA_MQTT_AVAILABLE]
     # Store remaining subscriptions to be able to restore or reload them
     # when the entry is set up again
     if subscriptions := mqtt_client.subscriptions:
