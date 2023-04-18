@@ -145,7 +145,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
         self._shutdown_requested = True
-        self._unschedule_refresh(cancel_debouncer=False)
+        self._async_unsub_refresh()
         await self._debounced_refresh.async_shutdown()
 
     @callback
