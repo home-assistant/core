@@ -133,19 +133,19 @@
         "name": "Rain last hour"
       },
       "temperature_1d": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%] 1d"
+        "name": "Temperature 1d"
       },
       "temperature_2d": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%] 2d"
+        "name": "Temperature 2d"
       },
       "temperature_3d": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%] 3d"
+        "name": "Temperature 3d"
       },
       "temperature_4d": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%] 4d"
+        "name": "Temperature 4d"
       },
       "temperature_5d": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%] 5d"
+        "name": "Temperature 5d"
       },
       "mintemp_1d": {
         "name": "Minimum temperature 1d"
@@ -253,19 +253,19 @@
         "name": "Wind force 5d"
       },
       "windspeed_1d": {
-        "name": "[%key:component::sensor::entity_component::wind_speed::name%] 1d"
+        "name": "Wind speed 1d"
       },
       "windspeed_2d": {
-        "name": "[%key:component::sensor::entity_component::wind_speed::name%] 2d"
+        "name": "Wind speed 2d"
       },
       "windspeed_3d": {
-        "name": "[%key:component::sensor::entity_component::wind_speed::name%] 3d"
+        "name": "Wind speed 3d"
       },
       "windspeed_4d": {
-        "name": "[%key:component::sensor::entity_component::wind_speed::name%] 4d"
+        "name": "Wind speed 4d"
       },
       "windspeed_5d": {
-        "name": "[%key:component::sensor::entity_component::wind_speed::name%] 5d"
+        "name": "Wind speed 5d"
       },
       "winddirection_1d": {
         "name": "Wind direction 1d"
