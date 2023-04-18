@@ -31,12 +31,12 @@ from .common import (
 def _select_device_id_context_ids_sub_query(
     start_day: float,
     end_day: float,
-    event_types: tuple[str, ...],
+    event_type_ids: tuple[int, ...],
     json_quotable_device_ids: list[str],
 ) -> Select:
     """Generate a subquery to find context ids for multiple devices."""
     inner = (
-        select_events_context_id_subquery(start_day, end_day, event_types)
+        select_events_context_id_subquery(start_day, end_day, event_type_ids)
         .where(apply_event_device_id_matchers(json_quotable_device_ids))
         .subquery()
     )
@@ -47,14 +47,14 @@ def _apply_devices_context_union(
     sel: Select,
     start_day: float,
     end_day: float,
-    event_types: tuple[str, ...],
+    event_type_ids: tuple[int, ...],
     json_quotable_device_ids: list[str],
 ) -> CompoundSelect:
     """Generate a CTE to find the device context ids and a query to find linked row."""
     devices_cte: CTE = _select_device_id_context_ids_sub_query(
         start_day,
         end_day,
-        event_types,
+        event_type_ids,
         json_quotable_device_ids,
     ).cte()
     return sel.union_all(
@@ -77,18 +77,18 @@ def _apply_devices_context_union(
 def devices_stmt(
     start_day: float,
     end_day: float,
-    event_types: tuple[str, ...],
+    event_type_ids: tuple[int, ...],
     json_quotable_device_ids: list[str],
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple devices."""
     stmt = lambda_stmt(
         lambda: _apply_devices_context_union(
-            select_events_without_states(start_day, end_day, event_types).where(
+            select_events_without_states(start_day, end_day, event_type_ids).where(
                 apply_event_device_id_matchers(json_quotable_device_ids)
             ),
             start_day,
             end_day,
-            event_types,
+            event_type_ids,
             json_quotable_device_ids,
         ).order_by(Events.time_fired_ts)
     )
