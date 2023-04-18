@@ -1,6 +1,7 @@
 """Data update coordinator for the LastFM integration."""
+from dataclasses import dataclass
 
-from pylast import SIZE_SMALL, LastFMNetwork, Track, User, WSError
+from pylast import SIZE_SMALL, LastFMNetwork, Track, WSError
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -15,21 +16,15 @@ def format_track(track: Track) -> str:
     return f"{track.artist} - {track.title}"
 
 
+@dataclass
 class UserData:
     """Data object for transfer to the sensors."""
 
-    def __init__(self, user: User) -> None:
-        """Initialize the object."""
-        self.image = user.get_image(SIZE_SMALL)
-        if user.get_now_playing() is not None:
-            self.now_playing = format_track(user.get_now_playing())
-        else:
-            self.now_playing = STATE_NOT_SCROBBLING
-        self.top_played = None
-        if top_tracks := user.get_top_tracks(limit=1):
-            self.top_played = format_track(top_tracks[0].item)
-        self.last_played = format_track(user.get_recent_tracks(limit=1)[0].track)
-        self.play_count = user.get_playcount()
+    image: str
+    now_playing: str
+    top_played: str | None
+    last_played: str
+    play_count: int
 
 
 class LastFmUpdateCoordinator(DataUpdateCoordinator[dict[str, UserData]]):
@@ -45,7 +40,22 @@ class LastFmUpdateCoordinator(DataUpdateCoordinator[dict[str, UserData]]):
         response = {}
         for user in self._users:
             try:
-                response[user] = UserData(self.lastfm_api.get_user(user))
+                lastfm_user = self.lastfm_api.get_user(user)
+                image = lastfm_user.get_image(SIZE_SMALL)
+                if lastfm_user.get_now_playing() is not None:
+                    now_playing = format_track(lastfm_user.get_now_playing())
+                else:
+                    now_playing = STATE_NOT_SCROBBLING
+                top_played = None
+                if top_tracks := lastfm_user.get_top_tracks(limit=1):
+                    top_played = format_track(top_tracks[0].item)
+                last_played = format_track(
+                    lastfm_user.get_recent_tracks(limit=1)[0].track
+                )
+                play_count = lastfm_user.get_playcount()
+                response[user] = UserData(
+                    image, now_playing, top_played, last_played, play_count
+                )
             except WSError as error:
                 LOGGER.error(error)
         return response
