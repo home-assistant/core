@@ -80,6 +80,7 @@ class LastFmSensor(SensorEntity):
         top_played = None
         if top_tracks := self._user.get_top_tracks(limit=1):
             top_played = format_track(top_tracks[0].item)
+        last_played = None
         if last_tracks := self._user.get_recent_tracks(limit=1):
             last_played = format_track(last_tracks[0].track)
         play_count = self._user.get_playcount()
