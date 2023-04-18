@@ -15,9 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-LOGGER = logging.getLogger(__package__)
-DOMAIN: Final = "lastfm"
-DEFAULT_NAME = "LastFM"
+LOGGER = logging.getLogger(__name__)
 
 CONF_USERS = "users"
 
