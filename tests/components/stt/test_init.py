@@ -35,7 +35,7 @@ from tests.common import (
     mock_platform,
     mock_restore_cache,
 )
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_DOMAIN = "test"
 
@@ -52,7 +52,7 @@ class BaseProvider:
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return ["en"]
+        return ["de-DE", "en-US"]
 
     @property
     def supported_formats(self) -> list[AudioFormats]:
@@ -213,7 +213,7 @@ async def test_get_provider_info(
     response = await client.get(f"/api/stt/{TEST_DOMAIN}")
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
-        "languages": ["en"],
+        "languages": ["de-DE", "en-US"],
         "formats": ["wav", "ogg"],
         "codecs": ["pcm", "opus"],
         "sample_rates": [16000],
@@ -236,6 +236,7 @@ async def test_non_existing_provider(
     response = await client.get("/api/stt/not_exist")
     assert response.status == HTTPStatus.NOT_FOUND
 
+    # Language en is matched with en-US
     response = await client.post(
         "/api/stt/not_exist",
         headers={
@@ -258,6 +259,8 @@ async def test_stream_audio(
 ) -> None:
     """Test streaming audio and getting response."""
     client = await hass_client()
+
+    # Language en is matched with en-US
     response = await client.post(
         f"/api/stt/{TEST_DOMAIN}",
         headers={
@@ -375,3 +378,48 @@ async def test_restore_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
+
+
+@pytest.mark.parametrize(
+    ("setup", "engine_id"),
+    [("mock_setup", "test"), ("mock_config_entry_setup", "stt.test")],
+    indirect=["setup"],
+)
+async def test_ws_list_engines(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: str,
+    engine_id: str,
+) -> None:
+    """Test listing speech to text engines."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "stt/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"providers": [{"engine_id": engine_id}]}
+
+    await client.send_json_auto_id({"type": "stt/engine/list", "language": "smurfish"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": engine_id, "language_supported": False}]
+    }
+
+    await client.send_json_auto_id({"type": "stt/engine/list", "language": "en"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": engine_id, "language_supported": True}]
+    }
+
+    await client.send_json_auto_id({"type": "stt/engine/list", "language": "en-UK"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": engine_id, "language_supported": True}]
+    }

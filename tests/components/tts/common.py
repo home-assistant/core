@@ -16,9 +16,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from tests.common import MockPlatform
 
-SUPPORT_LANGUAGES = ["de", "en", "en_US"]
+SUPPORT_LANGUAGES = ["de_DE", "en_GB", "en_US"]
+TEST_LANGUAGES = ["de", "en"]
 
-DEFAULT_LANG = "en"
+DEFAULT_LANG = "en_US"
 
 
 class MockProvider(Provider):
@@ -55,7 +56,11 @@ class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
     PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-        {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+        {
+            vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(
+                SUPPORT_LANGUAGES + TEST_LANGUAGES
+            )
+        }
     )
 
     def __init__(

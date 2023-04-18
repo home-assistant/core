@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections import deque
+from collections.abc import AsyncIterable
 import logging
 import time
 from typing import TYPE_CHECKING
@@ -26,6 +28,7 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from .devices import VoIPDevice, VoIPDevices
 
+_BUFFERED_CHUNKS_BEFORE_SPEECH = 100  # ~2 seconds
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -95,9 +98,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
         if self._pipeline_task is None:
-            # Clear audio queue
-            while not self._audio_queue.empty():
-                self._audio_queue.get_nowait()
+            self._clear_audio_queue()
 
             # Run pipeline until voice command finishes, then start over
             self._pipeline_task = self.hass.async_create_background_task(
@@ -114,23 +115,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         _LOGGER.debug("Starting pipeline")
 
         async def stt_stream():
-            segmenter = VoiceCommandSegmenter()
-
             try:
-                # Timeout if no audio comes in for a while.
-                # This means the caller hung up.
-                async with async_timeout.timeout(self.audio_timeout):
-                    chunk = await self._audio_queue.get()
-
-                while chunk:
-                    if not segmenter.process(chunk):
-                        # Voice command is finished
-                        break
-
+                async for chunk in self._segment_audio():
                     yield chunk
-
-                    async with async_timeout.timeout(self.audio_timeout):
-                        chunk = await self._audio_queue.get()
             except asyncio.TimeoutError:
                 # Expected after caller hangs up
                 _LOGGER.debug("Audio timeout")
@@ -138,6 +125,8 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 if self.transport is not None:
                     self.transport.close()
                     self.transport = None
+            finally:
+                self._clear_audio_queue()
 
         try:
             # Run pipeline with a timeout
@@ -171,6 +160,40 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         finally:
             # Allow pipeline to run again
             self._pipeline_task = None
+
+    async def _segment_audio(self) -> AsyncIterable[bytes]:
+        segmenter = VoiceCommandSegmenter()
+        chunk_buffer: deque[bytes] = deque(maxlen=_BUFFERED_CHUNKS_BEFORE_SPEECH)
+
+        # Timeout if no audio comes in for a while.
+        # This means the caller hung up.
+        async with async_timeout.timeout(self.audio_timeout):
+            chunk = await self._audio_queue.get()
+
+        while chunk:
+            if not segmenter.process(chunk):
+                # Voice command is finished
+                break
+
+            if segmenter.in_command:
+                if chunk_buffer:
+                    # Release audio in buffer first
+                    for buffered_chunk in chunk_buffer:
+                        yield buffered_chunk
+
+                    chunk_buffer.clear()
+
+                yield chunk
+            else:
+                # Buffer until command starts
+                chunk_buffer.append(chunk)
+
+            async with async_timeout.timeout(self.audio_timeout):
+                chunk = await self._audio_queue.get()
+
+    def _clear_audio_queue(self) -> None:
+        while not self._audio_queue.empty():
+            self._audio_queue.get_nowait()
 
     def _event_callback(self, event: PipelineEvent):
         if not event.data:
