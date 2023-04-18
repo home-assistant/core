@@ -20,7 +20,7 @@ from .entities_and_devices import entities_devices_stmt
 def statement_for_request(
     start_day_dt: dt,
     end_day_dt: dt,
-    event_types: tuple[str, ...],
+    event_type_ids: tuple[int, ...],
     entity_ids: list[str] | None = None,
     states_metadata_ids: Collection[int] | None = None,
     device_ids: list[str] | None = None,
@@ -37,7 +37,7 @@ def statement_for_request(
         return all_stmt(
             start_day,
             end_day,
-            event_types,
+            event_type_ids,
             filters,
             context_id_bin,
         )
@@ -52,7 +52,7 @@ def statement_for_request(
         return entities_devices_stmt(
             start_day,
             end_day,
-            event_types,
+            event_type_ids,
             states_metadata_ids or [],
             [json_dumps(entity_id) for entity_id in entity_ids],
             [json_dumps(device_id) for device_id in device_ids],
@@ -63,7 +63,7 @@ def statement_for_request(
         return entities_stmt(
             start_day,
             end_day,
-            event_types,
+            event_type_ids,
             states_metadata_ids or [],
             [json_dumps(entity_id) for entity_id in entity_ids],
         )
@@ -73,6 +73,6 @@ def statement_for_request(
     return devices_stmt(
         start_day,
         end_day,
-        event_types,
+        event_type_ids,
         [json_dumps(device_id) for device_id in device_ids],
     )
