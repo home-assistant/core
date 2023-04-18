@@ -1,3 +1,5 @@
+"""Component providing HA sensor support for Ring Buttons."""
+
 from __future__ import annotations
 from dataclasses import dataclass
 
