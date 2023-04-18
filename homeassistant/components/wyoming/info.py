@@ -27,7 +27,9 @@ async def load_wyoming_info(host: str, port: int) -> Info | None:
                     while True:
                         event = await client.read_event()
                         if event is None:
-                            raise WyomingError("Connection closed unexpectedly")
+                            raise WyomingError(
+                                "Connection closed unexpectedly",
+                            )
 
                         if Info.is_type(event.type):
                             wyoming_info = Info.from_event(event)
