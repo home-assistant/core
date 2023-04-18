@@ -52,7 +52,7 @@ class BaseProvider:
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return ["en"]
+        return ["de-DE", "en-US"]
 
     @property
     def supported_formats(self) -> list[AudioFormats]:
@@ -213,7 +213,7 @@ async def test_get_provider_info(
     response = await client.get(f"/api/stt/{TEST_DOMAIN}")
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
-        "languages": ["en"],
+        "languages": ["de-DE", "en-US"],
         "formats": ["wav", "ogg"],
         "codecs": ["pcm", "opus"],
         "sample_rates": [16000],
@@ -236,6 +236,7 @@ async def test_non_existing_provider(
     response = await client.get("/api/stt/not_exist")
     assert response.status == HTTPStatus.NOT_FOUND
 
+    # Language en is matched with en-US
     response = await client.post(
         "/api/stt/not_exist",
         headers={
@@ -258,6 +259,8 @@ async def test_stream_audio(
 ) -> None:
     """Test streaming audio and getting response."""
     client = await hass_client()
+
+    # Language en is matched with en-US
     response = await client.post(
         f"/api/stt/{TEST_DOMAIN}",
         headers={
