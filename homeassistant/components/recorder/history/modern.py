@@ -374,6 +374,8 @@ def state_changes_during_period(
         if entity_id:
             instance = recorder.get_instance(hass)
             metadata_id = instance.states_meta_manager.get(entity_id, session, False)
+            if metadata_id is None:
+                return {}
             entity_id_to_metadata_id = {entity_id: metadata_id}
         stmt = _state_changed_during_period_stmt(
             start_time,
@@ -394,7 +396,7 @@ def state_changes_during_period(
                 states,
                 start_time,
                 entity_ids,
-                entity_id_to_metadata_id,
+                entity_id_to_metadata_id,  # type: ignore[arg-type]
                 include_start_time_state=include_start_time_state,
             ),
         )
