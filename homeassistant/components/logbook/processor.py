@@ -14,6 +14,7 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
+    extract_event_type_ids,
     extract_metadata_ids,
     process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
@@ -153,17 +154,22 @@ class EventProcessor:
 
         with session_scope(hass=self.hass, read_only=True) as session:
             metadata_ids: list[int] | None = None
+            instance = get_instance(self.hass)
             if self.entity_ids:
-                instance = get_instance(self.hass)
                 metadata_ids = extract_metadata_ids(
                     instance.states_meta_manager.get_many(
                         self.entity_ids, session, False
                     )
                 )
+            event_type_ids = tuple(
+                extract_event_type_ids(
+                    instance.event_type_manager.get_many(self.event_types, session)
+                )
+            )
             stmt = statement_for_request(
                 start_day,
                 end_day,
-                self.event_types,
+                event_type_ids,
                 self.entity_ids,
                 metadata_ids,
                 self.device_ids,
