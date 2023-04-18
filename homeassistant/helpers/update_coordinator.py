@@ -71,6 +71,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         self.name = name
         self.update_method = update_method
         self.update_interval = update_interval
+        self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
 
         # It's None before the first successful update.
@@ -140,6 +141,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         """Update all registered listeners."""
         for update_callback, _ in list(self._listeners.values()):
             update_callback()
+
+    async def async_shutdown(self) -> None:
+        """Cancel any scheduled call, and ignore new runs."""
+        self._shutdown_requested = True
+        self._async_unsub_refresh()
+        await self._debounced_refresh.async_shutdown()
 
     @callback
     def _unschedule_refresh(self) -> None:
@@ -237,7 +244,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
 
-        if scheduled and self.hass.is_stopping:
+        if self._shutdown_requested or scheduled and self.hass.is_stopping:
             return
 
         if log_timing := self.logger.isEnabledFor(logging.DEBUG):
