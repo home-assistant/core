@@ -87,8 +87,9 @@ from .models import (  # noqa: F401
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import (
+from .util import (  # noqa: F401
     async_create_certificate_temp_files,
+    async_wait_for_mqtt_client,
     get_mqtt_data,
     mqtt_config_entry_enabled,
     valid_publish_topic,

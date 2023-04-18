@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
 import tempfile
 from typing import Any
 
+import async_timeout
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import (
+    SIGNAL_CONFIG_ENTRY_CHANGED,
+    ConfigEntry,
+    ConfigEntryChange,
+    ConfigEntryState,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -29,6 +38,8 @@ from .const import (
 )
 from .models import MqttData
 
+AVAILABILITY_TIMEOUT = 30.0
+
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
@@ -39,6 +50,52 @@ def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     if not bool(hass.config_entries.async_entries(DOMAIN)):
         return None
     return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
+
+
+async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
+    """Wait for the MQTT client to become available.
+
+    Waits and returns True when mqtt set up or is in progress,
+    it is not needed that the client is connected.
+    or returns False when the client is not available.
+    """
+
+    valid_states = {ConfigEntryState.SETUP_IN_PROGRESS, ConfigEntryState.LOADED}
+
+    if not mqtt_config_entry_enabled(hass):
+        return False
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    if entry.state in valid_states:
+        await asyncio.sleep(0)
+        return True
+
+    state_reached_future: asyncio.Future[None] = asyncio.Future()
+
+    @callback
+    def _async_entry_changed(
+        change: ConfigEntryChange, event_entry: ConfigEntry
+    ) -> None:
+        if (
+            event_entry is entry
+            and change is ConfigEntryChange.UPDATED
+            and entry.state in valid_states
+        ):
+            state_reached_future.set_result(None)
+
+    unsub = async_dispatcher_connect(
+        hass, SIGNAL_CONFIG_ENTRY_CHANGED, _async_entry_changed
+    )
+    try:
+        async with async_timeout.timeout(AVAILABILITY_TIMEOUT):
+            await state_reached_future
+            await asyncio.sleep(0)
+            return True
+
+    except asyncio.TimeoutError:
+        return False
+    finally:
+        unsub()
 
 
 def valid_topic(topic: Any) -> str:
