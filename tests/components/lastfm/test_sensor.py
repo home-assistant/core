@@ -1,6 +1,4 @@
 """Tests for the lastfm sensor."""
-
-
 from homeassistant.components import sensor
 from homeassistant.components.lastfm.const import STATE_NOT_SCROBBLING
 from homeassistant.core import HomeAssistant
@@ -25,7 +23,7 @@ async def test_update_not_playing(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    entity_id = "sensor.lastfm_test"
+    entity_id = "sensor.test"
 
     state = hass.states.get(entity_id)
 
@@ -48,7 +46,7 @@ async def test_update_playing(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    entity_id = "sensor.lastfm_test"
+    entity_id = "sensor.test"
 
     state = hass.states.get(entity_id)
 

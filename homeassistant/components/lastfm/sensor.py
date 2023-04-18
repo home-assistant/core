@@ -4,19 +4,16 @@ from __future__ import annotations
 import hashlib
 import logging
 
-from pylast import SIZE_SMALL, Track, User
+from pylast import SIZE_SMALL, Track
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorEntity,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_LAST_PLAYED,
@@ -26,7 +23,6 @@ from .const import (
     STATE_NOT_SCROBBLING,
 )
 from .coordinator import LastFmUpdateCoordinator
-from .entity import LastFmEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,43 +51,34 @@ def setup_platform(
     add_entities((LastFmSensor(coordinator, user) for user in config[CONF_USERS]), True)
 
 
-class LastFmSensor(LastFmEntity, SensorEntity):
+class LastFmSensor(CoordinatorEntity[LastFmUpdateCoordinator], SensorEntity):
     """A class for the Last.fm account."""
+
+    _attr_attribution = "Data provided by Last.fm"
+    _attr_icon = "mdi:radio-fm"
 
     def __init__(self, coordinator: LastFmUpdateCoordinator, user: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
-        self.entity_description = SensorEntityDescription(
-            key=user, name=f"lastfm_{user}", icon="mdi:radio-fm"
-        )
+        self._attr_name = user
+        self._attr_native_value = STATE_NOT_SCROBBLING
 
-    def _user(self) -> User:
-        return self.coordinator.data.get(self.entity_description.key)
-
-    @property
-    def native_value(self) -> StateType:
-        """Return what the user is scrobbling."""
-        if user := self._user():
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        if user := self.coordinator.data.get(self.entity_description.key):
+            self._attr_entity_picture = user.get_image(SIZE_SMALL)
             if user.get_now_playing() is not None:
-                return format_track(user.get_now_playing())
-        return STATE_NOT_SCROBBLING
-
-    @property
-    def entity_picture(self):
-        """Avatar of the user."""
-        return self._user().get_image(SIZE_SMALL)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        top_played = None
-        if top_tracks := self._user().get_top_tracks(limit=1):
-            top_played = format_track(top_tracks[0].item)
-        return {
-            ATTR_LAST_PLAYED: format_track(
-                self._user().get_recent_tracks(limit=1)[0].track
-            ),
-            ATTR_PLAY_COUNT: self._user().get_playcount(),
-            ATTR_TOP_PLAYED: top_played,
-        }
+                self._attr_native_value = format_track(user.get_now_playing())
+            else:
+                self._attr_native_value = STATE_NOT_SCROBBLING
+            top_played = None
+            if top_tracks := user.get_top_tracks(limit=1):
+                top_played = format_track(top_tracks[0].item)
+            self._attr_extra_state_attributes = {
+                ATTR_LAST_PLAYED: format_track(
+                    user.get_recent_tracks(limit=1)[0].track
+                ),
+                ATTR_PLAY_COUNT: user.get_playcount(),
+                ATTR_TOP_PLAYED: top_played,
+            }

@@ -1,4 +1,4 @@
-"""Constants for LastFn."""
+"""Constants for LastFm."""
 import logging
 from typing import Final
 
