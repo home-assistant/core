@@ -83,6 +83,18 @@ class MockUser:
         return self.now_playing
 
 
+class MockLastFMNetwork:
+    """Create mock network."""
+
+    def __init__(self, user: MockUser):
+        """Initialize mock with user."""
+        self.user = user
+
+    def get_user(self, username: str) -> MockUser:
+        """Get user mock."""
+        return self.user
+
+
 def patch_interface(now_playing: Track | None = None) -> MockUser:
     """Patch interface."""
     return patch("pylast.User", return_value=MockUser(now_playing))

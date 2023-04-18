@@ -61,7 +61,7 @@ class LastFmSensor(CoordinatorEntity[LastFmUpdateCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
-        self._attr_name = user
+        self._attr_name = f"lastfm_{user}"
         self._user = user
 
     @callback
