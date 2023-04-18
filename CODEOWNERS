@@ -1370,6 +1370,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ws66i/ @ssaenger
 /tests/components/ws66i/ @ssaenger
 /homeassistant/components/wyoming/ @balloob @synesthesiam
+/tests/components/wyoming/ @balloob @synesthesiam
 /homeassistant/components/xbox/ @hunterjm
 /tests/components/xbox/ @hunterjm
 /homeassistant/components/xiaomi_aqara/ @danielhiversen @syssi

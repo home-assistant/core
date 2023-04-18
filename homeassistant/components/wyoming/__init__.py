@@ -8,6 +8,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .error import WyomingError
 from .info import load_wyoming_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,8 +29,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"info": wyoming_info}
 
-    if any(asr.installed for asr in wyoming_info.asr):
-        # At least one speech to text system is installed
+    # ASR = automated speech recognition (STT)
+    asr_installed = [asr for asr in wyoming_info.asr if asr.installed]
+    if len(asr_installed) > 2:
+        raise WyomingError(
+            "Only a single speech to text (asr) provider is supported per endpoint: {entry.data}"
+        )
+
+    if asr_installed:
+        # One speech to text system is installed
         await hass.config_entries.async_forward_entry_setup(
             entry,
             Platform.STT,

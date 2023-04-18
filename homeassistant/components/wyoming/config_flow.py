@@ -33,4 +33,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        return self.async_create_entry(title="Wyoming", data=user_input)
+        host = user_input[CONF_HOST]
+        port = user_input[CONF_PORT]
+
+        return self.async_create_entry(
+            title=f"Wyoming ({host}:{port})", data=user_input
+        )

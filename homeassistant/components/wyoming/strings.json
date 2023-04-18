@@ -1,11 +1,10 @@
 {
-  "options": {
+  "config": {
     "step": {
-      "init": {
+      "user": {
         "data": {
-          "stt_address": "STT address",
-          "tts_address": "TTS address",
-          "handle_address": "Handle address"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     }
