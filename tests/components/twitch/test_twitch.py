@@ -1,6 +1,8 @@
 """The tests for an update of the Twitch component."""
 from unittest.mock import MagicMock, patch
 
+from twitchAPI.twitch import Stream, TwitchUser
+
 from homeassistant.components import sensor
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
@@ -25,18 +27,16 @@ CONFIG_WITH_OAUTH = {
     }
 }
 
-USER_OBJECT = {
-    "id": 123,
-    "display_name": "channel123",
-    "offline_image_url": "logo.png",
-    "profile_image_url": "logo.png",
-    "view_count": 42,
-}
-STREAM_OBJECT_ONLINE = {
-    "game_name": "Good Game",
-    "title": "Title",
-    "thumbnail_url": "stream-medium.png",
-}
+USER_OBJECT: TwitchUser = TwitchUser(
+    id=123,
+    display_name="channel123",
+    offline_image_url="logo.png",
+    profile_image_url="logo.png",
+    view_count=42,
+)
+STREAM_OBJECT_ONLINE: Stream = Stream(
+    game_name="Good game", title="Title", thumbnail_url="stream-medium.png"
+)
 
 FOLLOWERS_OBJECT = [{"followed_at": "2020-01-20T21:22:42"}] * 24
 OAUTH_USER_ID = {"id": 987}
