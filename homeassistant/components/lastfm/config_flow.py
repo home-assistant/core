@@ -11,31 +11,16 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_USERS, DOMAIN, LOGGER, PLACEHOLDERS
 
+CONFIG_SCHEMA: vol.Schema = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_USERS): str,
+    }
+)
+
 
 class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
-
-    async def _async_setup_form(
-        self,
-        user_input: dict[str, Any] | None = None,
-        errors: dict[str, Any] | None = None,
-    ):
-        user_input = user_input or {}
-        return self.async_show_form(
-            step_id="user",
-            errors=errors,
-            description_placeholders=PLACEHOLDERS,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
-                    ): str,
-                    vol.Required(
-                        CONF_USERS, default=user_input.get(CONF_USERS, "")
-                    ): str,
-                }
-            ),
-        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -65,7 +50,12 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             if not errors:
                 return self.async_create_entry(title="LastFM", data=final_user_input)
-        return await self._async_setup_form(user_input, errors)
+        return self.async_show_form(
+            step_id="user",
+            errors=errors,
+            description_placeholders=PLACEHOLDERS,
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
+        )
 
     async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Import config from yaml."""

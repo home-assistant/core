@@ -1,6 +1,8 @@
 """Sensor for Last.fm account status."""
 from __future__ import annotations
 
+import hashlib
+
 from pylast import SIZE_SMALL, Track, User
 import voluptuous as vol
 
@@ -16,7 +18,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import LastFmEntity, LastFmUpdateCoordinator
 from .const import (
     ATTR_LAST_PLAYED,
     ATTR_PLAY_COUNT,
@@ -25,6 +26,8 @@ from .const import (
     DOMAIN,
     STATE_NOT_SCROBBLING,
 )
+from .coordinator import LastFmUpdateCoordinator
+from .entity import LastFmEntity
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -71,7 +74,7 @@ class LastFmSensor(LastFmEntity, SensorEntity):
     def __init__(self, coordinator: LastFmUpdateCoordinator, user: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"sensor.lastfm_{user}"
+        self._attr_unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
         self.entity_description = SensorEntityDescription(
             key=user, name=f"LastFM {user}", icon="mdi:radio-fm"
         )
@@ -82,8 +85,7 @@ class LastFmSensor(LastFmEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return what the user is scrobbling."""
-        if self._user() is not None:
-            user = self._user()
+        if user := self._user():
             if user.get_now_playing() is not None:
                 return format_track(user.get_now_playing())
         return STATE_NOT_SCROBBLING
