@@ -1022,7 +1022,7 @@ async def test_audio_pipeline_debug(
     assert msg["success"]
     assert msg["result"] == {"pipeline_runs": [ANY]}
 
-    pipeline_run_id = msg["result"]["pipeline_runs"][0]
+    pipeline_run_id = msg["result"]["pipeline_runs"][0]["pipeline_run_id"]
 
     await client.send_json_auto_id(
         {
