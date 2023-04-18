@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 import logging
 
-from pylast import SIZE_SMALL, Track, WSError
+from pylast import WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -16,13 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_LAST_PLAYED,
-    ATTR_PLAY_COUNT,
-    ATTR_TOP_PLAYED,
-    CONF_USERS,
-    STATE_NOT_SCROBBLING,
-)
+from .const import ATTR_LAST_PLAYED, ATTR_PLAY_COUNT, ATTR_TOP_PLAYED, CONF_USERS
 from .coordinator import LastFmUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,11 +28,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERS, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }
 )
-
-
-def format_track(track: Track) -> str:
-    """Format the track."""
-    return f"{track.artist} - {track.title}"
 
 
 async def async_setup_platform(
@@ -73,21 +62,13 @@ class LastFmSensor(CoordinatorEntity[LastFmUpdateCoordinator], SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if user := self.coordinator.data.get(self._user):
-            self._attr_entity_picture = user.get_image(SIZE_SMALL)
-            if user.get_now_playing() is not None:
-                self._attr_native_value = format_track(user.get_now_playing())
-            else:
-                self._attr_native_value = STATE_NOT_SCROBBLING
-            top_played = None
-            if top_tracks := user.get_top_tracks(limit=1):
-                top_played = format_track(top_tracks[0].item)
+        if user_data := self.coordinator.data.get(self._user):
+            self._attr_entity_picture = user_data.image
+            self._attr_native_value = user_data.now_playing
             self._attr_extra_state_attributes = {
-                ATTR_LAST_PLAYED: format_track(
-                    user.get_recent_tracks(limit=1)[0].track
-                ),
-                ATTR_PLAY_COUNT: user.get_playcount(),
-                ATTR_TOP_PLAYED: top_played,
+                ATTR_LAST_PLAYED: user_data.last_played,
+                ATTR_PLAY_COUNT: user_data.play_count,
+                ATTR_TOP_PLAYED: user_data.top_played,
             }
         super()._handle_coordinator_update()
 
