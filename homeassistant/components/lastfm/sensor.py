@@ -5,7 +5,7 @@ import hashlib
 import logging
 from typing import Final
 
-from pylast import SIZE_SMALL, LastFMNetwork, Track, WSError
+from pylast import SIZE_SMALL, LastFMNetwork, Track, User, WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -40,17 +40,22 @@ def format_track(track: Track) -> str:
     return f"{track.artist} - {track.title}"
 
 
-async def async_setup_platform(
+def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Last.fm sensor platform."""
     lastfm_api = LastFMNetwork(api_key=config[CONF_API_KEY])
-    async_add_entities(
-        (LastFmSensor(user, lastfm_api) for user in config[CONF_USERS]), True
-    )
+    entities = []
+    for username in config[CONF_USERS]:
+        try:
+            user = lastfm_api.get_user(username)
+            entities.append(LastFmSensor(user, lastfm_api))
+        except WSError as exc:
+            LOGGER.error(exc)
+    add_entities(entities, True)
 
 
 class LastFmSensor(SensorEntity):
@@ -59,10 +64,10 @@ class LastFmSensor(SensorEntity):
     _attr_attribution = "Data provided by Last.fm"
     _attr_icon = "mdi:radio-fm"
 
-    def __init__(self, user: str, lastfm_api: LastFMNetwork) -> None:
+    def __init__(self, user: User, lastfm_api: LastFMNetwork) -> None:
         """Initialize the sensor."""
-        self._attr_unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
-        self._attr_name = user
+        self._attr_unique_id = hashlib.sha256(user.name.encode("utf-8")).hexdigest()
+        self._attr_name = user.name
         try:
             self._user = lastfm_api.get_user(user)
         except WSError as exc:
@@ -72,8 +77,8 @@ class LastFmSensor(SensorEntity):
     def update(self) -> None:
         """Update device state."""
         self._attr_entity_picture = self._user.get_image(SIZE_SMALL)
-        if self._user.get_now_playing() is not None:
-            self._attr_native_value = format_track(self._user.get_now_playing())
+        if now_playing := self._user.get_now_playing():
+            self._attr_native_value = format_track(now_playing)
         else:
             self._attr_native_value = STATE_NOT_SCROBBLING
         top_played = None
