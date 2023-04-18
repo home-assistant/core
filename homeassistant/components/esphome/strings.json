@@ -46,6 +46,21 @@
     },
     "flow_title": "{name}"
   },
+  "entity": {
+    "binary_sensor": {
+      "call_active": {
+        "name": "Call Active"
+      }
+    },
+    "select": {
+      "pipeline": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      }
+    }
+  },
   "issues": {
     "ble_firmware_outdated": {
       "title": "Update {name} with ESPHome {version} or later",
