@@ -700,7 +700,7 @@ holidays==0.21.13
 home-assistant-frontend==20230411.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.3.29
+home-assistant-intents==2023.4.17-1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1171,7 +1171,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.0.9
 
 # homeassistant.components.fibaro
-pyfibaro==0.6.9
+pyfibaro==0.7.0
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -1547,7 +1547,7 @@ pytrafikverket==0.2.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.7.0
+pyunifiprotect==4.8.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1593,6 +1593,9 @@ radios==0.1.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
+
+# homeassistant.components.rapt_ble
+rapt-ble==0.1.0
 
 # homeassistant.components.rainmachine
 regenmaschine==2022.11.0

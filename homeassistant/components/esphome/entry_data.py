@@ -99,6 +99,10 @@ class RuntimeEntryData:
     _ble_connection_free_futures: list[asyncio.Future[int]] = field(
         default_factory=list
     )
+    assist_pipeline_update_callbacks: list[Callable[[], None]] = field(
+        default_factory=list
+    )
+    assist_pipeline_state: bool = False
 
     @property
     def name(self) -> str:
@@ -154,6 +158,24 @@ class RuntimeEntryData:
         return await fut
 
     @callback
+    def async_set_assist_pipeline_state(self, state: bool) -> None:
+        """Set the assist pipeline state."""
+        self.assist_pipeline_state = state
+        for update_callback in self.assist_pipeline_update_callbacks:
+            update_callback()
+
+    def async_subscribe_assist_pipeline_update(
+        self, update_callback: Callable[[], None]
+    ) -> Callable[[], None]:
+        """Subscribe to assist pipeline updates."""
+
+        def _unsubscribe() -> None:
+            self.assist_pipeline_update_callbacks.remove(update_callback)
+
+        self.assist_pipeline_update_callbacks.append(update_callback)
+        return _unsubscribe
+
+    @callback
     def async_remove_entity(
         self, hass: HomeAssistant, component_key: str, key: int
     ) -> None:
@@ -179,6 +201,9 @@ class RuntimeEntryData:
 
         if async_get_dashboard(hass):
             needed_platforms.add(Platform.UPDATE)
+
+        if self.device_info is not None and self.device_info.voice_assistant_version:
+            needed_platforms.add(Platform.BINARY_SENSOR)
 
         for info in infos:
             for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
