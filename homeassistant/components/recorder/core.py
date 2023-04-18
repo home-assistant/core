@@ -382,9 +382,7 @@ class Recorder(threading.Thread):
             * (self._available_memory() / ESTIMATED_QUEUE_ITEM_SIZE)
         )
         self.max_backlog = max(max_queue_backlog, MAX_QUEUE_BACKLOG_MIN_VALUE)
-        if current_backlog < (max_queue_backlog * percentage_modifier):
-            return False
-        return True
+        return current_backlog >= (max_queue_backlog * percentage_modifier)
 
     @callback
     def _async_stop_queue_watcher_and_event_listener(self) -> None:
