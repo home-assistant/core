@@ -149,7 +149,12 @@ class WemoDispatcher:
         if wemo.serialnumber in self._added_serial_numbers:
             return
 
-        coordinator = await async_register_device(hass, self._config_entry, wemo)
+        try:
+            coordinator = await async_register_device(hass, self._config_entry, wemo)
+        except pywemo.PyWeMoException as err:
+            _LOGGER.error("Unable to add WeMo %s %s: %s", repr(wemo), wemo.host, err)
+            return
+
         platforms = set(WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]))
         platforms.add(Platform.SENSOR)
         for platform in platforms:
