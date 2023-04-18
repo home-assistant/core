@@ -3,24 +3,29 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from typing import Final
 
-from pylast import WSError
+from pylast import SIZE_SMALL, LastFMNetwork, Track, WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_LAST_PLAYED, ATTR_PLAY_COUNT, ATTR_TOP_PLAYED, CONF_USERS
-from .coordinator import LastFmUpdateCoordinator
+LOGGER = logging.getLogger(__package__)
+DOMAIN: Final = "lastfm"
+DEFAULT_NAME = "LastFM"
 
-_LOGGER = logging.getLogger(__name__)
+CONF_USERS = "users"
 
+ATTR_LAST_PLAYED = "last_played"
+ATTR_PLAY_COUNT = "play_count"
+ATTR_TOP_PLAYED = "top_played"
+
+STATE_NOT_SCROBBLING = "Not Scrobbling"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -30,6 +35,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def format_track(track: Track) -> str:
+    """Format the track."""
+    return f"{track.artist} - {track.title}"
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -37,42 +47,41 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Last.fm sensor platform."""
-    coordinator = LastFmUpdateCoordinator(hass, config)
-    try:
-        await coordinator.async_refresh()
-    except WSError as exc:
-        raise PlatformNotReady from exc
+    lastfm_api = LastFMNetwork(api_key=config[CONF_API_KEY])
     async_add_entities(
-        (LastFmSensor(coordinator, user) for user in config[CONF_USERS]), True
+        (LastFmSensor(user, lastfm_api) for user in config[CONF_USERS]), True
     )
 
 
-class LastFmSensor(CoordinatorEntity[LastFmUpdateCoordinator], SensorEntity):
+class LastFmSensor(SensorEntity):
     """A class for the Last.fm account."""
 
     _attr_attribution = "Data provided by Last.fm"
     _attr_icon = "mdi:radio-fm"
 
-    def __init__(self, coordinator: LastFmUpdateCoordinator, user: str) -> None:
+    def __init__(self, user: str, lastfm_api: LastFMNetwork) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
         self._attr_unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
-        self._attr_name = f"lastfm_{user}"
-        self._user = user
+        self._attr_name = user
+        try:
+            self._user = lastfm_api.get_user(user)
+        except WSError as exc:
+            LOGGER.error(exc)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        if user_data := self.coordinator.data.get(self._user):
-            self._attr_entity_picture = user_data.image
-            self._attr_native_value = user_data.now_playing
-            self._attr_extra_state_attributes = {
-                ATTR_LAST_PLAYED: user_data.last_played,
-                ATTR_PLAY_COUNT: user_data.play_count,
-                ATTR_TOP_PLAYED: user_data.top_played,
-            }
-        super()._handle_coordinator_update()
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
-        self._handle_coordinator_update()
-        await super().async_added_to_hass()
+    def update(self) -> None:
+        """Update device state."""
+        self._attr_entity_picture = self._user.get_image(SIZE_SMALL)
+        if self._user.get_now_playing() is not None:
+            self._attr_native_value = format_track(self._user.get_now_playing())
+        else:
+            self._attr_native_value = STATE_NOT_SCROBBLING
+        top_played = None
+        if top_tracks := self._user.get_top_tracks(limit=1):
+            top_played = format_track(top_tracks[0].item)
+        last_played = format_track(self._user.get_recent_tracks(limit=1)[0].track)
+        play_count = self._user.get_playcount()
+        self._attr_extra_state_attributes = {
+            ATTR_LAST_PLAYED: last_played,
+            ATTR_PLAY_COUNT: play_count,
+            ATTR_TOP_PLAYED: top_played,
+        }
