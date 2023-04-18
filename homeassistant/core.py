@@ -217,13 +217,25 @@ class HassJob(Generic[_P, _R_co]):
     we run the job.
     """
 
-    __slots__ = ("job_type", "target", "name")
+    __slots__ = ("job_type", "target", "name", "_cancel_on_shutdown")
 
-    def __init__(self, target: Callable[_P, _R_co], name: str | None = None) -> None:
+    def __init__(
+        self,
+        target: Callable[_P, _R_co],
+        name: str | None = None,
+        *,
+        cancel_on_shutdown: bool | None = None,
+    ) -> None:
         """Create a job object."""
         self.target = target
         self.name = name
         self.job_type = _get_hassjob_callable_job_type(target)
+        self._cancel_on_shutdown = cancel_on_shutdown
+
+    @property
+    def cancel_on_shutdown(self) -> bool | None:
+        """Return if the job should be cancelled on shutdown."""
+        return self._cancel_on_shutdown
 
     def __repr__(self) -> str:
         """Return the job."""
@@ -505,12 +517,14 @@ class HomeAssistant:
 
         return task
 
-    def create_task(self, target: Coroutine[Any, Any, Any]) -> None:
+    def create_task(
+        self, target: Coroutine[Any, Any, Any], name: str | None = None
+    ) -> None:
         """Add task to the executor pool.
 
         target: target to call.
         """
-        self.loop.call_soon_threadsafe(self.async_create_task, target)
+        self.loop.call_soon_threadsafe(self.async_create_task, target, name)
 
     @callback
     def async_create_task(
@@ -728,6 +742,7 @@ class HomeAssistant:
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
             task.cancel()
+        self._cancel_cancellable_timers()
 
         self.exit_code = exit_code
 
@@ -811,6 +826,20 @@ class HomeAssistant:
 
         if self._stopped is not None:
             self._stopped.set()
+
+    def _cancel_cancellable_timers(self) -> None:
+        """Cancel timer handles marked as cancellable."""
+        # pylint: disable-next=protected-access
+        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
+        for handle in handles:
+            if (
+                not handle.cancelled()
+                and (args := handle._args)  # pylint: disable=protected-access
+                # pylint: disable-next=unidiomatic-typecheck
+                and type(job := args[0]) is HassJob
+                and job.cancel_on_shutdown
+            ):
+                handle.cancel()
 
     def _async_log_running_tasks(self, stage: int) -> None:
         """Log all running tasks."""
@@ -1847,7 +1876,10 @@ class ServiceRegistry:
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error executing service: %s", service_call)
 
-        self._hass.async_create_task(catch_exceptions())
+        self._hass.async_create_task(
+            catch_exceptions(),
+            f"service call background {service_call.domain}.{service_call.service}",
+        )
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
@@ -1950,7 +1982,11 @@ class Config:
         )
 
     def is_allowed_path(self, path: str) -> bool:
-        """Check if the path is valid for access from outside."""
+        """Check if the path is valid for access from outside.
+
+        This function does blocking I/O and should not be called from the event loop.
+        Use hass.async_add_executor_job to schedule it on the executor.
+        """
         assert path is not None
 
         thepath = pathlib.Path(path)

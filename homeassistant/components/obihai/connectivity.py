@@ -1,4 +1,5 @@
 """Support for Obihai Connectivity."""
+
 from __future__ import annotations
 
 from pyobihai import PyObihai
@@ -12,6 +13,7 @@ def get_pyobihai(
     password: str,
 ) -> PyObihai:
     """Retrieve an authenticated PyObihai."""
+
     return PyObihai(host, username, password)
 
 
@@ -19,16 +21,17 @@ def validate_auth(
     host: str,
     username: str,
     password: str,
-) -> bool:
+) -> PyObihai | None:
     """Test if the given setting works as expected."""
+
     obi = get_pyobihai(host, username, password)
 
     login = obi.check_account()
     if not login:
         LOGGER.debug("Invalid credentials")
-        return False
+        return None
 
-    return True
+    return obi
 
 
 class ObihaiConnection:
@@ -53,6 +56,7 @@ class ObihaiConnection:
 
     def update(self) -> bool:
         """Validate connection and retrieve a list of sensors."""
+
         if not self.pyobihai:
             self.pyobihai = get_pyobihai(self.host, self.username, self.password)
 

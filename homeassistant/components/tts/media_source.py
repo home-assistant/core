@@ -40,16 +40,12 @@ def generate_media_source_id(
     cache: bool | None = None,
 ) -> str:
     """Generate a media source ID for text-to-speech."""
+    from . import async_resolve_engine  # pylint: disable=import-outside-toplevel
+
     manager: SpeechManager = hass.data[DOMAIN]
 
-    if engine is not None:
-        pass
-    elif not manager.providers:
-        raise HomeAssistantError("No TTS providers available")
-    elif "cloud" in manager.providers:
-        engine = "cloud"
-    else:
-        engine = next(iter(manager.providers))
+    if (engine := async_resolve_engine(hass, engine)) is None:
+        raise HomeAssistantError("Invalid TTS provider selected")
 
     manager.process_options(engine, language, options)
     params = {

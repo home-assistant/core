@@ -71,6 +71,7 @@ class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
 
     _attr_has_entity_name = True
     _attr_supported_features = LockEntityFeature.OPEN
+    _attr_translation_key = "nuki_lock"
 
     @property
     def unique_id(self) -> str | None:

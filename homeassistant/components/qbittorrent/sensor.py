@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -23,12 +24,12 @@ from homeassistant.const import (
     UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DEFAULT_NAME
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,31 +70,41 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the qBittorrent sensors."""
+    """Set up the qBittorrent platform."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.6.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
 
-    try:
-        client = Client(config[CONF_URL])
-        client.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    except LoginRequired:
-        _LOGGER.error("Invalid authentication")
-        return
-    except RequestException as err:
-        _LOGGER.error("Connection failed")
-        raise PlatformNotReady from err
 
-    name = config.get(CONF_NAME)
-
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entites: AddEntitiesCallback,
+) -> None:
+    """Set up qBittorrent sensor entries."""
+    client: Client = hass.data[DOMAIN][config_entry.entry_id]
     entities = [
-        QBittorrentSensor(description, client, name) for description in SENSOR_TYPES
+        QBittorrentSensor(description, client, config_entry)
+        for description in SENSOR_TYPES
     ]
-
-    add_entities(entities, True)
+    async_add_entites(entities, True)
 
 
 def format_speed(speed):
@@ -108,14 +119,15 @@ class QBittorrentSensor(SensorEntity):
     def __init__(
         self,
         description: SensorEntityDescription,
-        qbittorrent_client,
-        client_name,
+        qbittorrent_client: Client,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the qBittorrent sensor."""
         self.entity_description = description
         self.client = qbittorrent_client
 
-        self._attr_name = f"{client_name} {description.name}"
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
+        self._attr_name = f"{config_entry.title} {description.name}"
         self._attr_available = False
 
     def update(self) -> None:

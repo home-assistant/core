@@ -1268,7 +1268,7 @@ def mock_integration(
 
     def mock_import_platform(platform_name: str) -> NoReturn:
         raise ImportError(
-            f"Mocked unable to import platform '{platform_name}'",
+            f"Mocked unable to import platform '{integration.pkg_path}.{platform_name}'",
             name=f"{integration.pkg_path}.{platform_name}",
         )
 

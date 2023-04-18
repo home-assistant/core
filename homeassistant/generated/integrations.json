@@ -241,10 +241,16 @@
       "iot_class": "local_polling"
     },
     "androidtv": {
-      "name": "Android TV",
+      "name": "Android Debug Bridge",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "androidtv_remote": {
+      "name": "Android TV Remote",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "anel_pwrctrl": {
       "name": "Anel NET-PwrCtrl",
@@ -391,6 +397,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "assist_pipeline": {
+      "name": "Assist pipeline",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_push"
     },
     "asterisk": {
       "name": "Asterisk",
@@ -657,7 +669,7 @@
     "brottsplatskartan": {
       "name": "Brottsplatskartan",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "browser": {
@@ -875,12 +887,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "coronavirus": {
-      "name": "Coronavirus (COVID-19)",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "cozytouch": {
       "name": "Atlantic Cozytouch",
       "integration_type": "virtual",
@@ -925,12 +931,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "darksky": {
-      "name": "Dark Sky",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "datadog": {
       "name": "Datadog",
@@ -3299,12 +3299,6 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Xbox"
-        },
-        "xbox_live": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_polling",
-          "name": "Xbox Live"
         }
       }
     },
@@ -3400,6 +3394,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "monessen": {
+      "name": "Monessen",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
     },
     "monoprice": {
       "name": "Monoprice 6-Zone Amplifier",
@@ -4322,7 +4321,7 @@
     "qbittorrent": {
       "name": "qBittorrent",
       "integration_type": "service",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "qingping": {
@@ -4430,6 +4429,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "rapt_ble": {
+      "name": "RAPT Bluetooth",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "raspberry_pi": {
       "name": "Raspberry Pi",
@@ -5067,7 +5072,7 @@
     "snapcast": {
       "name": "Snapcast",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "snips": {
@@ -6074,17 +6079,17 @@
         }
       }
     },
-    "voice_assistant": {
-      "name": "Voice Assistant",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "voicerss": {
       "name": "VoiceRSS",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "voip": {
+      "name": "Voice over IP",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "volkszaehler": {
       "name": "Volkszaehler",

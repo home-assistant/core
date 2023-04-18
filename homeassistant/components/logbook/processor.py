@@ -14,6 +14,7 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
+    extract_event_type_ids,
     extract_metadata_ids,
     process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
@@ -61,7 +62,7 @@ from .queries import statement_for_request
 from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 
 
-@dataclass
+@dataclass(slots=True)
 class LogbookRun:
     """A logbook run which may be a long running event stream or single request."""
 
@@ -153,17 +154,22 @@ class EventProcessor:
 
         with session_scope(hass=self.hass, read_only=True) as session:
             metadata_ids: list[int] | None = None
+            instance = get_instance(self.hass)
             if self.entity_ids:
-                instance = get_instance(self.hass)
                 metadata_ids = extract_metadata_ids(
                     instance.states_meta_manager.get_many(
                         self.entity_ids, session, False
                     )
                 )
+            event_type_ids = tuple(
+                extract_event_type_ids(
+                    instance.event_type_manager.get_many(self.event_types, session)
+                )
+            )
             stmt = statement_for_request(
                 start_day,
                 end_day,
-                self.event_types,
+                event_type_ids,
                 self.entity_ids,
                 metadata_ids,
                 self.device_ids,
@@ -204,7 +210,7 @@ def _humanify(
 
     # Process rows
     for row in rows:
-        context_id = context_lookup.memorize(row)
+        context_id_bin = context_lookup.memorize(row)
         if row.context_only:
             continue
         event_type = row.event_type
@@ -232,7 +238,7 @@ def _humanify(
             if icon := row.icon or row.old_format_icon:
                 data[LOGBOOK_ENTRY_ICON] = icon
 
-            context_augmenter.augment(data, row, context_id)
+            context_augmenter.augment(data, row, context_id_bin)
             yield data
 
         elif event_type in external_events:
@@ -240,7 +246,7 @@ def _humanify(
             data = describe_event(event_cache.get(row))
             data[LOGBOOK_ENTRY_WHEN] = format_time(row)
             data[LOGBOOK_ENTRY_DOMAIN] = domain
-            context_augmenter.augment(data, row, context_id)
+            context_augmenter.augment(data, row, context_id_bin)
             yield data
 
         elif event_type == EVENT_LOGBOOK_ENTRY:
@@ -259,7 +265,7 @@ def _humanify(
                 LOGBOOK_ENTRY_DOMAIN: entry_domain,
                 LOGBOOK_ENTRY_ENTITY_ID: entry_entity_id,
             }
-            context_augmenter.augment(data, row, context_id)
+            context_augmenter.augment(data, row, context_id_bin)
             yield data
 
 
@@ -302,11 +308,11 @@ class ContextAugmenter:
         self.include_entity_name = logbook_run.include_entity_name
 
     def _get_context_row(
-        self, context_id: bytes | None, row: Row | EventAsRow
+        self, context_id_bin: bytes | None, row: Row | EventAsRow
     ) -> Row | EventAsRow | None:
         """Get the context row from the id or row context."""
-        if context_id:
-            return self.context_lookup.get(context_id)
+        if context_id_bin:
+            return self.context_lookup.get(context_id_bin)
         if (context := getattr(row, "context", None)) is not None and (
             origin_event := context.origin_event
         ) is not None:
@@ -314,13 +320,13 @@ class ContextAugmenter:
         return None
 
     def augment(
-        self, data: dict[str, Any], row: Row | EventAsRow, context_id: bytes | None
+        self, data: dict[str, Any], row: Row | EventAsRow, context_id_bin: bytes | None
     ) -> None:
         """Augment data from the row and cache."""
         if context_user_id_bin := row.context_user_id_bin:
             data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(context_user_id_bin)
 
-        if not (context_row := self._get_context_row(context_id, row)):
+        if not (context_row := self._get_context_row(context_id_bin, row)):
             return
 
         if _rows_match(row, context_row):

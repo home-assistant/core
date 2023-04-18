@@ -22,10 +22,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     _LOGGER,
@@ -137,7 +134,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await hass.async_add_executor_job(build_client)
 
-    coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
+    coordinators: dict[
+        str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
+    ] = {}
     hass.data[DOMAIN][COORDINATORS] = coordinators
 
     # Create a coordinator for each vm/container
@@ -250,54 +249,6 @@ def call_api_container_vm(
         return None
 
     return status
-
-
-class ProxmoxEntity(CoordinatorEntity):
-    """Represents any entity created for the Proxmox VE platform."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id: str,
-        name: str,
-        icon: str,
-        host_name: str,
-        node_name: str,
-        vm_id: int | None = None,
-    ) -> None:
-        """Initialize the Proxmox entity."""
-        super().__init__(coordinator)
-
-        self.coordinator = coordinator
-        self._unique_id = unique_id
-        self._name = name
-        self._host_name = host_name
-        self._icon = icon
-        self._available = True
-        self._node_name = node_name
-        self._vm_id = vm_id
-
-        self._state = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self._available
 
 
 class ProxmoxClient:
