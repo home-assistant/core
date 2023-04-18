@@ -106,7 +106,10 @@ DATA_SCHEMA_OPT = vol.Schema(
     {
         vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): SelectSelector(
             SelectSelectorConfig(
-                options=ALLOWED_DAYS, multiple=True, mode=SelectSelectorMode.DROPDOWN
+                options=ALLOWED_DAYS,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="days",
             )
         ),
         vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): NumberSelector(
@@ -114,7 +117,10 @@ DATA_SCHEMA_OPT = vol.Schema(
         ),
         vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
             SelectSelectorConfig(
-                options=ALLOWED_DAYS, multiple=True, mode=SelectSelectorMode.DROPDOWN
+                options=ALLOWED_DAYS,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="days",
             )
         ),
         vol.Optional(CONF_ADD_HOLIDAYS, default=[]): SelectSelector(
