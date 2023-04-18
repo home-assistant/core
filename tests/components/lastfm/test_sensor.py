@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components import sensor
-from homeassistant.components.lastfm.const import STATE_NOT_SCROBBLING
+from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -22,13 +22,13 @@ CONFIG = {
 async def test_update_not_playing(hass: HomeAssistant) -> None:
     """Test update when no playing song."""
     with patch(
-        "homeassistant.components.lastfm.coordinator.LastFMNetwork",
+        "homeassistant.components.lastfm.sensor.LastFMNetwork",
         return_value=MockLastFMNetwork(MockUser()),
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
         await hass.async_block_till_done()
 
-    entity_id = "sensor.lastfm_test"
+    entity_id = "sensor.test"
 
     state = hass.states.get(entity_id)
 
@@ -38,13 +38,13 @@ async def test_update_not_playing(hass: HomeAssistant) -> None:
 async def test_update_playing(hass: HomeAssistant) -> None:
     """Test update when song playing."""
     with patch(
-        "homeassistant.components.lastfm.coordinator.LastFMNetwork",
+        "homeassistant.components.lastfm.sensor.LastFMNetwork",
         return_value=MockLastFMNetwork(MockUser(MOCK_TRACK)),
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
         await hass.async_block_till_done()
 
-    entity_id = "sensor.lastfm_test"
+    entity_id = "sensor.test"
 
     state = hass.states.get(entity_id)
 
@@ -54,7 +54,7 @@ async def test_update_playing(hass: HomeAssistant) -> None:
 async def test_failed_update(hass: HomeAssistant) -> None:
     """Test that the integration does not break when an unknown user is added."""
     with patch(
-        "homeassistant.components.lastfm.coordinator.LastFMNetwork",
+        "homeassistant.components.lastfm.sensor.LastFMNetwork",
         return_value=MockLastFMNetwork(MockUser(MOCK_TRACK)),
     ):
         assert (
@@ -73,8 +73,8 @@ async def test_failed_update(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    entity_id = "sensor.lastfm_not_existing"
+    entity_id = "sensor.not_existing"
 
     state = hass.states.get(entity_id)
 
-    assert state.state == "unknown"
+    assert state is None

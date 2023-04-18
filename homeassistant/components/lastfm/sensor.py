@@ -67,6 +67,7 @@ class LastFmSensor(SensorEntity):
             self._user = lastfm_api.get_user(user)
         except WSError as exc:
             LOGGER.error(exc)
+            self._attr_available = False
 
     def update(self) -> None:
         """Update device state."""

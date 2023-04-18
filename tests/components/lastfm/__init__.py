@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pylast import Album, PlayedTrack, TopItem, Track, WSError
 
-from homeassistant.components.lastfm.const import CONF_USERS, DOMAIN
+from homeassistant.components.lastfm.sensor import CONF_USERS, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
