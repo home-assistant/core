@@ -50,9 +50,10 @@ def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
 async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
     """Wait for the MQTT client to become available.
 
-    Waits and returns True when mqtt set up or is in progress,
-    it is not needed that the client is connected.
-    or returns False when the client is not available.
+    Waits when mqtt set up is in progress,
+    It is not needed that the client is connected.
+    Returns True if the mqtt client is available.
+    Returns False when the client is not available.
     """
 
     if not mqtt_config_entry_enabled(hass):
