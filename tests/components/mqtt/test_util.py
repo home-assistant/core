@@ -7,11 +7,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import mqtt
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import CoreState, HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.typing import MqttMockPahoClient
+from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 @pytest.fixture(autouse=True)
@@ -55,11 +55,11 @@ async def test_reading_non_exitisting_certificate_file() -> None:
     )
 
 
-async def test_waiting_for_client(
+async def test_waiting_for_client_not_loaded(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
-    """Test waiting for client."""
+    """Test waiting for client while mqtt entry is not yet loaded."""
     hass.state = CoreState.starting
     await hass.async_block_till_done()
 
@@ -75,11 +75,77 @@ async def test_waiting_for_client(
     async def _async_just_in_time_subscribe() -> Callable[[], None]:
         nonlocal unsub
         assert await mqtt.async_wait_for_mqtt_client(hass)
-        unsub = await mqtt.async_subscribe(hass, "test_topic", lambda x: None)
+        unsub = await mqtt.async_subscribe(hass, "test_topic", lambda msg: None)
 
+    # _async_just_in_time_subscribe blocks until entry os loaded
     hass.async_add_job(_async_just_in_time_subscribe)
     assert entry.state == ConfigEntryState.NOT_LOADED
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert unsub
+    assert unsub is not None
     unsub()
+
+
+async def test_waiting_for_client_loaded(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
+    """Test waiting for client where mqtt entry is loaded."""
+    unsub: Callable[[], None] | None = None
+
+    async def _async_just_in_time_subscribe() -> Callable[[], None]:
+        nonlocal unsub
+        assert await mqtt.async_wait_for_mqtt_client(hass)
+        unsub = await mqtt.async_subscribe(hass, "test_topic", lambda msg: None)
+
+    entry = hass.config_entries.async_entries(mqtt.DATA_MQTT)[0]
+    assert entry.state == ConfigEntryState.LOADED
+
+    await _async_just_in_time_subscribe()
+
+    assert unsub is not None
+    unsub()
+
+
+@patch("homeassistant.components.mqtt.util.AVAILABILITY_TIMEOUT", 0.01)
+async def test_waiting_for_client_timeout(
+    hass: HomeAssistant,
+) -> None:
+    """Test waiting for client with timeout."""
+    hass.state = CoreState.starting
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={"broker": "test-broker"},
+        state=ConfigEntryState.NOT_LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.state == ConfigEntryState.NOT_LOADED
+    # returns False after timeout
+    assert not await mqtt.async_wait_for_mqtt_client(hass)
+
+
+async def test_waiting_for_client_with_disabled_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test waiting for client with timeout."""
+    hass.state = CoreState.starting
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={"broker": "test-broker"},
+        state=ConfigEntryState.NOT_LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    # Disable MQTT config entry
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
+
+    assert entry.state == ConfigEntryState.NOT_LOADED
+
+    # returns False because entry is disabled
+    assert not await mqtt.async_wait_for_mqtt_client(hass)
