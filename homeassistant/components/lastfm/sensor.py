@@ -68,11 +68,7 @@ class LastFmSensor(SensorEntity):
         """Initialize the sensor."""
         self._attr_unique_id = hashlib.sha256(user.name.encode("utf-8")).hexdigest()
         self._attr_name = user.name
-        try:
-            self._user = lastfm_api.get_user(user)
-        except WSError as exc:
-            LOGGER.error(exc)
-            self._attr_available = False
+        self._user = user
 
     def update(self) -> None:
         """Update device state."""
