@@ -7,7 +7,7 @@
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
-  "dependencies": [],
+  "dependencies": ["websocket_api"],
   "codeowners": [
     "@flix6x"
   ],
