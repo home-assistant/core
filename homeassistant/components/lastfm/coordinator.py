@@ -13,18 +13,15 @@ from .const import CONF_USERS, DOMAIN, LOGGER
 class LastFmUpdateCoordinator(DataUpdateCoordinator[dict[str, User]]):
     """Data update coordinator for the LastFM integration."""
 
-    config_entry: ConfigEntry
-
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize the coordinator."""
         super().__init__(hass=hass, logger=LOGGER, name=DOMAIN)
-        self._config = config
+        self._users = config[CONF_USERS]
         self.lastfm_api = LastFMNetwork(api_key=self._config[CONF_API_KEY])
 
     def _update(self) -> dict[str, User]:
-        users = self._config[CONF_USERS]
         response = {}
-        for user in users:
+        for user in self._users:
             try:
                 response[user] = self.lastfm_api.get_user(user)
             except WSError as error:

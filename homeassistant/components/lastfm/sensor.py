@@ -63,10 +63,11 @@ class LastFmSensor(CoordinatorEntity[LastFmUpdateCoordinator], SensorEntity):
         self._attr_unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
         self._attr_name = user
         self._attr_native_value = STATE_NOT_SCROBBLING
+        self._user = user
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if user := self.coordinator.data.get(self.entity_description.key):
+        if user := self.coordinator.data.get(self._user):
             self._attr_entity_picture = user.get_image(SIZE_SMALL)
             if user.get_now_playing() is not None:
                 self._attr_native_value = format_track(user.get_now_playing())
@@ -82,3 +83,4 @@ class LastFmSensor(CoordinatorEntity[LastFmUpdateCoordinator], SensorEntity):
                 ATTR_PLAY_COUNT: user.get_playcount(),
                 ATTR_TOP_PLAYED: top_played,
             }
+        super()._handle_coordinator_update()
