@@ -353,6 +353,11 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         return round(self._state.color_temperature)
 
     @property
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return mired_to_kelvin(self._state.color_temperature)
+
+    @property
     @esphome_state_property
     def effect(self) -> str | None:
         """Return the current effect."""
