@@ -5,9 +5,12 @@ from unittest import mock
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import zigpy.endpoint
 import zigpy.profiles.zha
 import zigpy.types as t
+from zigpy.zcl import foundation
 import zigpy.zcl.clusters
+import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.channels as zha_channels
 import homeassistant.components.zha.core.channels.base as base_channels
@@ -726,3 +729,56 @@ async def test_cluster_no_ep_attribute(m1, zha_device_mock) -> None:
     pools = {pool.id: pool for pool in channels.pools}
     assert "1:0x042e" in pools[1].all_channels
     assert pools[1].all_channels["1:0x042e"].name
+
+
+async def test_configure_reporting(hass: HomeAssistant) -> None:
+    """Test setting up a channel and configuring attribute reporting in two batches."""
+
+    class TestZigbeeChannel(base_channels.ZigbeeChannel):
+        BIND = True
+        REPORT_CONFIG = (
+            # By name
+            base_channels.AttrReportConfig(attr="current_x", config=(1, 60, 1)),
+            base_channels.AttrReportConfig(attr="current_hue", config=(1, 60, 2)),
+            base_channels.AttrReportConfig(attr="color_temperature", config=(1, 60, 3)),
+            base_channels.AttrReportConfig(attr="current_y", config=(1, 60, 4)),
+        )
+
+    mock_ep = mock.AsyncMock(spec_set=zigpy.endpoint.Endpoint)
+    mock_ep.device.zdo = AsyncMock()
+
+    cluster = zigpy.zcl.clusters.lighting.Color(mock_ep)
+    cluster.bind = AsyncMock(
+        spec_set=cluster.bind,
+        return_value=[zdo_t.Status.SUCCESS],  # ZDOCmd.Bind_rsp
+    )
+    cluster.configure_reporting_multiple = AsyncMock(
+        spec_set=cluster.configure_reporting_multiple,
+        return_value=[
+            foundation.ConfigureReportingResponseRecord(
+                status=foundation.Status.SUCCESS
+            )
+        ],
+    )
+
+    ch_pool = mock.AsyncMock(spec_set=zha_channels.ChannelPool)
+    ch_pool.skip_configuration = False
+
+    channel = TestZigbeeChannel(cluster, ch_pool)
+    await channel.async_configure()
+
+    # Since we request reporting for five attributes, we need to make two calls (3 + 1)
+    assert cluster.configure_reporting_multiple.mock_calls == [
+        mock.call(
+            {
+                "current_x": (1, 60, 1),
+                "current_hue": (1, 60, 2),
+                "color_temperature": (1, 60, 3),
+            }
+        ),
+        mock.call(
+            {
+                "current_y": (1, 60, 4),
+            }
+        ),
+    ]

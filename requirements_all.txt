@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.5
+PySwitchbot==0.37.6
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -661,7 +661,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.32
+env_canada==0.5.33
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -1260,7 +1260,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.2.3
+onvif-zeep-async==1.2.11
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -2150,7 +2150,7 @@ pytrafikverket==0.2.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.7.0
+pyunifiprotect==4.8.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
