@@ -1,12 +1,17 @@
 """Test MQTT utils."""
 
+from collections.abc import Callable
 from random import getrandbits
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import mqtt
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import CoreState, HomeAssistant
+
+from tests.common import MockConfigEntry
+from tests.typing import MqttMockPahoClient
 
 
 @pytest.fixture(autouse=True)
@@ -48,3 +53,33 @@ async def test_reading_non_exitisting_certificate_file() -> None:
     assert (
         mqtt.util.migrate_certificate_file_to_content("/home/file_not_exists") is None
     )
+
+
+async def test_waiting_for_client(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test waiting for client."""
+    hass.state = CoreState.starting
+    await hass.async_block_till_done()
+
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={"broker": "test-broker"},
+        state=ConfigEntryState.NOT_LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    unsub: Callable[[], None] | None = None
+
+    async def _async_just_in_time_subscribe() -> Callable[[], None]:
+        nonlocal unsub
+        assert await mqtt.async_wait_for_mqtt_client(hass)
+        unsub = await mqtt.async_subscribe(hass, "test_topic", lambda x: None)
+
+    hass.async_add_job(_async_just_in_time_subscribe)
+    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert unsub
+    unsub()

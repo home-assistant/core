@@ -68,6 +68,7 @@ from .const import (  # noqa: F401
     CONF_WS_HEADERS,
     CONF_WS_PATH,
     DATA_MQTT,
+    DATA_MQTT_AVAILABLE,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
@@ -212,6 +213,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await mqtt_data.client.async_connect()
+    hass.data.setdefault(DATA_MQTT_AVAILABLE, asyncio.Event()).set()
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""

@@ -31,6 +31,7 @@ from .const import (
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
     DATA_MQTT,
+    DATA_MQTT_AVAILABLE,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
@@ -89,8 +90,8 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
     try:
         async with async_timeout.timeout(AVAILABILITY_TIMEOUT):
             await state_reached_future
-            await asyncio.sleep(0)
-            return True
+            await hass.data.setdefault(DATA_MQTT_AVAILABLE, asyncio.Event()).wait()
+        return True
 
     except asyncio.TimeoutError:
         return False
