@@ -106,6 +106,7 @@ async def test_no_repair_issue(
     assert (const.DOMAIN, "webhook_url") not in issue_registry.issues
     assert (const.DOMAIN, "enable_port") not in issue_registry.issues
     assert (const.DOMAIN, "firmware_update") not in issue_registry.issues
+    assert (const.DOMAIN, "ssl") not in issue_registry.issues
 
 
 async def test_https_repair_issue(
@@ -121,6 +122,23 @@ async def test_https_repair_issue(
 
     issue_registry = ir.async_get(hass)
     assert (const.DOMAIN, "https_webhook") in issue_registry.issues
+
+
+async def test_ssl_repair_issue(
+    hass: HomeAssistant, config_entry: MockConfigEntry, reolink_ONVIF_wait: MagicMock
+) -> None:
+    """Test repairs issue is raised when global ssl certificate is used."""
+    await async_process_ha_core_config(
+        hass, {"country": "GB", "internal_url": "http://test_homeassistant_address"}
+    )
+
+    hass.config.api.use_ssl = True
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert (const.DOMAIN, "ssl") in issue_registry.issues
 
 
 @pytest.mark.parametrize("protocol", ["rtsp", "rtmp"])
