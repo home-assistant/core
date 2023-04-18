@@ -204,6 +204,7 @@ class RuntimeEntryData:
 
         if self.device_info is not None and self.device_info.voice_assistant_version:
             needed_platforms.add(Platform.BINARY_SENSOR)
+            needed_platforms.add(Platform.SELECT)
 
         for info in infos:
             for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
