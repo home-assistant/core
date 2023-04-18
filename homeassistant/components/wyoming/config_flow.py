@@ -48,6 +48,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_services")
 
         name = asr_installed[0].name
-        data = {"wyoming": wyoming_info.to_dict(), **user_input}
+        data = {"asr": asr_installed[0].to_dict(), **user_input}
 
         return self.async_create_entry(title=f"Wyoming ({name})", data=data)

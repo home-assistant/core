@@ -57,7 +57,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": 1234,
-        "wyoming": _STT_INFO.to_dict(),
+        "asr": _STT_INFO.asr[0].to_dict(),
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

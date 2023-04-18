@@ -9,20 +9,29 @@ from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.STT]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load Wyoming."""
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    platforms = []
+    if "asr" in entry.data:
+        platforms.append(Platform.STT)
+
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        platforms,
+    )
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Wyoming."""
+    platforms = []
+    if "asr" in entry.data:
+        platforms.append(Platform.STT)
+
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
-        PLATFORMS,
+        platforms,
     )
     return unload_ok

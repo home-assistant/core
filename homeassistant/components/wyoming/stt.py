@@ -24,24 +24,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Wyoming speech to text."""
-    wyoming_info = config_entry.data["wyoming"]
-    asr_installed = [asr for asr in wyoming_info.get("asr", []) if asr["installed"]]
-    if not asr_installed:
-        # No STT services
-        return
-
     model_languages: set[str] = set()
-    for asr_program in asr_installed:
-        for asr_model in asr_program["models"]:
-            if not asr_model["installed"]:
-                continue
-
-            model_languages.update(asr_model["languages"])
+    for asr_model in config_entry.data["asr"]["models"]:
+        model_languages.update(asr_model["languages"])
 
     async_add_entities(
         [
             WyomingSttProvider(
-                hass,
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
                 list(model_languages),
@@ -55,13 +44,11 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         host: str,
         port: int,
         supported_languages: list[str],
     ) -> None:
         """Set up provider."""
-        self.hass = hass
         self.host = host
         self.port = port
         self._supported_languages = supported_languages
