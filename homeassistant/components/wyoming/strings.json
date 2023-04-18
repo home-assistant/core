@@ -1,0 +1,13 @@
+{
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "stt_address": "STT address",
+          "tts_address": "TTS address",
+          "handle_address": "Handle address"
+        }
+      }
+    }
+  }
+}

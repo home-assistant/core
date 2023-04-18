@@ -501,6 +501,7 @@ FLOWS = {
         "wled",
         "wolflink",
         "ws66i",
+        "wyoming",
         "xbox",
         "xiaomi_aqara",
         "xiaomi_ble",
