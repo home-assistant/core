@@ -1,5 +1,7 @@
 """The ONVIF integration."""
+from httpx import RequestError
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
+from zeep.exceptions import Fault
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
@@ -27,9 +29,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = ONVIFDevice(hass, entry)
 
-    if not await device.async_setup():
+    try:
+        await device.async_setup()
+    except RequestError as err:
         await device.device.close()
-        return False
+        raise ConfigEntryNotReady(
+            f"Could not connect to camera {device.device.host}:{device.device.port}: {err}"
+        ) from err
+    except Fault as err:
+        await device.device.close()
+        # We do no know if the credentials are wrong or the camera is
+        # still booting up, so we will retry later
+        raise ConfigEntryNotReady(
+            f"Could not connect to camera, verify credentials are correct: {err}"
+        ) from err
+    except ONVIFError as err:
+        await device.device.close()
+        raise ConfigEntryNotReady(
+            f"Could not setup camera {device.device.host}:{device.device.port}: {err}"
+        ) from err
 
     if not device.available:
         raise ConfigEntryNotReady()
@@ -39,15 +57,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.unique_id] = device
 
-    platforms = [Platform.BUTTON, Platform.CAMERA]
+    device.platforms = [Platform.BUTTON, Platform.CAMERA]
 
     if device.capabilities.events:
-        platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
+        device.platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
 
     if device.capabilities.imaging:
-        platforms += [Platform.SWITCH]
+        device.platforms += [Platform.SWITCH]
 
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, device.platforms)
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
@@ -59,16 +77,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    device = hass.data[DOMAIN][entry.unique_id]
-    platforms = ["camera"]
+    device: ONVIFDevice = hass.data[DOMAIN][entry.unique_id]
 
     if device.capabilities.events and device.events.started:
-        platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
         await device.events.async_stop()
-    if device.capabilities.imaging:
-        platforms += [Platform.SWITCH]
 
-    return await hass.config_entries.async_unload_platforms(entry, platforms)
+    return await hass.config_entries.async_unload_platforms(entry, device.platforms)
 
 
 async def _get_snapshot_auth(device):
