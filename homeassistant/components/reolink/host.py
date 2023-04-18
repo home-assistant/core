@@ -359,7 +359,7 @@ class ReolinkHost:
                     severity=ir.IssueSeverity.WARNING,
                     translation_key="ssl",
                     translation_placeholders={
-                        "ssl_link": "https://www.home-assistant.io/integrations/http/#ssl_certificate"
+                        "ssl_link": "https://www.home-assistant.io/integrations/http/#ssl_certificate",
                         "base_url": self._base_url,
                         "network_link": "https://my.home-assistant.io/redirect/network/",
                         "nginx_link": "https://github.com/home-assistant/addons/tree/master/nginx_proxy",
