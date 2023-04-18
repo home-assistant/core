@@ -1,12 +1,11 @@
 """Tests for the lastfm sensor."""
-from unittest.mock import patch
 
 from homeassistant.components import sensor
 from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import MockLastFMNetwork, MockUser
+from . import patch_interface
 
 from tests.components.lastfm import MOCK_TRACK
 
@@ -21,10 +20,7 @@ CONFIG = {
 
 async def test_update_not_playing(hass: HomeAssistant) -> None:
     """Test update when no playing song."""
-    with patch(
-        "homeassistant.components.lastfm.sensor.LastFMNetwork",
-        return_value=MockLastFMNetwork(MockUser()),
-    ):
+    with patch_interface("test"):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
         await hass.async_block_till_done()
 
@@ -37,10 +33,7 @@ async def test_update_not_playing(hass: HomeAssistant) -> None:
 
 async def test_update_playing(hass: HomeAssistant) -> None:
     """Test update when song playing."""
-    with patch(
-        "homeassistant.components.lastfm.sensor.LastFMNetwork",
-        return_value=MockLastFMNetwork(MockUser(MOCK_TRACK)),
-    ):
+    with patch_interface("test", MOCK_TRACK):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
         await hass.async_block_till_done()
 
@@ -53,10 +46,7 @@ async def test_update_playing(hass: HomeAssistant) -> None:
 
 async def test_failed_update(hass: HomeAssistant) -> None:
     """Test that the integration does not break when an unknown user is added."""
-    with patch(
-        "homeassistant.components.lastfm.sensor.LastFMNetwork",
-        return_value=MockLastFMNetwork(MockUser(MOCK_TRACK)),
-    ):
+    with patch_interface("not_existing"):
         assert (
             await async_setup_component(
                 hass,

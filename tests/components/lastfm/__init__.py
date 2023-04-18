@@ -44,9 +44,14 @@ MOCK_TOP_ITEM = TopItem(item=MOCK_TRACK, weight=69)
 class MockUser:
     """Mock User object for pylast."""
 
-    def __init__(self, now_playing: Track | None = None) -> None:
+    def __init__(self, username: str, now_playing: Track | None = None) -> None:
         """Initialize the mock."""
         self.now_playing = now_playing
+        self.name = username
+
+    def name(self) -> str:
+        """Return mocked name."""
+        return self.name
 
     def get_playcount(self) -> int | float:
         """Get mock play count."""
@@ -83,6 +88,11 @@ class MockLastFMNetwork:
         return self.user
 
 
-def patch_interface(now_playing: Track | None = None) -> MockUser:
+def patch_interface(
+    username: str, now_playing: Track | None = None
+) -> MockLastFMNetwork:
     """Patch interface."""
-    return patch("pylast.User", return_value=MockUser(now_playing))
+    return patch(
+        "homeassistant.components.lastfm.sensor.LastFMNetwork",
+        return_value=MockLastFMNetwork(MockUser(username, now_playing)),
+    )
