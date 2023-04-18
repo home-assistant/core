@@ -350,7 +350,7 @@ class ReolinkHost:
             )
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
-            if self._hass.config.api.use_ssl:
+            if self._hass.config.api is not None and self._hass.config.api.use_ssl:
                 ir.async_create_issue(
                     self._hass,
                     DOMAIN,
