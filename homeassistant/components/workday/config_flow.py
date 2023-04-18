@@ -43,6 +43,8 @@ from .const import (
     DOMAIN,
 )
 
+NONE_SENTINEL = "none"
+
 
 def add_province_to_schema(
     schema: vol.Schema,
@@ -51,23 +53,21 @@ def add_province_to_schema(
     """Update schema with province from country."""
     year: int = dt.now().year
     obj_holidays: HolidayBase = getattr(holidays, options[CONF_COUNTRY])(years=year)
-    new_schema = schema
-    div_list = ["none"]
+    if not obj_holidays.subdivisions:
+        return schema
 
-    if hasattr(obj_holidays, "subdivisions"):
-        div_list.extend(obj_holidays.subdivisions)
+    province_list = [NONE_SENTINEL, *obj_holidays.subdivisions]
     add_schema = {
-        vol.Optional(CONF_PROVINCE, default="none"): SelectSelector(
+        vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
-                options=div_list,
+                options=province_list,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_PROVINCE,
             )
         ),
     }
 
-    new_schema = vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
-    return new_schema
+    return vol.Schema({**DATA_SCHEMA_OPT.schema, **add_schema})
 
 
 def validate_custom_dates(user_input: dict[str, Any]) -> None:
@@ -192,7 +192,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
-            if combined_input[CONF_PROVINCE] == "none":
+            if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
                 combined_input[CONF_PROVINCE] = None
 
             try:
@@ -246,7 +246,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.options, **user_input}
-            if combined_input[CONF_PROVINCE] == "none":
+            if combined_input.get(CONF_PROVINCE, NONE_SENTINEL) == NONE_SENTINEL:
                 combined_input[CONF_PROVINCE] = None
 
             try:
@@ -273,14 +273,11 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 except AbortFlow as err:
                     errors = {"base": err.reason}
                 else:
-                    return self.async_create_entry(
-                        title="",
-                        data=combined_input,
-                    )
+                    return self.async_create_entry(data=combined_input)
 
         saved_options = self.options.copy()
         if saved_options[CONF_PROVINCE] is None:
-            saved_options[CONF_PROVINCE] = "none"
+            saved_options[CONF_PROVINCE] = NONE_SENTINEL
         schema: vol.Schema = await self.hass.async_add_executor_job(
             add_province_to_schema, DATA_SCHEMA_OPT, self.options
         )

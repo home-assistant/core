@@ -67,5 +67,12 @@
       "title": "The Workday YAML configuration is being removed",
       "description": "Configuring Workday using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Workday YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
+  },
+  "selector": {
+    "province": {
+      "options": {
+        "none": "No subdivision"
+      }
+    }
   }
 }
