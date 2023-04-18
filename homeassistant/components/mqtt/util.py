@@ -11,15 +11,9 @@ from typing import Any
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SIGNAL_CONFIG_ENTRY_CHANGED,
-    ConfigEntry,
-    ConfigEntryChange,
-    ConfigEntryState,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -61,42 +55,20 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
     or returns False when the client is not available.
     """
 
-    valid_states = {ConfigEntryState.SETUP_IN_PROGRESS, ConfigEntryState.LOADED}
-
     if not mqtt_config_entry_enabled(hass):
         return False
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    if entry.state in valid_states:
-        await asyncio.sleep(0)
+    if entry.state == ConfigEntryState.LOADED:
         return True
 
-    state_reached_future: asyncio.Future[None] = asyncio.Future()
-
-    @callback
-    def _async_entry_changed(
-        change: ConfigEntryChange, event_entry: ConfigEntry
-    ) -> None:
-        if (
-            event_entry is entry
-            and change is ConfigEntryChange.UPDATED
-            and entry.state in valid_states
-        ):
-            state_reached_future.set_result(None)
-
-    unsub = async_dispatcher_connect(
-        hass, SIGNAL_CONFIG_ENTRY_CHANGED, _async_entry_changed
-    )
     try:
         async with async_timeout.timeout(AVAILABILITY_TIMEOUT):
-            await state_reached_future
             await hass.data.setdefault(DATA_MQTT_AVAILABLE, asyncio.Event()).wait()
         return True
 
     except asyncio.TimeoutError:
         return False
-    finally:
-        unsub()
 
 
 def valid_topic(topic: Any) -> str:
