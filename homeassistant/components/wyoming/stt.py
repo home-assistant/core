@@ -5,16 +5,39 @@ import logging
 from wyoming.asr import Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
+from wyoming.info import Info
 
 from homeassistant.components import stt
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
+from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 from .error import WyomingError
-from .info import load_wyoming_info
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Wyoming speech to text."""
+    wyoming_info = hass.data[DOMAIN][config_entry.entry_id]["info"]
+    hass.data[DOMAIN][config_entry.entry_id]["provider"] = WyomingSttProvider(
+        hass,
+        config_entry.data[CONF_HOST],
+        config_entry.data[CONF_PORT],
+        wyoming_info,
+    )
+
+    await async_load_platform(
+        hass, Platform.STT, DOMAIN, {"entry_id": config_entry.entry_id}, {}
+    )
 
 
 async def async_get_engine(
@@ -26,28 +49,36 @@ async def async_get_engine(
     if discovery_info is None:
         raise ValueError("Missing discovery info")
 
-    address = discovery_info["address"]
-    host, port_str = address.split(":", maxsplit=1)
-    port = int(port_str)
+    entry_id = discovery_info["entry_id"]
 
-    provider = WyomingSttProvider(hass, host, port)
-    hass.async_create_background_task(
-        provider.load_info(),
-        "stt-wyoming-info",
-    )
-
-    return provider
+    return hass.data[DOMAIN][entry_id]["provider"]
 
 
 class WyomingSttProvider(stt.Provider):
     """Wyoming speech to text provider."""
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
+    def __init__(
+        self, hass: HomeAssistant, host: str, port: int, wyoming_info: Info
+    ) -> None:
         """Set up provider."""
         self.hass = hass
         self.host = host
         self.port = port
-        self._supported_languages: list[str] = []
+        self.wyoming_info = wyoming_info
+
+        # Set supported languages
+        model_languages: set[str] = set()
+        for asr_program in wyoming_info.asr:
+            if not asr_program.installed:
+                continue
+
+            for asr_model in asr_program.models:
+                if not asr_model.installed:
+                    continue
+
+                model_languages.update(asr_model.languages)
+
+        self._supported_languages = list(model_languages)
 
     @property
     def supported_languages(self) -> list[str]:
@@ -120,27 +151,4 @@ class WyomingSttProvider(stt.Provider):
         return stt.SpeechResult(
             text,
             stt.SpeechResultState.SUCCESS,
-        )
-
-    async def load_info(self):
-        """Gather set of all supported languages from models."""
-        wyoming_info = await load_wyoming_info(self.host, self.port)
-        if wyoming_info is None:
-            return
-
-        model_languages: set[str] = set()
-        for asr_program in wyoming_info.asr:
-            if not asr_program.installed:
-                continue
-
-            for asr_model in asr_program.models:
-                if not asr_model.installed:
-                    continue
-
-                model_languages.update(asr_model.languages)
-
-        self._supported_languages = list(model_languages)
-        _LOGGER.debug(
-            "Supported languages: %s",
-            self._supported_languages,
         )
