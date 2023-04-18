@@ -32,13 +32,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class LastFmEntity(CoordinatorEntity[LastFmUpdateCoordinator]):
     """Representation of a LastFM entity."""
 
-    _attr_attribution = "Data provided by LastFM"
+    _attr_attribution = "Data provided by Last.fm"
 
     def __init__(self, lastfm_coordinator: LastFmUpdateCoordinator) -> None:
         """Initialize a LastFM entity."""
         super().__init__(lastfm_coordinator)
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://last.fm",
+            configuration_url="https://www.last.fm",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, lastfm_coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,

@@ -1,5 +1,5 @@
 """Data update coordinator for the LastFM integration."""
-from pylast import LastFMNetwork, User
+from pylast import LastFMNetwork, User, WSError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -24,7 +24,10 @@ class LastFmUpdateCoordinator(DataUpdateCoordinator[dict[str, User]]):
         users = self.config_entry.data[CONF_USERS]
         response = {}
         for user in users:
-            response[user] = self.lastfm_api.get_user(user)
+            try:
+                response[user] = self.lastfm_api.get_user(user)
+            except WSError as error:
+                LOGGER.error(error)
         return response
 
     async def _async_update_data(self) -> dict[str, User]:

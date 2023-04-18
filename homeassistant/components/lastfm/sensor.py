@@ -1,7 +1,6 @@
 """Sensor for Last.fm account status."""
 from __future__ import annotations
 
-import logging
 import re
 
 from pylast import SIZE_SMALL, Track, User
@@ -20,17 +19,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import LastFmEntity, LastFmUpdateCoordinator
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_LAST_PLAYED = "last_played"
-ATTR_PLAY_COUNT = "play_count"
-ATTR_TOP_PLAYED = "top_played"
-
-STATE_NOT_SCROBBLING = "Not Scrobbling"
-
-CONF_USERS = "users"
+from .const import (
+    ATTR_LAST_PLAYED,
+    ATTR_PLAY_COUNT,
+    ATTR_TOP_PLAYED,
+    CONF_USERS,
+    DOMAIN,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -62,10 +57,10 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entites: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize the entries."""
-    async_add_entites(
+    async_add_entities(
         LastFmSensor(hass.data[DOMAIN][entry.entry_id], user)
         for user in entry.data[CONF_USERS]
     )
@@ -73,8 +68,6 @@ async def async_setup_entry(
 
 class LastFmSensor(LastFmEntity, SensorEntity):
     """A class for the Last.fm account."""
-
-    _attr_attribution = "Data provided by Last.fm"
 
     def __init__(self, coordinator: LastFmUpdateCoordinator, user: str) -> None:
         """Initialize the sensor."""

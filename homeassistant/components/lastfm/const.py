@@ -7,3 +7,9 @@ DOMAIN: Final = "lastfm"
 DEFAULT_NAME = "LastFM"
 
 CONF_USERS = "users"
+
+ATTR_LAST_PLAYED = "last_played"
+ATTR_PLAY_COUNT = "play_count"
+ATTR_TOP_PLAYED = "top_played"
+
+PLACEHOLDERS = {"api_account_url": "https://www.last.fm/api/account/create"}
