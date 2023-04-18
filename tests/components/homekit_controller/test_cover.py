@@ -124,7 +124,8 @@ async def test_read_window_cover_tilt_horizontal(hass: HomeAssistant, utcnow) ->
         {CharacteristicsTypes.HORIZONTAL_TILT_CURRENT: 75},
     )
     state = await helper.poll_and_get_state()
-    assert state.attributes["current_tilt_position"] == 75
+    # Expect converted value from arcdegree scale to percentage scale.
+    assert state.attributes["current_tilt_position"] == 83
 
 
 async def test_read_window_cover_tilt_vertical(hass: HomeAssistant, utcnow) -> None:
@@ -138,7 +139,8 @@ async def test_read_window_cover_tilt_vertical(hass: HomeAssistant, utcnow) -> N
         {CharacteristicsTypes.VERTICAL_TILT_CURRENT: 75},
     )
     state = await helper.poll_and_get_state()
-    assert state.attributes["current_tilt_position"] == 75
+    # Expect converted value from arcdegree scale to percentage scale.
+    assert state.attributes["current_tilt_position"] == 83
 
 
 async def test_write_window_cover_tilt_horizontal(hass: HomeAssistant, utcnow) -> None:
@@ -153,10 +155,11 @@ async def test_write_window_cover_tilt_horizontal(hass: HomeAssistant, utcnow) -
         {"entity_id": helper.entity_id, "tilt_position": 90},
         blocking=True,
     )
+    # Expect converted value from percentage scale to arcdegree scale.
     helper.async_assert_service_values(
         ServicesTypes.WINDOW_COVERING,
         {
-            CharacteristicsTypes.HORIZONTAL_TILT_TARGET: 90,
+            CharacteristicsTypes.HORIZONTAL_TILT_TARGET: 81,
         },
     )
 
@@ -173,10 +176,11 @@ async def test_write_window_cover_tilt_vertical(hass: HomeAssistant, utcnow) -> 
         {"entity_id": helper.entity_id, "tilt_position": 90},
         blocking=True,
     )
+    # Expect converted value from percentage scale to arcdegree scale.
     helper.async_assert_service_values(
         ServicesTypes.WINDOW_COVERING,
         {
-            CharacteristicsTypes.VERTICAL_TILT_TARGET: 90,
+            CharacteristicsTypes.VERTICAL_TILT_TARGET: 81,
         },
     )
 
