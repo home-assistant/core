@@ -4,11 +4,8 @@ from unittest.mock import patch
 
 from pylast import Album, PlayedTrack, TopItem, Track, WSError
 
-from homeassistant.components.lastfm.sensor import CONF_USERS, DOMAIN
+from homeassistant.components.lastfm.sensor import CONF_USERS
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 API_KEY = "asdasdasdasdasd"
 USERNAME_1 = "testaccount1"
@@ -42,17 +39,6 @@ MOCK_PLAYED_TRACK = PlayedTrack(
 )
 
 MOCK_TOP_ITEM = TopItem(item=MOCK_TRACK, weight=69)
-
-
-def create_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Add config entry in Home Assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONF_DATA,
-        unique_id=USERNAME_1,
-    )
-    entry.add_to_hass(hass)
-    return entry
 
 
 class MockUser:
