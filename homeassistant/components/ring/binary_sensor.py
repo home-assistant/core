@@ -57,6 +57,9 @@ async def async_setup_entry(
     ring = hass.data[DOMAIN][config_entry.entry_id]["api"]
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
+    """Some accounts returned data without intercom devices"""
+    devices.setdefault("other", [])
+
     entities = [
         RingBinarySensor(config_entry.entry_id, ring, device, description)
         for device_type in ("doorbots", "authorized_doorbots", "stickup_cams", "other")
