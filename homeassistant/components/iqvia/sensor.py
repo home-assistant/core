@@ -80,16 +80,19 @@ FORECAST_SENSOR_DESCRIPTIONS = (
         key=TYPE_ALLERGY_FORECAST,
         name="Allergy index: forecasted average",
         icon="mdi:flower",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_FORECAST,
         name="Asthma index: forecasted average",
         icon="mdi:flower",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_FORECAST,
         name="Cold & flu: forecasted average",
         icon="mdi:snowflake",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -104,6 +107,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ALLERGY_TOMORROW,
         name="Allergy index: tomorrow",
         icon="mdi:flower",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TODAY,
@@ -115,6 +119,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ASTHMA_TOMORROW,
         name="Asthma index: tomorrow",
         icon="mdi:flower",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_TODAY,
