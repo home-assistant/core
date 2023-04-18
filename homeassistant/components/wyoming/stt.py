@@ -9,11 +9,9 @@ from wyoming.info import Info
 
 from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 from .error import WyomingError
@@ -28,33 +26,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Wyoming speech to text."""
     wyoming_info = hass.data[DOMAIN][config_entry.entry_id]["info"]
-    hass.data[DOMAIN][config_entry.entry_id]["provider"] = WyomingSttProvider(
-        hass,
-        config_entry.data[CONF_HOST],
-        config_entry.data[CONF_PORT],
-        wyoming_info,
+    async_add_entities(
+        [
+            WyomingSttProvider(
+                hass,
+                config_entry.data[CONF_HOST],
+                config_entry.data[CONF_PORT],
+                wyoming_info,
+            )
+        ]
     )
 
-    await async_load_platform(
-        hass, Platform.STT, DOMAIN, {"entry_id": config_entry.entry_id}, {}
-    )
 
-
-async def async_get_engine(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> stt.Provider:
-    """Set up Wyoming speech to text component."""
-    if discovery_info is None:
-        raise ValueError("Missing discovery info")
-
-    entry_id = discovery_info["entry_id"]
-
-    return hass.data[DOMAIN][entry_id]["provider"]
-
-
-class WyomingSttProvider(stt.Provider):
+class WyomingSttProvider(stt.SpeechToTextEntity):
     """Wyoming speech to text provider."""
 
     def __init__(
