@@ -64,6 +64,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # We were set up using config flow and not YAML.
         return True
 
+    # YAML config uses old hydrawiser library (which uses the v1 API); allow it
+    # to continue existing until we reach feature parity with the new config flow
+    # implementation.
     conf = config[DOMAIN]
     access_token = conf[CONF_ACCESS_TOKEN]
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
