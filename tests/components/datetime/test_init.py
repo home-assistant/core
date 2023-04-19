@@ -1,96 +1,153 @@
 """The tests for the datetime component."""
 from datetime import date, datetime, time, timezone
+from zoneinfo import ZoneInfo
+
+import pytest
 
 from homeassistant.components.datetime import (
-    ATTR_DATE,
     ATTR_DATETIME,
     ATTR_DAY,
     ATTR_HOUR,
     ATTR_MINUTE,
     ATTR_MONTH,
     ATTR_SECOND,
-    ATTR_TIME,
+    ATTR_TIME_ZONE,
     ATTR_TIMESTAMP,
     ATTR_YEAR,
     DOMAIN,
     SERVICE_SET_VALUE,
     DateTimeEntity,
     _async_set_value,
-    _split_date_time,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.const import (
+    ATTR_DATE,
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_TIME,
+    CONF_PLATFORM,
+)
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.setup import async_setup_component
+
+DEFAULT_VALUE = datetime(2020, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 
 
 class MockDateTimeEntity(DateTimeEntity):
     """Mock datetime device to use in tests."""
 
-    def __init__(
-        self,
-        hass,
-        native_value=datetime(2020, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
-    ):
+    def __init__(self, native_value: datetime | None = DEFAULT_VALUE) -> None:
         """Initialize mock datetime entity."""
-        hass.config.time_zone = "UTC"
         self._attr_native_value = native_value
 
-    async def async_set_value(self, dt_value: datetime) -> None:
+    async def async_set_value(self, value: datetime) -> None:
         """Set the value of the datetime."""
-        self._attr_native_value = dt_value
+        self._attr_native_value = value
 
 
-async def test_datetime_default(hass):
-    """Test default datetime."""
-    datetime_entity = MockDateTimeEntity(hass)
-    assert datetime_entity.state == "2020-01-01T12:00:00+00:00"
-    assert datetime_entity.day == 1
-    assert datetime_entity.month == 1
-    assert datetime_entity.year == 2020
-    assert datetime_entity.hour == 12
-    assert datetime_entity.minute == 0
-    assert datetime_entity.second == 0
-    assert datetime_entity.timestamp == 1577880000.0
-    assert datetime_entity.state_attributes == {
+async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+    """Test time entity."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("datetime.test")
+    assert state.state == "2020-01-01T01:02:03+00:00"
+    assert state.attributes == {
         ATTR_DAY: 1,
         ATTR_MONTH: 1,
         ATTR_YEAR: 2020,
-        ATTR_HOUR: 12,
-        ATTR_MINUTE: 0,
-        ATTR_SECOND: 0,
-        ATTR_TIMESTAMP: 1577880000.0,
+        ATTR_HOUR: 1,
+        ATTR_MINUTE: 2,
+        ATTR_SECOND: 3,
+        ATTR_TIMESTAMP: 1577840523.0,
+        ATTR_FRIENDLY_NAME: "test",
     }
 
-
-async def test_set_datetime_valid(hass):
-    """Test set_datetime service valid scenarios."""
-    datetime_entity = MockDateTimeEntity(hass)
-    await _async_set_value(
-        hass,
-        datetime_entity,
-        ServiceCall(
-            DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_DATE: date(2021, 12, 12)},
-        ),
+    # Test updating just the time
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_TIME: time(2, 3, 4),
+            ATTR_TIME_ZONE: "utc",
+            ATTR_ENTITY_ID: "datetime.test",
+        },
+        blocking=True,
     )
-    assert isinstance(datetime_entity.native_value, datetime)
-    assert datetime_entity.state == "2021-12-12T12:00:00+00:00"
+    await hass.async_block_till_done()
 
-    await _async_set_value(
-        hass,
-        datetime_entity,
-        ServiceCall(
-            DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_TIME: time(5, 1, 2)},
-        ),
+    state = hass.states.get("datetime.test")
+    assert state.state == "2020-01-01T02:03:04+00:00"
+
+    # Test updating just the date
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_DATE: date(2021, 2, 2),
+            ATTR_TIME_ZONE: "utc",
+            ATTR_ENTITY_ID: "datetime.test",
+        },
+        blocking=True,
     )
-    assert isinstance(datetime_entity.native_value, datetime)
-    assert datetime_entity.state == "2021-12-12T05:01:02+00:00"
+    await hass.async_block_till_done()
 
+    state = hass.states.get("datetime.test")
+    assert state.state == "2021-02-02T02:03:04+00:00"
 
-async def test_validate():
-    """Test service validation."""
-    assert _split_date_time({ATTR_DATETIME: datetime(2020, 1, 1, 12, 0, 0)}) == {
-        ATTR_DATE: date(2020, 1, 1),
-        ATTR_TIME: time(12, 0, 0),
+    # Test updating datetime
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_DATETIME: datetime(2022, 3, 3, 3, 4, 5),
+            ATTR_TIME_ZONE: "utc",
+            ATTR_ENTITY_ID: "datetime.test",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("datetime.test")
+    assert state.state == "2022-03-03T03:04:05+00:00"
+
+    # Test that non UTC timezone gets converted to UTC
+    assert (
+        MockDateTimeEntity(
+            native_value=datetime(2020, 1, 2, 3, 4, 5, tzinfo=ZoneInfo("US/Eastern"))
+        ).state
+        == "2020-01-02T08:04:05+00:00"
+    )
+
+    # Test None state
+    date_entity = MockDateTimeEntity(native_value=None)
+    assert date_entity.state is None
+    assert date_entity.state_attributes == {
+        ATTR_DAY: None,
+        ATTR_MONTH: None,
+        ATTR_YEAR: None,
+        ATTR_HOUR: None,
+        ATTR_MINUTE: None,
+        ATTR_SECOND: None,
+        ATTR_TIMESTAMP: None,
     }
+
+    # Test setting partial value with None state is not allowed
+    with pytest.raises(ValueError):
+        await _async_set_value(
+            hass,
+            date_entity,
+            ServiceCall(
+                DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_DATE: date(2021, 12, 12)},
+            ),
+        )
+
+    # Test that timezone is required to process state
+    with pytest.raises(ValueError):
+        assert MockDateTimeEntity(
+            native_value=datetime(2020, 1, 2, 3, 4, 5, tzinfo=None)
+        ).state

@@ -71,7 +71,7 @@ class DemoDateTime(DateTimeEntity):
             name=self.name,
         )
 
-    async def async_set_value(self, dt_value: datetime) -> None:
+    async def async_set_value(self, value: datetime) -> None:
         """Update the date/time."""
-        self._attr_native_value = dt_value
+        self._attr_native_value = value
         self.async_write_ha_state()

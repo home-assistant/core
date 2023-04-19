@@ -10,6 +10,7 @@ from typing import final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DATE, ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -23,14 +24,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTR_DATE,
     ATTR_DATETIME,
     ATTR_DAY,
     ATTR_HOUR,
     ATTR_MINUTE,
     ATTR_MONTH,
     ATTR_SECOND,
-    ATTR_TIME,
     ATTR_TIME_ZONE,
     ATTR_TIMESTAMP,
     ATTR_YEAR,
@@ -41,8 +40,6 @@ from .const import (
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,29 +151,45 @@ class DateTimeEntity(Entity):
     """Representation of a Date/time entity."""
 
     entity_description: DateTimeEntityDescription
+    _attr_device_class: None = None
+    _attr_state: None = None
     _attr_native_value: datetime | None
 
     @property
     @final
-    def state_attributes(self) -> dict[str, int | float]:
+    def device_class(self) -> None:
+        """Return entity device class."""
+        return None
+
+    @property
+    @final
+    def state_attributes(self) -> dict[str, int | float] | dict[str, None]:
         """Return the state attributes."""
-        state_attr: dict[str, int | float | None] = {
-            ATTR_DAY: self.day,
-            ATTR_MONTH: self.month,
-            ATTR_YEAR: self.year,
-            ATTR_HOUR: self.hour,
-            ATTR_MINUTE: self.minute,
-            ATTR_SECOND: self.second,
-            ATTR_TIMESTAMP: self.timestamp,
+        if self.native_value is None:
+            return {
+                ATTR_DAY: None,
+                ATTR_MONTH: None,
+                ATTR_YEAR: None,
+                ATTR_HOUR: None,
+                ATTR_MINUTE: None,
+                ATTR_SECOND: None,
+                ATTR_TIMESTAMP: None,
+            }
+        return {
+            ATTR_DAY: self.native_value.day,
+            ATTR_MONTH: self.native_value.month,
+            ATTR_YEAR: self.native_value.year,
+            ATTR_HOUR: self.native_value.hour,
+            ATTR_MINUTE: self.native_value.minute,
+            ATTR_SECOND: self.native_value.second,
+            ATTR_TIMESTAMP: self.native_value.timestamp(),
         }
-        return {k: v for k, v in state_attr.items() if v is not None}
 
     @property
     @final
     def state(self) -> str | None:
         """Return the entity state."""
-        value = self.native_value
-        if value is None:
+        if (value := self.native_value) is None:
             return None
         if value.tzinfo is None:
             raise ValueError(
@@ -189,70 +202,14 @@ class DateTimeEntity(Entity):
         return value.isoformat(timespec="seconds")
 
     @property
-    @final
-    def day(self) -> int | None:
-        """Return day from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.day
-
-    @property
-    @final
-    def month(self) -> int | None:
-        """Return month from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.month
-
-    @property
-    @final
-    def year(self) -> int | None:
-        """Return year from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.year
-
-    @property
-    @final
-    def hour(self) -> int | None:
-        """Return hour from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.hour
-
-    @property
-    @final
-    def minute(self) -> int | None:
-        """Return minute from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.minute
-
-    @property
-    @final
-    def second(self) -> int | None:
-        """Return second from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.second
-
-    @property
-    @final
-    def timestamp(self) -> float | None:
-        """Return UNIX timestamp of value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.timestamp()
-
-    @property
     def native_value(self) -> datetime | None:
         """Return the value reported by the datetime."""
         return self._attr_native_value
 
-    def set_value(self, dt_value: datetime) -> None:
+    def set_value(self, value: datetime) -> None:
         """Change the date/time."""
         raise NotImplementedError()
 
-    async def async_set_value(self, dt_value: datetime) -> None:
+    async def async_set_value(self, value: datetime) -> None:
         """Change the date/time."""
-        await self.hass.async_add_executor_job(self.set_value, dt_value)
+        await self.hass.async_add_executor_job(self.set_value, value)
