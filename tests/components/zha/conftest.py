@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+from collections.abc import Callable
 import itertools
 import time
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
@@ -230,7 +231,9 @@ def zha_device_joined_restored(request):
 
 
 @pytest.fixture
-def zha_device_mock(hass, zigpy_device_mock):
+def zha_device_mock(
+    hass, zigpy_device_mock
+) -> Callable[..., zha_core_device.ZHADevice]:
     """Return a ZHA Device factory."""
 
     def _zha_device(
@@ -240,7 +243,7 @@ def zha_device_mock(hass, zigpy_device_mock):
         model="mock model",
         node_desc=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
         patch_cluster=True,
-    ):
+    ) -> zha_core_device.ZHADevice:
         if endpoints is None:
             endpoints = {
                 1: {
