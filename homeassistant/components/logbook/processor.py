@@ -215,7 +215,7 @@ def _humanify(
     # Process rows
     for row in rows:
         if memoize_new_contexts:
-            context_id_bin = row.context_id_bin
+            context_id_bin: bytes = row.context_id_bin
             memoize_context(context_id_bin, row)
         if row.context_only:
             continue
