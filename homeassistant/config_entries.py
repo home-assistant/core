@@ -14,6 +14,7 @@ from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 import weakref
 
+import async_timeout
 from typing_extensions import Self
 
 from . import data_entry_flow, loader
@@ -29,7 +30,7 @@ from .exceptions import (
     HomeAssistantError,
 )
 from .helpers import device_registry, entity_registry, storage
-from .helpers.dispatcher import async_dispatcher_send
+from .helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from .helpers.event import (
     RANDOM_MICROSECOND_MAX,
     RANDOM_MICROSECOND_MIN,
@@ -1410,6 +1411,36 @@ class ConfigEntries:
 
         await entry.async_setup(self.hass, integration=integration)
         return True
+
+    async def async_wait_for_states(
+        self, entry: ConfigEntry, states: set[ConfigEntryState], timeout: float = 60.0
+    ) -> ConfigEntryState:
+        """Wait for the setup of an entry to reach one of the supplied states state.
+
+        Returns the state the entry reached or raises asyncio.TimeoutError if the
+        entry did not reach one of the supplied states within the timeout.
+        """
+        state_reached_future: asyncio.Future[ConfigEntryState] = asyncio.Future()
+
+        @callback
+        def _async_entry_changed(
+            change: ConfigEntryChange, event_entry: ConfigEntry
+        ) -> None:
+            if (
+                event_entry is entry
+                and change is ConfigEntryChange.UPDATED
+                and entry.state in states
+            ):
+                state_reached_future.set_result(entry.state)
+
+        unsub = async_dispatcher_connect(
+            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, _async_entry_changed
+        )
+        try:
+            async with async_timeout.timeout(timeout):
+                return await state_reached_future
+        finally:
+            unsub()
 
     async def async_unload_platforms(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
