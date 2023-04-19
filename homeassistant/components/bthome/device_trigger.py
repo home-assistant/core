@@ -44,21 +44,25 @@ TRIGGERS_BY_EVENT_CLASS = {
 }
 
 SCHEMA_BY_EVENT_CLASS = {
-    EVENT_CLASS_BUTTON: vol.Schema(
-        {
-            vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
-            vol.Required(CONF_SUBTYPE): vol.In(
-                TRIGGERS_BY_EVENT_CLASS[EVENT_CLASS_BUTTON]
-            ),
-        }
+    EVENT_CLASS_BUTTON: DEVICE_TRIGGER_BASE_SCHEMA.extend(
+        vol.Schema(
+            {
+                vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
+                vol.Required(CONF_SUBTYPE): vol.In(
+                    TRIGGERS_BY_EVENT_CLASS[EVENT_CLASS_BUTTON]
+                ),
+            }
+        )
     ),
-    EVENT_CLASS_DIMMER: vol.Schema(
-        {
-            vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_DIMMER]),
-            vol.Required(CONF_SUBTYPE): vol.In(
-                TRIGGERS_BY_EVENT_CLASS[EVENT_CLASS_DIMMER]
-            ),
-        }
+    EVENT_CLASS_DIMMER: DEVICE_TRIGGER_BASE_SCHEMA.extend(
+        vol.Schema(
+            {
+                vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_DIMMER]),
+                vol.Required(CONF_SUBTYPE): vol.In(
+                    TRIGGERS_BY_EVENT_CLASS[EVENT_CLASS_DIMMER]
+                ),
+            }
+        )
     ),
 }
 
