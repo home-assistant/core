@@ -1582,10 +1582,32 @@ async def test_get_agent_list(
     """Test getting agent info."""
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 5, "type": "conversation/agent/list"})
-
+    await client.send_json_auto_id({"type": "conversation/agent/list"})
     msg = await client.receive_json()
-    assert msg["id"] == 5
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "smurfish"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "en"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "en-UK"}
+    )
+    msg = await client.receive_json()
     assert msg["type"] == "result"
     assert msg["success"]
     assert msg["result"] == snapshot
@@ -1597,7 +1619,7 @@ async def test_get_agent_info(
     """Test get agent info."""
     agent_info = conversation.async_get_agent_info(hass)
     # Test it's the default
-    assert agent_info["id"] == mock_agent.agent_id
+    assert agent_info.id == mock_agent.agent_id
     assert agent_info == snapshot
     assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
     assert conversation.async_get_agent_info(hass, mock_agent.agent_id) == snapshot
