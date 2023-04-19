@@ -733,6 +733,8 @@ class ZHAGateway:
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         for unsubscribe in self._unsubs:
             unsubscribe()
+        for device in self.devices.values():
+            device.async_cleanup_handles()
         await self.application_controller.shutdown()
 
     def handle_message(
