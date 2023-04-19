@@ -1371,6 +1371,11 @@ def _context_id_to_bytes(context_id: str | None) -> bytes | None:
     return None
 
 
+def _generate_ulid_bytes_at_time(timestamp: float | None) -> bytes:
+    """Generate a ulid with a specific timestamp."""
+    return ulid_to_bytes(ulid_at_time(timestamp or time()))
+
+
 @retryable_database_job("migrate states context_ids to binary format")
 def migrate_states_context_ids(instance: Recorder) -> bool:
     """Migrate states context_ids to use binary format."""
@@ -1386,7 +1391,7 @@ def migrate_states_context_ids(instance: Recorder) -> bool:
                         "state_id": state_id,
                         "context_id": None,
                         "context_id_bin": _to_bytes(context_id)
-                        or ulid_to_bytes(ulid_at_time(last_updated_ts or time())),
+                        or _generate_ulid_bytes_at_time(last_updated_ts),
                         "context_user_id": None,
                         "context_user_id_bin": _to_bytes(context_user_id),
                         "context_parent_id": None,
@@ -1421,7 +1426,7 @@ def migrate_events_context_ids(instance: Recorder) -> bool:
                         "event_id": event_id,
                         "context_id": None,
                         "context_id_bin": _to_bytes(context_id)
-                        or ulid_to_bytes(ulid_at_time(time_fired_ts or time())),
+                        or _generate_ulid_bytes_at_time(time_fired_ts),
                         "context_user_id": None,
                         "context_user_id_bin": _to_bytes(context_user_id),
                         "context_parent_id": None,

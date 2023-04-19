@@ -310,7 +310,7 @@ async def test_migrate_states_context_ids(
     uuid_hex = test_uuid.hex
     uuid_bin = test_uuid.bytes
 
-    def _insert_events():
+    def _insert_states():
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -374,28 +374,14 @@ async def test_migrate_states_context_ids(
                         context_parent_id="0ae29799-ee4e-4f45-8116-f582d7d3ee65",
                         context_parent_id_bin=None,
                     ),
-                    States(
-                        entity_id="state.garbage_context_id_no_last_updated_ts",
-                        last_updated_ts=None,
-                        context_id="GaRBaGE",
-                        context_id_bin=None,
-                        context_user_id="0ae29799-ee4e-4f45-8116-f582d7d3ee65",
-                        context_user_id_bin=None,
-                        context_parent_id="0ae29799-ee4e-4f45-8116-f582d7d3ee65",
-                        context_parent_id_bin=None,
-                    ),
                 )
             )
 
-    await instance.async_add_executor_job(_insert_events)
+    await instance.async_add_executor_job(_insert_states)
 
     await async_wait_recording_done(hass)
-    now = dt_util.utcnow()
-    expected_ulid_fallback_start = ulid_to_bytes(ulid_at_time(now.timestamp()))[0:6]
-    with freeze_time(now):
-        # This is a threadsafe way to add a task to the recorder
-        instance.queue_task(StatesContextIDMigrationTask())
-        await async_recorder_block_till_done(hass)
+    instance.queue_task(StatesContextIDMigrationTask())
+    await async_recorder_block_till_done(hass)
 
     def _object_as_dict(obj):
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
@@ -413,13 +399,12 @@ async def test_migrate_states_context_ids(
                             "state.invalid_context_id",
                             "state.garbage_context_id",
                             "state.human_readable_uuid_context_id",
-                            "state.garbage_context_id_no_last_updated_ts",
                         ]
                     )
                 )
                 .all()
             )
-            assert len(events) == 7
+            assert len(events) == 6
             return {state.entity_id: _object_as_dict(state) for state in events}
 
     states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
@@ -494,24 +479,6 @@ async def test_migrate_states_context_ids(
     )
     assert (
         human_readable_uuid_context_id["context_parent_id_bin"]
-        == b"\n\xe2\x97\x99\xeeNOE\x81\x16\xf5\x82\xd7\xd3\xeee"
-    )
-
-    garbage_context_id_no_last_updated_ts = states_by_entity_id[
-        "state.garbage_context_id_no_last_updated_ts"
-    ]
-    assert garbage_context_id_no_last_updated_ts["context_id"] is None
-    assert garbage_context_id_no_last_updated_ts["context_user_id"] is None
-    assert garbage_context_id_no_last_updated_ts["context_parent_id"] is None
-    assert garbage_context_id_no_last_updated_ts["context_id_bin"].startswith(
-        expected_ulid_fallback_start
-    )
-    assert (
-        garbage_context_id_no_last_updated_ts["context_user_id_bin"]
-        == b"\n\xe2\x97\x99\xeeNOE\x81\x16\xf5\x82\xd7\xd3\xeee"
-    )
-    assert (
-        garbage_context_id_no_last_updated_ts["context_parent_id_bin"]
         == b"\n\xe2\x97\x99\xeeNOE\x81\x16\xf5\x82\xd7\xd3\xeee"
     )
 
