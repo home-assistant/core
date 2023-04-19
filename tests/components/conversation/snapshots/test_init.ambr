@@ -32,3 +32,30 @@
     'default_agent': 'mock-entry',
   })
 # ---
+# name: test_ws_get_agent_info
+  dict({
+    'attribution': dict({
+      'name': 'Mock assistant',
+      'url': 'https://assist.me',
+    }),
+  })
+# ---
+# name: test_ws_get_agent_info.1
+  dict({
+    'attribution': None,
+  })
+# ---
+# name: test_ws_get_agent_info.2
+  dict({
+    'attribution': dict({
+      'name': 'Mock assistant',
+      'url': 'https://assist.me',
+    }),
+  })
+# ---
+# name: test_ws_get_agent_info.3
+  dict({
+    'code': 'invalid_format',
+    'message': "invalid agent ID for dictionary value @ data['agent_id']. Got 'not_exist'",
+  })
+# ---
