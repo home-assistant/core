@@ -77,13 +77,15 @@ class DateEntity(Entity):
 
     @property
     @final
-    def state_attributes(self) -> dict[str, int | None]:
+    def state_attributes(self) -> dict[str, int] | dict[str, None]:
         """Return the state attributes."""
-        return {
-            ATTR_DAY: self.native_value.day if self.native_value else None,
-            ATTR_MONTH: self.native_value.month if self.native_value else None,
-            ATTR_YEAR: self.native_value.year if self.native_value else None,
-        }
+        if self.native_value:
+            return {
+                ATTR_DAY: self.native_value.day,
+                ATTR_MONTH: self.native_value.month,
+                ATTR_YEAR: self.native_value.year,
+            }
+        return {ATTR_DAY: None, ATTR_MONTH: None, ATTR_YEAR: None}
 
     @property
     @final
