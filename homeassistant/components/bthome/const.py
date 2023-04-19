@@ -6,7 +6,7 @@ from typing import Final, TypedDict
 DOMAIN = "bthome"
 
 CONF_BIND_KEY: Final = "bind_key"
-CONF_KNOWN_EVENTS: Final = "known_events"
+CONF_DISCOVERED_EVENT_CLASSES: Final = "known_events"
 
 EVENT_TYPE: Final = "event_type"
 EVENT_CLASS: Final = "event_class"

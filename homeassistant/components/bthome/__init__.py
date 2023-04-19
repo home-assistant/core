@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import DeviceRegistry, async_get
 from .const import (
     BTHOME_BLE_EVENT,
     CONF_BIND_KEY,
-    CONF_KNOWN_EVENTS,
+    CONF_DISCOVERED_EVENT_CLASSES,
     DOMAIN,
     BTHomeBleEvent,
 )
@@ -59,13 +59,16 @@ def process_service_info(
             event_class = event.device_key.key
             event_type = event.event_type
 
-            event_tuple = (event_class, event_type)
-            if event_tuple not in domain_data.known_events:
-                domain_data.known_events.add(event_tuple)
+            if event_class not in domain_data.discovered_event_classes:
+                domain_data.discovered_event_classes.add(event_class)
                 hass.config_entries.async_update_entry(
                     entry,
                     data=entry.data
-                    | {CONF_KNOWN_EVENTS: list(domain_data.known_events)},
+                    | {
+                        CONF_DISCOVERED_EVENT_CLASSES: list(
+                            domain_data.discovered_event_classes
+                        )
+                    },
                 )
 
             hass.bus.async_fire(
@@ -111,12 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         connectable=False,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    known_events = {  # pylint: disable=unnecessary-comprehension
-        (event_class, event_type)
-        for event_class, event_type in entry.data.get(CONF_KNOWN_EVENTS, [])
-    }
-    domain_data = BTHomeData(known_events)
+    domain_data = BTHomeData(set(entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])))
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = domain_data
 
     entry.async_on_unload(

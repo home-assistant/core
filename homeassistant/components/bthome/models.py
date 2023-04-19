@@ -8,4 +8,4 @@ from dataclasses import dataclass
 class BTHomeData:
     """Data for the bthome integration."""
 
-    known_events: set[tuple[str, str]]
+    discovered_event_classes: set[str]

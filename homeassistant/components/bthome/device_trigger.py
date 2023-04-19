@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BTHOME_BLE_EVENT,
-    CONF_KNOWN_EVENTS,
+    CONF_DISCOVERED_EVENT_CLASSES,
     DOMAIN,
     EVENT_CLASS,
     EVENT_CLASS_BUTTON,
@@ -99,9 +99,10 @@ async def async_get_triggers(
             CONF_TYPE: event_class,
             CONF_SUBTYPE: event_type,
         }
-        for event_class, event_type in bthome_config_entries[0].data.get(
-            CONF_KNOWN_EVENTS, []
+        for event_class in bthome_config_entries[0].data.get(
+            CONF_DISCOVERED_EVENT_CLASSES, []
         )
+        for event_type in TRIGGERS_BY_EVENT_CLASS.get(event_class, [])
     ]
 
 
