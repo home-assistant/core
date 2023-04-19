@@ -1,0 +1,36 @@
+{
+  "config": {
+    "error": {
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "scan_interval": "Scan interval for data updates"
+        },
+        "description": "Configure your go-e Charger Cloud car charger."
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "scan_interval": "Scan interval for data updates"
+        },
+        "description": "Configure your go-e Charger Cloud car charger."
+      }
+    }
+  }
+}

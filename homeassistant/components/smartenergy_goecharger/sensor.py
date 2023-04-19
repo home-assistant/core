@@ -69,9 +69,9 @@ CHARGER_SENSORS_CONFIG: dict = {
         "name": {"unit": "", "name": "Charger name"},
     },
     "state_classes": {
-        CHARGER_MAX_CURRENT: SensorStateClass.TOTAL,
-        ENERGY_SINCE_CAR_CONNECTED: K_WATT_HOUR,
-        ENERGY_TOTAL: K_WATT_HOUR,
+        CHARGER_MAX_CURRENT: SensorStateClass.MEASUREMENT,
+        ENERGY_SINCE_CAR_CONNECTED: SensorStateClass.TOTAL,
+        ENERGY_TOTAL: SensorStateClass.TOTAL,
     },
     "device_classes": {
         CHARGER_ACCESS: f"{DOMAIN}__access_control",

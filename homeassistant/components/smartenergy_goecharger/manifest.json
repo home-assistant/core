@@ -1,10 +1,9 @@
 {
   "domain": "smartenergy_goecharger",
   "name": "go-e Charger Cloud",
+  "codeowners": ["@openkfw"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smartenergy_goecharger",
   "iot_class": "cloud_polling",
-  "config_flow": true,
-  "dependencies": ["sensor"],
-  "codeowners": ["@openkfw"],
   "requirements": ["smart-energy.goecharger-api==0.3.1"]
 }
