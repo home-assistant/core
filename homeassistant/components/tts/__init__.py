@@ -851,12 +851,16 @@ class TextToSpeechUrlView(HomeAssistantView):
             data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON specified", HTTPStatus.BAD_REQUEST)
-        if not data.get(ATTR_PLATFORM) or not data.get(ATTR_MESSAGE):
+        if (
+            not data.get("engine_id")
+            and not data.get(ATTR_PLATFORM)
+            or not data.get(ATTR_MESSAGE)
+        ):
             return self.json_message(
                 "Must specify platform and message", HTTPStatus.BAD_REQUEST
             )
 
-        p_type = data[ATTR_PLATFORM]
+        engine = data.get("engine_id") or data[ATTR_PLATFORM]
         message = data[ATTR_MESSAGE]
         cache = data.get(ATTR_CACHE)
         language = data.get(ATTR_LANGUAGE)
@@ -864,7 +868,7 @@ class TextToSpeechUrlView(HomeAssistantView):
 
         try:
             path = await self.tts.async_get_url_path(
-                p_type, message, cache=cache, language=language, options=options
+                engine, message, cache=cache, language=language, options=options
             )
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
