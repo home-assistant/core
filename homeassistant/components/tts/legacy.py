@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
@@ -225,6 +225,11 @@ class Provider:
     @property
     def supported_options(self) -> list[str] | None:
         """Return a list of supported options like voice, emotions."""
+        return None
+
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[str] | None:
+        """Return a list of supported voices for a language."""
         return None
 
     @property
