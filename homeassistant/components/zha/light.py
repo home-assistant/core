@@ -1178,6 +1178,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
                 function=self._force_member_updates,
             )
             self._debounced_member_refresh = force_refresh_debouncer
+            self.async_on_remove(force_refresh_debouncer.async_cancel)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
