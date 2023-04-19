@@ -15,9 +15,6 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
-    FORMAT_DATE,
-    FORMAT_DATETIME,
-    FORMAT_TIME,
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -45,6 +42,10 @@ DEFAULT_TIME = py_datetime.time(0, 0, 0)
 
 ATTR_DATETIME = "datetime"
 ATTR_TIMESTAMP = "timestamp"
+
+FMT_DATE = "%Y-%m-%d"
+FMT_TIME = "%H:%M:%S"
+FMT_DATETIME = f"{FMT_DATE} {FMT_TIME}"
 
 
 def validate_set_datetime_attrs(config):
@@ -271,7 +272,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         if self.state is not None:
             return
 
-        default_value = py_datetime.datetime.today().strftime(f"{FORMAT_DATE} 00:00:00")
+        default_value = py_datetime.datetime.today().strftime(f"{FMT_DATE} 00:00:00")
 
         # Priority 2: Old state
         if (old_state := await self.async_get_last_state()) is None:
@@ -330,12 +331,12 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             return None
 
         if self.has_date and self.has_time:
-            return self._current_datetime.strftime(FORMAT_DATETIME)
+            return self._current_datetime.strftime(FMT_DATETIME)
 
         if self.has_date:
-            return self._current_datetime.strftime(FORMAT_DATE)
+            return self._current_datetime.strftime(FMT_DATE)
 
-        return self._current_datetime.strftime(FORMAT_TIME)
+        return self._current_datetime.strftime(FMT_TIME)
 
     @property
     def capability_attributes(self) -> dict:
