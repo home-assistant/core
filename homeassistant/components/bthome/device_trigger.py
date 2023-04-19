@@ -79,7 +79,7 @@ BTHOME_TRIGGER_TYPES = {
     "button": BTHomeTriggers(
         triggers=BUTTON_DEVICE_TRIGGERS, schema=BUTTON_DEVICE_SCHEMA
     ),
-    "dimmmer": BTHomeTriggers(
+    "dimmer": BTHomeTriggers(
         triggers=DIMMER_DEVICE_TRIGGERS, schema=DIMMER_DEVICE_SCHEMA
     ),
 }
