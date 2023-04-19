@@ -965,6 +965,8 @@ build.json @home-assistant/supervisor
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff
 /tests/components/random/ @fabaff
+/homeassistant/components/rapt_ble/ @sairon
+/tests/components/rapt_ble/ @sairon
 /homeassistant/components/raspberry_pi/ @home-assistant/core
 /tests/components/raspberry_pi/ @home-assistant/core
 /homeassistant/components/rdw/ @frenck
@@ -1140,8 +1142,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck
 /tests/components/spotify/ @frenck
-/homeassistant/components/sql/ @dgomes @gjohansson-ST
-/tests/components/sql/ @dgomes @gjohansson-ST
+/homeassistant/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
+/tests/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
 /homeassistant/components/squeezebox/ @rajlaud
 /tests/components/squeezebox/ @rajlaud
 /homeassistant/components/srp_energy/ @briglx
@@ -1259,8 +1261,8 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins
 /tests/components/transmission/ @engrbm87 @JPHutchins
-/homeassistant/components/tts/ @pvizeli
-/tests/components/tts/ @pvizeli
+/homeassistant/components/tts/ @home-assistant/core @pvizeli
+/tests/components/tts/ @home-assistant/core @pvizeli
 /homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
 /tests/components/tuya/ @Tuya @zlinoliver @frenck
 /homeassistant/components/twentemilieu/ @frenck
@@ -1369,6 +1371,8 @@ build.json @home-assistant/supervisor
 /tests/components/worldclock/ @fabaff
 /homeassistant/components/ws66i/ @ssaenger
 /tests/components/ws66i/ @ssaenger
+/homeassistant/components/wyoming/ @balloob @synesthesiam
+/tests/components/wyoming/ @balloob @synesthesiam
 /homeassistant/components/xbox/ @hunterjm
 /tests/components/xbox/ @hunterjm
 /homeassistant/components/xiaomi_aqara/ @danielhiversen @syssi

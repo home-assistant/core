@@ -49,6 +49,11 @@ class AbstractConversationAgent(ABC):
         """Return the attribution."""
         return None
 
+    @property
+    @abstractmethod
+    def supported_languages(self) -> list[str]:
+        """Return a list of supported languages."""
+
     @abstractmethod
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
