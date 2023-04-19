@@ -353,6 +353,8 @@ async def test_discover_endpoint(
             ent_info[DEV_SIG_CLUSTER_HANDLERS]
         )
 
+    device.async_cleanup_handles()
+
 
 def _ch_mock(cluster):
     """Return mock of a cluster_handler with a cluster."""
