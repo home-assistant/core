@@ -45,6 +45,8 @@ INSTEON_PLATFORMS = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SWITCH,
 ]
 
@@ -98,6 +100,7 @@ SIGNAL_LOAD_ALDB = "load_aldb"
 SIGNAL_PRINT_ALDB = "print_aldb"
 SIGNAL_SAVE_DEVICES = "save_devices"
 SIGNAL_ADD_ENTITIES = "insteon_add_entities"
+SIGNAL_ADD_CONFIG_ENTITIES = "insteon_add_config_entities"
 SIGNAL_ADD_DEFAULT_LINKS = "add_default_links"
 SIGNAL_ADD_DEVICE_OVERRIDE = "add_device_override"
 SIGNAL_REMOVE_DEVICE_OVERRIDE = "insteon_remove_device_override"

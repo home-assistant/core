@@ -2,6 +2,7 @@
 import asyncio
 from collections.abc import Callable
 import logging
+from typing import Any
 
 from pyinsteon import devices
 from pyinsteon.address import Address
@@ -28,6 +29,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_PLATFORM,
     ENTITY_MATCH_ALL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
@@ -49,7 +51,7 @@ from .const import (
     EVENT_GROUP_OFF_FAST,
     EVENT_GROUP_ON,
     EVENT_GROUP_ON_FAST,
-    ON_OFF_EVENTS,
+    SIGNAL_ADD_CONFIG_ENTITIES,
     SIGNAL_ADD_DEFAULT_LINKS,
     SIGNAL_ADD_DEVICE_OVERRIDE,
     SIGNAL_ADD_ENTITIES,
@@ -77,7 +79,12 @@ from .const import (
     SRV_X10_ALL_LIGHTS_ON,
     SRV_X10_ALL_UNITS_OFF,
 )
-from .ipdb import get_device_platforms, get_platform_groups
+from .ipdb import (
+    get_device_config_plaforms,
+    get_device_config_platform_props,
+    get_device_platform_groups,
+    get_device_platforms,
+)
 from .schemas import (
     ADD_ALL_LINK_SCHEMA,
     ADD_DEFAULT_LINKS_SCHEMA,
@@ -102,8 +109,8 @@ def _register_event(event: Event, listener: Callable) -> None:
     event.subscribe(listener, force_strong_ref=True)
 
 
-def add_on_off_event_device(hass: HomeAssistant, device: Device) -> None:
-    """Register an Insteon device as an on/off event device."""
+def add_device_events(hass: HomeAssistant, device: Device) -> None:
+    """Register Insteon device events."""
 
     @callback
     def async_fire_group_on_off_event(
@@ -139,7 +146,7 @@ def add_on_off_event_device(hass: HomeAssistant, device: Device) -> None:
             _register_event(event, async_fire_group_on_off_event)
 
 
-def register_new_device_callback(hass):
+def register_new_device_callback(hass: HomeAssistant):
     """Register callback for new Insteon device."""
 
     @callback
@@ -155,20 +162,20 @@ def register_new_device_callback(hass):
         await devices.async_save(workdir=hass.config.config_dir)
         device = devices[address]
         await device.async_status()
-        platforms = get_device_platforms(device)
-        for platform in platforms:
-            if platform == ON_OFF_EVENTS:
-                add_on_off_event_device(hass, device)
+        for platform, groups in get_device_platforms(device).items():
+            signal = f"{SIGNAL_ADD_ENTITIES}_{platform}"
+            dispatcher_send(hass, signal, {"address": device.address, "groups": groups})
 
-            else:
-                signal = f"{SIGNAL_ADD_ENTITIES}_{platform}"
-                dispatcher_send(hass, signal, {"address": device.address})
+        for platform, names in get_device_config_plaforms(device).items():
+            signal = f"{SIGNAL_ADD_CONFIG_ENTITIES}_{platform}"
+            dispatcher_send(hass, signal, {"address": device.address, "names": names})
+        add_device_events(hass, device)
 
     devices.subscribe(async_new_insteon_device, force_strong_ref=True)
 
 
 @callback
-def async_register_services(hass):
+def async_register_services(hass: HomeAssistant):
     """Register services used by insteon component."""
 
     save_lock = asyncio.Lock()
@@ -386,15 +393,67 @@ def print_aldb_to_log(aldb):
 
 @callback
 def async_add_insteon_entities(
-    hass, platform, entity_type, async_add_entities, discovery_info
-):
-    """Add Insteon devices to a platform."""
+    hass: HomeAssistant,
+    platform: Platform,
+    entity_type: type,
+    async_add_entities: Callable,
+    discovery_info: dict[str, Any],
+) -> None:
+    """Add an Insteon group to a platform."""
     new_entities = []
-    device_list = [discovery_info.get("address")] if discovery_info else devices
-
-    for address in device_list:
-        device = devices[address]
-        groups = get_platform_groups(device, platform)
-        for group in groups:
-            new_entities.append(entity_type(device, group))
+    address = discovery_info["address"]
+    device = devices[address]
+    for group in discovery_info["groups"]:
+        new_entities.append(entity_type(device=device, group=group))
     async_add_entities(new_entities)
+
+
+@callback
+def async_add_insteon_devices(
+    hass: HomeAssistant,
+    platform: Platform,
+    entity_type: type,
+    async_add_entities: Callable,
+) -> None:
+    """Add all entities to a platform."""
+    for address in devices:
+        device = devices[address]
+        groups = get_device_platform_groups(device, platform)
+        discovery_info = {"address": address, "groups": groups}
+        async_add_insteon_entities(
+            hass, platform, entity_type, async_add_entities, discovery_info
+        )
+
+
+@callback
+def async_add_insteon_config_entities(
+    hass: HomeAssistant,
+    platform: Platform,
+    entity_type: type,
+    async_add_entities: Callable,
+    discovery_info: dict[str, Any],
+) -> None:
+    """Add Insteon configuration entities to a platform."""
+    new_entities = []
+    address = discovery_info["address"]
+    device = devices[address]
+    for name in discovery_info["names"]:
+        new_entities.append(entity_type(device=device, name=name))
+    async_add_entities(new_entities)
+
+
+@callback
+def async_add_insteon_devices_config(
+    hass: HomeAssistant,
+    platform: Platform,
+    entity_type: type,
+    async_add_entities: Callable,
+) -> None:
+    """Add all entities to a platform."""
+    for address in devices:
+        device = devices[address]
+        names = get_device_config_platform_props(device, platform)
+        discovery_info = {"address": address, "names": names}
+        async_add_insteon_config_entities(
+            hass, platform, entity_type, async_add_entities, discovery_info
+        )

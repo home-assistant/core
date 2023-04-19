@@ -1,10 +1,15 @@
 """Insteon base entity."""
+from enum import Enum
 import functools
 import logging
 
 from pyinsteon import devices
+from pyinsteon.address import Address
+from pyinsteon.device_types.device_base import Device
 
+from homeassistant.const import EntityCategory
 from homeassistant.core import callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -23,17 +28,25 @@ from .const import (
 from .utils import print_aldb_to_log
 
 _LOGGER = logging.getLogger(__name__)
+WRITE_DELAY = 10
 
 
-class InsteonEntity(Entity):
+class InsteonEntityBase(Entity):
     """INSTEON abstract base entity."""
 
     _attr_should_poll = False
 
-    def __init__(self, device, group):
-        """Initialize the INSTEON binary sensor."""
-        self._insteon_device_group = device.groups[group]
+    def __init__(
+        self, device: Device, group: int | None = None, name: str | None = None
+    ) -> None:
+        """Initialize the INSTEON base class."""
+        if group is not None:
+            self._entity = device.groups[group]
+        else:
+            self._entity = device.configuration[name]
         self._insteon_device = device
+        self._group = group
+        self._name = name
 
     def __hash__(self):
         """Return the hash of the Insteon Entity."""
@@ -45,20 +58,6 @@ class InsteonEntity(Entity):
         return str(self._insteon_device.address)
 
     @property
-    def group(self):
-        """Return the INSTEON group that the entity responds to."""
-        return self._insteon_device_group.group
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        if self._insteon_device_group.group == 0x01:
-            uid = self._insteon_device.id
-        else:
-            uid = f"{self._insteon_device.id}_{self._insteon_device_group.group}"
-        return uid
-
-    @property
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
         # Set a base description
@@ -68,14 +67,6 @@ class InsteonEntity(Entity):
         if extension := self._get_label():
             extension = f" {extension}"
         return f"{description} {self._insteon_device.address}{extension}"
-
-    @property
-    def extra_state_attributes(self):
-        """Provide attributes for display on device card."""
-        return {
-            "insteon_address": self.address,
-            "insteon_group": self.group,
-        }
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -95,26 +86,9 @@ class InsteonEntity(Entity):
             via_device=(DOMAIN, str(devices.modem.address)),
         )
 
-    @callback
-    def async_entity_update(self, name, address, value, group):
-        """Receive notification from transport that new data exists."""
-        _LOGGER.debug(
-            "Received update for device %s group %d value %s",
-            address,
-            group,
-            value,
-        )
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self):
         """Register INSTEON update events."""
-        _LOGGER.debug(
-            "Tracking updates for device %s group %d name %s",
-            self.address,
-            self.group,
-            self._insteon_device_group.name,
-        )
-        self._insteon_device_group.subscribe(self.async_entity_update)
+        self._entity.subscribe(self.async_entity_update)
         load_signal = f"{self.entity_id}_{SIGNAL_LOAD_ALDB}"
         self.async_on_remove(
             async_dispatcher_connect(self.hass, load_signal, self._async_read_aldb)
@@ -136,13 +110,12 @@ class InsteonEntity(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe to INSTEON update events."""
-        _LOGGER.debug(
-            "Remove tracking updates for device %s group %d name %s",
-            self.address,
-            self.group,
-            self._insteon_device_group.name,
-        )
-        self._insteon_device_group.unsubscribe(self.async_entity_update)
+        self._entity.unsubscribe(self.async_entity_update)
+
+    @callback
+    def async_entity_update(self, *args, **kwargs) -> None:
+        """Receive notification from transport that new data exists."""
+        raise NotImplementedError
 
     async def _async_read_aldb(self, reload):
         """Call device load process and print to log."""
@@ -163,13 +136,79 @@ class InsteonEntity(Entity):
     def _get_label(self):
         """Get the device label for grouped devices."""
         label = ""
-        if len(self._insteon_device.groups) > 1:
-            if self._insteon_device_group.name in STATE_NAME_LABEL_MAP:
-                label = STATE_NAME_LABEL_MAP[self._insteon_device_group.name]
-            else:
-                label = f"Group {self.group:d}"
+
+        if self._group and len(self._insteon_device.groups) == 1:
+            return label
+
+        if self._entity.name in STATE_NAME_LABEL_MAP:
+            label = STATE_NAME_LABEL_MAP[self._entity.name]
+        else:
+            label = self._entity.name.replace("_", " ").title()
         return label
 
     async def _async_add_default_links(self):
         """Add default links between the device and the modem."""
         await self._insteon_device.async_add_default_links()
+
+
+class InsteonEntity(InsteonEntityBase):
+    """Base class for Insteon state entities."""
+
+    @property
+    def group(self):
+        """Return the INSTEON group that the entity responds to."""
+        return self._entity.group
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        if self._entity.group == 0x01:
+            uid = self._insteon_device.id
+        else:
+            uid = f"{self._insteon_device.id}_{self._entity.group}"
+        return uid
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Address | int]:
+        """Provide attributes for display on device card."""
+        return {
+            "insteon_address": self.address,
+            "insteon_group": self.group,
+        }
+
+    # pylint: disable=arguments-differ
+    @callback
+    def async_entity_update(
+        self, name: str, address: Address, value: int | bool, group: int
+    ):
+        """Receive notification from transport that new data exists."""
+        self.async_write_ha_state()
+
+
+class InsteonConfigEntity(InsteonEntityBase):
+    """Base class for Insteon configuration entities."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _debounce_writer: Debouncer
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._insteon_device.id}_config_{self._entity.name}"
+
+    # pylint: disable=arguments-differ
+    @callback
+    def async_entity_update(self, name: str, value: int | bool | Enum | list):
+        """Receive notification from transport that new data exists."""
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        """Handle the added to HASS event."""
+        await super().async_added_to_hass()
+        self._debounce_writer = Debouncer(
+            hass=self.hass,
+            logger=_LOGGER,
+            cooldown=WRITE_DELAY,
+            immediate=False,
+            function=self._insteon_device.async_write_config,
+        )

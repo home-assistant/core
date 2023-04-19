@@ -4,6 +4,7 @@ import logging
 
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.constants import ReadWriteMode
+from pyinsteon.device_types.device_base import Device
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
@@ -24,11 +25,10 @@ from .const import (
     CONF_X10,
     DOMAIN,
     INSTEON_PLATFORMS,
-    ON_OFF_EVENTS,
 )
 from .schemas import convert_yaml_to_config_flow
 from .utils import (
-    add_on_off_event_device,
+    add_device_events,
     async_register_services,
     get_device_platforms,
     register_new_device_callback,
@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 OPTIONS = "options"
 
 
-async def async_get_device_config(hass, config_entry):
+async def async_get_device_config(hass: HomeAssistant, config_entry: ConfigEntry):
     """Initiate the connection and services."""
     # Make a copy of addresses due to edge case where the list of devices could
     # change during status update
@@ -158,9 +158,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     for address in devices:
         device = devices[address]
-        platforms = get_device_platforms(device)
-        if ON_OFF_EVENTS in platforms:
-            add_on_off_event_device(hass, device)
+        add_device_events(hass, device)
+        if not get_device_platforms(device):
             create_insteon_device(hass, device, entry.entry_id)
 
     _LOGGER.debug("Insteon device count: %s", len(devices))
@@ -179,11 +178,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def create_insteon_device(hass, device, config_entry_id):
+def create_insteon_device(hass: HomeAssistant, device: Device, config_entry_id: str):
     """Create an Insteon device."""
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
-        config_entry_id=config_entry_id,  # entry.entry_id,
+        config_entry_id=config_entry_id,
         identifiers={(DOMAIN, str(device.address))},
         manufacturer="SmartLabs, Inc",
         name=f"{device.description} {device.address}",
