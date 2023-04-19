@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .api import async_register_s2_api, S2FlexMeasuresClient
 from .const import DOMAIN
+from .websockets import WebsocketAPIView
 
 ATTR_NAME = "name"
 DEFAULT_NAME = "World"
@@ -53,6 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_register_s2_api(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    """Initialize the websocket API."""
+    hass.http.register_view(WebsocketAPIView())
 
     return True
 
