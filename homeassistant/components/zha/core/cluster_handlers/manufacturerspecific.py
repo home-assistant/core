@@ -1,4 +1,4 @@
-"""Manufacturer specific channels module for Zigbee Home Automation."""
+"""Manufacturer specific cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
 import logging
@@ -10,6 +10,7 @@ import zigpy.zcl
 
 from homeassistant.core import callback
 
+from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 from .. import registries
 from ..const import (
     ATTR_ATTRIBUTE_ID,
@@ -23,17 +24,18 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
-from .base import AttrReportConfig, ClientChannel, ZigbeeChannel
 
 if TYPE_CHECKING:
-    from . import ChannelPool
+    from ..endpoint import Endpoint
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.SMARTTHINGS_HUMIDITY_CLUSTER)
-class SmartThingsHumidity(ZigbeeChannel):
-    """Smart Things Humidity channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    registries.SMARTTHINGS_HUMIDITY_CLUSTER
+)
+class SmartThingsHumidity(ClusterHandler):
+    """Smart Things Humidity cluster handler."""
 
     REPORT_CONFIG = (
         {
@@ -43,32 +45,34 @@ class SmartThingsHumidity(ZigbeeChannel):
     )
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(0xFD00)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFD00)
-class OsramButton(ZigbeeChannel):
-    """Osram button channel."""
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFD00)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFD00)
+class OsramButton(ClusterHandler):
+    """Osram button cluster handler."""
 
     REPORT_CONFIG = ()
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.PHILLIPS_REMOTE_CLUSTER)
-class PhillipsRemote(ZigbeeChannel):
-    """Phillips remote channel."""
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(registries.PHILLIPS_REMOTE_CLUSTER)
+class PhillipsRemote(ClusterHandler):
+    """Phillips remote cluster handler."""
 
     REPORT_CONFIG = ()
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(registries.TUYA_MANUFACTURER_CLUSTER)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.TUYA_MANUFACTURER_CLUSTER)
-class TuyaChannel(ZigbeeChannel):
-    """Channel for the Tuya manufacturer Zigbee cluster."""
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(registries.TUYA_MANUFACTURER_CLUSTER)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    registries.TUYA_MANUFACTURER_CLUSTER
+)
+class TuyaClusterHandler(ClusterHandler):
+    """Cluster handler for the Tuya manufacturer Zigbee cluster."""
 
     REPORT_CONFIG = ()
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
-        """Initialize TuyaChannel."""
-        super().__init__(cluster, ch_pool)
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
+        """Initialize TuyaClusterHandler."""
+        super().__init__(cluster, endpoint)
 
         if self.cluster.endpoint.manufacturer in (
             "_TZE200_7tdtqgwv",
@@ -94,16 +98,16 @@ class TuyaChannel(ZigbeeChannel):
             }
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFCC0)
-class OppleRemote(ZigbeeChannel):
-    """Opple channel."""
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFCC0)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFCC0)
+class OppleRemote(ClusterHandler):
+    """Opple cluster handler."""
 
     REPORT_CONFIG = ()
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
-        """Initialize Opple channel."""
-        super().__init__(cluster, ch_pool)
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
+        """Initialize Opple cluster handler."""
+        super().__init__(cluster, endpoint)
         if self.cluster.endpoint.model == "lumi.motion.ac02":
             self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
                 "detection_interval": True,
@@ -162,8 +166,8 @@ class OppleRemote(ZigbeeChannel):
                 "linkage_alarm": True,
             }
 
-    async def async_initialize_channel_specific(self, from_cache: bool) -> None:
-        """Initialize channel specific."""
+    async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
+        """Initialize cluster handler specific."""
         if self.cluster.endpoint.model in ("lumi.motion.ac02", "lumi.motion.agl04"):
             interval = self.cluster.get("detection_interval", self.cluster.get(0x0102))
             if interval is not None:
@@ -171,11 +175,11 @@ class OppleRemote(ZigbeeChannel):
                 self.cluster.endpoint.ias_zone.reset_s = int(interval)
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     registries.SMARTTHINGS_ACCELERATION_CLUSTER
 )
-class SmartThingsAcceleration(ZigbeeChannel):
-    """Smart Things Acceleration channel."""
+class SmartThingsAcceleration(ClusterHandler):
+    """Smart Things Acceleration cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="acceleration", config=REPORT_CONFIG_ASAP),
@@ -211,9 +215,9 @@ class SmartThingsAcceleration(ZigbeeChannel):
         )
 
 
-@registries.CLIENT_CHANNELS_REGISTRY.register(0xFC31)
-class InovelliNotificationChannel(ClientChannel):
-    """Inovelli Notification channel."""
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(0xFC31)
+class InovelliNotificationClusterHandler(ClientClusterHandler):
+    """Inovelli Notification cluster handler."""
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -224,9 +228,9 @@ class InovelliNotificationChannel(ClientChannel):
         """Handle a cluster command received on this cluster."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFC31)
-class InovelliConfigEntityChannel(ZigbeeChannel):
-    """Inovelli Configuration Entity channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFC31)
+class InovelliConfigEntityClusterHandler(ClusterHandler):
+    """Inovelli Configuration Entity cluster handler."""
 
     REPORT_CONFIG = ()
     ZCL_INIT_ATTRS = {
@@ -307,10 +311,12 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         )
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(registries.IKEA_AIR_PURIFIER_CLUSTER)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.IKEA_AIR_PURIFIER_CLUSTER)
-class IkeaAirPurifierChannel(ZigbeeChannel):
-    """IKEA Air Purifier channel."""
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(registries.IKEA_AIR_PURIFIER_CLUSTER)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    registries.IKEA_AIR_PURIFIER_CLUSTER
+)
+class IkeaAirPurifierClusterHandler(ClusterHandler):
+    """IKEA Air Purifier cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="filter_run_time", config=REPORT_CONFIG_DEFAULT),
@@ -360,9 +366,9 @@ class IkeaAirPurifierChannel(ZigbeeChannel):
             )
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(0xFC80)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFC80)
-class IkeaRemote(ZigbeeChannel):
-    """Ikea Matter remote channel."""
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(0xFC80)
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(0xFC80)
+class IkeaRemote(ClusterHandler):
+    """Ikea Matter remote cluster handler."""
 
     REPORT_CONFIG = ()

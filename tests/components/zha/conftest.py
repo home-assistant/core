@@ -121,19 +121,19 @@ def setup_zha(hass, config_entry, zigpy_app_controller):
 
 
 @pytest.fixture
-def channel():
-    """Channel mock factory fixture."""
+def cluster_handler():
+    """ClusterHandler mock factory fixture."""
 
-    def channel(name: str, cluster_id: int, endpoint_id: int = 1):
+    def cluster_handler(name: str, cluster_id: int, endpoint_id: int = 1):
         ch = MagicMock()
         ch.name = name
-        ch.generic_id = f"channel_0x{cluster_id:04x}"
+        ch.generic_id = f"cluster_handler_0x{cluster_id:04x}"
         ch.id = f"{endpoint_id}:0x{cluster_id:04x}"
         ch.async_configure = AsyncMock()
         ch.async_initialize = AsyncMock()
         return ch
 
-    return channel
+    return cluster_handler
 
 
 @pytest.fixture
@@ -162,7 +162,7 @@ def zigpy_device_mock(zigpy_app_controller):
         for epid, ep in endpoints.items():
             endpoint = device.add_endpoint(epid)
             endpoint.device_type = ep[SIG_EP_TYPE]
-            endpoint.profile_id = ep.get(SIG_EP_PROFILE)
+            endpoint.profile_id = ep.get(SIG_EP_PROFILE, 0x0104)
             endpoint.request = AsyncMock(return_value=[0])
 
             for cluster_id in ep.get(SIG_EP_INPUT, []):
@@ -170,6 +170,8 @@ def zigpy_device_mock(zigpy_app_controller):
 
             for cluster_id in ep.get(SIG_EP_OUTPUT, []):
                 endpoint.add_output_cluster(cluster_id)
+
+        device.status = zigpy.device.Status.ENDPOINTS_INIT
 
         if quirk:
             device = quirk(zigpy_app_controller, device.ieee, device.nwk, device)
