@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
@@ -28,29 +29,23 @@ CONF_TO_ATTRIBUTE = {
 }
 
 
-class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
-    """Template entity based on trigger data."""
+class TriggerBaseEntity(Entity):
+    """Template Base entity based on trigger data."""
 
     domain: str
     extra_template_keys: tuple | None = None
     extra_template_keys_complex: tuple | None = None
+    _unique_id: str | None
 
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: TriggerUpdateCoordinator,
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
+        self.hass = hass
 
-        entity_unique_id = config.get(CONF_UNIQUE_ID)
-
-        self._unique_id: str | None
-        if entity_unique_id and coordinator.unique_id:
-            self._unique_id = f"{coordinator.unique_id}-{entity_unique_id}"
-        else:
-            self._unique_id = entity_unique_id
+        self._set_unique_id(config.get(CONF_UNIQUE_ID))
 
         self._config = config
 
@@ -125,9 +120,10 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         template.attach(self.hass, self._config)
-        await super().async_added_to_hass()
-        if self.coordinator.data is not None:
-            self._process_data()
+
+    def _set_unique_id(self, unique_id: str | None) -> None:
+        """Set unique id."""
+        self._unique_id = unique_id
 
     def restore_attributes(self, last_state: State) -> None:
         """Restore attributes."""
@@ -144,16 +140,8 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
                 extra_state_attributes[attr] = last_state.attributes[attr]
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
-    @callback
-    def _process_data(self) -> None:
-        """Process new data."""
-
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
-        run_variables = self.coordinator.data["run_variables"]
-        variables = {"this": this, **(run_variables or {})}
-
+    def _render_templates(self, variables: dict[str, Any]) -> None:
+        """Render templates."""
         try:
             rendered = dict(self._static_rendered)
 
@@ -181,6 +169,46 @@ class TriggerEntity(CoordinatorEntity[TriggerUpdateCoordinator]):
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
             self._rendered = self._static_rendered
+
+
+class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]):
+    """Template entity based on trigger data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: dict,
+    ) -> None:
+        """Initialize the entity."""
+        super(CoordinatorEntity, self).__init__(coordinator)
+        super().__init__(hass, config)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
+        await super(CoordinatorEntity, self).async_added_to_hass()
+        if self.coordinator.data is not None:
+            self._process_data()
+
+    def _set_unique_id(self, unique_id: str | None) -> None:
+        """Set unique id."""
+        if unique_id and self.coordinator.unique_id:
+            self._unique_id = f"{self.coordinator.unique_id}-{unique_id}"
+        else:
+            self._unique_id = unique_id
+
+    @callback
+    def _process_data(self) -> None:
+        """Process new data."""
+
+        this = None
+        if state := self.hass.states.get(self.entity_id):
+            this = state.as_dict()
+        run_variables = self.coordinator.data["run_variables"]
+        variables = {"this": this, **(run_variables or {})}
+
+        self._render_templates(variables)
 
         self.async_set_context(self.coordinator.data["context"])
 

@@ -497,7 +497,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.2.3
+easyenergy==0.3.0
 
 # homeassistant.components.elgato
 elgato==4.0.1
@@ -670,7 +670,7 @@ ha-philipsjs==3.0.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.64.1
+hass-nabucasa==0.65.0
 
 # homeassistant.components.conversation
 hassil==1.0.6
@@ -700,7 +700,7 @@ holidays==0.21.13
 home-assistant-frontend==20230411.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.3.29
+home-assistant-intents==2023.4.17-1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1034,6 +1034,7 @@ progettihwsw==0.1.1
 prometheus_client==0.7.1
 
 # homeassistant.components.hardware
+# homeassistant.components.recorder
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.androidtv
@@ -1601,7 +1602,7 @@ rapt-ble==0.1.0
 regenmaschine==2022.11.0
 
 # homeassistant.components.renault
-renault-api==0.1.12
+renault-api==0.1.13
 
 # homeassistant.components.reolink
 reolink-aio==0.5.10

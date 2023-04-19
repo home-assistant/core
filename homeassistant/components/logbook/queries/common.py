@@ -23,7 +23,6 @@ from homeassistant.components.recorder.db_schema import (
     StatesMeta,
 )
 from homeassistant.components.recorder.filters import like_domain_matchers
-from homeassistant.components.recorder.queries import select_event_type_ids
 
 from ..const import ALWAYS_CONTINUOUS_DOMAINS, CONDITIONALLY_CONTINUOUS_DOMAINS
 
@@ -112,13 +111,13 @@ NOT_CONTEXT_ONLY = literal(value=None, type_=sqlalchemy.String).label("context_o
 def select_events_context_id_subquery(
     start_day: float,
     end_day: float,
-    event_types: tuple[str, ...],
+    event_type_ids: tuple[int, ...],
 ) -> Select:
     """Generate the select for a context_id subquery."""
     return (
         select(Events.context_id_bin)
         .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
-        .where(Events.event_type_id.in_(select_event_type_ids(event_types)))
+        .where(Events.event_type_id.in_(event_type_ids))
         .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
@@ -145,13 +144,13 @@ def select_states_context_only() -> Select:
 
 
 def select_events_without_states(
-    start_day: float, end_day: float, event_types: tuple[str, ...]
+    start_day: float, end_day: float, event_type_ids: tuple[int, ...]
 ) -> Select:
     """Generate an events select that does not join states."""
     return (
         select(*EVENT_ROWS_NO_STATES, NOT_CONTEXT_ONLY)
         .where((Events.time_fired_ts > start_day) & (Events.time_fired_ts < end_day))
-        .where(Events.event_type_id.in_(select_event_type_ids(event_types)))
+        .where(Events.event_type_id.in_(event_type_ids))
         .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
         .outerjoin(EventData, (Events.data_id == EventData.data_id))
     )
