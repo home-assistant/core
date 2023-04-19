@@ -326,6 +326,16 @@ async def test_migrate_states_context_ids(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
+                    States(
+                        entity_id="state.human_readable_uuid_context_id",
+                        last_updated_ts=1677721632.552529,
+                        context_id="0ae29799-ee4e-4f45-8116-f582d7d3ee65",
+                        context_id_bin=None,
+                        context_user_id="0ae29799-ee4e-4f45-8116-f582d7d3ee65",
+                        context_user_id_bin=None,
+                        context_parent_id="0ae29799-ee4e-4f45-8116-f582d7d3ee65",
+                        context_parent_id_bin=None,
+                    ),
                 )
             )
 
@@ -351,12 +361,13 @@ async def test_migrate_states_context_ids(
                             "state.ulid_context_id",
                             "state.invalid_context_id",
                             "state.garbage_context_id",
+                            "state.human_readable_uuid_context_id",
                         ]
                     )
                 )
                 .all()
             )
-            assert len(events) == 5
+            assert len(events) == 6
             return {state.entity_id: _object_as_dict(state) for state in events}
 
     states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
@@ -408,6 +419,25 @@ async def test_migrate_states_context_ids(
     assert garbage_context_id["context_id_bin"] == b"\x00" * 16
     assert garbage_context_id["context_user_id_bin"] is None
     assert garbage_context_id["context_parent_id_bin"] is None
+
+    human_readable_uuid_context_id = states_by_entity_id[
+        "state.human_readable_uuid_context_id"
+    ]
+    assert human_readable_uuid_context_id["context_id"] is None
+    assert human_readable_uuid_context_id["context_user_id"] is None
+    assert human_readable_uuid_context_id["context_parent_id"] is None
+    assert (
+        human_readable_uuid_context_id["context_id_bin"]
+        == b"\n\xe2\x97\x99\xeeNOE\x81\x16\xf5\x82\xd7\xd3\xeee"
+    )
+    assert (
+        human_readable_uuid_context_id["context_user_id_bin"]
+        == b"\n\xe2\x97\x99\xeeNOE\x81\x16\xf5\x82\xd7\xd3\xeee"
+    )
+    assert (
+        human_readable_uuid_context_id["context_parent_id_bin"]
+        == b"\n\xe2\x97\x99\xeeNOE\x81\x16\xf5\x82\xd7\xd3\xeee"
+    )
 
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
