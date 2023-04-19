@@ -53,11 +53,10 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Wyoming (Test ASR)"
+    assert result2["title"] == "Test ASR"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": 1234,
-        "asr": _STT_INFO.asr[0].to_dict(),
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -80,5 +79,5 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "cannot_connect"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}

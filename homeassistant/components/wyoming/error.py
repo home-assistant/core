@@ -1,5 +1,6 @@
 """Errors for the Wyoming integration."""
+from homeassistant.exceptions import HomeAssistantError
 
 
-class WyomingError(Exception):
+class WyomingError(HomeAssistantError):
     """Base class for Wyoming errors."""

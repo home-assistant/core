@@ -8,11 +8,11 @@ from wyoming.client import AsyncTcpClient
 
 from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
+from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
+from .data import WyomingService
 from .error import WyomingError
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,19 +24,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Wyoming speech to text."""
-    model_languages: set[str] = set()
-    for asr_model in config_entry.data["asr"]["models"]:
-        model_languages.update(asr_model["languages"])
+    service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
-        [
-            WyomingSttProvider(
-                config_entry.data[CONF_HOST],
-                config_entry.data[CONF_PORT],
-                list(model_languages),
-            )
-        ]
-    )
+    model_languages: set[str] = set()
+    for asr_model in service.info.models:
+        model_languages.update(asr_model.languages)
+
+    async_add_entities([WyomingSttProvider(service, list(model_languages))])
 
 
 class WyomingSttProvider(stt.SpeechToTextEntity):
@@ -44,13 +38,11 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
 
     def __init__(
         self,
-        host: str,
-        port: int,
+        service: WyomingService,
         supported_languages: list[str],
     ) -> None:
         """Set up provider."""
-        self.host = host
-        self.port = port
+        self.service = service
         self._supported_languages = supported_languages
 
     @property
@@ -88,7 +80,7 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
     ) -> stt.SpeechResult:
         """Process an audio stream to STT service."""
         try:
-            async with AsyncTcpClient(self.host, self.port) as client:
+            async with AsyncTcpClient(self.service.host, self.service.port) as client:
                 await client.write_event(
                     AudioStart(
                         rate=SAMPLE_RATE,
