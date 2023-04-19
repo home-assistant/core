@@ -1077,16 +1077,38 @@ async def test_ws_list_voices(
     await client.send_json_auto_id(
         {
             "type": "tts/engine/voices",
-            "engine_id": "smurf",
+            "engine_id": "smurf_tts",
+            "language": "smurfish",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": "tts engine smurf_tts not found",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "tts/engine/voices",
+            "engine_id": "test",
             "language": "smurfish",
         }
     )
 
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {
-        "voices": [
-            {"voice_id": "voice_1", "name": "James Earl Jones"},
-            {"voice_id": "voice_2", "name": "Fran Drescher"},
-        ]
-    }
+    assert msg["result"] == {"voices": None}
+
+    await client.send_json_auto_id(
+        {
+            "type": "tts/engine/voices",
+            "engine_id": "test",
+            "language": "en-US",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"voices": ["James Earl Jones", "Fran Drescher"]}
