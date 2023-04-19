@@ -76,6 +76,8 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         change: ConfigEntryChange, event_entry: ConfigEntry
     ) -> None:
         if event_entry is entry and change is ConfigEntryChange.UPDATED:
+            if DATA_MQTT_AVAILABLE in hass.data and entry.state not in valid_states:
+                hass.data[DATA_MQTT_AVAILABLE].set()
             state_reached_future.set_result(None)
 
     unsub = async_dispatcher_connect(
