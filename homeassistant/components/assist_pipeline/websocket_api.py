@@ -33,47 +33,45 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
-    websocket_api.async_register_command(
-        hass,
-        "assist_pipeline/run",
-        websocket_run,
-        vol.All(
-            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                {
-                    vol.Required("type"): "assist_pipeline/run",
-                    # pylint: disable-next=unnecessary-lambda
-                    vol.Required("start_stage"): lambda val: PipelineStage(val),
-                    # pylint: disable-next=unnecessary-lambda
-                    vol.Required("end_stage"): lambda val: PipelineStage(val),
-                    vol.Optional("input"): dict,
-                    vol.Optional("pipeline"): str,
-                    vol.Optional("conversation_id"): vol.Any(str, None),
-                    vol.Optional("timeout"): vol.Any(float, int),
-                },
-            ),
-            cv.key_value_schemas(
-                "start_stage",
-                {
-                    PipelineStage.STT: vol.Schema(
-                        {vol.Required("input"): {vol.Required("sample_rate"): int}},
-                        extra=vol.ALLOW_EXTRA,
-                    ),
-                    PipelineStage.INTENT: vol.Schema(
-                        {vol.Required("input"): {"text": str}},
-                        extra=vol.ALLOW_EXTRA,
-                    ),
-                    PipelineStage.TTS: vol.Schema(
-                        {vol.Required("input"): {"text": str}},
-                        extra=vol.ALLOW_EXTRA,
-                    ),
-                },
-            ),
-        ),
-    )
+    websocket_api.async_register_command(hass, websocket_run)
     websocket_api.async_register_command(hass, websocket_list_runs)
     websocket_api.async_register_command(hass, websocket_get_run)
 
 
+@websocket_api.websocket_command(
+    vol.All(
+        websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+            {
+                vol.Required("type"): "assist_pipeline/run",
+                # pylint: disable-next=unnecessary-lambda
+                vol.Required("start_stage"): lambda val: PipelineStage(val),
+                # pylint: disable-next=unnecessary-lambda
+                vol.Required("end_stage"): lambda val: PipelineStage(val),
+                vol.Optional("input"): dict,
+                vol.Optional("pipeline"): str,
+                vol.Optional("conversation_id"): vol.Any(str, None),
+                vol.Optional("timeout"): vol.Any(float, int),
+            },
+        ),
+        cv.key_value_schemas(
+            "start_stage",
+            {
+                PipelineStage.STT: vol.Schema(
+                    {vol.Required("input"): {vol.Required("sample_rate"): int}},
+                    extra=vol.ALLOW_EXTRA,
+                ),
+                PipelineStage.INTENT: vol.Schema(
+                    {vol.Required("input"): {"text": str}},
+                    extra=vol.ALLOW_EXTRA,
+                ),
+                PipelineStage.TTS: vol.Schema(
+                    {vol.Required("input"): {"text": str}},
+                    extra=vol.ALLOW_EXTRA,
+                ),
+            },
+        ),
+    ),
+)
 @websocket_api.async_response
 async def websocket_run(
     hass: HomeAssistant,
