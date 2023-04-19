@@ -1,6 +1,8 @@
 """The Android TV Remote integration."""
 from __future__ import annotations
 
+import logging
+
 from androidtvremote2 import (
     AndroidTVRemote,
     CannotConnect,
@@ -16,13 +18,24 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .const import DOMAIN
 from .helpers import create_api
 
-PLATFORMS: list[Platform] = [Platform.REMOTE]
+_LOGGER = logging.getLogger(__name__)
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV Remote from a config entry."""
+    host = entry.data[CONF_HOST]
+    api = create_api(hass, host)
 
-    api = create_api(hass, entry.data[CONF_HOST])
+    @callback
+    def is_available_updated(is_available: bool) -> None:
+        if is_available:
+            _LOGGER.info("Reconnected to %s", host)
+        else:
+            _LOGGER.warning("Disconnected from %s", host)
+
+    api.add_is_available_updated_callback(is_available_updated)
+
     try:
         await api.async_connect()
     except InvalidAuth as exc:
