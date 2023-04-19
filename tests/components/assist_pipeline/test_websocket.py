@@ -636,6 +636,51 @@ async def test_add_pipeline(
     assert not msg["success"]
 
 
+async def test_add_pipeline_missing_language(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can't add a pipeline without specifying stt or tts language."""
+    client = await hass_ws_client(hass)
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_store = pipeline_data.pipeline_store
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "stt_language": None,
+            "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert len(pipeline_store.data) == 0
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
+            "tts_engine": "test_tts_engine",
+            "tts_language": None,
+            "tts_voice": "Arnold Schwarzenegger",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert len(pipeline_store.data) == 0
+
+
 async def test_delete_pipeline(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
 ) -> None:
