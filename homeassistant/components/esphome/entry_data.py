@@ -39,6 +39,7 @@ from homeassistant.helpers.storage import Store
 
 from .dashboard import async_get_dashboard
 
+_SENTINEL = object()
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +70,10 @@ class RuntimeEntryData:
     client: APIClient
     store: Store
     state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
+    # When the disconnect callback is called, we mark all states
+    # as stale so we will always dispatch a state update when the
+    # device reconnects. This is the same format as state_subscriptions.
+    stale_state: set[tuple[type[EntityState], int]] = field(default_factory=set)
     info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
@@ -130,10 +135,15 @@ class RuntimeEntryData:
         )
         self.ble_connections_free = free
         self.ble_connections_limit = limit
-        if free:
-            for fut in self._ble_connection_free_futures:
+        if not free:
+            return
+        for fut in self._ble_connection_free_futures:
+            # If wait_for_ble_connections_free gets cancelled, it will
+            # leave a future in the list. We need to check if it's done
+            # before setting the result.
+            if not fut.done():
                 fut.set_result(free)
-            self._ble_connection_free_futures.clear()
+        self._ble_connection_free_futures.clear()
 
     async def wait_for_ble_connections_free(self) -> int:
         """Wait until there are free BLE connections."""
@@ -198,14 +208,28 @@ class RuntimeEntryData:
     @callback
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
-        subscription_key = (type(state), state.key)
-        self.state[type(state)][state.key] = state
+        key = state.key
+        state_type = type(state)
+        stale_state = self.stale_state
+        current_state_by_type = self.state[state_type]
+        current_state = current_state_by_type.get(key, _SENTINEL)
+        subscription_key = (state_type, key)
+        if current_state == state and subscription_key not in stale_state:
+            _LOGGER.debug(
+                "%s: ignoring duplicate update with and key %s: %s",
+                self.name,
+                key,
+                state,
+            )
+            return
         _LOGGER.debug(
             "%s: dispatching update with key %s: %s",
             self.name,
-            subscription_key,
+            key,
             state,
         )
+        stale_state.discard(subscription_key)
+        current_state_by_type[key] = state
         if subscription_key in self.state_subscriptions:
             self.state_subscriptions[subscription_key]()
 

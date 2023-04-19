@@ -17,10 +17,15 @@ from home_assistant_intents import get_intents
 import yaml
 
 from homeassistant import core, setup
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_listen_entity_updates,
+    async_should_expose,
+)
+from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.helpers import (
-    area_registry,
-    device_registry,
-    entity_registry,
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
     intent,
     template,
     translation,
@@ -28,17 +33,13 @@ from homeassistant.helpers import (
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
-from .const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
+_ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
-
-
-def is_entity_exposed(state: core.State) -> bool:
-    """Return true if entity belongs to exposed domain list."""
-    return state.domain in DEFAULT_EXPOSED_DOMAINS
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -46,7 +47,7 @@ def json_load(fp: IO[str]) -> JsonObjectType:
     return json_loads_object(fp.read())
 
 
-@dataclass
+@dataclass(slots=True)
 class LanguageIntents:
     """Loaded intents for a language."""
 
@@ -95,19 +96,17 @@ class DefaultAgent(AbstractConversationAgent):
             self._config_intents = config_intents
 
         self.hass.bus.async_listen(
-            area_registry.EVENT_AREA_REGISTRY_UPDATED,
+            ar.EVENT_AREA_REGISTRY_UPDATED,
             self._async_handle_area_registry_changed,
             run_immediately=True,
         )
         self.hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._async_handle_entity_registry_changed,
             run_immediately=True,
         )
-        self.hass.bus.async_listen(
-            core.EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,
-            run_immediately=True,
+        async_listen_entity_updates(
+            self.hass, DOMAIN, self._async_exposed_entities_updated
         )
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
@@ -227,7 +226,21 @@ class DefaultAgent(AbstractConversationAgent):
         intent_response: intent.IntentResponse,
         recognize_result: RecognizeResult,
     ) -> str:
-        all_states = intent_response.matched_states + intent_response.unmatched_states
+        # Make copies of the states here so we can add translated names for responses.
+        matched: list[core.State] = []
+
+        for state in intent_response.matched_states:
+            state_copy = core.State.from_dict(state.as_dict())
+            if state_copy is not None:
+                matched.append(state_copy)
+
+        unmatched: list[core.State] = []
+        for state in intent_response.unmatched_states:
+            state_copy = core.State.from_dict(state.as_dict())
+            if state_copy is not None:
+                unmatched.append(state_copy)
+
+        all_states = matched + unmatched
         domains = {state.domain for state in all_states}
         translations = await translation.async_get_translations(
             self.hass, language, "state", domains
@@ -243,9 +256,9 @@ class DefaultAgent(AbstractConversationAgent):
         # This is available in the response template as "state".
         state1: core.State | None = None
         if intent_response.matched_states:
-            state1 = intent_response.matched_states[0]
+            state1 = matched[0]
         elif intent_response.unmatched_states:
-            state1 = intent_response.unmatched_states[0]
+            state1 = unmatched[0]
 
         # Render response template
         speech = response_template.async_render(
@@ -262,13 +275,11 @@ class DefaultAgent(AbstractConversationAgent):
                 "query": {
                     # Entity states that matched the query (e.g, "on")
                     "matched": [
-                        template.TemplateState(self.hass, state)
-                        for state in intent_response.matched_states
+                        template.TemplateState(self.hass, state) for state in matched
                     ],
                     # Entity states that did not match the query
                     "unmatched": [
-                        template.TemplateState(self.hass, state)
-                        for state in intent_response.unmatched_states
+                        template.TemplateState(self.hass, state) for state in unmatched
                     ],
                 },
             }
@@ -321,6 +332,9 @@ class DefaultAgent(AbstractConversationAgent):
             intents_dict = lang_intents.intents_dict
             loaded_components = lang_intents.loaded_components
 
+        # en-US, en_US, en, ...
+        language_variations = list(_get_language_variations(language))
+
         # Check if any new components have been loaded
         intents_changed = False
         for component in hass_components:
@@ -332,7 +346,7 @@ class DefaultAgent(AbstractConversationAgent):
 
             # Check for intents for this component with the target language.
             # Try en-US, en, etc.
-            for language_variation in _get_language_variations(language):
+            for language_variation in language_variations:
                 component_intents = get_intents(
                     component, language_variation, json_load=json_load
                 )
@@ -343,7 +357,10 @@ class DefaultAgent(AbstractConversationAgent):
                     # Will need to recreate graph
                     intents_changed = True
                     _LOGGER.debug(
-                        "Loaded intents component=%s, language=%s", component, language
+                        "Loaded intents component=%s, language=%s (%s)",
+                        component,
+                        language,
+                        language_variation,
                     )
                     break
 
@@ -351,24 +368,31 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # Only load custom sentences once, otherwise they will be re-loaded
             # when components change.
-            custom_sentences_dir = Path(
-                self.hass.config.path("custom_sentences", language)
-            )
-            if custom_sentences_dir.is_dir():
-                for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
-                    with custom_sentences_path.open(
-                        encoding="utf-8"
-                    ) as custom_sentences_file:
-                        # Merge custom sentences
-                        merge_dict(intents_dict, yaml.safe_load(custom_sentences_file))
+            for language_variation in language_variations:
+                custom_sentences_dir = Path(
+                    self.hass.config.path("custom_sentences", language_variation)
+                )
+                if custom_sentences_dir.is_dir():
+                    for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
+                        with custom_sentences_path.open(
+                            encoding="utf-8"
+                        ) as custom_sentences_file:
+                            # Merge custom sentences
+                            merge_dict(
+                                intents_dict, yaml.safe_load(custom_sentences_file)
+                            )
 
-                    # Will need to recreate graph
-                    intents_changed = True
-                    _LOGGER.debug(
-                        "Loaded custom sentences language=%s, path=%s",
-                        language,
-                        custom_sentences_path,
-                    )
+                        # Will need to recreate graph
+                        intents_changed = True
+                        _LOGGER.debug(
+                            "Loaded custom sentences language=%s (%s), path=%s",
+                            language,
+                            language_variation,
+                            custom_sentences_path,
+                        )
+
+                    # Stop after first matched language variation
+                    break
 
             # Load sentences from HA config for default language only
             if self._config_intents and (language == self.hass.config.language):
@@ -425,16 +449,16 @@ class DefaultAgent(AbstractConversationAgent):
 
     @core.callback
     def _async_handle_entity_registry_changed(self, event: core.Event) -> None:
-        """Clear names list cache when an entity changes aliases."""
-        if event.data["action"] == "update" and "aliases" not in event.data["changes"]:
+        """Clear names list cache when an entity registry entry has changed."""
+        if event.data["action"] == "update" and not any(
+            field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
+        ):
             return
         self._slot_lists = None
 
     @core.callback
-    def _async_handle_state_changed(self, event: core.Event) -> None:
-        """Clear names list cache when a state is added or removed from the state machine."""
-        if event.data.get("old_state") and event.data.get("new_state"):
-            return
+    def _async_exposed_entities_updated(self) -> None:
+        """Handle updated preferences."""
         self._slot_lists = None
 
     def _make_slot_lists(self) -> dict[str, SlotList]:
@@ -443,45 +467,43 @@ class DefaultAgent(AbstractConversationAgent):
             return self._slot_lists
 
         area_ids_with_entities: set[str] = set()
-        states = [
-            state for state in self.hass.states.async_all() if is_entity_exposed(state)
+        all_entities = er.async_get(self.hass)
+        entities = [
+            entity
+            for entity in all_entities.entities.values()
+            if async_should_expose(self.hass, DOMAIN, entity.entity_id)
         ]
-        entities = entity_registry.async_get(self.hass)
-        devices = device_registry.async_get(self.hass)
+        devices = dr.async_get(self.hass)
 
         # Gather exposed entity names
         entity_names = []
-        for state in states:
+        for entity in entities:
             # Checked against "requires_context" and "excludes_context" in hassil
-            context = {"domain": state.domain}
+            context = {"domain": entity.domain}
+            if entity.device_class:
+                context[ATTR_DEVICE_CLASS] = entity.device_class
 
-            entity = entities.async_get(state.entity_id)
-            if entity is not None:
-                if entity.entity_category or entity.hidden:
-                    # Skip configuration/diagnostic/hidden entities
-                    continue
+            if entity.aliases:
+                for alias in entity.aliases:
+                    entity_names.append((alias, alias, context))
 
-                if entity.aliases:
-                    for alias in entity.aliases:
-                        entity_names.append((alias, alias, context))
+            # Default name
+            name = entity.async_friendly_name(self.hass) or entity.entity_id.replace(
+                "_", " "
+            )
+            entity_names.append((name, name, context))
 
-                # Default name
-                entity_names.append((state.name, state.name, context))
-
-                if entity.area_id:
-                    # Expose area too
-                    area_ids_with_entities.add(entity.area_id)
-                elif entity.device_id:
-                    # Check device for area as well
-                    device = devices.async_get(entity.device_id)
-                    if (device is not None) and device.area_id:
-                        area_ids_with_entities.add(device.area_id)
-            else:
-                # Default name
-                entity_names.append((state.name, state.name, context))
+            if entity.area_id:
+                # Expose area too
+                area_ids_with_entities.add(entity.area_id)
+            elif entity.device_id:
+                # Check device for area as well
+                device = devices.async_get(entity.device_id)
+                if (device is not None) and device.area_id:
+                    area_ids_with_entities.add(device.area_id)
 
         # Gather areas from exposed entities
-        areas = area_registry.async_get(self.hass)
+        areas = ar.async_get(self.hass)
         area_names = []
         for area_id in area_ids_with_entities:
             area = areas.async_get_area(area_id)
@@ -492,6 +514,9 @@ class DefaultAgent(AbstractConversationAgent):
             if area.aliases:
                 for alias in area.aliases:
                     area_names.append((alias, area.id))
+
+        _LOGGER.debug("Exposed areas: %s", area_names)
+        _LOGGER.debug("Exposed entities: %s", entity_names)
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),

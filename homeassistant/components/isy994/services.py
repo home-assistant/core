@@ -52,8 +52,14 @@ SERVICE_RENAME_NODE = "rename_node"
 SERVICE_SET_ON_LEVEL = "set_on_level"
 SERVICE_SET_RAMP_RATE = "set_ramp_rate"
 
+# Services valid only for Z-Wave Locks
+SERVICE_SET_ZWAVE_LOCK_USER_CODE = "set_zwave_lock_user_code"
+SERVICE_DELETE_ZWAVE_LOCK_USER_CODE = "delete_zwave_lock_user_code"
+
 CONF_PARAMETER = "parameter"
 CONF_PARAMETERS = "parameters"
+CONF_USER_NUM = "user_num"
+CONF_CODE = "code"
 CONF_VALUE = "value"
 CONF_INIT = "init"
 CONF_ISY = "isy"
@@ -128,6 +134,13 @@ SERVICE_SET_ZWAVE_PARAMETER_SCHEMA = {
     vol.Required(CONF_VALUE): vol.Coerce(int),
     vol.Required(CONF_SIZE): vol.All(vol.Coerce(int), vol.In(VALID_PARAMETER_SIZES)),
 }
+
+SERVICE_SET_USER_CODE_SCHEMA = {
+    vol.Required(CONF_USER_NUM): vol.Coerce(int),
+    vol.Required(CONF_CODE): vol.Coerce(int),
+}
+
+SERVICE_DELETE_USER_CODE_SCHEMA = {vol.Required(CONF_USER_NUM): vol.Coerce(int)}
 
 SERVICE_SET_VARIABLE_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_ADDRESS, CONF_TYPE, CONF_NAME),

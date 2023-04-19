@@ -17,7 +17,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import ATTR_FORECAST, CONF_FORECAST, DOMAIN, MANUFACTURER
 
@@ -116,11 +115,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             async with timeout(10):
                 current = await self.accuweather.async_get_current_conditions()
                 forecast = (
-                    await self.accuweather.async_get_forecast(
-                        metric=self.hass.config.units is METRIC_SYSTEM
-                    )
-                    if self.forecast
-                    else {}
+                    await self.accuweather.async_get_forecast() if self.forecast else {}
                 )
         except (
             ApiError,

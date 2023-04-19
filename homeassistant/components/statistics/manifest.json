@@ -2,7 +2,7 @@
   "domain": "statistics",
   "name": "Statistics",
   "after_dependencies": ["recorder"],
-  "codeowners": ["@fabaff", "@ThomDietrich"],
+  "codeowners": ["@ThomDietrich"],
   "documentation": "https://www.home-assistant.io/integrations/statistics",
   "iot_class": "local_polling",
   "quality_scale": "internal"

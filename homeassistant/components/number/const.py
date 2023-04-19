@@ -127,6 +127,15 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
     """
 
+    ENERGY_STORAGE = "energy_storage"
+    """Stored energy.
+
+    Use this device class for sensors measuring stored energy, for example the amount
+    of electric energy currently stored in a battery or the capacity of a battery.
+
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    """
+
     FREQUENCY = "frequency"
     """Frequency.
 
@@ -315,6 +324,18 @@ class NumberDeviceClass(StrEnum):
     USCS/imperial units are currently assumed to be US volumes)
     """
 
+    VOLUME_STORAGE = "volume_storage"
+    """Generic stored volume.
+
+    Use this device class for sensors measuring stored volume, for example the amount
+    of fuel in a fuel tank.
+
+    Unit of measurement: `VOLUME_*` units
+    - SI / metric: `mL`, `L`, `m³`
+    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
     WATER = "water"
     """Water.
 
@@ -365,6 +386,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.DATA_SIZE: set(UnitOfInformation),
     NumberDeviceClass.DISTANCE: set(UnitOfLength),
     NumberDeviceClass.ENERGY: set(UnitOfEnergy),
+    NumberDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     NumberDeviceClass.FREQUENCY: set(UnitOfFrequency),
     NumberDeviceClass.GAS: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -401,6 +423,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     NumberDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     NumberDeviceClass.VOLUME: set(UnitOfVolume),
+    NumberDeviceClass.VOLUME_STORAGE: set(UnitOfVolume),
     NumberDeviceClass.WATER: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,

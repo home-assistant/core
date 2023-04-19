@@ -202,11 +202,11 @@ class MySensorsDevice(ABC):
 
 def get_mysensors_devices(
     hass: HomeAssistant, domain: Platform
-) -> dict[DevId, MySensorsDevice]:
+) -> dict[DevId, MySensorsEntity]:
     """Return MySensors devices for a hass platform name."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:
         hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
-    devices: dict[DevId, MySensorsDevice] = hass.data[DOMAIN][
+    devices: dict[DevId, MySensorsEntity] = hass.data[DOMAIN][
         MYSENSORS_PLATFORM_DEVICES.format(domain)
     ]
     return devices
