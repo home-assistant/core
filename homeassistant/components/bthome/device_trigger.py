@@ -67,9 +67,9 @@ async def async_validate_trigger_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate trigger config."""
-    return SCHEMA_BY_EVENT_CLASS.get(
-        config[CONF_TYPE], DEVICE_TRIGGER_BASE_SCHEMA
-    ).schema(config)
+    return SCHEMA_BY_EVENT_CLASS.get(config[CONF_TYPE], DEVICE_TRIGGER_BASE_SCHEMA)(
+        config
+    )
 
 
 async def async_get_triggers(
