@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         firmware_version = coordinator.data["sensors"][
             AnovaPrecisionCookerSensor.FIRMWARE_VERSION
         ]
-        coordinator.async_setup(firmware_version)
+        coordinator.async_setup(str(firmware_version))
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AnovaData(
         api_jwt=entry.data["jwt"], precision_cookers=devices, coordinators=coordinators
     )

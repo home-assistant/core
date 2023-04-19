@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 class AnovaCoordinator(DataUpdateCoordinator):
     """Anova custom coordinator."""
 
+    data: dict[str, dict[str, str | int | float]]
+
     def __init__(
         self,
         hass: HomeAssistant,
