@@ -2,22 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from contextlib import suppress
-import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
-from aiohttp import WSMsgType, web
-import async_timeout
+from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
+from homeassistant.core import HomeAssistant
 from homeassistant.util.json import json_loads
-
 
 _WS_LOGGER: Final = logging.getLogger(f"{__name__}.connection")
 
@@ -26,7 +18,7 @@ class WebsocketAPIView(HomeAssistantView):
     """View to serve a websockets endpoint."""
 
     name: str = "websocketapi_custom"
-    url: str =  "/api/websocket_custom"
+    url: str = "/api/websocket_custom"
     requires_auth: bool = False
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
@@ -52,7 +44,7 @@ class WebSocketHandler:
         self.hass = hass
         self.request = request
         self.wsock = web.WebSocketResponse(heartbeat=55)
-       
+
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
 
     async def async_handle(self) -> web.WebSocketResponse:
@@ -61,7 +53,7 @@ class WebSocketHandler:
         wsock = self.wsock
 
         await wsock.prepare(request)
-        
+
         try:
             await wsock.send_str("1")
 
@@ -77,5 +69,5 @@ class WebSocketHandler:
 
         except Exception:  # pylint: disable=broad-except
             self._logger.exception("Unexpected error inside websocket API")
-        
+
         return wsock

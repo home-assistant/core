@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .api import async_register_s2_api, S2FlexMeasuresClient
+from .api import S2FlexMeasuresClient, async_register_s2_api
 from .const import DOMAIN
 from .websockets import WebsocketAPIView
 
