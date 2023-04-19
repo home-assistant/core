@@ -1,7 +1,7 @@
 {
   "domain": "androidtv_remote",
   "name": "Android TV Remote",
-  "codeowners": ["@tronikos"],
+  "codeowners": ["@tronikos", "@Drafteed"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/androidtv_remote",
   "integration_type": "device",
