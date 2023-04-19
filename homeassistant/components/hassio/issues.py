@@ -115,8 +115,8 @@ class Suggestion:
         """Get key for suggestion (combination of context and type)."""
         return f"{self.context}_{self.type_}"
 
-    @staticmethod
-    def from_dict(data: SuggestionDataType) -> Suggestion:
+    @classmethod
+    def from_dict(cls, data: SuggestionDataType) -> Suggestion:
         """Convert from dictionary representation."""
         return Suggestion(
             uuid=data["uuid"],
@@ -151,8 +151,8 @@ class Issue:
         """Get key for issue (combination of context and type)."""
         return f"issue_{self.context}_{self.type_}"
 
-    @staticmethod
-    def from_dict(data: IssueDataType) -> Issue:
+    @classmethod
+    def from_dict(cls, data: IssueDataType) -> Issue:
         """Convert from dictionary representation."""
         suggestions: list[SuggestionDataType] = data.get("suggestions", [])
         return Issue(
@@ -244,6 +244,9 @@ class SupervisorIssues:
     def add_issue(self, issue: Issue) -> None:
         """Add or update an issue in the list. Create or update a repair if necessary."""
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
+            placeholders: dict[str, str] | None = None
+            if issue.reference:
+                placeholders = {PLACEHOLDER_KEY_REFERENCE: issue.reference}
             async_create_issue(
                 self._hass,
                 DOMAIN,
@@ -251,9 +254,7 @@ class SupervisorIssues:
                 is_fixable=bool(issue.suggestions),
                 severity=IssueSeverity.WARNING,
                 translation_key=issue.key,
-                translation_placeholders={PLACEHOLDER_KEY_REFERENCE: issue.reference}
-                if issue.reference
-                else None,
+                translation_placeholders=placeholders,
             )
 
         self._issues[issue.uuid] = issue
