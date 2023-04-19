@@ -118,7 +118,7 @@ class Suggestion:
     @classmethod
     def from_dict(cls, data: SuggestionDataType) -> Suggestion:
         """Convert from dictionary representation."""
-        return Suggestion(
+        return cls(
             uuid=data["uuid"],
             type_=data["type"],
             context=data["context"],
@@ -155,7 +155,7 @@ class Issue:
     def from_dict(cls, data: IssueDataType) -> Issue:
         """Convert from dictionary representation."""
         suggestions: list[SuggestionDataType] = data.get("suggestions", [])
-        return Issue(
+        return cls(
             uuid=data["uuid"],
             type_=data["type"],
             context=data["context"],
