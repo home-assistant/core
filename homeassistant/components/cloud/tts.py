@@ -10,6 +10,7 @@ from homeassistant.components.tts import (
     PLATFORM_SCHEMA,
     Provider,
 )
+from homeassistant.core import callback
 
 from .const import DOMAIN
 
@@ -94,6 +95,11 @@ class CloudProvider(Provider):
     def supported_options(self):
         """Return list of supported options like voice, emotion."""
         return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
+
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[str] | None:
+        """Return a list of supported voices for a language."""
+        return TTS_VOICES.get(language)
 
     @property
     def default_options(self):

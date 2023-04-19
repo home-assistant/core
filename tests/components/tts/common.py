@@ -11,7 +11,7 @@ from homeassistant.components.tts import (
     Provider,
     TtsAudioType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from tests.common import MockPlatform
@@ -39,6 +39,13 @@ class MockProvider(Provider):
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
+
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[str] | None:
+        """Return list of supported languages."""
+        if language == "en-US":
+            return ["James Earl Jones", "Fran Drescher"]
+        return None
 
     @property
     def supported_options(self) -> list[str]:

@@ -739,18 +739,20 @@ def websocket_list_engine_voices(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List voices for a given language."""
-    voices = {
-        "voices": [
-            # placeholder until TTS refactoring
-            {
-                "voice_id": "voice_1",
-                "name": "James Earl Jones",
-            },
-            {
-                "voice_id": "voice_2",
-                "name": "Fran Drescher",
-            },
-        ]
-    }
+    engine_id = msg["engine_id"]
+    language = msg["language"]
+
+    manager: SpeechManager = hass.data[DOMAIN]
+    engine = manager.providers.get(engine_id)
+
+    if not engine:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_FOUND,
+            f"tts engine {engine_id} not found",
+        )
+        return
+
+    voices = {"voices": engine.async_get_supported_voices(language)}
 
     connection.send_message(websocket_api.result_message(msg["id"], voices))
