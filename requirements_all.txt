@@ -2233,7 +2233,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2022.11.0
 
 # homeassistant.components.renault
-renault-api==0.1.12
+renault-api==0.1.13
 
 # homeassistant.components.reolink
 reolink-aio==0.5.10
