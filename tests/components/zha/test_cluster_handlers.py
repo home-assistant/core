@@ -1,5 +1,6 @@
 """Test ZHA Core cluster handlers."""
 import asyncio
+from collections.abc import Callable
 import math
 from unittest import mock
 from unittest.mock import AsyncMock, patch
@@ -15,7 +16,7 @@ import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
 import homeassistant.components.zha.core.const as zha_const
-from homeassistant.components.zha.core.device import ZHADevice as Device
+from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.endpoint import Endpoint
 import homeassistant.components.zha.core.registries as registries
 from homeassistant.core import HomeAssistant
@@ -346,7 +347,7 @@ def test_epch_unclaimed_cluster_handlers(cluster_handler) -> None:
     ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
 
     ep_cluster_handlers = Endpoint(
-        mock.MagicMock(spec_set=ZigpyEndpoint), mock.MagicMock(spec_set=Device)
+        mock.MagicMock(spec_set=ZigpyEndpoint), mock.MagicMock(spec_set=ZHADevice)
     )
     all_cluster_handlers = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     with mock.patch.dict(
@@ -384,7 +385,7 @@ def test_epch_claim_cluster_handlers(cluster_handler) -> None:
     ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
 
     ep_cluster_handlers = Endpoint(
-        mock.MagicMock(spec_set=ZigpyEndpoint), mock.MagicMock(spec_set=Device)
+        mock.MagicMock(spec_set=ZigpyEndpoint), mock.MagicMock(spec_set=ZHADevice)
     )
     all_cluster_handlers = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     with mock.patch.dict(
@@ -417,7 +418,7 @@ def test_epch_claim_cluster_handlers(cluster_handler) -> None:
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-def test_ep_all_cluster_handlers(m1, zha_device_mock) -> None:
+def test_ep_all_cluster_handlers(m1, zha_device_mock: Callable[..., ZHADevice]) -> None:
     """Test Endpoint adding all cluster handlers."""
     zha_device = zha_device_mock(
         {
@@ -454,6 +455,8 @@ def test_ep_all_cluster_handlers(m1, zha_device_mock) -> None:
     assert "2:0x0008" in zha_device._endpoints[2].all_cluster_handlers
     assert "2:0x0300" in zha_device._endpoints[2].all_cluster_handlers
 
+    zha_device.async_cleanup_handles()
+
 
 @mock.patch(
     "homeassistant.components.zha.core.endpoint.Endpoint.add_client_cluster_handlers"
@@ -462,7 +465,9 @@ def test_ep_all_cluster_handlers(m1, zha_device_mock) -> None:
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-def test_cluster_handler_power_config(m1, zha_device_mock) -> None:
+def test_cluster_handler_power_config(
+    m1, zha_device_mock: Callable[..., ZHADevice]
+) -> None:
     """Test that cluster handlers only get a single power cluster handler."""
     in_clusters = [0, 1, 6, 8]
     zha_device = zha_device_mock(
@@ -486,6 +491,8 @@ def test_cluster_handler_power_config(m1, zha_device_mock) -> None:
     assert "2:0x0008" in zha_device._endpoints[2].all_cluster_handlers
     assert "2:0x0300" in zha_device._endpoints[2].all_cluster_handlers
 
+    zha_device.async_cleanup_handles()
+
     zha_device = zha_device_mock(
         {
             1: {SIG_EP_INPUT: [], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x0000},
@@ -495,10 +502,14 @@ def test_cluster_handler_power_config(m1, zha_device_mock) -> None:
     assert "1:0x0001" not in zha_device._endpoints[1].all_cluster_handlers
     assert "2:0x0001" in zha_device._endpoints[2].all_cluster_handlers
 
+    zha_device.async_cleanup_handles()
+
     zha_device = zha_device_mock(
         {2: {SIG_EP_INPUT: in_clusters, SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x0000}}
     )
     assert "2:0x0001" in zha_device._endpoints[2].all_cluster_handlers
+
+    zha_device.async_cleanup_handles()
 
 
 async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
@@ -517,7 +528,7 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
     endpoint_mock = mock.MagicMock(spec_set=ZigpyEndpoint)
     type(endpoint_mock).in_clusters = mock.PropertyMock(return_value={})
     type(endpoint_mock).out_clusters = mock.PropertyMock(return_value={})
-    endpoint = Endpoint.new(endpoint_mock, mock.MagicMock(spec_set=Device))
+    endpoint = Endpoint.new(endpoint_mock, mock.MagicMock(spec_set=ZHADevice))
 
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     client_handlers = {ch_4.id: ch_4, ch_5.id: ch_5}
@@ -715,7 +726,9 @@ async def test_zll_device_groups(
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
-async def test_cluster_no_ep_attribute(zha_device_mock) -> None:
+async def test_cluster_no_ep_attribute(
+    zha_device_mock: Callable[..., ZHADevice]
+) -> None:
     """Test cluster handlers for clusters without ep_attribute."""
 
     zha_device = zha_device_mock(
@@ -724,6 +737,8 @@ async def test_cluster_no_ep_attribute(zha_device_mock) -> None:
 
     assert "1:0x042e" in zha_device._endpoints[1].all_cluster_handlers
     assert zha_device._endpoints[1].all_cluster_handlers["1:0x042e"].name
+
+    zha_device.async_cleanup_handles()
 
 
 async def test_configure_reporting(hass: HomeAssistant, endpoint) -> None:
