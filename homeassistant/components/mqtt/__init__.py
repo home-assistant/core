@@ -572,8 +572,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await mqtt_client.async_disconnect()
 
     # Cleanup MQTT client availability
-    if DATA_MQTT_AVAILABLE in hass.data:
-        del hass.data[DATA_MQTT_AVAILABLE]
+    hass.data.pop(DATA_MQTT_AVAILABLE, None)
     # Store remaining subscriptions to be able to restore or reload them
     # when the entry is set up again
     if subscriptions := mqtt_client.subscriptions:
