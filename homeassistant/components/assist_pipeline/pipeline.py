@@ -40,7 +40,6 @@ STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
 
 ENGINE_LANGUAGE_PAIRS = (
-    ("conversation_engine", "conversation_language"),
     ("stt_engine", "stt_language"),
     ("tts_engine", "tts_language"),
 )
