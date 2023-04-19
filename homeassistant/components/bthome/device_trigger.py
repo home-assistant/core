@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -31,11 +32,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 BUTTON_DEVICE_TRIGGERS = [
+    {CONF_TYPE: "press", CONF_EVENT_PROPERTIES: None},
+    {CONF_TYPE: "double_press", CONF_EVENT_PROPERTIES: None},
+    {CONF_TYPE: "triple_press", CONF_EVENT_PROPERTIES: None},
     {CONF_TYPE: "long_press", CONF_EVENT_PROPERTIES: None},
+    {CONF_TYPE: "long_double_press", CONF_EVENT_PROPERTIES: None},
+    {CONF_TYPE: "long_triple_press", CONF_EVENT_PROPERTIES: None},
 ]
 
 DIMMER_DEVICE_TRIGGERS = [
     {CONF_TYPE: "rotate_left", CONF_EVENT_PROPERTIES: None},
+    {CONF_TYPE: "rotate_right", CONF_EVENT_PROPERTIES: None},
 ]
 
 BUTTON_DEVICE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -100,7 +107,7 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """Return a list of triggers for BTHome BLE devices."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_registry.async_get(device_id)
 
     triggers = []
