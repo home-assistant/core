@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -323,7 +323,7 @@ async def test_switch_command_state_code_exceptions(
     """Test that switch state code exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -356,7 +356,7 @@ async def test_switch_command_state_value_exceptions(
     """Test that switch state value exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -393,7 +393,9 @@ async def test_no_switches(
     assert "No switches" in caplog.text
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id option and if it only creates one switch per id."""
     await setup_test_entity(
         hass,
@@ -418,13 +420,10 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 2
 
-    ent_reg = entity_registry.async_get(hass)
-
-    assert len(ent_reg.entities) == 2
-    assert ent_reg.async_get_entity_id("switch", "command_line", "unique") is not None
-    assert (
-        ent_reg.async_get_entity_id("switch", "command_line", "not-so-unique-anymore")
-        is not None
+    assert len(entity_registry.entities) == 2
+    assert entity_registry.async_get_entity_id("switch", "command_line", "unique")
+    assert entity_registry.async_get_entity_id(
+        "switch", "command_line", "not-so-unique-anymore"
     )
 
 

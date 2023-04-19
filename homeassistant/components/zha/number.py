@@ -11,7 +11,7 @@ from zigpy.zcl.foundation import Status
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfMass
+from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -375,6 +375,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_step: float = 1.0
+    _attr_multiplier: float = 1
     _zcl_attribute: str
 
     @classmethod
@@ -417,13 +418,13 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     @property
     def native_value(self) -> float:
         """Return the current value."""
-        return self._channel.cluster.get(self._zcl_attribute)
+        return self._channel.cluster.get(self._zcl_attribute) * self._attr_multiplier
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         try:
             res = await self._channel.cluster.write_attributes(
-                {self._zcl_attribute: int(value)}
+                {self._zcl_attribute: int(value / self._attr_multiplier)}
             )
         except zigpy.exceptions.ZigbeeException as ex:
             self.error("Could not set value: %s", ex)
@@ -834,6 +835,34 @@ class InovelliDefaultAllLEDOffIntensity(
     _attr_name: str = "Default all LED off intensity"
 
 
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliDoubleTapUpLevel(
+    ZHANumberConfigurationEntity, id_suffix="double_tap_up_level"
+):
+    """Inovelli double tap up level configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[16]
+    _attr_native_min_value: float = 2
+    _attr_native_max_value: float = 254
+    _zcl_attribute: str = "double_tap_up_level"
+    _attr_name: str = "Double tap up level"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliDoubleTapDownLevel(
+    ZHANumberConfigurationEntity, id_suffix="double_tap_down_level"
+):
+    """Inovelli double tap down level configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[16]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 254
+    _zcl_attribute: str = "double_tap_down_level"
+    _attr_name: str = "Double tap down level"
+
+
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving_size"):
     """Aqara pet feeder serving size configuration entity."""
@@ -861,3 +890,20 @@ class AqaraPetFeederPortionWeight(
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
     _attr_icon: str = "mdi:weight-gram"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+class AqaraThermostatAwayTemp(
+    ZHANumberConfigurationEntity, id_suffix="away_preset_temperature"
+):
+    """Aqara away preset temperature configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 5
+    _attr_native_max_value: float = 30
+    _attr_multiplier: float = 0.01
+    _zcl_attribute: str = "away_preset_temperature"
+    _attr_name: str = "Away preset temperature"
+    _attr_mode: NumberMode = NumberMode.SLIDER
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_icon: str = ICONS[0]

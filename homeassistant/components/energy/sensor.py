@@ -74,7 +74,7 @@ async def async_setup_platform(
     await sensor_manager.async_start()
 
 
-@dataclass
+@dataclass(slots=True)
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 

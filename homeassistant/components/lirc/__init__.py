@@ -42,7 +42,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 class LircInterface(threading.Thread):
-    """This interfaces with the lirc daemon to read IR commands.
+    """Interfaces with the lirc daemon to read IR commands.
 
     When using lirc in blocking mode, sometimes repeated commands get produced
     in the next read of a command so we use a thread here to just wait

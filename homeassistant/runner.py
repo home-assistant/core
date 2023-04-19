@@ -34,7 +34,7 @@ ALPINE_RELEASE_FILE = "/etc/alpine-release"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class RuntimeConfig:
     """Class to hold the information for running Home Assistant."""
 
@@ -62,7 +62,7 @@ def can_use_pidfd() -> bool:
         return False
     try:
         pid = os.getpid()
-        os.close(os.pidfd_open(pid, 0))  # pylint: disable=no-member
+        os.close(os.pidfd_open(pid, 0))
     except OSError:
         # blocked by security policy like SECCOMP
         return False
@@ -110,7 +110,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
-        loop.set_default_executor = warn_use(  # type: ignore[assignment]
+        loop.set_default_executor = warn_use(  # type: ignore[method-assign]
             loop.set_default_executor, "sets default executor on the event loop"
         )
         return loop

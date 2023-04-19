@@ -6,7 +6,7 @@ from unittest.mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import DEFAULT_DB_FILE, DEFAULT_URL, Recorder
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -43,7 +43,6 @@ async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Get Value"
     assert result2["options"] == {
-        "db_url": "sqlite://",
         "name": "Get Value",
         "query": "SELECT 5 as value",
         "column": "value",
@@ -113,7 +112,6 @@ async def test_flow_fails_invalid_query(
     assert result5["type"] == FlowResultType.CREATE_ENTRY
     assert result5["title"] == "Get Value"
     assert result5["options"] == {
-        "db_url": "sqlite://",
         "name": "Get Value",
         "query": "SELECT 5 as value",
         "column": "value",
@@ -163,7 +161,6 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
-        "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",
@@ -215,7 +212,6 @@ async def test_options_flow_name_previously_removed(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value Title",
-        "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",
@@ -316,7 +312,6 @@ async def test_options_flow_fails_invalid_query(
     assert result4["type"] == FlowResultType.CREATE_ENTRY
     assert result4["data"] == {
         "name": "Get Value",
-        "db_url": "sqlite://",
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",
@@ -369,12 +364,9 @@ async def test_options_flow_db_url_empty(
         )
         await hass.async_block_till_done()
 
-    db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
-        "db_url": db_url,
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",

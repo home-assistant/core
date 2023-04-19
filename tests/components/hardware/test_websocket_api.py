@@ -3,6 +3,7 @@ from collections import namedtuple
 import datetime
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.components.hardware.const import DOMAIN
@@ -33,7 +34,9 @@ TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(seconds=5 + 1)
 
 
 async def test_system_status_subscription(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, freezer
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test websocket system status subscription."""
 

@@ -28,7 +28,7 @@ import homeassistant.components.zha.sensor
 import homeassistant.components.zha.switch
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry
+import homeassistant.helpers.entity_registry as er
 
 from .common import get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -104,9 +104,7 @@ async def test_devices(
     zha_device_joined_restored,
 ) -> None:
     """Test device discovery."""
-    entity_registry = homeassistant.helpers.entity_registry.async_get(
-        hass_disable_services
-    )
+    entity_registry = er.async_get(hass_disable_services)
 
     zigpy_device = zigpy_device_mock(
         device[SIG_ENDPOINTS],

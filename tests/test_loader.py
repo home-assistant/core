@@ -83,7 +83,9 @@ async def test_helpers_wrapper(hass: HomeAssistant) -> None:
     assert result == ["hello"]
 
 
-async def test_custom_component_name(hass, enable_custom_integrations):
+async def test_custom_component_name(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test the name attribute of custom components."""
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test_standalone")
@@ -109,7 +111,11 @@ async def test_custom_component_name(hass, enable_custom_integrations):
     assert TEST == 5
 
 
-async def test_log_warning_custom_component(hass, caplog, enable_custom_integrations):
+async def test_log_warning_custom_component(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test that we log a warning when loading a custom component."""
 
     await loader.async_get_integration(hass, "test_package")
@@ -120,8 +126,10 @@ async def test_log_warning_custom_component(hass, caplog, enable_custom_integrat
 
 
 async def test_custom_integration_version_not_valid(
-    hass, caplog, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test that we log a warning when custom integrations have a invalid version."""
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test_no_version")
@@ -161,14 +169,18 @@ async def test_get_integration_exceptions(hass: HomeAssistant) -> None:
         assert hue_light == integration.get_platform("light")
 
 
-async def test_get_integration_legacy(hass, enable_custom_integrations):
+async def test_get_integration_legacy(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_embedded")
     assert integration.get_component().DOMAIN == "test_embedded"
     assert integration.get_platform("switch") is not None
 
 
-async def test_get_integration_custom_component(hass, enable_custom_integrations):
+async def test_get_integration_custom_component(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_package")
     assert integration.get_component().DOMAIN == "test_package"
@@ -461,7 +473,9 @@ def _get_test_integration_with_usb_matcher(hass, name, config_flow):
     )
 
 
-async def test_get_custom_components(hass, enable_custom_integrations):
+async def test_get_custom_components(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Verify that custom components are cached."""
     test_1_integration = _get_test_integration(hass, "test_1", False)
     test_2_integration = _get_test_integration(hass, "test_2", True)
@@ -663,7 +677,9 @@ async def test_get_custom_components_safe_mode(hass: HomeAssistant) -> None:
     assert await loader.async_get_custom_components(hass) == {}
 
 
-async def test_custom_integration_missing_version(hass, caplog):
+async def test_custom_integration_missing_version(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test trying to load a custom integration without a version twice does not deadlock."""
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test_no_version")
@@ -672,7 +688,9 @@ async def test_custom_integration_missing_version(hass, caplog):
         await loader.async_get_integration(hass, "test_no_version")
 
 
-async def test_custom_integration_missing(hass, caplog):
+async def test_custom_integration_missing(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test trying to load a custom integration that is missing twice not deadlock."""
     with patch("homeassistant.loader.async_get_custom_components") as mock_get:
         mock_get.return_value = {}

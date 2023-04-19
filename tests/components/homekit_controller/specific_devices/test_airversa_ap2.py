@@ -1,7 +1,7 @@
 """Tests for Airversa AP2 Air Purifier."""
-
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, PERCENTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 
 from ..common import (
@@ -14,7 +14,7 @@ from ..common import (
 )
 
 
-async def test_airversa_ap2_setup(hass):
+async def test_airversa_ap2_setup(hass: HomeAssistant) -> None:
     """Test that an Ecbobee occupancy sensor be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "airversa_ap2.json")
     await setup_test_accessories(hass, accessories)
