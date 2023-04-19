@@ -11,7 +11,6 @@ from homeassistant.components.datetime import (
     ATTR_MINUTE,
     ATTR_MONTH,
     ATTR_SECOND,
-    ATTR_TIME_ZONE,
     ATTR_TIMESTAMP,
     ATTR_YEAR,
     DOMAIN,
@@ -46,6 +45,7 @@ class MockDateTimeEntity(DateTimeEntity):
 
 async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> None:
     """Test time entity."""
+    hass.config.set_time_zone("utc")
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
 
@@ -69,11 +69,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,
-        {
-            ATTR_TIME: time(2, 3, 4),
-            ATTR_TIME_ZONE: "Etc/UTC",
-            ATTR_ENTITY_ID: "datetime.test",
-        },
+        {ATTR_TIME: time(2, 3, 4), ATTR_ENTITY_ID: "datetime.test"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -85,11 +81,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,
-        {
-            ATTR_DATE: date(2021, 2, 2),
-            ATTR_TIME_ZONE: "Etc/UTC",
-            ATTR_ENTITY_ID: "datetime.test",
-        },
+        {ATTR_DATE: date(2021, 2, 2), ATTR_ENTITY_ID: "datetime.test"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -101,11 +93,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,
-        {
-            ATTR_DATETIME: datetime(2022, 3, 3, 3, 4, 5),
-            ATTR_TIME_ZONE: "Etc/UTC",
-            ATTR_ENTITY_ID: "datetime.test",
-        },
+        {ATTR_DATETIME: datetime(2022, 3, 3, 3, 4, 5), ATTR_ENTITY_ID: "datetime.test"},
         blocking=True,
     )
     await hass.async_block_till_done()
