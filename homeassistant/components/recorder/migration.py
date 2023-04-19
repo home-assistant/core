@@ -6,6 +6,7 @@ import contextlib
 from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
+from time import time
 from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
@@ -26,7 +27,7 @@ from sqlalchemy.sql.expression import true
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
-from homeassistant.util.ulid import ulid_to_bytes
+from homeassistant.util.ulid import ulid_at_time, ulid_to_bytes
 
 from .auto_repairs.events.schema import (
     correct_db_schema as events_correct_db_schema,
@@ -1384,13 +1385,14 @@ def migrate_states_context_ids(instance: Recorder) -> bool:
                     {
                         "state_id": state_id,
                         "context_id": None,
-                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
+                        "context_id_bin": _to_bytes(context_id)
+                        or ulid_to_bytes(ulid_at_time(last_updated_ts or time())),
                         "context_user_id": None,
                         "context_user_id_bin": _to_bytes(context_user_id),
                         "context_parent_id": None,
                         "context_parent_id_bin": _to_bytes(context_parent_id),
                     }
-                    for state_id, context_id, context_user_id, context_parent_id in states
+                    for state_id, last_updated_ts, context_id, context_user_id, context_parent_id in states
                 ],
             )
         # If there is more work to do return False
@@ -1418,13 +1420,14 @@ def migrate_events_context_ids(instance: Recorder) -> bool:
                     {
                         "event_id": event_id,
                         "context_id": None,
-                        "context_id_bin": _to_bytes(context_id) or _EMPTY_CONTEXT_ID,
+                        "context_id_bin": _to_bytes(context_id)
+                        or ulid_to_bytes(ulid_at_time(time_fired_ts or time())),
                         "context_user_id": None,
                         "context_user_id_bin": _to_bytes(context_user_id),
                         "context_parent_id": None,
                         "context_parent_id_bin": _to_bytes(context_parent_id),
                     }
-                    for event_id, context_id, context_user_id, context_parent_id in events
+                    for event_id, time_fired_ts, context_id, context_user_id, context_parent_id in events
                 ],
             )
         # If there is more work to do return False
