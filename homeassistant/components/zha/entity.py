@@ -320,6 +320,7 @@ class ZhaGroupEntity(BaseZhaEntity):
                 immediate=False,
                 function=functools.partial(self.async_update_ha_state, True),
             )
+            self.async_on_remove(self._change_listener_debouncer.async_cancel)
         self._async_unsub_state_changed = async_track_state_change_event(
             self.hass, self._entity_ids, self.async_state_changed_listener
         )
