@@ -51,7 +51,7 @@ def setup_platform(
             user = lastfm_api.get_user(username)
             entities.append(LastFmSensor(user, lastfm_api))
         except WSError as exc:
-            LOGGER.error(exc)
+            LOGGER.error("Failed to load LastFM user `%s`: %r", username, exc)
     add_entities(entities, True)
 
 
