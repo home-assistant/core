@@ -98,10 +98,10 @@ class DateEntity(Entity):
         """Return the value reported by the date."""
         return self._attr_native_value
 
-    def set_value(self, data: dict[str, date]) -> None:
+    def set_value(self, value: date) -> None:
         """Change the date."""
         raise NotImplementedError()
 
-    async def async_set_value(self, data: dict[str, date]) -> None:
+    async def async_set_value(self, value: date) -> None:
         """Change the date."""
-        await self.hass.async_add_executor_job(self.set_value, data)
+        await self.hass.async_add_executor_job(self.set_value, value)
