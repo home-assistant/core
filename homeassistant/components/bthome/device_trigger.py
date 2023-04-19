@@ -93,9 +93,9 @@ async def async_get_triggers(
     return [
         {
             # Required fields of TRIGGER_BASE_SCHEMA
-            CONF_PLATFORM: CONF_EVENT,
-            CONF_DOMAIN: DOMAIN,
+            CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
             # Required fields of TRIGGER_SCHEMA
             CONF_TYPE: event_class,
             CONF_SUBTYPE: event_type,
