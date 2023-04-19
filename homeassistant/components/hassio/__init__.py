@@ -72,6 +72,7 @@ from .const import (
     DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     SupervisorEntityModel,
 )
@@ -126,7 +127,6 @@ DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
-DATA_SUPERVISOR_ISSUES = "supervisor_issues"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
@@ -611,7 +611,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     )
 
     # Start listening for problems with supervisor and making issues
-    hass.data[DATA_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
+    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
     await issues.setup()
 
     return True

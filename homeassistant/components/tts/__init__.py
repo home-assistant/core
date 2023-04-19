@@ -276,12 +276,19 @@ class SpeechManager:
 
         # Languages
         language = language or provider.default_language
-        if (
-            language is None
-            or provider.supported_languages is None
-            or language not in provider.supported_languages
-        ):
+
+        if language is None or provider.supported_languages is None:
             raise HomeAssistantError(f"Not supported language {language}")
+
+        if language not in provider.supported_languages:
+            language_matches = language_util.matches(
+                language, provider.supported_languages
+            )
+            if language_matches:
+                # Choose best match
+                language = language_matches[0]
+            else:
+                raise HomeAssistantError(f"Not supported language {language}")
 
         # Options
         if (default_options := provider.default_options) and options:

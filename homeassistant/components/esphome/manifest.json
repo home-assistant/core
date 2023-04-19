@@ -1,10 +1,10 @@
 {
   "domain": "esphome",
   "name": "ESPHome",
-  "after_dependencies": ["zeroconf", "tag", "assist_pipeline"],
+  "after_dependencies": ["zeroconf", "tag"],
   "codeowners": ["@OttoWinter", "@jesserockz"],
   "config_flow": true,
-  "dependencies": ["bluetooth"],
+  "dependencies": ["assist_pipeline", "bluetooth"],
   "dhcp": [
     {
       "registered_devices": true
