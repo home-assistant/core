@@ -71,7 +71,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
         SERVICE_SET_VALUE,
         {
             ATTR_TIME: time(2, 3, 4),
-            ATTR_TIME_ZONE: "utc",
+            ATTR_TIME_ZONE: "Etc/UTC",
             ATTR_ENTITY_ID: "datetime.test",
         },
         blocking=True,
@@ -87,7 +87,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
         SERVICE_SET_VALUE,
         {
             ATTR_DATE: date(2021, 2, 2),
-            ATTR_TIME_ZONE: "utc",
+            ATTR_TIME_ZONE: "Etc/UTC",
             ATTR_ENTITY_ID: "datetime.test",
         },
         blocking=True,
@@ -103,7 +103,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
         SERVICE_SET_VALUE,
         {
             ATTR_DATETIME: datetime(2022, 3, 3, 3, 4, 5),
-            ATTR_TIME_ZONE: "utc",
+            ATTR_TIME_ZONE: "Etc/UTC",
             ATTR_ENTITY_ID: "datetime.test",
         },
         blocking=True,
