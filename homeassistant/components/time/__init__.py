@@ -9,7 +9,7 @@ from typing import final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import FORMAT_TIME
+from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -20,20 +20,11 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_HOUR,
-    ATTR_MINUTE,
-    ATTR_SECOND,
-    ATTR_TIME,
-    DOMAIN,
-    SERVICE_SET_VALUE,
-)
+from .const import ATTR_HOUR, ATTR_MINUTE, ATTR_SECOND, DOMAIN, SERVICE_SET_VALUE
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,17 +72,26 @@ class TimeEntity(Entity):
 
     entity_description: TimeEntityDescription
     _attr_native_value: time | None
+    _attr_device_class: None = None
+    _attr_state: None = None
 
     @property
     @final
-    def state_attributes(self) -> dict[str, str | bool | int | float]:
+    def device_class(self) -> None:
+        """Return the device class for the entity."""
+        return None
+
+    @property
+    @final
+    def state_attributes(self) -> dict[str, int] | dict[str, None]:
         """Return the state attributes."""
-        state_attr: dict[str, int | None] = {
-            ATTR_HOUR: self.hour,
-            ATTR_MINUTE: self.minute,
-            ATTR_SECOND: self.second,
+        if self.native_value is None:
+            return {ATTR_HOUR: None, ATTR_MINUTE: None, ATTR_SECOND: None}
+        return {
+            ATTR_HOUR: self.native_value.hour,
+            ATTR_MINUTE: self.native_value.minute,
+            ATTR_SECOND: self.native_value.second,
         }
-        return {k: v for k, v in state_attr.items() if v is not None}
 
     @property
     @final
@@ -99,41 +99,17 @@ class TimeEntity(Entity):
         """Return the entity state."""
         if self.native_value is None:
             return None
-        return self.native_value.strftime(FORMAT_TIME)
-
-    @property
-    @final
-    def hour(self) -> int | None:
-        """Return hour from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.hour
-
-    @property
-    @final
-    def minute(self) -> int | None:
-        """Return minute from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.minute
-
-    @property
-    @final
-    def second(self) -> int | None:
-        """Return second from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.second
+        return self.native_value.isoformat()
 
     @property
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
         return self._attr_native_value
 
-    def set_value(self, time_value: time) -> None:
+    def set_value(self, value: time) -> None:
         """Change the time."""
         raise NotImplementedError()
 
-    async def async_set_value(self, time_value: time) -> None:
+    async def async_set_value(self, value: time) -> None:
         """Change the time."""
-        await self.hass.async_add_executor_job(self.set_value, time_value)
+        await self.hass.async_add_executor_job(self.set_value, value)

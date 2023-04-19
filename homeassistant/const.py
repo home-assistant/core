@@ -1164,11 +1164,6 @@ HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
 
-# Date/Time formats
-FORMAT_DATE: Final = "%Y-%m-%d"
-FORMAT_TIME: Final = "%H:%M:%S"
-FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
-
 
 class EntityCategory(StrEnum):
     """Category of an entity.

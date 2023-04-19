@@ -1,3 +1,19 @@
 {
-  "title": "Time"
+  "title": "Time",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::time::title%]",
+      "state_attributes": {
+        "hour": {
+          "name": "Hour"
+        },
+        "minute": {
+          "name": "Minute"
+        },
+        "second": {
+          "name": "Second"
+        }
+      }
+    }
+  }
 }

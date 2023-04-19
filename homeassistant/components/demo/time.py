@@ -57,7 +57,7 @@ class DemoTime(TimeEntity):
             identifiers={(DOMAIN, unique_id)}, name=self.name
         )
 
-    async def async_set_value(self, time_value: time) -> None:
+    async def async_set_value(self, value: time) -> None:
         """Update the time."""
-        self._attr_native_value = time_value
+        self._attr_native_value = value
         self.async_write_ha_state()
