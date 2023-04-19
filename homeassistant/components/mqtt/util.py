@@ -11,15 +11,9 @@ from typing import Any
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SIGNAL_CONFIG_ENTRY_CHANGED,
-    ConfigEntry,
-    ConfigEntryChange,
-    ConfigEntryState,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -68,7 +62,6 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
     if entry.state == ConfigEntryState.LOADED:
         return True
 
-    valid_states = {ConfigEntryState.SETUP_IN_PROGRESS, ConfigEntryState.LOADED}
     state_reached_future: asyncio.Future[bool]
     if DATA_MQTT_AVAILABLE not in hass.data:
         hass.data[DATA_MQTT_AVAILABLE] = state_reached_future = asyncio.Future()
@@ -77,30 +70,12 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         if state_reached_future.done():
             return state_reached_future.result()
 
-    @callback
-    def _async_entry_changed(
-        change: ConfigEntryChange, event_entry: ConfigEntry
-    ) -> None:
-        if event_entry is entry and change is ConfigEntryChange.UPDATED:
-            # SETUP_IN_PROGRESS: allow integration to set the result
-            if entry.state == ConfigEntryState.SETUP_IN_PROGRESS:
-                return
-            # Set the result based on the state
-            # False if when entered an error state else True
-            if not state_reached_future.done():
-                state_reached_future.set_result(entry.state in valid_states)
-
-    unsub = async_dispatcher_connect(
-        hass, SIGNAL_CONFIG_ENTRY_CHANGED, _async_entry_changed
-    )
     try:
         async with async_timeout.timeout(AVAILABILITY_TIMEOUT):
             # Await the client setup or an error state was received
             return await state_reached_future
     except asyncio.TimeoutError:
         return False
-    finally:
-        unsub()
 
 
 def valid_topic(topic: Any) -> str:
