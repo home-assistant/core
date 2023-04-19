@@ -93,7 +93,6 @@ if TYPE_CHECKING:
     from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
-_EMPTY_CONTEXT_ID = b"\x00" * 16
 _EMPTY_ENTITY_ID = "missing.entity_id"
 _EMPTY_EVENT_TYPE = "missing_event_type"
 
