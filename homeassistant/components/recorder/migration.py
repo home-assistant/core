@@ -1364,10 +1364,9 @@ def _context_id_to_bytes(context_id: str | None) -> bytes | None:
         # ULIDs that filled the column to the max length
         # so we need to catch the ValueError and return
         # None if it happens
-        if len(context_id) == 32:
-            return UUID(context_id).bytes
         if len(context_id) == 26:
             return ulid_to_bytes(context_id)
+        return UUID(context_id).bytes
     return None
 
 
