@@ -61,14 +61,14 @@ def _apply_devices_context_union(
         apply_events_context_hints(
             select_events_context_only()
             .select_from(devices_cte)
-            .outerjoin(Events, devices_cte.c.context_id_bin == Events.context_id_bin)
+            .join(Events, devices_cte.c.context_id_bin == Events.context_id_bin)
             .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
             .outerjoin(EventData, (Events.data_id == EventData.data_id)),
         ),
         apply_states_context_hints(
             select_states_context_only()
             .select_from(devices_cte)
-            .outerjoin(States, devices_cte.c.context_id_bin == States.context_id_bin)
+            .join(States, devices_cte.c.context_id_bin == States.context_id_bin)
             .outerjoin(StatesMeta, (States.metadata_id == StatesMeta.metadata_id))
         ),
     )

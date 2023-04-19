@@ -83,7 +83,7 @@ def _apply_entities_devices_context_union(
         apply_events_context_hints(
             select_events_context_only()
             .select_from(devices_entities_cte)
-            .outerjoin(
+            .join(
                 Events, devices_entities_cte.c.context_id_bin == Events.context_id_bin
             )
             .outerjoin(EventTypes, (Events.event_type_id == EventTypes.event_type_id))
@@ -92,7 +92,7 @@ def _apply_entities_devices_context_union(
         apply_states_context_hints(
             select_states_context_only()
             .select_from(devices_entities_cte)
-            .outerjoin(
+            .join(
                 States, devices_entities_cte.c.context_id_bin == States.context_id_bin
             )
             .outerjoin(StatesMeta, (States.metadata_id == StatesMeta.metadata_id))
