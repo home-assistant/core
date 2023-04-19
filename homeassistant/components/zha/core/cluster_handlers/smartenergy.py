@@ -1,4 +1,4 @@
-"""Smart energy channels module for Zigbee Home Automation."""
+"""Smart energy cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
 import enum
@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import zigpy.zcl
 from zigpy.zcl.clusters import smartenergy
 
+from . import AttrReportConfig, ClusterHandler
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -15,55 +16,60 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import AttrReportConfig, ZigbeeChannel
 
 if TYPE_CHECKING:
-    from . import ChannelPool
+    from ..endpoint import Endpoint
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Calendar.cluster_id)
-class Calendar(ZigbeeChannel):
-    """Calendar channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Calendar.cluster_id)
+class Calendar(ClusterHandler):
+    """Calendar cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.DeviceManagement.cluster_id)
-class DeviceManagement(ZigbeeChannel):
-    """Device Management channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    smartenergy.DeviceManagement.cluster_id
+)
+class DeviceManagement(ClusterHandler):
+    """Device Management cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Drlc.cluster_id)
-class Drlc(ZigbeeChannel):
-    """Demand Response and Load Control channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Drlc.cluster_id)
+class Drlc(ClusterHandler):
+    """Demand Response and Load Control cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.EnergyManagement.cluster_id)
-class EnergyManagement(ZigbeeChannel):
-    """Energy Management channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    smartenergy.EnergyManagement.cluster_id
+)
+class EnergyManagement(ClusterHandler):
+    """Energy Management cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Events.cluster_id)
-class Events(ZigbeeChannel):
-    """Event channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Events.cluster_id)
+class Events(ClusterHandler):
+    """Event cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.KeyEstablishment.cluster_id)
-class KeyEstablishment(ZigbeeChannel):
-    """Key Establishment channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    smartenergy.KeyEstablishment.cluster_id
+)
+class KeyEstablishment(ClusterHandler):
+    """Key Establishment cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.MduPairing.cluster_id)
-class MduPairing(ZigbeeChannel):
-    """Pairing channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.MduPairing.cluster_id)
+class MduPairing(ClusterHandler):
+    """Pairing cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Messaging.cluster_id)
-class Messaging(ZigbeeChannel):
-    """Messaging channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Messaging.cluster_id)
+class Messaging(ClusterHandler):
+    """Messaging cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Metering.cluster_id)
-class Metering(ZigbeeChannel):
-    """Metering channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Metering.cluster_id)
+class Metering(ClusterHandler):
+    """Metering cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="instantaneous_demand", config=REPORT_CONFIG_OP),
@@ -137,9 +143,9 @@ class Metering(ZigbeeChannel):
         DEMAND = 0
         SUMMATION = 1
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Initialize Metering."""
-        super().__init__(cluster, ch_pool)
+        super().__init__(cluster, endpoint)
         self._format_spec: str | None = None
         self._summa_format: str | None = None
 
@@ -176,7 +182,7 @@ class Metering(ZigbeeChannel):
         """Return unit of measurement."""
         return self.cluster.get("unit_of_measure")
 
-    async def async_initialize_channel_specific(self, from_cache: bool) -> None:
+    async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
 
         fmting = self.cluster.get(
@@ -249,16 +255,16 @@ class Metering(ZigbeeChannel):
     summa_formatter = partialmethod(_formatter_function, FormatSelector.SUMMATION)
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Prepayment.cluster_id)
-class Prepayment(ZigbeeChannel):
-    """Prepayment channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Prepayment.cluster_id)
+class Prepayment(ClusterHandler):
+    """Prepayment cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Price.cluster_id)
-class Price(ZigbeeChannel):
-    """Price channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Price.cluster_id)
+class Price(ClusterHandler):
+    """Price cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Tunneling.cluster_id)
-class Tunneling(ZigbeeChannel):
-    """Tunneling channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(smartenergy.Tunneling.cluster_id)
+class Tunneling(ClusterHandler):
+    """Tunneling cluster handler."""

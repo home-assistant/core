@@ -1,29 +1,29 @@
-"""Lighting channels module for Zigbee Home Automation."""
+"""Lighting cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
 from functools import cached_property
 
 from zigpy.zcl.clusters import lighting
 
+from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 from .. import registries
 from ..const import REPORT_CONFIG_DEFAULT
-from .base import AttrReportConfig, ClientChannel, ZigbeeChannel
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(lighting.Ballast.cluster_id)
-class Ballast(ZigbeeChannel):
-    """Ballast channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(lighting.Ballast.cluster_id)
+class Ballast(ClusterHandler):
+    """Ballast cluster handler."""
 
 
-@registries.CLIENT_CHANNELS_REGISTRY.register(lighting.Color.cluster_id)
-class ColorClientChannel(ClientChannel):
-    """Color client channel."""
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(lighting.Color.cluster_id)
+class ColorClientClusterHandler(ClientClusterHandler):
+    """Color client cluster handler."""
 
 
 @registries.BINDABLE_CLUSTERS.register(lighting.Color.cluster_id)
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(lighting.Color.cluster_id)
-class ColorChannel(ZigbeeChannel):
-    """Color channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(lighting.Color.cluster_id)
+class ColorClusterHandler(ClusterHandler):
+    """Color cluster handler."""
 
     CAPABILITIES_COLOR_XY = 0x08
     CAPABILITIES_COLOR_TEMP = 0x10
@@ -98,7 +98,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def min_mireds(self) -> int:
-        """Return the coldest color_temp that this channel supports."""
+        """Return the coldest color_temp that this cluster handler supports."""
         min_mireds = self.cluster.get("color_temp_physical_min", self.MIN_MIREDS)
         if min_mireds == 0:
             self.warning(
@@ -113,7 +113,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def max_mireds(self) -> int:
-        """Return the warmest color_temp that this channel supports."""
+        """Return the warmest color_temp that this cluster handler supports."""
         max_mireds = self.cluster.get("color_temp_physical_max", self.MAX_MIREDS)
         if max_mireds == 0:
             self.warning(
@@ -128,7 +128,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def hs_supported(self) -> bool:
-        """Return True if the channel supports hue and saturation."""
+        """Return True if the cluster handler supports hue and saturation."""
         return (
             self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.Hue_and_saturation
@@ -137,7 +137,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def enhanced_hue_supported(self) -> bool:
-        """Return True if the channel supports enhanced hue and saturation."""
+        """Return True if the cluster handler supports enhanced hue and saturation."""
         return (
             self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.Enhanced_hue in self.color_capabilities
@@ -145,7 +145,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def xy_supported(self) -> bool:
-        """Return True if the channel supports xy."""
+        """Return True if the cluster handler supports xy."""
         return (
             self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.XY_attributes
@@ -154,7 +154,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def color_temp_supported(self) -> bool:
-        """Return True if the channel supports color temperature."""
+        """Return True if the cluster handler supports color temperature."""
         return (
             self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.Color_temperature
@@ -163,7 +163,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def color_loop_supported(self) -> bool:
-        """Return True if the channel supports color loop."""
+        """Return True if the cluster handler supports color loop."""
         return (
             self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.Color_loop in self.color_capabilities
@@ -171,10 +171,10 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def options(self) -> lighting.Color.Options:
-        """Return ZCL options of the channel."""
+        """Return ZCL options of the cluster handler."""
         return lighting.Color.Options(self.cluster.get("options", 0))
 
     @property
     def execute_if_off_supported(self) -> bool:
-        """Return True if the channel can execute commands when off."""
+        """Return True if the cluster handler can execute commands when off."""
         return lighting.Color.Options.Execute_if_off in self.options
