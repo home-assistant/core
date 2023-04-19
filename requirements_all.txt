@@ -629,7 +629,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.2.3
+easyenergy==0.3.0
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -872,7 +872,7 @@ ha-philipsjs==3.0.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.64.1
+hass-nabucasa==0.65.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -1404,6 +1404,7 @@ prometheus_client==0.7.1
 proxmoxer==2.0.1
 
 # homeassistant.components.hardware
+# homeassistant.components.recorder
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
@@ -2235,7 +2236,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2022.11.0
 
 # homeassistant.components.renault
-renault-api==0.1.12
+renault-api==0.1.13
 
 # homeassistant.components.reolink
 reolink-aio==0.5.10

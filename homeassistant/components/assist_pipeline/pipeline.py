@@ -53,25 +53,29 @@ SAVE_DELAY = 10
 
 
 async def async_get_pipeline(
-    hass: HomeAssistant, pipeline_id: str | None = None, language: str | None = None
+    hass: HomeAssistant, pipeline_id: str | None = None
 ) -> Pipeline | None:
     """Get a pipeline by id or create one for a language."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
 
-    if pipeline_id is not None:
-        return pipeline_data.pipeline_store.data.get(pipeline_id)
+    if pipeline_id is None:
+        # A pipeline was not specified, use the preferred one
+        pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
 
-    # Construct a pipeline for the required/configured language
-    language = language or hass.config.language
-    return await pipeline_data.pipeline_store.async_create_item(
-        {
-            "name": language,
-            "language": language,
-            "stt_engine": None,  # first engine
-            "conversation_engine": None,  # first agent
-            "tts_engine": None,  # first engine
-        }
-    )
+    if pipeline_id is None:
+        # There's no preferred pipeline, construct a pipeline for the
+        # configured language
+        return await pipeline_data.pipeline_store.async_create_item(
+            {
+                "name": hass.config.language,
+                "language": hass.config.language,
+                "stt_engine": None,  # first engine
+                "conversation_engine": None,  # first agent
+                "tts_engine": None,  # first engine
+            }
+        )
+
+    return pipeline_data.pipeline_store.data.get(pipeline_id)
 
 
 class PipelineEventType(StrEnum):
@@ -169,7 +173,7 @@ class PipelineRun:
     event_callback: PipelineEventCallback
     language: str = None  # type: ignore[assignment]
     runner_data: Any | None = None
-    stt_provider: stt.Provider | None = None
+    stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
     intent_agent: str | None = None
     tts_engine: str | None = None
     tts_options: dict | None = None
@@ -191,7 +195,7 @@ class PipelineRun:
             pipeline_data.pipeline_runs[self.pipeline.id] = LimitedSizeDict(
                 size_limit=STORED_PIPELINE_RUNS
             )
-        pipeline_data.pipeline_runs[self.pipeline.id][self.id] = []
+        pipeline_data.pipeline_runs[self.pipeline.id][self.id] = PipelineRunDebug()
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
@@ -201,7 +205,7 @@ class PipelineRun:
         if self.id not in pipeline_data.pipeline_runs[self.pipeline.id]:
             # This run has been evicted from the logged pipeline runs already
             return
-        pipeline_data.pipeline_runs[self.pipeline.id][self.id].append(event)
+        pipeline_data.pipeline_runs[self.pipeline.id][self.id].events.append(event)
 
     def start(self) -> None:
         """Emit run start event."""
@@ -224,7 +228,21 @@ class PipelineRun:
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
         """Prepare speech to text."""
-        stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
+        stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
+
+        if self.pipeline.stt_engine is not None:
+            # Try entity first
+            stt_provider = stt.async_get_speech_to_text_entity(
+                self.hass,
+                self.pipeline.stt_engine,
+            )
+
+        if stt_provider is None:
+            # Try legacy provider second
+            stt_provider = stt.async_get_provider(
+                self.hass,
+                self.pipeline.stt_engine,
+            )
 
         if stt_provider is None:
             engine = self.pipeline.stt_engine or "default"
@@ -717,8 +735,19 @@ class PipelineStorageCollectionWebsocket(
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
-    pipeline_runs: dict[str, LimitedSizeDict[str, list[PipelineEvent]]]
+    pipeline_runs: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
     pipeline_store: PipelineStorageCollection
+
+
+@dataclass
+class PipelineRunDebug:
+    """Debug data for a pipelinerun."""
+
+    events: list[PipelineEvent] = field(default_factory=list, init=False)
+    timestamp: str = field(
+        default_factory=lambda: dt_util.utcnow().isoformat(),
+        init=False,
+    )
 
 
 async def async_setup_pipeline_store(hass: HomeAssistant) -> None:

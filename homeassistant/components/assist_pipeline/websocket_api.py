@@ -46,7 +46,6 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     # pylint: disable-next=unnecessary-lambda
                     vol.Required("end_stage"): lambda val: PipelineStage(val),
                     vol.Optional("input"): dict,
-                    vol.Optional("language"): str,
                     vol.Optional("pipeline"): str,
                     vol.Optional("conversation_id"): vol.Any(str, None),
                     vol.Optional("timeout"): vol.Any(float, int),
@@ -82,23 +81,13 @@ async def websocket_run(
     msg: dict[str, Any],
 ) -> None:
     """Run a pipeline."""
-    language = msg.get("language", hass.config.language)
-
-    # Temporary workaround for language codes
-    if language == "en":
-        language = "en-US"
-
     pipeline_id = msg.get("pipeline")
-    pipeline = await async_get_pipeline(
-        hass,
-        pipeline_id=pipeline_id,
-        language=language,
-    )
+    pipeline = await async_get_pipeline(hass, pipeline_id=pipeline_id)
     if pipeline is None:
         connection.send_error(
             msg["id"],
             "pipeline-not-found",
-            f"Pipeline not found: id={pipeline_id}, language={language}",
+            f"Pipeline not found: id={pipeline_id}",
         )
         return
 
@@ -147,7 +136,7 @@ async def websocket_run(
 
         # Audio input must be raw PCM at 16Khz with 16-bit mono samples
         input_args["stt_metadata"] = stt.SpeechMetadata(
-            language=language,
+            language=pipeline.language,
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
             bit_rate=stt.AudioBitRates.BITRATE_16,
@@ -232,7 +221,15 @@ def websocket_list_runs(
 
     pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
 
-    connection.send_result(msg["id"], {"pipeline_runs": list(pipeline_runs)})
+    connection.send_result(
+        msg["id"],
+        {
+            "pipeline_runs": [
+                {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
+                for id, pipeline_run in pipeline_runs.items()
+            ]
+        },
+    )
 
 
 @callback
@@ -274,5 +271,5 @@ def websocket_get_run(
 
     connection.send_result(
         msg["id"],
-        {"events": pipeline_runs[pipeline_run_id]},
+        {"events": pipeline_runs[pipeline_run_id].events},
     )
