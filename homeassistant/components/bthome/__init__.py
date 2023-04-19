@@ -7,6 +7,7 @@ from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
 from bthome_ble.parser import EncryptionScheme
 
 from homeassistant.components.bluetooth import (
+    DOMAIN as BLUETOOTH_DOMAIN,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
@@ -16,8 +17,9 @@ from homeassistant.components.bluetooth.passive_update_processor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry, async_get
 
-from .const import DOMAIN
+from .const import BTHOME_BLE_EVENT, DOMAIN, BTHomeBleEvent
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -29,10 +31,37 @@ def process_service_info(
     entry: ConfigEntry,
     data: BTHomeBluetoothDeviceData,
     service_info: BluetoothServiceInfoBleak,
+    device_registry: DeviceRegistry,
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     update = data.update(service_info)
-    # If that payload was encrypted and the bindkey was not verified then we need to reauth
+    if update.events:
+        address = service_info.device.address
+        for device_key, event in update.events.items():
+            sensor_device_info = update.devices[device_key.device_id]
+            device = device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(BLUETOOTH_DOMAIN, address)},
+                manufacturer=sensor_device_info.manufacturer,
+                model=sensor_device_info.model,
+                name=sensor_device_info.name,
+                sw_version=sensor_device_info.sw_version,
+                hw_version=sensor_device_info.hw_version,
+            )
+
+            hass.bus.async_fire(
+                BTHOME_BLE_EVENT,
+                dict(
+                    BTHomeBleEvent(
+                        device_id=device.id,
+                        address=address,
+                        event_type=event.event_type,
+                        event_properties=event.event_properties,
+                    )
+                ),
+            )
+
+    # If payload is encrypted and the bindkey is not verified then we need to reauth
     if data.encryption_scheme != EncryptionScheme.NONE and not data.bindkey_verified:
         entry.async_start_reauth(hass, data={"device": data})
 
@@ -49,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         kwargs["bindkey"] = bytes.fromhex(bindkey)
     data = BTHomeBluetoothDeviceData(**kwargs)
 
+    device_registry = async_get(hass)
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
     ] = PassiveBluetoothProcessorCoordinator(
@@ -57,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         address=address,
         mode=BluetoothScanningMode.PASSIVE,
         update_method=lambda service_info: process_service_info(
-            hass, entry, data, service_info
+            hass, entry, data, service_info, device_registry
         ),
         connectable=False,
     )
