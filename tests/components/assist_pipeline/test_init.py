@@ -4,7 +4,7 @@ from dataclasses import asdict
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import assist_pipeline, stt
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 
 
 async def test_pipeline_from_audio_stream(
@@ -21,6 +21,7 @@ async def test_pipeline_from_audio_stream(
 
     await assist_pipeline.async_pipeline_from_audio_stream(
         hass,
+        Context(),
         events.append,
         stt.SpeechMetadata(
             language="",
