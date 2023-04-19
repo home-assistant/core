@@ -536,8 +536,10 @@ class SinopeTechnologiesThermostat(Thermostat):
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to Hass."""
         await super().async_added_to_hass()
-        async_track_time_interval(
-            self.hass, self._async_update_time, self.update_time_interval
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self._async_update_time, self.update_time_interval
+            )
         )
         self._async_update_time()
 
