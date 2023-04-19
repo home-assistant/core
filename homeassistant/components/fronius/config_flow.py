@@ -33,7 +33,7 @@ def create_title(info: FroniusConfigEntryData) -> str:
     """Return the title of the config flow."""
     return (
         f"SolarNet {'Datalogger' if info['is_logger'] else 'Inverter'}"
-        f" at {info['host']}"
+        f" ({info['host']})"
     )
 
 
