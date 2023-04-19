@@ -52,6 +52,33 @@ async def test_entry_diagnostics(
                     "links": {"system": 12345},
                 }
             },
+            "listeners": {
+                "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx": {
+                    "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "definition_id": 7,
+                    "created_at": "2019-07-10T22:40:48.847Z",
+                    "type": "sensor",
+                    "model_version": "3.1",
+                    "sensor_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "status": {
+                        "trigger_value": "no_alarm",
+                        "data_received_at": "2019-06-28T22:12:49.516Z",
+                    },
+                    "status_localized": {
+                        "state": "No Sound",
+                        "description": "Jun 28 at 4:12pm",
+                    },
+                    "insights": {
+                        "primary": {
+                            "origin": {},
+                            "value": "no_alarm",
+                            "data_received_at": "2019-06-28T22:12:49.516Z",
+                        }
+                    },
+                    "configuration": {},
+                    "pro_monitoring_status": "eligible",
+                }
+            },
             "sensors": {
                 "123456": {
                     "id": 123456,
@@ -105,29 +132,6 @@ async def test_entry_diagnostics(
                     "rssi": -30,
                     "surface_type": None,
                 },
-            },
-            "tasks": {
-                "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx": {
-                    "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    "task_type": "low_battery",
-                    "sensor_data": [],
-                    "status": {
-                        "insights": {
-                            "primary": {
-                                "from_state": None,
-                                "to_state": "high",
-                                "data_received_at": "2020-11-17T18:40:27.024Z",
-                                "origin": {},
-                            }
-                        }
-                    },
-                    "created_at": "2020-11-17T18:40:27.024Z",
-                    "updated_at": "2020-11-17T18:40:27.033Z",
-                    "sensor_id": 525993,
-                    "model_version": "4.1",
-                    "configuration": {},
-                    "links": {"sensor": 525993},
-                }
             },
         },
     }

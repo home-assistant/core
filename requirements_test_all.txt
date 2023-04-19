@@ -204,7 +204,7 @@ aiomusiccast==0.14.8
 aionanoleaf==0.2.1
 
 # homeassistant.components.notion
-aionotion==3.0.2
+aionotion==2023.04.0
 
 # homeassistant.components.oncue
 aiooncue==0.3.4

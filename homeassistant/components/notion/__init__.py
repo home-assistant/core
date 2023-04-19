@@ -58,11 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update() -> dict[str, dict[str, Any]]:
         """Get the latest data from the Notion API."""
-        data: dict[str, dict[str, Any]] = {"bridges": {}, "sensors": {}, "tasks": {}}
+        data: dict[str, dict[str, Any]] = {
+            "bridges": {},
+            "listeners": {},
+            "sensors": {},
+        }
         tasks = {
             "bridges": client.bridge.async_all(),
+            "listeners": client.sensor.async_listeners(),
             "sensors": client.sensor.async_all(),
-            "tasks": client.task.async_all(),
         }
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
@@ -145,7 +149,7 @@ class NotionEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        task_id: str,
+        listener_id: str,
         sensor_id: str,
         bridge_id: str,
         system_id: str,
@@ -167,12 +171,12 @@ class NotionEntity(CoordinatorEntity):
 
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = (
-            f'{sensor_id}_{coordinator.data["tasks"][task_id]["task_type"]}'
+            f'{sensor_id}_{coordinator.data["listeners"][listener_id]["task_type"]}'
         )
         self._bridge_id = bridge_id
+        self._listener_id = listener_id
         self._sensor_id = sensor_id
         self._system_id = system_id
-        self._task_id = task_id
         self.entity_description = description
 
     @property
