@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.wyoming import DOMAIN, WyomingService
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -38,16 +37,10 @@ def config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
-async def init_wyoming(hass: HomeAssistant, config_entry: ConfigEntry):
+async def init_wyoming_stt(hass: HomeAssistant, config_entry: ConfigEntry):
     """Initialize Wyoming."""
     with patch(
         "homeassistant.components.wyoming.config_flow.load_wyoming_info",
         return_value=STT_INFO,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-
-
-@pytest.fixture
-def wyoming_service(hass, config_entry, init_wyoming) -> WyomingService:
-    """Return a WyomingService."""
-    return hass.data[DOMAIN][config_entry.entry_id]
