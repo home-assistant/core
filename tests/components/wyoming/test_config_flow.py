@@ -2,33 +2,15 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from wyoming.info import AsrModel, AsrProgram, Attribution, Info
 
 from homeassistant import config_entries
 from homeassistant.components.wyoming.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+from . import STT_INFO
 
-_TEST_ATTR = Attribution(name="Test", url="http://www.test.com")
-_STT_INFO = Info(
-    asr=[
-        AsrProgram(
-            name="Test ASR",
-            installed=True,
-            attribution=_TEST_ATTR,
-            models=[
-                AsrModel(
-                    name="Test Model",
-                    installed=True,
-                    attribution=_TEST_ATTR,
-                    languages=["en-US"],
-                )
-            ],
-        )
-    ]
-)
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -41,7 +23,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     with patch(
         "homeassistant.components.wyoming.config_flow.load_wyoming_info",
-        return_value=_STT_INFO,
+        return_value=STT_INFO,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
