@@ -1193,7 +1193,7 @@ async def test_ws_prepare(
 ) -> None:
     """Test the Websocket prepare conversation API."""
     assert await async_setup_component(hass, "conversation", {})
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
+    agent = await conversation.get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
 
     # No intents should be loaded yet
@@ -1323,7 +1323,7 @@ async def test_prepare_reload(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
+    agent = await conversation.get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
     await agent.async_prepare(language)
 
@@ -1343,7 +1343,7 @@ async def test_prepare_fail(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
+    agent = await conversation.get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
     await agent.async_prepare("not-a-language")
 
@@ -1390,7 +1390,7 @@ async def test_reload_on_new_component(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
+    agent = await conversation.get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
     await agent.async_prepare()
 
@@ -1423,7 +1423,7 @@ async def test_non_default_response(
     hass.states.async_set("cover.front_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent()
+    agent = await conversation.get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
 
     result = await agent.async_process(

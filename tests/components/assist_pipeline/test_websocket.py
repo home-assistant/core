@@ -1130,3 +1130,19 @@ async def test_pipeline_debug_get_run_wrong_pipeline_run(
         "code": "not_found",
         "message": "pipeline_run_id blah not found",
     }
+
+
+async def test_list_pipeline_languages(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+) -> None:
+    """Test listing pipeline languages."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "assist_pipeline/language/list"})
+
+    # result
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"languages": ["en"]}

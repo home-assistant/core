@@ -335,7 +335,7 @@ async def test_conversation_agent(
     )
     await hass.async_block_till_done()
 
-    agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent = await conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
     assert agent.supported_languages == ["en-US"]
 
     text1 = "tell me a joke"

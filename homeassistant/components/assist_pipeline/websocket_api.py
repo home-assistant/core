@@ -8,9 +8,12 @@ from typing import Any
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components import stt, websocket_api
+from homeassistant.components import conversation, stt, tts, websocket_api
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util import language as language_util
 
 from .const import DOMAIN
 from .pipeline import (
@@ -34,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
     websocket_api.async_register_command(hass, websocket_run)
+    websocket_api.async_register_command(hass, websocket_list_languages)
     websocket_api.async_register_command(hass, websocket_list_runs)
     websocket_api.async_register_command(hass, websocket_get_run)
 
@@ -270,4 +274,64 @@ def websocket_get_run(
     connection.send_result(
         msg["id"],
         {"events": pipeline_runs[pipeline_run_id].events},
+    )
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/language/list",
+    }
+)
+@websocket_api.async_response
+async def websocket_list_languages(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List languages which are supported by a complete pipeline.
+
+    This will return a list of languages which are supported by at least one stt, tts
+    and conversation engine respectively.
+    """
+    conversation_manager = conversation.get_agent_manager(hass)
+    conversation_languages = set()
+    stt_languages = set()
+    tts_languages = set()
+    conversation_match_all = False
+
+    for agent_info in conversation_manager.async_get_agent_info():
+        agent = await conversation_manager.async_get_agent(agent_info.id)
+        for language_tag in agent.supported_languages:
+            if language_tag == MATCH_ALL:
+                conversation_match_all = True
+                continue
+            dialect = language_util.Dialect.parse(language_tag)
+            conversation_languages.add(dialect.language)
+
+    stt_component: EntityComponent[stt.SpeechToTextEntity] = hass.data[stt.DOMAIN]
+    legacy_stt_providers: dict[str, stt.Provider] = hass.data[stt.DATA_PROVIDERS]
+    for stt_entity in stt_component.entities:
+        for language_tag in stt_entity.supported_languages:
+            dialect = language_util.Dialect.parse(language_tag)
+            stt_languages.add(dialect.language)
+
+    for stt_engine in legacy_stt_providers.values():
+        for language_tag in stt_engine.supported_languages:
+            dialect = language_util.Dialect.parse(language_tag)
+            stt_languages.add(dialect.language)
+
+    tts_manager: tts.SpeechManager = hass.data[tts.DOMAIN]
+    for tts_engine in tts_manager.providers.values():
+        for language_tag in tts_engine.supported_languages:
+            dialect = language_util.Dialect.parse(language_tag)
+            tts_languages.add(dialect.language)
+
+    pipeline_languages = stt_languages & tts_languages
+    if not conversation_match_all:
+        pipeline_languages &= conversation_languages
+
+    connection.send_result(
+        msg["id"],
+        {"languages": pipeline_languages},
     )

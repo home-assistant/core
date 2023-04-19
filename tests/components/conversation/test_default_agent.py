@@ -129,7 +129,7 @@ async def test_conversation_agent(
     init_components,
 ) -> None:
     """Test DefaultAgent."""
-    agent = await conversation._get_agent_manager(hass).async_get_agent(
+    agent = await conversation.get_agent_manager(hass).async_get_agent(
         conversation.HOME_ASSISTANT_AGENT
     )
     with patch(
