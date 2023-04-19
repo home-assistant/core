@@ -40,7 +40,7 @@ def config_entry(hass: HomeAssistant) -> ConfigEntry:
 async def init_wyoming_stt(hass: HomeAssistant, config_entry: ConfigEntry):
     """Initialize Wyoming."""
     with patch(
-        "homeassistant.components.wyoming.config_flow.load_wyoming_info",
+        "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=STT_INFO,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

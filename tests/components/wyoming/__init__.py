@@ -19,3 +19,4 @@ STT_INFO = Info(
         )
     ]
 )
+EMPTY_INFO = Info()

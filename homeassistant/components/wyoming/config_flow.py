@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-from .data import load_wyoming_info
+from .data import WyomingService
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -34,12 +34,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        wyoming_info = await load_wyoming_info(
+        service = await WyomingService.create(
             user_input[CONF_HOST],
             user_input[CONF_PORT],
         )
 
-        if wyoming_info is None:
+        if service is None:
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
@@ -47,7 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # ASR = automated speech recognition (STT)
-        asr_installed = [asr for asr in wyoming_info.asr if asr.installed]
+        asr_installed = [asr for asr in service.info.asr if asr.installed]
         if not asr_installed:
             return self.async_abort(reason="no_services")
 

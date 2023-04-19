@@ -8,7 +8,7 @@ from homeassistant.components.wyoming.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import STT_INFO
+from . import EMPTY_INFO, STT_INFO
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -22,7 +22,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.wyoming.config_flow.load_wyoming_info",
+        "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=STT_INFO,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -50,7 +50,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.wyoming.config_flow.load_wyoming_info",
+        "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -63,3 +63,25 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_no_supported_services(hass: HomeAssistant) -> None:
+    """Test we handle no supported services error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=EMPTY_INFO,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "port": 1234,
+            },
+        )
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "no_services"
