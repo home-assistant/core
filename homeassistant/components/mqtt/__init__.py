@@ -213,9 +213,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await mqtt_data.client.async_connect()
+    client_available: asyncio.Future
     if DATA_MQTT_AVAILABLE not in hass.data:
-        hass.data[DATA_MQTT_AVAILABLE] = asyncio.Event()
-    hass.data[DATA_MQTT_AVAILABLE].set()
+        client_available = hass.data[DATA_MQTT_AVAILABLE] = asyncio.Future()
+        client_available.set_result(True)
+    else:
+        client_available = hass.data[DATA_MQTT_AVAILABLE]
+        if not client_available.done():
+            client_available.set_result(True)
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""

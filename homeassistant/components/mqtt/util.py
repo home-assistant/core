@@ -69,35 +69,34 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         return True
 
     valid_states = {ConfigEntryState.SETUP_IN_PROGRESS, ConfigEntryState.LOADED}
-    state_reached_future: asyncio.Future[None] = asyncio.Future()
+    state_reached_future: asyncio.Future[bool]
+    if DATA_MQTT_AVAILABLE not in hass.data:
+        hass.data[DATA_MQTT_AVAILABLE] = state_reached_future = asyncio.Future()
+    else:
+        state_reached_future = hass.data[DATA_MQTT_AVAILABLE]
+        if state_reached_future.done():
+            return state_reached_future.result()
 
     @callback
     def _async_entry_changed(
         change: ConfigEntryChange, event_entry: ConfigEntry
     ) -> None:
         if event_entry is entry and change is ConfigEntryChange.UPDATED:
-            if DATA_MQTT_AVAILABLE in hass.data and entry.state not in valid_states:
-                # When the MQTT entry enters an invalid state
-                # we should no longer wait for the client
-                hass.data[DATA_MQTT_AVAILABLE].set()
-            state_reached_future.set_result(None)
+            # SETUP_IN_PROGRESS: allow integration to set the result
+            if entry.state == ConfigEntryState.SETUP_IN_PROGRESS:
+                return
+            # Set the result based on the state
+            # False if when entered an error state else True
+            if not state_reached_future.done():
+                state_reached_future.set_result(entry.state in valid_states)
 
     unsub = async_dispatcher_connect(
         hass, SIGNAL_CONFIG_ENTRY_CHANGED, _async_entry_changed
     )
     try:
         async with async_timeout.timeout(AVAILABILITY_TIMEOUT):
-            # Make sure setup is in progress
-            if entry.state == ConfigEntryState.NOT_LOADED:
-                await state_reached_future
-            # Bail out if we did not reach a valid state
-            if entry.state not in valid_states:
-                return False
-            if DATA_MQTT_AVAILABLE not in hass.data:
-                hass.data[DATA_MQTT_AVAILABLE] = asyncio.Event()
-            # Wait for the the MQTT client to become available
-            await hass.data[DATA_MQTT_AVAILABLE].wait()
-        return entry.state in valid_states
+            # Await the client setup or an error state was received
+            return await state_reached_future
     except asyncio.TimeoutError:
         return False
     finally:

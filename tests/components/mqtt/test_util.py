@@ -71,19 +71,26 @@ async def test_waiting_for_client_not_loaded(
     )
     entry.add_to_hass(hass)
 
-    unsub: Callable[[], None] | None = None
+    unsubs: list[Callable[[], None]] = []
 
     async def _async_just_in_time_subscribe() -> Callable[[], None]:
         nonlocal unsub
         assert await mqtt.async_wait_for_mqtt_client(hass)
-        unsub = await mqtt.async_subscribe(hass, "test_topic", lambda msg: None)
+        # Awaiting a second time should work too and return True
+        assert await mqtt.async_wait_for_mqtt_client(hass)
+        unsubs.append(await mqtt.async_subscribe(hass, "test_topic", lambda msg: None))
 
-    # _async_just_in_time_subscribe blocks until entry os loaded
+    # Simulate some integration waiting for the client to become available
     hass.async_add_job(_async_just_in_time_subscribe)
+    hass.async_add_job(_async_just_in_time_subscribe)
+    hass.async_add_job(_async_just_in_time_subscribe)
+    hass.async_add_job(_async_just_in_time_subscribe)
+
     assert entry.state == ConfigEntryState.NOT_LOADED
     assert await hass.config_entries.async_setup(entry.entry_id)
-    assert unsub is not None
-    unsub()
+    assert len(unsubs) == 4
+    for unsub in unsubs:
+        unsub()
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
@@ -131,7 +138,7 @@ async def test_waiting_for_client_entry_fails(
     with patch(
         "homeassistant.components.mqtt.async_setup_entry",
         side_effect=Exception,
-    ), pytest.raises(Exception):
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
@@ -159,8 +166,7 @@ async def test_waiting_for_client_setup_fails(
 
     # Simulate MQTT setup fails before the client would become available
     mqtt_client_mock.connect.side_effect = Exception
-    with pytest.raises(Exception):
-        await hass.config_entries.async_setup(entry.entry_id)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
