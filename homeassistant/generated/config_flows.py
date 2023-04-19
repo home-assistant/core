@@ -502,6 +502,7 @@ FLOWS = {
         "wolflink",
         "workday",
         "ws66i",
+        "wyoming",
         "xbox",
         "xiaomi_aqara",
         "xiaomi_ble",
