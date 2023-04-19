@@ -127,13 +127,15 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
             return None
         return engine
 
-    if not manager.providers:
-        return None
-
     if "cloud" in manager.providers:
         return "cloud"
 
-    return next(iter(manager.providers))
+    entity = next(iter(component.entities), None)
+
+    if entity is not None:
+        return entity.entity_id
+
+    return next(iter(manager.providers), None)
 
 
 async def async_support_options(
