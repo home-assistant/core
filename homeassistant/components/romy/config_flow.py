@@ -6,7 +6,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
@@ -43,7 +43,7 @@ def _schema_with_defaults_and_password(
     )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for ROMY."""
 
     VERSION = 1
@@ -63,6 +63,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the user step."""
         errors = {}
+        data = self.discovery_schema or _schema_with_defaults()
+
         if user_input is not None:
             # Validate the user input
             if "host" not in user_input:
@@ -89,6 +91,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                     if not ret:
                         _LOGGER.error("Unlock of ROMY robot failed: %s", response)
+                        errors[CONF_PASSWORD] = "wrong password"
+                        return self.async_show_form(
+                            step_id="user", data_schema=data, errors=errors
+                        )
 
                 # set name of robot
                 ret, _ = await async_query(
@@ -104,7 +110,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input["name"], data=user_input
                 )
 
-        data = self.discovery_schema or _schema_with_defaults()
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
 
     async def async_step_zeroconf(
@@ -179,11 +184,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return await self.async_step_user()
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidHost(exceptions.HomeAssistantError):
-    """Error to indicate there is an invalid hostname."""
