@@ -77,6 +77,8 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
     ) -> None:
         if event_entry is entry and change is ConfigEntryChange.UPDATED:
             if DATA_MQTT_AVAILABLE in hass.data and entry.state not in valid_states:
+                # When the MQTT entry enters an invalid state
+                # we should no longer wait for the client
                 hass.data[DATA_MQTT_AVAILABLE].set()
             state_reached_future.set_result(None)
 
@@ -93,6 +95,7 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
                 return False
             if DATA_MQTT_AVAILABLE not in hass.data:
                 hass.data[DATA_MQTT_AVAILABLE] = asyncio.Event()
+            # Wait for the the MQTT client to become available
             await hass.data[DATA_MQTT_AVAILABLE].wait()
         return entry.state in valid_states
     except asyncio.TimeoutError:
