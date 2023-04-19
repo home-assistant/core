@@ -1,5 +1,7 @@
 """Test ZHA device discovery."""
+from collections.abc import Callable
 import re
+from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -16,6 +18,7 @@ import zigpy.zcl.foundation as zcl_f
 import homeassistant.components.zha.binary_sensor
 import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
 import homeassistant.components.zha.core.const as zha_const
+from homeassistant.components.zha.core.device import ZHADevice
 import homeassistant.components.zha.core.discovery as disc
 from homeassistant.components.zha.core.endpoint import Endpoint
 import homeassistant.components.zha.core.registries as zha_regs
@@ -301,7 +304,9 @@ def test_discover_probe_single_cluster() -> None:
 
 @pytest.mark.parametrize("device_info", DEVICES)
 async def test_discover_endpoint(
-    device_info, zha_device_mock, hass: HomeAssistant
+    device_info: dict[str, Any],
+    zha_device_mock: Callable[..., ZHADevice],
+    hass: HomeAssistant,
 ) -> None:
     """Test device discovery."""
 
@@ -352,6 +357,8 @@ async def test_discover_endpoint(
         assert {ch.name for ch in entity_cluster_handlers} == set(
             ent_info[DEV_SIG_CLUSTER_HANDLERS]
         )
+
+    device.async_cleanup_handles()
 
 
 def _ch_mock(cluster):
