@@ -9,7 +9,7 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.VACUUM, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
+PLATFORMS = [Platform.VACUUM]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
