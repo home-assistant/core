@@ -42,18 +42,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_pipeline_from_audio_stream(
     hass: HomeAssistant,
+    context: Context,
     event_callback: PipelineEventCallback,
     stt_metadata: stt.SpeechMetadata,
     stt_stream: AsyncIterable[bytes],
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
-    context: Context | None = None,
     tts_options: dict | None = None,
 ) -> None:
     """Create an audio pipeline from an audio stream."""
-    if context is None:
-        context = Context()
-
     pipeline = await async_get_pipeline(hass, pipeline_id=pipeline_id)
     if pipeline is None:
         raise PipelineNotFound(
