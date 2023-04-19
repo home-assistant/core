@@ -29,6 +29,53 @@
         'name': 'Mock Title',
       }),
     ]),
-    'default_agent': 'mock-entry',
+  })
+# ---
+# name: test_get_agent_list.1
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'language_supported': False,
+        'name': 'Home Assistant',
+      }),
+      dict({
+        'id': 'mock-entry',
+        'language_supported': True,
+        'name': 'Mock Title',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.2
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'language_supported': True,
+        'name': 'Home Assistant',
+      }),
+      dict({
+        'id': 'mock-entry',
+        'language_supported': False,
+        'name': 'Mock Title',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.3
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'language_supported': True,
+        'name': 'Home Assistant',
+      }),
+      dict({
+        'id': 'mock-entry',
+        'language_supported': False,
+        'name': 'Mock Title',
+      }),
+    ]),
   })
 # ---

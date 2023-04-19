@@ -337,7 +337,7 @@ class PipelineRun:
                 message=f"Intent recognition engine {engine} is not found",
             )
 
-        self.intent_agent = agent_info["id"]
+        self.intent_agent = agent_info.id
 
     async def recognize_intent(
         self, intent_input: str, conversation_id: str | None
