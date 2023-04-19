@@ -21,7 +21,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BTHOME_BLE_EVENT,
-    CONF_EVENT_CLASS,
     CONF_KNOWN_EVENTS,
     DOMAIN,
     EVENT_CLASS,
@@ -69,7 +68,7 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate trigger config."""
     return SCHEMA_BY_EVENT_CLASS.get(
-        config[CONF_EVENT_CLASS], DEVICE_TRIGGER_BASE_SCHEMA
+        config[CONF_TYPE], DEVICE_TRIGGER_BASE_SCHEMA
     ).schema(config)
 
 
