@@ -222,7 +222,9 @@ async def test_migrate_events_context_ids(
     assert empty_context_id_event["context_id"] is None
     assert empty_context_id_event["context_user_id"] is None
     assert empty_context_id_event["context_parent_id"] is None
-    assert empty_context_id_event["context_id_bin"] == b"\x00" * 16
+    assert empty_context_id_event["context_id_bin"].startswith(
+        b"\x01\x86\xa0\x00\x7f"
+    )  # 6 bytes of timestamp + random
     assert empty_context_id_event["context_user_id_bin"] is None
     assert empty_context_id_event["context_parent_id_bin"] is None
 
@@ -247,7 +249,9 @@ async def test_migrate_events_context_ids(
     assert invalid_context_id_event["context_id"] is None
     assert invalid_context_id_event["context_user_id"] is None
     assert invalid_context_id_event["context_parent_id"] is None
-    assert invalid_context_id_event["context_id_bin"] == b"\x00" * 16
+    assert invalid_context_id_event["context_id_bin"].startswith(
+        b"\x01\x86\xa0\x00\x7f"
+    )  # 6 bytes of timestamp + random
     assert invalid_context_id_event["context_user_id_bin"] is None
     assert invalid_context_id_event["context_parent_id_bin"] is None
 
@@ -255,7 +259,9 @@ async def test_migrate_events_context_ids(
     assert garbage_context_id_event["context_id"] is None
     assert garbage_context_id_event["context_user_id"] is None
     assert garbage_context_id_event["context_parent_id"] is None
-    assert garbage_context_id_event["context_id_bin"] == b"\x00" * 16
+    assert garbage_context_id_event["context_id_bin"].startswith(
+        b"\x01\x86\xa0\x00\x7f"
+    )  # 6 bytes of timestamp + random
     assert garbage_context_id_event["context_user_id_bin"] is None
     assert garbage_context_id_event["context_parent_id_bin"] is None
 
@@ -384,7 +390,9 @@ async def test_migrate_states_context_ids(
     assert empty_context_id["context_id"] is None
     assert empty_context_id["context_user_id"] is None
     assert empty_context_id["context_parent_id"] is None
-    assert empty_context_id["context_id_bin"] == b"\x00" * 16
+    assert empty_context_id["context_id_bin"].startswith(
+        b"\x01\x86\xa0\x00\x7f"
+    )  # 6 bytes of timestamp + random
     assert empty_context_id["context_user_id_bin"] is None
     assert empty_context_id["context_parent_id_bin"] is None
 
@@ -408,7 +416,9 @@ async def test_migrate_states_context_ids(
     assert invalid_context_id["context_id"] is None
     assert invalid_context_id["context_user_id"] is None
     assert invalid_context_id["context_parent_id"] is None
-    assert invalid_context_id["context_id_bin"] == b"\x00" * 16
+    assert invalid_context_id["context_id_bin"].startswith(
+        b"\x01\x86\xa0\x00\x7f"
+    )  # 6 bytes of timestamp + random
     assert invalid_context_id["context_user_id_bin"] is None
     assert invalid_context_id["context_parent_id_bin"] is None
 
@@ -416,7 +426,9 @@ async def test_migrate_states_context_ids(
     assert garbage_context_id["context_id"] is None
     assert garbage_context_id["context_user_id"] is None
     assert garbage_context_id["context_parent_id"] is None
-    assert garbage_context_id["context_id_bin"] == b"\x00" * 16
+    assert garbage_context_id["context_id_bin"].startswith(
+        b"\x01\x86\xa0\x00\x7f"
+    )  # 6 bytes of timestamp + random
     assert garbage_context_id["context_user_id_bin"] is None
     assert garbage_context_id["context_parent_id_bin"] is None
 
