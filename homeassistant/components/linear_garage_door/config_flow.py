@@ -1,6 +1,7 @@
 """Config flow for Linear Garage Door integration."""
 from __future__ import annotations
 
+from collections.abc import Collection, Mapping, Sequence
 import logging
 from typing import Any
 import uuid
@@ -27,8 +28,8 @@ STEP_USER_DATA_SCHEMA = {
 
 async def validate_input(
     hass: HomeAssistant,
-    data: dict[str, Any],
-) -> dict[str, Any]:
+    data: dict[str, str],
+) -> dict[str, Sequence[Collection[str]]]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -61,7 +62,6 @@ async def validate_input(
 
     await hub.close()
 
-    # Return info that you want to store in the config entry.
     return info
 
 
@@ -72,20 +72,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data: dict[str, str | list[dict[str, str]]] = {}
+        self.data: dict[str, Sequence[Collection[str]]] = {}
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        data_schema = STEP_USER_DATA_SCHEMA
+
+        if self.show_advanced_options:
+            data_schema["device_id"] = str
+
+        data_schema = vol.Schema(data_schema)
+
         if user_input is None:
-            data_schema = STEP_USER_DATA_SCHEMA
-
-            if self.show_advanced_options:
-                data_schema["device_id"] = str
-
-            data_schema = vol.Schema(data_schema)
-
             return self.async_show_form(step_id="user", data_schema=data_schema)
 
         errors = {}
@@ -101,10 +102,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             self.data = info
+
+            # Check if we are reauthenticating
+            if self._reauth_entry is not None:
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry,
+                    data=self._reauth_entry.data
+                    | {"email": self.data["email"], "password": self.data["password"]},
+                )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
             return await self.async_step_site()
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     async def async_step_site(
@@ -144,6 +156,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "device_id": self.data["device_id"],
             },
         )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Reauth in case of a password change or other error."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_user()
 
 
 class InvalidAuth(HomeAssistantError):

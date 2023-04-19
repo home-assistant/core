@@ -41,7 +41,9 @@ async def test_open_cover(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    with patch("linear_garage_door.Linear.operate_device") as operate_device:
+    with patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.operate_device"
+    ) as operate_device:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -51,9 +53,16 @@ async def test_open_cover(hass: HomeAssistant) -> None:
 
     assert operate_device.call_count == 0
 
-    with patch("linear_garage_door.Linear.login", return_value=True), patch(
-        "linear_garage_door.Linear.operate_device", return_value=None
-    ) as operate_device, patch("linear_garage_door.Linear.close", return_value=True):
+    with patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.operate_device",
+        return_value=None,
+    ) as operate_device, patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.close",
+        return_value=True,
+    ):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -62,14 +71,17 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         )
 
     assert operate_device.call_count == 1
-    with patch("linear_garage_door.Linear.login", return_value=True), patch(
-        "linear_garage_door.Linear.get_devices",
+    with patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.get_devices",
         return_value=[
             {"id": "test1", "name": "Test Garage 1", "subdevices": ["GDO", "Light"]},
             {"id": "test2", "name": "Test Garage 2", "subdevices": ["GDO", "Light"]},
         ],
     ), patch(
-        "linear_garage_door.Linear.get_device_state",
+        "homeassistant.components.linear_garage_door.cover.Linear.get_device_state",
         side_effect=lambda id: {
             "test1": {
                 "GDO": {"Open_B": "true", "Open_P": "100"},
@@ -81,7 +93,8 @@ async def test_open_cover(hass: HomeAssistant) -> None:
             },
         }[id],
     ), patch(
-        "linear_garage_door.Linear.close", return_value=True
+        "homeassistant.components.linear_garage_door.cover.Linear.close",
+        return_value=True,
     ):
         async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()
@@ -94,7 +107,9 @@ async def test_close_cover(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    with patch("linear_garage_door.Linear.operate_device") as operate_device:
+    with patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.operate_device"
+    ) as operate_device:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -104,9 +119,16 @@ async def test_close_cover(hass: HomeAssistant) -> None:
 
     assert operate_device.call_count == 0
 
-    with patch("linear_garage_door.Linear.login", return_value=True), patch(
-        "linear_garage_door.Linear.operate_device", return_value=None
-    ) as operate_device, patch("linear_garage_door.Linear.close", return_value=True):
+    with patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.operate_device",
+        return_value=None,
+    ) as operate_device, patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.close",
+        return_value=True,
+    ):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -115,14 +137,17 @@ async def test_close_cover(hass: HomeAssistant) -> None:
         )
 
     assert operate_device.call_count == 1
-    with patch("linear_garage_door.Linear.login", return_value=True), patch(
-        "linear_garage_door.Linear.get_devices",
+    with patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.linear_garage_door.cover.Linear.get_devices",
         return_value=[
             {"id": "test1", "name": "Test Garage 1", "subdevices": ["GDO", "Light"]},
             {"id": "test2", "name": "Test Garage 2", "subdevices": ["GDO", "Light"]},
         ],
     ), patch(
-        "linear_garage_door.Linear.get_device_state",
+        "homeassistant.components.linear_garage_door.cover.Linear.get_device_state",
         side_effect=lambda id: {
             "test1": {
                 "GDO": {"Open_B": "true", "Closing_P": "100"},
@@ -134,7 +159,8 @@ async def test_close_cover(hass: HomeAssistant) -> None:
             },
         }[id],
     ), patch(
-        "linear_garage_door.Linear.close", return_value=True
+        "homeassistant.components.linear_garage_door.cover.Linear.close",
+        return_value=True,
     ):
         async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()

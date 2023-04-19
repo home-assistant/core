@@ -31,9 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Linear Garage Door cover."""
-    coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        "coordinator"
-    ]
+    coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     data = coordinator.data
 
     device_list = []

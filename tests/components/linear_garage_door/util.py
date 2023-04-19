@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def async_init_integration(hass: HomeAssistant):
+async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Initialize mock integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -21,14 +21,17 @@ async def async_init_integration(hass: HomeAssistant):
     )
     config_entry.add_to_hass(hass)
 
-    with patch("linear_garage_door.Linear.login", return_value=True), patch(
-        "linear_garage_door.Linear.get_devices",
+    with patch(
+        "homeassistant.components.linear_garage_door.coordinator.Linear.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.linear_garage_door.coordinator.Linear.get_devices",
         return_value=[
             {"id": "test1", "name": "Test Garage 1", "subdevices": ["GDO", "Light"]},
             {"id": "test2", "name": "Test Garage 2", "subdevices": ["GDO", "Light"]},
         ],
     ), patch(
-        "linear_garage_door.Linear.get_device_state",
+        "homeassistant.components.linear_garage_door.coordinator.Linear.get_device_state",
         side_effect=lambda id: {
             "test1": {
                 "GDO": {"Open_B": "true", "Open_P": "100"},
@@ -40,7 +43,7 @@ async def async_init_integration(hass: HomeAssistant):
             },
         }[id],
     ), patch(
-        "linear_garage_door.Linear.close",
+        "homeassistant.components.linear_garage_door.coordinator.Linear.close",
         return_value=True,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

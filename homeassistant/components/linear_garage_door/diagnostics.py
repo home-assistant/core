@@ -18,9 +18,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "coordinator"
-    ]
+    coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     diag_data = {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
