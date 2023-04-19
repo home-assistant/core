@@ -19,7 +19,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get
 
-from .const import BTHOME_BLE_EVENT, DOMAIN, BTHomeBleEvent
+from .const import (
+    BTHOME_BLE_EVENT,
+    CONF_BIND_KEY,
+    CONF_KNOWN_EVENTS,
+    DOMAIN,
+    BTHomeBleEvent,
+)
+from .models import BTHomeData
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -35,6 +42,7 @@ def process_service_info(
 ) -> SensorUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     update = data.update(service_info)
+    domain_data: BTHomeData = hass.data[DOMAIN][entry.entry_id]
     if update.events:
         address = service_info.device.address
         for device_key, event in update.events.items():
@@ -48,6 +56,17 @@ def process_service_info(
                 sw_version=sensor_device_info.sw_version,
                 hw_version=sensor_device_info.hw_version,
             )
+            event_class = event.device_key.key
+            event_type = event.event_type
+
+            event_tuple = (event_class, event_type)
+            if event_tuple not in domain_data.known_events:
+                domain_data.known_events.add(event_tuple)
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data=entry.data
+                    | {CONF_KNOWN_EVENTS: list(domain_data.known_events)},
+                )
 
             hass.bus.async_fire(
                 BTHOME_BLE_EVENT,
@@ -55,8 +74,8 @@ def process_service_info(
                     BTHomeBleEvent(
                         device_id=device.id,
                         address=address,
-                        event_type=event.event_type,
-                        event_properties=event.event_properties,
+                        event_class=event_class,  # ie 'button'
+                        event_type=event_type,  # ie 'press'
                     )
                 ),
             )
@@ -74,8 +93,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert address is not None
 
     kwargs = {}
-    if bindkey := entry.data.get("bindkey"):
-        kwargs["bindkey"] = bytes.fromhex(bindkey)
+    if bindkey := entry.data.get(CONF_BIND_KEY):
+        kwargs[CONF_BIND_KEY] = bytes.fromhex(bindkey)
     data = BTHomeBluetoothDeviceData(**kwargs)
 
     device_registry = async_get(hass)
@@ -92,6 +111,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         connectable=False,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    known_events = {  # pylint: disable=unnecessary-comprehension
+        (event_class, event_type)
+        for event_class, event_type in entry.data.get(CONF_KNOWN_EVENTS, [])
+    }
+    domain_data = BTHomeData(known_events)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = domain_data
+
     entry.async_on_unload(
         coordinator.async_start()
     )  # only start after all platforms have had a chance to subscribe
