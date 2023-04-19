@@ -39,17 +39,37 @@ _LOGGER = logging.getLogger(__name__)
 STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
-    vol.Required("conversation_engine"): str,
-    vol.Required("conversation_language"): str,
-    vol.Required("language"): str,
-    vol.Required("name"): str,
-    vol.Required("stt_engine"): vol.Any(str, None),
-    vol.Required("stt_language"): vol.Any(str, None),
-    vol.Required("tts_engine"): vol.Any(str, None),
-    vol.Required("tts_language"): vol.Any(str, None),
-    vol.Required("tts_voice"): vol.Any(str, None),
-}
+ENGINE_LANGUAGE_PAIRS = (
+    ("conversation_engine", "conversation_language"),
+    ("stt_engine", "stt_language"),
+    ("tts_engine", "tts_language"),
+)
+
+
+def validate_language(data: dict[str, Any]) -> Any:
+    """Validate language settings."""
+    for engine, language in ENGINE_LANGUAGE_PAIRS:
+        if data[engine] is not None and data[language] is None:
+            raise vol.Invalid(f"Need language {language} for {engine} {data[engine]}")
+    return data
+
+
+PIPELINE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("conversation_engine"): str,
+            vol.Required("conversation_language"): str,
+            vol.Required("language"): str,
+            vol.Required("name"): str,
+            vol.Required("stt_engine"): vol.Any(str, None),
+            vol.Required("stt_language"): vol.Any(str, None),
+            vol.Required("tts_engine"): vol.Any(str, None),
+            vol.Required("tts_language"): vol.Any(str, None),
+            vol.Required("tts_voice"): vol.Any(str, None),
+        }
+    ),
+    validate_language,
+)
 
 STORED_PIPELINE_RUNS = 10
 
@@ -593,8 +613,6 @@ class PipelineStorageCollection(
 ):
     """Pipeline storage collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
-
     _preferred_item: str | None = None
 
     async def _async_load_data(self) -> SerializedPipelineStorageCollection | None:
@@ -759,6 +777,10 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
     )
     await pipeline_store.async_load()
     PipelineStorageCollectionWebsocket(
-        pipeline_store, f"{DOMAIN}/pipeline", "pipeline", STORAGE_FIELDS, STORAGE_FIELDS
+        pipeline_store,
+        f"{DOMAIN}/pipeline",
+        "pipeline",
+        PIPELINE_SCHEMA,
+        PIPELINE_SCHEMA,
     ).async_setup(hass)
     hass.data[DOMAIN] = PipelineData({}, pipeline_store)
