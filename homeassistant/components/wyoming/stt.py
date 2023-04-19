@@ -25,13 +25,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Wyoming speech to text."""
     service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
-
-    model_languages: set[str] = set()
-    for asr_model in service.info.asr[0].models:
-        if asr_model.installed:
-            model_languages.update(asr_model.languages)
-
-    async_add_entities([WyomingSttProvider(service, list(model_languages))])
+    async_add_entities(
+        [
+            WyomingSttProvider(config_entry, service),
+        ]
+    )
 
 
 class WyomingSttProvider(stt.SpeechToTextEntity):
@@ -39,12 +37,21 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         service: WyomingService,
-        supported_languages: list[str],
     ) -> None:
         """Set up provider."""
         self.service = service
-        self._supported_languages = supported_languages
+        asr_service = service.info.asr[0]
+
+        model_languages: set[str] = set()
+        for asr_model in asr_service.models:
+            if asr_model.installed:
+                model_languages.update(asr_model.languages)
+
+        self._supported_languages = list(model_languages)
+        self._attr_name = asr_service.name
+        self._attr_unique_id = f"{config_entry.entry_id}-stt"
 
     @property
     def supported_languages(self) -> list[str]:
@@ -104,14 +111,16 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
                 while True:
                     event = await client.read_event()
                     if event is None:
-                        raise WyomingError("Connection closed unexpectedly")
+                        _LOGGER.debug("Connection lost")
+                        return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
                     if Transcript.is_type(event.type):
                         transcript = Transcript.from_event(event)
                         text = transcript.text
                         break
 
-        except (OSError, WyomingError):
+        except (OSError, WyomingError) as err:
+            _LOGGER.exception("Error processing audio stream: %s", err)
             return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
 
         return stt.SpeechResult(
