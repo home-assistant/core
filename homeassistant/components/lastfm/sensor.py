@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 import logging
 
-from pylast import SIZE_SMALL, LastFMNetwork, Track, User, WSError
+from pylast import LastFMNetwork, Track, User, WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -52,6 +52,7 @@ def setup_platform(
             entities.append(LastFmSensor(user, lastfm_api))
         except WSError as exc:
             LOGGER.error("Failed to load LastFM user `%s`: %r", username, exc)
+            return
     add_entities(entities, True)
 
 
@@ -69,7 +70,7 @@ class LastFmSensor(SensorEntity):
 
     def update(self) -> None:
         """Update device state."""
-        self._attr_entity_picture = self._user.get_image(SIZE_SMALL)
+        self._attr_entity_picture = self._user.get_image()
         if now_playing := self._user.get_now_playing():
             self._attr_native_value = format_track(now_playing)
         else:
