@@ -173,7 +173,7 @@ class PipelineRun:
     event_callback: PipelineEventCallback
     language: str = None  # type: ignore[assignment]
     runner_data: Any | None = None
-    stt_provider: stt.Provider | None = None
+    stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
     intent_agent: str | None = None
     tts_engine: str | None = None
     tts_options: dict | None = None
@@ -228,7 +228,21 @@ class PipelineRun:
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
         """Prepare speech to text."""
-        stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
+        stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
+
+        if self.pipeline.stt_engine is not None:
+            # Try entity first
+            stt_provider = stt.async_get_speech_to_text_entity(
+                self.hass,
+                self.pipeline.stt_engine,
+            )
+
+        if stt_provider is None:
+            # Try legacy provider second
+            stt_provider = stt.async_get_provider(
+                self.hass,
+                self.pipeline.stt_engine,
+            )
 
         if stt_provider is None:
             engine = self.pipeline.stt_engine or "default"
