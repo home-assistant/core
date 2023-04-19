@@ -318,6 +318,7 @@ class BluetoothManager:
                     tracker.async_remove_address(address)
                     self._integration_matcher.async_clear_address(address)
                     self._async_dismiss_discoveries(address)
+                    self._integration_matcher.async_clear_address(address)
 
                 service_info = history.pop(address)
 
