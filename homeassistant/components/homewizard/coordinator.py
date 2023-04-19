@@ -52,8 +52,6 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 if self.supports_system(data.device):
                     data.system = await self.api.system()
 
-                raise UnsupportedError("state is not supported")
-
             except UnsupportedError as ex:
                 # Old firmware, ignore
                 if not self._unsupported_error:
