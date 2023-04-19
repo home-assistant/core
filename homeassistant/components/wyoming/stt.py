@@ -27,8 +27,9 @@ async def async_setup_entry(
     service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
 
     model_languages: set[str] = set()
-    for asr_model in service.info.models:
-        model_languages.update(asr_model.languages)
+    for asr_model in service.info.asr[0].models:
+        if asr_model.installed:
+            model_languages.update(asr_model.languages)
 
     async_add_entities([WyomingSttProvider(service, list(model_languages))])
 
