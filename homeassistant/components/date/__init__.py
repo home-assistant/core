@@ -9,8 +9,7 @@ from typing import final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import FORMAT_DATE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -26,16 +25,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 _LOGGER = logging.getLogger(__name__)
 
 __all__ = ["DOMAIN", "DateEntity", "DateEntityDescription"]
-
-
-async def _async_set_value(entity: DateEntity, service_call: ServiceCall) -> None:
-    """Service call wrapper to set a new date."""
-    return await entity.async_set_value(service_call.data[ATTR_DATE])
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -46,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_SET_VALUE, {vol.Required(ATTR_DATE): cv.date}, _async_set_value
+        SERVICE_SET_VALUE, {vol.Required(ATTR_DATE): cv.date}, "async_set_value"
     )
 
     return True
@@ -73,18 +65,25 @@ class DateEntity(Entity):
     """Representation of a Date entity."""
 
     entity_description: DateEntityDescription
+    _attr_device_class: None
     _attr_native_value: date | None
+    _attr_state: None = None
 
     @property
     @final
-    def state_attributes(self) -> dict[str, int]:
+    def device_class(self) -> None:
+        """Return the device class for the entity."""
+        return None
+
+    @property
+    @final
+    def state_attributes(self) -> dict[str, int | None]:
         """Return the state attributes."""
-        state_attr: dict[str, int | None] = {
-            ATTR_DAY: self.day,
-            ATTR_MONTH: self.month,
-            ATTR_YEAR: self.year,
+        return {
+            ATTR_DAY: self.native_value.day if self.native_value else None,
+            ATTR_MONTH: self.native_value.month if self.native_value else None,
+            ATTR_YEAR: self.native_value.year if self.native_value else None,
         }
-        return {k: v for k, v in state_attr.items() if v is not None}
 
     @property
     @final
@@ -92,41 +91,17 @@ class DateEntity(Entity):
         """Return the entity state."""
         if self.native_value is None:
             return None
-        return self.native_value.strftime(FORMAT_DATE)
-
-    @property
-    @final
-    def day(self) -> int | None:
-        """Return day from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.day
-
-    @property
-    @final
-    def month(self) -> int | None:
-        """Return month from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.month
-
-    @property
-    @final
-    def year(self) -> int | None:
-        """Return year from value."""
-        if self.native_value is None:
-            return None
-        return self.native_value.year
+        return self.native_value.isoformat()
 
     @property
     def native_value(self) -> date | None:
         """Return the value reported by the date."""
         return self._attr_native_value
 
-    def set_value(self, date_value: date) -> None:
+    def set_value(self, data: dict[str, date]) -> None:
         """Change the date."""
         raise NotImplementedError()
 
-    async def async_set_value(self, date_value: date) -> None:
+    async def async_set_value(self, data: dict[str, date]) -> None:
         """Change the date."""
-        await self.hass.async_add_executor_job(self.set_value, date_value)
+        await self.hass.async_add_executor_job(self.set_value, data)
