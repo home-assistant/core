@@ -339,6 +339,14 @@ class ControllerEvents:
                 node,
             )
 
+        # Create statistics sensors for each device
+        await self.driver_events.async_setup_platform(Platform.SENSOR)
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self.config_entry.entry_id}_add_statistics_sensors",
+            node,
+        )
+
         LOGGER.debug("Node added: %s", node.node_id)
 
         # Listen for ready node events, both new and re-interview.

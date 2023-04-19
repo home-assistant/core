@@ -690,8 +690,8 @@
   "interviewStage": "Complete",
   "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0109:0x2021:0x2101:5.1",
   "statistics": {
-    "commandsTX": 39,
-    "commandsRX": 38,
+    "commandsTX": 0,
+    "commandsRX": 0,
     "commandsDroppedRX": 0,
     "commandsDroppedTX": 0,
     "timeoutResponse": 0
