@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterable, Callable
 from dataclasses import asdict, dataclass, field
+import functools as ft
 import logging
 from typing import Any
 
@@ -47,7 +48,8 @@ STORAGE_FIELDS = {
     vol.Optional("tts_engine", default=None): vol.Any(str, None),
 }
 
-STORED_PIPELINE_RUNS = 10
+STORED_PIPELINE_SESSIONS = 10
+STORED_PIPELINE_RUNS_PER_SESSION = 100
 
 SAVE_DELAY = 10
 
@@ -191,21 +193,29 @@ class PipelineRun:
             raise InvalidPipelineStagesError(self.start_stage, self.end_stage)
 
         pipeline_data: PipelineData = self.hass.data[DOMAIN]
-        if self.pipeline.id not in pipeline_data.pipeline_runs:
-            pipeline_data.pipeline_runs[self.pipeline.id] = LimitedSizeDict(
-                size_limit=STORED_PIPELINE_RUNS
+        pipeline_runs = pipeline_data.pipeline_runs
+        if self.pipeline.id not in pipeline_runs:
+            pipeline_runs[self.pipeline.id] = LimitedSizeDict(
+                size_limit=STORED_PIPELINE_SESSIONS
             )
-        pipeline_data.pipeline_runs[self.pipeline.id][self.id] = PipelineRunDebug()
+        if self.context.id not in pipeline_runs[self.pipeline.id]:
+            pipeline_runs[self.pipeline.id][self.context.id] = PipelineSessionDebug()
+
+        pipeline_runs[self.pipeline.id][self.context.id].runs[self.id] = []
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
         """Log an event and call listener."""
         self.event_callback(event)
         pipeline_data: PipelineData = self.hass.data[DOMAIN]
-        if self.id not in pipeline_data.pipeline_runs[self.pipeline.id]:
+        pipeline_runs = pipeline_data.pipeline_runs
+        if self.context.id not in pipeline_runs[self.pipeline.id]:
+            # This session has been evicted from the logged pipeline sessions already
+            return
+        if self.id not in pipeline_runs[self.pipeline.id][self.context.id].runs:
             # This run has been evicted from the logged pipeline runs already
             return
-        pipeline_data.pipeline_runs[self.pipeline.id][self.id].events.append(event)
+        pipeline_runs[self.pipeline.id][self.context.id].runs[self.id].append(event)
 
     def start(self) -> None:
         """Emit run start event."""
@@ -735,15 +745,20 @@ class PipelineStorageCollectionWebsocket(
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
-    pipeline_runs: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
+    pipeline_runs: dict[str, LimitedSizeDict[str, PipelineSessionDebug]]
     pipeline_store: PipelineStorageCollection
 
 
 @dataclass
-class PipelineRunDebug:
-    """Debug data for a pipelinerun."""
+class PipelineSessionDebug:
+    """Debug data for a pipeline session."""
 
-    events: list[PipelineEvent] = field(default_factory=list, init=False)
+    runs: LimitedSizeDict[str, list[PipelineEvent]] = field(
+        default_factory=ft.partial(  # type: ignore[arg-type]
+            LimitedSizeDict, size_limit=STORED_PIPELINE_RUNS_PER_SESSION
+        ),
+        init=False,
+    )
     timestamp: str = field(
         default_factory=lambda: dt_util.utcnow().isoformat(),
         init=False,

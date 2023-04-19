@@ -70,8 +70,8 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
             ),
         ),
     )
-    websocket_api.async_register_command(hass, websocket_list_runs)
-    websocket_api.async_register_command(hass, websocket_get_run)
+    websocket_api.async_register_command(hass, websocket_list_sessions)
+    websocket_api.async_register_command(hass, websocket_get_session)
 
 
 @websocket_api.async_response
@@ -206,12 +206,12 @@ async def websocket_run(
         vol.Required("pipeline_id"): str,
     }
 )
-def websocket_list_runs(
+def websocket_list_sessions(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """List pipeline runs for which debug data is available."""
+    """List pipeline sessions for which debug data is available."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_id = msg["pipeline_id"]
 
@@ -219,14 +219,14 @@ def websocket_list_runs(
         connection.send_result(msg["id"], {"pipeline_runs": []})
         return
 
-    pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
+    pipeline_sessions = pipeline_data.pipeline_runs[pipeline_id]
 
     connection.send_result(
         msg["id"],
         {
-            "pipeline_runs": [
-                {"pipeline_run_id": id, "timestamp": pipeline_run.timestamp}
-                for id, pipeline_run in pipeline_runs.items()
+            "pipeline_sessions": [
+                {"pipeline_session_id": id, "timestamp": pipeline_run.timestamp}
+                for id, pipeline_run in pipeline_sessions.items()
             ]
         },
     )
@@ -238,18 +238,18 @@ def websocket_list_runs(
     {
         vol.Required("type"): "assist_pipeline/pipeline_debug/get",
         vol.Required("pipeline_id"): str,
-        vol.Required("pipeline_run_id"): str,
+        vol.Required("pipeline_session_id"): str,
     }
 )
-def websocket_get_run(
+def websocket_get_session(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Get debug data for a pipeline run."""
+    """Get debug data for a pipeline session."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_id = msg["pipeline_id"]
-    pipeline_run_id = msg["pipeline_run_id"]
+    pipeline_session_id = msg["pipeline_session_id"]
 
     if pipeline_id not in pipeline_data.pipeline_runs:
         connection.send_error(
@@ -259,17 +259,22 @@ def websocket_get_run(
         )
         return
 
-    pipeline_runs = pipeline_data.pipeline_runs[pipeline_id]
+    pipeline_sessions = pipeline_data.pipeline_runs[pipeline_id]
 
-    if pipeline_run_id not in pipeline_runs:
+    if pipeline_session_id not in pipeline_sessions:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
-            f"pipeline_run_id {pipeline_run_id} not found",
+            f"pipeline_session_id {pipeline_session_id} not found",
         )
         return
 
     connection.send_result(
         msg["id"],
-        {"events": pipeline_runs[pipeline_run_id].events},
+        {
+            "runs": [
+                {"pipeline_run_id": id, "events": events}
+                for id, events in pipeline_sessions[pipeline_session_id].runs.items()
+            ]
+        },
     )
