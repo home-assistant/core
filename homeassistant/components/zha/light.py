@@ -138,6 +138,11 @@ class BaseLight(LogMixin, light.LightEntity):
         self._transitioning_group: bool = False
         self._transition_listener: Callable[[], None] | None = None
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+        self._async_unsub_transition_listener()
+        await super().async_will_remove_from_hass()
+
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
@@ -575,8 +580,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 SIGNAL_LIGHT_GROUP_TRANSITION_START,
                 {"entity_ids": self._entity_ids},
             )
-        if self._transition_listener is not None:
-            self._transition_listener()
+        self._async_unsub_transition_listener()
 
     @callback
     def async_transition_start_timer(self, transition_time) -> None:
@@ -597,13 +601,18 @@ class BaseLight(LogMixin, light.LightEntity):
         )
 
     @callback
+    def _async_unsub_transition_listener(self) -> None:
+        """Unsubscribe transition listener."""
+        if self._transition_listener:
+            self._transition_listener()
+            self._transition_listener = None
+
+    @callback
     def async_transition_complete(self, _=None) -> None:
         """Set _transitioning_individual to False and write HA state."""
         self.debug("transition complete - future attribute reports will write HA state")
         self._transitioning_individual = False
-        if self._transition_listener:
-            self._transition_listener()
-            self._transition_listener = None
+        self._async_unsub_transition_listener()
         self.async_write_ha_state()
         if isinstance(self, LightGroup):
             async_dispatcher_send(
