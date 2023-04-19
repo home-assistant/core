@@ -45,7 +45,7 @@ class AnovaCoordinator(DataUpdateCoordinator):
             sw_version=firmware_version,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, dict[str, str | int | float]]:
         try:
             async with async_timeout.timeout(5):
                 return await self.anova_device.update()
