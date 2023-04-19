@@ -67,7 +67,7 @@ class DemoDate(DateEntity):
             identifiers={(DOMAIN, unique_id)}, name=self.name
         )
 
-    async def async_set_value(self, date_value: date) -> None:
+    async def async_set_value(self, value: date) -> None:
         """Update the date."""
-        self._attr_native_value = date_value
+        self._attr_native_value = value
         self.async_write_ha_state()
