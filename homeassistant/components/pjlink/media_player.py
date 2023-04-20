@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT
+from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT, DOMAIN
 
 ERR_PROJECTOR_UNAVAILABLE = "projector unavailable"
 
@@ -47,9 +47,9 @@ def setup_platform(
     encoding = config.get(CONF_ENCODING)
     password = config.get(CONF_PASSWORD)
 
-    if "pjlink" not in hass.data:
-        hass.data["pjlink"] = {}
-    hass_data = hass.data["pjlink"]
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass_data = hass.data[DOMAIN]
 
     device_label = f"{host}:{port}"
     if device_label in hass_data:
