@@ -1519,7 +1519,7 @@ python-roborock==0.6.5
 python-smarttub==0.0.33
 
 # homeassistant.components.songpal
-python-songpal==0.15.1
+python-songpal==0.15.2
 
 # homeassistant.components.tado
 python-tado==0.12.0
