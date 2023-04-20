@@ -83,13 +83,14 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
                         int, event_type_id
                     )
 
-        for missed in missing:
-            if results[missed] is None:
-                non_existent.append(missed)
-
-        if non_existent:
+        if non_existent := [
+            event_type for event_type in missing if results[event_type] is None
+        ]:
             if from_recorder:
-                self._non_existent_event_types.update(non_existent)
+                # We are already in the recorder thread so we can update the
+                # non-existent event types directly.
+                for event_type in non_existent:
+                    self._non_existent_event_types[event_type] = None
             else:
                 # Queue a task to refresh the event types since its not
                 # thread-safe to do it here since we are not in the recorder
