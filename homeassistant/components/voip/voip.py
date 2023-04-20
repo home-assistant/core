@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, MutableSequence, Sequence
 from functools import partial
 import logging
 from pathlib import Path
@@ -131,24 +131,37 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             if self.listening_tone_enabled:
                 await self._play_listening_tone()
 
-        _LOGGER.debug("Starting pipeline")
-
-        async def stt_stream():
-            try:
-                async for chunk in self._segment_audio():
-                    yield chunk
-            except asyncio.TimeoutError:
-                # Expected after caller hangs up
-                _LOGGER.debug("Audio timeout")
-                self._session_id = None
-
-                if self.transport is not None:
-                    self.transport.close()
-                    self.transport = None
-            finally:
-                self._clear_audio_queue()
-
         try:
+            # Wait for speech before starting pipeline
+            segmenter = VoiceCommandSegmenter()
+            chunk_buffer: deque[bytes] = deque(
+                maxlen=_BUFFERED_CHUNKS_BEFORE_SPEECH,
+            )
+            speech_detected = await self._wait_for_speech(
+                segmenter,
+                chunk_buffer,
+            )
+            if not speech_detected:
+                _LOGGER.debug("No speech detected")
+                return
+
+            _LOGGER.debug("Starting pipeline")
+
+            async def stt_stream():
+                try:
+                    async for chunk in self._segment_audio(
+                        segmenter,
+                        chunk_buffer,
+                    ):
+                        yield chunk
+                except asyncio.TimeoutError:
+                    # Expected after caller hangs up
+                    _LOGGER.debug("Audio timeout")
+                    self._session_id = None
+                    self.disconnect()
+                finally:
+                    self._clear_audio_queue()
+
             # Run pipeline with a timeout
             async with async_timeout.timeout(self.pipeline_timeout):
                 await async_pipeline_from_audio_stream(
@@ -175,17 +188,47 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             # Expected after caller hangs up
             _LOGGER.debug("Pipeline timeout")
             self._session_id = None
-
-            if self.transport is not None:
-                self.transport.close()
-                self.transport = None
+            self.disconnect()
         finally:
             # Allow pipeline to run again
             self._pipeline_task = None
 
-    async def _segment_audio(self) -> AsyncIterable[bytes]:
-        segmenter = VoiceCommandSegmenter()
-        chunk_buffer: deque[bytes] = deque(maxlen=_BUFFERED_CHUNKS_BEFORE_SPEECH)
+    async def _wait_for_speech(
+        self,
+        segmenter: VoiceCommandSegmenter,
+        chunk_buffer: MutableSequence[bytes],
+    ):
+        """Buffer audio chunks until speech is detected.
+
+        Returns True if speech was detected, False otherwise.
+        """
+        # Timeout if no audio comes in for a while.
+        # This means the caller hung up.
+        async with async_timeout.timeout(self.audio_timeout):
+            chunk = await self._audio_queue.get()
+
+        while chunk:
+            segmenter.process(chunk)
+            if segmenter.in_command:
+                return True
+
+            # Buffer until command starts
+            chunk_buffer.append(chunk)
+
+            async with async_timeout.timeout(self.audio_timeout):
+                chunk = await self._audio_queue.get()
+
+        return False
+
+    async def _segment_audio(
+        self,
+        segmenter: VoiceCommandSegmenter,
+        chunk_buffer: Sequence[bytes],
+    ) -> AsyncIterable[bytes]:
+        """Yield audio chunks until voice command has finished."""
+        # Buffered chunks first
+        for buffered_chunk in chunk_buffer:
+            yield buffered_chunk
 
         # Timeout if no audio comes in for a while.
         # This means the caller hung up.
@@ -197,18 +240,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 # Voice command is finished
                 break
 
-            if segmenter.in_command:
-                if chunk_buffer:
-                    # Release audio in buffer first
-                    for buffered_chunk in chunk_buffer:
-                        yield buffered_chunk
-
-                    chunk_buffer.clear()
-
-                yield chunk
-            else:
-                # Buffer until command starts
-                chunk_buffer.append(chunk)
+            yield chunk
 
             async with async_timeout.timeout(self.audio_timeout):
                 chunk = await self._audio_queue.get()
@@ -259,13 +291,12 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
         await self.hass.async_add_executor_job(
             partial(
-                self.send_audio(
-                    self._tone_bytes,
-                    rate=16000,
-                    width=2,
-                    channels=1,
-                    silence_before=_TONE_DELAY,
-                )
+                self.send_audio,
+                self._tone_bytes,
+                rate=16000,
+                width=2,
+                channels=1,
+                silence_before=_TONE_DELAY,
             )
         )
 

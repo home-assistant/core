@@ -93,7 +93,7 @@ async def test_pipeline(
         # Ensure audio queue is cleared before pipeline starts
         rtp_protocol._audio_queue.put_nowait(bad_chunk)
 
-        async def send_audio(*args, **kwargs):
+        def send_audio(*args, **kwargs):
             # Test finished successfully
             done.set()
 
@@ -125,6 +125,9 @@ async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) ->
     with patch(
         "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
+    ), patch(
+        "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._wait_for_speech",
+        return_value=True,
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
