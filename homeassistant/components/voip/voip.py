@@ -5,6 +5,7 @@ import asyncio
 from collections import deque
 from collections.abc import AsyncIterable
 import logging
+from pathlib import Path
 import time
 from typing import TYPE_CHECKING
 
@@ -22,6 +23,7 @@ from homeassistant.components.assist_pipeline import (
 from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
 from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.util.ulid import ulid
 
 from .const import DOMAIN
 
@@ -29,6 +31,7 @@ if TYPE_CHECKING:
     from .devices import VoIPDevice, VoIPDevices
 
 _BUFFERED_CHUNKS_BEFORE_SPEECH = 100  # ~2 seconds
+_TONE_DELAY = 0.2  # seconds before playing tone
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -85,6 +88,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self._context = Context()
         self._conversation_id: str | None = None
         self._pipeline_task: asyncio.Task | None = None
+        self._session_id: str | None = None
 
     def connection_made(self, transport):
         """Server is ready."""
@@ -113,6 +117,10 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self,
     ) -> None:
         """Forward audio to pipeline STT and handle TTS."""
+        if self._session_id is None:
+            self._session_id = ulid()
+            await self._play_listening_tone(delay=_TONE_DELAY)
+
         _LOGGER.debug("Starting pipeline")
 
         async def stt_stream():
@@ -122,6 +130,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             except asyncio.TimeoutError:
                 # Expected after caller hangs up
                 _LOGGER.debug("Audio timeout")
+                self._session_id = None
 
                 if self.transport is not None:
                     self.transport.close()
@@ -155,6 +164,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         except asyncio.TimeoutError:
             # Expected after caller hangs up
             _LOGGER.debug("Pipeline timeout")
+            self._session_id = None
 
             if self.transport is not None:
                 self.transport.close()
@@ -225,4 +235,12 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         _LOGGER.debug("Sending %s byte(s) of audio", len(audio_bytes))
 
         # Assume TTS audio is 16Khz 16-bit mono
+        await self.send_audio(audio_bytes, rate=16000, width=2, channels=1)
+
+    async def _play_listening_tone(self, delay: float | None = None) -> None:
+        """Play a tone to indicate that Home Assistant is listening."""
+        if delay:
+            await asyncio.sleep(delay)
+
+        audio_bytes = (Path(__file__).parent / "tone.raw").read_bytes()
         await self.send_audio(audio_bytes, rate=16000, width=2, channels=1)
