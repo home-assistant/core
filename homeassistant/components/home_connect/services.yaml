@@ -1,3 +1,14 @@
+stop_program:
+  name: Stop active program
+  description: Stops active program.
+  fields:
+    device_id:
+      name: Device ID
+      description: Id of the device.
+      required: true
+      selector:
+        device:
+          integration: home_connect
 start_program:
   name: Start program
   description: Selects a program and starts it.
