@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from collections.abc import AsyncIterable
+from functools import partial
 import logging
 from pathlib import Path
 import time
@@ -244,20 +245,28 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         _LOGGER.debug("Sending %s byte(s) of audio", len(audio_bytes))
 
         # Assume TTS audio is 16Khz 16-bit mono
-        await self.send_audio(audio_bytes, rate=16000, width=2, channels=1)
+        await self.hass.async_add_executor_job(
+            partial(self.send_audio, audio_bytes, rate=16000, width=2, channels=1)
+        )
 
     async def _play_listening_tone(self) -> None:
         """Play a tone to indicate that Home Assistant is listening."""
         if self._tone_bytes is None:
             # Do I/O in executor
-            self._tone_bytes = await self.hass.async_add_executor_job(self._load_tone)
+            self._tone_bytes = await self.hass.async_add_executor_job(
+                self._load_tone,
+            )
 
-        await self.send_audio(
-            self._tone_bytes,
-            rate=16000,
-            width=2,
-            channels=1,
-            silence_before=_TONE_DELAY,
+        await self.hass.async_add_executor_job(
+            partial(
+                self.send_audio(
+                    self._tone_bytes,
+                    rate=16000,
+                    width=2,
+                    channels=1,
+                    silence_before=_TONE_DELAY,
+                )
+            )
         )
 
     def _load_tone(self) -> bytes:
@@ -293,12 +302,15 @@ class NotConfiguredRtpDatagramProtocol(RtpDatagramProtocol):
             )
 
     async def _play_message(self) -> None:
-        await self.send_audio(
-            self._audio_bytes,
-            16000,
-            2,
-            1,
-            silence_before=_MESSAGE_DELAY,
+        await self.hass.async_add_executor_job(
+            partial(
+                self.send_audio,
+                self._audio_bytes,
+                16000,
+                2,
+                1,
+                silence_before=_MESSAGE_DELAY,
+            )
         )
 
         await asyncio.sleep(_LOOP_DELAY)
