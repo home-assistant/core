@@ -40,9 +40,12 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         self.get_many(
             {event.event_type for event in events if event.event_type is not None},
             session,
+            True,
         )
 
-    def get(self, event_type: str, session: Session) -> int | None:
+    def get(
+        self, event_type: str, session: Session, from_recorder: bool = False
+    ) -> int | None:
         """Resolve event_type to the event_type_id.
 
         This call is not thread-safe and must be called from the
