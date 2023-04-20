@@ -50,7 +50,7 @@ async def setup_tts(hass: HomeAssistant, mock_tts: None) -> None:
 
 
 class DefaultEntity(tts.TextToSpeechEntity):
-    """Test provider."""
+    """Test entity."""
 
     @property
     def supported_languages(self) -> list[str]:

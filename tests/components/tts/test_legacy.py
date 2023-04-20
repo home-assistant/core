@@ -38,7 +38,7 @@ class DefaultProvider(Provider):
 
 
 async def test_default_provider_attributes() -> None:
-    """Test default provider properties."""
+    """Test default provider attributes."""
     provider = DefaultProvider()
 
     assert provider.hass is None
@@ -47,6 +47,7 @@ async def test_default_provider_attributes() -> None:
     assert provider.supported_languages == SUPPORT_LANGUAGES
     assert provider.supported_options is None
     assert provider.default_options is None
+    assert provider.async_get_supported_voices("test") is None
 
 
 async def test_deprecated_platform(hass: HomeAssistant) -> None:
