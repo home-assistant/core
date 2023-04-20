@@ -1,0 +1,42 @@
+vacuum_set_mop_mode:
+  name: Vacuum set mop mode
+  description: Change vacuum mop mode.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    mop_mode:
+      name: Mop Mode
+      description: Mop mode.
+      required: true
+      example: "standard"
+      selector:
+        select:
+          options:
+            - "standard"
+            - "deep"
+            - "deep_plus"
+            - "custom"
+
+vacuum_set_mop_intensity:
+  name: Vacuum set mop intensity
+  description: Change vacuum mop intensity.
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    mop_intensity:
+      name: Mop Intensity
+      description: Mop intensity.
+      required: true
+      example: "mild"
+      selector:
+        select:
+          options:
+            - "off"
+            - "mild"
+            - "moderate"
+            - "intense"
+            - "custom"
