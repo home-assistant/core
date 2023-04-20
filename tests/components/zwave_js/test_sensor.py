@@ -498,7 +498,8 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
 
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
-CONTROLLER_STATISTICS_SUFFIXES_0 = {
+# controller statistics with initial state of 0
+CONTROLLER_STATISTICS_SUFFIXES = {
     "successful_messages_tx": 1,
     "successful_messages_rx": 2,
     "messages_dropped_tx": 3,
@@ -509,6 +510,7 @@ CONTROLLER_STATISTICS_SUFFIXES_0 = {
     "timed_out_responses": 8,
     "timed_out_callbacks": 9,
 }
+# controller statistics with initial state of unknown
 CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN = {
     "current_background_rssi_channel_0": -1,
     "average_background_rssi_channel_0": -2,
@@ -518,13 +520,15 @@ CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN = {
     "average_background_rssi_channel_2": STATE_UNKNOWN,
 }
 NODE_STATISTICS_ENTITY_PREFIX = "sensor.4_in_1_sensor_"
-NODE_STATISTICS_SUFFIXES_0 = {
+# node statistics with initial state of 0
+NODE_STATISTICS_SUFFIXES = {
     "successful_commands_tx": 1,
     "successful_commands_rx": 2,
     "commands_dropped_tx": 3,
     "commands_dropped_rx": 4,
     "timed_out_responses": 5,
 }
+# node statistics with initial state of unknown
 NODE_STATISTICS_SUFFIXES_UNKNOWN = {
     "round_trip_time": 6,
     "rssi": 7,
@@ -538,9 +542,9 @@ async def test_statistics_sensors(
     ent_reg = er.async_get(hass)
 
     for prefix, suffixes in (
-        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_0),
+        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES),
         (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN),
-        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_0),
+        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES),
         (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_UNKNOWN),
     ):
         for suffix_key in suffixes:
@@ -556,13 +560,13 @@ async def test_statistics_sensors(
     await hass.async_block_till_done()
 
     for prefix, suffixes, initial_state in (
-        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_0, "0"),
+        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES, "0"),
         (
             CONTROLLER_STATISTICS_ENTITY_PREFIX,
             CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN,
             STATE_UNKNOWN,
         ),
-        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_0, "0"),
+        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES, "0"),
         (
             NODE_STATISTICS_ENTITY_PREFIX,
             NODE_STATISTICS_SUFFIXES_UNKNOWN,
@@ -647,9 +651,9 @@ async def test_statistics_sensors(
 
     # Check that states match the statistics from the updates
     for prefix, suffixes in (
-        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_0),
+        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES),
         (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN),
-        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_0),
+        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES),
         (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_UNKNOWN),
     ):
         for suffix_key, val in suffixes.items():
