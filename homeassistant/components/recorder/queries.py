@@ -690,6 +690,7 @@ def find_events_context_ids_to_migrate() -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(
             Events.event_id,
+            Events.time_fired_ts,
             Events.context_id,
             Events.context_user_id,
             Events.context_parent_id,
@@ -730,7 +731,8 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
         lambda: update(States)
         .where(
             States.state_id.in_(
-                select(States.state_id).join(
+                select(States.state_id)
+                .join(
                     states_with_entity_ids := select(
                         States.state_id.label("state_id_with_entity_id")
                     )
@@ -739,6 +741,8 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
                     .subquery(),
                     States.state_id == states_with_entity_ids.c.state_id_with_entity_id,
                 )
+                .alias("states_with_entity_ids")
+                .select()
             )
         )
         .values(entity_id=None)
@@ -785,6 +789,7 @@ def find_states_context_ids_to_migrate() -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(
             States.state_id,
+            States.last_updated_ts,
             States.context_id,
             States.context_user_id,
             States.context_parent_id,

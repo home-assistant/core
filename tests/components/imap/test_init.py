@@ -313,9 +313,9 @@ async def test_lost_connection_with_imap_push(
     assert "Lost imap.server.com (will attempt to reconnect after 10 s)" in caplog.text
 
     state = hass.states.get("sensor.imap_email_email_com")
-    # we should have an entity with an unavailable state
+    # Our entity should keep its current state as this
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == "0"
 
 
 @pytest.mark.parametrize("imap_has_capability", [True], ids=["push"])

@@ -20,11 +20,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
-    CHANNEL_ACCELEROMETER,
-    CHANNEL_BINARY_INPUT,
-    CHANNEL_OCCUPANCY,
-    CHANNEL_ON_OFF,
-    CHANNEL_ZONE,
+    CLUSTER_HANDLER_ACCELEROMETER,
+    CLUSTER_HANDLER_BINARY_INPUT,
+    CLUSTER_HANDLER_OCCUPANCY,
+    CLUSTER_HANDLER_ON_OFF,
+    CLUSTER_HANDLER_ZONE,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
@@ -72,22 +72,22 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
 
     SENSOR_ATTR: str | None = None
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize the ZHA binary sensor."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel = channels[0]
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._cluster_handler = cluster_handlers[0]
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
-            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+            self._cluster_handler, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
     @property
     def is_on(self) -> bool:
         """Return True if the switch is on based on the state machine."""
-        raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
+        raw_state = self._cluster_handler.cluster.get(self.SENSOR_ATTR)
         if raw_state is None:
             return False
         return self.parse(raw_state)
@@ -103,7 +103,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         return bool(value)
 
 
-@MULTI_MATCH(channel_names=CHANNEL_ACCELEROMETER)
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ACCELEROMETER)
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
@@ -111,7 +111,7 @@ class Accelerometer(BinarySensor):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOVING
 
 
-@MULTI_MATCH(channel_names=CHANNEL_OCCUPANCY)
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY)
 class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
@@ -119,7 +119,7 @@ class Occupancy(BinarySensor):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
+@STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ON_OFF)
 class Opening(BinarySensor):
     """ZHA OnOff BinarySensor."""
 
@@ -131,13 +131,13 @@ class Opening(BinarySensor):
     @callback
     def async_restore_last_state(self, last_state):
         """Restore previous state to zigpy cache."""
-        self._channel.cluster.update_attribute(
+        self._cluster_handler.cluster.update_attribute(
             OnOff.attributes_by_name[self.SENSOR_ATTR].id,
             t.Bool.true if last_state.state == STATE_ON else t.Bool.false,
         )
 
 
-@MULTI_MATCH(channel_names=CHANNEL_BINARY_INPUT)
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_BINARY_INPUT)
 class BinaryInput(BinarySensor):
     """ZHA BinarySensor."""
 
@@ -145,14 +145,14 @@ class BinaryInput(BinarySensor):
 
 
 @STRICT_MATCH(
-    channel_names=CHANNEL_ON_OFF,
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
     manufacturers="IKEA of Sweden",
     models=lambda model: isinstance(model, str)
     and model is not None
     and model.find("motion") != -1,
 )
 @STRICT_MATCH(
-    channel_names=CHANNEL_ON_OFF,
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
     manufacturers="Philips",
     models={"SML001", "SML002"},
 )
@@ -162,7 +162,7 @@ class Motion(Opening):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOTION
 
 
-@MULTI_MATCH(channel_names=CHANNEL_ZONE)
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ZONE)
 class IASZone(BinarySensor):
     """ZHA IAS BinarySensor."""
 
@@ -171,7 +171,7 @@ class IASZone(BinarySensor):
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return device class from component DEVICE_CLASSES."""
-        return CLASS_MAPPING.get(self._channel.cluster.get("zone_type"))
+        return CLASS_MAPPING.get(self._cluster_handler.cluster.get("zone_type"))
 
     @staticmethod
     def parse(value: bool | int) -> bool:
@@ -204,13 +204,13 @@ class IASZone(BinarySensor):
         else:
             migrated_state = IasZone.ZoneStatus(0)
 
-        self._channel.cluster.update_attribute(
+        self._cluster_handler.cluster.update_attribute(
             IasZone.attributes_by_name[self.SENSOR_ATTR].id, migrated_state
         )
 
 
 @MULTI_MATCH(
-    channel_names="tuya_manufacturer",
+    cluster_handler_names="tuya_manufacturer",
     manufacturers={
         "_TZE200_htnnfasr",
     },
@@ -222,7 +222,7 @@ class FrostLock(BinarySensor, id_suffix="frost_lock"):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK
 
 
-@MULTI_MATCH(channel_names="ikea_airpurifier")
+@MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
 class ReplaceFilter(BinarySensor, id_suffix="replace_filter"):
     """ZHA BinarySensor."""
 
@@ -230,7 +230,7 @@ class ReplaceFilter(BinarySensor, id_suffix="replace_filter"):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
 
 
-@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+@MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederErrorDetected(BinarySensor, id_suffix="error_detected"):
     """ZHA aqara pet feeder error detected binary sensor."""
 
@@ -240,7 +240,8 @@ class AqaraPetFeederErrorDetected(BinarySensor, id_suffix="error_detected"):
 
 
 @MULTI_MATCH(
-    channel_names="opple_cluster", models={"lumi.plug.mmeu01", "lumi.plug.maeu01"}
+    cluster_handler_names="opple_cluster",
+    models={"lumi.plug.mmeu01", "lumi.plug.maeu01"},
 )
 class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
     """ZHA Xiaomi plug consumer connected binary sensor."""
@@ -250,7 +251,7 @@ class XiaomiPlugConsumerConnected(BinarySensor, id_suffix="consumer_connected"):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PLUG
 
 
-@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+@MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"})
 class AqaraThermostatWindowOpen(BinarySensor, id_suffix="window_open"):
     """ZHA Aqara thermostat window open binary sensor."""
 
@@ -259,7 +260,7 @@ class AqaraThermostatWindowOpen(BinarySensor, id_suffix="window_open"):
     _attr_name: str = "Window open"
 
 
-@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+@MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"})
 class AqaraThermostatValveAlarm(BinarySensor, id_suffix="valve_alarm"):
     """ZHA Aqara thermostat valve alarm binary sensor."""
 
@@ -268,7 +269,9 @@ class AqaraThermostatValveAlarm(BinarySensor, id_suffix="valve_alarm"):
     _attr_name: str = "Valve alarm"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"}
+)
 class AqaraThermostatCalibrated(BinarySensor, id_suffix="calibrated"):
     """ZHA Aqara thermostat calibrated binary sensor."""
 
@@ -277,7 +280,9 @@ class AqaraThermostatCalibrated(BinarySensor, id_suffix="calibrated"):
     _attr_name: str = "Calibrated"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.airrtc.agl001"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"}
+)
 class AqaraThermostatExternalSensor(BinarySensor, id_suffix="sensor"):
     """ZHA Aqara thermostat external sensor binary sensor."""
 
@@ -286,7 +291,7 @@ class AqaraThermostatExternalSensor(BinarySensor, id_suffix="sensor"):
     _attr_name: str = "External sensor"
 
 
-@MULTI_MATCH(channel_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
+@MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
 class AqaraLinkageAlarmState(BinarySensor, id_suffix="linkage_alarm_state"):
     """ZHA Aqara linkage alarm state binary sensor."""
 

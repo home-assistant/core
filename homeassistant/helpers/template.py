@@ -42,6 +42,7 @@ from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU  # pylint: disable=no-name-in-module
+import orjson
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -149,6 +150,10 @@ CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
     CACHED_TEMPLATE_STATES
 )
 ENTITY_COUNT_GROWTH_FACTOR = 1.2
+
+ORJSON_PASSTHROUGH_OPTIONS = (
+    orjson.OPT_PASSTHROUGH_DATACLASS | orjson.OPT_PASSTHROUGH_DATETIME
+)
 
 
 def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
@@ -436,6 +441,7 @@ class Template:
         "_limited",
         "_strict",
         "_hash_cache",
+        "_renders",
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
@@ -452,6 +458,7 @@ class Template:
         self._limited: bool | None = None
         self._strict: bool | None = None
         self._hash_cache: int = hash(self.template)
+        self._renders: int = 0
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -521,6 +528,8 @@ class Template:
         If limited is True, the template is not allowed to access any function
         or filter depending on hass or the state machine.
         """
+        self._renders += 1
+
         if self.is_static:
             if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
@@ -596,6 +605,8 @@ class Template:
 
         This method must be run in the event loop.
         """
+        self._renders += 1
+
         if self.is_static:
             return False
 
@@ -638,6 +649,7 @@ class Template:
         self, variables: TemplateVarsType = None, strict: bool = False, **kwargs: Any
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        self._renders += 1
         assert self.hass and _RENDER_INFO not in self.hass.data
 
         render_info = RenderInfo(self)
@@ -687,6 +699,8 @@ class Template:
 
         This method must be run in the event loop.
         """
+        self._renders += 1
+
         if self.is_static:
             return self.template
 
@@ -750,7 +764,7 @@ class Template:
 
     def __repr__(self) -> str:
         """Representation of Template."""
-        return 'Template("' + self.template + '")'
+        return f"Template<template=({self.template}) renders={self._renders}>"
 
 
 @cache
@@ -2020,9 +2034,38 @@ def from_json(value):
     return json_loads(value)
 
 
-def to_json(value, ensure_ascii=True):
+def _to_json_default(obj: Any) -> None:
+    """Disable custom types in json serialization."""
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
+def to_json(
+    value: Any,
+    ensure_ascii: bool = False,
+    pretty_print: bool = False,
+    sort_keys: bool = False,
+) -> str:
     """Convert an object to a JSON string."""
-    return json.dumps(value, ensure_ascii=ensure_ascii)
+    if ensure_ascii:
+        # For those who need ascii, we can't use orjson, so we fall back to the json library.
+        return json.dumps(
+            value,
+            ensure_ascii=ensure_ascii,
+            indent=2 if pretty_print else None,
+            sort_keys=sort_keys,
+        )
+
+    option = (
+        ORJSON_PASSTHROUGH_OPTIONS
+        | (orjson.OPT_INDENT_2 if pretty_print else 0)
+        | (orjson.OPT_SORT_KEYS if sort_keys else 0)
+    )
+
+    return orjson.dumps(
+        value,
+        option=option,
+        default=_to_json_default,
+    ).decode("utf-8")
 
 
 @pass_context
@@ -2164,10 +2207,11 @@ class LoggingUndefined(jinja2.Undefined):
 
 async def async_load_custom_templates(hass: HomeAssistant) -> None:
     """Load all custom jinja files under 5MiB into memory."""
-    return await hass.async_add_executor_job(_load_custom_templates, hass)
+    custom_templates = await hass.async_add_executor_job(_load_custom_templates, hass)
+    _get_hass_loader(hass).sources = custom_templates
 
 
-def _load_custom_templates(hass: HomeAssistant) -> None:
+def _load_custom_templates(hass: HomeAssistant) -> dict[str, str]:
     result = {}
     jinja_path = hass.config.path("custom_templates")
     all_files = [
@@ -2179,8 +2223,7 @@ def _load_custom_templates(hass: HomeAssistant) -> None:
         content = file.read_text()
         path = str(file.relative_to(jinja_path))
         result[path] = content
-
-    _get_hass_loader(hass).sources = result
+    return result
 
 
 @singleton(_HASS_LOADER)

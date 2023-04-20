@@ -28,11 +28,11 @@
   },
   "entity": {
     "binary_sensor": {
-      "this_device_nextdns_connection_status": {
-        "name": "This device NextDNS connection status"
+      "device_connection_status": {
+        "name": "Device connection status"
       },
-      "this_device_profile_connection_status": {
-        "name": "This device profile connection status"
+      "device_profile_connection_status": {
+        "name": "Device profile connection status"
       }
     },
     "button": {
