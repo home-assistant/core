@@ -302,7 +302,7 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3310_s_lqi",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-64581"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["manufacturer_specific"],
+                DEV_SIG_CLUSTER_HANDLERS: ["humidity"],
                 DEV_SIG_ENT_MAP_CLASS: "Humidity",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3310_s_humidity",
             },
@@ -2336,10 +2336,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_plug_maus01_identify",
             "sensor.lumi_lumi_plug_maus01_active_power",
-            "sensor.lumi_lumi_plug_maus01_apparent_power",
-            "sensor.lumi_lumi_plug_maus01_rms_current",
             "sensor.lumi_lumi_plug_maus01_rms_voltage",
-            "sensor.lumi_lumi_plug_maus01_ac_frequency",
             "sensor.lumi_lumi_plug_maus01_power_factor",
             "binary_sensor.lumi_lumi_plug_maus01_binaryinput",
             "switch.lumi_lumi_plug_maus01_switch",
@@ -2368,25 +2365,10 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_active_power",
             },
-            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_apparent_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_rms_current",
-            },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_voltage"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_rms_voltage",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-2820-ac_frequency"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_ac_frequency",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-power_factor"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -2407,6 +2389,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["binary_input"],
                 DEV_SIG_ENT_MAP_CLASS: "BinaryInput",
                 DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_plug_maus01_binaryinput",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["sensor"],
+                DEV_SIG_ENT_MAP_CLASS: "Sensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_summation_delivered",
             },
         },
     },

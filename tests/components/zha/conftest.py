@@ -13,6 +13,7 @@ from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.device
 import zigpy.group
 import zigpy.profiles
+import zigpy.quirks
 from zigpy.state import State
 import zigpy.types
 import zigpy.zdo.types as zdo_t
@@ -176,6 +177,9 @@ def zigpy_device_mock(zigpy_app_controller):
 
         if quirk:
             device = quirk(zigpy_app_controller, device.ieee, device.nwk, device)
+        else:
+            # Allow zigpy to apply quirks if we don't pass one explicitly
+            device = zigpy.quirks.get_device(device)
 
         if patch_cluster:
             for endpoint in (ep for epid, ep in device.endpoints.items() if epid):
