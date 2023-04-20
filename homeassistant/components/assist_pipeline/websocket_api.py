@@ -8,9 +8,11 @@ from typing import Any
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components import stt, websocket_api
+from homeassistant.components import conversation, stt, tts, websocket_api
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import language as language_util
 
 from .const import DOMAIN
 from .pipeline import (
@@ -34,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
     websocket_api.async_register_command(hass, websocket_run)
+    websocket_api.async_register_command(hass, websocket_list_languages)
     websocket_api.async_register_command(hass, websocket_list_runs)
     websocket_api.async_register_command(hass, websocket_get_run)
 
@@ -270,4 +273,59 @@ def websocket_get_run(
     connection.send_result(
         msg["id"],
         {"events": pipeline_runs[pipeline_run_id].events},
+    )
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/language/list",
+    }
+)
+@websocket_api.async_response
+async def websocket_list_languages(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List languages which are supported by a complete pipeline.
+
+    This will return a list of languages which are supported by at least one stt, tts
+    and conversation engine respectively.
+    """
+    conv_language_tags = await conversation.async_get_conversation_languages(hass)
+    stt_language_tags = stt.async_get_speech_to_text_languages(hass)
+    tts_language_tags = tts.async_get_text_to_speech_languages(hass)
+    pipeline_languages: set[str] | None = None
+
+    if conv_language_tags and conv_language_tags != MATCH_ALL:
+        languages = set()
+        for language_tag in conv_language_tags:
+            dialect = language_util.Dialect.parse(language_tag)
+            languages.add(dialect.language)
+        pipeline_languages = languages
+
+    if stt_language_tags:
+        languages = set()
+        for language_tag in stt_language_tags:
+            dialect = language_util.Dialect.parse(language_tag)
+            languages.add(dialect.language)
+        if pipeline_languages is not None:
+            pipeline_languages &= languages
+        else:
+            pipeline_languages = languages
+
+    if tts_language_tags:
+        languages = set()
+        for language_tag in tts_language_tags:
+            dialect = language_util.Dialect.parse(language_tag)
+            languages.add(dialect.language)
+        if pipeline_languages is not None:
+            pipeline_languages &= languages
+        else:
+            pipeline_languages = languages
+
+    connection.send_result(
+        msg["id"],
+        {"languages": pipeline_languages},
     )
