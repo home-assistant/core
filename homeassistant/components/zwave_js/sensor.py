@@ -854,7 +854,6 @@ class ZWaveStatisticsSensor(SensorEntity):
         if "." not in self.entity_description.key:
             return cast(int | None, statistics.get(self.entity_description.key))
 
-        LOGGER.error(self.entity_id)
         # If key contains dots, we need to traverse the dict to get to the right value
         for key in self.entity_description.key.split("."):
             if key not in statistics:
