@@ -51,7 +51,7 @@ PSEUDO_EVENT_STATE_CHANGED: Final = None
 # in the payload
 
 EVENT_COLUMNS = (
-    Events.event_id.label("event_id"),
+    Events.event_id.label("row_id"),
     EventTypes.event_type.label("event_type"),
     SHARED_DATA_OR_LEGACY_EVENT_DATA,
     Events.time_fired_ts.label("time_fired_ts"),
@@ -61,21 +61,19 @@ EVENT_COLUMNS = (
 )
 
 STATE_COLUMNS = (
-    States.state_id.label("state_id"),
     States.state.label("state"),
     StatesMeta.entity_id.label("entity_id"),
     ICON_OR_OLD_FORMAT_ICON_JSON,
 )
 
 STATE_CONTEXT_ONLY_COLUMNS = (
-    States.state_id.label("state_id"),
     States.state.label("state"),
     StatesMeta.entity_id.label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
 )
 
 EVENT_COLUMNS_FOR_STATE_SELECT = (
-    literal(value=None, type_=sqlalchemy.Text).label("event_id"),
+    States.state_id.label("row_id"),
     # We use PSEUDO_EVENT_STATE_CHANGED aka None for
     # state_changed events since it takes up less
     # space in the response and every row has to be
@@ -91,7 +89,6 @@ EVENT_COLUMNS_FOR_STATE_SELECT = (
 )
 
 EMPTY_STATE_COLUMNS = (
-    literal(value=0, type_=sqlalchemy.Integer).label("state_id"),
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),

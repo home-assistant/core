@@ -103,9 +103,8 @@ class EventAsRow:
     context: Context
     context_id_bin: bytes
     time_fired_ts: float
-    state_id: int
+    row_id: int
     event_data: str | None = None
-    event_id: None = None
     entity_id: str | None = None
     icon: str | None = None
     context_user_id_bin: bytes | None = None
@@ -128,7 +127,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
             time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
-            state_id=hash(event),
+            row_id=hash(event),
         )
     # States are prefiltered so we never get states
     # that are missing new_state or old_state
@@ -144,6 +143,6 @@ def async_event_to_row(event: Event) -> EventAsRow:
         context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
         context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
         time_fired_ts=dt_util.utc_to_timestamp(new_state.last_updated),
-        state_id=hash(event),
+        row_id=hash(event),
         icon=new_state.attributes.get(ATTR_ICON),
     )

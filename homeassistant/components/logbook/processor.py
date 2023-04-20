@@ -372,15 +372,9 @@ class ContextAugmenter:
 
 def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
-    if (
-        row is other_row
-        or (state_id := row.state_id)
-        and state_id == other_row.state_id
-        or (event_id := row.event_id)
-        and event_id == other_row.event_id
-    ):
-        return True
-    return False
+    return bool(
+        row is other_row or (row_id := row.row_id) and row_id == other_row.row_id
+    )
 
 
 def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:
