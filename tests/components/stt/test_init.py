@@ -443,5 +443,5 @@ async def test_ws_list_engines(
     assert msg["type"] == "result"
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["de", "de-CH"]}]
+        "providers": [{"engine_id": engine_id, "supported_languages": ["de-CH", "de"]}]
     }
