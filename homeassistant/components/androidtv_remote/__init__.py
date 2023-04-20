@@ -11,7 +11,7 @@ from androidtvremote2 import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
@@ -24,15 +24,20 @@ PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV Remote from a config entry."""
-    host = entry.data[CONF_HOST]
-    api = create_api(hass, host)
+    api = create_api(hass, entry.data[CONF_HOST])
 
     @callback
     def is_available_updated(is_available: bool) -> None:
         if is_available:
-            _LOGGER.info("Reconnected to %s", host)
+            _LOGGER.info(
+                "Reconnected to %s at %s", entry.data[CONF_NAME], entry.data[CONF_HOST]
+            )
         else:
-            _LOGGER.warning("Disconnected from %s", host)
+            _LOGGER.warning(
+                "Disconnected from %s at %s",
+                entry.data[CONF_NAME],
+                entry.data[CONF_HOST],
+            )
 
     api.add_is_available_updated_callback(is_available_updated)
 
