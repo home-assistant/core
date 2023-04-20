@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
+from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
@@ -12,6 +13,7 @@ from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventTypes
 from ..queries import find_event_type_ids
+from ..tasks import RefreshEventTypesTask
 from ..util import chunked, execute_stmt_lambda_element
 
 if TYPE_CHECKING:
@@ -27,6 +29,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the event type manager."""
         super().__init__(recorder, CACHE_SIZE)
+        self._non_existent_event_types: LRU = LRU(CACHE_SIZE)
 
     def load(self, events: list[Event], session: Session) -> None:
         """Load the event_type to event_type_ids mapping into memory.
@@ -48,7 +51,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         return self.get_many((event_type,), session)[event_type]
 
     def get_many(
-        self, event_types: Iterable[str], session: Session
+        self, event_types: Iterable[str], session: Session, from_recorder: bool = False
     ) -> dict[str, int | None]:
         """Resolve event_types to event_type_ids.
 
@@ -57,9 +60,14 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         """
         results: dict[str, int | None] = {}
         missing: list[str] = []
+        non_existent: list[str] = []
+
         for event_type in event_types:
             if (event_type_id := self._id_map.get(event_type)) is None:
-                missing.append(event_type)
+                if event_type in self._non_existent_event_types:
+                    results[event_type] = None
+                else:
+                    missing.append(event_type)
 
             results[event_type] = event_type_id
 
@@ -74,6 +82,19 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
                     results[event_type] = self._id_map[event_type] = cast(
                         int, event_type_id
                     )
+
+        for missed in missing:
+            if results[missed] is None:
+                non_existent.append(missed)
+
+        if non_existent:
+            if from_recorder:
+                self._non_existent_event_types.update(non_existent)
+            else:
+                # Queue a task to refresh the event types since its not
+                # thread-safe to do it here since we are not in the recorder
+                # thread.
+                self.recorder.queue_task(RefreshEventTypesTask(non_existent))
 
         return results
 
@@ -95,6 +116,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         """
         for event_type, db_event_types in self._pending.items():
             self._id_map[event_type] = db_event_types.event_type_id
+            self._non_existent_event_types.pop(event_type, None)
         self._pending.clear()
 
     def evict_purged(self, event_types: Iterable[str]) -> None:
