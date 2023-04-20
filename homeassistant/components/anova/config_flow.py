@@ -1,7 +1,7 @@
 """Config flow for Anova."""
 from __future__ import annotations
 
-from anova_wifi import AnovaApi, AnovaOffline, InvalidLogin, NoDevicesFound
+from anova_wifi import AnovaApi, InvalidLogin, NoDevicesFound
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,8 +33,6 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await api.authenticate()
                 devices = await api.get_devices()
-            except AnovaOffline:
-                errors["base"] = "cannot_connect"
             except InvalidLogin:
                 errors["base"] = "invalid_auth"
             except NoDevicesFound:
@@ -42,10 +40,15 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
+                # We store device list in config flow in order to persist found devices on restart, as the Anova api get_devices does not return any devices that are offline.
                 device_list = [(device.device_key, device.type) for device in devices]
                 return self.async_create_entry(
                     title="Anova",
-                    data={"jwt": api.jwt, "devices": device_list},
+                    data={
+                        CONF_USERNAME: api.username,
+                        CONF_PASSWORD: api.password,
+                        "devices": device_list,
+                    },
                 )
 
         return self.async_show_form(

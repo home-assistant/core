@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from anova_wifi import AnovaPrecisionCookerBinarySensor, AnovaPrecisionCookerSensor
+from anova_wifi import (
+    AnovaPrecisionCooker,
+    AnovaPrecisionCookerBinarySensor,
+    AnovaPrecisionCookerSensor,
+)
 
 from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -38,14 +42,15 @@ ONLINE_UPDATE = {
 }
 
 
-def create_entry(hass: HomeAssistant) -> ConfigEntry:
+def create_entry(hass: HomeAssistant, device_id: str = DEVICE_UNIQUE_ID) -> ConfigEntry:
     """Add config entry in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Anova",
         data={
-            "devices": [(DEVICE_UNIQUE_ID, "type_sample")],
-            "jwt": "jwt_sample",
+            CONF_USERNAME: "sample@gmail.com",
+            CONF_PASSWORD: "sample",
+            "devices": [(device_id, "type_sample")],
         },
         unique_id="sample@gmail.com",
     )
@@ -60,9 +65,17 @@ async def async_init_integration(
 ) -> ConfigEntry:
     """Set up the Anova integration in Home Assistant."""
     with patch(
-        "homeassistant.components.anova.AnovaPrecisionCooker.update"
-    ) as update_patch:
+        "homeassistant.components.anova.coordinator.AnovaPrecisionCooker.update"
+    ) as update_patch, patch(
+        "homeassistant.components.anova.AnovaApi.authenticate"
+    ), patch(
+        "homeassistant.components.anova.AnovaApi.get_devices"
+    ) as device_patch:
         update_patch.return_value = ONLINE_UPDATE
+        device_patch.return_value = [
+            AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)
+        ]
+
         entry = create_entry(hass)
 
         if not skip_setup:

@@ -2,24 +2,34 @@
 
 from unittest.mock import patch
 
-from anova_wifi import AnovaOffline, AnovaPrecisionCooker, InvalidLogin, NoDevicesFound
+from anova_wifi import AnovaPrecisionCooker, InvalidLogin, NoDevicesFound
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.anova.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import CONF_INPUT, DEVICE_UNIQUE_ID, create_entry
 
 
-async def test_flow_user(hass: HomeAssistant) -> None:
+async def test_flow_user(
+    hass: HomeAssistant,
+) -> None:
     """Test user initialized flow."""
     with patch(
         "homeassistant.components.anova.config_flow.AnovaApi.authenticate",
     ) as auth_patch, patch(
+        "homeassistant.components.anova.AnovaApi.get_devices"
+    ) as device_patch, patch(
+        "homeassistant.components.anova.AnovaApi.authenticate"
+    ), patch(
         "homeassistant.components.anova.config_flow.AnovaApi.get_devices"
-    ) as device_patch:
+    ) as config_flow_device_patch:
         auth_patch.return_value = True
         device_patch.return_value = [
+            AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)
+        ]
+        config_flow_device_patch.return_value = [
             AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)
         ]
         result = await hass.config_entries.flow.async_init(
@@ -32,8 +42,9 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == {
+            CONF_USERNAME: "sample@gmail.com",
+            CONF_PASSWORD: "sample",
             "devices": [(DEVICE_UNIQUE_ID, "type_sample")],
-            "jwt": None,
         }
 
 
@@ -42,10 +53,15 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.anova.config_flow.AnovaApi.authenticate",
     ) as auth_patch, patch(
+        "homeassistant.components.anova.AnovaApi.get_devices"
+    ) as device_patch, patch(
         "homeassistant.components.anova.config_flow.AnovaApi.get_devices"
-    ) as device_patch:
+    ) as config_flow_device_patch:
         auth_patch.return_value = True
         device_patch.return_value = [
+            AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)
+        ]
+        config_flow_device_patch.return_value = [
             AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)
         ]
         create_entry(hass)
@@ -59,24 +75,6 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
-
-
-async def test_flow_cant_reach_anova(hass: HomeAssistant) -> None:
-    """Test anova offline throwing error."""
-    with patch(
-        "homeassistant.components.anova.config_flow.AnovaApi.authenticate",
-        side_effect=AnovaOffline(),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_INPUT,
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_wrong_login(hass: HomeAssistant) -> None:
