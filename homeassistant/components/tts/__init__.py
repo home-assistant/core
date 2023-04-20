@@ -134,6 +134,19 @@ async def async_get_media_source_audio(
     )
 
 
+@callback
+def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
+    """Return a set with the union of languages supported by tts engines."""
+    languages = set()
+
+    manager: SpeechManager = hass.data[DOMAIN]
+    for tts_engine in manager.providers.values():
+        for language_tag in tts_engine.supported_languages:
+            languages.add(language_tag)
+
+    return languages
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TTS."""
     websocket_api.async_register_command(hass, websocket_list_engines)

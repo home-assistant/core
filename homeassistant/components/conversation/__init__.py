@@ -5,7 +5,7 @@ import asyncio
 from dataclasses import dataclass
 import logging
 import re
-from typing import Any
+from typing import Any, Literal
 
 import voluptuous as vol
 
@@ -13,6 +13,7 @@ from homeassistant import core
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent, singleton
 from homeassistant.helpers.typing import ConfigType
@@ -51,7 +52,7 @@ SERVICE_RELOAD = "reload"
 def agent_id_validator(value: Any) -> str:
     """Validate agent ID."""
     hass = core.async_get_hass()
-    manager = get_agent_manager(hass)
+    manager = _get_agent_manager(hass)
     if not manager.async_is_valid_agent_id(cv.string(value)):
         raise vol.Invalid("invalid agent ID")
     return value
@@ -89,7 +90,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 @singleton.singleton("conversation_agent")
 @core.callback
-def get_agent_manager(hass: HomeAssistant) -> AgentManager:
+def _get_agent_manager(hass: HomeAssistant) -> AgentManager:
     """Get the active agent."""
     return AgentManager(hass)
 
@@ -102,7 +103,7 @@ def async_set_agent(
     agent: AbstractConversationAgent,
 ):
     """Set the agent to handle the conversations."""
-    get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
+    _get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
 
 
 @core.callback
@@ -112,12 +113,29 @@ def async_unset_agent(
     config_entry: ConfigEntry,
 ):
     """Set the agent to handle the conversations."""
-    get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
+    _get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
+
+
+async def async_get_conversation_languages(
+    hass: HomeAssistant,
+) -> set[str] | Literal["*"]:
+    """Return a set with the union of languages supported by conversation agents."""
+    agent_manager = _get_agent_manager(hass)
+    languages = set()
+
+    for agent_info in agent_manager.async_get_agent_info():
+        agent = await agent_manager.async_get_agent(agent_info.id)
+        if agent.supported_languages == MATCH_ALL:
+            return MATCH_ALL
+        for language_tag in agent.supported_languages:
+            languages.add(language_tag)
+
+    return languages
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
-    agent_manager = get_agent_manager(hass)
+    agent_manager = _get_agent_manager(hass)
 
     if config_intents := config.get(DOMAIN, {}).get("intents"):
         hass.data[DATA_CONFIG] = config_intents
@@ -199,7 +217,7 @@ async def websocket_prepare(
     msg: dict[str, Any],
 ) -> None:
     """Reload intents."""
-    manager = get_agent_manager(hass)
+    manager = _get_agent_manager(hass)
     agent = await manager.async_get_agent(msg.get("agent_id"))
     await agent.async_prepare(msg.get("language"))
     connection.send_result(msg["id"])
@@ -218,7 +236,7 @@ async def websocket_get_agent_info(
     msg: dict[str, Any],
 ) -> None:
     """Info about the agent in use."""
-    agent = await get_agent_manager(hass).async_get_agent(msg.get("agent_id"))
+    agent = await _get_agent_manager(hass).async_get_agent(msg.get("agent_id"))
 
     connection.send_result(
         msg["id"],
@@ -239,7 +257,7 @@ async def websocket_list_agents(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List conversation agents and, optionally, if they support a given language."""
-    manager = get_agent_manager(hass)
+    manager = _get_agent_manager(hass)
 
     language = msg.get("language")
     agents = []
@@ -302,7 +320,7 @@ def async_get_agent_info(
     agent_id: str | None = None,
 ) -> AgentInfo | None:
     """Get information on the agent or None if not found."""
-    manager = get_agent_manager(hass)
+    manager = _get_agent_manager(hass)
 
     if agent_id is None:
         agent_id = manager.default_agent
@@ -323,7 +341,7 @@ async def async_converse(
     agent_id: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
-    agent = await get_agent_manager(hass).async_get_agent(agent_id)
+    agent = await _get_agent_manager(hass).async_get_agent(agent_id)
 
     if language is None:
         language = hass.config.language

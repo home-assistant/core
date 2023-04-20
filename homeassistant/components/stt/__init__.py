@@ -74,6 +74,24 @@ def async_get_speech_to_text_entity(
     return component.get_entity(entity_id)
 
 
+@callback
+def async_get_speech_to_text_languages(hass: HomeAssistant) -> set[str]:
+    """Return a set with the union of languages supported by stt engines."""
+    languages = set()
+
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
+    legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
+    for entity in component.entities:
+        for language_tag in entity.supported_languages:
+            languages.add(language_tag)
+
+    for engine in legacy_providers.values():
+        for language_tag in engine.supported_languages:
+            languages.add(language_tag)
+
+    return languages
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
     websocket_api.async_register_command(hass, websocket_list_engines)
