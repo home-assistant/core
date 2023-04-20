@@ -1041,14 +1041,21 @@ async def test_ws_list_engines(
 
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"providers": [{"engine_id": "test"}]}
+    assert msg["result"] == {
+        "providers": [
+            {
+                "engine_id": "test",
+                "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+            }
+        ]
+    }
 
     await client.send_json_auto_id({"type": "tts/engine/list", "language": "smurfish"})
 
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": "test", "language_supported": False}]
+        "providers": [{"engine_id": "test", "supported_languages": []}]
     }
 
     await client.send_json_auto_id({"type": "tts/engine/list", "language": "en"})
@@ -1056,7 +1063,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": "test", "language_supported": True}]
+        "providers": [{"engine_id": "test", "supported_languages": ["en_US", "en_GB"]}]
     }
 
     await client.send_json_auto_id({"type": "tts/engine/list", "language": "en-UK"})
@@ -1064,7 +1071,25 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": "test", "language_supported": True}]
+        "providers": [{"engine_id": "test", "supported_languages": ["en_GB", "en_US"]}]
+    }
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "de"})
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "supported_languages": ["de_DE", "de_CH"]}]
+    }
+
+    await client.send_json_auto_id(
+        {"type": "tts/engine/list", "language": "de", "country": "ch"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "supported_languages": ["de_CH", "de_DE"]}]
     }
 
 
