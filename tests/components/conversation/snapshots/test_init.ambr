@@ -145,6 +145,46 @@
     ]),
   })
 # ---
+# name: test_get_agent_list.4
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'de',
+          'de-CH',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.5
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'de',
+          'de-CH',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+    ]),
+  })
+# ---
 # name: test_ws_get_agent_info
   dict({
     'attribution': dict({

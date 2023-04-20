@@ -232,6 +232,7 @@ async def websocket_get_agent_info(
     {
         vol.Required("type"): "conversation/agent/list",
         vol.Optional("language"): str,
+        vol.Optional("country"): str,
     }
 )
 @websocket_api.async_response
@@ -241,6 +242,7 @@ async def websocket_list_agents(
     """List conversation agents and, optionally, if they support a given language."""
     manager = _get_agent_manager(hass)
 
+    country = msg.get("country")
     language = msg.get("language")
     agents = []
 
@@ -253,7 +255,7 @@ async def websocket_list_agents(
         }
         if language:
             agent_dict["supported_languages"] = language_util.matches(
-                language, agent.supported_languages
+                language, agent.supported_languages, country
             )
         agents.append(agent_dict)
 
