@@ -715,6 +715,7 @@ def get_base_url(hass: HomeAssistant) -> str:
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/list",
+        vol.Optional("country"): str,
         vol.Optional("language"): str,
     }
 )
@@ -725,13 +726,17 @@ def websocket_list_engines(
     """List text to speech engines and, optionally, if they support a given language."""
     manager: SpeechManager = hass.data[DOMAIN]
 
+    country = msg.get("country")
     language = msg.get("language")
     providers = []
     for engine_id, provider in manager.providers.items():
-        provider_info: dict[str, Any] = {"engine_id": engine_id}
+        provider_info: dict[str, Any] = {
+            "engine_id": engine_id,
+            "supported_languages": provider.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, provider.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, provider.supported_languages, country
             )
         providers.append(provider_info)
 

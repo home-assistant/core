@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from tests.common import MockPlatform
 
-SUPPORT_LANGUAGES = ["de_DE", "en_GB", "en_US"]
+SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_LANGUAGES = ["de", "en"]
 
 DEFAULT_LANG = "en_US"
