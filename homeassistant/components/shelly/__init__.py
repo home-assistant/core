@@ -156,11 +156,13 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         """Set up a block based device that is online."""
         shelly_entry_data.block = ShellyBlockCoordinator(hass, entry, device)
         shelly_entry_data.block.async_setup()
+        entry.async_on_unload(shelly_entry_data.block.async_shutdown)
 
         platforms = BLOCK_SLEEPING_PLATFORMS
 
         if not entry.data.get(CONF_SLEEP_PERIOD):
             shelly_entry_data.rest = ShellyRestCoordinator(hass, device, entry)
+            entry.async_on_unload(shelly_entry_data.rest.async_shutdown)
             platforms = BLOCK_PLATFORMS
 
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
@@ -240,6 +242,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         """Set up a RPC based device that is online."""
         shelly_entry_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         shelly_entry_data.rpc.async_setup()
+        entry.async_on_unload(shelly_entry_data.rpc.async_shutdown)
 
         platforms = RPC_SLEEPING_PLATFORMS
 
@@ -247,6 +250,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
             shelly_entry_data.rpc_poll = ShellyRpcPollingCoordinator(
                 hass, entry, device
             )
+            entry.async_on_unload(shelly_entry_data.rpc_poll.async_shutdown)
             platforms = RPC_PLATFORMS
 
         await hass.config_entries.async_forward_entry_setups(entry, platforms)

@@ -136,7 +136,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
-        self._debounced_reload.async_cancel()
+        await self._debounced_reload.async_shutdown()
         LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
@@ -463,7 +463,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.connected = False
             self._async_run_disconnected_events()
         # Try to reconnect right away if hass is not stopping
-        if not self.hass.is_stopping:
+        if not self._shutdown_requested and not self.hass.is_stopping:
             await self.async_request_refresh()
 
     @callback
