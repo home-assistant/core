@@ -13,13 +13,26 @@ EMPTY_JSON_OBJECT = "{}"
 _LOGGER = logging.getLogger(__name__)
 
 
+def decode_attributes_from_row_legacy(
+    row: Row, attr_cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    """Decode attributes from a database row."""
+    return _decode_attributes_from_row(
+        getattr(row, "shared_attrs", None) or getattr(row, "attributes", None),
+        attr_cache,
+    )
+
+
 def decode_attributes_from_row(
     row: Row, attr_cache: dict[str, dict[str, Any]]
 ) -> dict[str, Any]:
     """Decode attributes from a database row."""
-    source: str | None = getattr(row, "shared_attrs", None) or getattr(
-        row, "attributes", None
-    )
+    return _decode_attributes_from_row(getattr(row, "attributes", None), attr_cache)
+
+
+def _decode_attributes_from_row(
+    source: Any, attr_cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
     if not source or source == EMPTY_JSON_OBJECT:
         return {}
     if (attributes := attr_cache.get(source)) is not None:

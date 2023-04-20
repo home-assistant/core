@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
 from ... import recorder
-from ..db_schema import StateAttributes, States
+from ..db_schema import SHARED_ATTR_OR_LEGACY_ATTRIBUTES, StateAttributes, States
 from ..filters import Filters
 from ..models import (
     LazyState,
@@ -70,7 +70,7 @@ def _stmt_and_join_attributes(
     if include_last_changed:
         _select = _select.add_columns(States.last_changed_ts)
     if not no_attributes:
-        _select = _select.add_columns(States.attributes, StateAttributes.shared_attrs)
+        _select = _select.add_columns(SHARED_ATTR_OR_LEGACY_ATTRIBUTES)
     return _select
 
 
@@ -87,7 +87,7 @@ def _stmt_and_join_attributes_for_start_state(
             literal(value=None).label("last_changed_ts").cast(CASTABLE_DOUBLE_TYPE)
         )
     if not no_attributes:
-        _select = _select.add_columns(States.attributes, StateAttributes.shared_attrs)
+        _select = _select.add_columns(SHARED_ATTR_OR_LEGACY_ATTRIBUTES)
     return _select
 
 
@@ -104,7 +104,7 @@ def _select_from_subquery(
         base_select = base_select.add_columns(subquery.c.last_changed_ts)
     if no_attributes:
         return base_select
-    return base_select.add_columns(subquery.c.attributes, subquery.c.shared_attrs)
+    return base_select.add_columns(subquery.c.attributes)
 
 
 def get_significant_states(

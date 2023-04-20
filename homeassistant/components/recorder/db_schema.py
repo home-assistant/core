@@ -25,6 +25,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    case,
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
@@ -822,3 +823,11 @@ ENTITY_ID_IN_EVENT: ColumnElement = EVENT_DATA_JSON["entity_id"]
 OLD_ENTITY_ID_IN_EVENT: ColumnElement = OLD_FORMAT_EVENT_DATA_JSON["entity_id"]
 DEVICE_ID_IN_EVENT: ColumnElement = EVENT_DATA_JSON["device_id"]
 OLD_STATE = aliased(States, name="old_state")
+
+SHARED_ATTR_OR_LEGACY_ATTRIBUTES = case(
+    (StateAttributes.shared_attrs.is_(None), States.attributes),
+    else_=StateAttributes.shared_attrs,
+).label("attributes")
+SHARED_DATA_OR_LEGACY_EVENT_DATA = case(
+    (EventData.shared_data.is_(None), Events.event_data), else_=EventData.shared_data
+).label("event_data")
