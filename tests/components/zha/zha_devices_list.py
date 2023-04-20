@@ -2326,12 +2326,17 @@ DEVICES = [
                 SIG_EP_PROFILE: -1,
             },
         },
-        DEV_SIG_EVT_CLUSTER_HANDLERS: ["1:0x0006", "1:0x0008", "1:0x0300"],
+        DEV_SIG_EVT_CLUSTER_HANDLERS: ["1:0x0006", "1:0x0008", "1:0x0300", "2:0x0006"],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b286opcn01_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b286opcn01_battery",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
@@ -2401,6 +2406,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b486opcn01_identify",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b486opcn01_battery",
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -2427,12 +2437,17 @@ DEVICES = [
                 SIG_EP_PROFILE: 260,
             },
         },
-        DEV_SIG_EVT_CLUSTER_HANDLERS: ["1:0x0006", "1:0x0008", "1:0x0300"],
+        DEV_SIG_EVT_CLUSTER_HANDLERS: ["1:0x0006", "1:0x0008", "1:0x0300", "2:0x0006"],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b686opcn01_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b686opcn01_battery",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
@@ -2501,6 +2516,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b686opcn01_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b686opcn01_battery",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
@@ -2644,6 +2664,11 @@ DEVICES = [
         },
         DEV_SIG_EVT_CLUSTER_HANDLERS: [],
         DEV_SIG_ENT_MAP: {
+            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sen_ill_mgl01_battery",
+            },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
@@ -2961,6 +2986,18 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Illuminance",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_illuminance",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_battery",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["device_temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.lumi_lumi_sensor_motion_aq2_device_temperature"
+                ),
+            },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -3003,6 +3040,13 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_smoke_battery",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["device_temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",
+                DEV_SIG_ENT_MAP_ID: (
+                    "sensor.lumi_lumi_sensor_smoke_device_temperature"
+                ),
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
@@ -3625,36 +3669,6 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.osram_plug_01_identify",
             },
-            ("sensor", "00:11:22:33:44:55:66:77-3-2820"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_active_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-2820-apparent_power"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_apparent_power",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_current"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSCurrent",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_rms_current",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_voltage"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_rms_voltage",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-2820-ac_frequency"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementFrequency",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_ac_frequency",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-2820-power_factor"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
-                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementPowerFactor",
-                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_power_factor",
-            },
             ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
@@ -3884,6 +3898,11 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.samjin_multi_identify",
+            },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["accelerometer"],
+                DEV_SIG_ENT_MAP_CLASS: "Accelerometer",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.samjin_multi_accelerometer",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["power"],
@@ -4308,9 +4327,12 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_ID: "button.sinope_technologies_th1123zb_identify",
             },
             ("climate", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
-                DEV_SIG_ENT_MAP_CLASS: "Thermostat",
-                DEV_SIG_ENT_MAP_ID: "climate.sinope_technologies_th1123zb_thermostat",
+                DEV_SIG_CLUSTER_HANDLERS: [
+                    "thermostat",
+                    "sinope_manufacturer_specific",
+                ],
+                DEV_SIG_ENT_MAP_CLASS: "SinopeTechnologiesThermostat",
+                DEV_SIG_ENT_MAP_ID: "climate.sinope_technologies_th1123zb_sinopetechnologiesthermostat",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
@@ -4395,9 +4417,12 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_ID: "button.sinope_technologies_th1124zb_identify",
             },
             ("climate", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
-                DEV_SIG_ENT_MAP_CLASS: "Thermostat",
-                DEV_SIG_ENT_MAP_ID: "climate.sinope_technologies_th1124zb_thermostat",
+                DEV_SIG_CLUSTER_HANDLERS: [
+                    "thermostat",
+                    "sinope_manufacturer_specific",
+                ],
+                DEV_SIG_ENT_MAP_CLASS: "SinopeTechnologiesThermostat",
+                DEV_SIG_ENT_MAP_ID: "climate.sinope_technologies_th1124zb_sinopetechnologiesthermostat",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["electrical_measurement"],
