@@ -19,11 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-CONF_ENCODING = "encoding"
-
-DEFAULT_PORT = 4352
-DEFAULT_ENCODING = "utf-8"
-DEFAULT_TIMEOUT = 10
+from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT
 
 ERR_PROJECTOR_UNAVAILABLE = "projector unavailable"
 
