@@ -290,8 +290,10 @@ class ContextAugmenter:
         self, context_id_bin: bytes | None, row: Row | EventAsRow
     ) -> Row | EventAsRow | None:
         """Get the context row from the id or row context."""
-        if context_id_bin:
-            return self.context_lookup.get(context_id_bin)
+        if context_id_bin is not None and (
+            context_row := self.context_lookup.get(context_id_bin)
+        ):
+            return context_row
         if (context := getattr(row, "context", None)) is not None and (
             origin_event := context.origin_event
         ) is not None:
