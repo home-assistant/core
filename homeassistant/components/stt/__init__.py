@@ -410,18 +410,24 @@ def websocket_list_engines(
     provider_info: dict[str, Any]
 
     for entity in component.entities:
-        provider_info = {"engine_id": entity.entity_id}
+        provider_info = {
+            "engine_id": entity.entity_id,
+            "supported_languages": entity.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, entity.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, entity.supported_languages
             )
         providers.append(provider_info)
 
     for engine_id, provider in legacy_providers.items():
-        provider_info = {"engine_id": engine_id}
+        provider_info = {
+            "engine_id": engine_id,
+            "supported_languages": provider.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, provider.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, provider.supported_languages
             )
         providers.append(provider_info)
 

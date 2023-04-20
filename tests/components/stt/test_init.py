@@ -398,14 +398,18 @@ async def test_ws_list_engines(
 
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"providers": [{"engine_id": engine_id}]}
+    assert msg["result"] == {
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": ["de-DE", "en-US"]}
+        ]
+    }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "smurfish"})
 
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "language_supported": False}]
+        "providers": [{"engine_id": engine_id, "supported_languages": []}]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en"})
@@ -413,7 +417,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "language_supported": True}]
+        "providers": [{"engine_id": engine_id, "supported_languages": ["en-US"]}]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en-UK"})
@@ -421,5 +425,5 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "language_supported": True}]
+        "providers": [{"engine_id": engine_id, "supported_languages": ["en-US"]}]
     }
