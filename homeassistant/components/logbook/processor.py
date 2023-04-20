@@ -14,6 +14,7 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
+    extract_event_type_ids,
     extract_metadata_ids,
     process_datetime_to_timestamp,
     process_timestamp_to_utc_isoformat,
@@ -65,7 +66,7 @@ from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 class LogbookRun:
     """A logbook run which may be a long running event stream or single request."""
 
-    context_lookup: ContextLookup
+    context_lookup: dict[bytes | None, Row | EventAsRow | None]
     external_events: dict[
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ]
@@ -73,6 +74,7 @@ class LogbookRun:
     entity_name_cache: EntityNameCache
     include_entity_name: bool
     format_time: Callable[[Row | EventAsRow], Any]
+    memoize_new_contexts: bool = True
 
 
 class EventProcessor:
@@ -104,7 +106,7 @@ class EventProcessor:
             _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
         )
         self.logbook_run = LogbookRun(
-            context_lookup=ContextLookup(hass),
+            context_lookup={None: None},
             external_events=logbook_config.external_events,
             event_cache=EventCache({}),
             entity_name_cache=EntityNameCache(self.hass),
@@ -125,6 +127,7 @@ class EventProcessor:
         """
         self.logbook_run.event_cache.clear()
         self.logbook_run.context_lookup.clear()
+        self.logbook_run.memoize_new_contexts = False
 
     def get_events(
         self,
@@ -153,17 +156,22 @@ class EventProcessor:
 
         with session_scope(hass=self.hass, read_only=True) as session:
             metadata_ids: list[int] | None = None
+            instance = get_instance(self.hass)
             if self.entity_ids:
-                instance = get_instance(self.hass)
                 metadata_ids = extract_metadata_ids(
                     instance.states_meta_manager.get_many(
                         self.entity_ids, session, False
                     )
                 )
+            event_type_ids = tuple(
+                extract_event_type_ids(
+                    instance.event_type_manager.get_many(self.event_types, session)
+                )
+            )
             stmt = statement_for_request(
                 start_day,
                 end_day,
-                self.event_types,
+                event_type_ids,
                 self.entity_ids,
                 metadata_ids,
                 self.device_ids,
@@ -201,10 +209,14 @@ def _humanify(
     entity_name_cache = logbook_run.entity_name_cache
     include_entity_name = logbook_run.include_entity_name
     format_time = logbook_run.format_time
+    memoize_new_contexts = logbook_run.memoize_new_contexts
+    memoize_context = context_lookup.setdefault
 
     # Process rows
     for row in rows:
-        context_id_bin = context_lookup.memorize(row)
+        context_id_bin: bytes = row.context_id_bin
+        if memoize_new_contexts:
+            memoize_context(context_id_bin, row)
         if row.context_only:
             continue
         event_type = row.event_type
@@ -263,33 +275,6 @@ def _humanify(
             yield data
 
 
-class ContextLookup:
-    """A lookup class for context origins."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Memorize context origin."""
-        self.hass = hass
-        self._memorize_new = True
-        self._lookup: dict[bytes | None, Row | EventAsRow | None] = {None: None}
-
-    def memorize(self, row: Row | EventAsRow) -> bytes | None:
-        """Memorize a context from the database."""
-        if self._memorize_new:
-            context_id_bin: bytes = row.context_id_bin
-            self._lookup.setdefault(context_id_bin, row)
-            return context_id_bin
-        return None
-
-    def clear(self) -> None:
-        """Clear the context origins and stop recording new ones."""
-        self._lookup.clear()
-        self._memorize_new = False
-
-    def get(self, context_id_bin: bytes) -> Row | EventAsRow | None:
-        """Get the context origin."""
-        return self._lookup.get(context_id_bin)
-
-
 class ContextAugmenter:
     """Augment data with context trace."""
 
@@ -305,8 +290,10 @@ class ContextAugmenter:
         self, context_id_bin: bytes | None, row: Row | EventAsRow
     ) -> Row | EventAsRow | None:
         """Get the context row from the id or row context."""
-        if context_id_bin:
-            return self.context_lookup.get(context_id_bin)
+        if context_id_bin is not None and (
+            context_row := self.context_lookup.get(context_id_bin)
+        ):
+            return context_row
         if (context := getattr(row, "context", None)) is not None and (
             origin_event := context.origin_event
         ) is not None:

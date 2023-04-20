@@ -1,5 +1,5 @@
 """The test for the History Statistics sensor platform."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -1534,3 +1534,58 @@ async def test_device_classes(recorder_mock: Recorder, hass: HomeAssistant) -> N
     assert hass.states.get("sensor.time").attributes[ATTR_DEVICE_CLASS] == "duration"
     assert ATTR_DEVICE_CLASS not in hass.states.get("sensor.ratio").attributes
     assert ATTR_DEVICE_CLASS not in hass.states.get("sensor.count").attributes
+
+
+async def test_history_stats_handles_floored_timestamps(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+) -> None:
+    """Test we account for microseconds when doing the data calculation."""
+    hass.config.set_time_zone("UTC")
+    utcnow = dt_util.utcnow()
+    start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
+    last_times = None
+
+    def _fake_states(
+        hass: HomeAssistant, start: datetime, end: datetime | None, *args, **kwargs
+    ) -> dict[str, list[ha.State]]:
+        """Fake state changes."""
+        nonlocal last_times
+        last_times = (start, end)
+        return {
+            "binary_sensor.state": [
+                ha.State(
+                    "binary_sensor.state",
+                    "on",
+                    last_changed=start_time,
+                    last_updated=start_time,
+                ),
+            ]
+        }
+
+    with patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_states,
+    ), freeze_time(start_time):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0, microsecond=100) }}",
+                        "duration": {"hours": 2},
+                        "type": "time",
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
+
+    assert last_times == (start_time, start_time + timedelta(hours=2))

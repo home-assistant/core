@@ -19,7 +19,7 @@
           "value_template": "Value Template"
         },
         "data_description": {
-          "db_url": "Database URL, leave empty to use default HA database",
+          "db_url": "Database URL, leave empty to use HA recorder database",
           "name": "Name that will be used for Config Entry and also the Sensor",
           "query": "Query to run, needs to start with 'SELECT'",
           "column": "Column for returned query to present as state",

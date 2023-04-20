@@ -1,0 +1,89 @@
+"""Provide common tests tools for tts."""
+from __future__ import annotations
+
+from typing import Any
+
+import voluptuous as vol
+
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA,
+    Provider,
+    TtsAudioType,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from tests.common import MockPlatform
+
+SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
+TEST_LANGUAGES = ["de", "en"]
+
+DEFAULT_LANG = "en_US"
+
+
+class MockProvider(Provider):
+    """Test speech API provider."""
+
+    def __init__(self, lang: str) -> None:
+        """Initialize test provider."""
+        self._lang = lang
+        self.name = "Test"
+
+    @property
+    def default_language(self) -> str:
+        """Return the default language."""
+        return self._lang
+
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return list of supported languages."""
+        return SUPPORT_LANGUAGES
+
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[str] | None:
+        """Return list of supported languages."""
+        if language == "en-US":
+            return ["James Earl Jones", "Fran Drescher"]
+        return None
+
+    @property
+    def supported_options(self) -> list[str]:
+        """Return list of supported options like voice, emotions."""
+        return ["voice", "age"]
+
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any] | None = None
+    ) -> TtsAudioType:
+        """Load TTS dat."""
+        return ("mp3", b"")
+
+
+class MockTTS(MockPlatform):
+    """A mock TTS platform."""
+
+    PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(
+                SUPPORT_LANGUAGES + TEST_LANGUAGES
+            )
+        }
+    )
+
+    def __init__(
+        self, provider: type[MockProvider] | None = None, **kwargs: Any
+    ) -> None:
+        """Initialize."""
+        super().__init__(**kwargs)
+        if provider is None:
+            provider = MockProvider
+        self._provider = provider
+
+    async def async_get_engine(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> Provider | None:
+        """Set up a mock speech component."""
+        return self._provider(config.get(CONF_LANG, DEFAULT_LANG))

@@ -24,6 +24,7 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
+from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from .const import DOMAIN
 from .error import (
@@ -39,36 +40,42 @@ STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS = {
-    vol.Required("conversation_engine"): str,
+    vol.Optional("conversation_engine", default=None): vol.Any(str, None),
     vol.Required("language"): str,
     vol.Required("name"): str,
-    vol.Required("stt_engine"): str,
-    vol.Required("tts_engine"): str,
+    vol.Optional("stt_engine", default=None): vol.Any(str, None),
+    vol.Optional("tts_engine", default=None): vol.Any(str, None),
 }
+
+STORED_PIPELINE_RUNS = 10
 
 SAVE_DELAY = 10
 
 
 async def async_get_pipeline(
-    hass: HomeAssistant, pipeline_id: str | None = None, language: str | None = None
+    hass: HomeAssistant, pipeline_id: str | None = None
 ) -> Pipeline | None:
     """Get a pipeline by id or create one for a language."""
-    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
+    pipeline_data: PipelineData = hass.data[DOMAIN]
 
-    if pipeline_id is not None:
-        return pipeline_store.data.get(pipeline_id)
+    if pipeline_id is None:
+        # A pipeline was not specified, use the preferred one
+        pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
 
-    # Construct a pipeline for the required/configured language
-    language = language or hass.config.language
-    return await pipeline_store.async_create_item(
-        {
-            "name": language,
-            "language": language,
-            "stt_engine": None,  # first engine
-            "conversation_engine": None,  # first agent
-            "tts_engine": None,  # first engine
-        }
-    )
+    if pipeline_id is None:
+        # There's no preferred pipeline, construct a pipeline for the
+        # configured language
+        return await pipeline_data.pipeline_store.async_create_item(
+            {
+                "name": hass.config.language,
+                "language": hass.config.language,
+                "stt_engine": None,  # first engine
+                "conversation_engine": None,  # first agent
+                "tts_engine": None,  # first engine
+            }
+        )
+
+    return pipeline_data.pipeline_store.data.get(pipeline_id)
 
 
 class PipelineEventType(StrEnum):
@@ -85,21 +92,13 @@ class PipelineEventType(StrEnum):
     ERROR = "error"
 
 
-@dataclass
+@dataclass(frozen=True)
 class PipelineEvent:
     """Events emitted during a pipeline run."""
 
     type: PipelineEventType
     data: dict[str, Any] | None = None
     timestamp: str = field(default_factory=lambda: dt_util.utcnow().isoformat())
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of the event."""
-        return {
-            "type": self.type,
-            "timestamp": self.timestamp,
-            "data": self.data or {},
-        }
 
 
 PipelineEventCallback = Callable[[PipelineEvent], None]
@@ -110,7 +109,7 @@ class Pipeline:
     """A voice assistant pipeline."""
 
     conversation_engine: str | None
-    language: str | None
+    language: str
     name: str
     stt_engine: str | None
     tts_engine: str | None
@@ -174,12 +173,14 @@ class PipelineRun:
     event_callback: PipelineEventCallback
     language: str = None  # type: ignore[assignment]
     runner_data: Any | None = None
-    stt_provider: stt.Provider | None = None
+    stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
     intent_agent: str | None = None
     tts_engine: str | None = None
     tts_options: dict | None = None
 
-    def __post_init__(self):
+    id: str = field(default_factory=ulid_util.ulid)
+
+    def __post_init__(self) -> None:
         """Set language for pipeline."""
         self.language = self.pipeline.language or self.hass.config.language
 
@@ -189,7 +190,24 @@ class PipelineRun:
         ):
             raise InvalidPipelineStagesError(self.start_stage, self.end_stage)
 
-    def start(self):
+        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        if self.pipeline.id not in pipeline_data.pipeline_runs:
+            pipeline_data.pipeline_runs[self.pipeline.id] = LimitedSizeDict(
+                size_limit=STORED_PIPELINE_RUNS
+            )
+        pipeline_data.pipeline_runs[self.pipeline.id][self.id] = PipelineRunDebug()
+
+    @callback
+    def process_event(self, event: PipelineEvent) -> None:
+        """Log an event and call listener."""
+        self.event_callback(event)
+        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        if self.id not in pipeline_data.pipeline_runs[self.pipeline.id]:
+            # This run has been evicted from the logged pipeline runs already
+            return
+        pipeline_data.pipeline_runs[self.pipeline.id][self.id].events.append(event)
+
+    def start(self) -> None:
         """Emit run start event."""
         data = {
             "pipeline": self.pipeline.name,
@@ -198,11 +216,11 @@ class PipelineRun:
         if self.runner_data is not None:
             data["runner_data"] = self.runner_data
 
-        self.event_callback(PipelineEvent(PipelineEventType.RUN_START, data))
+        self.process_event(PipelineEvent(PipelineEventType.RUN_START, data))
 
-    def end(self):
+    def end(self) -> None:
         """Emit run end event."""
-        self.event_callback(
+        self.process_event(
             PipelineEvent(
                 PipelineEventType.RUN_END,
             )
@@ -210,7 +228,21 @@ class PipelineRun:
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
         """Prepare speech to text."""
-        stt_provider = stt.async_get_provider(self.hass, self.pipeline.stt_engine)
+        stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
+
+        if self.pipeline.stt_engine is not None:
+            # Try entity first
+            stt_provider = stt.async_get_speech_to_text_entity(
+                self.hass,
+                self.pipeline.stt_engine,
+            )
+
+        if stt_provider is None:
+            # Try legacy provider second
+            stt_provider = stt.async_get_provider(
+                self.hass,
+                self.pipeline.stt_engine,
+            )
 
         if stt_provider is None:
             engine = self.pipeline.stt_engine or "default"
@@ -241,7 +273,7 @@ class PipelineRun:
 
         engine = self.stt_provider.name
 
-        self.event_callback(
+        self.process_event(
             PipelineEvent(
                 PipelineEventType.STT_START,
                 {
@@ -276,7 +308,7 @@ class PipelineRun:
                 code="stt-no-text-recognized", message="No text recognized"
             )
 
-        self.event_callback(
+        self.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END,
                 {
@@ -305,7 +337,7 @@ class PipelineRun:
                 message=f"Intent recognition engine {engine} is not found",
             )
 
-        self.intent_agent = agent_info["id"]
+        self.intent_agent = agent_info.id
 
     async def recognize_intent(
         self, intent_input: str, conversation_id: str | None
@@ -314,7 +346,7 @@ class PipelineRun:
         if self.intent_agent is None:
             raise RuntimeError("Recognize intent was not prepared")
 
-        self.event_callback(
+        self.process_event(
             PipelineEvent(
                 PipelineEventType.INTENT_START,
                 {
@@ -342,14 +374,16 @@ class PipelineRun:
 
         _LOGGER.debug("conversation result %s", conversation_result)
 
-        self.event_callback(
+        self.process_event(
             PipelineEvent(
                 PipelineEventType.INTENT_END,
                 {"intent_output": conversation_result.as_dict()},
             )
         )
 
-        speech = conversation_result.response.speech.get("plain", {}).get("speech", "")
+        speech: str = conversation_result.response.speech.get("plain", {}).get(
+            "speech", ""
+        )
 
         return speech
 
@@ -385,7 +419,7 @@ class PipelineRun:
         if self.tts_engine is None:
             raise RuntimeError("Text to speech was not prepared")
 
-        self.event_callback(
+        self.process_event(
             PipelineEvent(
                 PipelineEventType.TTS_START,
                 {
@@ -418,7 +452,7 @@ class PipelineRun:
 
         _LOGGER.debug("TTS result %s", tts_media)
 
-        self.event_callback(
+        self.process_event(
             PipelineEvent(
                 PipelineEventType.TTS_END,
                 {
@@ -453,7 +487,7 @@ class PipelineInput:
 
     conversation_id: str | None = None
 
-    async def execute(self):
+    async def execute(self) -> None:
         """Run pipeline."""
         self.run.start()
         current_stage = self.run.start_stage
@@ -486,7 +520,7 @@ class PipelineInput:
                         await self.run.text_to_speech(tts_input)
 
         except PipelineError as err:
-            self.run.event_callback(
+            self.run.process_event(
                 PipelineEvent(
                     PipelineEventType.ERROR,
                     {"code": err.code, "message": err.message},
@@ -496,7 +530,7 @@ class PipelineInput:
 
         self.run.end()
 
-    async def validate(self):
+    async def validate(self) -> None:
         """Validate pipeline input against start stage."""
         if self.run.start_stage == PipelineStage.STT:
             if self.stt_metadata is None:
@@ -524,7 +558,8 @@ class PipelineInput:
         prepare_tasks = []
 
         if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.STT):
-            prepare_tasks.append(self.run.prepare_speech_to_text(self.stt_metadata))
+            # self.stt_metadata can't be None or we'd raise above
+            prepare_tasks.append(self.run.prepare_speech_to_text(self.stt_metadata))  # type: ignore[arg-type]
 
         if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.INTENT):
             prepare_tasks.append(self.run.prepare_recognize_intent())
@@ -644,6 +679,18 @@ class PipelineStorageCollectionWebsocket(
 
         websocket_api.async_register_command(
             hass,
+            f"{self.api_prefix}/get",
+            self.ws_get_item,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {
+                    vol.Required("type"): f"{self.api_prefix}/get",
+                    vol.Optional(self.item_id_key): str,
+                }
+            ),
+        )
+
+        websocket_api.async_register_command(
+            hass,
             f"{self.api_prefix}/set_preferred",
             websocket_api.require_admin(
                 websocket_api.async_response(self.ws_set_preferred_item)
@@ -656,6 +703,37 @@ class PipelineStorageCollectionWebsocket(
             ),
         )
 
+    async def ws_delete_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Delete an item."""
+        try:
+            await super().ws_delete_item(hass, connection, msg)
+        except PipelinePreferred as exc:
+            connection.send_error(
+                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
+            )
+
+    @callback
+    def ws_get_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Get an item."""
+        item_id = msg.get(self.item_id_key)
+        if item_id is None:
+            item_id = self.storage_collection.async_get_preferred_item()
+
+        if item_id not in self.storage_collection.data:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_NOT_FOUND,
+                f"Unable to find {self.item_id_key} {item_id}",
+            )
+            return
+
+        connection.send_result(msg["id"], self.storage_collection.data[item_id])
+
+    @callback
     def ws_list_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -667,17 +745,6 @@ class PipelineStorageCollectionWebsocket(
                 "preferred_pipeline": self.storage_collection.async_get_preferred_item(),
             },
         )
-
-    async def ws_delete_item(
-        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-    ) -> None:
-        """Delete an item."""
-        try:
-            await super().ws_delete_item(hass, connection, msg)
-        except PipelinePreferred as exc:
-            connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
-            )
 
     async def ws_set_preferred_item(
         self,
@@ -696,7 +763,26 @@ class PipelineStorageCollectionWebsocket(
         connection.send_result(msg["id"])
 
 
-async def async_setup_pipeline_store(hass):
+@dataclass
+class PipelineData:
+    """Store and debug data stored in hass.data."""
+
+    pipeline_runs: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
+    pipeline_store: PipelineStorageCollection
+
+
+@dataclass
+class PipelineRunDebug:
+    """Debug data for a pipelinerun."""
+
+    events: list[PipelineEvent] = field(default_factory=list, init=False)
+    timestamp: str = field(
+        default_factory=lambda: dt_util.utcnow().isoformat(),
+        init=False,
+    )
+
+
+async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
     """Set up the pipeline storage collection."""
     pipeline_store = PipelineStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY)
@@ -705,4 +791,4 @@ async def async_setup_pipeline_store(hass):
     PipelineStorageCollectionWebsocket(
         pipeline_store, f"{DOMAIN}/pipeline", "pipeline", STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
-    hass.data[DOMAIN] = pipeline_store
+    hass.data[DOMAIN] = PipelineData({}, pipeline_store)
