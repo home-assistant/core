@@ -301,6 +301,7 @@ async def async_setup_entry(  # noqa: C901
             update_method=partial(async_update, api_category),
         )
         controller_init_tasks.append(async_init_coordinator(coordinator))
+        entry.async_on_unload(coordinator.async_shutdown)
 
     await asyncio.gather(*controller_init_tasks)
 
