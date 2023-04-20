@@ -82,25 +82,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Anova device."""
     anova_data: AnovaData = hass.data[DOMAIN][entry.entry_id]
-    sensors: list[AnovaSensor] = []
-    for coordinator in anova_data.coordinators:
-        sensors.extend(
-            [
-                AnovaSensor(coordinator, description)
-                for description in SENSOR_DESCRIPTIONS
-            ]
-        )
-    async_add_entities(sensors)
+    async_add_entities(
+        AnovaSensor(coordinator, description)
+        for coordinator in anova_data.coordinators
+        for description in SENSOR_DESCRIPTIONS
+    )
 
 
 class AnovaSensor(AnovaDescriptionEntity, SensorEntity):
     """A sensor using anova coordinator."""
-
-    def __init__(
-        self, coordinator: AnovaCoordinator, description: SensorEntityDescription
-    ) -> None:
-        """Set up an Anova Sensor Entity."""
-        super().__init__(coordinator, description)
 
     @property
     def native_value(self) -> StateType:
