@@ -66,9 +66,9 @@ class BroadlinkDevice:
         return self.config.data[CONF_MAC]
 
     @property
-    def available(self) -> bool | None:
+    def available(self) -> bool:
         """Return True if the device is available."""
-        if self.update_manager is None:
+        if self.update_manager is None or self.update_manager.available is None:
             return False
         return self.update_manager.available
 
