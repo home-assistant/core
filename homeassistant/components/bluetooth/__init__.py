@@ -208,6 +208,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Call the debouncer at a later time."""
         await discovery_debouncer.async_call()
 
+    call_debouncer_job = HassJob(_async_call_debouncer, cancel_on_shutdown=True)
+
     def _async_trigger_discovery() -> None:
         # There are so many bluetooth adapter models that
         # we check the bus whenever a usb device is plugged in
@@ -226,7 +228,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_call_later(
             hass,
             BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS + LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
-            HassJob(_async_call_debouncer, cancel_on_shutdown=True),
+            call_debouncer_job,
         )
 
     cancel = usb.async_register_scan_request_callback(hass, _async_trigger_discovery)
