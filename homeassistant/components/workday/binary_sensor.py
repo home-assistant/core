@@ -4,9 +4,13 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
-from holidays import DateLike, HolidayBase
-from holidays import country_holidays, list_supported_countries
-from holidays import __version__ as python_holidays_version
+from holidays import (
+    DateLike,
+    HolidayBase,
+    __version__ as python_holidays_version,
+    country_holidays,
+    list_supported_countries,
+)
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
