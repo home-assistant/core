@@ -12,8 +12,10 @@ from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TYPE,
 )
 from zwave_js_server.model.controller import Controller
+from zwave_js_server.model.controller.statistics import ControllerStatisticsDataType
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.node.statistics import NodeStatisticsDataType
 from zwave_js_server.model.value import ConfigurationValue
 from zwave_js_server.util.command_class.meter import get_meter_type
 
@@ -273,38 +275,130 @@ ENTITY_DESCRIPTION_KEY_MAP = {
     ),
 }
 
-
 # Controller statistics descriptions
 ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
-    SensorEntityDescription("messagesTX", name="Successful messages (TX)"),
-    SensorEntityDescription("messagesRX", name="Successful messages (RX)"),
-    SensorEntityDescription("messagesDroppedTX", name="Messages dropped (TX)"),
-    SensorEntityDescription("messagesDroppedRX", name="Messages dropped (RX)"),
-    SensorEntityDescription("NAK", name="Messages not accepted"),
-    SensorEntityDescription("CAN", name="Collisions"),
-    SensorEntityDescription("timeoutACK", name="Missing ACKs"),
-    SensorEntityDescription("timeoutResponse", name="Timed out responses"),
-    SensorEntityDescription("timeoutCallback", name="Timed out callbacks"),
+    SensorEntityDescription(
+        "messagesTX",
+        name="Successful messages (TX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "messagesRX",
+        name="Successful messages (RX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "messagesDroppedTX",
+        name="Messages dropped (TX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "messagesDroppedRX",
+        name="Messages dropped (RX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "NAK",
+        name="Messages not accepted",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "CAN", name="Collisions", state_class=SensorStateClass.TOTAL
+    ),
+    SensorEntityDescription(
+        "timeoutACK", name="Missing ACKs", state_class=SensorStateClass.TOTAL
+    ),
+    SensorEntityDescription(
+        "timeoutResponse",
+        name="Timed out responses",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "timeoutCallback",
+        name="Timed out callbacks",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel0.average",
+        name="Average background RSSI (channel 0)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel0.current",
+        name="Current background RSSI (channel 0)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel1.average",
+        name="Average background RSSI (channel 1)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel1.current",
+        name="Current background RSSI (channel 1)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel2.average",
+        name="Average background RSSI (channel 2)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel2.current",
+        name="Current background RSSI (channel 2)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 ]
 
 # Node statistics descriptions
 ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
-    SensorEntityDescription("commandsRX", name="Successful commands (RX)"),
-    SensorEntityDescription("commandsTX", name="Successful commands (TX)"),
-    SensorEntityDescription("commandsDroppedRX", name="Commands dropped (RX)"),
-    SensorEntityDescription("commandsDroppedTX", name="Commands dropped (TX)"),
-    SensorEntityDescription("timeoutResponse", name="Timed out responses"),
+    SensorEntityDescription(
+        "commandsRX",
+        name="Successful commands (RX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "commandsTX",
+        name="Successful commands (TX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "commandsDroppedRX",
+        name="Commands dropped (RX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "commandsDroppedTX",
+        name="Commands dropped (TX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "timeoutResponse",
+        name="Timed out responses",
+        state_class=SensorStateClass.TOTAL,
+    ),
     SensorEntityDescription(
         "rtt",
         name="Round Trip Time",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         "rssi",
         name="RSSI",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
@@ -753,11 +847,26 @@ class ZWaveStatisticsSensor(SensorEntity):
             " service won't work for it"
         )
 
+    def _get_data_from_statistics(
+        self, statistics: ControllerStatisticsDataType | NodeStatisticsDataType
+    ) -> int | None:
+        """Get the data from the statistics dict."""
+        if "." not in self.entity_description.key:
+            return cast(int | None, statistics.get(self.entity_description.key))
+
+        LOGGER.error(self.entity_id)
+        # If key contains dots, we need to traverse the dict to get to the right value
+        for key in self.entity_description.key.split("."):
+            if key not in statistics:
+                return None
+            statistics = statistics[key]  # type: ignore[literal-required]
+        return cast(int, statistics)
+
     @callback
     def statistics_updated(self, event_data: dict) -> None:
         """Call when statistics updated event is received."""
-        self._attr_native_value = event_data["statistics"].get(
-            self.entity_description.key
+        self._attr_native_value = self._get_data_from_statistics(
+            event_data["statistics"]
         )
         self.async_write_ha_state()
 
@@ -782,8 +891,7 @@ class ZWaveStatisticsSensor(SensorEntity):
         )
 
         # Set initial state
-        self._attr_native_value = cast(
-            int,
-            self.statistics_src.statistics.data.get(self.entity_description.key) or 0,
+        self._attr_native_value = self._get_data_from_statistics(
+            self.statistics_src.statistics.data
         )
         self.async_write_ha_state()

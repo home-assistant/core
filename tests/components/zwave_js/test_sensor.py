@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -497,7 +498,7 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
 
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
-CONTROLLER_STATISTICS_SUFFIXES = {
+CONTROLLER_STATISTICS_SUFFIXES_0 = {
     "successful_messages_tx": 1,
     "successful_messages_rx": 2,
     "messages_dropped_tx": 3,
@@ -508,13 +509,23 @@ CONTROLLER_STATISTICS_SUFFIXES = {
     "timed_out_responses": 8,
     "timed_out_callbacks": 9,
 }
+CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN = {
+    "current_background_rssi_channel_0": -1,
+    "average_background_rssi_channel_0": -2,
+    "current_background_rssi_channel_1": -3,
+    "average_background_rssi_channel_1": -4,
+    "current_background_rssi_channel_2": STATE_UNKNOWN,
+    "average_background_rssi_channel_2": STATE_UNKNOWN,
+}
 NODE_STATISTICS_ENTITY_PREFIX = "sensor.4_in_1_sensor_"
-NODE_STATISTICS_SUFFIXES = {
+NODE_STATISTICS_SUFFIXES_0 = {
     "successful_commands_tx": 1,
     "successful_commands_rx": 2,
     "commands_dropped_tx": 3,
     "commands_dropped_rx": 4,
     "timed_out_responses": 5,
+}
+NODE_STATISTICS_SUFFIXES_UNKNOWN = {
     "round_trip_time": 6,
     "rssi": 7,
 }
@@ -527,8 +538,10 @@ async def test_statistics_sensors(
     ent_reg = er.async_get(hass)
 
     for prefix, suffixes in (
-        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES),
-        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES),
+        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_0),
+        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN),
+        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_0),
+        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_UNKNOWN),
     ):
         for suffix_key in suffixes:
             entry = ent_reg.async_get(f"{prefix}{suffix_key}")
@@ -542,9 +555,19 @@ async def test_statistics_sensors(
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
-    for prefix, suffixes in (
-        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES),
-        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES),
+    for prefix, suffixes, initial_state in (
+        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_0, "0"),
+        (
+            CONTROLLER_STATISTICS_ENTITY_PREFIX,
+            CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN,
+            STATE_UNKNOWN,
+        ),
+        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_0, "0"),
+        (
+            NODE_STATISTICS_ENTITY_PREFIX,
+            NODE_STATISTICS_SUFFIXES_UNKNOWN,
+            STATE_UNKNOWN,
+        ),
     ):
         for suffix_key in suffixes:
             entry = ent_reg.async_get(f"{prefix}{suffix_key}")
@@ -554,7 +577,7 @@ async def test_statistics_sensors(
 
             state = hass.states.get(entry.entity_id)
             assert state
-            assert state.state == "0"
+            assert state.state == initial_state
 
     # Fire statistics updated for controller
     event = Event(
@@ -572,6 +595,17 @@ async def test_statistics_sensors(
                 "timeoutACK": 7,
                 "timeoutResponse": 8,
                 "timeoutCallback": 9,
+                "backgroundRSSI": {
+                    "channel0": {
+                        "current": -1,
+                        "average": -2,
+                    },
+                    "channel1": {
+                        "current": -3,
+                        "average": -4,
+                    },
+                    "timestamp": 1681967176510,
+                },
             },
         },
     )
@@ -613,8 +647,10 @@ async def test_statistics_sensors(
 
     # Check that states match the statistics from the updates
     for prefix, suffixes in (
-        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES),
-        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES),
+        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_0),
+        (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN),
+        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_0),
+        (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_UNKNOWN),
     ):
         for suffix_key, val in suffixes.items():
             state = hass.states.get(f"{prefix}{suffix_key}")
