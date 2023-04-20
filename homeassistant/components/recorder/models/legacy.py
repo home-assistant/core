@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 
-from .state_attributes import decode_attributes_from_row_legacy
+from .state_attributes import decode_attributes_from_source
 from .time import (
     process_datetime_to_timestamp,
     process_timestamp,
@@ -289,3 +289,13 @@ def legacy_row_to_compressed_state(
         ) and row_last_updated_ts != row_last_changed_ts:
             comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_last_changed_ts
     return comp_state
+
+
+def decode_attributes_from_row_legacy(
+    row: Row, attr_cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    """Decode attributes from a database row."""
+    return decode_attributes_from_source(
+        getattr(row, "shared_attrs", None) or getattr(row, "attributes", None),
+        attr_cache,
+    )
