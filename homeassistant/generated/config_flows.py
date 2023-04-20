@@ -361,6 +361,7 @@ FLOWS = {
         "ring",
         "risco",
         "rituals_perfume_genie",
+        "roborock",
         "roku",
         "roomba",
         "roon",
