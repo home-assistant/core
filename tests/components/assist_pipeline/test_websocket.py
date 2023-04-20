@@ -729,6 +729,18 @@ async def test_get_pipeline(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/get",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": "Unable to find pipeline_id None",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
             "pipeline_id": "no_such_pipeline",
         }
     )
@@ -753,6 +765,22 @@ async def test_get_pipeline(
     assert msg["success"]
     pipeline_id = msg["result"]["id"]
     assert len(pipeline_store.data) == 1
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": "test_conversation_engine",
+        "id": pipeline_id,
+        "language": "test_language",
+        "name": "test_name",
+        "stt_engine": "test_stt_engine",
+        "tts_engine": "test_tts_engine",
+    }
 
     await client.send_json_auto_id(
         {
