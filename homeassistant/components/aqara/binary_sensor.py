@@ -39,15 +39,6 @@ BATTERY_STATUS_DESC = AqaraBinarySensorEntityDescription(
 )
 
 
-MOTION_DESC = AqaraBinarySensorEntityDescription(
-    key="3.1.85",
-    name="motion",
-    entity_category=EntityCategory.CONFIG,
-    on_value="1",
-    device_class=BinarySensorDeviceClass.MOTION,
-)
-
-
 DOOR_DESC = AqaraBinarySensorEntityDescription(  # 0: close，1:  open
     key="3.1.85",
     name="door status",
@@ -66,16 +57,6 @@ MOISTURE_DESC = AqaraBinarySensorEntityDescription(
 )
 
 BINARY_SENSORS: dict[str, tuple[AqaraBinarySensorEntityDescription, ...]] = {
-    "lumi.motion.jcn001": (MOTION_DESC, BATTERY_STATUS_DESC),
-    "lumi.motion.ac02": (MOTION_DESC, BATTERY_STATUS_DESC),
-    "lumi.motion.ac01": (MOTION_DESC, BATTERY_STATUS_DESC),
-    "lumi.motion.agl04": (MOTION_DESC, BATTERY_STATUS_DESC),
-    "lumi.motion.akr01": (MOTION_DESC, BATTERY_STATUS_DESC),
-    "lumi.motion.agl02": (MOTION_DESC, BATTERY_STATUS_DESC),
-    "lumi.sensor_motion.es2": (MOTION_DESC, BATTERY_STATUS_DESC),
-    "lumi.sensor_motion.aq2": (MOTION_DESC, BATTERY_STATUS_DESC),
-    "lumi.sensor_motion.v2": (MOTION_DESC, BATTERY_STATUS_DESC),
-    "lumi.sensor_motion.v1": (MOTION_DESC, BATTERY_STATUS_DESC),
     "lumi.magnet.acn002": (DOOR_DESC, BATTERY_STATUS_DESC),
     "lumi.magnet.jcn002": (DOOR_DESC, BATTERY_STATUS_DESC),
     "lumi.magnet.ac01": (DOOR_DESC, BATTERY_STATUS_DESC),
