@@ -141,6 +141,11 @@ class ClusterHandler(LogMixin):
         self._cluster.add_listener(self)
         self.data_cache: dict[str, Enum] = {}
 
+    @classmethod
+    def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
+        """Filter the cluster match for specific devices."""
+        return True
+
     @property
     def id(self) -> str:
         """Return cluster handler id unique for this device only."""
