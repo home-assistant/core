@@ -12,8 +12,6 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 
-PARALLEL_UPDATES = 0
-
 
 class AndroidTVRemoteBaseEntity(Entity):
     """Android TV Remote Base Entity."""
