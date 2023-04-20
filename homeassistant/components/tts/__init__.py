@@ -114,6 +114,16 @@ class TTSCache(TypedDict):
 
 
 @callback
+def async_get_text_to_speech_entity(
+    hass: HomeAssistant, entity_id: str
+) -> TextToSpeechEntity | None:
+    """Return tts entity."""
+    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
+
+    return component.get_entity(entity_id)
+
+
+@callback
 def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
     """Resolve engine.
 
@@ -251,6 +261,16 @@ class TextToSpeechEntity(RestoreEntity):
 
     _attr_should_poll = False
     __last_tts_loaded: str | None = None
+
+    @property
+    @final
+    def name(self) -> str:
+        """Return the name of the provider entity."""
+        # Only one entity is allowed per platform for now.
+        if self.platform is None:
+            raise RuntimeError("Entity is not added to hass yet.")
+
+        return self.platform.platform_name
 
     @property
     @final
