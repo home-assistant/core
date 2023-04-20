@@ -69,7 +69,7 @@ class LazyEventPartialState:
             # json decode process as we already have the data
             self.data = data
             return
-        source = cast(str, self.row.shared_data or self.row.event_data)
+        source = cast(str, self.row.event_data)
         if not source:
             self.data = {}
         elif event_data := self._event_data_cache.get(source):
@@ -105,7 +105,6 @@ class EventAsRow:
     time_fired_ts: float
     state_id: int
     event_data: str | None = None
-    old_format_icon: None = None
     event_id: None = None
     entity_id: str | None = None
     icon: str | None = None
@@ -113,7 +112,6 @@ class EventAsRow:
     context_parent_id_bin: bytes | None = None
     event_type: str | None = None
     state: str | None = None
-    shared_data: str | None = None
     context_only: None = None
 
 

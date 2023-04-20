@@ -29,7 +29,7 @@ class MockRow:
     ):
         """Init the fake row."""
         self.event_type = event_type
-        self.shared_data = json.dumps(data, cls=JSONEncoder)
+        self.event_data = json.dumps(data, cls=JSONEncoder)
         self.data = data
         self.time_fired = dt_util.utcnow()
         self.time_fired_ts = dt_util.utc_to_timestamp(self.time_fired)
