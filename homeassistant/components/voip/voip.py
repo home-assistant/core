@@ -32,6 +32,8 @@ if TYPE_CHECKING:
 
 _BUFFERED_CHUNKS_BEFORE_SPEECH = 100  # ~2 seconds
 _TONE_DELAY = 0.2  # seconds before playing tone
+_MESSAGE_DELAY = 1.0  # seconds before playing "not configured" message
+_LOOP_DELAY = 2.0  # seconds before replaying not-configured message
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -47,10 +49,13 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
                 session_name="voip_hass",
                 version=__version__,
             ),
-            protocol_factory=lambda call_info: PipelineRtpDatagramProtocol(
+            valid_protocol_factory=lambda call_info: PipelineRtpDatagramProtocol(
                 hass,
                 hass.config.language,
                 devices.async_get_or_create(call_info),
+            ),
+            invalid_protocol_factory=lambda call_info: NotConfiguredRtpDatagramProtocol(
+                hass,
             ),
         )
         self.hass = hass
@@ -89,6 +94,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self._conversation_id: str | None = None
         self._pipeline_task: asyncio.Task | None = None
         self._session_id: str | None = None
+        self._tone_bytes: bytes | None = None
 
     def connection_made(self, transport):
         """Server is ready."""
@@ -119,7 +125,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         """Forward audio to pipeline STT and handle TTS."""
         if self._session_id is None:
             self._session_id = ulid()
-            await self._play_listening_tone(delay=_TONE_DELAY)
+            await self._play_listening_tone()
 
         _LOGGER.debug("Starting pipeline")
 
@@ -237,10 +243,62 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         # Assume TTS audio is 16Khz 16-bit mono
         await self.send_audio(audio_bytes, rate=16000, width=2, channels=1)
 
-    async def _play_listening_tone(self, delay: float | None = None) -> None:
+    async def _play_listening_tone(self) -> None:
         """Play a tone to indicate that Home Assistant is listening."""
-        if delay:
-            await asyncio.sleep(delay)
+        if self._tone_bytes is None:
+            # Do I/O in executor
+            self._tone_bytes = await self.hass.async_add_executor_job(self._load_tone)
 
-        audio_bytes = (Path(__file__).parent / "tone.raw").read_bytes()
-        await self.send_audio(audio_bytes, rate=16000, width=2, channels=1)
+        await self.send_audio(
+            self._tone_bytes,
+            rate=16000,
+            width=2,
+            channels=1,
+            silence_before=_TONE_DELAY,
+        )
+
+    def _load_tone(self) -> bytes:
+        """Load raw tone audio (16Khz, 16-bit mono)."""
+        return (Path(__file__).parent / "tone.raw").read_bytes()
+
+
+class NotConfiguredRtpDatagramProtocol(RtpDatagramProtocol):
+    """Plays audio on a loop to inform the user to configure the phone in Home Assistant."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Set up RTP server."""
+        super().__init__(rate=16000, width=2, channels=1)
+        self.hass = hass
+        self._audio_task: asyncio.Task | None = None
+        self._audio_bytes: bytes | None = None
+
+    def on_chunk(self, audio_bytes: bytes) -> None:
+        """Handle raw audio chunk."""
+        if self.transport is None:
+            return
+
+        if self._audio_bytes is None:
+            # 16Khz, 16-bit mono audio message
+            self._audio_bytes = (
+                Path(__file__).parent / "not_configured.raw"
+            ).read_bytes()
+
+        if self._audio_task is None:
+            self._audio_task = self.hass.async_create_background_task(
+                self._play_message(),
+                "voip_not_connected",
+            )
+
+    async def _play_message(self) -> None:
+        await self.send_audio(
+            self._audio_bytes,
+            16000,
+            2,
+            1,
+            silence_before=_MESSAGE_DELAY,
+        )
+
+        await asyncio.sleep(_LOOP_DELAY)
+
+        # Allow message to play again
+        self._audio_task = None
