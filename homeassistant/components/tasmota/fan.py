@@ -65,7 +65,7 @@ class TasmotaFan(
     """Representation of a Tasmota fan."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
-    _fan_speed = tasmota_const.FAN_SPEED_MEDIUM
+    _fan_speed = tasmota_const.FAN_SPEED_LOW
     _tasmota_entity: tasmota_fan.TasmotaFan
 
     def __init__(self, **kwds: Any) -> None:
