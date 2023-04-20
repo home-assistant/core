@@ -691,6 +691,7 @@ class PipelineStorageCollectionWebsocket(
             ),
         )
 
+    @callback
     def ws_list_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
