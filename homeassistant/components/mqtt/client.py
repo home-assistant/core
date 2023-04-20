@@ -376,6 +376,8 @@ class MQTT:
 
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
+        # _retained_init remembers we had an initial payload and should filter
+        # incoming retained payloads that are stale
         self._retained_init: dict[Subscription, set[str]] = {}
         self.connected = False
         self._ha_started = asyncio.Event()
