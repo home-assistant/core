@@ -172,8 +172,8 @@
         'id': 'homeassistant',
         'name': 'Home Assistant',
         'supported_languages': list([
-          'de',
           'de-CH',
+          'de',
         ]),
       }),
       dict({
