@@ -499,8 +499,8 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
         storage_collection: _StorageCollectionT,
         api_prefix: str,
         model_name: str,
-        create_schema: dict | vol.All,
-        update_schema: dict | vol.All,
+        create_schema: dict,
+        update_schema: dict,
     ) -> None:
         """Initialize a websocket CRUD."""
         self.storage_collection = storage_collection
@@ -536,56 +536,33 @@ class StorageCollectionWebsocket(Generic[_StorageCollectionT]):
             )
 
         if create_create:
-            if isinstance(self.create_schema, dict):
-                create_schema = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                    {
-                        **self.create_schema,
-                        vol.Required("type"): f"{self.api_prefix}/create",
-                    }
-                )
-            else:
-                create_schema = vol.All(
-                    self.create_schema.validators[0]
-                    .extend(websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.schema)
-                    .extend({vol.Required("type"): f"{self.api_prefix}/create"}),
-                    *self.create_schema.validators[1:],
-                )
             websocket_api.async_register_command(
                 hass,
                 f"{self.api_prefix}/create",
                 websocket_api.require_admin(
                     websocket_api.async_response(self.ws_create_item)
                 ),
-                create_schema,
-            )
-
-        if isinstance(self.update_schema, dict):
-            update_schema = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                {
-                    **self.update_schema,
-                    vol.Required("type"): f"{self.api_prefix}/update",
-                    vol.Required(self.item_id_key): str,
-                }
-            )
-        else:
-            update_schema = vol.All(
-                self.update_schema.validators[0]
-                .extend(websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.schema)
-                .extend(
+                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                     {
-                        vol.Required("type"): f"{self.api_prefix}/update",
-                        vol.Required(self.item_id_key): str,
+                        **self.create_schema,
+                        vol.Required("type"): f"{self.api_prefix}/create",
                     }
                 ),
-                *self.update_schema.validators[1:],
             )
+
         websocket_api.async_register_command(
             hass,
             f"{self.api_prefix}/update",
             websocket_api.require_admin(
                 websocket_api.async_response(self.ws_update_item)
             ),
-            update_schema,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {
+                    **self.update_schema,
+                    vol.Required("type"): f"{self.api_prefix}/update",
+                    vol.Required(self.item_id_key): str,
+                }
+            ),
         )
 
         websocket_api.async_register_command(

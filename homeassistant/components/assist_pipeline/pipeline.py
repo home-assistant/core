@@ -53,22 +53,17 @@ def validate_language(data: dict[str, Any]) -> Any:
     return data
 
 
-PIPELINE_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required("conversation_engine"): str,
-            vol.Required("conversation_language"): str,
-            vol.Required("language"): str,
-            vol.Required("name"): str,
-            vol.Required("stt_engine"): vol.Any(str, None),
-            vol.Required("stt_language"): vol.Any(str, None),
-            vol.Required("tts_engine"): vol.Any(str, None),
-            vol.Required("tts_language"): vol.Any(str, None),
-            vol.Required("tts_voice"): vol.Any(str, None),
-        }
-    ),
-    validate_language,
-)
+PIPELINE_FIELDS = {
+    vol.Required("conversation_engine"): str,
+    vol.Required("conversation_language"): str,
+    vol.Required("language"): str,
+    vol.Required("name"): str,
+    vol.Required("stt_engine"): vol.Any(str, None),
+    vol.Required("stt_language"): vol.Any(str, None),
+    vol.Required("tts_engine"): vol.Any(str, None),
+    vol.Required("tts_language"): vol.Any(str, None),
+    vol.Required("tts_voice"): vol.Any(str, None),
+}
 
 STORED_PIPELINE_RUNS = 10
 
@@ -625,8 +620,8 @@ class PipelineStorageCollection(
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        # We don't need to validate, the WS API has already validated
-        return data
+        validated_data: dict = validate_language(data)
+        return validated_data
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
@@ -635,6 +630,7 @@ class PipelineStorageCollection(
 
     async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
         """Return a new updated item."""
+        update_data = validate_language(update_data)
         return Pipeline(id=item.id, **update_data)
 
     def _create_item(self, item_id: str, data: dict) -> Pipeline:
@@ -779,7 +775,7 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
         pipeline_store,
         f"{DOMAIN}/pipeline",
         "pipeline",
-        PIPELINE_SCHEMA,
-        PIPELINE_SCHEMA,
+        PIPELINE_FIELDS,
+        PIPELINE_FIELDS,
     ).async_setup(hass)
     hass.data[DOMAIN] = PipelineData({}, pipeline_store)
