@@ -1,53 +1,55 @@
-"""Home automation channels module for Zigbee Home Automation."""
+"""Home automation cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
 import enum
 
 from zigpy.zcl.clusters import homeautomation
 
+from . import AttrReportConfig, ClusterHandler
 from .. import registries
 from ..const import (
-    CHANNEL_ELECTRICAL_MEASUREMENT,
+    CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import AttrReportConfig, ZigbeeChannel
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     homeautomation.ApplianceEventAlerts.cluster_id
 )
-class ApplianceEventAlerts(ZigbeeChannel):
-    """Appliance Event Alerts channel."""
+class ApplianceEventAlerts(ClusterHandler):
+    """Appliance Event Alerts cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     homeautomation.ApplianceIdentification.cluster_id
 )
-class ApplianceIdentification(ZigbeeChannel):
-    """Appliance Identification channel."""
+class ApplianceIdentification(ClusterHandler):
+    """Appliance Identification cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     homeautomation.ApplianceStatistics.cluster_id
 )
-class ApplianceStatistics(ZigbeeChannel):
-    """Appliance Statistics channel."""
+class ApplianceStatistics(ClusterHandler):
+    """Appliance Statistics cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.Diagnostic.cluster_id)
-class Diagnostic(ZigbeeChannel):
-    """Diagnostic channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    homeautomation.Diagnostic.cluster_id
+)
+class Diagnostic(ClusterHandler):
+    """Diagnostic cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     homeautomation.ElectricalMeasurement.cluster_id
 )
-class ElectricalMeasurementChannel(ZigbeeChannel):
-    """Channel that polls active power level."""
+class ElectricalMeasurementClusterHandler(ClusterHandler):
+    """Cluster handler that polls active power level."""
 
-    CHANNEL_NAME = CHANNEL_ELECTRICAL_MEASUREMENT
+    CLUSTER_HANDLER_NAME = CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT
 
     class MeasurementType(enum.IntFlag):
         """Measurement types."""
@@ -91,7 +93,7 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
         """Retrieve latest state."""
         self.debug("async_update")
 
-        # This is a polling channel. Don't allow cache.
+        # This is a polling cluster handler. Don't allow cache.
         attrs = [
             a["attr"]
             for a in self.REPORT_CONFIG
@@ -165,8 +167,8 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
         )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     homeautomation.MeterIdentification.cluster_id
 )
-class MeterIdentification(ZigbeeChannel):
-    """Metering Identification channel."""
+class MeterIdentification(ClusterHandler):
+    """Metering Identification cluster handler."""

@@ -21,7 +21,7 @@ from homeassistant.components.assist_pipeline import (
 )
 from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
 from homeassistant.const import __version__
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 
 from .const import DOMAIN
 
@@ -82,8 +82,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self.audio_timeout = audio_timeout
 
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
-        self._pipeline_task: asyncio.Task | None = None
+        self._context = Context()
         self._conversation_id: str | None = None
+        self._pipeline_task: asyncio.Task | None = None
 
     def connection_made(self, transport):
         """Server is ready."""
@@ -133,6 +134,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             async with async_timeout.timeout(self.pipeline_timeout):
                 await async_pipeline_from_audio_stream(
                     self.hass,
+                    context=self._context,
                     event_callback=self._event_callback,
                     stt_metadata=stt.SpeechMetadata(
                         language="",  # set in async_pipeline_from_audio_stream

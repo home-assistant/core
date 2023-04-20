@@ -134,6 +134,19 @@ async def async_get_media_source_audio(
     )
 
 
+@callback
+def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
+    """Return a set with the union of languages supported by tts engines."""
+    languages = set()
+
+    manager: SpeechManager = hass.data[DOMAIN]
+    for tts_engine in manager.providers.values():
+        for language_tag in tts_engine.supported_languages:
+            languages.add(language_tag)
+
+    return languages
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TTS."""
     websocket_api.async_register_command(hass, websocket_list_engines)
@@ -702,6 +715,7 @@ def get_base_url(hass: HomeAssistant) -> str:
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/list",
+        vol.Optional("country"): str,
         vol.Optional("language"): str,
     }
 )
@@ -712,13 +726,17 @@ def websocket_list_engines(
     """List text to speech engines and, optionally, if they support a given language."""
     manager: SpeechManager = hass.data[DOMAIN]
 
+    country = msg.get("country")
     language = msg.get("language")
     providers = []
     for engine_id, provider in manager.providers.items():
-        provider_info: dict[str, Any] = {"engine_id": engine_id}
+        provider_info: dict[str, Any] = {
+            "engine_id": engine_id,
+            "supported_languages": provider.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, provider.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, provider.supported_languages, country
             )
         providers.append(provider_info)
 
@@ -739,18 +757,20 @@ def websocket_list_engine_voices(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List voices for a given language."""
-    voices = {
-        "voices": [
-            # placeholder until TTS refactoring
-            {
-                "voice_id": "voice_1",
-                "name": "James Earl Jones",
-            },
-            {
-                "voice_id": "voice_2",
-                "name": "Fran Drescher",
-            },
-        ]
-    }
+    engine_id = msg["engine_id"]
+    language = msg["language"]
+
+    manager: SpeechManager = hass.data[DOMAIN]
+    engine = manager.providers.get(engine_id)
+
+    if not engine:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_FOUND,
+            f"tts engine {engine_id} not found",
+        )
+        return
+
+    voices = {"voices": engine.async_get_supported_voices(language)}
 
     connection.send_message(websocket_api.result_message(msg["id"], voices))

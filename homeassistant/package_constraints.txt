@@ -32,6 +32,7 @@ ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
+mutagen==1.46.0
 orjson==3.8.10
 paho-mqtt==1.6.1
 pillow==9.5.0
@@ -49,6 +50,7 @@ typing-extensions>=4.5.0,<5.0
 ulid-transform==0.6.3
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
+webrtcvad==2.0.10
 yarl==1.8.1
 zeroconf==0.56.0
 

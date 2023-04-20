@@ -1,6 +1,6 @@
 {
   "domain": "homekit",
-  "name": "HomeKit",
+  "name": "HomeKit Bridge",
   "after_dependencies": ["camera", "zeroconf"],
   "codeowners": ["@bdraco"],
   "config_flow": true,

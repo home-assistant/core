@@ -1,4 +1,4 @@
-"""Measurement channels module for Zigbee Home Automation."""
+"""Measurement cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import zigpy.zcl
 from zigpy.zcl.clusters import measurement
 
+from . import AttrReportConfig, ClusterHandler
 from .. import registries
 from ..const import (
     REPORT_CONFIG_DEFAULT,
@@ -13,55 +14,58 @@ from ..const import (
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
 )
-from .base import AttrReportConfig, ZigbeeChannel
 from .helpers import is_hue_motion_sensor
 
 if TYPE_CHECKING:
-    from . import ChannelPool
+    from ..endpoint import Endpoint
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.FlowMeasurement.cluster_id)
-class FlowMeasurement(ZigbeeChannel):
-    """Flow Measurement channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    measurement.FlowMeasurement.cluster_id
+)
+class FlowMeasurement(ClusterHandler):
+    """Flow Measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     measurement.IlluminanceLevelSensing.cluster_id
 )
-class IlluminanceLevelSensing(ZigbeeChannel):
-    """Illuminance Level Sensing channel."""
+class IlluminanceLevelSensing(ClusterHandler):
+    """Illuminance Level Sensing cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="level_status", config=REPORT_CONFIG_DEFAULT),
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     measurement.IlluminanceMeasurement.cluster_id
 )
-class IlluminanceMeasurement(ZigbeeChannel):
-    """Illuminance Measurement channel."""
+class IlluminanceMeasurement(ClusterHandler):
+    """Illuminance Measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.OccupancySensing.cluster_id)
-class OccupancySensing(ZigbeeChannel):
-    """Occupancy Sensing channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    measurement.OccupancySensing.cluster_id
+)
+class OccupancySensing(ClusterHandler):
+    """Occupancy Sensing cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="occupancy", config=REPORT_CONFIG_IMMEDIATE),
     )
 
-    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
-        """Initialize Occupancy channel."""
-        super().__init__(cluster, ch_pool)
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
+        """Initialize Occupancy cluster handler."""
+        super().__init__(cluster, endpoint)
         if is_hue_motion_sensor(self):
             self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
                 self.ZCL_INIT_ATTRS.copy()
@@ -69,18 +73,22 @@ class OccupancySensing(ZigbeeChannel):
             self.ZCL_INIT_ATTRS["sensitivity"] = True
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.PressureMeasurement.cluster_id)
-class PressureMeasurement(ZigbeeChannel):
-    """Pressure measurement channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    measurement.PressureMeasurement.cluster_id
+)
+class PressureMeasurement(ClusterHandler):
+    """Pressure measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.RelativeHumidity.cluster_id)
-class RelativeHumidity(ZigbeeChannel):
-    """Relative Humidity measurement channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    measurement.RelativeHumidity.cluster_id
+)
+class RelativeHumidity(ClusterHandler):
+    """Relative Humidity measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(
@@ -90,9 +98,11 @@ class RelativeHumidity(ZigbeeChannel):
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.SoilMoisture.cluster_id)
-class SoilMoisture(ZigbeeChannel):
-    """Soil Moisture measurement channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    measurement.SoilMoisture.cluster_id
+)
+class SoilMoisture(ClusterHandler):
+    """Soil Moisture measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(
@@ -102,9 +112,9 @@ class SoilMoisture(ZigbeeChannel):
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.LeafWetness.cluster_id)
-class LeafWetness(ZigbeeChannel):
-    """Leaf Wetness measurement channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(measurement.LeafWetness.cluster_id)
+class LeafWetness(ClusterHandler):
+    """Leaf Wetness measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(
@@ -114,11 +124,11 @@ class LeafWetness(ZigbeeChannel):
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     measurement.TemperatureMeasurement.cluster_id
 )
-class TemperatureMeasurement(ZigbeeChannel):
-    """Temperature measurement channel."""
+class TemperatureMeasurement(ClusterHandler):
+    """Temperature measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(
@@ -128,11 +138,11 @@ class TemperatureMeasurement(ZigbeeChannel):
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     measurement.CarbonMonoxideConcentration.cluster_id
 )
-class CarbonMonoxideConcentration(ZigbeeChannel):
-    """Carbon Monoxide measurement channel."""
+class CarbonMonoxideConcentration(ClusterHandler):
+    """Carbon Monoxide measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(
@@ -142,11 +152,11 @@ class CarbonMonoxideConcentration(ZigbeeChannel):
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     measurement.CarbonDioxideConcentration.cluster_id
 )
-class CarbonDioxideConcentration(ZigbeeChannel):
-    """Carbon Dioxide measurement channel."""
+class CarbonDioxideConcentration(ClusterHandler):
+    """Carbon Dioxide measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(
@@ -156,9 +166,9 @@ class CarbonDioxideConcentration(ZigbeeChannel):
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.PM25.cluster_id)
-class PM25(ZigbeeChannel):
-    """Particulate Matter 2.5 microns or less measurement channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(measurement.PM25.cluster_id)
+class PM25(ClusterHandler):
+    """Particulate Matter 2.5 microns or less measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(
@@ -168,11 +178,11 @@ class PM25(ZigbeeChannel):
     )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     measurement.FormaldehydeConcentration.cluster_id
 )
-class FormaldehydeConcentration(ZigbeeChannel):
-    """Formaldehyde measurement channel."""
+class FormaldehydeConcentration(ClusterHandler):
+    """Formaldehyde measurement cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(

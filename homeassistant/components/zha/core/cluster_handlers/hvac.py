@@ -1,4 +1,4 @@
-"""HVAC channels module for Zigbee Home Automation.
+"""HVAC cluster handlers module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
@@ -14,6 +14,7 @@ from zigpy.zcl.foundation import Status
 
 from homeassistant.core import callback
 
+from . import AttrReportConfig, ClusterHandler
 from .. import registries
 from ..const import (
     REPORT_CONFIG_MAX_INT,
@@ -21,7 +22,6 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import AttrReportConfig, ZigbeeChannel
 
 AttributeUpdateRecord = namedtuple("AttributeUpdateRecord", "attr_id, attr_name, value")
 REPORT_CONFIG_CLIMATE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 25)
@@ -29,14 +29,14 @@ REPORT_CONFIG_CLIMATE_DEMAND = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 5)
 REPORT_CONFIG_CLIMATE_DISCRETE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1)
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Dehumidification.cluster_id)
-class Dehumidification(ZigbeeChannel):
-    """Dehumidification channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Dehumidification.cluster_id)
+class Dehumidification(ClusterHandler):
+    """Dehumidification cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Fan.cluster_id)
-class FanChannel(ZigbeeChannel):
-    """Fan channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Fan.cluster_id)
+class FanClusterHandler(ClusterHandler):
+    """Fan cluster handler."""
 
     _value_attribute = 0
 
@@ -79,14 +79,14 @@ class FanChannel(ZigbeeChannel):
             )
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Pump.cluster_id)
-class Pump(ZigbeeChannel):
-    """Pump channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Pump.cluster_id)
+class Pump(ClusterHandler):
+    """Pump cluster handler."""
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Thermostat.cluster_id)
-class ThermostatChannel(ZigbeeChannel):
-    """Thermostat channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.Thermostat.cluster_id)
+class ThermostatClusterHandler(ClusterHandler):
+    """Thermostat cluster handler."""
 
     REPORT_CONFIG = (
         AttrReportConfig(attr="local_temperature", config=REPORT_CONFIG_CLIMATE),
@@ -314,6 +314,6 @@ class ThermostatChannel(ZigbeeChannel):
         return all(record.status == Status.SUCCESS for record in res[0])
 
 
-@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)
-class UserInterface(ZigbeeChannel):
-    """User interface (thermostat) channel."""
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(hvac.UserInterface.cluster_id)
+class UserInterface(ClusterHandler):
+    """User interface (thermostat) cluster handler."""
