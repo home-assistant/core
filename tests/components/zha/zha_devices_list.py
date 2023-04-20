@@ -2343,6 +2343,7 @@ DEVICES = [
             "sensor.lumi_lumi_plug_maus01_rssi",
             "sensor.lumi_lumi_plug_maus01_lqi",
             "sensor.lumi_lumi_plug_maus01_device_temperature",
+            "sensor.lumi_lumi_plug_maus01_summation_delivered",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-1"): {
@@ -2391,8 +2392,8 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_ID: "binary_sensor.lumi_lumi_plug_maus01_binaryinput",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794-summation_delivered"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["sensor"],
-                DEV_SIG_ENT_MAP_CLASS: "Sensor",
+                DEV_SIG_CLUSTER_HANDLERS: ["smartenergy_metering"],
+                DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_summation_delivered",
             },
         },
