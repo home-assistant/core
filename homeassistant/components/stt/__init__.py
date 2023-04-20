@@ -395,6 +395,7 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
     {
         "type": "stt/engine/list",
         vol.Optional("language"): str,
+        vol.Optional("country"): str,
     }
 )
 @callback
@@ -405,6 +406,7 @@ def websocket_list_engines(
     component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
     legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
 
+    country = msg.get("country")
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
@@ -416,7 +418,7 @@ def websocket_list_engines(
         }
         if language:
             provider_info["supported_languages"] = language_util.matches(
-                language, entity.supported_languages
+                language, entity.supported_languages, country
             )
         providers.append(provider_info)
 
@@ -427,7 +429,7 @@ def websocket_list_engines(
         }
         if language:
             provider_info["supported_languages"] = language_util.matches(
-                language, provider.supported_languages
+                language, provider.supported_languages, country
             )
         providers.append(provider_info)
 

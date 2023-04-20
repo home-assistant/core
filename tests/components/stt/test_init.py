@@ -52,7 +52,7 @@ class BaseProvider:
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return ["de-DE", "en-US"]
+        return ["de", "de-CH", "en-US"]
 
     @property
     def supported_formats(self) -> list[AudioFormats]:
@@ -213,7 +213,7 @@ async def test_get_provider_info(
     response = await client.get(f"/api/stt/{TEST_DOMAIN}")
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
-        "languages": ["de-DE", "en-US"],
+        "languages": ["de", "de-CH", "en-US"],
         "formats": ["wav", "ogg"],
         "codecs": ["pcm", "opus"],
         "sample_rates": [16000],
@@ -400,7 +400,7 @@ async def test_ws_list_engines(
     assert msg["success"]
     assert msg["result"] == {
         "providers": [
-            {"engine_id": engine_id, "supported_languages": ["de-DE", "en-US"]}
+            {"engine_id": engine_id, "supported_languages": ["de", "de-CH", "en-US"]}
         ]
     }
 
@@ -426,4 +426,22 @@ async def test_ws_list_engines(
     assert msg["success"]
     assert msg["result"] == {
         "providers": [{"engine_id": engine_id, "supported_languages": ["en-US"]}]
+    }
+
+    await client.send_json_auto_id({"type": "stt/engine/list", "language": "de"})
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": engine_id, "supported_languages": ["de", "de-CH"]}]
+    }
+
+    await client.send_json_auto_id(
+        {"type": "stt/engine/list", "language": "de", "country": "ch"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": engine_id, "supported_languages": ["de", "de-CH"]}]
     }
