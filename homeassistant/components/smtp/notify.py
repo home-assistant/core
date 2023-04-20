@@ -223,14 +223,80 @@ class MailNotificationService(BaseNotificationService):
             try:
                 mail.sendmail(self._sender, recipients, msg.as_string())
                 break
-            except smtplib.SMTPServerDisconnected:
+            except smtplib.SMTPServerDisconnected as err:
                 _LOGGER.warning(
-                    "SMTPServerDisconnected sending mail: retrying connection"
+                    "SMTPServerDisconnected while sending mail: Retrying Connection"
                 )
+                _LOGGER.debug("SMTPServerDisconnected Full Error Contents: %s", err)
                 mail.quit()
                 mail = self.connect()
-            except smtplib.SMTPException:
-                _LOGGER.warning("SMTPException sending mail: retrying connection")
+            except smtplib.SMTPSenderRefused as err:
+                _LOGGER.warning(
+                    "SMTPSenderRefused while sending mail: Retrying Connection --- "
+                    "Error Code: %s  - Error Message: %s",
+                    err.smtp_code,
+                    err.smtp_error,
+                )
+                _LOGGER.debug("SMTPSenderRefused Full Error Contents: %s", err)
+                mail.quit()
+                mail = self.connect()
+            except smtplib.SMTPRecipientsRefused as err:
+                _LOGGER.warning(
+                    "SMTPRecipientsRefused while sending mail: Retrying Connection"
+                )
+                _LOGGER.debug("SMTPRecipientsRefused Full Error Contents: %s", err)
+                mail.quit()
+                mail = self.connect()
+            except smtplib.SMTPDataError as err:
+                _LOGGER.warning(
+                    "SMTPDataError while sending mail (The SMTP server refused to accept the message data): Retrying Connection --- "
+                    "Error Code: %s  - Error Message: %s",
+                    err.smtp_code,
+                    err.smtp_error,
+                )
+                _LOGGER.debug("SMTPDataError Full Error Contents: %s", err)
+                mail.quit()
+                mail = self.connect()
+            except smtplib.SMTPConnectError as err:
+                _LOGGER.warning(
+                    "SMTPConnectError while sending mail (Error occurred during establishment of a connection with the server): Retrying Connection --- "
+                    "Error Code: %s  - Error Message: %s",
+                    err.smtp_code,
+                    err.smtp_error,
+                )
+                _LOGGER.debug("SMTPConnectError Full Error Contents: %s", err)
+                mail.quit()
+                mail = self.connect()
+            except smtplib.SMTPHeloError as err:
+                _LOGGER.warning(
+                    "SMTPHeloError while sending mail: Retrying Connection --- "
+                    "Error Code: %s  - Error Message: %s",
+                    err.smtp_code,
+                    err.smtp_error,
+                )
+                _LOGGER.debug("SMTPHeloError Full Error Contents: %s", err)
+                mail.quit()
+                mail = self.connect()
+            except smtplib.SMTPResponseException as err:
+                _LOGGER.warning(
+                    "SMTPResponseException while sending mail: Retrying Connection --- "
+                    "Error Code: %s  - Error Message: %s",
+                    err.smtp_code,
+                    err.smtp_error,
+                )
+                _LOGGER.debug("SMTPResponseException Full Error Contents: %s", err)
+                mail.quit()
+                mail = self.connect()
+            except smtplib.SMTPNotSupportedError as err:
+                _LOGGER.warning(
+                    "SMTPNotSupportedError while sending mail: Retrying Connection"
+                )
+                _LOGGER.debug("SMTPNotSupportedError Full Error Contents: %s", err)
+                mail.quit()
+                mail = self.connect()
+            except smtplib.SMTPException as err:
+                _LOGGER.warning("SMTPException while sending mail: Retrying Connection")
+                _LOGGER.debug("SMTPException Full Error Contents: %s", err)
                 mail.quit()
                 mail = self.connect()
         mail.quit()
