@@ -801,10 +801,14 @@ async def test_get_pipeline(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
+            "conversation_language": "en-US",
             "language": "test_language",
             "name": "test_name",
             "stt_engine": "test_stt_engine",
+            "stt_language": "en-US",
             "tts_engine": "test_tts_engine",
+            "tts_language": "en-US",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()
@@ -821,11 +825,15 @@ async def test_get_pipeline(
     assert msg["success"]
     assert msg["result"] == {
         "conversation_engine": "test_conversation_engine",
+        "conversation_language": "en-US",
         "id": pipeline_id,
         "language": "test_language",
         "name": "test_name",
         "stt_engine": "test_stt_engine",
+        "stt_language": "en-US",
         "tts_engine": "test_tts_engine",
+        "tts_language": "en-US",
+        "tts_voice": "Arnold Schwarzenegger",
     }
 
     await client.send_json_auto_id(
@@ -838,11 +846,15 @@ async def test_get_pipeline(
     assert msg["success"]
     assert msg["result"] == {
         "conversation_engine": "test_conversation_engine",
+        "conversation_language": "en-US",
         "id": pipeline_id,
         "language": "test_language",
         "name": "test_name",
         "stt_engine": "test_stt_engine",
+        "stt_language": "en-US",
         "tts_engine": "test_tts_engine",
+        "tts_language": "en-US",
+        "tts_voice": "Arnold Schwarzenegger",
     }
 
 
