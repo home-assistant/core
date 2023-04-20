@@ -42,8 +42,7 @@ class MockRow:
         self.context_id_bin = ulid_to_bytes_or_none(context.id) if context else None
         self.state = None
         self.entity_id = None
-        self.state_id = None
-        self.event_id = None
+        self.row_id = None
         self.shared_attrs = None
         self.attributes = None
         self.context_only = False
