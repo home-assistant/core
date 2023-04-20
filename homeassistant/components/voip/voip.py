@@ -77,6 +77,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         voip_device: VoIPDevice,
         pipeline_timeout: float = 30.0,
         audio_timeout: float = 2.0,
+        listening_tone_enabled: bool = True,
     ) -> None:
         """Set up pipeline RTP server."""
         # STT expects 16Khz mono with 16-bit samples
@@ -88,6 +89,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self.pipeline: Pipeline | None = None
         self.pipeline_timeout = pipeline_timeout
         self.audio_timeout = audio_timeout
+        self.listening_tone_enabled = listening_tone_enabled
 
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self._context = Context()
@@ -125,7 +127,8 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         """Forward audio to pipeline STT and handle TTS."""
         if self._session_id is None:
             self._session_id = ulid()
-            await self._play_listening_tone()
+            if self.listening_tone_enabled:
+                await self._play_listening_tone()
 
         _LOGGER.debug("Starting pipeline")
 
