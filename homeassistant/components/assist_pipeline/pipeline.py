@@ -679,6 +679,18 @@ class PipelineStorageCollectionWebsocket(
 
         websocket_api.async_register_command(
             hass,
+            f"{self.api_prefix}/get",
+            self.ws_get_item,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {
+                    vol.Required("type"): f"{self.api_prefix}/get",
+                    vol.Optional(self.item_id_key): str,
+                }
+            ),
+        )
+
+        websocket_api.async_register_command(
+            hass,
             f"{self.api_prefix}/set_preferred",
             websocket_api.require_admin(
                 websocket_api.async_response(self.ws_set_preferred_item)
@@ -690,6 +702,36 @@ class PipelineStorageCollectionWebsocket(
                 }
             ),
         )
+
+    async def ws_delete_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Delete an item."""
+        try:
+            await super().ws_delete_item(hass, connection, msg)
+        except PipelinePreferred as exc:
+            connection.send_error(
+                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
+            )
+
+    @callback
+    def ws_get_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Get an item."""
+        item_id = msg.get(self.item_id_key)
+        if item_id is None:
+            item_id = self.storage_collection.async_get_preferred_item()
+
+        if item_id not in self.storage_collection.data:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_NOT_FOUND,
+                f"Unable to find {self.item_id_key} {item_id}",
+            )
+            return
+
+        connection.send_result(msg["id"], self.storage_collection.data[item_id])
 
     @callback
     def ws_list_item(
@@ -703,17 +745,6 @@ class PipelineStorageCollectionWebsocket(
                 "preferred_pipeline": self.storage_collection.async_get_preferred_item(),
             },
         )
-
-    async def ws_delete_item(
-        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-    ) -> None:
-        """Delete an item."""
-        try:
-            await super().ws_delete_item(hass, connection, msg)
-        except PipelinePreferred as exc:
-            connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
-            )
 
     async def ws_set_preferred_item(
         self,

@@ -718,6 +718,88 @@ async def test_delete_pipeline(
     }
 
 
+async def test_get_pipeline(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can get a pipeline."""
+    client = await hass_ws_client(hass)
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_store = pipeline_data.pipeline_store
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": "Unable to find pipeline_id None",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+            "pipeline_id": "no_such_pipeline",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": "Unable to find pipeline_id no_such_pipeline",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "tts_engine": "test_tts_engine",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id = msg["result"]["id"]
+    assert len(pipeline_store.data) == 1
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": "test_conversation_engine",
+        "id": pipeline_id,
+        "language": "test_language",
+        "name": "test_name",
+        "stt_engine": "test_stt_engine",
+        "tts_engine": "test_tts_engine",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+            "pipeline_id": pipeline_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": "test_conversation_engine",
+        "id": pipeline_id,
+        "language": "test_language",
+        "name": "test_name",
+        "stt_engine": "test_stt_engine",
+        "tts_engine": "test_tts_engine",
+    }
+
+
 async def test_list_pipelines(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
 ) -> None:
