@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -83,12 +84,22 @@ class PjLinkDevice(MediaPlayerEntity):
         self._encoding = encoding
         self._source_name_mapping = {}
 
-        self._attr_name = name
+        self._attr_available = False
         self._attr_is_volume_muted = False
-        self._attr_state = MediaPlayerState.OFF
+        self._attr_manufacturer = None
+        self._attr_model = None
+        self._attr_name = name
         self._attr_source = None
         self._attr_source_list = []
-        self._attr_available = False
+        self._attr_state = MediaPlayerState.OFF
+        self._attr_unique_id = f"{DOMAIN}-{host}-{name}"
+
+        self._attr_device_class = MediaPlayerDeviceClass.TV
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "via_device": (DOMAIN, self.unique_id),
+        }
 
     def _force_off(self):
         self._attr_state = MediaPlayerState.OFF
@@ -100,7 +111,15 @@ class PjLinkDevice(MediaPlayerEntity):
             with self.projector() as projector:
                 if not self._attr_name:
                     self._attr_name = projector.get_name()
+                    self._attr_unique_id = f"{DOMAIN}-{self._host}-{self.name}"
+
+                self._attr_manufacturer = projector.get_manufacturer()
+                self._attr_model = projector.get_product_name()
+                self._attr_device_info["manufacturer"] = self._attr_manufacturer
+                self._attr_device_info["model"] = self._attr_model
+
                 inputs = projector.get_inputs()
+
         except ProjectorError as err:
             if str(err) == ERR_PROJECTOR_UNAVAILABLE:
                 return False
