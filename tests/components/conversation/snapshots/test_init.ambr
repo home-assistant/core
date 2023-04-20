@@ -1,0 +1,108 @@
+# serializer version: 1
+# name: test_get_agent_info
+  dict({
+    'id': 'mock-entry',
+    'name': 'Mock Title',
+  })
+# ---
+# name: test_get_agent_info.1
+  dict({
+    'id': 'homeassistant',
+    'name': 'Home Assistant',
+  })
+# ---
+# name: test_get_agent_info.2
+  dict({
+    'id': 'mock-entry',
+    'name': 'Mock Title',
+  })
+# ---
+# name: test_get_agent_list
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.1
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'language_supported': False,
+        'name': 'Home Assistant',
+      }),
+      dict({
+        'id': 'mock-entry',
+        'language_supported': True,
+        'name': 'Mock Title',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.2
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'language_supported': True,
+        'name': 'Home Assistant',
+      }),
+      dict({
+        'id': 'mock-entry',
+        'language_supported': False,
+        'name': 'Mock Title',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.3
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'language_supported': True,
+        'name': 'Home Assistant',
+      }),
+      dict({
+        'id': 'mock-entry',
+        'language_supported': False,
+        'name': 'Mock Title',
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_get_agent_info
+  dict({
+    'attribution': dict({
+      'name': 'Mock assistant',
+      'url': 'https://assist.me',
+    }),
+  })
+# ---
+# name: test_ws_get_agent_info.1
+  dict({
+    'attribution': None,
+  })
+# ---
+# name: test_ws_get_agent_info.2
+  dict({
+    'attribution': dict({
+      'name': 'Mock assistant',
+      'url': 'https://assist.me',
+    }),
+  })
+# ---
+# name: test_ws_get_agent_info.3
+  dict({
+    'code': 'invalid_format',
+    'message': "invalid agent ID for dictionary value @ data['agent_id']. Got 'not_exist'",
+  })
+# ---

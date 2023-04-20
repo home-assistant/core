@@ -68,7 +68,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     instance = recorder.get_instance(hass)
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Should not fail if there is nothing there yet
@@ -329,7 +329,7 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
@@ -418,7 +418,7 @@ def test_rename_entity_collision(
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
@@ -485,7 +485,7 @@ def test_statistics_duplicated(
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     wait_recording_done(hass)
@@ -1223,6 +1223,59 @@ def test_monthly_statistics(
         ]
     }
 
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["not", "the", "same", "test:total_energy_import"],
+        period="month",
+        types={"sum"},
+    )
+    sep_start = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    sep_end = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_start = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_end = dt_util.as_utc(dt_util.parse_datetime("2021-11-01 00:00:00"))
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": sep_start.timestamp(),
+                "end": sep_end.timestamp(),
+                "sum": pytest.approx(3.0),
+            },
+            {
+                "start": oct_start.timestamp(),
+                "end": oct_end.timestamp(),
+                "sum": pytest.approx(5.0),
+            },
+        ]
+    }
+
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["not", "the", "same", "test:total_energy_import"],
+        period="month",
+        types={"sum"},
+        units={"energy": "Wh"},
+    )
+    sep_start = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    sep_end = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_start = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_end = dt_util.as_utc(dt_util.parse_datetime("2021-11-01 00:00:00"))
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": sep_start.timestamp(),
+                "end": sep_end.timestamp(),
+                "sum": pytest.approx(3000.0),
+            },
+            {
+                "start": oct_start.timestamp(),
+                "end": oct_end.timestamp(),
+                "sum": pytest.approx(5000.0),
+            },
+        ]
+    }
+
     # Use 5minute to ensure table switch works
     stats = statistics_during_period(
         hass,
@@ -1244,29 +1297,21 @@ def test_monthly_statistics(
 
 def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
-    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
     stmt = _generate_statistics_during_period_stmt(
-        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, {}
+        dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, set()
     )
     cache_key_1 = stmt._generate_cache_key()
     stmt2 = _generate_statistics_during_period_stmt(
-        columns, dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, {}
+        dt_util.utcnow(), dt_util.utcnow(), [0], StatisticsShortTerm, set()
     )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    columns2 = select(
-        StatisticsShortTerm.metadata_id,
-        StatisticsShortTerm.start_ts,
-        StatisticsShortTerm.sum,
-        StatisticsShortTerm.mean,
-    )
     stmt3 = _generate_statistics_during_period_stmt(
-        columns2,
         dt_util.utcnow(),
         dt_util.utcnow(),
         [0],
         StatisticsShortTerm,
-        {"max", "mean"},
+        {"sum", "mean"},
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3
@@ -1322,18 +1367,13 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
 
 def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
     """Test cache key for _generate_statistics_at_time_stmt."""
-    columns = select(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts)
-    stmt = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    stmt = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_at_time_stmt(columns, StatisticsShortTerm, {0}, 0.0)
+    stmt2 = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    columns2 = select(
-        StatisticsShortTerm.metadata_id,
-        StatisticsShortTerm.start_ts,
-        StatisticsShortTerm.sum,
-        StatisticsShortTerm.mean,
+    stmt3 = _generate_statistics_at_time_stmt(
+        StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
     )
-    stmt3 = _generate_statistics_at_time_stmt(columns2, StatisticsShortTerm, {0}, 0.0)
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3

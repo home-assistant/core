@@ -59,8 +59,9 @@ async def async_setup_entry(
         await setup_update_entity()
         return
 
-    signal = f"esphome_{entry_data.entry_id}_on_device_update"
-    unsub = async_dispatcher_connect(hass, signal, setup_update_entity)
+    unsub = async_dispatcher_connect(
+        hass, entry_data.signal_device_updated, setup_update_entity
+    )
 
 
 class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):

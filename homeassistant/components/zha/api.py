@@ -18,8 +18,6 @@ from .core.const import (
 from .core.gateway import ZHAGateway
 
 if TYPE_CHECKING:
-    from zigpy.application import ControllerApplication
-
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
@@ -49,19 +47,15 @@ def _get_config_entry(hass: HomeAssistant) -> ConfigEntry:
     return entries[0]
 
 
-def _wrap_network_settings(app: ControllerApplication) -> NetworkBackup:
-    """Wrap the ZHA network settings into a `NetworkBackup`."""
+def async_get_active_network_settings(hass: HomeAssistant) -> NetworkBackup:
+    """Get the network settings for the currently active ZHA network."""
+    zha_gateway: ZHAGateway = _get_gateway(hass)
+    app = zha_gateway.application_controller
+
     return NetworkBackup(
         node_info=app.state.node_info,
         network_info=app.state.network_info,
     )
-
-
-def async_get_active_network_settings(hass: HomeAssistant) -> NetworkBackup:
-    """Get the network settings for the currently active ZHA network."""
-    zha_gateway: ZHAGateway = _get_gateway(hass)
-
-    return _wrap_network_settings(zha_gateway.application_controller)
 
 
 async def async_get_last_network_settings(
@@ -79,12 +73,11 @@ async def async_get_last_network_settings(
 
     try:
         await app._load_db()  # pylint: disable=protected-access
-        settings = _wrap_network_settings(app)
+        settings = max(app.backups, key=lambda b: b.backup_time)
+    except ValueError:
+        settings = None
     finally:
         await app.shutdown()
-
-    if settings.network_info.channel == 0:
-        return None
 
     return settings
 

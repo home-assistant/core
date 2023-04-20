@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from homeassistant.components import conversation
+from homeassistant.components.homeassistant.exposed_entities import (
+    DATA_EXPOSED_ENTITIES,
+    ExposedEntities,
+)
 from homeassistant.helpers import intent
 
 
@@ -14,6 +18,16 @@ class MockAgent(conversation.AbstractConversationAgent):
         self.calls = []
         self.response = "Test response"
 
+    @property
+    def attribution(self) -> conversation.Attribution | None:
+        """Return the attribution."""
+        return {"name": "Mock assistant", "url": "https://assist.me"}
+
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return a list of supported languages."""
+        return ["smurfish"]
+
     async def async_process(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
@@ -24,3 +38,15 @@ class MockAgent(conversation.AbstractConversationAgent):
         return conversation.ConversationResult(
             response=response, conversation_id=user_input.conversation_id
         )
+
+
+def expose_new(hass, expose_new):
+    """Enable exposing new entities to the default agent."""
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_expose_new_entities(conversation.DOMAIN, expose_new)
+
+
+def expose_entity(hass, entity_id, should_expose):
+    """Expose an entity to the default agent."""
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_expose_entity(conversation.DOMAIN, entity_id, should_expose)

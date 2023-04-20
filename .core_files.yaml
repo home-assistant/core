@@ -125,6 +125,7 @@ tests: &tests
   - tests/mock/**
   - tests/pylint/**
   - tests/scripts/**
+  - tests/syrupy.py
   - tests/test_util/**
   - tests/testing_config/**
   - tests/util/**

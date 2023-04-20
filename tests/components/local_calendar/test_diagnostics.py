@@ -1,5 +1,4 @@
 """Tests for diagnostics platform of local calendar."""
-
 from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
 import pytest
@@ -9,11 +8,11 @@ from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_ENTITY, Client, ClientFixture
+from .conftest import TEST_ENTITY, Client
 
 from tests.common import CLIENT_ID, MockConfigEntry, MockUser
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def generate_new_hass_access_token(
@@ -82,7 +81,7 @@ async def test_api_date_time_event(
     hass_admin_user: MockUser,
     hass_admin_credential: Credentials,
     config_entry: MockConfigEntry,
-    hass_ws_client: ClientFixture,
+    hass_ws_client: WebSocketGenerator,
     aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
     snapshot: SnapshotAssertion,

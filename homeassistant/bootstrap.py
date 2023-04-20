@@ -239,13 +239,14 @@ async def load_registries(hass: core.HomeAssistant) -> None:
 
     # Load the registries and cache the result of platform.uname().processor
     entity.async_setup(hass)
+    template.async_setup(hass)
     await asyncio.gather(
         area_registry.async_load(hass),
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
-        template.async_load_custom_jinja(hass),
+        template.async_load_custom_templates(hass),
     )
 
 
@@ -515,16 +516,15 @@ async def async_setup_multi_components(
         )
         for domain in domains
     }
-    await asyncio.wait(futures.values())
-    errors = [domain for domain in domains if futures[domain].exception()]
-    for domain in errors:
-        exception = futures[domain].exception()
-        assert exception is not None
-        _LOGGER.error(
-            "Error setting up integration %s - received exception",
-            domain,
-            exc_info=(type(exception), exception, exception.__traceback__),
-        )
+    results = await asyncio.gather(*futures.values(), return_exceptions=True)
+    for idx, domain in enumerate(futures):
+        result = results[idx]
+        if isinstance(result, BaseException):
+            _LOGGER.error(
+                "Error setting up integration %s - received exception",
+                domain,
+                exc_info=(type(result), result, result.__traceback__),
+            )
 
 
 async def _async_set_up_integrations(

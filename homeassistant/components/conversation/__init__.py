@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 import re
 from typing import Any
@@ -16,9 +17,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent, singleton
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util import language as language_util
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
+from .const import HOME_ASSISTANT_AGENT
 from .default_agent import DefaultAgent
+
+__all__ = [
+    "DOMAIN",
+    "HOME_ASSISTANT_AGENT",
+    "async_converse",
+    "async_get_agent_info",
+    "async_set_agent",
+    "async_unset_agent",
+    "async_setup",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,24 +231,29 @@ async def websocket_get_agent_info(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "conversation/agent/list",
+        vol.Optional("language"): str,
     }
 )
-@core.callback
-def websocket_list_agents(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
+@websocket_api.async_response
+async def websocket_list_agents(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """List available agents."""
+    """List conversation agents and, optionally, if they support a given language."""
     manager = _get_agent_manager(hass)
 
-    connection.send_result(
-        msg["id"],
-        {
-            "default_agent": manager.default_agent,
-            "agents": manager.async_get_agent_info(),
-        },
-    )
+    language = msg.get("language")
+    agents = []
+
+    for agent_info in manager.async_get_agent_info():
+        agent_dict: dict[str, Any] = {"id": agent_info.id, "name": agent_info.name}
+        if language:
+            agent = await manager.async_get_agent(agent_info.id)
+            agent_dict["language_supported"] = bool(
+                language_util.matches(language, agent.supported_languages)
+            )
+        agents.append(agent_dict)
+
+    connection.send_message(websocket_api.result_message(msg["id"], {"agents": agents}))
 
 
 class ConversationProcessView(http.HomeAssistantView):
@@ -270,6 +288,32 @@ class ConversationProcessView(http.HomeAssistantView):
         return self.json(result.as_dict())
 
 
+@dataclass(frozen=True)
+class AgentInfo:
+    """Container for conversation agent info."""
+
+    id: str
+    name: str
+
+
+@core.callback
+def async_get_agent_info(
+    hass: core.HomeAssistant,
+    agent_id: str | None = None,
+) -> AgentInfo | None:
+    """Get information on the agent or None if not found."""
+    manager = _get_agent_manager(hass)
+
+    if agent_id is None:
+        agent_id = manager.default_agent
+
+    for agent_info in manager.async_get_agent_info():
+        if agent_info.id == agent_id:
+            return agent_info
+
+    return None
+
+
 async def async_converse(
     hass: core.HomeAssistant,
     text: str,
@@ -299,8 +343,6 @@ async def async_converse(
 class AgentManager:
     """Class to manage conversation agents."""
 
-    HOME_ASSISTANT_AGENT = "homeassistant"
-
     default_agent: str = HOME_ASSISTANT_AGENT
     _builtin_agent: AbstractConversationAgent | None = None
 
@@ -317,7 +359,7 @@ class AgentManager:
         if agent_id is None:
             agent_id = self.default_agent
 
-        if agent_id == AgentManager.HOME_ASSISTANT_AGENT:
+        if agent_id == HOME_ASSISTANT_AGENT:
             if self._builtin_agent is not None:
                 return self._builtin_agent
 
@@ -332,50 +374,55 @@ class AgentManager:
 
             return self._builtin_agent
 
+        if agent_id not in self._agents:
+            raise ValueError(f"Agent {agent_id} not found")
+
         return self._agents[agent_id]
 
     @core.callback
-    def async_get_agent_info(self) -> list[dict[str, Any]]:
+    def async_get_agent_info(self) -> list[AgentInfo]:
         """List all agents."""
-        agents = [
-            {
-                "id": AgentManager.HOME_ASSISTANT_AGENT,
-                "name": "Home Assistant",
-            }
+        agents: list[AgentInfo] = [
+            AgentInfo(
+                id=HOME_ASSISTANT_AGENT,
+                name="Home Assistant",
+            )
         ]
         for agent_id, agent in self._agents.items():
             config_entry = self.hass.config_entries.async_get_entry(agent_id)
 
-            # This is a bug, agent should have been unset when config entry was unloaded
+            # Guard against potential bugs in conversation agents where the agent is not
+            # removed from the manager when the config entry is removed
             if config_entry is None:
                 _LOGGER.warning(
-                    "Agent was still loaded while config entry is gone: %s", agent
+                    "Conversation agent %s is still loaded after config entry removal",
+                    agent,
                 )
                 continue
 
             agents.append(
-                {
-                    "id": agent_id,
-                    "name": config_entry.title,
-                }
+                AgentInfo(
+                    id=agent_id,
+                    name=config_entry.title,
+                )
             )
         return agents
 
     @core.callback
     def async_is_valid_agent_id(self, agent_id: str) -> bool:
         """Check if the agent id is valid."""
-        return agent_id in self._agents or agent_id == AgentManager.HOME_ASSISTANT_AGENT
+        return agent_id in self._agents or agent_id == HOME_ASSISTANT_AGENT
 
     @core.callback
     def async_set_agent(self, agent_id: str, agent: AbstractConversationAgent) -> None:
         """Set the agent."""
         self._agents[agent_id] = agent
-        if self.default_agent == AgentManager.HOME_ASSISTANT_AGENT:
+        if self.default_agent == HOME_ASSISTANT_AGENT:
             self.default_agent = agent_id
 
     @core.callback
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
         if self.default_agent == agent_id:
-            self.default_agent = AgentManager.HOME_ASSISTANT_AGENT
+            self.default_agent = HOME_ASSISTANT_AGENT
         self._agents.pop(agent_id, None)

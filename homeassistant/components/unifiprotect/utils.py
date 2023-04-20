@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Generator, Iterable
 import contextlib
 from enum import Enum
+from pathlib import Path
 import socket
 from typing import Any
 
@@ -27,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_ALL_UPDATES,
@@ -142,4 +144,5 @@ def async_create_api_client(
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,
+        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
     )

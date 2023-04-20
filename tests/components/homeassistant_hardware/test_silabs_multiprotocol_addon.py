@@ -25,7 +25,7 @@ from tests.common import (
 TEST_DOMAIN = "test"
 
 
-class TestConfigFlow(ConfigFlow):
+class FakeConfigFlow(ConfigFlow):
     """Handle a config flow for the silabs multiprotocol add-on."""
 
     VERSION = 1
@@ -34,9 +34,9 @@ class TestConfigFlow(ConfigFlow):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> TestOptionsFlow:
+    ) -> FakeOptionsFlow:
         """Return the options flow."""
-        return TestOptionsFlow(config_entry)
+        return FakeOptionsFlow(config_entry)
 
     async def async_step_system(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Handle the initial step."""
@@ -46,7 +46,7 @@ class TestConfigFlow(ConfigFlow):
         return self.async_create_entry(title="Test HW", data={})
 
 
-class TestOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
+class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
     """Handle an option flow for the silabs multiprotocol add-on."""
 
     async def _async_serial_port_settings(
@@ -89,10 +89,10 @@ class TestOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
 @pytest.fixture(autouse=True)
 def config_flow_handler(
     hass: HomeAssistant, current_request_with_host: Any
-) -> Generator[TestConfigFlow, None, None]:
+) -> Generator[FakeConfigFlow, None, None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-    with mock_config_flow(TEST_DOMAIN, TestConfigFlow):
+    with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
         yield
 
 
@@ -795,3 +795,14 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "zha_migration_failed"
+
+
+def test_is_multiprotocol_url() -> None:
+    """Test is_multiprotocol_url."""
+    assert silabs_multiprotocol_addon.is_multiprotocol_url(
+        "socket://core-silabs-multiprotocol:9999"
+    )
+    assert silabs_multiprotocol_addon.is_multiprotocol_url(
+        "http://core-silabs-multiprotocol:8081"
+    )
+    assert not silabs_multiprotocol_addon.is_multiprotocol_url("/dev/ttyAMA1")

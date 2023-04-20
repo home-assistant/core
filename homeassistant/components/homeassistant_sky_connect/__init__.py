@@ -4,8 +4,8 @@ from __future__ import annotations
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     check_multi_pan_addon,
-    get_multi_pan_addon_info,
     get_zigbee_socket,
+    multi_pan_addon_using_device,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -33,9 +33,8 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     usb_dev = entry.data["device"]
     dev_path = await hass.async_add_executor_job(usb.get_serial_by_id, usb_dev)
-    addon_info = await get_multi_pan_addon_info(hass, dev_path)
 
-    if not addon_info:
+    if not await multi_pan_addon_using_device(hass, dev_path):
         usb_info = get_usb_service_info(entry)
         await hass.config_entries.flow.async_init(
             "zha",
@@ -47,7 +46,7 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hw_discovery_data = {
         "name": "SkyConnect Multi-PAN",
         "port": {
-            "path": get_zigbee_socket(hass, addon_info),
+            "path": get_zigbee_socket(),
         },
         "radio_type": "ezsp",
     }
