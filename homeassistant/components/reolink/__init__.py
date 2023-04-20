@@ -75,6 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
+    starting = True
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
         async with async_timeout.timeout(host.api.timeout):
@@ -97,8 +98,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             try:
                 return await host.api.check_new_firmware()
             except ReolinkError as err:
+                if starting:
+                    _LOGGER.debug(
+                        "Error checking Reolink firmware update at startup "
+                        "from %s, possibly internet acces is blocked", 
+                        host.api.nvr_name
+                    )
+
                 raise UpdateFailed(
-                    f"Error checking Reolink firmware update {host.api.nvr_name}"
+                    f"Error checking Reolink firmware update from {host.api.nvr_name}, "
+                    "if the camera is blocked from accesing the internet, "
+                    "disable the update entity"
                 ) from err
 
     device_coordinator = DataUpdateCoordinator(
@@ -138,6 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         config_entry.add_update_listener(entry_update_listener)
     )
 
+    starting = False
     return True
 
 
