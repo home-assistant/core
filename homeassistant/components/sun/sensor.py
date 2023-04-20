@@ -15,6 +15,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -40,48 +42,48 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
     SunSensorEntityDescription(
         key="next_dawn",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Next dawn",
+        translation_key="next_dawn",
         icon="mdi:sun-clock",
         value_fn=lambda data: data.next_dawn,
     ),
     SunSensorEntityDescription(
         key="next_dusk",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Next dusk",
+        translation_key="next_dusk",
         icon="mdi:sun-clock",
         value_fn=lambda data: data.next_dusk,
     ),
     SunSensorEntityDescription(
         key="next_midnight",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Next midnight",
+        translation_key="next_midnight",
         icon="mdi:sun-clock",
         value_fn=lambda data: data.next_midnight,
     ),
     SunSensorEntityDescription(
         key="next_noon",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Next noon",
+        translation_key="next_noon",
         icon="mdi:sun-clock",
         value_fn=lambda data: data.next_noon,
     ),
     SunSensorEntityDescription(
         key="next_rising",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Next rising",
+        translation_key="next_rising",
         icon="mdi:sun-clock",
         value_fn=lambda data: data.next_rising,
     ),
     SunSensorEntityDescription(
         key="next_setting",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Next setting",
+        translation_key="next_setting",
         icon="mdi:sun-clock",
         value_fn=lambda data: data.next_setting,
     ),
     SunSensorEntityDescription(
         key="solar_elevation",
-        name="Solar elevation",
+        translation_key="solar_elevation",
         icon="mdi:theme-light-dark",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.solar_elevation,
@@ -90,7 +92,7 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
     ),
     SunSensorEntityDescription(
         key="solar_azimuth",
-        name="Solar azimuth",
+        translation_key="solar_azimuth",
         icon="mdi:sun-angle",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.solar_azimuth,
@@ -115,6 +117,7 @@ async def async_setup_entry(
 class SunSensor(SensorEntity):
     """Representation of a Sun Sensor."""
 
+    _attr_has_entity_name = True
     entity_description: SunSensorEntityDescription
 
     def __init__(
@@ -125,6 +128,12 @@ class SunSensor(SensorEntity):
         self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(entity_description.key)
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.sun = sun
+
+        self._attr_device_info = DeviceInfo(
+            name="Sun",
+            identifiers={(DOMAIN, entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> StateType | datetime:

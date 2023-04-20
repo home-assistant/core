@@ -380,7 +380,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entity.async_write_ha_state()
 
     unsub = async_track_time_interval(
-        hass, update_tokens, TOKEN_CHANGE_INTERVAL, "Camera update tokens"
+        hass, update_tokens, TOKEN_CHANGE_INTERVAL, name="Camera update tokens"
     )
 
     @callback

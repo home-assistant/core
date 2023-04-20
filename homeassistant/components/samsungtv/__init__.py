@@ -165,10 +165,9 @@ class DebouncedEntryReloader:
         LOGGER.debug("Calling debouncer to get a reload after cooldown")
         await self._debounced_reload.async_call()
 
-    @callback
-    def async_cancel(self) -> None:
+    async def async_shutdown(self) -> None:
         """Cancel any pending reload."""
-        self._debounced_reload.async_cancel()
+        await self._debounced_reload.async_shutdown()
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
@@ -228,7 +227,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # will be a race where the config flow will see the entry
     # as not loaded and may reload it
     debounced_reloader = DebouncedEntryReloader(hass, entry)
-    entry.async_on_unload(debounced_reloader.async_cancel)
+    entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
     hass.data[DOMAIN][entry.entry_id] = bridge
@@ -340,7 +339,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         en_reg.async_clear_config_entry(config_entry.entry_id)
 
         version = config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry)
     LOGGER.debug("Migration to version %s successful", version)
 
     return True

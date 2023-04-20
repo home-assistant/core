@@ -40,10 +40,10 @@ from .core.const import (
     ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE,
     ATTR_WARNING_DEVICE_STROBE_INTENSITY,
     BINDINGS,
-    CHANNEL_IAS_WD,
     CLUSTER_COMMAND_SERVER,
     CLUSTER_COMMANDS_CLIENT,
     CLUSTER_COMMANDS_SERVER,
+    CLUSTER_HANDLER_IAS_WD,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
     CUSTOM_CONFIGURATION,
@@ -61,7 +61,7 @@ from .core.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
     ZHA_ALARM_OPTIONS,
-    ZHA_CHANNEL_MSG,
+    ZHA_CLUSTER_HANDLER_MSG,
     ZHA_CONFIG_SCHEMAS,
 )
 from .core.gateway import EntityReference
@@ -389,7 +389,7 @@ async def websocket_get_groupable_devices(
                             ),
                         }
                         for entity_ref in entity_refs
-                        if list(entity_ref.cluster_channels.values())[
+                        if list(entity_ref.cluster_handlers.values())[
                             0
                         ].cluster.endpoint.endpoint_id
                         == ep_id
@@ -597,7 +597,7 @@ async def websocket_reconfigure_node(
         connection.send_message(websocket_api.event_message(msg["id"], data))
 
     remove_dispatcher_function = async_dispatcher_connect(
-        hass, ZHA_CHANNEL_MSG, forward_messages
+        hass, ZHA_CLUSTER_HANDLER_MSG, forward_messages
     )
 
     @callback
@@ -1406,14 +1406,14 @@ def async_load_api(hass: HomeAssistant) -> None:
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND],
     )
 
-    def _get_ias_wd_channel(zha_device):
-        """Get the IASWD channel for a device."""
-        cluster_channels = {
+    def _get_ias_wd_cluster_handler(zha_device):
+        """Get the IASWD cluster handler for a device."""
+        cluster_handlers = {
             ch.name: ch
-            for pool in zha_device.channels.pools
-            for ch in pool.claimed_channels.values()
+            for endpoint in zha_device.endpoints.values()
+            for ch in endpoint.claimed_cluster_handlers.values()
         }
-        return cluster_channels.get(CHANNEL_IAS_WD)
+        return cluster_handlers.get(CLUSTER_HANDLER_IAS_WD)
 
     async def warning_device_squawk(service: ServiceCall) -> None:
         """Issue the squawk command for an IAS warning device."""
@@ -1423,11 +1423,11 @@ def async_load_api(hass: HomeAssistant) -> None:
         level: int = service.data[ATTR_LEVEL]
 
         if (zha_device := zha_gateway.get_device(ieee)) is not None:
-            if channel := _get_ias_wd_channel(zha_device):
-                await channel.issue_squawk(mode, strobe, level)
+            if cluster_handler := _get_ias_wd_cluster_handler(zha_device):
+                await cluster_handler.issue_squawk(mode, strobe, level)
             else:
                 _LOGGER.error(
-                    "Squawking IASWD: %s: [%s] is missing the required IASWD channel!",
+                    "Squawking IASWD: %s: [%s] is missing the required IASWD cluster handler!",
                     ATTR_IEEE,
                     str(ieee),
                 )
@@ -1466,13 +1466,13 @@ def async_load_api(hass: HomeAssistant) -> None:
         intensity: int = service.data[ATTR_WARNING_DEVICE_STROBE_INTENSITY]
 
         if (zha_device := zha_gateway.get_device(ieee)) is not None:
-            if channel := _get_ias_wd_channel(zha_device):
-                await channel.issue_start_warning(
+            if cluster_handler := _get_ias_wd_cluster_handler(zha_device):
+                await cluster_handler.issue_start_warning(
                     mode, strobe, level, duration, duty_mode, intensity
                 )
             else:
                 _LOGGER.error(
-                    "Warning IASWD: %s: [%s] is missing the required IASWD channel!",
+                    "Warning IASWD: %s: [%s] is missing the required IASWD cluster handler!",
                     ATTR_IEEE,
                     str(ieee),
                 )
