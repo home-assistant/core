@@ -1043,7 +1043,10 @@ async def test_ws_list_engines(
     assert msg["success"]
     assert msg["result"] == {
         "providers": [
-            {"engine_id": "test", "supported_languages": ["de_DE", "en_GB", "en_US"]}
+            {
+                "engine_id": "test",
+                "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+            }
         ]
     }
 
@@ -1069,6 +1072,24 @@ async def test_ws_list_engines(
     assert msg["success"]
     assert msg["result"] == {
         "providers": [{"engine_id": "test", "supported_languages": ["en_GB", "en_US"]}]
+    }
+
+    await client.send_json_auto_id({"type": "tts/engine/list", "language": "de"})
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "supported_languages": ["de_DE", "de_CH"]}]
+    }
+
+    await client.send_json_auto_id(
+        {"type": "tts/engine/list", "language": "de", "country": "ch"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [{"engine_id": "test", "supported_languages": ["de_CH", "de_DE"]}]
     }
 
 
