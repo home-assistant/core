@@ -534,7 +534,7 @@ class PollControl(ClusterHandler):
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
     general.PowerConfiguration.cluster_id
 )
-class PowerConfigurationCLusterHandler(ClusterHandler):
+class PowerConfigurationClusterHandler(ClusterHandler):
     """Cluster handler for the zigbee power configuration cluster."""
 
     REPORT_CONFIG = (
