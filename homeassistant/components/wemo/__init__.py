@@ -153,8 +153,8 @@ class WemoDispatcher:
         try:
             coordinator = await async_register_device(hass, self._config_entry, wemo)
         except pywemo.PyWeMoException as err:
-            if wemo.serial_number not in self._failed_serial_numbers:
-                self._failed_serial_numbers.add(wemo.serial_number)
+            if wemo.serialnumber not in self._failed_serial_numbers:
+                self._failed_serial_numbers.add(wemo.serialnumber)
                 _LOGGER.error(
                     "Unable to add WeMo %s %s: %s", repr(wemo), wemo.host, err
                 )
