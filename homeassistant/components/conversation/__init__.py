@@ -269,12 +269,15 @@ async def websocket_list_agents(
         agent_dict: dict[str, Any] = {
             "id": agent_info.id,
             "name": agent_info.name,
-            "supported_languages": agent.supported_languages,
         }
-        if language:
-            agent_dict["supported_languages"] = language_util.matches(
-                language, agent.supported_languages, country
-            )
+        if agent.supported_languages != "*":
+            if language:
+                agent_dict["supported_languages"] = language_util.matches(
+                    language, agent.supported_languages, country
+                )
+            else:
+                agent_dict["supported_languages"] = agent.supported_languages
+
         agents.append(agent_dict)
 
     connection.send_message(websocket_api.result_message(msg["id"], {"agents": agents}))
