@@ -1405,7 +1405,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.4
+psutil==5.9.5
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==20.2.4
