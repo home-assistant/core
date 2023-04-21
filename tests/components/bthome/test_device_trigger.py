@@ -162,35 +162,35 @@ async def test_get_triggers_dimmer(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-# async def test_get_triggers_for_invalid_xiami_ble_device(hass: HomeAssistant) -> None:
-#     """Test that we don't get triggers for an invalid device."""
-#     mac = "DE:70:E8:B2:39:0C"
-#     entry = await _async_setup_xiaomi_device(hass, mac)
-#     events = async_capture_events(hass, "xiaomi_ble_event")
+async def test_get_triggers_for_invalid_bthome_ble_device(hass: HomeAssistant) -> None:
+    """Test that we don't get triggers for an invalid device."""
+    mac = "A4:C1:38:8D:18:B2"
+    entry = await _async_setup_bthome_device(hass, mac)
+    events = async_capture_events(hass, "bthome_ble_event")
 
-#     # Emit motion detected event so it creates the device in the registry
-#     inject_bluetooth_service_info_bleak(
-#         hass,
-#         make_bthome_v2_adv(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
-#     )
+    # Creates the device in the registry but no events
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_bthome_v2_adv(mac, b"\x40\x02\xca\x09\x03\xbf\x13"),
+    )
 
-#     # wait for the event
-#     await hass.async_block_till_done()
-#     assert len(events) == 1
+    # wait to make sure there are no events
+    await hass.async_block_till_done()
+    assert len(events) == 0
 
-#     dev_reg = async_get_dev_reg(hass)
-#     invalid_device = dev_reg.async_get_or_create(
-#         config_entry_id=entry.entry_id,
-#         identifiers={(DOMAIN, "invdevmac")},
-#     )
+    dev_reg = async_get_dev_reg(hass)
+    invalid_device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "invdevmac")},
+    )
 
-#     triggers = await async_get_device_automations(
-#         hass, DeviceAutomationType.TRIGGER, invalid_device.id
-#     )
-#     assert triggers == []
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, invalid_device.id
+    )
+    assert triggers == []
 
-#     assert await hass.config_entries.async_unload(entry.entry_id)
-#     await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 # async def test_get_triggers_for_invalid_device_id(hass: HomeAssistant) -> None:
