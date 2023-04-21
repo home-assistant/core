@@ -399,8 +399,7 @@ async def test_write_properties(
         )
         msg = await ws_client.receive_json()
         assert msg["success"]
-        assert devices["33.33.33"].async_write_op_flags.call_count == 1
-        assert devices["33.33.33"].async_write_ext_properties.call_count == 1
+        assert devices["33.33.33"].async_write_config.call_count == 1
 
 
 async def test_write_properties_failure(

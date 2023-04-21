@@ -103,6 +103,9 @@ class MockDevices:
                 device.async_write_ext_properties = AsyncMock(
                     return_value=ResponseStatus.SUCCESS
                 )
+                device.async_write_config = AsyncMock(
+                    return_value=ResponseStatus.SUCCESS
+                )
 
             for device in [
                 self._devices[addr] for addr in [addr2, addr3, addr4, addr5]
@@ -121,6 +124,9 @@ class MockDevices:
                 return_value=ResponseStatus.FAILURE
             )
             self._devices[addr2].async_write_ext_properties = AsyncMock(
+                return_value=ResponseStatus.FAILURE
+            )
+            self._devices[addr2].async_write_config = AsyncMock(
                 return_value=ResponseStatus.FAILURE
             )
 
