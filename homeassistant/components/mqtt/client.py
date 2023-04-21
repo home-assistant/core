@@ -808,10 +808,12 @@ class MQTT:
         for subscription in subscriptions:
             init_status = self._retained_init.setdefault(subscription, set())
             # skip already initialized subscriptions
-            if msg.retain and msg.topic in init_status:
-                continue
-            # remember the subscription had an initial payload
-            self._retained_init[subscription].add(msg.topic)
+            if msg.topic in init_status:
+                if msg.retain:
+                    continue
+            elif msg.retain:
+                # remember the subscription had an initial retained payload
+                self._retained_init[subscription].add(msg.topic)
 
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
