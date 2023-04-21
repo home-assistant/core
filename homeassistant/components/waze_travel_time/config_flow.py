@@ -62,6 +62,21 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        vol.Required(CONF_ORIGIN): TextSelector(),
+        vol.Required(CONF_DESTINATION): TextSelector(),
+        vol.Required(CONF_REGION): SelectSelector(
+            SelectSelectorConfig(
+                options=sorted(REGIONS),
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_REGION,
+            )
+        ),
+    }
+)
+
 
 def default_options(hass: HomeAssistant) -> dict[str, str | bool]:
     """Get the default options."""
@@ -129,24 +144,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # If we get here, it's because we couldn't connect
             errors["base"] = "cannot_connect"
+            user_input[CONF_REGION] = user_input[CONF_REGION].lower()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): TextSelector(),
-                    vol.Required(CONF_ORIGIN): TextSelector(),
-                    vol.Required(CONF_DESTINATION): TextSelector(),
-                    vol.Required(CONF_REGION): SelectSelector(
-                        SelectSelectorConfig(
-                            options=sorted(REGIONS),
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key=CONF_REGION,
-                        )
-                    ),
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
             errors=errors,
         )

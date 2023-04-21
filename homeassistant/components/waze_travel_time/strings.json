@@ -50,7 +50,7 @@
         "imperial": "Imperial System"
       }
     },
-    "regions": {
+    "region": {
       "options": {
         "us": "USA",
         "na": "North America",
