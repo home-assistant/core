@@ -130,16 +130,18 @@ class ClusterHandler(LogMixin):
         unique_id = endpoint.unique_id.replace("-", ":")
         self._unique_id = f"{unique_id}:0x{cluster.cluster_id:04x}"
         if not hasattr(self, "_value_attribute") and self.REPORT_CONFIG:
-            attr_def: ZCLAttributeDef | None = self.cluster.attributes_by_name.get(
+            attr_def: ZCLAttributeDef = self.cluster.attributes_by_name[
                 self.REPORT_CONFIG[0]["attr"]
-            )
-            if attr_def is not None:
-                self.value_attribute = attr_def.id
-            else:
-                self.value_attribute = None
+            ]
+            self.value_attribute = attr_def.id
         self._status = ClusterHandlerStatus.CREATED
         self._cluster.add_listener(self)
         self.data_cache: dict[str, Enum] = {}
+
+    @classmethod
+    def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
+        """Filter the cluster match for specific devices."""
+        return True
 
     @property
     def id(self) -> str:
@@ -203,7 +205,10 @@ class ClusterHandler(LogMixin):
             )
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
-                "Failed to bind '%s' cluster: %s", self.cluster.ep_attribute, str(ex)
+                "Failed to bind '%s' cluster: %s",
+                self.cluster.ep_attribute,
+                str(ex),
+                exc_info=ex,
             )
             async_dispatcher_send(
                 self._endpoint.device.hass,

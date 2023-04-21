@@ -79,10 +79,14 @@ async def test_pipeline_from_audio_stream_legacy(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "homeassistant",
+            "conversation_language": "test_language",
             "language": "en-US",
             "name": "test_name",
             "stt_engine": "test",
+            "stt_language": "test_language",
             "tts_engine": "test",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()
@@ -141,10 +145,14 @@ async def test_pipeline_from_audio_stream_entity(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "homeassistant",
+            "conversation_language": "test_language",
             "language": "en-US",
             "name": "test_name",
             "stt_engine": mock_stt_provider_entity.entity_id,
+            "stt_language": "test_language",
             "tts_engine": "test",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()

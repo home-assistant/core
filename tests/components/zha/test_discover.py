@@ -111,23 +111,30 @@ async def test_devices(
         Endpoint.async_new_entity = orig_new_entity
 
     if cluster_identify:
-        called = int(zha_device_joined_restored.name == "zha_device_joined")
-        assert cluster_identify.request.call_count == called
-        assert cluster_identify.request.await_count == called
-        if called:
-            assert cluster_identify.request.call_args == mock.call(
-                False,
-                cluster_identify.commands_by_name["trigger_effect"].id,
-                cluster_identify.commands_by_name["trigger_effect"].schema,
-                effect_id=zigpy.zcl.clusters.general.Identify.EffectIdentifier.Okay,
-                effect_variant=(
-                    zigpy.zcl.clusters.general.Identify.EffectVariant.Default
-                ),
-                expect_reply=True,
-                manufacturer=None,
-                tries=1,
-                tsn=None,
-            )
+        # We only identify on join
+        should_identify = (
+            zha_device_joined_restored.name == "zha_device_joined"
+            and not zigpy_device.skip_configuration
+        )
+
+        if should_identify:
+            assert cluster_identify.request.mock_calls == [
+                mock.call(
+                    False,
+                    cluster_identify.commands_by_name["trigger_effect"].id,
+                    cluster_identify.commands_by_name["trigger_effect"].schema,
+                    effect_id=zigpy.zcl.clusters.general.Identify.EffectIdentifier.Okay,
+                    effect_variant=(
+                        zigpy.zcl.clusters.general.Identify.EffectVariant.Default
+                    ),
+                    expect_reply=True,
+                    manufacturer=None,
+                    tries=1,
+                    tsn=None,
+                )
+            ]
+        else:
+            assert cluster_identify.request.mock_calls == []
 
     event_cluster_handlers = {
         ch.id
