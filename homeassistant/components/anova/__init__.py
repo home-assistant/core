@@ -19,6 +19,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import DOMAIN
 from .coordinator import AnovaCoordinator
 from .models import AnovaData
+from .util import serialize_device_list
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -65,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={
                 **entry.data,
-                **{"devices": [(device.device_key, device.type) for device in devices]},
+                **{"devices": serialize_device_list(devices)},
             },
         )
     coordinators = [AnovaCoordinator(hass, device) for device in devices]

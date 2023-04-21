@@ -10,6 +10,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
+from .util import serialize_device_list
 
 
 class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -41,7 +42,7 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # We store device list in config flow in order to persist found devices on restart, as the Anova api get_devices does not return any devices that are offline.
-                device_list = [(device.device_key, device.type) for device in devices]
+                device_list = serialize_device_list(devices)
                 return self.async_create_entry(
                     title="Anova",
                     data={
