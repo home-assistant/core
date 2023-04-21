@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
+from datetime import datetime
+from typing import Any, Final
 
 from homewizard_energy.models import Data
 
@@ -26,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
@@ -46,6 +48,8 @@ class HomeWizardSensorEntityDescription(
     SensorEntityDescription, HomeWizardEntityDescriptionMixin
 ):
     """Class describing HomeWizard sensor entities."""
+
+    attr_fn: Callable[[Data], dict[str, StateType | datetime]] = lambda _: {}
 
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
@@ -341,6 +345,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda data: data.monthly_power_peak_w,
+        attr_fn=lambda data: {"last_update": data.monthly_power_peak_timestamp},
     ),
     HomeWizardSensorEntityDescription(
         key="total_gas_m3",
@@ -349,6 +354,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.total_gas_m3,
+        attr_fn=lambda data: {"last_update": data.gas_timestamp},
     ),
     HomeWizardSensorEntityDescription(
         key="gas_unique_id",
@@ -430,3 +436,8 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
     def available(self) -> bool:
         """Return availability of meter."""
         return super().available and self.native_value is not None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return self.entity_description.attr_fn(self.coordinator.data.data)
