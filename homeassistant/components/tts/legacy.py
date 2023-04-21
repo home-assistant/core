@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
@@ -44,6 +44,7 @@ from .const import (
     CONF_CACHE_DIR,
     CONF_FIELDS,
     CONF_TIME_MEMORY,
+    DATA_TTS_MANAGER,
     DEFAULT_CACHE,
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
@@ -111,7 +112,7 @@ async def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy text to speech providers."""
-    tts: SpeechManager = hass.data[DOMAIN]
+    tts: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
     # Load service descriptions from tts/services.yaml
     services_yaml = Path(__file__).parent / "services.yaml"
@@ -225,6 +226,11 @@ class Provider:
     @property
     def supported_options(self) -> list[str] | None:
         """Return a list of supported options like voice, emotions."""
+        return None
+
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[str] | None:
+        """Return a list of supported voices for a language."""
         return None
 
     @property

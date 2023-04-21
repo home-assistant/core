@@ -19,6 +19,11 @@ class MockAgent(conversation.AbstractConversationAgent):
         self.response = "Test response"
 
     @property
+    def attribution(self) -> conversation.Attribution | None:
+        """Return the attribution."""
+        return {"name": "Mock assistant", "url": "https://assist.me"}
+
+    @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return ["smurfish"]
