@@ -1,12 +1,7 @@
 """Support for Roborock vacuum class."""
 from typing import Any
 
-from roborock.code_mappings import (
-    RoborockFanPowerCode,
-    RoborockMopIntensityCode,
-    RoborockMopModeCode,
-    RoborockStateCode,
-)
+from roborock.code_mappings import RoborockFanPowerCode, RoborockStateCode
 from roborock.typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
@@ -167,20 +162,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
             await self.async_pause()
         else:
             await self.async_start()
-
-    async def async_set_mop_mode(self, mop_mode: str, _=None) -> None:
-        """Change vacuum mop mode."""
-        await self.send(
-            RoborockCommand.SET_MOP_MODE,
-            [k for k, v in RoborockMopModeCode.items() if v == mop_mode],
-        )
-
-    async def async_set_mop_intensity(self, mop_intensity: str, _=None):
-        """Set vacuum mop intensity."""
-        await self.send(
-            RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
-            [k for k, v in RoborockMopIntensityCode.items() if v == mop_intensity],
-        )
 
     async def async_send_command(
         self,
