@@ -1612,6 +1612,22 @@ async def test_get_agent_list(
     assert msg["success"]
     assert msg["result"] == snapshot
 
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "de"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "de", "country": "ch"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
 
 async def test_get_agent_info(
     hass: HomeAssistant, init_components, mock_agent, snapshot: SnapshotAssertion

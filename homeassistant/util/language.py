@@ -6,6 +6,8 @@ from dataclasses import dataclass
 import operator
 import re
 
+from homeassistant.const import MATCH_ALL
+
 SEPARATOR_RE = re.compile(r"[-_]")
 
 
@@ -95,7 +97,7 @@ class Dialect:
         other_regions = pref_regions if dialect.region is None else {dialect.region}
 
         # Better match if there is overlap in regions
-        return 1 if regions.intersection(other_regions) else 0
+        return 2 if regions.intersection(other_regions) else 0
 
     @staticmethod
     def parse(tag: str) -> Dialect:
@@ -125,6 +127,9 @@ def matches(
     target: str, supported: Iterable[str], country: str | None = None
 ) -> list[str]:
     """Return a sorted list of matching language tags based on a target tag and country hint."""
+    if target == MATCH_ALL:
+        return list(supported)
+
     target_dialect = Dialect.parse(target)
 
     # Higher score is better
