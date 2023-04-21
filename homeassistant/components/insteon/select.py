@@ -60,5 +60,6 @@ class InsteonSelectConfigEntity(InsteonConfigEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._entity.new_value = option
+        option_value = self._entity.value_type[option.upper()]
+        self._entity.new_value = option_value
         await self._debounce_writer.async_call()
