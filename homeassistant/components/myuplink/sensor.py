@@ -7,8 +7,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyUplinkDataCoordinator
@@ -96,9 +96,9 @@ class MyUplinkSensor(SensorEntity):
     def __init__(
         self,
         coordinator: MyUplinkDataCoordinator,
-        data_group,
-        data_id,
-        device_id,
+        data_group: str,
+        data_id: str,
+        device_id: str,
         name: str,
         u_id: str,
         diag: bool,
