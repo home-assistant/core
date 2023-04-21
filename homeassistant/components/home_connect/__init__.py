@@ -41,10 +41,10 @@ from .const import (
     SERVICE_OPTION_SELECTED,
     SERVICE_PAUSE_PROGRAM,
     SERVICE_RESUME_PROGRAM,
-    SERVICE_STOP_PROGRAM,
     SERVICE_SELECT_PROGRAM,
     SERVICE_SETTING,
     SERVICE_START_PROGRAM,
+    SERVICE_STOP_PROGRAM,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -161,7 +161,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         appliance = _get_appliance_by_device_id(hass, device_id)
         await hass.async_add_executor_job(appliance.execute_command, command)
-    
+
     async def _async_stop_program(call):
         """Execute calls to services executing a stop of active program."""
         device_id = call.data[ATTR_DEVICE_ID]
@@ -218,7 +218,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_service_start_program(call):
         """Service for starting a program."""
         await _async_service_program(call, "start_program")
-    
+
     async def async_service_stop_program(call):
         """Service for stopping active program."""
         await _async_stop_program(call)
