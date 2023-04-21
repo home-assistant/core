@@ -46,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     entry: ConfigEntry
     auth: Auth
     user_input: dict
-    contracts: dict
+    contracts: list[Any]
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -70,35 +70,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_choose_contract(self, user_input=None):
+    async def async_step_choose_contract(
+        self, user_input: Any | None = None
+    ) -> FlowResult:
         """Let user decide which contract is being setup."""
 
         if user_input:
             await self.async_set_unique_id(user_input[CONF_CONTRACT])
             self._abort_if_unique_id_configured()
 
-            self.user_input["contract"] = user_input[CONF_CONTRACT]
+            self.user_input[CONF_CONTRACT] = user_input[CONF_CONTRACT]
 
             return self.async_create_entry(
                 title=f"Contract {user_input[CONF_CONTRACT]}", data=self.user_input
             )
 
+        contract_options = [
+            selector.SelectOptionDict(value=c["contractId"], label=c["description"])
+            for c in self.contracts
+        ]
+
         return self.async_show_form(
             step_id="choose_contract",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_CONTRACT): selector.selector(
-                        {
-                            "select": {
-                                "options": [
-                                    {
-                                        "value": c["contractId"],
-                                        "label": c["description"],
-                                    }
-                                    for c in self.contracts
-                                ]
-                            }
-                        }
+                    vol.Required(CONF_CONTRACT): selector.SelectSelector(
+                        selector.SelectSelectorConfig(options=contract_options)
                     ),
                 }
             ),
