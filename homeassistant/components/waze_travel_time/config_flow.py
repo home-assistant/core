@@ -42,7 +42,6 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_INCL_FILTER, default=""): TextSelector(),
         vol.Optional(CONF_EXCL_FILTER, default=""): TextSelector(),
         vol.Optional(CONF_REALTIME): BooleanSelector(),
-        vol.Optional(CONF_VEHICLE_TYPE): vol.In(VEHICLE_TYPES),
         vol.Required(CONF_VEHICLE_TYPE): SelectSelector(
             SelectSelectorConfig(
                 options=sorted(VEHICLE_TYPES),
