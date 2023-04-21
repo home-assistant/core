@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from unittest.mock import patch
 
-from anova_wifi import AnovaOffline
+from anova_wifi import AnovaApi, AnovaOffline
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -17,7 +17,7 @@ from tests.common import async_fire_time_changed
 LOGGER = logging.getLogger(__name__)
 
 
-async def test_sensors(hass: HomeAssistant, anova_api) -> None:
+async def test_sensors(hass: HomeAssistant, anova_api: AnovaApi) -> None:
     """Test setting up creates the sensors."""
     await async_init_integration(hass)
     assert len(hass.states.async_all("sensor")) == 8
@@ -46,7 +46,7 @@ async def test_sensors(hass: HomeAssistant, anova_api) -> None:
     )
 
 
-async def test_update_failed(hass: HomeAssistant, anova_api) -> None:
+async def test_update_failed(hass: HomeAssistant, anova_api: AnovaApi) -> None:
     """Test updating data after the coordinator has been set up, but anova is offline."""
     await async_init_integration(hass)
     await hass.async_block_till_done()
