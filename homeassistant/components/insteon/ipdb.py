@@ -1,7 +1,7 @@
 """Utility methods for the Insteon platform."""
 from enum import Enum
 
-from pyinsteon.config import MOMENTARY_DELAY, RELAY_MODE
+from pyinsteon.config import MOMENTARY_DELAY, RAMP_RATE_IN_SEC
 from pyinsteon.config.device_flag import DeviceFlagBase
 from pyinsteon.constants import PropertyType
 from pyinsteon.device_types.device_base import Device
@@ -127,7 +127,7 @@ def map_config_to_platform(prop: DeviceFlagBase):
         return Platform.LIGHT
     if issubclass(prop.value_type, Enum):
         return Platform.SELECT
-    if prop.name == RELAY_MODE:
+    if prop.name == RAMP_RATE_IN_SEC:
         return Platform.SELECT
     if prop.name == MOMENTARY_DELAY:
         return Platform.NUMBER
