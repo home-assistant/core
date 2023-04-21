@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, KNOWN_APPS
+from .const import DOMAIN
 from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -56,6 +56,10 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         """Initialize the entity."""
         super().__init__(api, config_entry)
 
+        self._volume_max: int | None = None
+        self._volume_set_task: asyncio.Task | None = None
+        self._channel_set_task: asyncio.Task | None = None
+
         self._update_current_app(api.current_app)
         self._update_volume_info(api.volume_info)
 
@@ -67,7 +71,8 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         @callback
         def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
             self._update_volume_info(volume_info)
-            self.async_write_ha_state()
+            if not self._volume_set_task or self._volume_set_task.done():
+                self.async_write_ha_state()
 
         api.add_current_app_updated_callback(current_app_updated)
         api.add_volume_info_updated_callback(volume_info_updated)
@@ -75,12 +80,20 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
     def _update_current_app(self, current_app: str) -> None:
         """Update current app info."""
         self._attr_app_id = current_app
-        self._attr_app_name = KNOWN_APPS.get(current_app, current_app)
+        self._attr_app_name = current_app
 
     def _update_volume_info(self, volume_info: dict[str, str | bool]) -> None:
         """Update volume info."""
-        self._attr_volume_level = int(volume_info["level"]) / 100
-        self._attr_is_volume_muted = bool(volume_info["muted"])
+        if volume_info["max"]:
+            self._volume_max = int(volume_info["max"])
+            self._attr_volume_level = int(volume_info["level"]) / self._volume_max
+            self._attr_is_volume_muted = bool(volume_info["muted"])
+            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
+        else:
+            self._volume_max = None
+            self._attr_volume_level = None
+            self._attr_is_volume_muted = None
+            self._attr_supported_features &= ~MediaPlayerEntityFeature.VOLUME_SET
 
     @property
     def state(self) -> MediaPlayerState:
@@ -114,11 +127,17 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        if isinstance(self._attr_volume_level, float):
-            diff = volume - self._attr_volume_level
-            for _ in range(abs(round(diff * 100))):
-                self._send_key_command("VOLUME_UP" if diff > 0 else "VOLUME_DOWN")
-                await asyncio.sleep(0.1)
+        assert self._volume_max
+        assert self._attr_volume_level is not None
+        if self._volume_set_task:
+            self._volume_set_task.cancel()
+        diff = volume - self._attr_volume_level
+        count = abs(round(diff * self._volume_max))
+        key_code = "VOLUME_UP" if diff > 0 else "VOLUME_DOWN"
+        self._volume_set_task = asyncio.create_task(
+            self._send_key_commands([key_code] * count)
+        )
+        await self._volume_set_task
 
     async def async_media_play(self) -> None:
         """Send play command."""
@@ -151,9 +170,12 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         if media_type == MediaType.CHANNEL:
             if not media_id.isnumeric():
                 raise ValueError(f"Channel must be numeric: {media_id}")
-            for digit in media_id:
-                self._send_key_command(f"KEYCODE_{digit}")
-                await asyncio.sleep(0.1)
+            if self._channel_set_task:
+                self._channel_set_task.cancel()
+            self._channel_set_task = asyncio.create_task(
+                self._send_key_commands(list(media_id))
+            )
+            await self._channel_set_task
             return
 
         if media_type == MediaType.URL:

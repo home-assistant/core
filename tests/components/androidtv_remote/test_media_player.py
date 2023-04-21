@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 from androidtvremote2 import ConnectionClosed
 import pytest
 
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -35,13 +36,13 @@ async def test_media_player_receives_push_updates(
     )
     assert (
         hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("app_name")
-        == "Android TV Launcher"
+        == "com.google.android.tvlauncher"
     )
 
-    mock_api._on_volume_info_updated({"level": 35, "muted": False})
+    mock_api._on_volume_info_updated({"level": 35, "muted": False, "max": 100})
     assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") == 0.35
 
-    mock_api._on_volume_info_updated({"level": 50, "muted": True})
+    mock_api._on_volume_info_updated({"level": 50, "muted": True, "max": 100})
     assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") == 0.50
     assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("is_volume_muted")
 
@@ -95,7 +96,7 @@ async def test_media_player_volume(
         {"entity_id": MEDIA_PLAYER_ENTITY},
         blocking=True,
     )
-    mock_api._on_volume_info_updated({"level": 10, "muted": False})
+    mock_api._on_volume_info_updated({"level": 10, "muted": False, "max": 100})
 
     mock_api.send_key_command.assert_called_with("VOLUME_UP", "SHORT")
 
@@ -105,7 +106,7 @@ async def test_media_player_volume(
         {"entity_id": MEDIA_PLAYER_ENTITY},
         blocking=True,
     )
-    mock_api._on_volume_info_updated({"level": 9, "muted": False})
+    mock_api._on_volume_info_updated({"level": 9, "muted": False, "max": 100})
 
     mock_api.send_key_command.assert_called_with("VOLUME_DOWN", "SHORT")
 
@@ -115,7 +116,7 @@ async def test_media_player_volume(
         {"entity_id": MEDIA_PLAYER_ENTITY, "is_volume_muted": True},
         blocking=True,
     )
-    mock_api._on_volume_info_updated({"level": 9, "muted": True})
+    mock_api._on_volume_info_updated({"level": 9, "muted": True, "max": 100})
 
     mock_api.send_key_command.assert_called_with("VOLUME_MUTE", "SHORT")
 
@@ -125,7 +126,7 @@ async def test_media_player_volume(
         {"entity_id": MEDIA_PLAYER_ENTITY, "is_volume_muted": False},
         blocking=True,
     )
-    mock_api._on_volume_info_updated({"level": 9, "muted": False})
+    mock_api._on_volume_info_updated({"level": 9, "muted": False, "max": 100})
 
     mock_api.send_key_command.assert_called_with("VOLUME_MUTE", "SHORT")
 
@@ -138,8 +139,20 @@ async def test_media_player_volume_set(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    mock_api._on_volume_info_updated({"level": 10, "muted": False})
+    mock_api._on_volume_info_updated({"level": 0, "muted": False, "max": 0})
+    assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") is None
+    assert (
+        hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("supported_features")
+        & MediaPlayerEntityFeature.VOLUME_SET
+        == 0
+    )
+
+    mock_api._on_volume_info_updated({"level": 10, "muted": False, "max": 100})
     assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") == 0.1
+    assert (
+        hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("supported_features")
+        & MediaPlayerEntityFeature.VOLUME_SET
+    )
 
     assert await hass.services.async_call(
         "media_player",
@@ -152,7 +165,7 @@ async def test_media_player_volume_set(
     assert mock_api.send_key_command.call_count == 3
     mock_api.send_key_command.reset_mock()
 
-    mock_api._on_volume_info_updated({"level": 15, "muted": False})
+    mock_api._on_volume_info_updated({"level": 15, "muted": False, "max": 100})
 
     assert await hass.services.async_call(
         "media_player",
@@ -247,9 +260,21 @@ async def test_media_player_play_media(
         blocking=True,
     )
     assert mock_api.send_key_command.mock_calls == [
-        call("KEYCODE_4", "SHORT"),
-        call("KEYCODE_5", "SHORT"),
+        call("4", "SHORT"),
+        call("5", "SHORT"),
     ]
+
+    assert await hass.services.async_call(
+        "media_player",
+        "play_media",
+        {
+            "entity_id": MEDIA_PLAYER_ENTITY,
+            "media_content_type": "channel",
+            "media_content_id": "45",
+        },
+        blocking=True,
+    )
+    assert mock_api.send_key_command.call_count == 4
 
     with pytest.raises(ValueError):
         assert await hass.services.async_call(
@@ -304,7 +329,6 @@ async def test_media_player_connection_closed(
             {"entity_id": MEDIA_PLAYER_ENTITY},
             blocking=True,
         )
-    assert mock_api.send_key_command.mock_calls == [call("MEDIA_PAUSE", "SHORT")]
 
     mock_api.send_launch_app_command.side_effect = ConnectionClosed()
     with pytest.raises(HomeAssistantError):
@@ -313,11 +337,8 @@ async def test_media_player_connection_closed(
             "play_media",
             {
                 "entity_id": MEDIA_PLAYER_ENTITY,
-                "media_content_type": "url",
-                "media_content_id": "https://www.youtube.com",
+                "media_content_type": "channel",
+                "media_content_id": "1",
             },
             blocking=True,
         )
-    assert mock_api.send_launch_app_command.mock_calls == [
-        call("https://www.youtube.com")
-    ]

@@ -1,6 +1,8 @@
 """Base entity for Android TV Remote."""
 from __future__ import annotations
 
+import asyncio
+
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
 from homeassistant.config_entries import ConfigEntry
@@ -69,6 +71,20 @@ class AndroidTVRemoteBaseEntity(Entity):
         """
         try:
             self._api.send_launch_app_command(app_link)
+        except ConnectionClosed as exc:
+            raise HomeAssistantError(
+                "Connection to Android TV device is closed"
+            ) from exc
+
+    async def _send_key_commands(
+        self, key_codes: list[str], direction: str = "SHORT", delay: float = 0.1
+    ) -> None:
+        """Send key press sequence to Android TV."""
+        try:
+            for index, key_code in enumerate(key_codes):
+                self._api.send_key_command(key_code, direction)
+                if index != (len(key_codes) - 1):
+                    await asyncio.sleep(delay)
         except ConnectionClosed as exc:
             raise HomeAssistantError(
                 "Connection to Android TV device is closed"

@@ -19,6 +19,7 @@ from .const import DOMAIN
 from .helpers import create_api
 
 _LOGGER = logging.getLogger(__name__)
+
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 
