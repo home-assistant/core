@@ -15,7 +15,7 @@ from homeassistant.components.media_source import (
     Unresolvable,
     generate_media_source_id as ms_generate_media_source_id,
 )
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
@@ -159,11 +159,14 @@ class TTSMediaSource(MediaSource):
     @callback
     def _engine_item(self, engine: str, params: str | None = None) -> BrowseMediaSource:
         """Return provider item."""
+        from . import TextToSpeechEntity  # pylint: disable=import-outside-toplevel
+
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
             raise BrowseError("Unknown provider")
 
-        if engine.startswith(f"{DOMAIN}."):
-            engine_domain = split_entity_id(engine)[1]
+        if isinstance(engine_instance, TextToSpeechEntity):
+            assert engine_instance.platform is not None
+            engine_domain = engine_instance.platform.domain
         else:
             engine_domain = engine
 
