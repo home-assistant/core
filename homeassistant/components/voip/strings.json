@@ -15,9 +15,22 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "call_active": {
+        "name": "Call Active"
+      }
+    },
     "switch": {
       "allow_call": {
         "name": "Allow Calls"
+      }
+    },
+    "select": {
+      "pipeline": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
       }
     }
   }

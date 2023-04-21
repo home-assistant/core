@@ -302,10 +302,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Begin setup HomeKit for %s", name)
 
     # ip_address and advertise_ip are yaml only
-    ip_address = conf.get(
-        CONF_IP_ADDRESS, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+    ip_address = conf.get(CONF_IP_ADDRESS, [None])
+    advertise_ip = conf.get(
+        CONF_ADVERTISE_IP, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
     )
-    advertise_ip = conf.get(CONF_ADVERTISE_IP)
     # exclude_accessory_mode is only used for config flow
     # to indicate that the config entry was setup after
     # we started creating config entries for entities that

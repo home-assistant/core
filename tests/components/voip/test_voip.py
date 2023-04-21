@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import async_timeout
 
 from homeassistant.components import assist_pipeline, voip
+from homeassistant.components.voip.devices import VoIPDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -12,7 +13,10 @@ _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 _MEDIA_ID = "12345"
 
 
-async def test_pipeline(hass: HomeAssistant) -> None:
+async def test_pipeline(
+    hass: HomeAssistant,
+    voip_device: VoIPDevice,
+) -> None:
     """Test that pipeline function is called from RTP protocol."""
     assert await async_setup_component(hass, "voip", {})
 
@@ -31,7 +35,6 @@ async def test_pipeline(hass: HomeAssistant) -> None:
         async for _chunk in stt_stream:
             # Stream will end when VAD detects end of "speech"
             assert _chunk != bad_chunk
-            pass
 
         # Test empty data
         event_callback(
@@ -82,13 +85,15 @@ async def test_pipeline(hass: HomeAssistant) -> None:
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
             hass.config.language,
+            voip_device,
+            listening_tone_enabled=False,
         )
         rtp_protocol.transport = Mock()
 
         # Ensure audio queue is cleared before pipeline starts
         rtp_protocol._audio_queue.put_nowait(bad_chunk)
 
-        async def send_audio(*args, **kwargs):
+        def send_audio(*args, **kwargs):
             # Test finished successfully
             done.set()
 
@@ -108,7 +113,7 @@ async def test_pipeline(hass: HomeAssistant) -> None:
             await done.wait()
 
 
-async def test_pipeline_timeout(hass: HomeAssistant) -> None:
+async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) -> None:
     """Test timeout during pipeline run."""
     assert await async_setup_component(hass, "voip", {})
 
@@ -120,9 +125,16 @@ async def test_pipeline_timeout(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
+    ), patch(
+        "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._wait_for_speech",
+        return_value=True,
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass, hass.config.language, pipeline_timeout=0.001
+            hass,
+            hass.config.language,
+            voip_device,
+            pipeline_timeout=0.001,
+            listening_tone_enabled=False,
         )
         transport = Mock(spec=["close"])
         rtp_protocol.connection_made(transport)
@@ -138,7 +150,7 @@ async def test_pipeline_timeout(hass: HomeAssistant) -> None:
             await done.wait()
 
 
-async def test_stt_stream_timeout(hass: HomeAssistant) -> None:
+async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) -> None:
     """Test timeout in STT stream during pipeline run."""
     assert await async_setup_component(hass, "voip", {})
 
@@ -155,7 +167,11 @@ async def test_stt_stream_timeout(hass: HomeAssistant) -> None:
         new=async_pipeline_from_audio_stream,
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass, hass.config.language, audio_timeout=0.001
+            hass,
+            hass.config.language,
+            voip_device,
+            audio_timeout=0.001,
+            listening_tone_enabled=False,
         )
         transport = Mock(spec=["close"])
         rtp_protocol.connection_made(transport)

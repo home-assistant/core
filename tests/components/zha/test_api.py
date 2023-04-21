@@ -44,12 +44,17 @@ async def test_async_get_network_settings_inactive(
     with patch(
         "bellows.zigbee.application.ControllerApplication.__new__",
         return_value=zigpy_app_controller,
-    ):
+    ), patch.object(
+        zigpy_app_controller, "_load_db", wraps=zigpy_app_controller._load_db
+    ) as mock_load_db, patch.object(
+        zigpy_app_controller,
+        "start_network",
+        wraps=zigpy_app_controller.start_network,
+    ) as mock_start_network:
         settings = await api.async_get_network_settings(hass)
 
-    assert len(zigpy_app_controller._load_db.mock_calls) == 1
-    assert len(zigpy_app_controller.start_network.mock_calls) == 0
-
+    assert len(mock_load_db.mock_calls) == 1
+    assert len(mock_start_network.mock_calls) == 0
     assert settings.network_info.channel == 20
 
 
