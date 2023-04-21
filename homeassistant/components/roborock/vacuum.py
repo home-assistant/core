@@ -8,7 +8,6 @@ from roborock.code_mappings import (
     RoborockStateCode,
 )
 from roborock.typing import RoborockCommand
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
@@ -22,11 +21,10 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from .const import DOMAIN, SERVICE_VACUUM_SET_MOP_INTENSITY, SERVICE_VACUUM_SET_MOP_MODE
+from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 from .models import RoborockHassDeviceInfo
@@ -62,29 +60,6 @@ ATTR_STATUS = "status"
 ATTR_ERROR = "error"
 
 
-def add_services() -> None:
-    """Add the vacuum services to hass."""
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_VACUUM_SET_MOP_MODE,
-        cv.make_entity_service_schema(
-            {vol.Required("mop_mode"): vol.In(list(RoborockMopModeCode.values()))}
-        ),
-        RoborockVacuum.async_set_mop_mode.__name__,
-    )
-    platform.async_register_entity_service(
-        SERVICE_VACUUM_SET_MOP_INTENSITY,
-        cv.make_entity_service_schema(
-            {
-                vol.Required("mop_intensity"): vol.In(
-                    list(RoborockMopIntensityCode.values())
-                )
-            }
-        ),
-        RoborockVacuum.async_set_mop_intensity.__name__,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -98,7 +73,6 @@ async def async_setup_entry(
         RoborockVacuum(slugify(device_id), device_info, coordinator)
         for device_id, device_info in coordinator.devices_info.items()
     )
-    add_services()
 
 
 class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
