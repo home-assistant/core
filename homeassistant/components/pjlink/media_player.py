@@ -92,7 +92,7 @@ class PjLinkDevice(MediaPlayerEntity):
         self._attr_source = None
         self._attr_source_list = []
         self._attr_state = MediaPlayerState.OFF
-        self._attr_unique_id = f"{DOMAIN}-{host}-{name}"
+        self._attr_unique_id = host
 
         self._attr_device_class = MediaPlayerDeviceClass.TV
         self._attr_device_info = {
