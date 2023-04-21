@@ -1,5 +1,4 @@
 """Support for Insteon select entities."""
-from logging import getLogger
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,9 +11,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import SIGNAL_ADD_CONFIG_ENTITIES
 from .insteon_entity import InsteonConfigEntity
 from .utils import async_add_insteon_config_entities, async_add_insteon_devices_config
-
-_LOGGER = getLogger(__name__)
-DEBOUNCE_TIME = 10
 
 
 async def async_setup_entry(
