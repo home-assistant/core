@@ -20,10 +20,10 @@ from .const import (
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
     MANUFACTURER,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["cover"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     identifiers={(DOMAIN, hub.hub_mac)},
                     manufacturer=MANUFACTURER,
                     name=entry.title,
-                    model="Wi-Fi bridge",
+                    model="Wi-Fi Bridge:" + hub.hub_mac,
                     sw_version=hub.hub_version,
                 )
     for component in PLATFORMS:

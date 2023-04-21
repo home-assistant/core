@@ -6,7 +6,7 @@ DEFAULT_HUB_NAME = "Connector Hub"
 MANUFACTURER = "Connector Shades"
 DEFAULT_GATEWAY_NAME = "Connector Shades"
 
-PLATFORMS = [Platform.COVER, Platform.SENSOR]
+PLATFORMS = [Platform.COVER]
 
 CONF_WAIT_FOR_PUSH = "wait_for_push"
 CONF_INTERFACE = "interface"
@@ -26,7 +26,3 @@ ATTR_ABSOLUTE_POSITION = "absolute_position"
 ATTR_AVAILABLE = "available"
 
 SERVICE_SET_ABSOLUTE_POSITION = "set_absolute_position"
-
-UPDATE_INTERVAL = 600
-UPDATE_INTERVAL_FAST = 60
-UPDATE_INTERVAL_MOVING = 5

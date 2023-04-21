@@ -47,6 +47,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     connector = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     device_list = await connector.device_list()
+    if device_list is None:
+        return
     for hub in device_list.values():
         if hub.devicetype in WIFIMOTORTYPE:
             wifi_motor_type = POSITION_DEVICE_MAP.get(hub.type, CoverDeviceClass.SHADE)
