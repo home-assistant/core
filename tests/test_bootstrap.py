@@ -886,8 +886,10 @@ async def test_bootstrap_dependencies(
             dependencies=["file_upload", "http"],
         ),
     )
+
+    # We mock the MQTT integration and integrations that depend on it
+    # to make sure that core tests will not fail when non core components are changed
     mqtt_integration._import_platform = Mock()
-    # mqtt_integration.async_migrate = AsyncMock(return_value=False)
 
     integrations = {
         "mqtt": {
