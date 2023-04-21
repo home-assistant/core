@@ -140,6 +140,7 @@ class WemoDispatcher:
         """Initialize the WemoDispatcher."""
         self._config_entry = config_entry
         self._added_serial_numbers: set[str] = set()
+        self._failed_serial_numbers: set[str] = set()
         self._loaded_platforms: set[Platform] = set()
 
     async def async_add_unique_device(
@@ -152,7 +153,11 @@ class WemoDispatcher:
         try:
             coordinator = await async_register_device(hass, self._config_entry, wemo)
         except pywemo.PyWeMoException as err:
-            _LOGGER.error("Unable to add WeMo %s %s: %s", repr(wemo), wemo.host, err)
+            if wemo.serial_number not in self._failed_serial_numbers:
+                self._failed_serial_numbers.add(wemo.serial_number)
+                _LOGGER.error(
+                    "Unable to add WeMo %s %s: %s", repr(wemo), wemo.host, err
+                )
             return
 
         platforms = set(WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]))
