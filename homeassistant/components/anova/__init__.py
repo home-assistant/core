@@ -1,6 +1,8 @@
 """The Anova integration."""
 from __future__ import annotations
 
+import logging
+
 from anova_wifi import (
     AnovaApi,
     AnovaPrecisionCooker,
@@ -12,7 +14,6 @@ from anova_wifi import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -20,6 +21,8 @@ from .coordinator import AnovaCoordinator
 from .models import AnovaData
 
 PLATFORMS = [Platform.SENSOR]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -33,7 +36,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await api.authenticate()
         online_devices = await api.get_devices()
     except InvalidLogin as err:
-        raise ConfigEntryNotReady("Login was incorrect, please try again") from err
+        _LOGGER.error(
+            "Login was incorrect - please log back in through the config flow. %s", err
+        )
+        return False
     except NoDevicesFound:
         # get_devices raises an exception if no devices are online
         online_devices = []
