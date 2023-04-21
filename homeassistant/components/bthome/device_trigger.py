@@ -76,18 +76,16 @@ async def async_get_triggers(
 ) -> list[dict[str, Any]]:
     """Return a list of triggers for BTHome BLE devices."""
     device_registry = dr.async_get(hass)
-    if not (device := device_registry.async_get(device_id)):
-        return []
+    device = device_registry.async_get(device_id)
+    assert device is not None
     config_entries = [
         hass.config_entries.async_get_entry(entry_id)
         for entry_id in device.config_entries
     ]
-    if not (
-        bthome_config_entries := [
-            entry for entry in config_entries if entry and entry.domain == DOMAIN
-        ]
-    ):
-        return []
+    bthome_config_entries = [
+        entry for entry in config_entries if entry and entry.domain == DOMAIN
+    ]
+    assert bthome_config_entries is not None
     return [
         {
             # Required fields of TRIGGER_BASE_SCHEMA
