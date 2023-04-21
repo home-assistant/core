@@ -3,6 +3,8 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
+from aionotion.bridge.models import Bridge
+from aionotion.sensor.models import Listener, Sensor
 import pytest
 
 from homeassistant.components.notion import DOMAIN
@@ -28,10 +30,20 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 def client_fixture(data_bridge, data_listener, data_sensor):
     """Define a fixture for an aionotion client."""
     return Mock(
-        bridge=Mock(async_all=AsyncMock(return_value=data_bridge)),
+        bridge=Mock(
+            async_all=AsyncMock(
+                return_value=[Bridge.parse_obj(bridge) for bridge in data_bridge]
+            )
+        ),
         sensor=Mock(
-            async_all=AsyncMock(return_value=data_sensor),
-            async_listeners=AsyncMock(return_value=data_listener),
+            async_all=AsyncMock(
+                return_value=[Sensor.parse_obj(sensor) for sensor in data_sensor]
+            ),
+            async_listeners=AsyncMock(
+                return_value=[
+                    Listener.parse_obj(listener) for listener in data_listener
+                ]
+            ),
         ),
     )
 

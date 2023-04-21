@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import timedelta
 import logging
 import traceback
@@ -92,6 +92,13 @@ class NotionData:
 
     # Define a dict of sensors, indexed by sensor UUID (a string):
     sensors: dict[str, Sensor] = field(default_factory=dict)
+
+    def asdict(self) -> dict[str, Any]:
+        """Represent this dataclass (and its Pydantic contents) as a dict."""
+        return {
+            field.name: [obj.dict() for obj in getattr(self, field.name).values()]
+            for field in fields(self)
+        }
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
