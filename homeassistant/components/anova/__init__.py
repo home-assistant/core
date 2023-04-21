@@ -35,22 +35,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await api.authenticate()
-        assert api.jwt
     except InvalidLogin as err:
         _LOGGER.error(
             "Login was incorrect - please log back in through the config flow. %s", err
         )
         return False
+    assert api.jwt
+    api.existing_devices = [
+        AnovaPrecisionCooker(
+            aiohttp_client.async_get_clientsession(hass),
+            device[0],
+            device[1],
+            api.jwt,
+        )
+        for device in entry.data["devices"]
+    ]
     try:
-        api.existing_devices = [
-            AnovaPrecisionCooker(
-                aiohttp_client.async_get_clientsession(hass),
-                device[0],
-                device[1],
-                api.jwt,
-            )
-            for device in entry.data["devices"]
-        ]
         new_devices = await api.get_devices()
     except NoDevicesFound:
         # get_devices raises an exception if no devices are online
