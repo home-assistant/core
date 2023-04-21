@@ -13,6 +13,7 @@ from homeassistant.components.tts import (
     Provider,
     TextToSpeechEntity,
     TtsAudioType,
+    Voice,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -61,10 +62,13 @@ class BaseProvider:
         return SUPPORT_LANGUAGES
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return list of supported languages."""
         if language == "en-US":
-            return ["James Earl Jones", "Fran Drescher"]
+            return [
+                Voice("james_earl_jones", "James Earl Jones"),
+                Voice("fran_drescher", "Fran Drescher"),
+            ]
         return None
 
     @property
