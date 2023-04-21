@@ -893,15 +893,16 @@ def test_execute_stmt_lambda_element(
     now = dt_util.utcnow()
     tomorrow = now + timedelta(days=1)
     one_week_from_now = now + timedelta(days=7)
+    all_calls = 0
 
     class MockExecutor:
         def __init__(self, stmt):
             assert isinstance(stmt, StatementLambdaElement)
-            self.calls = 0
 
         def all(self):
-            self.calls += 1
-            if self.calls == 2:
+            nonlocal all_calls
+            all_calls += 1
+            if all_calls == 2:
                 return ["mock_row"]
             raise SQLAlchemyError
 
