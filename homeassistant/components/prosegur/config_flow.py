@@ -46,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     entry: ConfigEntry
     auth: Auth
     user_input: dict
-    contracts: list[Any]
+    contracts: list[dict[str, str]]
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
