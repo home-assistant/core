@@ -183,7 +183,7 @@ async def websocket_get_fabrics(
     node = await matter.matter_client.get_node(node_id=node_id)
     supported_fabrics: int = node.get_attribute_value(
         0,
-        Clusters.OperationalCredentials,
+        None,
         Clusters.OperationalCredentials.Attributes.SupportedFabrics,
     )
 
