@@ -87,7 +87,7 @@ async def test_number_config_updates(hass: HomeAssistant) -> None:
         assert (
             device.configuration[f"{TOGGLE_BUTTON}_b"].new_value == ToggleMode.ON_ONLY
         )
-        await sleep(2)
+        await sleep(1)
         assert device.async_write_config.call_count == 1
     finally:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
