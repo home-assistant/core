@@ -926,6 +926,16 @@ def test_execute_stmt_lambda_element(
         assert row.state == new_state.state
         assert row.metadata_id == metadata_id
 
+        # Time window >= 2 days, we should not get a ChunkedIteratorResult
+        # because orm_rows=False
+        rows = util.execute_stmt_lambda_element(
+            session, stmt, now, one_week_from_now, orm_rows=False
+        )
+        assert not isinstance(rows, ChunkedIteratorResult)
+        row = next(rows)
+        assert row.state == new_state.state
+        assert row.metadata_id == metadata_id
+
         # Time window < 2 days, we get a list
         rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
         assert isinstance(rows, list)
