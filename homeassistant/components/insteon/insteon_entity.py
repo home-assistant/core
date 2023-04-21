@@ -8,7 +8,7 @@ from pyinsteon.address import Address
 from pyinsteon.device_types.device_base import Device
 
 from homeassistant.const import EntityCategory
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -29,6 +29,25 @@ from .utils import print_aldb_to_log
 
 _LOGGER = logging.getLogger(__name__)
 WRITE_DELAY = 10
+WRITE_DEBOUNCER = "write_debouncer"
+
+
+def get_write_debouncer(hass: HomeAssistant, device: Device) -> Debouncer:
+    """Return a debouncer for the device async_write_config method."""
+    hass.data[DOMAIN] = hass.data.get(DOMAIN, {})
+    hass.data[DOMAIN][WRITE_DEBOUNCER] = hass.data[DOMAIN].get(WRITE_DEBOUNCER, {})
+    if debouncer := hass.data[DOMAIN][WRITE_DEBOUNCER].get(device.address.id):
+        return debouncer
+
+    debouncer = Debouncer(
+        hass=hass,
+        logger=_LOGGER,
+        cooldown=WRITE_DELAY,
+        immediate=False,
+        function=device.async_write_config,
+    )
+    hass.data[DOMAIN][WRITE_DEBOUNCER][device.address.id] = debouncer
+    return debouncer
 
 
 class InsteonEntityBase(Entity):
@@ -205,10 +224,4 @@ class InsteonConfigEntity(InsteonEntityBase):
     async def async_added_to_hass(self):
         """Handle the added to HASS event."""
         await super().async_added_to_hass()
-        self._debounce_writer = Debouncer(
-            hass=self.hass,
-            logger=_LOGGER,
-            cooldown=WRITE_DELAY,
-            immediate=False,
-            function=self._insteon_device.async_write_config,
-        )
+        self._debounce_writer = get_write_debouncer(self.hass, self._insteon_device)
