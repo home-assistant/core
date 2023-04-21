@@ -5,30 +5,50 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.tts import (
     CONF_LANG,
+    DOMAIN as TTS_DOMAIN,
     PLATFORM_SCHEMA,
     Provider,
+    TextToSpeechEntity,
     TtsAudioType,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform
-
-SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
-TEST_LANGUAGES = ["de", "en"]
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+)
 
 DEFAULT_LANG = "en_US"
+SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
+TEST_DOMAIN = "test"
+TEST_LANGUAGES = ["de", "en"]
 
 
-class MockProvider(Provider):
+async def get_media_source_url(hass: HomeAssistant, media_content_id: str) -> str:
+    """Get the media source url."""
+    if media_source.DOMAIN not in hass.config.components:
+        assert await async_setup_component(hass, media_source.DOMAIN, {})
+
+    resolved = await media_source.async_resolve_media(hass, media_content_id, None)
+    return resolved.url
+
+
+class BaseProvider:
     """Test speech API provider."""
 
     def __init__(self, lang: str) -> None:
         """Initialize test provider."""
         self._lang = lang
-        self.name = "Test"
 
     @property
     def default_language(self) -> str:
@@ -59,6 +79,24 @@ class MockProvider(Provider):
         return ("mp3", b"")
 
 
+class MockProvider(BaseProvider, Provider):
+    """Test speech API provider."""
+
+    def __init__(self, lang: str) -> None:
+        """Initialize test provider."""
+        super().__init__(lang)
+        self.name = "Test"
+
+
+class MockTTSEntity(BaseProvider, TextToSpeechEntity):
+    """Test speech API provider."""
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return "Test"
+
+
 class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
@@ -70,13 +108,9 @@ class MockTTS(MockPlatform):
         }
     )
 
-    def __init__(
-        self, provider: type[MockProvider] | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, provider: MockProvider, **kwargs: Any) -> None:
         """Initialize."""
         super().__init__(**kwargs)
-        if provider is None:
-            provider = MockProvider
         self._provider = provider
 
     async def async_get_engine(
@@ -86,4 +120,65 @@ class MockTTS(MockPlatform):
         discovery_info: DiscoveryInfoType | None = None,
     ) -> Provider | None:
         """Set up a mock speech component."""
-        return self._provider(config.get(CONF_LANG, DEFAULT_LANG))
+        return self._provider
+
+
+async def mock_setup(
+    hass: HomeAssistant,
+    mock_provider: MockProvider,
+) -> None:
+    """Set up a test provider."""
+    mock_integration(hass, MockModule(domain=TEST_DOMAIN))
+    mock_platform(hass, f"{TEST_DOMAIN}.{TTS_DOMAIN}", MockTTS(mock_provider))
+
+    await async_setup_component(
+        hass, TTS_DOMAIN, {TTS_DOMAIN: {"platform": TEST_DOMAIN}}
+    )
+    await hass.async_block_till_done()
+
+
+async def mock_config_entry_setup(
+    hass: HomeAssistant, tts_entity: MockTTSEntity
+) -> MockConfigEntry:
+    """Set up a test tts platform via config entry."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setup(config_entry, TTS_DOMAIN)
+        return True
+
+    async def async_unload_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Unload up test config entry."""
+        await hass.config_entries.async_forward_entry_unload(config_entry, TTS_DOMAIN)
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+            async_unload_entry=async_unload_entry_init,
+        ),
+    )
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test tts platform via config entry."""
+        async_add_entities([tts_entity])
+
+    loaded_platform = MockPlatform(async_setup_entry=async_setup_entry_platform)
+    mock_platform(hass, f"{TEST_DOMAIN}.{TTS_DOMAIN}", loaded_platform)
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return config_entry
