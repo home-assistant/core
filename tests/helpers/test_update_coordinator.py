@@ -153,6 +153,39 @@ async def test_shutdown(
     assert updates == [2]
 
 
+async def test_shutdown_on_entry_unload(
+    hass: HomeAssistant,
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
+    """Test shutdown is requested on entry unload."""
+    entry = MockConfigEntry()
+    config_entries.current_entry.set(entry)
+
+    calls = 0
+
+    async def _refresh() -> int:
+        nonlocal calls
+        calls += 1
+        return calls
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        name="test",
+        update_method=_refresh,
+        update_interval=DEFAULT_UPDATE_INTERVAL,
+    )
+
+    crd.async_add_listener(lambda: None)
+    assert crd._unsub_refresh is not None
+    assert not crd._shutdown_requested
+
+    await entry._async_process_on_unload(hass)
+
+    assert crd._shutdown_requested
+    assert crd._unsub_refresh is None
+
+
 async def test_update_context(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:

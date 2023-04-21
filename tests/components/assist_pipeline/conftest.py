@@ -1,4 +1,6 @@
 """Test fixtures for voice assistant."""
+from __future__ import annotations
+
 from collections.abc import AsyncIterable, Generator
 from typing import Any
 from unittest.mock import AsyncMock
@@ -23,6 +25,7 @@ from tests.common import (
     mock_platform,
 )
 from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
+    init_cache_dir_side_effect,
     mock_get_cache_files,
     mock_init_cache_dir,
 )
@@ -33,11 +36,10 @@ _TRANSCRIPT = "test transcript"
 class BaseProvider:
     """Mock STT provider."""
 
-    def __init__(self, hass: HomeAssistant, text: str) -> None:
+    def __init__(self, text: str) -> None:
         """Init test provider."""
-        self.hass = hass
         self.text = text
-        self.received = []
+        self.received: list[bytes] = []
 
     @property
     def supported_languages(self) -> list[str]:
@@ -115,7 +117,7 @@ class MockTTSProvider(tts.Provider):
         return ("mp3", b"")
 
 
-class MockTTS:
+class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
     PLATFORM_SCHEMA = tts.PLATFORM_SCHEMA
@@ -131,15 +133,15 @@ class MockTTS:
 
 
 @pytest.fixture
-async def mock_stt_provider(hass) -> MockSttProvider:
+async def mock_stt_provider() -> MockSttProvider:
     """Mock STT provider."""
-    return MockSttProvider(hass, _TRANSCRIPT)
+    return MockSttProvider(_TRANSCRIPT)
 
 
 @pytest.fixture
-def mock_stt_provider_entity(hass) -> MockSttProviderEntity:
+def mock_stt_provider_entity() -> MockSttProviderEntity:
     """Test provider entity fixture."""
-    return MockSttProviderEntity(hass, _TRANSCRIPT)
+    return MockSttProviderEntity(_TRANSCRIPT)
 
 
 class MockSttPlatform(MockPlatform):
@@ -170,8 +172,9 @@ async def init_components(
     mock_stt_provider: MockSttProvider,
     mock_stt_provider_entity: MockSttProviderEntity,
     config_flow_fixture,
+    init_cache_dir_side_effect,  # noqa: F811
     mock_get_cache_files,  # noqa: F811
-    mock_init_cache_dir,  # noqa: F811,
+    mock_init_cache_dir,  # noqa: F811
 ):
     """Initialize relevant components with empty configs."""
 
