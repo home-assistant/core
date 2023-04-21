@@ -2129,7 +2129,7 @@ python_awair==0.2.4
 python_opendata_transport==0.3.0
 
 # homeassistant.components.egardia
-pythonegardia==1.0.40
+pythonegardia==1.0.52
 
 # homeassistant.components.tile
 pytile==2023.04.0
