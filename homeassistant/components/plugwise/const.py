@@ -21,7 +21,7 @@ SMILE: Final = "smile"
 STRETCH: Final = "stretch"
 STRETCH_USERNAME: Final = "stretch"
 
-PLATFORMS_GATEWAY: Final[list[str]] = [
+PLATFORMS: Final[list[str]] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.NUMBER,

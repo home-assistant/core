@@ -1582,10 +1582,48 @@ async def test_get_agent_list(
     """Test getting agent info."""
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 5, "type": "conversation/agent/list"})
-
+    await client.send_json_auto_id({"type": "conversation/agent/list"})
     msg = await client.receive_json()
-    assert msg["id"] == 5
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "smurfish"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "en"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "en-UK"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "de"}
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/list", "language": "de", "country": "ch"}
+    )
+    msg = await client.receive_json()
     assert msg["type"] == "result"
     assert msg["success"]
     assert msg["result"] == snapshot
@@ -1597,8 +1635,45 @@ async def test_get_agent_info(
     """Test get agent info."""
     agent_info = conversation.async_get_agent_info(hass)
     # Test it's the default
-    assert agent_info["id"] == mock_agent.agent_id
+    assert agent_info.id == mock_agent.agent_id
     assert agent_info == snapshot
     assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
     assert conversation.async_get_agent_info(hass, mock_agent.agent_id) == snapshot
     assert conversation.async_get_agent_info(hass, "not exist") is None
+
+
+async def test_ws_get_agent_info(
+    hass: HomeAssistant,
+    init_components,
+    mock_agent,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test get agent info."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "conversation/agent/info"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/info", "agent_id": "homeassistant"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/info", "agent_id": mock_agent.agent_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/info", "agent_id": "not_exist"}
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == snapshot
