@@ -188,6 +188,15 @@ class SmartThingsAcceleration(ClusterHandler):
         AttrReportConfig(attr="z_axis", config=REPORT_CONFIG_ASAP),
     )
 
+    @classmethod
+    def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
+        """Filter the cluster match for specific devices."""
+        return cluster.endpoint.device.manufacturer in (
+            "CentraLite",
+            "Samjin",
+            "SmartThings",
+        )
+
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
