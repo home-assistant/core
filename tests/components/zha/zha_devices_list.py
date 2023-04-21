@@ -4902,7 +4902,7 @@ DEVICES = [
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off", "level"],
                 DEV_SIG_ENT_MAP_CLASS: "MinTransitionLight",
-                DEV_SIG_ENT_MAP_ID: "light.sengled_e11_g13_mintransitionlight",
+                DEV_SIG_ENT_MAP_ID: "light.sengled_e11_g13_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4950,7 +4950,7 @@ DEVICES = [
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off", "level"],
                 DEV_SIG_ENT_MAP_CLASS: "MinTransitionLight",
-                DEV_SIG_ENT_MAP_ID: "light.sengled_e12_n14_mintransitionlight",
+                DEV_SIG_ENT_MAP_ID: "light.sengled_e12_n14_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],
@@ -4998,7 +4998,7 @@ DEVICES = [
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "MinTransitionLight",
-                DEV_SIG_ENT_MAP_ID: "light.sengled_z01_a19nae26_mintransitionlight",
+                DEV_SIG_ENT_MAP_ID: "light.sengled_z01_a19nae26_light",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["identify"],

@@ -65,9 +65,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     @property
     def name(self) -> str:
         """Return Entity's default name."""
-        if hasattr(self, "_attr_name") and self._attr_name is not None:
-            return self._attr_name
-        return self._name
+        return getattr(self, "_attr_name", self._name)
 
     @property
     def unique_id(self) -> str:
