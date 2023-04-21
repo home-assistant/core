@@ -1,7 +1,7 @@
 """Provides device triggers for BTHome BLE."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any
 
 import voluptuous as vol
 
@@ -22,14 +22,13 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     BTHOME_BLE_EVENT,
     CONF_DISCOVERED_EVENT_CLASSES,
+    CONF_SUBTYPE,
     DOMAIN,
     EVENT_CLASS,
     EVENT_CLASS_BUTTON,
     EVENT_CLASS_DIMMER,
     EVENT_TYPE,
 )
-
-CONF_SUBTYPE: Final = "subtype"
 
 TRIGGERS_BY_EVENT_CLASS = {
     EVENT_CLASS_BUTTON: {

@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.bluetooth.const import DOMAIN as BLUETOOTH_DOMAIN
-from homeassistant.components.bthome.const import CONF_EVENT_PROPERTIES, DOMAIN
+from homeassistant.components.bthome.const import CONF_SUBTYPE, DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
@@ -113,8 +113,8 @@ async def test_get_triggers_button(hass: HomeAssistant) -> None:
         CONF_PLATFORM: "device",
         CONF_DOMAIN: DOMAIN,
         CONF_DEVICE_ID: device.id,
-        CONF_TYPE: "long_press",
-        CONF_EVENT_PROPERTIES: None,
+        CONF_TYPE: "button",
+        CONF_SUBTYPE: "long_press",
         "metadata": {},
     }
     triggers = await async_get_device_automations(
@@ -149,8 +149,8 @@ async def test_get_triggers_dimmer(hass: HomeAssistant) -> None:
         CONF_PLATFORM: "device",
         CONF_DOMAIN: DOMAIN,
         CONF_DEVICE_ID: device.id,
-        CONF_TYPE: "rotate_left",
-        CONF_EVENT_PROPERTIES: {"steps": 3},
+        CONF_TYPE: "dimmer",
+        CONF_SUBTYPE: "rotate_left",
         "metadata": {},
     }
     triggers = await async_get_device_automations(

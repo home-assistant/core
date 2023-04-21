@@ -79,6 +79,7 @@ def process_service_info(
                         address=address,
                         event_class=event_class,  # ie 'button'
                         event_type=event_type,  # ie 'press'
+                        event_properties=event.event_properties,
                     )
                 ),
             )
