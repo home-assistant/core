@@ -149,7 +149,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await storage_collection.async_load()
     hass.data[DOMAIN][DATA_STORAGE] = storage_collection
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
