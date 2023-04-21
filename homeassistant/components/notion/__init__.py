@@ -55,8 +55,8 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-# Define a map of old-API sensor types to new-API listener types:
-OLD_TYPE_TO_LISTENER_MAP: dict[str, ListenerKind] = {
+# Define a map of old-API task types to new-API listener types:
+TASK_TYPE_TO_LISTENER_MAP: dict[str, ListenerKind] = {
     SENSOR_BATTERY: ListenerKind.BATTERY,
     SENSOR_DOOR: ListenerKind.DOOR,
     SENSOR_GARAGE_DOOR: ListenerKind.GARAGE_DOOR,
@@ -194,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             listener
             for listener in coordinator.data.listeners.values()
             if listener.sensor_id == sensor.uuid
-            and listener.listener_kind == OLD_TYPE_TO_LISTENER_MAP[task_type]
+            and listener.listener_kind == TASK_TYPE_TO_LISTENER_MAP[task_type]
         )
 
         return {"new_unique_id": listener.id}
