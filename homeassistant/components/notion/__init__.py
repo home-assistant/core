@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 import traceback
-from typing import Any
 
 from aionotion import async_get_client
+from aionotion.bridge.models import Bridge
 from aionotion.errors import InvalidCredentialsError, NotionError
+from aionotion.sensor.models import Listener, Sensor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -38,6 +40,20 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
+@dataclass
+class NotionData:
+    """Define a manager class for Notion data."""
+
+    # Define a dict of bridges, indexed by bridge ID (an integer):
+    bridges: dict[int, Bridge] = field(default_factory=dict)
+
+    # Define a dict of listeners, indexed by listener UUID (a string):
+    listeners: dict[str, Listener] = field(default_factory=dict)
+
+    # Define a dict of sensors, indexed by sensor UUID (a string):
+    sensors: dict[str, Sensor] = field(default_factory=dict)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Notion as a config entry."""
     if not entry.unique_id:
@@ -56,13 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except NotionError as err:
         raise ConfigEntryNotReady("Config entry failed to load") from err
 
-    async def async_update() -> dict[str, dict[str, Any]]:
+    async def async_update() -> NotionData:
         """Get the latest data from the Notion API."""
-        data: dict[str, dict[str, Any]] = {
-            "bridges": {},
-            "listeners": {},
-            "sensors": {},
-        }
+        data = NotionData()
         tasks = {
             "bridges": client.bridge.async_all(),
             "listeners": client.sensor.async_listeners(),
@@ -87,10 +99,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ) from result
 
             for item in result:
-                if attr == "bridges" and item["id"] not in data["bridges"]:
+                if attr == "bridges":
                     # If a new bridge is discovered, register it:
-                    _async_register_new_bridge(hass, item, entry)
-                data[attr][item["id"]] = item
+                    if item.id not in data.bridges:
+                        _async_register_new_bridge(hass, item, entry)
+                    data.bridges[item.id] = item
+                elif attr == "listeners":
+                    data.listeners[item.id] = item
+                else:
+                    data.sensors[item.uuid] = item
 
         return data
 
@@ -122,22 +139,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @callback
 def _async_register_new_bridge(
-    hass: HomeAssistant, bridge: dict, entry: ConfigEntry
+    hass: HomeAssistant, bridge: Bridge, entry: ConfigEntry
 ) -> None:
     """Register a new bridge."""
-    if name := bridge["name"]:
+    if name := bridge.name:
         bridge_name = name.capitalize()
     else:
-        bridge_name = bridge["id"]
+        bridge_name = str(bridge.id)
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, bridge["hardware_id"])},
+        identifiers={(DOMAIN, bridge.hardware_id)},
         manufacturer="Silicon Labs",
-        model=bridge["hardware_revision"],
+        model=str(bridge.hardware_revision),
         name=bridge_name,
-        sw_version=bridge["firmware_version"]["wifi"],
+        sw_version=bridge.firmware_version.wifi,
     )
 
 
@@ -158,21 +175,19 @@ class NotionEntity(CoordinatorEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        bridge = self.coordinator.data["bridges"].get(bridge_id, {})
-        sensor = self.coordinator.data["sensors"][sensor_id]
+        bridge = self.coordinator.data.bridges.get(bridge_id, {})
+        sensor = self.coordinator.data.sensors[sensor_id]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, sensor["hardware_id"])},
+            identifiers={(DOMAIN, sensor.hardware_id)},
             manufacturer="Silicon Labs",
-            model=sensor["hardware_revision"],
-            name=str(sensor["name"]).capitalize(),
-            sw_version=sensor["firmware_version"],
-            via_device=(DOMAIN, bridge.get("hardware_id")),
+            model=sensor.hardware_revision,
+            name=str(sensor.name).capitalize(),
+            sw_version=sensor.firmware_version,
+            via_device=(DOMAIN, bridge.hardware_id),
         )
 
         self._attr_extra_state_attributes = {}
-        self._attr_unique_id = (
-            f'{sensor_id}_{coordinator.data["listeners"][listener_id]["task_type"]}'
-        )
+        self._attr_unique_id = f"{sensor_id}_{listener_id}"
         self._bridge_id = bridge_id
         self._listener_id = listener_id
         self._sensor_id = sensor_id
@@ -184,7 +199,7 @@ class NotionEntity(CoordinatorEntity):
         """Return True if entity is available."""
         return (
             self.coordinator.last_update_success
-            and self._task_id in self.coordinator.data["tasks"]
+            and self._listener_id in self.coordinator.data.listeners
         )
 
     @callback
@@ -193,27 +208,23 @@ class NotionEntity(CoordinatorEntity):
 
         Sensors can move to other bridges based on signal strength, etc.
         """
-        sensor = self.coordinator.data["sensors"][self._sensor_id]
+        sensor = self.coordinator.data.sensors[self._sensor_id]
 
         # If the sensor's bridge ID is the same as what we had before or if it points
         # to a bridge that doesn't exist (which can happen due to a Notion API bug),
         # return immediately:
         if (
-            self._bridge_id == sensor["bridge"]["id"]
-            or sensor["bridge"]["id"] not in self.coordinator.data["bridges"]
+            self._bridge_id == sensor.bridge.id
+            or sensor.bridge.id not in self.coordinator.data.bridges
         ):
             return
 
-        self._bridge_id = sensor["bridge"]["id"]
+        self._bridge_id = sensor.bridge.id
 
         device_registry = dr.async_get(self.hass)
-        this_device = device_registry.async_get_device(
-            {(DOMAIN, sensor["hardware_id"])}
-        )
-        bridge = self.coordinator.data["bridges"][self._bridge_id]
-        bridge_device = device_registry.async_get_device(
-            {(DOMAIN, bridge["hardware_id"])}
-        )
+        this_device = device_registry.async_get_device({(DOMAIN, sensor.hardware_id)})
+        bridge = self.coordinator.data.bridges[self._bridge_id]
+        bridge_device = device_registry.async_get_device({(DOMAIN, bridge.hardware_id)})
 
         if not bridge_device or not this_device:
             return
@@ -230,7 +241,7 @@ class NotionEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
-        if self._task_id in self.coordinator.data["tasks"]:
+        if self._listener_id in self.coordinator.data.listeners:
             self._async_update_bridge_id()
             self._async_update_from_latest_data()
 
