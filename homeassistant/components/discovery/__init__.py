@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_discover, async_load_platform
@@ -219,7 +219,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     @callback
-    def schedule_first(event):
+    def schedule_first(event: Event) -> None:
         """Schedule the first discovery when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, scan_devices_job, dt_util.utcnow())
 
