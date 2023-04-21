@@ -5,6 +5,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
+from chip.clusters import Objects as Clusters
 from matter_server.common.errors import MatterError
 import voluptuous as vol
 
@@ -26,8 +27,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_commission_on_network)
     websocket_api.async_register_command(hass, websocket_set_thread_dataset)
     websocket_api.async_register_command(hass, websocket_set_wifi_credentials)
-    websocket_api.async_register_command(hass, websocket_get_matter_fabrics)
-    websocket_api.async_register_command(hass, websocket_remove_matter_fabric)
+    websocket_api.async_register_command(hass, websocket_get_fabrics)
+    websocket_api.async_register_command(hass, websocket_remove_fabric)
 
 
 def async_get_matter_adapter(func: Callable) -> Callable:
@@ -157,14 +158,14 @@ async def websocket_set_wifi_credentials(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/get_matter_fabrics",
+        vol.Required(TYPE): "matter/get_fabrics",
         vol.Required("device_id"): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_matter_adapter
-async def websocket_get_matter_fabrics(
+async def websocket_get_fabrics(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
@@ -178,13 +179,28 @@ async def websocket_get_matter_fabrics(
 
     fabrics = await matter.matter_client.get_matter_fabrics(node_id=node_id)
 
-    connection.send_result(msg[ID], {"fabrics": fabrics})
+    fabric_count: int = len(fabrics)
+    node = await matter.matter_client.get_node(node_id=node_id)
+    supported_fabrics: int = node.get_attribute_value(
+        0,
+        Clusters.OperationalCredentials,
+        Clusters.OperationalCredentials.Attributes.SupportedFabrics,
+    )
+
+    connection.send_result(
+        msg[ID],
+        {
+            "fabrics": fabrics,
+            "fabric_count": fabric_count,
+            "fabric_limit": supported_fabrics,
+        },
+    )
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "matter/remove_matter_fabric",
+        vol.Required(TYPE): "matter/remove_fabric",
         vol.Required("device_id"): str,
         vol.Required("fabric_index"): str,
     }
@@ -192,7 +208,7 @@ async def websocket_get_matter_fabrics(
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_matter_adapter
-async def websocket_remove_matter_fabric(
+async def websocket_remove_fabric(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
