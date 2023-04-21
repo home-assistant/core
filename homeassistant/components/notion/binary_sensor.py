@@ -83,6 +83,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         key=SENSOR_MISSING,
         name="Missing",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         listener_kind=ListenerKind.CONNECTED,
         on_state="not_missing",
     ),
