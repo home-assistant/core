@@ -82,10 +82,11 @@ async def async_get_triggers(
         hass.config_entries.async_get_entry(entry_id)
         for entry_id in device.config_entries
     ]
-    bthome_config_entries = [
-        entry for entry in config_entries if entry and entry.domain == DOMAIN
-    ]
-    assert bthome_config_entries is not None
+    bthome_config_entry = next(
+        iter(entry for entry in config_entries if entry and entry.domain == DOMAIN),
+        None,
+    )
+    assert bthome_config_entry is not None
     return [
         {
             # Required fields of TRIGGER_BASE_SCHEMA
@@ -96,7 +97,7 @@ async def async_get_triggers(
             CONF_TYPE: event_class,
             CONF_SUBTYPE: event_type,
         }
-        for event_class in bthome_config_entries[0].data.get(
+        for event_class in bthome_config_entry.data.get(
             CONF_DISCOVERED_EVENT_CLASSES, []
         )
         for event_type in TRIGGERS_BY_EVENT_CLASS.get(event_class, [])
