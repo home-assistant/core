@@ -122,7 +122,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_flow_reauth(hass: HomeAssistant):
+async def test_flow_reauth(hass: HomeAssistant) -> None:
     """Test reauth step."""
     with patch(
         "bluecurrent_api.Client.validate_api_token",

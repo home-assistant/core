@@ -18,8 +18,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BlueCurrentEntity, Connector
+from . import Connector
 from .const import DOMAIN
+from .entity import BlueCurrentEntity
 
 TIMESTAMP_KEYS = ("start_datetime", "stop_datetime", "offline_since")
 
@@ -284,7 +285,6 @@ class ChargePointSensor(BlueCurrentEntity, SensorEntity):
         new_value = self.connector.charge_points[self.evse_id].get(self.key)
 
         if new_value is not None:
-
             if self.key in TIMESTAMP_KEYS and not (
                 self._attr_native_value is None or self._attr_native_value < new_value
             ):

@@ -38,7 +38,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.client = Client()
         errors = {}
         if user_input is not None:
-
             api_token = user_input[CONF_API_TOKEN]
             self._async_abort_entries_match({CONF_API_TOKEN: api_token})
 
@@ -58,7 +57,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-
                 self.entry = await self.async_set_unique_id(email)
                 self.input = {CONF_API_TOKEN: api_token}
 

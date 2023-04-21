@@ -22,9 +22,9 @@ from . import init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_load_unload_entry(hass: HomeAssistant):
+async def test_load_unload_entry(hass: HomeAssistant) -> None:
     """Test load and unload entry."""
-    config_entry = await init_integration(hass, "sensor", {}, {})
+    config_entry = await init_integration(hass, "sensor", {})
     assert config_entry.state == ConfigEntryState.LOADED
     assert isinstance(hass.data[DOMAIN][config_entry.entry_id], Connector)
 
@@ -34,7 +34,7 @@ async def test_load_unload_entry(hass: HomeAssistant):
     assert hass.data[DOMAIN] == {}
 
 
-async def test_config_not_ready(hass: HomeAssistant):
+async def test_config_not_ready(hass: HomeAssistant) -> None:
     """Tests if ConfigEntryNotReady is raised when connect raises a WebsocketException."""
     with patch(
         "bluecurrent_api.Client.connect",
@@ -51,7 +51,7 @@ async def test_config_not_ready(hass: HomeAssistant):
         await async_setup_entry(hass, config_entry)
 
 
-async def test_set_entities_unavalible(hass: HomeAssistant):
+async def test_set_entities_unavalible(hass: HomeAssistant) -> None:
     """Tests set_entities_unavailable."""
 
     data = {
@@ -89,15 +89,14 @@ async def test_set_entities_unavalible(hass: HomeAssistant):
         assert state.state == "unavailable"
 
 
-async def test_on_data(hass: HomeAssistant):
+async def test_on_data(hass: HomeAssistant) -> None:
     """Test on_data."""
 
-    await init_integration(hass, "sensor", {}, {})
+    await init_integration(hass, "sensor", {})
 
     with patch(
         "homeassistant.components.blue_current.async_dispatcher_send"
     ) as test_async_dispatcher_send:
-
         connector: Connector = hass.data[DOMAIN]["uuid"]
 
         # test CHARGE_POINTS
@@ -170,13 +169,12 @@ async def test_on_data(hass: HomeAssistant):
         test_async_dispatcher_send.assert_called_with(hass, "blue_current_grid_update")
 
 
-async def test_start_loop(hass: HomeAssistant):
+async def test_start_loop(hass: HomeAssistant) -> None:
     """Tests start_loop."""
 
     with patch(
         "homeassistant.components.blue_current.async_call_later"
     ) as test_async_call_later:
-
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             entry_id="uuid",
@@ -200,7 +198,7 @@ async def test_start_loop(hass: HomeAssistant):
             test_async_call_later.assert_called_with(hass, 1, connector.reconnect)
 
 
-async def test_reconnect(hass: HomeAssistant):
+async def test_reconnect(hass: HomeAssistant) -> None:
     """Tests reconnect."""
 
     with patch("bluecurrent_api.Client.connect"), patch(
@@ -210,7 +208,6 @@ async def test_reconnect(hass: HomeAssistant):
     ), patch(
         "homeassistant.components.blue_current.async_call_later"
     ) as test_async_call_later:
-
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             entry_id="uuid",

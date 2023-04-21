@@ -1,5 +1,6 @@
 """The tests for Blue current sensors."""
 from datetime import datetime
+from typing import Any
 
 from homeassistant.components.blue_current import Connector
 from homeassistant.core import HomeAssistant
@@ -10,12 +11,6 @@ from . import init_integration
 
 TIMESTAMP_KEYS = ("start_datetime", "stop_datetime", "offline_since")
 
-data = {
-    "101": {
-        "model_type": "hidden",
-        "evse_id": "101",
-    }
-}
 
 charge_point = {
     "actual_v1": 14,
@@ -38,6 +33,14 @@ charge_point = {
     "max_offline": 7,
     "smartcharging_max_usage": 6,
     "current_left": 10,
+}
+
+data: dict[str, Any] = {
+    "101": {
+        "model_type": "hidden",
+        "evse_id": "101",
+        **charge_point,
+    }
 }
 
 
@@ -81,9 +84,9 @@ grid_entity_ids = {
 }
 
 
-async def test_sensors(hass: HomeAssistant):
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test the underlying sensors."""
-    await init_integration(hass, "sensor", data, charge_point, grid)
+    await init_integration(hass, "sensor", data, grid)
 
     entity_registry = er.async_get(hass)
     for entity_id, key in charge_point_entity_ids.items():
@@ -118,9 +121,9 @@ async def test_sensors(hass: HomeAssistant):
     assert len(charge_point.keys()) + len(grid.keys()) == len(sensors)
 
 
-async def test_sensor_update(hass: HomeAssistant):
+async def test_sensor_update(hass: HomeAssistant) -> None:
     """Test if the sensors get updated when there is new data."""
-    await init_integration(hass, "sensor", data, charge_point, grid)
+    await init_integration(hass, "sensor", data, grid)
     key = "avg_voltage"
     entity_id = "average_voltage"
     timestamp_key = "start_datetime"

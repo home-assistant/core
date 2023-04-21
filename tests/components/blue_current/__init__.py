@@ -8,17 +8,15 @@ from bluecurrent_api import Client
 from homeassistant.components.blue_current import DOMAIN, Connector
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry
 
 
 async def init_integration(
-    hass: HomeAssistant, platform, data: dict, charge_point: dict, grid=None
+    hass: HomeAssistant, platform, data: dict, grid=None
 ) -> MockConfigEntry:
     """Set up the Blue Current integration in Home Assistant."""
-
-    if charge_point:
-        data["101"].update(charge_point)
 
     if grid is None:
         grid = {}
@@ -39,7 +37,6 @@ async def init_integration(
     ), patch.object(Connector, "__init__", init), patch(
         "homeassistant.components.blue_current.Client", autospec=True
     ):
-
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             entry_id="uuid",
@@ -50,5 +47,5 @@ async def init_integration(
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-
+        async_dispatcher_send(hass, "blue_current_value_update_101")
     return config_entry

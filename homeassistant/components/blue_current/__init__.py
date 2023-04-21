@@ -1,6 +1,7 @@
 """The Blue Current integration."""
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import datetime
 from typing import Any
 
@@ -13,27 +14,22 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_TOKEN, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import CONF_API_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN, LOGGER, PLATFORMS
+from .const import DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
 
+PLATFORMS = [Platform.SENSOR]
 CHARGE_POINTS = "CHARGE_POINTS"
 DATA = "data"
 SMALL_DELAY = 1
 LARGE_DELAY = 20
 
-EVSE_ID = "evse_id"
-GRID_STATUS = "GRID_STATUS"
-MODEL_TYPE = "model_type"
+GRID = "GRID"
 OBJECT = "object"
 VALUE_TYPES = ["CH_STATUS"]
 
@@ -80,8 +76,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 def set_entities_unavalible(hass: HomeAssistant, config_id: str) -> None:
     """Set all Blue Current entities to unavailable."""
-    registry = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_config_entry(registry, config_id)
+    registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(registry, config_id)
 
     for entry in entries:
         entry.write_unavailable_state(hass)
@@ -130,7 +126,7 @@ class Connector:
             self.update_charge_point(evse_id, value_data)
 
         # gets grid key / values
-        elif object_name == GRID_STATUS:
+        elif GRID in object_name:
             data: dict = message[DATA]
             self.grid = data
             self.dispatch_grid_update_signal()
@@ -186,45 +182,5 @@ class Connector:
 
     async def disconnect(self) -> None:
         """Disconnect from the websocket."""
-        try:
+        with suppress(WebsocketException):
             await self.client.disconnect()
-        except WebsocketException:
-            pass
-
-
-class BlueCurrentEntity(Entity):
-    """Define a base charge point entity."""
-
-    def __init__(self, connector: Connector, evse_id: str) -> None:
-        """Initialize the entity."""
-        self.connector: Connector = connector
-
-        self.evse_id = evse_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, evse_id)},
-            name=evse_id,
-            manufacturer="Blue Current",
-            model=connector.charge_points[evse_id][MODEL_TYPE],
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, f"{DOMAIN}_value_update_{self.evse_id}", update
-            )
-        )
-
-        self.update_from_latest_data()
-
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
-        raise NotImplementedError
