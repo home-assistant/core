@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import Data
 
+from homeassistant.components.homewizard.const import ATTR_LAST_UPDATE
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -617,7 +618,7 @@ async def test_sensor_entity_total_gas(
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.CUBIC_METERS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
-    assert state.attributes.get("last_update") == datetime(2021, 3, 14, 11, 22, 33)
+    assert state.attributes.get(ATTR_LAST_UPDATE) == datetime(2021, 3, 14, 11, 22, 33)
     assert ATTR_ICON not in state.attributes
 
 
@@ -1481,7 +1482,7 @@ async def test_sensor_entity_monthly_power_peak(
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert state.attributes.get("last_update") == datetime(2023, 1, 1, 8, 0, 10)
+    assert state.attributes.get(ATTR_LAST_UPDATE) == datetime(2023, 1, 1, 8, 0, 10)
     assert ATTR_ICON not in state.attributes
 
 

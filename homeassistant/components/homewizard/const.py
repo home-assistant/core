@@ -20,6 +20,8 @@ CONF_PRODUCT_NAME = "product_name"
 CONF_PRODUCT_TYPE = "product_type"
 CONF_SERIAL = "serial"
 
+ATTR_LAST_UPDATE = "last_update"
+
 UPDATE_INTERVAL = timedelta(seconds=5)
 
 

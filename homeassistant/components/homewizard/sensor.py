@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from .const import ATTR_LAST_UPDATE, DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 
@@ -345,7 +345,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda data: data.monthly_power_peak_w,
-        attr_fn=lambda data: {"last_update": data.monthly_power_peak_timestamp},
+        attr_fn=lambda data: {ATTR_LAST_UPDATE: data.monthly_power_peak_timestamp},
     ),
     HomeWizardSensorEntityDescription(
         key="total_gas_m3",
@@ -354,7 +354,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.total_gas_m3,
-        attr_fn=lambda data: {"last_update": data.gas_timestamp},
+        attr_fn=lambda data: {ATTR_LAST_UPDATE: data.gas_timestamp},
     ),
     HomeWizardSensorEntityDescription(
         key="gas_unique_id",
