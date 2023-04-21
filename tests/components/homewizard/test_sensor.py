@@ -1,5 +1,5 @@
 """Test the update coordinator for HomeWizard."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 from homewizard_energy.errors import DisabledError, RequestError
@@ -586,7 +586,9 @@ async def test_sensor_entity_total_gas(
     """Test entity loads total gas."""
 
     api = get_mock_device()
-    api.data = AsyncMock(return_value=Data.from_dict({"total_gas_m3": 50}))
+    api.data = AsyncMock(
+        return_value=Data.from_dict({"total_gas_m3": 50, "gas_timestamp": 210314112233})
+    )
 
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
@@ -615,6 +617,7 @@ async def test_sensor_entity_total_gas(
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.CUBIC_METERS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+    assert state.attributes.get("last_update") == datetime(2021, 3, 14, 11, 22, 33)
     assert ATTR_ICON not in state.attributes
 
 
@@ -1437,7 +1440,14 @@ async def test_sensor_entity_monthly_power_peak(
     """Test entity loads monthly power peak."""
 
     api = get_mock_device()
-    api.data = AsyncMock(return_value=Data.from_dict({"montly_power_peak_w": 1234.456}))
+    api.data = AsyncMock(
+        return_value=Data.from_dict(
+            {
+                "montly_power_peak_w": 1234.456,
+                "montly_power_peak_timestamp": 230101080010,
+            }
+        )
+    )
 
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
@@ -1471,6 +1481,7 @@ async def test_sensor_entity_monthly_power_peak(
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
+    assert state.attributes.get("last_update") == datetime(2023, 1, 1, 8, 0, 10)
     assert ATTR_ICON not in state.attributes
 
 
