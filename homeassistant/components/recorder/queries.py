@@ -690,6 +690,7 @@ def find_events_context_ids_to_migrate() -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(
             Events.event_id,
+            Events.time_fired_ts,
             Events.context_id,
             Events.context_user_id,
             Events.context_parent_id,
@@ -788,6 +789,7 @@ def find_states_context_ids_to_migrate() -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(
             States.state_id,
+            States.last_updated_ts,
             States.context_id,
             States.context_user_id,
             States.context_parent_id,

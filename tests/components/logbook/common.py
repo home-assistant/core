@@ -64,7 +64,7 @@ def mock_humanify(hass_, rows):
     entity_name_cache = processor.EntityNameCache(hass_)
     ent_reg = er.async_get(hass_)
     event_cache = processor.EventCache({})
-    context_lookup = processor.ContextLookup(hass_)
+    context_lookup = {}
     logbook_config = hass_.data.get(logbook.DOMAIN, LogbookConfig({}, None, None))
     external_events = logbook_config.external_events
     logbook_run = processor.LogbookRun(

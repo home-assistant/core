@@ -22,10 +22,7 @@ from homeassistant.components.wallbox.const import (
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_SOFTWARE_KEY,
     CHARGER_STATUS_ID_KEY,
-    CONF_STATION,
-    DOMAIN,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import ERROR, STATUS, TTL, USER_ID
@@ -88,22 +85,9 @@ authorisation_response_unauthorised = json.loads(
     )
 )
 
-entry = MockConfigEntry(
-    domain=DOMAIN,
-    data={
-        CONF_USERNAME: "test_username",
-        CONF_PASSWORD: "test_password",
-        CONF_STATION: "12345",
-    },
-    entry_id="testEntry",
-)
 
-
-async def setup_integration(hass: HomeAssistant) -> None:
+async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test wallbox sensor class setup."""
-
-    entry.add_to_hass(hass)
-
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://user-api.wall-box.com/users/signin",
@@ -121,15 +105,14 @@ async def setup_integration(hass: HomeAssistant) -> None:
             status_code=HTTPStatus.OK,
         )
 
-        entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
 
-async def setup_integration_connection_error(hass: HomeAssistant) -> None:
+async def setup_integration_connection_error(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test wallbox sensor class setup with a connection error."""
-
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://user-api.wall-box.com/users/signin",
@@ -147,13 +130,13 @@ async def setup_integration_connection_error(hass: HomeAssistant) -> None:
             status_code=HTTPStatus.FORBIDDEN,
         )
 
-        entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
 
-async def setup_integration_read_only(hass: HomeAssistant) -> None:
+async def setup_integration_read_only(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test wallbox sensor class setup for read only."""
 
     with requests_mock.Mocker() as mock_request:
@@ -173,13 +156,13 @@ async def setup_integration_read_only(hass: HomeAssistant) -> None:
             status_code=HTTPStatus.FORBIDDEN,
         )
 
-        entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
 
-async def setup_integration_platform_not_ready(hass: HomeAssistant) -> None:
+async def setup_integration_platform_not_ready(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test wallbox sensor class setup for read only."""
 
     with requests_mock.Mocker() as mock_request:
@@ -198,8 +181,6 @@ async def setup_integration_platform_not_ready(hass: HomeAssistant) -> None:
             json=test_response,
             status_code=HTTPStatus.NOT_FOUND,
         )
-
-        entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

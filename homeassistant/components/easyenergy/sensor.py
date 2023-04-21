@@ -13,7 +13,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CURRENCY_EURO, PERCENTAGE, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import (
+    CURRENCY_EURO,
+    PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -174,6 +180,22 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_return,
+    ),
+    EasyEnergySensorEntityDescription(
+        key="hours_priced_equal_or_lower",
+        name="Hours priced equal or lower than current - today",
+        service_type="today_energy_usage",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        icon="mdi:clock",
+        value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower_usage,
+    ),
+    EasyEnergySensorEntityDescription(
+        key="hours_priced_equal_or_higher",
+        name="Hours priced equal or higher than current - today",
+        service_type="today_energy_return",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        icon="mdi:clock",
+        value_fn=lambda data: data.energy_today.hours_priced_equal_or_higher_return,
     ),
 )
 
