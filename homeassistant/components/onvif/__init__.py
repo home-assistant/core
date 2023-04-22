@@ -31,6 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await device.async_setup()
+        if not entry.data.get(CONF_SNAPSHOT_AUTH):
+            await async_populate_snapshot_auth(hass, device, entry)
     except RequestError as err:
         await device.device.close()
         raise ConfigEntryNotReady(
@@ -51,9 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not device.available:
         raise ConfigEntryNotReady()
-
-    if not entry.data.get(CONF_SNAPSHOT_AUTH):
-        await async_populate_snapshot_auth(hass, device, entry)
 
     hass.data[DOMAIN][entry.unique_id] = device
 
