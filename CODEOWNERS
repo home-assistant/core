@@ -899,8 +899,8 @@ build.json @home-assistant/supervisor
 /tests/components/plaato/ @JohNan
 /homeassistant/components/plex/ @jjlawren
 /tests/components/plex/ @jjlawren
-/homeassistant/components/plugwise/ @CoMPaTech @bouwew @brefra @frenck
-/tests/components/plugwise/ @CoMPaTech @bouwew @brefra @frenck
+/homeassistant/components/plugwise/ @CoMPaTech @bouwew @frenck
+/tests/components/plugwise/ @CoMPaTech @bouwew @frenck
 /homeassistant/components/plum_lightpad/ @ColinHarrington @prystupa
 /tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
@@ -1276,8 +1276,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifiled/ @florisvdk
-/homeassistant/components/unifiprotect/ @briis @AngellusMortis @bdraco
-/tests/components/unifiprotect/ @briis @AngellusMortis @bdraco
+/homeassistant/components/unifiprotect/ @AngellusMortis @bdraco
+/tests/components/unifiprotect/ @AngellusMortis @bdraco
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff

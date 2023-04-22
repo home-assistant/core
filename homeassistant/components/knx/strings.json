@@ -23,13 +23,13 @@
           "port": "[%key:common::config_flow::data::port%]",
           "host": "[%key:common::config_flow::data::host%]",
           "route_back": "Route back / NAT mode",
-          "local_ip": "Local IP of Home Assistant"
+          "local_ip": "Local IP interface"
         },
         "data_description": {
           "port": "Port of the KNX/IP tunneling device.",
-          "host": "IP address of the KNX/IP tunneling device.",
+          "host": "IP address or hostname of the KNX/IP tunneling device.",
           "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT. Only applies for UDP connections.",
-          "local_ip": "Leave blank to use auto-discovery."
+          "local_ip": "Local IP or interface name used for the connection from Home Assistant. Leave blank to use auto-discovery."
         }
       },
       "secure_key_source": {
@@ -93,11 +93,11 @@
           "routing_secure": "Use KNX IP Secure",
           "multicast_group": "Multicast group",
           "multicast_port": "Multicast port",
-          "local_ip": "Local IP of Home Assistant"
+          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data::local_ip%]"
         },
         "data_description": {
           "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
-          "local_ip": "Leave blank to use auto-discovery."
+          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
         }
       }
     },

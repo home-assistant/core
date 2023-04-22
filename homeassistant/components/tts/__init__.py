@@ -66,6 +66,7 @@ from .const import (
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
+from .models import Voice
 
 __all__ = [
     "async_get_media_source_audio",
@@ -80,6 +81,7 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "Provider",
     "TtsAudioType",
+    "Voice",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -302,7 +304,7 @@ class TextToSpeechEntity(RestoreEntity):
         return None
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
         return None
 
