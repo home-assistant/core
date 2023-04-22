@@ -273,7 +273,7 @@ def get_significant_states_with_session(
         ],
     )
     return _sorted_states_to_dict(
-        execute_stmt_lambda_element(session, stmt, None, end_time),
+        execute_stmt_lambda_element(session, stmt, None, end_time, orm_rows=False),
         start_time_ts if include_start_time_state else None,
         entity_ids,
         entity_id_to_metadata_id,
@@ -426,7 +426,9 @@ def state_changes_during_period(
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
-                execute_stmt_lambda_element(session, stmt, None, end_time),
+                execute_stmt_lambda_element(
+                    session, stmt, None, end_time, orm_rows=False
+                ),
                 start_time_ts if include_start_time_state else None,
                 entity_ids,
                 entity_id_to_metadata_id,
@@ -518,7 +520,7 @@ def get_last_state_changes(
                     number_of_states, metadata_id
                 ),
             )
-        states = list(execute_stmt_lambda_element(session, stmt))
+        states = list(execute_stmt_lambda_element(session, stmt, orm_rows=False))
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
