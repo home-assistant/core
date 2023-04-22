@@ -47,8 +47,12 @@ async def pipeline_1(
             "name": "Test 1",
             "language": "en-US",
             "conversation_engine": None,
+            "conversation_language": "en-US",
             "tts_engine": None,
+            "tts_language": None,
+            "tts_voice": None,
             "stt_engine": None,
+            "stt_language": None,
         }
     )
 
@@ -63,8 +67,12 @@ async def pipeline_2(
             "name": "Test 2",
             "language": "en-US",
             "conversation_engine": None,
+            "conversation_language": "en-US",
             "tts_engine": None,
+            "tts_language": None,
+            "tts_voice": None,
             "stt_engine": None,
+            "stt_language": None,
         }
     )
 

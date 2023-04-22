@@ -39,12 +39,30 @@ _LOGGER = logging.getLogger(__name__)
 STORAGE_KEY = f"{DOMAIN}.pipelines"
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
-    vol.Optional("conversation_engine", default=None): vol.Any(str, None),
+ENGINE_LANGUAGE_PAIRS = (
+    ("stt_engine", "stt_language"),
+    ("tts_engine", "tts_language"),
+)
+
+
+def validate_language(data: dict[str, Any]) -> Any:
+    """Validate language settings."""
+    for engine, language in ENGINE_LANGUAGE_PAIRS:
+        if data[engine] is not None and data[language] is None:
+            raise vol.Invalid(f"Need language {language} for {engine} {data[engine]}")
+    return data
+
+
+PIPELINE_FIELDS = {
+    vol.Required("conversation_engine"): str,
+    vol.Required("conversation_language"): str,
     vol.Required("language"): str,
     vol.Required("name"): str,
-    vol.Optional("stt_engine", default=None): vol.Any(str, None),
-    vol.Optional("tts_engine", default=None): vol.Any(str, None),
+    vol.Required("stt_engine"): vol.Any(str, None),
+    vol.Required("stt_language"): vol.Any(str, None),
+    vol.Required("tts_engine"): vol.Any(str, None),
+    vol.Required("tts_language"): vol.Any(str, None),
+    vol.Required("tts_voice"): vol.Any(str, None),
 }
 
 STORED_PIPELINE_RUNS = 10
@@ -67,11 +85,15 @@ async def async_get_pipeline(
         # configured language
         return await pipeline_data.pipeline_store.async_create_item(
             {
-                "name": hass.config.language,
+                "conversation_engine": None,
+                "conversation_language": None,
                 "language": hass.config.language,
-                "stt_engine": None,  # first engine
-                "conversation_engine": None,  # first agent
-                "tts_engine": None,  # first engine
+                "name": hass.config.language,
+                "stt_engine": None,
+                "stt_language": None,
+                "tts_engine": None,
+                "tts_language": None,
+                "tts_voice": None,
             }
         )
 
@@ -108,11 +130,15 @@ PipelineEventCallback = Callable[[PipelineEvent], None]
 class Pipeline:
     """A voice assistant pipeline."""
 
-    conversation_engine: str | None
+    conversation_engine: str
+    conversation_language: str
     language: str
     name: str
     stt_engine: str | None
+    stt_language: str | None
     tts_engine: str | None
+    tts_language: str | None
+    tts_voice: str | None
 
     id: str = field(default_factory=ulid_util.ulid)
 
@@ -120,11 +146,15 @@ class Pipeline:
         """Return a JSON serializable representation for storage."""
         return {
             "conversation_engine": self.conversation_engine,
+            "conversation_language": self.conversation_language,
             "id": self.id,
             "language": self.language,
             "name": self.name,
             "stt_engine": self.stt_engine,
+            "stt_language": self.stt_language,
             "tts_engine": self.tts_engine,
+            "tts_language": self.tts_language,
+            "tts_voice": self.tts_voice,
         }
 
 
@@ -591,8 +621,6 @@ class PipelineStorageCollection(
 ):
     """Pipeline storage collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
-
     _preferred_item: str | None = None
 
     async def _async_load_data(self) -> SerializedPipelineStorageCollection | None:
@@ -606,8 +634,8 @@ class PipelineStorageCollection(
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        # We don't need to validate, the WS API has already validated
-        return data
+        validated_data: dict = validate_language(data)
+        return validated_data
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
@@ -616,6 +644,7 @@ class PipelineStorageCollection(
 
     async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
         """Return a new updated item."""
+        update_data = validate_language(update_data)
         return Pipeline(id=item.id, **update_data)
 
     def _create_item(self, item_id: str, data: dict) -> Pipeline:
@@ -679,6 +708,18 @@ class PipelineStorageCollectionWebsocket(
 
         websocket_api.async_register_command(
             hass,
+            f"{self.api_prefix}/get",
+            self.ws_get_item,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {
+                    vol.Required("type"): f"{self.api_prefix}/get",
+                    vol.Optional(self.item_id_key): str,
+                }
+            ),
+        )
+
+        websocket_api.async_register_command(
+            hass,
             f"{self.api_prefix}/set_preferred",
             websocket_api.require_admin(
                 websocket_api.async_response(self.ws_set_preferred_item)
@@ -691,6 +732,37 @@ class PipelineStorageCollectionWebsocket(
             ),
         )
 
+    async def ws_delete_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Delete an item."""
+        try:
+            await super().ws_delete_item(hass, connection, msg)
+        except PipelinePreferred as exc:
+            connection.send_error(
+                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
+            )
+
+    @callback
+    def ws_get_item(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Get an item."""
+        item_id = msg.get(self.item_id_key)
+        if item_id is None:
+            item_id = self.storage_collection.async_get_preferred_item()
+
+        if item_id not in self.storage_collection.data:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_NOT_FOUND,
+                f"Unable to find {self.item_id_key} {item_id}",
+            )
+            return
+
+        connection.send_result(msg["id"], self.storage_collection.data[item_id])
+
+    @callback
     def ws_list_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -702,17 +774,6 @@ class PipelineStorageCollectionWebsocket(
                 "preferred_pipeline": self.storage_collection.async_get_preferred_item(),
             },
         )
-
-    async def ws_delete_item(
-        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-    ) -> None:
-        """Delete an item."""
-        try:
-            await super().ws_delete_item(hass, connection, msg)
-        except PipelinePreferred as exc:
-            connection.send_error(
-                msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc)
-            )
 
     async def ws_set_preferred_item(
         self,
@@ -757,6 +818,10 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
     )
     await pipeline_store.async_load()
     PipelineStorageCollectionWebsocket(
-        pipeline_store, f"{DOMAIN}/pipeline", "pipeline", STORAGE_FIELDS, STORAGE_FIELDS
+        pipeline_store,
+        f"{DOMAIN}/pipeline",
+        "pipeline",
+        PIPELINE_FIELDS,
+        PIPELINE_FIELDS,
     ).async_setup(hass)
     hass.data[DOMAIN] = PipelineData({}, pipeline_store)

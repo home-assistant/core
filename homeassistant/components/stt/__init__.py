@@ -74,6 +74,24 @@ def async_get_speech_to_text_entity(
     return component.get_entity(entity_id)
 
 
+@callback
+def async_get_speech_to_text_languages(hass: HomeAssistant) -> set[str]:
+    """Return a set with the union of languages supported by stt engines."""
+    languages = set()
+
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
+    legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
+    for entity in component.entities:
+        for language_tag in entity.supported_languages:
+            languages.add(language_tag)
+
+    for engine in legacy_providers.values():
+        for language_tag in engine.supported_languages:
+            languages.add(language_tag)
+
+    return languages
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
     websocket_api.async_register_command(hass, websocket_list_engines)
@@ -395,6 +413,7 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
     {
         "type": "stt/engine/list",
         vol.Optional("language"): str,
+        vol.Optional("country"): str,
     }
 )
 @callback
@@ -405,23 +424,30 @@ def websocket_list_engines(
     component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
     legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
 
+    country = msg.get("country")
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
 
     for entity in component.entities:
-        provider_info = {"engine_id": entity.entity_id}
+        provider_info = {
+            "engine_id": entity.entity_id,
+            "supported_languages": entity.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, entity.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, entity.supported_languages, country
             )
         providers.append(provider_info)
 
     for engine_id, provider in legacy_providers.items():
-        provider_info = {"engine_id": engine_id}
+        provider_info = {
+            "engine_id": engine_id,
+            "supported_languages": provider.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, provider.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, provider.supported_languages, country
             )
         providers.append(provider_info)
 
