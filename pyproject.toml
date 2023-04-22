@@ -53,7 +53,7 @@ dependencies    = [
     "ulid-transform==0.6.3",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
-    "yarl==1.8.1",
+    "yarl==1.9.1",
 ]
 
 [project.urls]

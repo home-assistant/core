@@ -51,7 +51,7 @@ ulid-transform==0.6.3
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtcvad==2.0.10
-yarl==1.8.1
+yarl==1.9.1
 zeroconf==0.56.0
 
 # Constrain pycryptodome to avoid vulnerability
