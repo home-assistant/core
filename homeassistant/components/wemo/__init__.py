@@ -188,6 +188,7 @@ class WemoDispatcher:
                 )
 
         self._added_serial_numbers.add(wemo.serialnumber)
+        self._failed_serial_numbers.discard(wemo.serialnumber)
 
 
 class WemoDiscovery:
