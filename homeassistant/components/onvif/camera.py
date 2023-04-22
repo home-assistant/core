@@ -1,6 +1,8 @@
 """Support for ONVIF Cameras with FFmpeg as decoder."""
 from __future__ import annotations
 
+import asyncio
+
 from haffmpeg.camera import CameraMjpeg
 from onvif.exceptions import ONVIFError
 import voluptuous as vol
@@ -110,6 +112,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             == HTTP_BASIC_AUTHENTICATION
         )
         self._stream_uri: str | None = None
+        self._stream_uri_future: asyncio.Future[str] | None = None
 
     @property
     def name(self) -> str:
@@ -190,13 +193,27 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         finally:
             await stream.close()
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        uri_no_auth = await self.device.async_get_stream_uri(self.profile)
-        url = URL(uri_no_auth)
-        url = url.with_user(self.device.username)
-        url = url.with_password(self.device.password)
-        self._stream_uri = str(url)
+    async def _async_get_stream_uri(self) -> str:
+        """Return the stream URI."""
+        if self._stream_uri:
+            return self._stream_uri
+        if self._stream_uri_future:
+            return await self._stream_uri_future
+        try:
+            loop = asyncio.get_running_loop()
+            self._stream_uri_future = loop.create_future()
+            uri_no_auth = await self.device.async_get_stream_uri(self.profile)
+            url = URL(uri_no_auth)
+            url = url.with_user(self.device.username)
+            url = url.with_password(self.device.password)
+            self._stream_uri = str(url)
+            self._stream_uri_future.set_result(self._stream_uri)
+        except (asyncio.TimeoutError, Exception) as err:  # pylint: disable=broad-except
+            LOGGER.error("Failed to get stream uri: %s", err)
+            if self._stream_uri_future:
+                self._stream_uri_future.set_exception(err)
+            raise
+        return self._stream_uri
 
     async def async_perform_ptz(
         self,
