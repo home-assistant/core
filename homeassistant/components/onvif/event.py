@@ -322,7 +322,13 @@ class PullPointManager:
         try:
             try:
                 started = await self._async_create_pullpoint_subscription()
-            except RemoteProtocolError:
+            except RequestError:
+                #
+                # We should only need to retry on RemoteProtocolError but some cameras
+                # are flaky and sometimes do not respond to the Renew request so we
+                # retry on RequestError as well.
+                #
+                # For RemoteProtocolError:
                 # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
                 # to close the connection at any time, we treat this as a normal and try again
                 # once since we do not want to declare the camera as not supporting PullPoint
@@ -441,7 +447,13 @@ class PullPointManager:
             # async_restart later.
             try:
                 await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
-            except RemoteProtocolError:
+            except RequestError:
+                #
+                # We should only need to retry on RemoteProtocolError but some cameras
+                # are flaky and sometimes do not respond to the Renew request so we
+                # retry on RequestError as well.
+                #
+                # For RemoteProtocolError:
                 # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
                 # to close the connection at any time, we treat this as a normal and try again
                 # once since we do not want to mark events as stale
@@ -678,7 +690,13 @@ class WebHookManager:
         try:
             try:
                 await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
-            except RemoteProtocolError:
+            except RequestError:
+                #
+                # We should only need to retry on RemoteProtocolError but some cameras
+                # are flaky and sometimes do not respond to the Renew request so we
+                # retry on RequestError as well.
+                #
+                # For RemoteProtocolError:
                 # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
                 # to close the connection at any time, we treat this as a normal and try again
                 # once since we do not want to mark events as stale
