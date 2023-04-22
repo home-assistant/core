@@ -19,10 +19,8 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     STATE_UNAVAILABLE,
     EntityCategory,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -155,7 +153,7 @@ TEST_DATA = [
                 "friendly_name": "AirQuality 1 CO2",
                 "device_class": SensorDeviceClass.CO2,
                 "state_class": SensorStateClass.MEASUREMENT,
-                "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION
+                "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
             },
             "websocket_event": {"state": {"airquality_co2_density": 332}},
             "next_state": "332",
@@ -195,7 +193,7 @@ TEST_DATA = [
                 "friendly_name": "AirQuality 1 CH2O",
                 "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
                 "state_class": SensorStateClass.MEASUREMENT,
-                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             },
             "websocket_event": {"state": {"airquality_formaldehyde_density": 5}},
             "next_state": "5",
@@ -235,7 +233,7 @@ TEST_DATA = [
                 "friendly_name": "AirQuality 1 PM25",
                 "device_class": SensorDeviceClass.PM25,
                 "state_class": SensorStateClass.MEASUREMENT,
-                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             },
             "websocket_event": {"state": {"pm2_5": 11}},
             "next_state": "11",
