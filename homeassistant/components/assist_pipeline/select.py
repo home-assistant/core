@@ -31,7 +31,7 @@ def get_chosen_pipeline(
     if state is None or state.state == OPTION_PREFERRED:
         return None
 
-    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN]
+    pipeline_store: PipelineStorageCollection = hass.data[DOMAIN].pipeline_store
     return next(
         (item.id for item in pipeline_store.async_items() if item.name == state.state),
         None,

@@ -273,14 +273,13 @@ async def test_lazy_state_handles_include_json(
     assert "Error converting row to state attributes" in caplog.text
 
 
-async def test_lazy_state_prefers_shared_attrs_over_attrs(
+async def test_lazy_state_can_decode_attributes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that the LazyState prefers shared_attrs over attributes."""
+    """Test that the LazyState prefers can decode attributes."""
     row = PropertyMock(
         entity_id="sensor.invalid",
-        shared_attrs='{"shared":true}',
-        attributes='{"shared":false}',
+        attributes='{"shared":true}',
     )
     assert LazyState(row, {}, None, row.entity_id, "", 1).attributes == {"shared": True}
 
@@ -293,7 +292,7 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
     row = PropertyMock(
         entity_id="sensor.valid",
         state="off",
-        shared_attrs='{"shared":true}',
+        attributes='{"shared":true}',
         last_updated_ts=now.timestamp(),
         last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
     )
@@ -324,7 +323,7 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
     row = PropertyMock(
         entity_id="sensor.valid",
         state="off",
-        shared_attrs='{"shared":true}',
+        attributes='{"shared":true}',
         last_updated_ts=now.timestamp(),
         last_changed_ts=now.timestamp(),
     )

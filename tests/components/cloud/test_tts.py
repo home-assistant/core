@@ -76,8 +76,11 @@ async def test_provider_properties(cloud_with_prefs) -> None:
     provider = await tts.async_get_engine(
         Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
     )
-    assert provider.supported_options == ["gender", "audio_output"]
+    assert provider.supported_options == ["gender", "voice", "audio_output"]
     assert "nl-NL" in provider.supported_languages
+    assert tts.Voice(
+        "ColetteNeural", "ColetteNeural"
+    ) in provider.async_get_supported_voices("nl-NL")
 
 
 async def test_get_tts_audio(cloud_with_prefs) -> None:
@@ -85,5 +88,5 @@ async def test_get_tts_audio(cloud_with_prefs) -> None:
     provider = await tts.async_get_engine(
         Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
     )
-    assert provider.supported_options == ["gender", "audio_output"]
+    assert provider.supported_options == ["gender", "voice", "audio_output"]
     assert "nl-NL" in provider.supported_languages

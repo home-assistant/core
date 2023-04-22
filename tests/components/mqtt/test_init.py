@@ -32,7 +32,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -944,46 +943,6 @@ async def test_subscribe_bad_topic(
     await mqtt_mock_entry()
     with pytest.raises(HomeAssistantError):
         await mqtt.async_subscribe(hass, 55, record_calls)  # type: ignore[arg-type]
-
-
-# Support for a deprecated callback type was removed with HA core 2023.3.0
-# Test can be removed from HA core 2023.5.0
-async def test_subscribe_with_deprecated_callback_fails(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the subscription of a topic using deprecated callback signature fails."""
-    await mqtt_mock_entry()
-
-    async def record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:
-        """Record calls."""
-
-    with pytest.raises(HomeAssistantError):
-        await mqtt.async_subscribe(hass, "test-topic", record_calls)
-    # Test with partial wrapper
-    with pytest.raises(HomeAssistantError):
-        await mqtt.async_subscribe(hass, "test-topic", RecordCallsPartial(record_calls))
-
-
-# Support for a deprecated callback type was removed with HA core 2023.3.0
-# Test can be removed from HA core 2023.5.0
-async def test_subscribe_deprecated_async_fails(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the subscription of a topic using deprecated coroutine signature fails."""
-    await mqtt_mock_entry()
-
-    @callback
-    def async_record_calls(topic: str, payload: ReceivePayloadType, qos: int) -> None:
-        """Record calls."""
-
-    with pytest.raises(HomeAssistantError):
-        await mqtt.async_subscribe(hass, "test-topic", async_record_calls)
-
-    # Test with partial wrapper
-    with pytest.raises(HomeAssistantError):
-        await mqtt.async_subscribe(
-            hass, "test-topic", RecordCallsPartial(async_record_calls)
-        )
 
 
 async def test_subscribe_topic_not_match(

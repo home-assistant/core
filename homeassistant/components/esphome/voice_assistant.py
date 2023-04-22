@@ -16,7 +16,7 @@ from homeassistant.components.assist_pipeline import (
     async_pipeline_from_audio_stream,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 
 from .enum_mapper import EsphomeEnumMapper
 
@@ -50,6 +50,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize UDP receiver."""
+        self.context = Context()
         self.hass = hass
         self.queue = asyncio.Queue()
 
@@ -151,6 +152,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         await async_pipeline_from_audio_stream(
             self.hass,
+            context=self.context,
             event_callback=handle_pipeline_event,
             stt_metadata=stt.SpeechMetadata(
                 language="",

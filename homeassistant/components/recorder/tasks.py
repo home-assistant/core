@@ -17,7 +17,7 @@ from . import entity_registry, purge, statistics
 from .const import DOMAIN
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
-from .util import periodic_db_cleanups
+from .util import periodic_db_cleanups, session_scope
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -466,3 +466,17 @@ class EventIdMigrationTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Clean up the legacy event_id index on states."""
         instance._cleanup_legacy_states_event_ids()  # pylint: disable=[protected-access]
+
+
+@dataclass(slots=True)
+class RefreshEventTypesTask(RecorderTask):
+    """An object to insert into the recorder queue to refresh event types."""
+
+    event_types: list[str]
+
+    def run(self, instance: Recorder) -> None:
+        """Refresh event types."""
+        with session_scope(session=instance.get_session(), read_only=True) as session:
+            instance.event_type_manager.get_many(
+                self.event_types, session, from_recorder=True
+            )
