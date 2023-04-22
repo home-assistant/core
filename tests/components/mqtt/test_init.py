@@ -1358,33 +1358,46 @@ async def test_replaying_payload_same_topic(
     mqtt_client_mock.reset_mock()
 
     await mqtt.async_subscribe(hass, "test/state", _callback_b)
-    async_fire_mqtt_message(
-        hass, "test/state", "online", qos=0, retain=True
-    )  # Simulate a (retained) message played back on new subscriptions
+
+    # Simulate edge case where non retained message was received
+    # after subscription at HA but before the debouncer delay was passed
+    async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
+
+    # Simulate a (retained) message played back on new subscriptions
+    async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=True)
+
+    # Make sure the debouncer delay was passed
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
+
     # The retained message playback should only be processed by the new subscription
     # The existing subscription already got the latest update,
+    # The none retained message directly after sunscription will be processed
+    # by both subscription.
     # hence the existing subscription should not receive the replayed payload.
-    assert len(calls_a) == 0
-    assert len(calls_b) == 1
+    assert len(calls_a) == 1
+    assert help_assert_message(calls_a[0], "test/state", "online", qos=0, retain=False)
+    assert len(calls_b) == 2
+    assert help_assert_message(calls_b[0], "test/state", "online", qos=0, retain=False)
+    assert help_assert_message(calls_b[1], "test/state", "online", qos=0, retain=True)
     mqtt_client_mock.subscribe.assert_called()
 
     calls_a = []
     calls_b = []
     mqtt_client_mock.reset_mock()
 
-    async_fire_mqtt_message(
-        hass, "test/state", "online", qos=0, retain=False
-    )  # Simulate new message played back on new subscriptions
+    # Simulate new message played back on new subscriptions
     # After connecting the retain flag will not be set, even if the
     # payload published was retained, we cannot see that
+    async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
     assert len(calls_a) == 1
+    assert help_assert_message(calls_a[0], "test/state", "online", qos=0, retain=False)
     assert len(calls_b) == 1
+    assert help_assert_message(calls_b[0], "test/state", "online", qos=0, retain=False)
 
     # Now simulate the broker was disconnected shortly
     calls_a = []
@@ -1400,9 +1413,11 @@ async def test_replaying_payload_same_topic(
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
-    # Both subscriptions should replay
+    # Both subscriptions should replay the retained message
     assert len(calls_a) == 1
+    assert help_assert_message(calls_a[0], "test/state", "online", qos=0, retain=True)
     assert len(calls_b) == 1
+    assert help_assert_message(calls_b[0], "test/state", "online", qos=0, retain=True)
 
 
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
