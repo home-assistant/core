@@ -133,7 +133,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
 
     async def stream_source(self):
         """Return the stream source."""
-        return self._stream_uri
+        return await self._async_get_stream_uri()
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -161,10 +161,10 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                     self.device.name,
                 )
 
-        assert self._stream_uri
+        stream_uri = await self._async_get_stream_uri()
         return await ffmpeg.async_get_image(
             self.hass,
-            self._stream_uri,
+            stream_uri,
             extra_cmd=self.device.config_entry.options.get(CONF_EXTRA_ARGUMENTS),
             width=width,
             height=height,
@@ -176,9 +176,10 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
 
         ffmpeg_manager = get_ffmpeg_manager(self.hass)
         stream = CameraMjpeg(ffmpeg_manager.binary)
+        stream_uri = await self._async_get_stream_uri()
 
         await stream.open_camera(
-            self._stream_uri,
+            stream_uri,
             extra_cmd=self.device.config_entry.options.get(CONF_EXTRA_ARGUMENTS),
         )
 
