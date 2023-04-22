@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_URL,
-    EVENT_HOMEASSISTANT_START,
     LENGTH_KILOMETERS,
 )
 from homeassistant.core import HomeAssistant
@@ -60,10 +59,6 @@ async def test_setup_as_legacy_platform(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, GEO_LOCATION_DOMAIN, CONFIG_LEGACY)
         await hass.async_block_till_done()
 
-        # Artificially trigger update.
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        await hass.async_block_till_done()
-
         assert len(hass.states.async_entity_ids(GEO_LOCATION_DOMAIN)) == 1
 
         assert mock_feed.call_args == call(ANY, ANY, URL, filter_radius=190.0)
@@ -90,10 +85,6 @@ async def test_entity_lifecycle(
 
         # Load config entry.
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Artificially trigger update and collect events.
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
         # 3 geolocation and 1 sensor entities

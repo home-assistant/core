@@ -50,14 +50,13 @@ class GeoJsonFeedEntityManager:
             config_entry.data[CONF_URL],
             filter_radius=config_entry.data[CONF_RADIUS],
         )
-        self._config_entry_id: str = config_entry.entry_id
         self._scan_interval: timedelta = timedelta(
             seconds=config_entry.data[CONF_SCAN_INTERVAL]
         )
         self._track_time_remove_callback: Callable[[], None] | None = None
         self.listeners: list[Callable[[], None]] = []
         self.signal_new_entity: str = (
-            f"{DOMAIN}_new_geolocation_{self._config_entry_id}"
+            f"{DOMAIN}_new_geolocation_{config_entry.entry_id}"
         )
 
     async def async_init(self) -> None:

@@ -31,7 +31,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 
 async def remove_orphaned_entities(hass: HomeAssistant, entry_id: str) -> None:
-    """Remove orphaned geo_location entities."""
+    """Remove orphaned geo_location entities.
+
+    This is needed because when fetching data from the external feed this integration is
+    determining which entities need to be added, updated or removed by comparing the
+    current with the previous data. After a restart of Home Assistant the integration
+    has no previous data to compare against, and thus all entities managed by this
+    integration are removed after startup.
+    """
     entity_registry = async_get(hass)
     orphaned_entries = async_entries_for_config_entry(entity_registry, entry_id)
     if orphaned_entries is not None:
@@ -45,6 +52,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the GeoJSON events config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        manager = hass.data[DOMAIN].pop(entry.entry_id)
+        manager: GeoJsonFeedEntityManager = hass.data[DOMAIN].pop(entry.entry_id)
         await manager.async_stop()
     return unload_ok
