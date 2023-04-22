@@ -13,6 +13,10 @@ on:
       - "requirements.txt"
       - "requirements_all.txt"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name}}
+  cancel-in-progress: true
+
 jobs:
   init:
     name: Initialize wheels builder
