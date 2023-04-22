@@ -1,6 +1,8 @@
 """Tests for the conversation component."""
 from __future__ import annotations
 
+from typing import Literal
+
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
@@ -12,11 +14,14 @@ from homeassistant.helpers import intent
 class MockAgent(conversation.AbstractConversationAgent):
     """Test Agent."""
 
-    def __init__(self, agent_id: str) -> None:
+    def __init__(
+        self, agent_id: str, supported_languages: list[str] | Literal["*"]
+    ) -> None:
         """Initialize the agent."""
         self.agent_id = agent_id
         self.calls = []
         self.response = "Test response"
+        self._supported_languages = supported_languages
 
     @property
     def attribution(self) -> conversation.Attribution | None:
@@ -26,7 +31,7 @@ class MockAgent(conversation.AbstractConversationAgent):
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return ["smurfish"]
+        return self._supported_languages
 
     async def async_process(
         self, user_input: conversation.ConversationInput
