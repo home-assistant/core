@@ -34,7 +34,7 @@
           "custom": "Custom"
         }
       },
-      "mop_intesity": {
+      "mop_intensity": {
         "name": "Mop intensity",
         "state": {
           "off": "Off",
