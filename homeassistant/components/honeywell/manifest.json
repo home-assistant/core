@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/honeywell",
   "iot_class": "cloud_polling",
   "loggers": ["somecomfort"],
-  "requirements": ["aiosomecomfort==0.0.11"]
+  "requirements": ["aiosomecomfort==0.0.14"]
 }

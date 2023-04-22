@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import datetime
 
-from freezegun import freeze_time
 import pytest
 import requests_mock
 
@@ -16,7 +15,9 @@ from .const import DOMAIN, METOFFICE_CONFIG_WAVERTREE, TEST_COORDINATES_WAVERTRE
 from tests.common import MockConfigEntry
 
 
-@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(
+    datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc)
+)
 @pytest.mark.parametrize(
     ("old_unique_id", "new_unique_id", "migration_needed"),
     [

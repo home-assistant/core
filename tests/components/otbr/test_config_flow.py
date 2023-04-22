@@ -1,7 +1,8 @@
 """Test the Open Thread Border Router config flow."""
 import asyncio
 from http import HTTPStatus
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
@@ -319,13 +320,22 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     aioclient_mock.post(f"{url}/node/dataset/active", status=HTTPStatus.ACCEPTED)
     aioclient_mock.post(f"{url}/node/state", status=HTTPStatus.OK)
 
+    networksettings = Mock()
+    networksettings.network_info.channel = 15
+
     with patch(
         "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
         return_value=DATASET_CH16.hex(),
     ), patch(
         "homeassistant.components.otbr.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.otbr.util.zha_api.async_get_radio_path",
+        return_value="socket://core-silabs-multiprotocol:9999",
+    ), patch(
+        "homeassistant.components.otbr.util.zha_api.async_get_network_settings",
+        return_value=networksettings,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
@@ -373,8 +383,69 @@ async def test_hassio_discovery_flow_404(
     assert result["reason"] == "unknown"
 
 
-@pytest.mark.parametrize("source", ("hassio", "user"))
-async def test_config_flow_single_entry(hass: HomeAssistant, source: str) -> None:
+async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
+    """Test the port can be updated."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={
+            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']+1}"
+        },
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Open Thread Border Router",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+    expected_data = {
+        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+    }
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+
+
+async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -> None:
+    """Test the port is not updated if we get data for another addon hosting OTBR."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={"url": f"http://openthread_border_router:{HASSIO_DATA.config['port']+1}"},
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Open Thread Border Router",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+    # Make sure the data was not updated
+    expected_data = {
+        "url": f"http://openthread_border_router:{HASSIO_DATA.config['port']+1}",
+    }
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+
+
+@pytest.mark.parametrize(("source", "data"), [("hassio", HASSIO_DATA), ("user", None)])
+async def test_config_flow_single_entry(
+    hass: HomeAssistant, source: str, data: Any
+) -> None:
     """Test only a single entry is allowed."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -392,7 +463,7 @@ async def test_config_flow_single_entry(hass: HomeAssistant, source: str) -> Non
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            otbr.DOMAIN, context={"source": source}
+            otbr.DOMAIN, context={"source": source}, data=data
         )
 
     assert result["type"] == FlowResultType.ABORT

@@ -1,5 +1,5 @@
 """Test configuration for Nibe Heat Pump."""
-from collections.abc import AsyncIterator, Iterable
+from collections.abc import AsyncIterator, Generator, Iterable
 from contextlib import ExitStack
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -8,6 +8,15 @@ from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
 from nibe.exceptions import ReadException
 import pytest
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Make sure we never actually run setup."""
+    with patch(
+        "homeassistant.components.nibe_heatpump.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(autouse=True, name="mock_connection_constructor")

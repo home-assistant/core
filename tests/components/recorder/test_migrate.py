@@ -14,6 +14,7 @@ from sqlalchemy.exc import (
     InternalError,
     OperationalError,
     ProgrammingError,
+    SQLAlchemyError,
 )
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
@@ -39,11 +40,14 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
 def _get_native_states(hass, entity_id):
-    with session_scope(hass=hass) as session:
-        return [
-            state.to_native()
-            for state in session.query(States).filter(States.entity_id == entity_id)
-        ]
+    with session_scope(hass=hass, read_only=True) as session:
+        instance = recorder.get_instance(hass)
+        metadata_id = instance.states_meta_manager.get(entity_id, session, True)
+        states = []
+        for dbstate in session.query(States).filter(States.metadata_id == metadata_id):
+            dbstate.entity_id = entity_id
+            states.append(dbstate.to_native())
+        return states
 
 
 async def test_schema_update_calls(recorder_db_url: str, hass: HomeAssistant) -> None:
@@ -255,7 +259,9 @@ async def test_events_during_migration_queue_exhausted(
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
-    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG", 1):
+    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
+        recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0
+    ):
         recorder_helper.async_initialize_recorder(hass)
         await async_setup_component(
             hass,
@@ -327,7 +333,7 @@ async def test_schema_migrate(
 
     def _mock_setup_run(self):
         self.run_info = RecorderRuns(
-            start=self.run_history.recording_start, created=dt_util.utcnow()
+            start=self.recorder_runs_manager.recording_start, created=dt_util.utcnow()
         )
 
     def _instrument_migrate_schema(*args):
@@ -342,7 +348,7 @@ async def test_schema_migrate(
 
         # Check and report the outcome of the migration; if migration fails
         # the recorder will silently create a new database.
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             res = (
                 session.query(db_schema.SchemaChanges)
                 .order_by(db_schema.SchemaChanges.change_id.desc())
@@ -471,7 +477,51 @@ def test_forgiving_add_index(recorder_db_url: str) -> None:
     with Session(engine) as session:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
-        migration._create_index(instance.get_session, "states", "ix_states_context_id")
+        migration._create_index(
+            instance.get_session, "states", "ix_states_context_id_bin"
+        )
+    engine.dispose()
+
+
+def test_forgiving_drop_index(
+    recorder_db_url: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that drop index will continue if index drop fails."""
+    engine = create_engine(recorder_db_url, poolclass=StaticPool)
+    db_schema.Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        instance = Mock()
+        instance.get_session = Mock(return_value=session)
+        migration._drop_index(
+            instance.get_session, "states", "ix_states_context_id_bin"
+        )
+        migration._drop_index(
+            instance.get_session, "states", "ix_states_context_id_bin"
+        )
+
+        with patch(
+            "homeassistant.components.recorder.migration.get_index_by_name",
+            return_value="ix_states_context_id_bin",
+        ), patch.object(
+            session, "connection", side_effect=SQLAlchemyError("connection failure")
+        ):
+            migration._drop_index(
+                instance.get_session, "states", "ix_states_context_id_bin"
+            )
+        assert "Failed to drop index" in caplog.text
+        assert "connection failure" in caplog.text
+        caplog.clear()
+        with patch(
+            "homeassistant.components.recorder.migration.get_index_by_name",
+            return_value="ix_states_context_id_bin",
+        ), patch.object(
+            session, "connection", side_effect=SQLAlchemyError("connection failure")
+        ):
+            migration._drop_index(
+                instance.get_session, "states", "ix_states_context_id_bin", quiet=True
+            )
+        assert "Failed to drop index" not in caplog.text
+        assert "connection failure" not in caplog.text
     engine.dispose()
 
 

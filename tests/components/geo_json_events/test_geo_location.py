@@ -5,9 +5,9 @@ from aio_geojson_generic_client import GenericFeed
 from freezegun import freeze_time
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_json_events.geo_location import (
+from homeassistant.components.geo_json_events.const import (
     ATTR_EXTERNAL_ID,
-    SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
 )
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.const import (
@@ -132,7 +132,7 @@ async def test_setup(hass: HomeAssistant) -> None:
                 "OK",
                 [mock_entry_1, mock_entry_4, mock_entry_3],
             )
-            async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+            async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
@@ -141,7 +141,7 @@ async def test_setup(hass: HomeAssistant) -> None:
             # Simulate an update - empty data, but successful update,
             # so no changes to entities.
             mock_feed_update.return_value = "OK_NO_DATA", None
-            async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
+            async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
@@ -149,7 +149,7 @@ async def test_setup(hass: HomeAssistant) -> None:
 
             # Simulate an update - empty data, removes all entities
             mock_feed_update.return_value = "ERROR", None
-            async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
+            async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
@@ -227,7 +227,7 @@ async def test_setup_race_condition(hass: HomeAssistant) -> None:
 
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
-        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+        async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
@@ -237,7 +237,7 @@ async def test_setup_race_condition(hass: HomeAssistant) -> None:
 
         # Simulate an update - 1 entry
         mock_feed_update.return_value = "OK", [mock_entry_1]
-        async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
+        async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
@@ -247,7 +247,7 @@ async def test_setup_race_condition(hass: HomeAssistant) -> None:
 
         # Simulate an update - 1 entry
         mock_feed_update.return_value = "OK", [mock_entry_1]
-        async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
+        async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
@@ -257,7 +257,7 @@ async def test_setup_race_condition(hass: HomeAssistant) -> None:
 
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
-        async_fire_time_changed(hass, utcnow + 4 * SCAN_INTERVAL)
+        async_fire_time_changed(hass, utcnow + 4 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()

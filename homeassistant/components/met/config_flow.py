@@ -6,10 +6,21 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    UnitOfLength,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
 from .const import (
     CONF_TRACK_HOME,
@@ -47,7 +58,14 @@ def _get_data_schema(
                 vol.Required(
                     CONF_LONGITUDE, default=hass.config.longitude
                 ): cv.longitude,
-                vol.Required(CONF_ELEVATION, default=hass.config.elevation): int,
+                vol.Required(
+                    CONF_ELEVATION, default=hass.config.elevation
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement=UnitOfLength.METERS,
+                    )
+                ),
             }
         )
     # Not tracking home, default values come from config entry
@@ -62,7 +80,12 @@ def _get_data_schema(
             ): cv.longitude,
             vol.Required(
                 CONF_ELEVATION, default=config_entry.data.get(CONF_ELEVATION)
-            ): int,
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    mode=NumberSelectorMode.BOX,
+                    unit_of_measurement=UnitOfLength.METERS,
+                )
+            ),
         }
     )
 

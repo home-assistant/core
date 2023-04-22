@@ -69,6 +69,7 @@ from .const import (
     KNX_ADDRESS,
     SUPPORTED_PLATFORMS,
 )
+from .device import KNXInterfaceDevice
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
 from .schema import (
     BinarySensorSchema,
@@ -254,13 +255,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             knx_module.exposures.append(
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
-
+    # always forward sensor for system entities (telegram counter, etc.)
+    await hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
     await hass.config_entries.async_forward_entry_setups(
         entry,
         [
             platform
             for platform in SUPPORTED_PLATFORMS
-            if platform in config and platform is not Platform.NOTIFY
+            if platform in config and platform not in (Platform.SENSOR, Platform.NOTIFY)
         ],
     )
 
@@ -366,9 +368,16 @@ class KNXModule:
         self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
         self.entry = entry
 
-        self.init_xknx()
+        self.xknx = XKNX(
+            connection_config=self.connection_config(),
+            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
+            state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
+        )
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
+        )
+        self.interface_device = KNXInterfaceDevice(
+            hass=hass, entry=entry, xknx=self.xknx
         )
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
@@ -381,14 +390,6 @@ class KNXModule:
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
         self.entry.async_on_unload(self.entry.add_update_listener(async_update_entry))
-
-    def init_xknx(self) -> None:
-        """Initialize XKNX object."""
-        self.xknx = XKNX(
-            connection_config=self.connection_config(),
-            rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
-            state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
-        )
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""

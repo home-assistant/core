@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -68,6 +68,7 @@ SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
 
+STARTUP_REPAIR_DELAY = 1  # 1 hour
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
@@ -309,8 +310,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_call_later(
         hass=hass,
-        delay=timedelta(hours=1),
-        action=async_startup_repairs,
+        delay=timedelta(hours=STARTUP_REPAIR_DELAY),
+        action=HassJob(
+            async_startup_repairs, "cloud startup repairs", cancel_on_shutdown=True
+        ),
     )
 
     return True

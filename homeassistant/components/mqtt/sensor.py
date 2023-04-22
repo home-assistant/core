@@ -107,7 +107,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
         vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -281,7 +281,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 else:
                     self._attr_native_value = new_value
                 return
-            if self.device_class is None:
+            if self.device_class in {None, SensorDeviceClass.ENUM}:
                 self._attr_native_value = new_value
                 return
             try:

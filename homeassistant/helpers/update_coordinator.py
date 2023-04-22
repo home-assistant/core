@@ -71,6 +71,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         self.name = name
         self.update_method = update_method
         self.update_interval = update_interval
+        self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
 
         # It's None before the first successful update.
@@ -113,6 +114,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
 
         self._debounced_refresh = request_refresh_debouncer
 
+        if self.config_entry:
+            self.config_entry.async_on_unload(self.async_shutdown)
+
     @callback
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
@@ -141,18 +145,29 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         for update_callback, _ in list(self._listeners.values()):
             update_callback()
 
+    async def async_shutdown(self) -> None:
+        """Cancel any scheduled call, and ignore new runs."""
+        self._shutdown_requested = True
+        self._async_unsub_refresh()
+        await self._debounced_refresh.async_shutdown()
+
     @callback
     def _unschedule_refresh(self) -> None:
         """Unschedule any pending refresh since there is no longer any listeners."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
+        self._async_unsub_refresh()
+        self._debounced_refresh.async_cancel()
 
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None
         )
+
+    def _async_unsub_refresh(self) -> None:
+        """Cancel any scheduled call."""
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
 
     @callback
     def _schedule_refresh(self) -> None:
@@ -163,9 +178,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
+        # We do not cancel the debouncer here. If the refresh interval is shorter
+        # than the debouncer cooldown, this would cause the debounce to never be called
+        self._async_unsub_refresh()
 
         # We _floor_ utcnow to create a schedule on a rounded second,
         # minimizing the time between the point and the real activation.
@@ -229,13 +244,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
+        self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
 
-        if scheduled and self.hass.is_stopping:
+        if self._shutdown_requested or scheduled and self.hass.is_stopping:
             return
 
         if log_timing := self.logger.isEnabledFor(logging.DEBUG):
@@ -348,10 +360,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
     @callback
     def async_set_updated_data(self, data: _T) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
+        self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
 
         self.data = data
