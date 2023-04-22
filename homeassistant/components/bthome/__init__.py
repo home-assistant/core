@@ -21,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceRegistry, async_get
 
 from .const import (
     BTHOME_BLE_EVENT,
-    CONF_BIND_KEY,
+    CONF_BINDKEY,
     CONF_DISCOVERED_EVENT_CLASSES,
     DOMAIN,
     BTHomeBleEvent,
@@ -97,8 +97,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert address is not None
 
     kwargs = {}
-    if bindkey := entry.data.get(CONF_BIND_KEY):
-        kwargs[CONF_BIND_KEY] = bytes.fromhex(bindkey)
+    if bindkey := entry.data.get(CONF_BINDKEY):
+        kwargs[CONF_BINDKEY] = bytes.fromhex(bindkey)
     data = BTHomeBluetoothDeviceData(**kwargs)
 
     device_registry = async_get(hass)
