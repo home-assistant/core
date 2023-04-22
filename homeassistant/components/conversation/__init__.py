@@ -270,7 +270,7 @@ async def websocket_list_agents(
         supported_languages = agent.supported_languages
         if language and supported_languages != MATCH_ALL:
             supported_languages = language_util.matches(
-                language, agent.supported_languages, country
+                language, supported_languages, country
             )
 
         agent_dict: dict[str, Any] = {
