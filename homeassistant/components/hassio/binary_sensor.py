@@ -29,7 +29,7 @@ ADDON_ENTITY_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_registry_enabled_default=False,
         key=ATTR_STATE,
-        name="Running",
+        translation_key="state",
         target=ATTR_STARTED,
     ),
 )

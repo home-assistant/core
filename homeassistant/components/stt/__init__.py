@@ -15,7 +15,9 @@ from aiohttp.web_exceptions import (
     HTTPNotFound,
     HTTPUnsupportedMediaType,
 )
+import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -23,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, language as language_util
 
 from .const import (
     DATA_PROVIDERS,
@@ -72,8 +74,28 @@ def async_get_speech_to_text_entity(
     return component.get_entity(entity_id)
 
 
+@callback
+def async_get_speech_to_text_languages(hass: HomeAssistant) -> set[str]:
+    """Return a set with the union of languages supported by stt engines."""
+    languages = set()
+
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
+    legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
+    for entity in component.entities:
+        for language_tag in entity.supported_languages:
+            languages.add(language_tag)
+
+    for engine in legacy_providers.values():
+        for language_tag in engine.supported_languages:
+            languages.add(language_tag)
+
+    return languages
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
+    websocket_api.async_register_command(hass, websocket_list_engines)
+
     component = hass.data[DOMAIN] = EntityComponent[SpeechToTextEntity](
         _LOGGER, DOMAIN, hass
     )
@@ -189,9 +211,18 @@ class SpeechToTextEntity(RestoreEntity):
     @callback
     def check_metadata(self, metadata: SpeechMetadata) -> bool:
         """Check if given metadata supported by this provider."""
+        if metadata.language not in self.supported_languages:
+            language_matches = language_util.matches(
+                metadata.language,
+                self.supported_languages,
+            )
+            if language_matches:
+                metadata.language = language_matches[0]
+            else:
+                return False
+
         if (
-            metadata.language not in self.supported_languages
-            or metadata.format not in self.supported_formats
+            metadata.format not in self.supported_formats
             or metadata.codec not in self.supported_codecs
             or metadata.bit_rate not in self.supported_bit_rates
             or metadata.sample_rate not in self.supported_sample_rates
@@ -376,3 +407,50 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
         )
     except ValueError as err:
         raise ValueError(f"Wrong format of X-Speech-Content: {err}") from err
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "stt/engine/list",
+        vol.Optional("language"): str,
+        vol.Optional("country"): str,
+    }
+)
+@callback
+def websocket_list_engines(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """List speech to text engines and, optionally, if they support a given language."""
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
+    legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
+
+    country = msg.get("country")
+    language = msg.get("language")
+    providers = []
+    provider_info: dict[str, Any]
+
+    for entity in component.entities:
+        provider_info = {
+            "engine_id": entity.entity_id,
+            "supported_languages": entity.supported_languages,
+        }
+        if language:
+            provider_info["supported_languages"] = language_util.matches(
+                language, entity.supported_languages, country
+            )
+        providers.append(provider_info)
+
+    for engine_id, provider in legacy_providers.items():
+        provider_info = {
+            "engine_id": engine_id,
+            "supported_languages": provider.supported_languages,
+        }
+        if language:
+            provider_info["supported_languages"] = language_util.matches(
+                language, provider.supported_languages, country
+            )
+        providers.append(provider_info)
+
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"providers": providers})
+    )

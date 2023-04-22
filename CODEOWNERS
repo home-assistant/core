@@ -897,8 +897,8 @@ build.json @home-assistant/supervisor
 /tests/components/plaato/ @JohNan
 /homeassistant/components/plex/ @jjlawren
 /tests/components/plex/ @jjlawren
-/homeassistant/components/plugwise/ @CoMPaTech @bouwew @brefra @frenck
-/tests/components/plugwise/ @CoMPaTech @bouwew @brefra @frenck
+/homeassistant/components/plugwise/ @CoMPaTech @bouwew @frenck
+/tests/components/plugwise/ @CoMPaTech @bouwew @frenck
 /homeassistant/components/plum_lightpad/ @ColinHarrington @prystupa
 /tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
@@ -963,6 +963,8 @@ build.json @home-assistant/supervisor
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff
 /tests/components/random/ @fabaff
+/homeassistant/components/rapt_ble/ @sairon
+/tests/components/rapt_ble/ @sairon
 /homeassistant/components/raspberry_pi/ @home-assistant/core
 /tests/components/raspberry_pi/ @home-assistant/core
 /homeassistant/components/rdw/ @frenck
@@ -997,6 +999,8 @@ build.json @home-assistant/supervisor
 /tests/components/rituals_perfume_genie/ @milanmeu
 /homeassistant/components/rmvtransport/ @cgtobi
 /tests/components/rmvtransport/ @cgtobi
+/homeassistant/components/roborock/ @humbertogontijo @Lash-L
+/tests/components/roborock/ @humbertogontijo @Lash-L
 /homeassistant/components/roku/ @ctalkington
 /tests/components/roku/ @ctalkington
 /homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn
@@ -1257,8 +1261,8 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins
 /tests/components/transmission/ @engrbm87 @JPHutchins
-/homeassistant/components/tts/ @pvizeli
-/tests/components/tts/ @pvizeli
+/homeassistant/components/tts/ @home-assistant/core @pvizeli
+/tests/components/tts/ @home-assistant/core @pvizeli
 /homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
 /tests/components/tuya/ @Tuya @zlinoliver @frenck
 /homeassistant/components/twentemilieu/ @frenck
@@ -1270,8 +1274,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifiled/ @florisvdk
-/homeassistant/components/unifiprotect/ @briis @AngellusMortis @bdraco
-/tests/components/unifiprotect/ @briis @AngellusMortis @bdraco
+/homeassistant/components/unifiprotect/ @AngellusMortis @bdraco
+/tests/components/unifiprotect/ @AngellusMortis @bdraco
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff
@@ -1367,6 +1371,8 @@ build.json @home-assistant/supervisor
 /tests/components/worldclock/ @fabaff
 /homeassistant/components/ws66i/ @ssaenger
 /tests/components/ws66i/ @ssaenger
+/homeassistant/components/wyoming/ @balloob @synesthesiam
+/tests/components/wyoming/ @balloob @synesthesiam
 /homeassistant/components/xbox/ @hunterjm
 /tests/components/xbox/ @hunterjm
 /homeassistant/components/xiaomi_aqara/ @danielhiversen @syssi

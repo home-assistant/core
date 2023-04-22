@@ -363,7 +363,7 @@ async def test_light_strip(hass: HomeAssistant) -> None:
     )
     # set a one zone
     assert len(bulb.set_power.calls) == 2
-    assert len(bulb.get_color_zones.calls) == 2
+    assert len(bulb.get_color_zones.calls) == 1
     assert len(bulb.set_color.calls) == 0
     call_dict = bulb.set_color_zones.calls[0][1]
     call_dict.pop("callb")
@@ -1124,7 +1124,7 @@ async def test_config_zoned_light_strip_fails(hass: HomeAssistant) -> None:
     entity_id = "light.my_bulb"
 
     class MockFailingLifxCommand:
-        """Mock a lifx command that fails on the 3rd try."""
+        """Mock a lifx command that fails on the 2nd try."""
 
         def __init__(self, bulb, **kwargs):
             """Init command."""
@@ -1134,7 +1134,7 @@ async def test_config_zoned_light_strip_fails(hass: HomeAssistant) -> None:
         def __call__(self, callb=None, *args, **kwargs):
             """Call command."""
             self.call_count += 1
-            response = None if self.call_count >= 3 else MockMessage()
+            response = None if self.call_count >= 2 else MockMessage()
             if callb:
                 callb(self.bulb, response)
 
@@ -1150,6 +1150,50 @@ async def test_config_zoned_light_strip_fails(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_legacy_zoned_light_strip(hass: HomeAssistant) -> None:
+    """Test we handle failure to update zones."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    light_strip = _mocked_light_strip()
+    entity_id = "light.my_bulb"
+
+    class MockPopulateLifxZonesCommand:
+        """Mock populating the number of zones."""
+
+        def __init__(self, bulb, **kwargs):
+            """Init command."""
+            self.bulb = bulb
+            self.call_count = 0
+
+        def __call__(self, callb=None, *args, **kwargs):
+            """Call command."""
+            self.call_count += 1
+            self.bulb.color_zones = [None] * 12
+            if callb:
+                callb(self.bulb, MockMessage())
+
+    get_color_zones_mock = MockPopulateLifxZonesCommand(light_strip)
+    light_strip.get_color_zones = get_color_zones_mock
+
+    with _patch_discovery(device=light_strip), _patch_device(device=light_strip):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+        entity_registry = er.async_get(hass)
+        assert entity_registry.async_get(entity_id).unique_id == SERIAL
+        assert hass.states.get(entity_id).state == STATE_OFF
+        # 1 to get the number of zones
+        # 2 get populate the zones
+        assert get_color_zones_mock.call_count == 3
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == STATE_OFF
+        # 2 get populate the zones
+        assert get_color_zones_mock.call_count == 5
 
 
 async def test_white_light_fails(hass: HomeAssistant) -> None:
