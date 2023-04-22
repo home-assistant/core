@@ -46,7 +46,7 @@ async def test_snips_no_mqtt(
         },
     )
     assert not result
-    assert "MQTT integration is not available" in caplog.text
+    assert "MQTT is not enabled" in caplog.text
 
 
 async def test_snips_bad_config(
