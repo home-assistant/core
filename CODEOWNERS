@@ -82,6 +82,8 @@ build.json @home-assistant/supervisor
 /tests/components/androidtv/ @JeffLIrion @ollo69
 /homeassistant/components/androidtv_remote/ @tronikos
 /tests/components/androidtv_remote/ @tronikos
+/homeassistant/components/anova/ @Lash-L
+/tests/components/anova/ @Lash-L
 /homeassistant/components/anthemav/ @hyralex
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
