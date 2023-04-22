@@ -257,7 +257,7 @@
   "entity": {
     "sensor": {
       "individual_address": {
-        "name": "Individual Address"
+        "name": "Individual address"
       },
       "connected_since": {
         "name": "Connection established"
