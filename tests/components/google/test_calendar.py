@@ -1295,3 +1295,37 @@ async def test_event_without_duration(
     assert state.attributes.get("start_time") == one_hour_from_now.strftime(
         DATE_STR_FORMAT
     )
+
+
+async def test_event_differs_timezone(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test a case where the event has a different start/end timezone."""
+    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    end_event = one_hour_from_now + datetime.timedelta(hours=8)
+    event = {
+        **TEST_EVENT,
+        "start": {
+            "dateTime": one_hour_from_now.isoformat(),
+            "timeZone": "America/Regina",
+        },
+        "end": {"dateTime": end_event.isoformat(), "timeZone": "UTC"},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": one_hour_from_now.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
