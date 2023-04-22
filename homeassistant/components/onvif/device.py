@@ -11,7 +11,7 @@ from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault, XMLParseError
+from zeep.exceptions import Fault, TransportError, XMLParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -38,6 +38,10 @@ from .const import (
 )
 from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
+
+# Some cameras don't support the GetServiceCapabilities call
+# and will return a 404 error which is caught by TransportError
+GET_CAPABILITIES_EXCEPTIONS = (ONVIFError, Fault, RequestError, TransportError)
 
 
 class ONVIFDevice:
@@ -264,23 +268,23 @@ class ONVIFDevice:
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
         snapshot = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
 
         ptz = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             self.device.get_definition("ptz")
             ptz = True
 
         imaging = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             self.device.create_imaging_service()
             imaging = True
 
         events = False
-        with suppress(ONVIFError, Fault, RequestError, XMLParseError):
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS, XMLParseError):
             events = await self.events.async_start()
 
         return Capabilities(snapshot, events, ptz, imaging)
@@ -330,7 +334,7 @@ class ONVIFDevice:
                     ptz_service = self.device.create_ptz_service()
                     presets = await ptz_service.GetPresets(profile.token)
                     profile.ptz.presets = [preset.token for preset in presets if preset]
-                except (Fault, RequestError):
+                except GET_CAPABILITIES_EXCEPTIONS:
                     # It's OK if Presets aren't supported
                     profile.ptz.presets = []
 
