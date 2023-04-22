@@ -73,8 +73,8 @@ class ManualTriggerEntity(TriggerBaseEntity):
         await TriggerBaseEntity.async_added_to_hass(self)
 
     @callback
-    def _process_data(self, value: str | None = None) -> None:
-        """Process new data."""
+    def _process_manual_data(self, value: str | None = None) -> None:
+        """Process new data manually."""
 
         this = None
         if state := self.hass.states.get(self.entity_id):
