@@ -1743,4 +1743,9 @@ async def test_ws_list_voices(
 
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {"voices": ["James Earl Jones", "Fran Drescher"]}
+    assert msg["result"] == {
+        "voices": [
+            {"voice_id": "james_earl_jones", "name": "James Earl Jones"},
+            {"voice_id": "fran_drescher", "name": "Fran Drescher"},
+        ]
+    }
