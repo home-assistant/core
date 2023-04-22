@@ -4,9 +4,12 @@ from __future__ import annotations
 import json
 import logging
 
-from azure.servicebus import ServiceBusMessage
-from azure.servicebus.aio import ServiceBusClient, ServiceBusSender
-from azure.servicebus.exceptions import (
+from azure.servicebus import ServiceBusMessage  # pylint: disable=import-error
+from azure.servicebus.aio import (  # pylint: disable=import-error
+    ServiceBusClient,
+    ServiceBusSender,
+)
+from azure.servicebus.exceptions import (  # pylint: disable=import-error
     MessagingEntityNotFoundError,
     ServiceBusConnectionError,
     ServiceBusError,
