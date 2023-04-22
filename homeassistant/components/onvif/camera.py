@@ -200,20 +200,20 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             return self._stream_uri
         if self._stream_uri_future:
             return await self._stream_uri_future
+        loop = asyncio.get_running_loop()
+        self._stream_uri_future = loop.create_future()
         try:
-            loop = asyncio.get_running_loop()
-            self._stream_uri_future = loop.create_future()
             uri_no_auth = await self.device.async_get_stream_uri(self.profile)
-            url = URL(uri_no_auth)
-            url = url.with_user(self.device.username)
-            url = url.with_password(self.device.password)
-            self._stream_uri = str(url)
-            self._stream_uri_future.set_result(self._stream_uri)
         except (asyncio.TimeoutError, Exception) as err:  # pylint: disable=broad-except
             LOGGER.error("Failed to get stream uri: %s", err)
             if self._stream_uri_future:
                 self._stream_uri_future.set_exception(err)
             raise
+        url = URL(uri_no_auth)
+        url = url.with_user(self.device.username)
+        url = url.with_password(self.device.password)
+        self._stream_uri = str(url)
+        self._stream_uri_future.set_result(self._stream_uri)
         return self._stream_uri
 
     async def async_perform_ptz(
