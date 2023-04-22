@@ -806,12 +806,11 @@ class MQTT:
         subscriptions = self._matching_subscriptions(msg.topic)
 
         for subscription in subscriptions:
-            init_status = self._retained_init.setdefault(subscription, set())
-            # skip already initialized subscriptions
-            if msg.topic in init_status:
-                if msg.retain:
+            if msg.retain:
+                init_status = self._retained_init.setdefault(subscription, set())
+                # skip already initialized subscriptions
+                if msg.topic in init_status:
                     continue
-            elif msg.retain:
                 # remember the subscription had an initial retained payload
                 self._retained_init[subscription].add(msg.topic)
 
