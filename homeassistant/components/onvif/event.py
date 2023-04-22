@@ -660,7 +660,13 @@ class WebHookManager:
         try:
             try:
                 await self._async_create_webhook_subscription()
-            except RemoteProtocolError:
+            except RequestError:
+                #
+                # We should only need to retry on RemoteProtocolError but some cameras
+                # are flaky and sometimes do not respond to the Renew request so we
+                # retry on RequestError as well.
+                #
+                # For RemoteProtocolError:
                 # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
                 # to close the connection at any time, we treat this as a normal and try again
                 # once since we do not want to declare the camera as not supporting webhooks
