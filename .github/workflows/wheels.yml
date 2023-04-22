@@ -219,15 +219,34 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3.5.2
 
-      - name: Download env_file
-        uses: actions/download-artifact@v3
-        with:
-          name: env_file
+      - name: Write alternative env-file for cp311
+        run: |
+          (
+            echo "GRPC_BUILD_WITH_BORING_SSL_ASM=false"
+            echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
+            echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
+            echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
 
-      - name: Download env_file
+            # GRPC on armv7 needed -lexecinfo (issue #56669) since home assistant installed
+            # execinfo-dev when building wheels. However, this package is no longer available
+            # Alpine 3.17, which we use for the cp311 ABI, so the flag should no longer be needed.
+            echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc" # -lexecinfo
+
+            # Fix out of memory issues with rust
+            echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
+
+            # OpenCV headless installation
+            echo "CI_BUILD=1"
+            echo "ENABLE_HEADLESS=1"
+
+            # Use C-Extension for sqlalchemy
+            echo "REQUIRE_SQLALCHEMY_CEXT=1"
+          ) > .env_file
+
+      - name: Download requirements_diff
         uses: actions/download-artifact@v3
         with:
-          name: env_file
+          name: requirements_diff
 
       - name: Uncomment packages
         run: |
