@@ -1102,12 +1102,20 @@ jobs:
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v3.1.3
+        uses: Wandalen/wretry.action@v1.0.36
         with:
-          fail_ci_if_error: true
-          flags: full-suite
+          action: codecov/codecov-action@v3.1.3
+          with: |
+            fail_ci_if_error: true
+            flags: full-suite
+          attempt_limit: 5
+          attempt_delay: 30000
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v3.1.3
+        uses: Wandalen/wretry.action@v1.0.36
         with:
-          fail_ci_if_error: true
+          action: codecov/codecov-action@v3.1.3
+          with: |
+            fail_ci_if_error: true
+          attempt_limit: 5
+          attempt_delay: 30000

@@ -266,15 +266,18 @@ async def websocket_list_agents(
 
     for agent_info in manager.async_get_agent_info():
         agent = await manager.async_get_agent(agent_info.id)
+
+        supported_languages = agent.supported_languages
+        if language and supported_languages != MATCH_ALL:
+            supported_languages = language_util.matches(
+                language, supported_languages, country
+            )
+
         agent_dict: dict[str, Any] = {
             "id": agent_info.id,
             "name": agent_info.name,
-            "supported_languages": agent.supported_languages,
+            "supported_languages": supported_languages,
         }
-        if language:
-            agent_dict["supported_languages"] = language_util.matches(
-                language, agent.supported_languages, country
-            )
         agents.append(agent_dict)
 
     connection.send_message(websocket_api.result_message(msg["id"], {"agents": agents}))

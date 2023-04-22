@@ -85,6 +85,11 @@
           'smurfish',
         ]),
       }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
     ]),
   })
 # ---
@@ -103,6 +108,11 @@
         'supported_languages': list([
           'smurfish',
         ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
       }),
     ]),
   })
@@ -123,6 +133,11 @@
         'supported_languages': list([
         ]),
       }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
     ]),
   })
 # ---
@@ -141,6 +156,11 @@
         'name': 'Mock Title',
         'supported_languages': list([
         ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
       }),
     ]),
   })
@@ -162,6 +182,11 @@
         'supported_languages': list([
         ]),
       }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
     ]),
   })
 # ---
@@ -181,6 +206,11 @@
         'name': 'Mock Title',
         'supported_languages': list([
         ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
       }),
     ]),
   })
