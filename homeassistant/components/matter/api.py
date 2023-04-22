@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import asdict
 from functools import wraps
 from typing import Any
 
@@ -190,7 +191,7 @@ async def websocket_get_fabrics(
     connection.send_result(
         msg[ID],
         {
-            "fabrics": fabrics,
+            "fabrics": [asdict(fabric) for fabric in fabrics],
             "fabric_count": fabric_count,
             "fabric_limit": supported_fabrics,
         },
