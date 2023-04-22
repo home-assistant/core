@@ -64,10 +64,12 @@ class LazyEventPartialState:
         self.context_id_bin: bytes | None = self.row.context_id_bin
         self.context_user_id_bin: bytes | None = self.row.context_user_id_bin
         self.context_parent_id_bin: bytes | None = self.row.context_parent_id_bin
-        if data := getattr(row, "data", None):
+        # We need to explicitly check for the row is EventAsRow as the unhappy path
+        # to fetch row.data for Row is very expensive
+        if type(row) is EventAsRow:  # pylint: disable=unidiomatic-typecheck
             # If its an EventAsRow we can avoid the whole
             # json decode process as we already have the data
-            self.data = data
+            self.data = row.data
             return
         source = cast(str, self.row.shared_data or self.row.event_data)
         if not source:
