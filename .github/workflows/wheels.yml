@@ -252,7 +252,12 @@ jobs:
         run: |
           requirement_files="requirements_all.txt requirements_diff.txt"
           for requirement_file in ${requirement_files}; do
-            sed -i "s|# pybluez|pybluez|g" ${requirement_file}
+
+            # PyBluez no longer compiles. Commented it out for now.
+            # It need further cleanup down the line, as all machine images
+            # try to install it.
+            # sed -i "s|# pybluez|pybluez|g" ${requirement_file}
+
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
