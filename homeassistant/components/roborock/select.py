@@ -37,7 +37,7 @@ class RoborockSelectDescription(
 
 SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
     RoborockSelectDescription(
-        key="mop_intensity",
+        key="water_box_mode",
         translation_key="mop_intensity",
         options=RoborockMopIntensityCode.values(),
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
