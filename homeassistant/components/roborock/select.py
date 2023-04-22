@@ -38,12 +38,14 @@ class RoborockSelectDescription(
 SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
     RoborockSelectDescription(
         key="mop_intensity",
+        translation_key="mop_intensity",
         options=RoborockMopIntensityCode.values(),
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
         option_code=RoborockMopIntensityCode,
     ),
     RoborockSelectDescription(
         key="mop_mode",
+        translation_key="mop_mode",
         options=RoborockMopModeCode.values(),
         api_command=RoborockCommand.SET_MOP_MODE,
         option_code=RoborockMopModeCode,
@@ -66,7 +68,10 @@ async def async_setup_entry(
         for description in SELECT_DESCRIPTIONS:
             entities.append(
                 RoborockSelectEntity(
-                    slugify(device_id), device_info, coordinator, description
+                    f"{description.key}_{slugify(device_id)}",
+                    device_info,
+                    coordinator,
+                    description,
                 )
             )
     async_add_entities(entities)
@@ -83,6 +88,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         entity_description: RoborockSelectDescription,
     ) -> None:
         """Create a select entity."""
+        self.entity_description = entity_description
         super().__init__(unique_id, device_info, coordinator)
         self.api_command = entity_description.api_command
         self.option_code = entity_description.option_code
