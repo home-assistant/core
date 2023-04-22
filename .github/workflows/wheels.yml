@@ -285,7 +285,6 @@ jobs:
             sed -i "s|# homekit|homekit|g" ${requirement_file}
             sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-            sed -i "s|# opencv-python-headless|opencv-python-headless|g" ${requirement_file}
           done
 
       - name: Split requirements all
