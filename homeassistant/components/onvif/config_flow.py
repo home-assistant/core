@@ -5,7 +5,6 @@ from pprint import pformat
 from typing import Any
 from urllib.parse import urlparse
 
-from onvif.exceptions import ONVIFError
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.scope import Scope
@@ -31,7 +30,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_DEVICE_ID, DEFAULT_ARGUMENTS, DEFAULT_PORT, DOMAIN, LOGGER
+from .const import (
+    CONF_DEVICE_ID,
+    DEFAULT_ARGUMENTS,
+    DEFAULT_PORT,
+    DOMAIN,
+    GET_CAPABILITIES_EXCEPTIONS,
+    LOGGER,
+)
 from .device import get_device
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
@@ -267,26 +273,26 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Verify there is an H264 profile
             media_service = device.create_media_service()
             profiles = await media_service.GetProfiles()
-            h264 = any(
-                profile.VideoEncoderConfiguration
-                and profile.VideoEncoderConfiguration.Encoding == "H264"
-                for profile in profiles
-            )
-
-            if not h264:
-                return self.async_abort(reason="no_h264")
-
-            title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
-            return self.async_create_entry(title=title, data=self.onvif_config)
-
-        except ONVIFError as err:
+        except GET_CAPABILITIES_EXCEPTIONS as err:
             LOGGER.error(
                 "Couldn't setup ONVIF device '%s'. Error: %s",
                 self.onvif_config[CONF_NAME],
                 err,
             )
-            return self.async_abort(reason="onvif_error")
+            return self.async_abort(
+                reason="onvif_error", description_placeholders={"error": err}
+            )
+        else:
+            h264 = any(
+                profile.VideoEncoderConfiguration
+                and profile.VideoEncoderConfiguration.Encoding == "H264"
+                for profile in profiles
+            )
+            if not h264:
+                return self.async_abort(reason="no_h264")
 
+            title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
+            return self.async_create_entry(title=title, data=self.onvif_config)
         finally:
             await device.close()
 

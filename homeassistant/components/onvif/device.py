@@ -11,7 +11,7 @@ from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault, TransportError, XMLParseError
+from zeep.exceptions import Fault, XMLParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,6 +28,7 @@ import homeassistant.util.dt as dt_util
 from .const import (
     ABSOLUTE_MOVE,
     CONTINUOUS_MOVE,
+    GET_CAPABILITIES_EXCEPTIONS,
     GOTOPRESET_MOVE,
     LOGGER,
     PAN_FACTOR,
@@ -38,10 +39,6 @@ from .const import (
 )
 from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
-
-# Some cameras don't support the GetServiceCapabilities call
-# and will return a 404 error which is caught by TransportError
-GET_CAPABILITIES_EXCEPTIONS = (ONVIFError, Fault, RequestError, TransportError)
 
 
 class ONVIFDevice:
