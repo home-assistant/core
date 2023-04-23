@@ -253,7 +253,7 @@ jobs:
         with:
           name: requirements_diff
 
-      - name: Uncomment packages
+      - name: (Un)comment packages
         run: |
           requirement_files="requirements_all.txt requirements_diff.txt"
           for requirement_file in ${requirement_files}; do
@@ -285,6 +285,19 @@ jobs:
             sed -i "s|# homekit|homekit|g" ${requirement_file}
             sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
+
+            # Some packages are not buildable on armhf anymore
+            if [ "${{ matrix.arch }}" = "armhf" ]; then
+
+              # Pandas has issues building on armhf, it is expected they
+              # will drop the platform in the near future (they consider it
+              # "flimsy" on 386). The following packages depend on pandas,
+              # so we comment them out.
+              sed -i "s|env-canada|# env-canada|g" ${requirement_file}
+              sed -i "s|noaa-coops|# noaa-coops|g" ${requirement_file}
+              sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
+              sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}
+            fi
           done
 
       - name: Split requirements all
