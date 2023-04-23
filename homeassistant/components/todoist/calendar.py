@@ -310,6 +310,13 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
         self._apply_coordinator_update()
         super()._handle_coordinator_update()
 
+    def _apply_coordinator_update(self) -> None:
+        self.data.update()
+        # Set Todoist-specific data that can't easily be grabbed
+        self._cal_data["all_tasks"] = [
+            task[SUMMARY] for task in self.data.all_project_tasks
+        ]
+
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
@@ -324,13 +331,6 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
         """Update all Todoist Calendars."""
         await super().async_update()
         self._apply_coordinator_update()
-
-    def _apply_coordinator_update(self) -> None:
-        self.data.update()
-        # Set Todoist-specific data that can't easily be grabbed
-        self._cal_data["all_tasks"] = [
-            task[SUMMARY] for task in self.data.all_project_tasks
-        ]
 
     async def async_get_events(
         self,
