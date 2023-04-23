@@ -6,7 +6,7 @@ import async_timeout
 
 from homeassistant.components import assist_pipeline, voip
 from homeassistant.components.voip.devices import VoIPDevice
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
@@ -86,6 +86,7 @@ async def test_pipeline(
             hass,
             hass.config.language,
             voip_device,
+            Context(),
             listening_tone_enabled=False,
         )
         rtp_protocol.transport = Mock()
@@ -133,6 +134,7 @@ async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) ->
             hass,
             hass.config.language,
             voip_device,
+            Context(),
             pipeline_timeout=0.001,
             listening_tone_enabled=False,
         )
@@ -170,6 +172,7 @@ async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) 
             hass,
             hass.config.language,
             voip_device,
+            Context(),
             audio_timeout=0.001,
             listening_tone_enabled=False,
         )
