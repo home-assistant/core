@@ -169,6 +169,16 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         translation_key="power_failed_state",
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
     ),
+    YoLinkSensorEntityDescription(
+        key="mute",
+        device_class=SensorDeviceClass.ENUM,
+        name="Mute",
+        icon="mdi:volume-mute",
+        options=["Yes", "No"],
+        translation_key="power_failed_mute",
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        value=lambda value: "Yes" if value is True else "No",
+    ),
 )
 
 
