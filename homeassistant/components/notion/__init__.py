@@ -235,29 +235,29 @@ def _async_register_new_bridge(
     )
 
 
-class NotionEntity(CoordinatorEntity):
+class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
     """Define a base Notion entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[NotionData],
         listener_id: str,
         sensor_id: str,
-        bridge_id: str,
+        bridge_id: int,
         system_id: str,
         description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        bridge = self.coordinator.data.bridges.get(bridge_id, {})
+        bridge = self.coordinator.data.bridges[bridge_id]
         sensor = self.coordinator.data.sensors[sensor_id]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor.hardware_id)},
             manufacturer="Silicon Labs",
-            model=sensor.hardware_revision,
+            model=str(sensor.hardware_revision),
             name=str(sensor.name).capitalize(),
             sw_version=sensor.firmware_version,
             via_device=(DOMAIN, bridge.hardware_id),
