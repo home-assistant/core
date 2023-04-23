@@ -164,9 +164,9 @@ uamqp==1.6.0;python_version<'3.11'
 faust-cchardet>=2.1.18
 
 # websockets 11.0 is missing files in the source distribution
-# which break wheel builds
+# which break wheel builds so we need at least 11.0.1
 # https://github.com/aaugustin/websockets/issues/1329
-websockets<11.0
+websockets>=11.0.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

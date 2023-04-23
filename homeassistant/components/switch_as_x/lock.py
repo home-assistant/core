@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,6 +36,7 @@ async def async_setup_entry(
             LockSwitch(
                 hass,
                 config_entry.title,
+                LOCK_DOMAIN,
                 entity_id,
                 config_entry.entry_id,
             )
