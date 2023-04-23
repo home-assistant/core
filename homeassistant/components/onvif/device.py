@@ -159,11 +159,8 @@ class ONVIFDevice:
         dt_param.UTCDateTime.Time.Second = system_date.second
         system_timezone = str(system_date.astimezone().tzinfo)
         timezone_names: list[str | None] = [system_timezone]
-        if time_zone := device_time.TimeZone:
-            if system_timezone != time_zone:
-                timezone_names.append(dt_param.TimeZone)
-            if time_zone.TZ and system_timezone != time_zone.TZ:
-                timezone_names.append(time_zone.TZ)
+        if (time_zone := device_time.TimeZone) and system_timezone != time_zone.TZ:
+            timezone_names.append(time_zone.TZ)
         timezone_names.append(None)
         timezone_max_idx = len(timezone_names) - 1
         LOGGER.debug(
