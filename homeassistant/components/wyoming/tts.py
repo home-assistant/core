@@ -82,7 +82,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
     @property
     def supported_options(self):
         """Return list of supported options like voice, emotion."""
-        return [tts.ATTR_AUDIO_OUTPUT]
+        return [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE]
 
     @property
     def default_options(self):
