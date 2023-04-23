@@ -34,7 +34,7 @@ from .core.const import (
 from .core.helpers import LogMixin
 
 if TYPE_CHECKING:
-    from .core.channels.base import ZigbeeChannel
+    from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,19 +122,19 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     @callback
     def async_accept_signal(
         self,
-        channel: ZigbeeChannel | None,
+        cluster_handler: ClusterHandler | None,
         signal: str,
         func: Callable[..., Any],
         signal_override=False,
     ):
-        """Accept a signal from a channel."""
+        """Accept a signal from a cluster handler."""
         unsub = None
         if signal_override:
             unsub = async_dispatcher_connect(self.hass, signal, func)
         else:
-            assert channel
+            assert cluster_handler
             unsub = async_dispatcher_connect(
-                self.hass, f"{channel.unique_id}_{signal}", func
+                self.hass, f"{cluster_handler.unique_id}_{signal}", func
             )
         self._unsubs.append(unsub)
 
@@ -152,7 +152,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         """Initialize subclass.
 
         :param id_suffix: suffix to add to the unique_id of the entity. Used for multi
-                          entities using the same channel/cluster id for the entity.
+                          entities using the same cluster handler/cluster id for the entity.
         """
         super().__init_subclass__(**kwargs)
         if id_suffix:
@@ -162,7 +162,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         self,
         unique_id: str,
         zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
+        cluster_handlers: list[ClusterHandler],
         **kwargs: Any,
     ) -> None:
         """Init ZHA entity."""
@@ -174,23 +174,23 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             .replace("sensor", "")
             .capitalize()
         )
-        self.cluster_channels: dict[str, ZigbeeChannel] = {}
-        for channel in channels:
-            self.cluster_channels[channel.name] = channel
+        self.cluster_handlers: dict[str, ClusterHandler] = {}
+        for cluster_handler in cluster_handlers:
+            self.cluster_handlers[cluster_handler.name] = cluster_handler
 
     @classmethod
     def create_entity(
         cls,
         unique_id: str,
         zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
+        cluster_handlers: list[ClusterHandler],
         **kwargs: Any,
     ) -> Self | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
         """
-        return cls(unique_id, zha_device, channels, **kwargs)
+        return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @property
     def available(self) -> bool:
@@ -220,7 +220,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             self._zha_device.ieee,
             self.entity_id,
             self._zha_device,
-            self.cluster_channels,
+            self.cluster_handlers,
             self.device_info,
             self.remove_future,
         )
@@ -238,9 +238,9 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     async def async_update(self) -> None:
         """Retrieve latest state."""
         tasks = [
-            channel.async_update()
-            for channel in self.cluster_channels.values()
-            if hasattr(channel, "async_update")
+            cluster_handler.async_update()
+            for cluster_handler in self.cluster_handlers.values()
+            if hasattr(cluster_handler, "async_update")
         ]
         if tasks:
             await asyncio.gather(*tasks)
@@ -320,6 +320,7 @@ class ZhaGroupEntity(BaseZhaEntity):
                 immediate=False,
                 function=functools.partial(self.async_update_ha_state, True),
             )
+            self.async_on_remove(self._change_listener_debouncer.async_cancel)
         self._async_unsub_state_changed = async_track_state_change_event(
             self.hass, self._entity_ids, self.async_state_changed_listener
         )

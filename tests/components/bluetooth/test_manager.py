@@ -822,12 +822,22 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     unsetup_not_connectable_scanner()
 
 
-async def test_goes_unavailable_dismisses_discovery(
+async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
     hass: HomeAssistant, mock_bluetooth_adapters: None
 ) -> None:
-    """Test that unavailable will dismiss any active discoveries."""
-    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
-    await hass.async_block_till_done()
+    """Test that unavailable will dismiss any active discoveries and make device discoverable again."""
+    mock_bt = [
+        {
+            "domain": "switchbot",
+            "service_data_uuid": "050a021a-0000-1000-8000-00805f9b34fb",
+            "connectable": False,
+        },
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
 
     assert async_scanner_count(hass, connectable=False) == 0
     switchbot_device_non_connectable = generate_ble_device(
@@ -896,9 +906,15 @@ async def test_goes_unavailable_dismisses_discovery(
     cancel_connectable_scanner = _get_manager().async_register_scanner(
         non_connectable_scanner, True
     )
-    non_connectable_scanner.inject_advertisement(
-        switchbot_device_non_connectable, switchbot_device_adv
-    )
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        non_connectable_scanner.inject_advertisement(
+            switchbot_device_non_connectable, switchbot_device_adv
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
+
     assert async_ble_device_from_address(hass, "44:44:33:11:23:45", False) is not None
     assert async_scanner_count(hass, connectable=True) == 1
     assert len(callbacks) == 1
@@ -949,6 +965,27 @@ async def test_goes_unavailable_dismisses_discovery(
 
     assert len(mock_async_progress_by_init_data_type.mock_calls) == 1
     assert mock_async_abort.mock_calls[0][1][0] == "mock_flow_id"
+
+    # Test that if the device comes back online, it can be discovered again
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        new_switchbot_device_adv = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["050a021a-0000-1000-8000-00805f9b34fb"],
+            service_data={"050a021a-0000-1000-8000-00805f9b34fb": b"\n\xff"},
+            manufacturer_data={1: b"\x01"},
+            rssi=-60,
+        )
+        non_connectable_scanner.inject_advertisement(
+            switchbot_device_non_connectable, new_switchbot_device_adv
+        )
+        await hass.async_block_till_done()
+
+    assert (
+        "44:44:33:11:23:45"
+        in non_connectable_scanner.discovered_devices_and_advertisement_data
+    )
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
     cancel_unavailable()
 
