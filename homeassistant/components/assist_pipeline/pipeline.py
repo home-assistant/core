@@ -282,12 +282,14 @@ class PipelineRun:
                 message=f"No speech to text provider for: {engine}",
             )
 
+        metadata.language = self.pipeline.stt_language or self.language
+
         if not stt_provider.check_metadata(metadata):
             raise SpeechToTextError(
                 code="stt-provider-unsupported-metadata",
                 message=(
                     f"Provider {stt_provider.name} does not support input speech "
-                    "to text metadata"
+                    "to text metadata {metadata}"
                 ),
             )
 
@@ -382,6 +384,7 @@ class PipelineRun:
                 PipelineEventType.INTENT_START,
                 {
                     "engine": self.intent_agent,
+                    "language": self.pipeline.conversation_language,
                     "intent_input": intent_input,
                 },
             )
@@ -393,7 +396,7 @@ class PipelineRun:
                 text=intent_input,
                 conversation_id=conversation_id,
                 context=self.context,
-                language=self.language,
+                language=self.pipeline.conversation_language,
                 agent_id=self.intent_agent,
             )
         except Exception as src_error:
@@ -439,14 +442,14 @@ class PipelineRun:
         if not await tts.async_support_options(
             self.hass,
             engine,
-            self.language,
+            self.pipeline.tts_language,
             tts_options,
         ):
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=(
                     f"Text to speech engine {engine} "
-                    f"does not support language {self.language} or options {tts_options}"
+                    f"does not support language {self.pipeline.tts_language} or options {tts_options}"
                 ),
             )
 
@@ -463,6 +466,8 @@ class PipelineRun:
                 PipelineEventType.TTS_START,
                 {
                     "engine": self.tts_engine,
+                    "language": self.pipeline.tts_language,
+                    "voice": self.pipeline.tts_voice,
                     "tts_input": tts_input,
                 },
             )
@@ -474,7 +479,7 @@ class PipelineRun:
                 self.hass,
                 tts_input,
                 engine=self.tts_engine,
-                language=self.language,
+                language=self.pipeline.tts_language,
                 options=self.tts_options,
             )
             tts_media = await media_source.async_resolve_media(
