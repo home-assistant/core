@@ -15,21 +15,26 @@ from . import MockAsyncTcpClient
 
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     """Test supported properties."""
-    state = hass.states.get("tts.wyoming")
+    state = hass.states.get("tts.test_tts")
     assert state is not None
 
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.wyoming")
+    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
     assert entity is not None
 
     assert entity.supported_languages == ["en-US"]
-    assert entity.supported_options == [tts.ATTR_AUDIO_OUTPUT]
-    assert entity.async_get_supported_voices("en-US") == ["Test Voice"]
+    assert entity.supported_options == [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE]
+    assert entity.async_get_supported_voices("en-US") == [
+        tts.Voice(
+            voice_id="Test Voice",
+            name="Test Voice",
+        )
+    ]
     assert not entity.async_get_supported_voices("de-DE")
 
 
 async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) -> None:
     """Test get audio."""
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.wyoming")
+    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
     assert entity is not None
 
     audio = bytes(100)
@@ -61,7 +66,7 @@ async def test_get_tts_audio_raw(
     hass: HomeAssistant, init_wyoming_tts, snapshot
 ) -> None:
     """Test get raw audio."""
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.wyoming")
+    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
     assert entity is not None
 
     audio = bytes(100)
@@ -89,7 +94,7 @@ async def test_get_tts_audio_connection_lost(
     hass: HomeAssistant, init_wyoming_tts
 ) -> None:
     """Test streaming audio and losing connection."""
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.wyoming")
+    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
     assert entity is not None
 
     with patch(
@@ -108,7 +113,7 @@ async def test_get_tts_audio_audio_oserror(
     hass: HomeAssistant, init_wyoming_tts
 ) -> None:
     """Test get audio and error raising."""
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.wyoming")
+    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
     assert entity is not None
 
     audio = bytes(100)
