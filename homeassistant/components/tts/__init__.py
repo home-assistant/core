@@ -287,6 +287,15 @@ class TextToSpeechEntity(RestoreEntity):
     __last_tts_loaded: str | None = None
 
     @property
+    def name(self) -> str | None:
+        """Return the name of the provider entity."""
+        # Only one entity is allowed per platform for now.
+        if self.platform is None:
+            return None
+
+        return self.platform.platform_name
+
+    @property
     @final
     def state(self) -> str | None:
         """Return the state of the entity."""
