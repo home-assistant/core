@@ -206,9 +206,10 @@ class PipelineRun:
     stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
     intent_agent: str | None = None
     tts_engine: str | None = None
-    tts_options: dict | None = None
+    tts_audio_output: str | None = None
 
     id: str = field(default_factory=ulid_util.ulid)
+    tts_options: dict | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
         """Set language for pipeline."""
@@ -428,21 +429,29 @@ class PipelineRun:
                 message=f"Text to speech engine '{engine}' not found",
             )
 
+        tts_options = {}
+        if self.pipeline.tts_voice is not None:
+            tts_options[tts.ATTR_VOICE] = self.pipeline.tts_voice
+
+        if self.tts_audio_output is not None:
+            tts_options[tts.ATTR_AUDIO_OUTPUT] = self.tts_audio_output
+
         if not await tts.async_support_options(
             self.hass,
             engine,
             self.language,
-            self.tts_options,
+            tts_options,
         ):
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=(
                     f"Text to speech engine {engine} "
-                    f"does not support language {self.language} or options {self.tts_options}"
+                    f"does not support language {self.language} or options {tts_options}"
                 ),
             )
 
         self.tts_engine = engine
+        self.tts_options = tts_options
 
     async def text_to_speech(self, tts_input: str) -> str:
         """Run text to speech portion of pipeline. Returns URL of TTS audio."""

@@ -89,6 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
+ATTR_VOICE = "voice"
 
 CONF_LANG = "language"
 

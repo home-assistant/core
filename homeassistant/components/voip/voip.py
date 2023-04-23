@@ -181,7 +181,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                         self.hass, DOMAIN, self.voip_device.voip_id
                     ),
                     conversation_id=self._conversation_id,
-                    tts_options={tts.ATTR_AUDIO_OUTPUT: "raw"},
+                    tts_audio_output="raw",
                 )
 
         except asyncio.TimeoutError:
