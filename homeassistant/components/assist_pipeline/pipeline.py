@@ -466,7 +466,7 @@ class PipelineRun:
                 PipelineEventType.TTS_START,
                 {
                     "engine": self.tts_engine,
-                    "language": self.pipeline.stt_language,
+                    "language": self.pipeline.tts_language,
                     "voice": self.pipeline.tts_voice,
                     "tts_input": tts_input,
                 },
