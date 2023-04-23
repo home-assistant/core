@@ -5,12 +5,21 @@ import io
 from unittest.mock import patch
 import wave
 
+import pytest
 from wyoming.audio import AudioChunk, AudioStop
 
 from homeassistant.components import tts
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from . import MockAsyncTcpClient
+
+from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
+    init_cache_dir_side_effect,
+    mock_get_cache_files,
+    mock_init_cache_dir,
+)
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
@@ -18,25 +27,20 @@ async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     state = hass.states.get("tts.test_tts")
     assert state is not None
 
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
+    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.wyoming")
     assert entity is not None
 
     assert entity.supported_languages == ["en-US"]
     assert entity.supported_options == [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE]
-    assert entity.async_get_supported_voices("en-US") == [
-        tts.Voice(
-            voice_id="Test Voice",
-            name="Test Voice",
-        )
-    ]
+    voices = entity.async_get_supported_voices("en-US")
+    assert len(voices) == 1
+    assert voices[0].name == "Test Voice"
+    assert voices[0].voice_id == "Test Voice"
     assert not entity.async_get_supported_voices("de-DE")
 
 
 async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) -> None:
     """Test get audio."""
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
-    assert entity is not None
-
     audio = bytes(100)
     audio_events = [
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
@@ -47,8 +51,11 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await entity.async_get_tts_audio(
-            "Hello world", hass.config.language
+        extension, data = await tts.async_get_media_source_audio(
+            hass,
+            tts.generate_media_source_id(
+                hass, "Hello world", "tts.wyoming", hass.config.language
+            ),
         )
 
     assert extension == "wav"
@@ -66,9 +73,6 @@ async def test_get_tts_audio_raw(
     hass: HomeAssistant, init_wyoming_tts, snapshot
 ) -> None:
     """Test get raw audio."""
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
-    assert entity is not None
-
     audio = bytes(100)
     audio_events = [
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
@@ -79,10 +83,15 @@ async def test_get_tts_audio_raw(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await entity.async_get_tts_audio(
-            "Hello world",
-            hass.config.language,
-            options={tts.ATTR_AUDIO_OUTPUT: "raw"},
+        extension, data = await tts.async_get_media_source_audio(
+            hass,
+            tts.generate_media_source_id(
+                hass,
+                "Hello world",
+                "tts.wyoming",
+                hass.config.language,
+                options={tts.ATTR_AUDIO_OUTPUT: "raw"},
+            ),
         )
 
     assert extension == "raw"
@@ -94,28 +103,22 @@ async def test_get_tts_audio_connection_lost(
     hass: HomeAssistant, init_wyoming_tts
 ) -> None:
     """Test streaming audio and losing connection."""
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
-    assert entity is not None
-
     with patch(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient([None]),
-    ):
-        extension, data = await entity.async_get_tts_audio(
-            "Hello world", hass.config.language
+    ), pytest.raises(HomeAssistantError):
+        await tts.async_get_media_source_audio(
+            hass,
+            tts.generate_media_source_id(
+                hass, "Hello world", "tts.wyoming", hass.config.language
+            ),
         )
-
-    assert extension is None
-    assert data is None
 
 
 async def test_get_tts_audio_audio_oserror(
     hass: HomeAssistant, init_wyoming_tts
 ) -> None:
     """Test get audio and error raising."""
-    entity = tts.async_get_text_to_speech_entity(hass, "tts.test_tts")
-    assert entity is not None
-
     audio = bytes(100)
     audio_events = [
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
@@ -127,10 +130,14 @@ async def test_get_tts_audio_audio_oserror(
     with patch(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         mock_client,
-    ), patch.object(mock_client, "read_event", side_effect=OSError("Boom!")):
-        extension, data = await entity.async_get_tts_audio(
-            "Hello world", hass.config.language
+    ), patch.object(
+        mock_client, "read_event", side_effect=OSError("Boom!")
+    ), pytest.raises(
+        HomeAssistantError
+    ):
+        await tts.async_get_media_source_audio(
+            hass,
+            tts.generate_media_source_id(
+                hass, "Hello world", "tts.wyoming", hass.config.language
+            ),
         )
-
-    assert extension is None
-    assert data is None

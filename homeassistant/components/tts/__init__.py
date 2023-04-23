@@ -117,16 +117,6 @@ class TTSCache(TypedDict):
 
 
 @callback
-def async_get_text_to_speech_entity(
-    hass: HomeAssistant, entity_id: str
-) -> TextToSpeechEntity | None:
-    """Return tts entity."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-
-    return component.get_entity(entity_id)
-
-
-@callback
 def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
     """Resolve engine.
 
