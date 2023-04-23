@@ -187,9 +187,11 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Device configuration."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         if user_input:
             self.onvif_config = user_input
-            if not (errors := await self.async_setup_profiles()):
+            errors, description_placeholders = await self.async_setup_profiles()
+            if not errors:
                 title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
                 return self.async_create_entry(title=title, data=self.onvif_config)
 
@@ -212,9 +214,10 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
-    async def async_setup_profiles(self) -> dict[str, str]:
+    async def async_setup_profiles(self) -> tuple[dict[str, str], dict[str, str]]:
         """Fetch ONVIF device profiles."""
         LOGGER.debug(
             "Fetching profiles from ONVIF device %s", pformat(self.onvif_config)
@@ -244,14 +247,10 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except Fault as fault:
                     if "not implemented" not in fault.message:
                         raise fault
-
                     LOGGER.debug(
-                        (
-                            "Couldn't get network interfaces from ONVIF device '%s'."
-                            " Error: %s"
-                        ),
+                        "%s: Could not get network interfaces: %s",
                         self.onvif_config[CONF_NAME],
-                        fault,
+                        stringify_onvif_error(fault),
                     )
             # If no network interfaces are exposed, fallback to serial number
             if not self.device_id:
@@ -273,7 +272,13 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             media_service = device.create_media_service()
             profiles = await media_service.GetProfiles()
         except GET_CAPABILITIES_EXCEPTIONS as err:
-            return {"base": stringify_onvif_error(err)}
+            LOGGER.debug(
+                "%s: Could not determine camera capabilities: %s",
+                self.onvif_config[CONF_NAME],
+                stringify_onvif_error(err),
+                exc_info=True,
+            )
+            return {"base": "onvif_errors"}, {"error": stringify_onvif_error(err)}
         else:
             if not any(
                 profile.VideoEncoderConfiguration
@@ -281,7 +286,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 for profile in profiles
             ):
                 raise AbortFlow(reason="no_h264")
-            return {}
+            return {}, {}
         finally:
             await device.close()
 
