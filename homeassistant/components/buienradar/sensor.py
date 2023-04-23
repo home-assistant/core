@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from buienradar.constants import (
+    __BRCONDITIONS,
     ATTRIBUTION,
     CONDCODE,
     CONDITION,
@@ -90,14 +91,20 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="condition",
         translation_key="condition",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[0] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="conditioncode",
         translation_key="conditioncode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[str(code) for code in __BRCONDITIONS],
     ),
     SensorEntityDescription(
         key="conditiondetailed",
         translation_key="conditiondetailed",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[1] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="conditionexact",
@@ -549,62 +556,92 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="condition_1d",
         translation_key="condition_1d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[0] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="condition_2d",
         translation_key="condition_2d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[0] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="condition_3d",
         translation_key="condition_3d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[0] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="condition_4d",
         translation_key="condition_4d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[0] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="condition_5d",
         translation_key="condition_5d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[0] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="conditioncode_1d",
         translation_key="conditioncode_1d",
+        device_class=SensorDeviceClass.ENUM,
+        options=[str(code) for code in __BRCONDITIONS],
     ),
     SensorEntityDescription(
         key="conditioncode_2d",
         translation_key="conditioncode_2d",
+        device_class=SensorDeviceClass.ENUM,
+        options=[str(code) for code in __BRCONDITIONS],
     ),
     SensorEntityDescription(
         key="conditioncode_3d",
         translation_key="conditioncode_3d",
+        device_class=SensorDeviceClass.ENUM,
+        options=[str(code) for code in __BRCONDITIONS],
     ),
     SensorEntityDescription(
         key="conditioncode_4d",
         translation_key="conditioncode_4d",
+        device_class=SensorDeviceClass.ENUM,
+        options=[str(code) for code in __BRCONDITIONS],
     ),
     SensorEntityDescription(
         key="conditioncode_5d",
         translation_key="conditioncode_5d",
+        device_class=SensorDeviceClass.ENUM,
+        options=[str(code) for code in __BRCONDITIONS],
     ),
     SensorEntityDescription(
         key="conditiondetailed_1d",
         translation_key="conditiondetailed_1d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[1] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="conditiondetailed_2d",
         translation_key="conditiondetailed_2d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[1] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="conditiondetailed_3d",
         translation_key="conditiondetailed_3d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[1] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="conditiondetailed_4d",
         translation_key="conditiondetailed_4d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[1] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="conditiondetailed_5d",
         translation_key="conditiondetailed_5d",
+        device_class=SensorDeviceClass.ENUM,
+        options=list({condition[1] for condition in __BRCONDITIONS.values()}),
     ),
     SensorEntityDescription(
         key="conditionexact_1d",
