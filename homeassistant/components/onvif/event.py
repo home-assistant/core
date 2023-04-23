@@ -31,7 +31,6 @@ from .parsers import PARSERS
 
 UNHANDLED_TOPICS: set[str] = set()
 
-
 SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
 CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError)
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
