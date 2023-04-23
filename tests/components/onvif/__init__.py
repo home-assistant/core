@@ -10,8 +10,10 @@ from homeassistant.components.onvif.models import (
     Capabilities,
     DeviceInfo,
     Profile,
+    PullPointManagerState,
     Resolution,
     Video,
+    WebHookManagerState,
 )
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
 
@@ -111,6 +113,10 @@ def setup_mock_device(mock_device):
         video_source_token=None,
     )
     mock_device.profiles = [profile1]
+    mock_device.events = MagicMock(
+        webhook_manager=MagicMock(state=WebHookManagerState.STARTED),
+        pullpoint_manager=MagicMock(state=PullPointManagerState.PAUSED),
+    )
 
     def mock_constructor(hass, config):
         """Fake the controller constructor."""

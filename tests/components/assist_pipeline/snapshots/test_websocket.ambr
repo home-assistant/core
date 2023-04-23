@@ -1,8 +1,8 @@
 # serializer version: 1
 # name: test_audio_pipeline
   dict({
-    'language': 'en-US',
-    'pipeline': 'en-US',
+    'language': 'en',
+    'pipeline': 'en',
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 30,
@@ -45,7 +45,7 @@
         'data': dict({
           'code': 'no_intent_match',
         }),
-        'language': 'en-US',
+        'language': 'en',
         'response_type': 'error',
         'speech': dict({
           'plain': dict({
@@ -66,7 +66,7 @@
 # name: test_audio_pipeline.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US",
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en",
       'mime_type': 'audio/mpeg',
       'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
     }),
@@ -74,8 +74,8 @@
 # ---
 # name: test_audio_pipeline_debug
   dict({
-    'language': 'en-US',
-    'pipeline': 'en-US',
+    'language': 'en',
+    'pipeline': 'en',
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 30,
@@ -118,7 +118,7 @@
         'data': dict({
           'code': 'no_intent_match',
         }),
-        'language': 'en-US',
+        'language': 'en',
         'response_type': 'error',
         'speech': dict({
           'plain': dict({
@@ -139,7 +139,7 @@
 # name: test_audio_pipeline_debug.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US",
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en",
       'mime_type': 'audio/mpeg',
       'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
     }),
@@ -147,8 +147,8 @@
 # ---
 # name: test_intent_failed
   dict({
-    'language': 'en-US',
-    'pipeline': 'en-US',
+    'language': 'en',
+    'pipeline': 'en',
     'runner_data': dict({
       'stt_binary_handler_id': None,
       'timeout': 30,
@@ -163,8 +163,8 @@
 # ---
 # name: test_intent_timeout
   dict({
-    'language': 'en-US',
-    'pipeline': 'en-US',
+    'language': 'en',
+    'pipeline': 'en',
     'runner_data': dict({
       'stt_binary_handler_id': None,
       'timeout': 0.1,
@@ -185,8 +185,8 @@
 # ---
 # name: test_stt_provider_missing
   dict({
-    'language': 'en-US',
-    'pipeline': 'en-US',
+    'language': 'en',
+    'pipeline': 'en',
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 30,
@@ -201,15 +201,15 @@
       'channel': 1,
       'codec': 'pcm',
       'format': 'wav',
-      'language': 'en-US',
+      'language': 'en',
       'sample_rate': 16000,
     }),
   })
 # ---
 # name: test_stt_stream_failed
   dict({
-    'language': 'en-US',
-    'pipeline': 'en-US',
+    'language': 'en',
+    'pipeline': 'en',
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 30,
@@ -231,8 +231,8 @@
 # ---
 # name: test_text_only_pipeline
   dict({
-    'language': 'en-US',
-    'pipeline': 'en-US',
+    'language': 'en',
+    'pipeline': 'en',
     'runner_data': dict({
       'stt_binary_handler_id': None,
       'timeout': 30,
@@ -255,7 +255,7 @@
         'data': dict({
           'code': 'no_intent_match',
         }),
-        'language': 'en-US',
+        'language': 'en',
         'response_type': 'error',
         'speech': dict({
           'plain': dict({
@@ -275,8 +275,8 @@
 # ---
 # name: test_tts_failed
   dict({
-    'language': 'en-US',
-    'pipeline': 'en-US',
+    'language': 'en',
+    'pipeline': 'en',
     'runner_data': dict({
       'stt_binary_handler_id': None,
       'timeout': 30,

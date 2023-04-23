@@ -1055,6 +1055,7 @@ async def test_purge_filtered_events(
     """Test filtered events are purged."""
     config: ConfigType = {"exclude": {"event_types": ["EVENT_PURGE"]}}
     instance = await async_setup_recorder_instance(hass, config)
+    await async_wait_recording_done(hass)
 
     def _add_db_entries(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
@@ -1086,14 +1087,14 @@ async def test_purge_filtered_events(
             convert_pending_states_to_meta(instance, session)
 
     service_data = {"keep_days": 10}
-    _add_db_entries(hass)
+    await instance.async_add_executor_job(_add_db_entries, hass)
+    await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         events_purge = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
         )
         states = session.query(States)
-
         assert events_purge.count() == 60
         assert states.count() == 10
 
@@ -1104,7 +1105,7 @@ async def test_purge_filtered_events(
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         events_purge = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
         )
@@ -1123,7 +1124,7 @@ async def test_purge_filtered_events(
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         events_purge = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
         )
