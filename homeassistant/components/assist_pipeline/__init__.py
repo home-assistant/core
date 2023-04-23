@@ -57,9 +57,6 @@ async def async_pipeline_from_audio_stream(
             "pipeline_not_found", f"Pipeline {pipeline_id} not found"
         )
 
-    if stt_metadata.language == "":
-        stt_metadata.language = pipeline.language
-
     pipeline_input = PipelineInput(
         conversation_id=conversation_id,
         stt_metadata=stt_metadata,
