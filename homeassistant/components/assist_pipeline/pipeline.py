@@ -467,6 +467,7 @@ class PipelineRun:
                 {
                     "engine": self.tts_engine,
                     "language": self.pipeline.stt_language,
+                    "voice": self.pipeline.tts_voice,
                     "tts_input": tts_input,
                 },
             )
