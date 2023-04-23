@@ -80,12 +80,12 @@ async def test_pipeline_from_audio_stream_legacy(
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "homeassistant",
             "conversation_language": "en-US",
-            "language": "en-US",
+            "language": "en",
             "name": "test_name",
             "stt_engine": "test",
-            "stt_language": "en-US",
+            "stt_language": "en-UK",
             "tts_engine": "test",
-            "tts_language": "en-US",
+            "tts_language": "en-AU",
             "tts_voice": "Arnold Schwarzenegger",
         }
     )
@@ -99,7 +99,7 @@ async def test_pipeline_from_audio_stream_legacy(
         Context(),
         events.append,
         stt.SpeechMetadata(
-            language="",
+            language="en-UK",
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
             bit_rate=stt.AudioBitRates.BITRATE_16,
@@ -146,12 +146,12 @@ async def test_pipeline_from_audio_stream_entity(
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "homeassistant",
             "conversation_language": "en-US",
-            "language": "en-US",
+            "language": "en",
             "name": "test_name",
             "stt_engine": mock_stt_provider_entity.entity_id,
-            "stt_language": "en-US",
+            "stt_language": "en-UK",
             "tts_engine": "test",
-            "tts_language": "en-US",
+            "tts_language": "en-UA",
             "tts_voice": "Arnold Schwarzenegger",
         }
     )
@@ -165,7 +165,7 @@ async def test_pipeline_from_audio_stream_entity(
         Context(),
         events.append,
         stt.SpeechMetadata(
-            language="",
+            language="en-UK",
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
             bit_rate=stt.AudioBitRates.BITRATE_16,
