@@ -246,7 +246,7 @@ class NumberStorageCollection(collection.StorageCollection):
 class InputNumber(collection.CollectionEntity, RestoreEntity):
     """Representation of a slider."""
 
-    _attr_should_poll = False
+    _attr_should_poll = True
     editable: bool
 
     def __init__(self, config: ConfigType) -> None:
