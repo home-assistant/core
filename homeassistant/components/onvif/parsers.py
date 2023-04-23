@@ -611,3 +611,35 @@ async def async_parse_jobstate(uid: str, msg) -> Event | None:
         )
     except (AttributeError, KeyError):
         return None
+
+
+@PARSERS.register("tns1:RuleEngine/LineDetector/Crossed")
+# pylint: disable=protected-access
+async def async_parse_linedetector_crossed(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/LineDetector/Crossed
+    """
+    try:
+        video_source = ""
+        video_analytics = ""
+        rule = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "VideoSourceConfigurationToken":
+                video_source = source.Value
+            if source.Name == "VideoAnalyticsConfigurationToken":
+                video_analytics = source.Value
+            if source.Name == "Rule":
+                rule = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            "Line Detector Crossed",
+            "sensor",
+            None,
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value,
+            EntityCategory.DIAGNOSTIC,
+        )
+    except (AttributeError, KeyError):
+        return None
