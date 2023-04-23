@@ -61,7 +61,7 @@ async def test_vacuum_button_press(hass: HomeAssistant) -> None:
     entity_name = "test_vacuum"
     entity_id = await setup_component(hass, entity_name)
 
-    state = hass.states.get(entity_id + "_reset_side_brush")
+    state = hass.states.get(f"{entity_id}_reset_side_brush")
     assert state
     assert state.state == "unknown"
 
