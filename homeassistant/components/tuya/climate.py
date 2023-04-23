@@ -192,7 +192,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 and not celsius_type
             )
         ):
-            self._set_temperature = fahrenheit_type
+            self._set_temperature = celsius_type
         elif celsius_type:
             self._set_temperature = celsius_type
 
@@ -200,9 +200,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if self._set_temperature:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.max_scaled
-            self._attr_min_temp = self._set_temperature.min_scaled
-            self._attr_target_temperature_step = self._set_temperature.step_scaled
+            self._attr_max_temp = 30
+            self._attr_min_temp = 0
+            self._attr_target_temperature_step = 0.5
 
         # Determine HVAC modes
         self._attr_hvac_modes: list[str] = []
