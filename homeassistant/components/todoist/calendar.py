@@ -320,17 +320,17 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
         """Return the name of the entity."""
         return self._name
 
+    async def async_update(self) -> None:
+        """Update all Todoist Calendars."""
+        await super().async_update()
+        self._apply_coordinator_update()
+
     def _apply_coordinator_update(self) -> None:
         self.data.update()
         # Set Todoist-specific data that can't easily be grabbed
         self._cal_data["all_tasks"] = [
             task[SUMMARY] for task in self.data.all_project_tasks
         ]
-
-    async def async_update(self) -> None:
-        """Update all Todoist Calendars."""
-        await super().async_update()
-        self._apply_coordinator_update()
 
     async def async_get_events(
         self,
