@@ -73,7 +73,7 @@ async def test_vacuum_button_press(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id + "_reset_side_brush")
+    state = hass.states.get(f"{entity_id}_reset_side_brush")
     assert state
     assert state.state[0:21] == pressed_at.isoformat()[0:21]  # drop millisecs
 
