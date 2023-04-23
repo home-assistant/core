@@ -326,7 +326,6 @@ class NotConfiguredRtpDatagramProtocol(RtpDatagramProtocol):
             ).read_bytes()
 
         if self._audio_task is None:
-            _LOGGER.info("HERE")
             self._audio_task = self.hass.async_create_background_task(
                 self._play_message(),
                 "voip_not_connected",
