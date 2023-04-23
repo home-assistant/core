@@ -60,9 +60,6 @@ async def setup_platform(
             FIBARO_DEVICES: {Platform.SCENE: scenes},
         }
     }
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        FIBARO_DEVICES: {Platform.SCENE: scenes}
-    }
     await hass.config_entries.async_forward_entry_setup(config_entry, platform)
     await hass.async_block_till_done()
     return config_entry
