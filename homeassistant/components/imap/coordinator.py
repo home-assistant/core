@@ -42,13 +42,10 @@ EVENT_IMAP = "imap_content"
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
-    client = IMAP4_SSL(
-        data[CONF_SERVER],
-        data[CONF_PORT],
-        ssl_context=client_context(
-            ssl_cipher_list=data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
-        ),
+    ssl_context = client_context(
+        ssl_cipher_list=data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
     )
+    client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT], ssl_context=ssl_context)
 
     await client.wait_hello_from_server()
 
