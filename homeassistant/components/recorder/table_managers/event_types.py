@@ -120,8 +120,16 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         """
         for event_type, db_event_types in self._pending.items():
             self._id_map[event_type] = db_event_types.event_type_id
-            self._non_existent_event_types.pop(event_type, None)
+            self.clear_non_existent(event_type)
         self._pending.clear()
+
+    def clear_non_existent(self, event_type: str) -> None:
+        """Clear a non-existent event types from the cache.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        self._non_existent_event_types.pop(event_type, None)
 
     def evict_purged(self, event_types: Iterable[str]) -> None:
         """Evict purged event_types from the cache when they are no longer used.
