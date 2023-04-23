@@ -171,6 +171,8 @@ class ONVIFDevice:
             LOGGER.debug("SetSystemDateAndTime: %s", dt_param)
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
+                LOGGER.debug("SetSystemDateAndTime: success")
+                return
             except Fault:
                 if idx == timezone_max_idx:
                     raise
