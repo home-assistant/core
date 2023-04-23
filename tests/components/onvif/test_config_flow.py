@@ -368,6 +368,48 @@ async def test_flow_manual_entry_no_profiles(hass: HomeAssistant) -> None:
         assert result["reason"] == "no_h264"
 
 
+async def test_flow_manual_entry_no_mac(hass: HomeAssistant) -> None:
+    """Test that config flow when no mac address is returned."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera, patch(
+        "homeassistant.components.onvif.config_flow.wsdiscovery"
+    ) as mock_discovery, patch(
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device:
+        setup_mock_onvif_camera(
+            mock_onvif_camera, with_serial=False, with_interfaces=False
+        )
+        # no discovery
+        mock_discovery.return_value = []
+        setup_mock_device(mock_device)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"auto": False},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                config_flow.CONF_NAME: NAME,
+                config_flow.CONF_HOST: HOST,
+                config_flow.CONF_PORT: PORT,
+                config_flow.CONF_USERNAME: USERNAME,
+                config_flow.CONF_PASSWORD: PASSWORD,
+            },
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "no_mac"
+
+
 async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
     """Test that we get a good error when manual entry fails."""
     result = await hass.config_entries.flow.async_init(
