@@ -378,7 +378,7 @@ async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "configure"
-        assert result["errors"] == {"base": "onvif_errors"}
+        assert result["errors"] == {"base": "onvif_error"}
         assert result["description_placeholders"] == {"error": "camera not ready"}
         setup_mock_onvif_camera(
             mock_onvif_camera, two_profiles=True, profiles_transient_failure=False
