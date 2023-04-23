@@ -1,6 +1,7 @@
 """Tests for the ONVIF integration."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from onvif.exceptions import ONVIFError
 from zeep.exceptions import Fault
 
 from homeassistant import config_entries
@@ -41,6 +42,7 @@ def setup_mock_onvif_camera(
     with_serial=True,
     profiles_transient_failure=False,
     auth_fail=False,
+    update_xaddrs_fail=False,
 ):
     """Prepare mock onvif.ONVIFCamera."""
     devicemgmt = MagicMock()
@@ -76,7 +78,12 @@ def setup_mock_onvif_camera(
     else:
         media_service.GetProfiles = AsyncMock(return_value=[profile1, profile2])
 
-    mock_onvif_camera.update_xaddrs = AsyncMock(return_value=True)
+    if update_xaddrs_fail:
+        mock_onvif_camera.update_xaddrs = AsyncMock(
+            side_effect=ONVIFError("camera not ready")
+        )
+    else:
+        mock_onvif_camera.update_xaddrs = AsyncMock(return_value=True)
     mock_onvif_camera.create_devicemgmt_service = MagicMock(return_value=devicemgmt)
     mock_onvif_camera.create_media_service = MagicMock(return_value=media_service)
     mock_onvif_camera.close = AsyncMock(return_value=None)
