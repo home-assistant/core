@@ -33,6 +33,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'test transcript',
+    'language': None,
   })
 # ---
 # name: test_audio_pipeline.4
@@ -60,13 +61,15 @@
 # name: test_audio_pipeline.5
   dict({
     'engine': 'test',
+    'language': None,
     'tts_input': "Sorry, I couldn't understand that",
+    'voice': None,
   })
 # ---
 # name: test_audio_pipeline.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en",
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that",
       'mime_type': 'audio/mpeg',
       'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
     }),
@@ -106,6 +109,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'test transcript',
+    'language': None,
   })
 # ---
 # name: test_audio_pipeline_debug.4
@@ -133,13 +137,15 @@
 # name: test_audio_pipeline_debug.5
   dict({
     'engine': 'test',
+    'language': None,
     'tts_input': "Sorry, I couldn't understand that",
+    'voice': None,
   })
 # ---
 # name: test_audio_pipeline_debug.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en",
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that",
       'mime_type': 'audio/mpeg',
       'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
     }),
@@ -159,6 +165,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'Are the lights on?',
+    'language': None,
   })
 # ---
 # name: test_intent_timeout
@@ -175,6 +182,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'Are the lights on?',
+    'language': None,
   })
 # ---
 # name: test_intent_timeout.2
@@ -243,6 +251,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'Are the lights on?',
+    'language': None,
   })
 # ---
 # name: test_text_only_pipeline.2
@@ -286,6 +295,8 @@
 # name: test_tts_failed.1
   dict({
     'engine': 'test',
+    'language': None,
     'tts_input': 'Lights are on.',
+    'voice': None,
   })
 # ---

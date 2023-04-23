@@ -78,7 +78,9 @@ async def test_provider_properties(cloud_with_prefs) -> None:
     )
     assert provider.supported_options == ["gender", "voice", "audio_output"]
     assert "nl-NL" in provider.supported_languages
-    assert "ColetteNeural" in provider.async_get_supported_voices("nl-NL")
+    assert tts.Voice(
+        "ColetteNeural", "ColetteNeural"
+    ) in provider.async_get_supported_voices("nl-NL")
 
 
 async def test_get_tts_audio(cloud_with_prefs) -> None:

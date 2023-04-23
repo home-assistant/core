@@ -1011,7 +1011,7 @@ class Recorder(threading.Thread):
         event_type_manager = self.event_type_manager
         if pending_event_types := event_type_manager.get_pending(event.event_type):
             dbevent.event_type_rel = pending_event_types
-        elif event_type_id := event_type_manager.get(event.event_type, session):
+        elif event_type_id := event_type_manager.get(event.event_type, session, True):
             dbevent.event_type_id = event_type_id
         else:
             event_types = EventTypes(event_type=event.event_type)

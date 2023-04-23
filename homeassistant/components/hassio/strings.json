@@ -151,5 +151,21 @@
       "title": "Unsupported system - Systemd-Resolved issues",
       "description": "System is unsupported because Systemd Resolved is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "state": { "name": "Running" }
+    },
+    "sensor": {
+      "agent_version": { "name": "OS Agent version" },
+      "apparmor_version": { "name": "Apparmor version" },
+      "cpu_percent": { "name": "CPU percent" },
+      "disk_free": { "name": "Disk free" },
+      "disk_total": { "name": "Disk total" },
+      "disk_used": { "name": "Disk used" },
+      "memory_percent": { "name": "Memory percent" },
+      "version": { "name": "Version" },
+      "version_latest": { "name": "Newest version" }
+    }
   }
 }

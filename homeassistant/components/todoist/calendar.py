@@ -17,8 +17,8 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEvent,
 )
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -121,6 +121,11 @@ async def async_setup_platform(
     api = TodoistAPIAsync(token)
     coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api)
     await coordinator.async_config_entry_first_refresh()
+
+    async def _shutdown_coordinator(_: Event) -> None:
+        await coordinator.async_shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_coordinator)
 
     # Setup devices:
     # Grab all projects.
