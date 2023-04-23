@@ -55,6 +55,7 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
                 hass,
                 hass.config.language,
                 devices.async_get_or_create(call_info),
+                Context(user_id=devices.config_entry.data["user"]),
             ),
             invalid_protocol_factory=lambda call_info: NotConfiguredRtpDatagramProtocol(
                 hass,
@@ -77,6 +78,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         hass: HomeAssistant,
         language: str,
         voip_device: VoIPDevice,
+        context: Context,
         pipeline_timeout: float = 30.0,
         audio_timeout: float = 2.0,
         listening_tone_enabled: bool = True,
@@ -94,7 +96,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self.listening_tone_enabled = listening_tone_enabled
 
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
-        self._context = Context()
+        self._context = context
         self._conversation_id: str | None = None
         self._pipeline_task: asyncio.Task | None = None
         self._session_id: str | None = None
