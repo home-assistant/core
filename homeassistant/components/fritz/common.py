@@ -138,8 +138,15 @@ class HostInfo(TypedDict):
     status: bool
 
 
+class UpdateCoordinatorDataType(TypedDict):
+    """Update coordinator data type."""
+
+    call_deflections: dict[int, dict]
+    entity_states: dict[str, StateType | bool]
+
+
 class FritzBoxTools(
-    update_coordinator.DataUpdateCoordinator[dict[str, bool | StateType | dict]]
+    update_coordinator.DataUpdateCoordinator[UpdateCoordinatorDataType]
 ):
     """FritzBoxTools class."""
 
@@ -263,14 +270,19 @@ class FritzBoxTools(
             self._entity_update_functions[key] = update_fn
         return unregister_entity_updates
 
-    async def _async_update_data(self) -> dict[str, bool | StateType | dict]:
+    async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
-        enity_data: dict[str, bool | StateType | dict] = {"call_deflections": {}}
+        enity_data: UpdateCoordinatorDataType = {
+            "call_deflections": {},
+            "entity_states": {},
+        }
         try:
             await self.async_scan_devices()
             for key, update_fn in self._entity_update_functions.items():
                 _LOGGER.debug("update entity %s", key)
-                enity_data[key] = await self.hass.async_add_executor_job(
+                enity_data["entity_states"][
+                    key
+                ] = await self.hass.async_add_executor_job(
                     update_fn, self.fritz_status, self.data.get(key)
                 )
             if self.has_call_deflections:

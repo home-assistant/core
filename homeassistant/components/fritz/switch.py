@@ -478,10 +478,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
     @property
     def data(self) -> dict[str, Any]:
         """Return call deflection data."""
-        call_deflections = self.coordinator.data.get("call_deflections")
-        if not call_deflections or not isinstance(call_deflections, dict):
-            return {}
-        return call_deflections.get(self.deflection_id, {})
+        return self.coordinator.data["call_deflections"].get(self.deflection_id, {})
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
