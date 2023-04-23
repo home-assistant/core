@@ -168,10 +168,10 @@ class ONVIFDevice:
         timezone_max_idx = len(timezone_names) - 1
         for idx, timezone_name in enumerate(timezone_names):
             dt_param.TimeZone = timezone_name
-            LOGGER.debug("SetSystemDateAndTime: %s", dt_param)
+            LOGGER.debug("%s: SetSystemDateAndTime: %s", dt_param, self.name)
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
-                LOGGER.debug("SetSystemDateAndTime: success")
+                LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
                 return
             except Fault:
                 if idx == timezone_max_idx:
