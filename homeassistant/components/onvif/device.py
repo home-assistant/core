@@ -151,15 +151,27 @@ class ONVIFDevice:
         dt_param.DaylightSavings = bool(time.localtime().tm_isdst)
         dt_param.UTCDateTime = device_time.UTCDateTime
         # Retrieve timezone from system
-        dt_param.TimeZone = str(system_date.astimezone().tzinfo)
         dt_param.UTCDateTime.Date.Year = system_date.year
         dt_param.UTCDateTime.Date.Month = system_date.month
         dt_param.UTCDateTime.Date.Day = system_date.day
         dt_param.UTCDateTime.Time.Hour = system_date.hour
         dt_param.UTCDateTime.Time.Minute = system_date.minute
         dt_param.UTCDateTime.Time.Second = system_date.second
-        LOGGER.debug("SetSystemDateAndTime: %s", dt_param)
-        await device_mgmt.SetSystemDateAndTime(dt_param)
+        system_timezone = str(system_date.astimezone().tzinfo)
+        timezone_names: list[str | None] = [system_timezone]
+        if dt_param.TimeZone != system_timezone:
+            timezone_names.append(dt_param.TimeZone)
+        if dt_param.TimeZone is not None:
+            timezone_names.append(None)
+        timezone_max_idx = len(timezone_names) - 1
+        for idx, timezone_name in enumerate(timezone_names):
+            dt_param.TimeZone = timezone_name
+            LOGGER.debug("SetSystemDateAndTime: %s", dt_param)
+            try:
+                await device_mgmt.SetSystemDateAndTime(dt_param)
+            except Fault:
+                if idx == timezone_max_idx:
+                    raise
 
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
