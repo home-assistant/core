@@ -293,7 +293,7 @@ jobs:
               # will drop the platform in the near future (they consider it
               # "flimsy" on 386). The following packages depend on pandas,
               # so we comment them out.
-              sed -i "s|env-canada|# env-canada|g" ${requirement_file}
+              sed -i "s|env_canada|# env_canada|g" ${requirement_file}
               sed -i "s|noaa-coops|# noaa-coops|g" ${requirement_file}
               sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
               sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}
