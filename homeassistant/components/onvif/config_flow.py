@@ -287,7 +287,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 stringified_error,
                 exc_info=True,
             )
-            return {"base": "onvif_errors"}, description_placeholders
+            return {"base": "onvif_error"}, description_placeholders
         except GET_CAPABILITIES_EXCEPTIONS as err:
             LOGGER.debug(
                 "%s: Could not determine camera capabilities: %s",
@@ -295,7 +295,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 stringify_onvif_error(err),
                 exc_info=True,
             )
-            return {"base": "onvif_errors"}, {"error": stringify_onvif_error(err)}
+            return {"base": "onvif_error"}, {"error": stringify_onvif_error(err)}
         else:
             if not any(
                 profile.VideoEncoderConfiguration
