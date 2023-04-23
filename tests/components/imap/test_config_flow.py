@@ -27,6 +27,7 @@ MOCK_CONFIG = {
     "charset": "utf-8",
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
+    "ssl_cipher_list": "python_default",
 }
 
 MOCK_OPTIONS = {
@@ -426,6 +427,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         "charset": "utf-8",
         "folder": "INBOX",
         "search": "UnSeen UnDeleted",
+        "ssl_cipher_list": "python_default",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -455,3 +457,34 @@ async def test_import_flow_connection_error(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.parametrize("cipher_list", ["python_default", "modern", "intermediate"])
+async def test_config_flow_with_cipherlist(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, cipher_list: str
+) -> None:
+    """Test with alternate cipherlist."""
+    config = MOCK_CONFIG.copy()
+    config["ssl_cipher_list"] = cipher_list
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = (
+            "OK",
+            [b""],
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "email@email.com"
+    assert result2["data"] == config
+    assert len(mock_setup_entry.mock_calls) == 1

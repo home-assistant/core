@@ -9,7 +9,8 @@
           "port": "[%key:common::config_flow::data::port%]",
           "charset": "Character set",
           "folder": "Folder",
-          "search": "IMAP search"
+          "search": "IMAP search",
+          "ssl_cipher_list": "SSL cipher list (Advanced)"
         }
       },
       "reauth_confirm": {
@@ -48,6 +49,15 @@
       "invalid_charset": "[%key:component::imap::config::error::invalid_charset%]",
       "invalid_folder": "[%key:component::imap::config::error::invalid_folder%]",
       "invalid_search": "[%key:component::imap::config::error::invalid_search%]"
+    }
+  },
+  "selector": {
+    "ssl_cipher_list": {
+      "options": {
+        "python_default": "Default settings",
+        "modern": "Modern ciphers",
+        "intermediate": "Intermediate ciphers"
+      }
     }
   }
 }

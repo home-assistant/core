@@ -13,17 +13,32 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
+from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
     CONF_CHARSET,
     CONF_FOLDER,
     CONF_SEARCH,
     CONF_SERVER,
+    CONF_SSL_CIPHER_LIST,
     DEFAULT_PORT,
     DOMAIN,
 )
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
+
+CIPHER_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=list(SSLCipherList),
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_SSL_CIPHER_LIST,
+    )
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -34,6 +49,9 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_CHARSET, default="utf-8"): str,
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        vol.Optional(
+            CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
+        ): CIPHER_SELECTOR,
     }
 )
 
