@@ -124,7 +124,7 @@ class EventTypeManager(BaseLRUTableManager[EventTypes]):
         self._pending.clear()
 
     def clear_non_existent(self, event_type: str) -> None:
-        """Clear a non-existent event types from the cache.
+        """Clear a non-existent event type from the cache.
 
         This call is not thread-safe and must be called from the
         recorder thread.
