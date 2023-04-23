@@ -71,7 +71,6 @@ async def test_vacuum_button_press(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id + "_reset_side_brush"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(f"{entity_id}_reset_side_brush")
     assert state
