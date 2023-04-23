@@ -22,8 +22,6 @@ from .time import (
     process_timestamp_to_utc_isoformat,
 )
 
-# pylint: disable=invalid-name
-
 
 class LegacyLazyStatePreSchema31(State):
     """A lazy version of core State before schema 31."""

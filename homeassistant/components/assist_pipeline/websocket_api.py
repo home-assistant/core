@@ -1,6 +1,6 @@
 """Assist pipeline Websocket API."""
 import asyncio
-import audioop  # pylint: disable=deprecated-module
+import audioop
 from collections.abc import AsyncGenerator, Callable
 import logging
 from typing import Any
