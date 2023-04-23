@@ -42,7 +42,8 @@
   },
   "device_automation": {
     "trigger_type": {
-      "samsungtv.turn_on": "Device is requested to turn on"
+      "samsungtv.turn_on": "Device is requested to turn on",
+      "samsungtv.turn_off": "Device is requested to turn off"
     }
   },
   "issues": {

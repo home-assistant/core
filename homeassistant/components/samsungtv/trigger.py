@@ -12,10 +12,11 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .triggers import turn_on
+from .triggers import turn_off, turn_on
 
 TRIGGERS = {
     "turn_on": turn_on,
+    "turn_off": turn_off,
 }
 
 

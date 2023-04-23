@@ -19,12 +19,16 @@ from .helpers import (
     async_get_client_by_device_entry,
     async_get_device_entry_by_device_id,
 )
+from .triggers.turn_off import (
+    PLATFORM_TYPE as TURN_OFF_PLATFORM_TYPE,
+    async_get_turn_off_trigger,
+)
 from .triggers.turn_on import (
     PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE,
     async_get_turn_on_trigger,
 )
 
-TRIGGER_TYPES = {TURN_ON_PLATFORM_TYPE}
+TRIGGER_TYPES = {TURN_ON_PLATFORM_TYPE, TURN_OFF_PLATFORM_TYPE}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -38,7 +42,7 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    if config[CONF_TYPE] == TURN_ON_PLATFORM_TYPE:
+    if [TURN_ON_PLATFORM_TYPE, TURN_OFF_PLATFORM_TYPE].count(config[CONF_TYPE]) == 1:
         device_id = config[CONF_DEVICE_ID]
         try:
             device = async_get_device_entry_by_device_id(hass, device_id)
@@ -54,7 +58,10 @@ async def async_get_triggers(
     _hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for device."""
-    triggers = [async_get_turn_on_trigger(device_id)]
+    triggers = [
+        async_get_turn_on_trigger(device_id),
+        async_get_turn_off_trigger(device_id),
+    ]
     return triggers
 
 
@@ -65,7 +72,8 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    if (trigger_type := config[CONF_TYPE]) == TURN_ON_PLATFORM_TYPE:
+    trigger_type = config[CONF_TYPE]
+    if [TURN_ON_PLATFORM_TYPE, TURN_OFF_PLATFORM_TYPE].count(trigger_type) == 1:
         trigger_config = {
             CONF_PLATFORM: trigger_type,
             CONF_DEVICE_ID: config[CONF_DEVICE_ID],

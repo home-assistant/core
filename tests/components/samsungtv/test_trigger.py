@@ -150,7 +150,7 @@ async def test_wrong_trigger_platform_type(
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
-async def test_trigger_invalid_entity_id(
+async def test_turn_on_trigger_invalid_entity_id(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test turn on trigger using invalid entity_id."""
@@ -169,6 +169,144 @@ async def test_trigger_invalid_entity_id(
                 {
                     "trigger": {
                         "platform": "samsungtv.turn_on",
+                        "entity_id": invalid_entity,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": ENTITY_ID,
+                            "id": "{{ trigger.id }}",
+                        },
+                    },
+                },
+            ],
+        },
+    )
+
+    assert (
+        f"ValueError: Entity {invalid_entity} is not a valid samsungtv entity"
+        in caplog.text
+    )
+
+
+@pytest.mark.usefixtures("remoteencws", "rest_api")
+async def test_turn_off_trigger_device_id(
+    hass: HomeAssistant, calls: list[ServiceCall], device_registry: dr.DeviceRegistry
+) -> None:
+    """Test for turn_off triggers by device_id firing."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "any")})
+    assert device, repr(device_registry.devices)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "samsungtv.turn_off",
+                        "device_id": device.id,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": device.id,
+                            "id": "{{ trigger.id }}",
+                        },
+                    },
+                },
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        "media_player", "turn_off", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == device.id
+    assert calls[0].data["id"] == 0
+
+    with patch("homeassistant.config.load_yaml", return_value={}):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    calls.clear()
+
+    # Ensure power off command is called when trigger not present
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVBridge.async_power_off",
+    ) as mock_send_magic_packet:
+        await hass.services.async_call(
+            "media_player", "turn_off", {"entity_id": ENTITY_ID}, blocking=True
+        )
+        await hass.async_block_till_done()
+
+    assert len(calls) == 0
+    mock_send_magic_packet.assert_called()
+
+
+@pytest.mark.usefixtures("remoteencws", "rest_api")
+async def test_turn_off_trigger_entity_id(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for turn_off triggers by entity_id firing."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "samsungtv.turn_off",
+                        "entity_id": ENTITY_ID,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": ENTITY_ID,
+                            "id": "{{ trigger.id }}",
+                        },
+                    },
+                },
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        "media_player", "turn_off", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == ENTITY_ID
+    assert calls[0].data["id"] == 0
+
+
+@pytest.mark.usefixtures("remoteencws", "rest_api")
+async def test_turn_off_trigger_invalid_entity_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test turn off trigger using invalid entity_id."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+
+    platform = MockEntityPlatform(hass)
+
+    invalid_entity = f"{DOMAIN}.invalid"
+    await platform.async_add_entities([MockEntity(name=invalid_entity)])
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "samsungtv.turn_off",
                         "entity_id": invalid_entity,
                     },
                     "action": {

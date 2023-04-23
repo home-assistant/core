@@ -54,6 +54,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .triggers.turn_off import async_get_turn_off_trigger
 from .triggers.turn_on import async_get_turn_on_trigger
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -117,6 +118,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             CONF_SSDP_RENDERING_CONTROL_LOCATION
         )
         self._turn_on = PluggableAction(self.async_write_ha_state)
+        self._turn_off = PluggableAction(self.async_write_ha_state)
         self._on_script = on_script
         # Assume that the TV is in Play mode
         self._playing: bool = True
@@ -388,13 +390,21 @@ class SamsungTVDevice(MediaPlayerEntity):
             self.async_on_remove(
                 self._turn_on.async_register(
                     self.hass, async_get_turn_on_trigger(entry.device_id)
-                )
+                ),
+            )
+            self.async_on_remove(
+                self._turn_off.async_register(
+                    self.hass, async_get_turn_off_trigger(entry.device_id)
+                ),
             )
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
-        await self._bridge.async_power_off()
+        if self._turn_off:
+            await self._turn_off.async_run(self.hass, self._context)
+        else:
+            await self._bridge.async_power_off()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level on the media player."""
