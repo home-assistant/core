@@ -40,6 +40,7 @@ def setup_mock_onvif_camera(
     with_interfaces_not_implemented=False,
     with_serial=True,
     profiles_transient_failure=False,
+    auth_fail=False,
 ):
     """Prepare mock onvif.ONVIFCamera."""
     devicemgmt = MagicMock()
@@ -68,7 +69,9 @@ def setup_mock_onvif_camera(
     profile2 = MagicMock()
     profile2.VideoEncoderConfiguration.Encoding = "H264" if two_profiles else "MJPEG"
 
-    if profiles_transient_failure:
+    if auth_fail:
+        media_service.GetProfiles = AsyncMock(side_effect=Fault("Authority failure"))
+    elif profiles_transient_failure:
         media_service.GetProfiles = AsyncMock(side_effect=Fault("camera not ready"))
     else:
         media_service.GetProfiles = AsyncMock(return_value=[profile1, profile2])

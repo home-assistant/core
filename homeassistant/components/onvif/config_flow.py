@@ -271,6 +271,23 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Verify there is an H264 profile
             media_service = device.create_media_service()
             profiles = await media_service.GetProfiles()
+        except Fault as err:
+            stringified_error = stringify_onvif_error(err)
+            description_placeholders = {"error": stringified_error}
+            if "authority" in stringified_error.lower():
+                LOGGER.debug(
+                    "%s: Could not authenticate with camera: %s",
+                    self.onvif_config[CONF_NAME],
+                    stringified_error,
+                )
+                return {CONF_PASSWORD: "auth_failed"}, description_placeholders
+            LOGGER.debug(
+                "%s: Could not determine camera capabilities: %s",
+                self.onvif_config[CONF_NAME],
+                stringified_error,
+                exc_info=True,
+            )
+            return {"base": "onvif_errors"}, description_placeholders
         except GET_CAPABILITIES_EXCEPTIONS as err:
             LOGGER.debug(
                 "%s: Could not determine camera capabilities: %s",
