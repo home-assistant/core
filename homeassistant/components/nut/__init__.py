@@ -90,15 +90,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unique_id is None:
         unique_id = entry.entry_id
 
-    user_available_commands = (
-        {
+    if username is not None and password is not None:
+        user_available_commands = {
             device_supported_command
             for device_supported_command in data.list_commands() or {}
             if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS
         }
-        if username is not None and password is not None
-        else set[str]()
-    )
+    else:
+        user_available_commands = set()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
