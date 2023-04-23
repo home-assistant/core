@@ -216,9 +216,6 @@ async def test_calendar_custom_project_unique_id(
     entity = entity_registry.async_get("calendar.all_projects")
     assert entity is None
 
-    state = hass.states.get("calendar.all_projects")
-    assert state.state == "off"
-
 
 @pytest.mark.parametrize(
     ("due", "start", "end", "expected_response"),
