@@ -442,14 +442,14 @@ class PipelineRun:
         if not await tts.async_support_options(
             self.hass,
             engine,
-            self.pipeline.stt_language,
+            self.pipeline.tts_language,
             tts_options,
         ):
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=(
                     f"Text to speech engine {engine} "
-                    f"does not support language {self.pipeline.stt_language} or options {tts_options}"
+                    f"does not support language {self.pipeline.tts_language} or options {tts_options}"
                 ),
             )
 
