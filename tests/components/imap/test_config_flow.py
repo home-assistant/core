@@ -1,5 +1,6 @@
 """Test the imap config flow."""
 import asyncio
+import ssl
 from unittest.mock import AsyncMock, patch
 
 from aioimaplib import AioImapException
@@ -114,10 +115,16 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exc",
-    [asyncio.TimeoutError, AioImapException("")],
+    ("exc", "error"),
+    [
+        (asyncio.TimeoutError, "cannot_connect"),
+        (AioImapException(""), "cannot_connect"),
+        (ssl.SSLError, "ssl_error"),
+    ],
 )
-async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, exc: Exception, error: str
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -132,7 +139,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": error}
 
     # make sure we do not lose the user input if somethings gets wrong
     assert {

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+import ssl
 from typing import Any
 
 from aioimaplib import AioImapException
@@ -78,6 +79,11 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
         errors[CONF_USERNAME] = errors[CONF_PASSWORD] = "invalid_auth"
     except InvalidFolder:
         errors[CONF_FOLDER] = "invalid_folder"
+    except ssl.SSLError:
+        # The aioimaplib library 1.0.1 does not raise an ssl.SSLError correctly, but is logged
+        # See https://github.com/bamthomas/aioimaplib/issues/91
+        # This handler is added to be able to supply a better error message
+        errors["base"] = "ssl_error"
     except (asyncio.TimeoutError, AioImapException, ConnectionRefusedError):
         errors["base"] = "cannot_connect"
     else:
