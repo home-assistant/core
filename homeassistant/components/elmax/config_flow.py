@@ -64,7 +64,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _password: str
     _panels_schema: vol.Schema
     _panel_names: dict
-    _entry: config_entries.ConfigEntry
+    _entry: config_entries.ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -177,10 +177,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])  # type: ignore[assignment]
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None) -> FlowResult:
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle reauthorization flow."""
         errors = {}
         if user_input is not None:
@@ -190,6 +192,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Handle authentication, make sure the panel we are re-authenticating against is listed among results
             # and verify its pin is correct.
+            assert self._entry is not None
             reauth_panel_id = self._entry.data[CONF_ELMAX_PANEL_ID]
             try:
                 # Test login.
@@ -210,9 +213,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             except ElmaxBadLoginError:
-                _LOGGER.error(
-                    "Wrong credentials or failed login while re-authenticating"
-                )
                 errors["base"] = "invalid_auth"
             except NoOnlinePanelsError:
                 errors["base"] = "reauth_panel_disappeared"

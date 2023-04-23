@@ -235,7 +235,11 @@ async def test_show_reauth(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": entry.unique_id,
+            "entry_id": entry.entry_id,
+        },
         data={
             CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
