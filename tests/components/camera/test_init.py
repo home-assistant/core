@@ -245,6 +245,26 @@ async def test_snapshot_service(hass: HomeAssistant, mock_camera) -> None:
         assert mock_write.mock_calls[0][1][0] == b"Test"
 
 
+async def test_snapshot_service_not_allowed_path(
+    hass: HomeAssistant, mock_camera
+) -> None:
+    """Test snapshot service with a not allowed path."""
+    mopen = mock_open()
+
+    with patch("homeassistant.components.camera.open", mopen, create=True), patch(
+        "homeassistant.components.camera.os.makedirs",
+    ), pytest.raises(HomeAssistantError, match="/test/snapshot.jpg"):
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+
+
 async def test_websocket_stream_no_source(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_camera, mock_stream
 ) -> None:

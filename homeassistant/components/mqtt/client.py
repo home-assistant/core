@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable
 from functools import lru_cache
-import inspect
 from itertools import chain, groupby
 import logging
 from operator import attrgetter
@@ -172,25 +171,6 @@ async def async_subscribe(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
     mqtt_data = get_mqtt_data(hass)
-    # Support for a deprecated callback type was removed with HA core 2023.3.0
-    # The signature validation code can be removed from HA core 2023.5.0
-    non_default = 0
-    if msg_callback:
-        non_default = sum(
-            p.default == inspect.Parameter.empty
-            for _, p in inspect.signature(msg_callback).parameters.items()
-        )
-
-    # Check for not supported callback signatures
-    # Can be removed from HA core 2023.5.0
-    if non_default != 1:
-        module = inspect.getmodule(msg_callback)
-        raise HomeAssistantError(
-            "Signature for MQTT msg_callback '{}.{}' is not supported".format(
-                module.__name__ if module else "<unknown>", msg_callback.__name__
-            )
-        )
-
     async_remove = await mqtt_data.client.async_subscribe(
         topic,
         catch_log_exception(
