@@ -166,9 +166,12 @@ class ONVIFDevice:
                 timezone_names.append(time_zone.TZ)
         timezone_names.append(None)
         timezone_max_idx = len(timezone_names) - 1
+        LOGGER.debug(
+            "%s: SetSystemDateAndTime: timezone_names:%s", self.name, timezone_names
+        )
         for idx, timezone_name in enumerate(timezone_names):
             dt_param.TimeZone = timezone_name
-            LOGGER.debug("%s: SetSystemDateAndTime: %s", dt_param, self.name)
+            LOGGER.debug("%s: SetSystemDateAndTime: %s", self.name, dt_param)
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
