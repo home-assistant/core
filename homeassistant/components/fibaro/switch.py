@@ -52,4 +52,5 @@ class FibaroSwitch(FibaroDevice, SwitchEntity):
 
     def update(self) -> None:
         """Update device state."""
+        super().update()
         self._attr_is_on = self.current_binary_state

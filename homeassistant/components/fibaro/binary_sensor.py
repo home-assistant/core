@@ -82,6 +82,7 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorEntity):
 
     def update(self) -> None:
         """Get the latest data and update the state."""
+        super().update()
         if self._fibaro_sensor_type == "com.fibaro.accelerometer":
             # Accelerator sensors have values for the three axis x, y and z
             moving_values = self._get_moving_values()
