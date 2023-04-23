@@ -11,8 +11,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util import language as language_util
 
 from .const import (
+    DATA_PROVIDERS,
     DOMAIN,
     AudioBitRates,
     AudioChannels,
@@ -31,15 +33,15 @@ def async_get_provider(
 ) -> Provider | None:
     """Return provider."""
     if domain:
-        return hass.data[DOMAIN].get(domain)
+        return hass.data[DATA_PROVIDERS].get(domain)
 
-    if not hass.data[DOMAIN]:
+    if not hass.data[DATA_PROVIDERS]:
         return None
 
-    if "cloud" in hass.data[DOMAIN]:
-        return hass.data[DOMAIN]["cloud"]
+    if "cloud" in hass.data[DATA_PROVIDERS]:
+        return hass.data[DATA_PROVIDERS]["cloud"]
 
-    return next(iter(hass.data[DOMAIN].values()))
+    return next(iter(hass.data[DATA_PROVIDERS].values()))
 
 
 @callback
@@ -47,7 +49,7 @@ def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy speech to text providers."""
-    providers = hass.data[DOMAIN] = {}
+    providers = hass.data[DATA_PROVIDERS] = {}
 
     async def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a TTS platform."""
@@ -157,9 +159,18 @@ class Provider(ABC):
     @callback
     def check_metadata(self, metadata: SpeechMetadata) -> bool:
         """Check if given metadata supported by this provider."""
+        if metadata.language not in self.supported_languages:
+            language_matches = language_util.matches(
+                metadata.language,
+                self.supported_languages,
+            )
+            if language_matches:
+                metadata.language = language_matches[0]
+            else:
+                return False
+
         if (
-            metadata.language not in self.supported_languages
-            or metadata.format not in self.supported_formats
+            metadata.format not in self.supported_formats
             or metadata.codec not in self.supported_codecs
             or metadata.bit_rate not in self.supported_bit_rates
             or metadata.sample_rate not in self.supported_sample_rates

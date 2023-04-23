@@ -63,10 +63,23 @@ async def test_diagnostics(
                     "index": 0,
                     "token": "dummy",
                     "name": "profile1",
-                    "video": None,
+                    "video": {
+                        "encoding": "any",
+                        "resolution": {"width": 640, "height": 480},
+                    },
                     "ptz": None,
                     "video_source_token": None,
                 }
             ],
+        },
+        "events": {
+            "pullpoint_manager_state": {
+                "__type": "<enum " "'PullPointManagerState'>",
+                "repr": "<PullPointManagerState.PAUSED: " "2>",
+            },
+            "webhook_manager_state": {
+                "__type": "<enum 'WebHookManagerState'>",
+                "repr": "<WebHookManagerState.STARTED: " "1>",
+            },
         },
     }
