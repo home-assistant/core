@@ -80,7 +80,7 @@ async def test_vacuum_button_press(hass: HomeAssistant) -> None:
     assert state.state[0:21] == pressed_at.isoformat()[0:21]  # drop millisecs
 
 
-async def setup_component(hass: HomeAssistant, entity_name: str):
+async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     """Set up vacuum component."""
     entity_id = f"{DOMAIN}.{entity_name}"
 
