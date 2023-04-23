@@ -1,6 +1,5 @@
 """The tests for the TTS component."""
 import asyncio
-from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -23,7 +22,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.network import normalize_url
