@@ -59,12 +59,13 @@ class SupervisorIssueRepairFlow(RepairsFlow):
 
     async def async_step_init(self, _: None = None) -> FlowResult:
         """Handle the first step of a fix flow."""
-        # Got out of sync with supervisor, issue is resolved or isn't fixable. Either way, resolve the repair
+        # Out of sync with supervisor, issue is resolved or not fixable. Remove it
         if not self.issue or not self.issue.suggestions:
             return self.async_create_entry(data={})
 
-        # All suggestions do the same thing: apply them in supervisor, optionally with a confirmation step.
-        # Generating the required handler for each allows for shared logic but screens can still be translated per step id.
+        # All suggestions have the same logic: Apply them in supervisor,
+        # optionally with a confirmation step. Generating the required handler for each
+        # allows for shared logic but screens can still be translated per step id.
         for suggestion in self.issue.suggestions:
             setattr(
                 self,
@@ -79,7 +80,7 @@ class SupervisorIssueRepairFlow(RepairsFlow):
                 description_placeholders=self.description_placeholders,
             )
 
-        # Always show a form if there's only one suggestion so we can explain to the user what's happening
+        # Always show a form for one suggestion to explain to user what's happening
         return self._async_form_for_suggestion(self.issue.suggestions[0])
 
     async def _async_step_apply_suggestion(

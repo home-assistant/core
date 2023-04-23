@@ -14,6 +14,7 @@ from homeassistant.components.recorder.db_schema import (
     OLD_FORMAT_ATTRS_JSON,
     OLD_STATE,
     SHARED_ATTRS_JSON,
+    SHARED_DATA_OR_LEGACY_EVENT_DATA,
     STATES_CONTEXT_ID_BIN_INDEX,
     EventData,
     Events,
@@ -36,6 +37,11 @@ ALWAYS_CONTINUOUS_ENTITY_ID_LIKE = like_domain_matchers(ALWAYS_CONTINUOUS_DOMAIN
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
+ICON_OR_OLD_FORMAT_ICON_JSON = sqlalchemy.case(
+    (SHARED_ATTRS_JSON["icon"].is_(None), OLD_FORMAT_ATTRS_JSON["icon"].as_string()),
+    else_=SHARED_ATTRS_JSON["icon"].as_string(),
+).label("icon")
+
 PSEUDO_EVENT_STATE_CHANGED: Final = None
 # Since we don't store event_types and None
 # and we don't store state_changed in events
@@ -45,9 +51,9 @@ PSEUDO_EVENT_STATE_CHANGED: Final = None
 # in the payload
 
 EVENT_COLUMNS = (
-    Events.event_id.label("event_id"),
+    Events.event_id.label("row_id"),
     EventTypes.event_type.label("event_type"),
-    Events.event_data.label("event_data"),
+    SHARED_DATA_OR_LEGACY_EVENT_DATA,
     Events.time_fired_ts.label("time_fired_ts"),
     Events.context_id_bin.label("context_id_bin"),
     Events.context_user_id_bin.label("context_user_id_bin"),
@@ -55,23 +61,19 @@ EVENT_COLUMNS = (
 )
 
 STATE_COLUMNS = (
-    States.state_id.label("state_id"),
     States.state.label("state"),
     StatesMeta.entity_id.label("entity_id"),
-    SHARED_ATTRS_JSON["icon"].as_string().label("icon"),
-    OLD_FORMAT_ATTRS_JSON["icon"].as_string().label("old_format_icon"),
+    ICON_OR_OLD_FORMAT_ICON_JSON,
 )
 
 STATE_CONTEXT_ONLY_COLUMNS = (
-    States.state_id.label("state_id"),
     States.state.label("state"),
     StatesMeta.entity_id.label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
-    literal(value=None, type_=sqlalchemy.String).label("old_format_icon"),
 )
 
 EVENT_COLUMNS_FOR_STATE_SELECT = (
-    literal(value=None, type_=sqlalchemy.Text).label("event_id"),
+    States.state_id.label("row_id"),
     # We use PSEUDO_EVENT_STATE_CHANGED aka None for
     # state_changed events since it takes up less
     # space in the response and every row has to be
@@ -84,21 +86,17 @@ EVENT_COLUMNS_FOR_STATE_SELECT = (
     States.context_id_bin.label("context_id_bin"),
     States.context_user_id_bin.label("context_user_id_bin"),
     States.context_parent_id_bin.label("context_parent_id_bin"),
-    literal(value=None, type_=sqlalchemy.Text).label("shared_data"),
 )
 
 EMPTY_STATE_COLUMNS = (
-    literal(value=0, type_=sqlalchemy.Integer).label("state_id"),
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
-    literal(value=None, type_=sqlalchemy.String).label("old_format_icon"),
 )
 
 
 EVENT_ROWS_NO_STATES = (
     *EVENT_COLUMNS,
-    EventData.shared_data.label("shared_data"),
     *EMPTY_STATE_COLUMNS,
 )
 

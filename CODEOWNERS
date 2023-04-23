@@ -82,6 +82,8 @@ build.json @home-assistant/supervisor
 /tests/components/androidtv/ @JeffLIrion @ollo69
 /homeassistant/components/androidtv_remote/ @tronikos
 /tests/components/androidtv_remote/ @tronikos
+/homeassistant/components/anova/ @Lash-L
+/tests/components/anova/ @Lash-L
 /homeassistant/components/anthemav/ @hyralex
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
@@ -897,8 +899,8 @@ build.json @home-assistant/supervisor
 /tests/components/plaato/ @JohNan
 /homeassistant/components/plex/ @jjlawren
 /tests/components/plex/ @jjlawren
-/homeassistant/components/plugwise/ @CoMPaTech @bouwew @brefra @frenck
-/tests/components/plugwise/ @CoMPaTech @bouwew @brefra @frenck
+/homeassistant/components/plugwise/ @CoMPaTech @bouwew @frenck
+/tests/components/plugwise/ @CoMPaTech @bouwew @frenck
 /homeassistant/components/plum_lightpad/ @ColinHarrington @prystupa
 /tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
@@ -999,6 +1001,8 @@ build.json @home-assistant/supervisor
 /tests/components/rituals_perfume_genie/ @milanmeu
 /homeassistant/components/rmvtransport/ @cgtobi
 /tests/components/rmvtransport/ @cgtobi
+/homeassistant/components/roborock/ @humbertogontijo @Lash-L
+/tests/components/roborock/ @humbertogontijo @Lash-L
 /homeassistant/components/roku/ @ctalkington
 /tests/components/roku/ @ctalkington
 /homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn
@@ -1272,8 +1276,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifiled/ @florisvdk
-/homeassistant/components/unifiprotect/ @briis @AngellusMortis @bdraco
-/tests/components/unifiprotect/ @briis @AngellusMortis @bdraco
+/homeassistant/components/unifiprotect/ @AngellusMortis @bdraco
+/tests/components/unifiprotect/ @AngellusMortis @bdraco
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff

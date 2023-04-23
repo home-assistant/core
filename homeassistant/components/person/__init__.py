@@ -56,6 +56,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE = "source"
 ATTR_USER_ID = "user_id"
+ATTR_DEVICE_TRACKERS = "device_trackers"
 
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
@@ -446,6 +447,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
             data[ATTR_SOURCE] = self._source
         if (user_id := self._config.get(CONF_USER_ID)) is not None:
             data[ATTR_USER_ID] = user_id
+        data[ATTR_DEVICE_TRACKERS] = self.device_trackers
         return data
 
     @property

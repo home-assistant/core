@@ -10,11 +10,20 @@ import pytest
 
 from homeassistant.components.tts import _get_cache_files
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
 
-from .common import DEFAULT_LANG, MockProvider, MockTTS, MockTTSEntity
+from .common import (
+    DEFAULT_LANG,
+    TEST_DOMAIN,
+    MockProvider,
+    MockTTS,
+    MockTTSEntity,
+    mock_config_entry_setup,
+    mock_setup,
+)
 
-from tests.common import MockModule, mock_integration, mock_platform
+from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -122,3 +131,32 @@ def mock_provider() -> MockProvider:
 def mock_tts_entity() -> MockTTSEntity:
     """Test TTS entity."""
     return MockTTSEntity(DEFAULT_LANG)
+
+
+class TTSFlow(ConfigFlow):
+    """Test flow."""
+
+
+@pytest.fixture(autouse=True)
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Mock config flow."""
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    with mock_config_flow(TEST_DOMAIN, TTSFlow):
+        yield
+
+
+@pytest.fixture(name="setup")
+async def setup_fixture(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    mock_provider: MockProvider,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Set up the test environment."""
+    if request.param == "mock_setup":
+        await mock_setup(hass, mock_provider)
+    elif request.param == "mock_config_entry_setup":
+        await mock_config_entry_setup(hass, mock_tts_entity)
+    else:
+        raise RuntimeError("Invalid setup fixture")

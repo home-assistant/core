@@ -66,6 +66,7 @@ from .const import (
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
+from .models import Voice
 
 __all__ = [
     "async_get_media_source_audio",
@@ -80,6 +81,7 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "Provider",
     "TtsAudioType",
+    "Voice",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,6 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
+ATTR_VOICE = "voice"
 
 CONF_LANG = "language"
 
@@ -137,13 +140,15 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
             return None
         return engine
 
-    if not manager.providers:
-        return None
-
     if "cloud" in manager.providers:
         return "cloud"
 
-    return next(iter(manager.providers))
+    entity = next(iter(component.entities), None)
+
+    if entity is not None:
+        return entity.entity_id
+
+    return next(iter(manager.providers), None)
 
 
 async def async_support_options(
@@ -175,6 +180,25 @@ async def async_get_media_source_audio(
     return await manager.async_get_tts_audio(
         **media_source_id_to_kwargs(media_source_id),
     )
+
+
+@callback
+def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
+    """Return a set with the union of languages supported by tts engines."""
+    languages = set()
+
+    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
+    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+
+    for entity in component.entities:
+        for language_tag in entity.supported_languages:
+            languages.add(language_tag)
+
+    for tts_engine in manager.providers.values():
+        for language_tag in tts_engine.supported_languages:
+            languages.add(language_tag)
+
+    return languages
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -264,16 +288,6 @@ class TextToSpeechEntity(RestoreEntity):
 
     @property
     @final
-    def name(self) -> str:
-        """Return the name of the provider entity."""
-        # Only one entity is allowed per platform for now.
-        if self.platform is None:
-            raise RuntimeError("Entity is not added to hass yet.")
-
-        return self.platform.platform_name
-
-    @property
-    @final
     def state(self) -> str | None:
         """Return the state of the entity."""
         if self.__last_tts_loaded is None:
@@ -301,7 +315,7 @@ class TextToSpeechEntity(RestoreEntity):
         return None
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
         return None
 
@@ -858,12 +872,16 @@ class TextToSpeechUrlView(HomeAssistantView):
             data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON specified", HTTPStatus.BAD_REQUEST)
-        if not data.get(ATTR_PLATFORM) or not data.get(ATTR_MESSAGE):
+        if (
+            not data.get("engine_id")
+            and not data.get(ATTR_PLATFORM)
+            or not data.get(ATTR_MESSAGE)
+        ):
             return self.json_message(
                 "Must specify platform and message", HTTPStatus.BAD_REQUEST
             )
 
-        p_type = data[ATTR_PLATFORM]
+        engine = data.get("engine_id") or data[ATTR_PLATFORM]
         message = data[ATTR_MESSAGE]
         cache = data.get(ATTR_CACHE)
         language = data.get(ATTR_LANGUAGE)
@@ -871,7 +889,7 @@ class TextToSpeechUrlView(HomeAssistantView):
 
         try:
             path = await self.tts.async_get_url_path(
-                p_type, message, cache=cache, language=language, options=options
+                engine, message, cache=cache, language=language, options=options
             )
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
@@ -913,6 +931,7 @@ def get_base_url(hass: HomeAssistant) -> str:
 @websocket_api.websocket_command(
     {
         "type": "tts/engine/list",
+        vol.Optional("country"): str,
         vol.Optional("language"): str,
     }
 )
@@ -924,22 +943,29 @@ def websocket_list_engines(
     component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
+    country = msg.get("country")
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
 
     for entity in component.entities:
-        provider_info = {"engine_id": entity.entity_id}
+        provider_info = {
+            "engine_id": entity.entity_id,
+            "supported_languages": entity.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, entity.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, entity.supported_languages, country
             )
         providers.append(provider_info)
     for engine_id, provider in manager.providers.items():
-        provider_info = {"engine_id": engine_id}
+        provider_info = {
+            "engine_id": engine_id,
+            "supported_languages": provider.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, provider.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, provider.supported_languages, country
             )
         providers.append(provider_info)
 

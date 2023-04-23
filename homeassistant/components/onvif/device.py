@@ -11,7 +11,7 @@ from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault, XMLParseError
+from zeep.exceptions import Fault, TransportError, XMLParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -38,6 +38,10 @@ from .const import (
 )
 from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
+
+# Some cameras don't support the GetServiceCapabilities call
+# and will return a 404 error which is caught by TransportError
+GET_CAPABILITIES_EXCEPTIONS = (ONVIFError, Fault, RequestError, TransportError)
 
 
 class ONVIFDevice:
@@ -101,7 +105,7 @@ class ONVIFDevice:
 
         # Create event manager
         assert self.config_entry.unique_id
-        self.events = EventManager(self.hass, self.device, self.config_entry.unique_id)
+        self.events = EventManager(self.hass, self.device, self.config_entry, self.name)
 
         # Fetch basic device info and capabilities
         self.info = await self.async_get_device_info()
@@ -159,10 +163,10 @@ class ONVIFDevice:
 
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
-        LOGGER.debug("Setting up the ONVIF device management service")
+        LOGGER.debug("%s: Setting up the ONVIF device management service", self.name)
         device_mgmt = self.device.create_devicemgmt_service()
 
-        LOGGER.debug("Retrieving current device date/time")
+        LOGGER.debug("%s: Retrieving current device date/time", self.name)
         try:
             system_date = dt_util.utcnow()
             device_time = await device_mgmt.GetSystemDateAndTime()
@@ -174,7 +178,7 @@ class ONVIFDevice:
                 )
                 return
 
-            LOGGER.debug("Device time: %s", device_time)
+            LOGGER.debug("%s: Device time: %s", self.name, device_time)
 
             tzone = dt_util.DEFAULT_TIME_ZONE
             cdate = device_time.LocalDateTime
@@ -185,7 +189,9 @@ class ONVIFDevice:
                 tzone = dt_util.get_time_zone(device_time.TimeZone.TZ) or tzone
 
             if cdate is None:
-                LOGGER.warning("Could not retrieve date/time on this camera")
+                LOGGER.warning(
+                    "%s: Could not retrieve date/time on this camera", self.name
+                )
             else:
                 cam_date = dt.datetime(
                     cdate.Date.Year,
@@ -201,7 +207,8 @@ class ONVIFDevice:
                 cam_date_utc = cam_date.astimezone(dt_util.UTC)
 
                 LOGGER.debug(
-                    "Device date/time: %s | System date/time: %s",
+                    "%s: Device date/time: %s | System date/time: %s",
+                    self.name,
                     cam_date_utc,
                     system_date,
                 )
@@ -261,26 +268,26 @@ class ONVIFDevice:
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
         snapshot = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
 
-        pullpoint = False
-        with suppress(ONVIFError, Fault, RequestError, XMLParseError):
-            pullpoint = await self.events.async_start()
-
         ptz = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             self.device.get_definition("ptz")
             ptz = True
 
         imaging = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             self.device.create_imaging_service()
             imaging = True
 
-        return Capabilities(snapshot, pullpoint, ptz, imaging)
+        events = False
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS, XMLParseError):
+            events = await self.events.async_start()
+
+        return Capabilities(snapshot, events, ptz, imaging)
 
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
@@ -327,7 +334,7 @@ class ONVIFDevice:
                     ptz_service = self.device.create_ptz_service()
                     presets = await ptz_service.GetPresets(profile.token)
                     profile.ptz.presets = [preset.token for preset in presets if preset]
-                except (Fault, RequestError):
+                except GET_CAPABILITIES_EXCEPTIONS:
                     # It's OK if Presets aren't supported
                     profile.ptz.presets = []
 

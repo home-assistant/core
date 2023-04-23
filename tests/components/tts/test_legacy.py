@@ -38,7 +38,7 @@ class DefaultProvider(Provider):
 
 
 async def test_default_provider_attributes() -> None:
-    """Test default provider properties."""
+    """Test default provider attributes."""
     provider = DefaultProvider()
 
     assert provider.hass is None
@@ -47,6 +47,7 @@ async def test_default_provider_attributes() -> None:
     assert provider.supported_languages == SUPPORT_LANGUAGES
     assert provider.supported_options is None
     assert provider.default_options is None
+    assert provider.async_get_supported_voices("test") is None
 
 
 async def test_deprecated_platform(hass: HomeAssistant) -> None:
@@ -165,3 +166,30 @@ async def test_service_base_url_set(hass: HomeAssistant, mock_tts) -> None:
         "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
         "_en-us_-_test.mp3"
     )
+
+
+async def test_service_without_cache_config(
+    hass: HomeAssistant, empty_cache_dir, mock_tts
+) -> None:
+    """Set up a TTS platform without cache."""
+    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+    config = {DOMAIN: {"platform": "test", "cache": False}}
+
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(hass, DOMAIN, config)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "test_say",
+        {
+            ATTR_ENTITY_ID: "media_player.something",
+            ATTR_MESSAGE: "There is someone at the door.",
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
+    await hass.async_block_till_done()
+    assert not (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
+    ).is_file()
