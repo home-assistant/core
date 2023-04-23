@@ -14,15 +14,15 @@ from .entity import GoalZeroEntity
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="v12PortStatus",
-        name="12V Port Status",
+        name="12V port status",
     ),
     SwitchEntityDescription(
         key="usbPortStatus",
-        name="USB Port Status",
+        name="USB port status",
     ),
     SwitchEntityDescription(
         key="acPortStatus",
-        name="AC Port Status",
+        name="AC port status",
     ),
 )
 
@@ -52,10 +52,10 @@ class GoalZeroSwitch(GoalZeroEntity, SwitchEntity):
         """Turn off the switch."""
         payload = {self.entity_description.key: 0}
         await self._api.post_state(payload=payload)
-        self.coordinator.async_set_updated_data(data=payload)
+        self.coordinator.async_set_updated_data(None)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         payload = {self.entity_description.key: 1}
         await self._api.post_state(payload=payload)
-        self.coordinator.async_set_updated_data(data=payload)
+        self.coordinator.async_set_updated_data(None)

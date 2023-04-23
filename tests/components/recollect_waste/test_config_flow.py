@@ -1,7 +1,8 @@
 """Define tests for the ReCollect Waste config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiorecollect.errors import RecollectError
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.recollect_waste import (
@@ -11,62 +12,73 @@ from homeassistant.components.recollect_waste import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
+
+from .conftest import TEST_PLACE_ID, TEST_SERVICE_ID
 
 
-async def test_duplicate_error(hass, config, config_entry):
+@pytest.mark.parametrize(
+    ("get_pickup_events_mock", "get_pickup_events_errors"),
+    [
+        (
+            AsyncMock(side_effect=RecollectError),
+            {"base": "invalid_place_or_service_id"},
+        ),
+    ],
+)
+async def test_create_entry(
+    hass: HomeAssistant,
+    client,
+    config,
+    get_pickup_events_errors,
+    get_pickup_events_mock,
+    mock_aiorecollect,
+) -> None:
+    """Test creating an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Test errors that can arise when checking the API key:
+    with patch.object(client, "async_get_pickup_events", get_pickup_events_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=config
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == get_pickup_events_errors
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{TEST_PLACE_ID}, {TEST_SERVICE_ID}"
+    assert result["data"] == {
+        CONF_PLACE_ID: TEST_PLACE_ID,
+        CONF_SERVICE_ID: TEST_SERVICE_ID,
+    }
+
+
+async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_place_or_service_id(hass, config):
-    """Test that an invalid Place or Service ID throws an error."""
-    with patch(
-        "homeassistant.components.recollect_waste.config_flow.Client.async_get_pickup_events",
-        side_effect=RecollectError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=config
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "invalid_place_or_service_id"}
-
-
-async def test_options_flow(hass, config, config_entry):
+async def test_options_flow(
+    hass: HomeAssistant, config, config_entry, setup_config_entry
+) -> None:
     """Test config flow options."""
-    with patch(
-        "homeassistant.components.recollect_waste.async_setup_entry", return_value=True
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_FRIENDLY_NAME: True}
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {CONF_FRIENDLY_NAME: True}
-
-
-async def test_show_form(hass):
-    """Test that the form is served with no input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_FRIENDLY_NAME: True}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-
-async def test_step_user(hass, config, setup_recollect_waste):
-    """Test that the user step works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "12345, 12345"
-    assert result["data"] == {CONF_PLACE_ID: "12345", CONF_SERVICE_ID: "12345"}
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_FRIENDLY_NAME: True}

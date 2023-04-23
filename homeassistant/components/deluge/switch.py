@@ -7,7 +7,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DelugeEntity
 from .const import DOMAIN
@@ -15,9 +15,7 @@ from .coordinator import DelugeDataUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Deluge switch."""
     async_add_entities([DelugeSwitch(hass.data[DOMAIN][entry.entry_id])])
@@ -29,7 +27,6 @@ class DelugeSwitch(DelugeEntity, SwitchEntity):
     def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize the Deluge switch."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.config_entry.title
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_enabled"
 
     def turn_on(self, **kwargs: Any) -> None:
@@ -46,7 +43,7 @@ class DelugeSwitch(DelugeEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return state of the switch."""
         if self.coordinator.data:
-            data: dict = self.coordinator.data[Platform.SWITCH]
+            data = self.coordinator.data[Platform.SWITCH]
             for torrent in data.values():
                 item = torrent.popitem()
                 if not item[1]:

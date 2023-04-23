@@ -1,6 +1,8 @@
 """Provides device automations for RFXCOM RFXtrx."""
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation.exceptions import (
@@ -65,7 +67,9 @@ async def async_get_actions(
     return actions
 
 
-def _get_commands(hass, device_id, action_type):
+def _get_commands(
+    hass: HomeAssistant, device_id: str, action_type: str
+) -> tuple[dict[str, str], Callable[..., None]]:
     device = async_get_device_object(hass, device_id)
     send_fun = getattr(device, action_type)
     commands = getattr(device, ACTION_SELECTION[action_type], {})

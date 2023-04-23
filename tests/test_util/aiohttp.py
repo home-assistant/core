@@ -13,7 +13,8 @@ from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util.json import json_loads
 
 RETYPE = type(re.compile(""))
 
@@ -111,7 +112,7 @@ class AiohttpClientMocker:
 
     def create_session(self, loop):
         """Create a ClientSession that is bound to this mocker."""
-        session = ClientSession(loop=loop)
+        session = ClientSession(loop=loop, json_serialize=json_dumps)
         # Setting directly on `session` will raise deprecation warning
         object.__setattr__(session, "_request", self.match_request)
         return session
@@ -146,9 +147,7 @@ class AiohttpClientMocker:
                     raise response.exc
                 return response
 
-        assert False, "No mock registered for {} {} {}".format(
-            method.upper(), url, params
-        )
+        raise AssertionError(f"No mock registered for {method.upper()} {url} {params}")
 
 
 class AiohttpClientMockResponse:
@@ -266,7 +265,7 @@ class AiohttpClientMockResponse:
             raise ClientResponseError(
                 request_info=request_info,
                 history=None,
-                code=self.status,
+                status=self.status,
                 headers=self.headers,
             )
 

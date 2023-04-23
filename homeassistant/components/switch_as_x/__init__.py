@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_id = async_add_to_device(hass, entry, entity_id)
 
-    hass.config_entries.async_setup_platforms(
+    await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options[CONF_TARGET_DOMAIN],)
     )
     return True

@@ -1,75 +1,172 @@
 """Support for Android IP Webcam sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from pydroid_ipcam import PyDroidIPCam
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import StateType
 
-from . import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_SENSORS,
-    DATA_IP_WEBCAM,
-    ICON_MAP,
-    KEY_MAP,
-    AndroidIPCamEntity,
+from .const import DOMAIN
+from .coordinator import AndroidIPCamDataUpdateCoordinator
+from .entity import AndroidIPCamBaseEntity
+
+
+@dataclass
+class AndroidIPWebcamSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[PyDroidIPCam], StateType]
+
+
+@dataclass
+class AndroidIPWebcamSensorEntityDescription(
+    SensorEntityDescription, AndroidIPWebcamSensorEntityDescriptionMixin
+):
+    """Entity description class for Android IP Webcam sensors."""
+
+    unit_fn: Callable[[PyDroidIPCam], str | None] = lambda _: None
+
+
+SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
+    AndroidIPWebcamSensorEntityDescription(
+        key="audio_connections",
+        name="Audio connections",
+        icon="mdi:speaker",
+        state_class=SensorStateClass.TOTAL,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda ipcam: ipcam.status_data.get("audio_connections"),
+    ),
+    AndroidIPWebcamSensorEntityDescription(
+        key="battery_level",
+        name="Battery level",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda ipcam: ipcam.get_sensor_value("battery_level"),
+        unit_fn=lambda ipcam: ipcam.get_sensor_unit("battery_level"),
+    ),
+    AndroidIPWebcamSensorEntityDescription(
+        key="battery_temp",
+        name="Battery temperature",
+        icon="mdi:thermometer",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda ipcam: ipcam.get_sensor_value("battery_temp"),
+        unit_fn=lambda ipcam: ipcam.get_sensor_unit("battery_temp"),
+    ),
+    AndroidIPWebcamSensorEntityDescription(
+        key="battery_voltage",
+        name="Battery voltage",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda ipcam: ipcam.get_sensor_value("battery_voltage"),
+        unit_fn=lambda ipcam: ipcam.get_sensor_unit("battery_voltage"),
+    ),
+    AndroidIPWebcamSensorEntityDescription(
+        key="light",
+        name="Light level",
+        icon="mdi:flashlight",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ipcam: ipcam.get_sensor_value("light"),
+        unit_fn=lambda ipcam: ipcam.get_sensor_unit("light"),
+    ),
+    AndroidIPWebcamSensorEntityDescription(
+        key="motion",
+        name="Motion",
+        icon="mdi:run",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ipcam: ipcam.get_sensor_value("motion"),
+        unit_fn=lambda ipcam: ipcam.get_sensor_unit("motion"),
+    ),
+    AndroidIPWebcamSensorEntityDescription(
+        key="pressure",
+        name="Pressure",
+        icon="mdi:gauge",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ipcam: ipcam.get_sensor_value("pressure"),
+        unit_fn=lambda ipcam: ipcam.get_sensor_unit("pressure"),
+    ),
+    AndroidIPWebcamSensorEntityDescription(
+        key="proximity",
+        name="Proximity",
+        icon="mdi:map-marker-radius",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ipcam: ipcam.get_sensor_value("proximity"),
+        unit_fn=lambda ipcam: ipcam.get_sensor_unit("proximity"),
+    ),
+    AndroidIPWebcamSensorEntityDescription(
+        key="sound",
+        name="Sound",
+        icon="mdi:speaker",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ipcam: ipcam.get_sensor_value("sound"),
+        unit_fn=lambda ipcam: ipcam.get_sensor_unit("sound"),
+    ),
+    AndroidIPWebcamSensorEntityDescription(
+        key="video_connections",
+        name="Video connections",
+        icon="mdi:eye",
+        state_class=SensorStateClass.TOTAL,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda ipcam: ipcam.status_data.get("video_connections"),
+    ),
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the IP Webcam Sensor."""
-    if discovery_info is None:
-        return
+    """Set up the IP Webcam sensors from config entry."""
 
-    host = discovery_info[CONF_HOST]
-    name = discovery_info[CONF_NAME]
-    sensors = discovery_info[CONF_SENSORS]
-    ipcam = hass.data[DATA_IP_WEBCAM][host]
+    coordinator: AndroidIPCamDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+    sensor_types = [
+        sensor
+        for sensor in SENSOR_TYPES
+        if sensor.key
+        in coordinator.cam.enabled_sensors + ["audio_connections", "video_connections"]
+    ]
+    async_add_entities(
+        IPWebcamSensor(coordinator, description) for description in sensor_types
+    )
 
-    all_sensors = []
 
-    for sensor in sensors:
-        all_sensors.append(IPWebcamSensor(name, host, ipcam, sensor))
-
-    async_add_entities(all_sensors, True)
-
-
-class IPWebcamSensor(AndroidIPCamEntity, SensorEntity):
+class IPWebcamSensor(AndroidIPCamBaseEntity, SensorEntity):
     """Representation of a IP Webcam sensor."""
 
-    def __init__(self, name, host, ipcam, sensor):
+    entity_description: AndroidIPWebcamSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: AndroidIPCamDataUpdateCoordinator,
+        description: AndroidIPWebcamSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(host, ipcam)
-
-        self._sensor = sensor
-        self._mapped_name = KEY_MAP.get(self._sensor, self._sensor)
-        self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_native_value = None
-        self._attr_native_unit_of_measurement = None
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        if self._sensor in ("audio_connections", "video_connections"):
-            if not self._ipcam.status_data:
-                return
-            self._attr_native_value = self._ipcam.status_data.get(self._sensor)
-            self._attr_native_unit_of_measurement = "Connections"
-        else:
-            (
-                self._attr_native_value,
-                self._attr_native_unit_of_measurement,
-            ) = self._ipcam.export_sensor(self._sensor)
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
+        self.entity_description = description
+        super().__init__(coordinator)
 
     @property
-    def icon(self):
-        """Return the icon for the sensor."""
-        if self._sensor == "battery_level" and self._attr_native_value is not None:
-            return icon_for_battery_level(int(self._attr_native_value))
-        return ICON_MAP.get(self._sensor, "mdi:eye")
+    def native_value(self) -> StateType:
+        """Return native value of sensor."""
+        return self.entity_description.value_fn(self.cam)
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return native unit of measurement of sensor."""
+        return self.entity_description.unit_fn(self.cam)

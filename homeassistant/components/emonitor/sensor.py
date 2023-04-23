@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import POWER_WATT
+from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
@@ -64,7 +64,7 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     """Representation of an Emonitor power sensor entity."""
 
     _attr_device_class = SensorDeviceClass.POWER
-    _attr_native_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
@@ -123,6 +123,6 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         return self._paired_attr(self.entity_description.key)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, int]:
         """Return the device specific state attributes."""
         return {"channel": self.channel_number}

@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CURRENCY_EURO, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import CONF_NAME, CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -30,7 +30,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="PVPC",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -142,14 +142,12 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://www.ree.es/es/apidatos",
+            configuration_url="https://api.esios.ree.es",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
             manufacturer="REE",
-            name="PVPC (REData API)",
+            name="ESIOS API",
         )
-        self._state: StateType = None
-        self._attrs: Mapping[str, Any] = {}
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -171,21 +169,24 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
     @callback
     def update_current_price(self, now: datetime) -> None:
         """Update the sensor state, by selecting the current price for this hour."""
-        self.coordinator.api.process_state_and_attributes(now)
+        self.coordinator.api.process_state_and_attributes(
+            self.coordinator.data, self.entity_description.key, now
+        )
         self.async_write_ha_state()
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        self._state = self.coordinator.api.state
-        return self._state
+        return self.coordinator.api.states.get(self.entity_description.key)
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
-        self._attrs = {
+        sensor_attributes = self.coordinator.api.sensor_attributes.get(
+            self.entity_description.key, {}
+        )
+        return {
             _PRICE_SENSOR_ATTRIBUTES_MAP[key]: value
-            for key, value in self.coordinator.api.attributes.items()
+            for key, value in sensor_attributes.items()
             if key in _PRICE_SENSOR_ATTRIBUTES_MAP
         }
-        return self._attrs

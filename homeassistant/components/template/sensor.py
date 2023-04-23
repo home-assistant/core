@@ -99,8 +99,9 @@ def extra_validation_checks(val):
     """Run extra validation checks."""
     if CONF_TRIGGER in val:
         raise vol.Invalid(
-            "You can only add triggers to template entities if they are defined under `template:`. "
-            "See the template documentation for more information: https://www.home-assistant.io/integrations/template/"
+            "You can only add triggers to template entities if they are defined under"
+            " `template:`. See the template documentation for more information:"
+            " https://www.home-assistant.io/integrations/template/"
         )
 
     if CONF_SENSORS not in val and SENSOR_DOMAIN not in val:
@@ -139,8 +140,11 @@ PLATFORM_SCHEMA = vol.All(
 
 @callback
 def _async_create_template_tracking_entities(
-    async_add_entities, hass, definitions: list[dict], unique_id_prefix: str | None
-):
+    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    definitions: list[dict],
+    unique_id_prefix: str | None,
+) -> None:
     """Create the template sensors."""
     sensors = []
 
@@ -205,7 +209,7 @@ class SensorTemplate(TemplateSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
-        self._template = config.get(CONF_STATE)
+        self._template: template.Template = config[CONF_STATE]
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass

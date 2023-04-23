@@ -5,13 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_traits import InfoTrait
+from google_nest_sdm.device_traits import ConnectivityTrait, InfoTrait
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 
-from .const import DATA_DEVICE_MANAGER, DOMAIN
+from .const import CONNECTIVITY_TRAIT_OFFLINE, DATA_DEVICE_MANAGER, DOMAIN
 
 DEVICE_TYPE_MAP: dict[str, str] = {
     "sdm.devices.types.CAMERA": "Camera",
@@ -29,6 +29,15 @@ class NestDeviceInfo:
     def __init__(self, device: Device) -> None:
         """Initialize the DeviceInfo."""
         self._device = device
+
+    @property
+    def available(self) -> bool:
+        """Return device availability."""
+        if ConnectivityTrait.NAME in self._device.traits:
+            trait: ConnectivityTrait = self._device.traits[ConnectivityTrait.NAME]
+            if trait.status == CONNECTIVITY_TRAIT_OFFLINE:
+                return False
+        return True
 
     @property
     def device_info(self) -> DeviceInfo:

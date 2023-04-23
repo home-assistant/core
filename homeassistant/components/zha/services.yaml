@@ -187,6 +187,11 @@ issue_zigbee_cluster_command:
       example: "[arg1, arg2, argN]"
       selector:
         object:
+    params:
+      name: Params
+      description: parameters to pass to the command
+      selector:
+        object:
     manufacturer:
       name: Manufacturer
       description: manufacturer code

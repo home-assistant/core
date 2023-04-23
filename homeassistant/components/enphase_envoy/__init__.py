@@ -78,15 +78,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady(
                 f"Could not obtain serial number from envoy: {ex}"
             ) from ex
-        else:
-            hass.config_entries.async_update_entry(entry, unique_id=serial)
+
+        hass.config_entries.async_update_entry(entry, unique_id=serial)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATOR: coordinator,
         NAME: name,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

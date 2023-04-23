@@ -31,12 +31,12 @@ FIXTURE_USER_INPUT_REAUTH_CHANGED_EMAIL = {
 }
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test the entire flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -59,7 +59,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_account_already_exists(hass):
+async def test_account_already_exists(hass: HomeAssistant) -> None:
     """Test account already exists."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -71,7 +71,7 @@ async def test_account_already_exists(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -95,7 +95,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -109,7 +109,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}
 
@@ -120,7 +120,7 @@ async def test_form_account_locked(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -134,12 +134,12 @@ async def test_form_account_locked(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "account_locked"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -158,7 +158,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass):
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -206,7 +206,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             data=FIXTURE_USER_INPUT,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {}
 
@@ -220,7 +220,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
 
 
@@ -249,7 +249,7 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
             data=FIXTURE_USER_INPUT,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -258,7 +258,7 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
         assert result2["step_id"] == "user"
         assert result2["errors"] == {"base": "invalid_auth"}
 
@@ -288,7 +288,7 @@ async def test_reauth_account_locked(hass: HomeAssistant) -> None:
             data=FIXTURE_USER_INPUT,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -297,7 +297,7 @@ async def test_reauth_account_locked(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
         assert result2["step_id"] == "user"
         assert result2["errors"] == {"base": "account_locked"}
 
@@ -327,7 +327,7 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
             data=FIXTURE_USER_INPUT,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -336,7 +336,7 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
         assert result2["step_id"] == "user"
         assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -366,7 +366,7 @@ async def test_reauth_unknown_error(hass: HomeAssistant) -> None:
             data=FIXTURE_USER_INPUT,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -375,7 +375,7 @@ async def test_reauth_unknown_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
         assert result2["step_id"] == "user"
         assert result2["errors"] == {"base": "unknown"}
 
@@ -405,7 +405,7 @@ async def test_reauth_user_has_new_email_address(hass: HomeAssistant) -> None:
             data=FIXTURE_USER_INPUT,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
         # Change the email and ensure the entry and its unique id gets
@@ -419,5 +419,5 @@ async def test_reauth_user_has_new_email_address(hass: HomeAssistant) -> None:
         assert (
             mock_config.unique_id == FIXTURE_USER_INPUT_REAUTH_CHANGED_EMAIL[CONF_EMAIL]
         )
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"

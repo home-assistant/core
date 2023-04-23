@@ -17,8 +17,7 @@ from didl_lite import didl_lite
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import ssdp
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import BrowseMediaSource, PlayMedia
 from homeassistant.config_entries import ConfigEntry
@@ -518,7 +517,7 @@ class DmsDeviceSource:
         media_source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=self._make_identifier(Action.SEARCH, query),
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="",
             title="Search results",
             can_play=False,

@@ -18,7 +18,7 @@ send:
         object:
     type:
       name: "Value type"
-      description: "If set, the payload will not be sent as raw bytes, but encoded as given DPT. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      description: "If set, the payload will not be sent as raw bytes, but encoded as given DPT. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
       required: false
       example: "temperature"
       selector:
@@ -53,7 +53,7 @@ event_register:
         object:
     type:
       name: "Value type"
-      description: "If set, the payload will be decoded as given DPT in the event data `value` key. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      description: "If set, the payload will be decoded as given DPT in the event data `value` key. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
       required: false
       example: "2byte_float"
       selector:
@@ -77,7 +77,7 @@ exposure_register:
         text:
     type:
       name: "Value type"
-      description: "Telegrams will be encoded as given DPT. 'binary' and all Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)"
+      description: "Telegrams will be encoded as given DPT. 'binary' and all KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)"
       required: true
       example: "percentU8"
       selector:

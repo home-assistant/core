@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from freebox_api import Freepybox
+from freebox_api.api.call import Call
 from freebox_api.api.wifi import Wifi
 from freebox_api.exceptions import NotOpenError
 
@@ -113,7 +114,7 @@ class FreeboxRouter:
         # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
         for sensor in syst_datas["sensors"]:
-            self.sensors_temperature[sensor["name"]] = sensor["value"]
+            self.sensors_temperature[sensor["name"]] = sensor.get("value")
 
         # Connection sensors
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
@@ -185,6 +186,11 @@ class FreeboxRouter:
     def sensors(self) -> dict[str, Any]:
         """Return sensors."""
         return {**self.sensors_temperature, **self.sensors_connection}
+
+    @property
+    def call(self) -> Call:
+        """Return the call."""
+        return self._api.call
 
     @property
     def wifi(self) -> Wifi:

@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from plugwise import Smile
 from plugwise.exceptions import (
+    ConnectionFailedError,
     InvalidAuthentication,
     InvalidSetupError,
-    PlugwiseException,
+    InvalidXMLError,
+    ResponseError,
+    UnsupportedDeviceError,
 )
-from plugwise.smile import Smile
 import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -32,7 +35,6 @@ from .const import (
     DOMAIN,
     FLOW_SMILE,
     FLOW_STRETCH,
-    LOGGER,
     PW_TYPE,
     SMILE,
     STRETCH,
@@ -41,25 +43,26 @@ from .const import (
 )
 
 
-def _base_gw_schema(discovery_info):
+def _base_gw_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
     """Generate base schema for gateways."""
-    base_gw_schema = {}
+    base_gw_schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
     if not discovery_info:
-        base_gw_schema[vol.Required(CONF_HOST)] = str
-        base_gw_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
-        base_gw_schema[vol.Required(CONF_USERNAME, default=SMILE)] = vol.In(
-            {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
+        base_gw_schema = base_gw_schema.extend(
+            {
+                vol.Required(CONF_HOST): str,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                vol.Required(CONF_USERNAME, default=SMILE): vol.In(
+                    {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
+                ),
+            }
         )
 
-    base_gw_schema.update({vol.Required(CONF_PASSWORD): str})
-
-    return vol.Schema(base_gw_schema)
+    return base_gw_schema
 
 
 async def validate_gw_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
-    """
-    Validate whether the user input allows us to connect to the gateway.
+    """Validate whether the user input allows us to connect to the gateway.
 
     Data has the keys from _base_gw_schema() with values provided by the user.
     """
@@ -91,7 +94,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_info = discovery_info
         _properties = discovery_info.properties
 
-        unique_id = discovery_info.hostname.split(".")[0]
+        unique_id = discovery_info.hostname.split(".")[0].split("-")[0]
         if config_entry := await self.async_set_unique_id(unique_id):
             try:
                 await validate_gw_input(
@@ -119,6 +122,32 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
+        # This is an Anna, but we already have config entries.
+        # Assuming that the user has already configured Adam, aborting discovery.
+        if self._async_current_entries() and _product == "smile_thermo":
+            return self.async_abort(reason="anna_with_adam")
+
+        # If we have discovered an Adam or Anna, both might be on the network.
+        # In that case, we need to cancel the Anna flow, as the Adam should
+        # be added.
+        for flow in self._async_in_progress():
+            # This is an Anna, and there is already an Adam flow in progress
+            if (
+                _product == "smile_thermo"
+                and "context" in flow
+                and flow["context"].get("product") == "smile_open_therm"
+            ):
+                return self.async_abort(reason="anna_with_adam")
+
+            # This is an Adam, and there is already an Anna flow in progress
+            if (
+                _product == "smile_open_therm"
+                and "context" in flow
+                and flow["context"].get("product") == "smile_thermo"
+                and "flow_id" in flow
+            ):
+                self.hass.config_entries.flow.async_abort(flow["flow_id"])
+
         self.context.update(
             {
                 "title_placeholders": {
@@ -127,7 +156,10 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: discovery_info.port,
                     CONF_USERNAME: self._username,
                 },
-                "configuration_url": f"http://{discovery_info.host}:{discovery_info.port}",
+                "configuration_url": (
+                    f"http://{discovery_info.host}:{discovery_info.port}"
+                ),
+                "product": _product,
             }
         )
         return await self.async_step_user()
@@ -146,14 +178,17 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 api = await validate_gw_input(self.hass, user_input)
-            except InvalidSetupError:
-                errors[CONF_BASE] = "invalid_setup"
+            except ConnectionFailedError:
+                errors[CONF_BASE] = "cannot_connect"
             except InvalidAuthentication:
                 errors[CONF_BASE] = "invalid_auth"
-            except PlugwiseException:
-                errors[CONF_BASE] = "cannot_connect"
+            except InvalidSetupError:
+                errors[CONF_BASE] = "invalid_setup"
+            except (InvalidXMLError, ResponseError):
+                errors[CONF_BASE] = "response_error"
+            except UnsupportedDeviceError:
+                errors[CONF_BASE] = "unsupported"
             except Exception:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception")
                 errors[CONF_BASE] = "unknown"
             else:
                 await self.async_set_unique_id(

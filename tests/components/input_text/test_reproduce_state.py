@@ -1,5 +1,7 @@
 """Test reproduce state for Input text."""
-from homeassistant.core import State
+import pytest
+
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.setup import async_setup_component
 
@@ -9,7 +11,9 @@ INVALID_TEXT1 = "This text is too long!"
 INVALID_TEXT2 = "Short"
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Input text states."""
 
     # Setup entity for testing

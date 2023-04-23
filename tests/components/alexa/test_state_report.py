@@ -7,11 +7,18 @@ import pytest
 
 from homeassistant import core
 from homeassistant.components.alexa import errors, state_report
+from homeassistant.components.alexa.resources import AlexaGlobalCatalog
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 
 from .test_common import TEST_URL, get_default_config
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_report_state(hass, aioclient_mock):
+
+async def test_report_state(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test proactive state reports."""
     aioclient_mock.post(TEST_URL, text="", status=202)
 
@@ -45,7 +52,11 @@ async def test_report_state(hass, aioclient_mock):
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_contact"
 
 
-async def test_report_state_fail(hass, aioclient_mock, caplog):
+async def test_report_state_fail(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test proactive state retries once."""
     aioclient_mock.post(
         TEST_URL,
@@ -87,7 +98,11 @@ async def test_report_state_fail(hass, aioclient_mock, caplog):
     ) in caplog.text
 
 
-async def test_report_state_timeout(hass, aioclient_mock, caplog):
+async def test_report_state_timeout(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test proactive state retries once."""
     aioclient_mock.post(
         TEST_URL,
@@ -120,7 +135,9 @@ async def test_report_state_timeout(hass, aioclient_mock, caplog):
     )
 
 
-async def test_report_state_retry(hass, aioclient_mock):
+async def test_report_state_retry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test proactive state retries once."""
     aioclient_mock.post(
         TEST_URL,
@@ -148,7 +165,9 @@ async def test_report_state_retry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 2
 
 
-async def test_report_state_unsets_authorized_on_error(hass, aioclient_mock):
+async def test_report_state_unsets_authorized_on_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test proactive state unsets authorized on error."""
     aioclient_mock.post(
         TEST_URL,
@@ -180,8 +199,8 @@ async def test_report_state_unsets_authorized_on_error(hass, aioclient_mock):
 
 @pytest.mark.parametrize("exc", [errors.NoTokenAvailable, errors.RequireRelink])
 async def test_report_state_unsets_authorized_on_access_token_error(
-    hass, aioclient_mock, exc
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, exc: Exception
+) -> None:
     """Test proactive state unsets authorized on error."""
     aioclient_mock.post(TEST_URL, text="", status=202)
 
@@ -209,8 +228,10 @@ async def test_report_state_unsets_authorized_on_access_token_error(
         config._store.set_authorized.assert_called_once_with(False)
 
 
-async def test_report_state_instance(hass, aioclient_mock):
-    """Test proactive state reports with instance."""
+async def test_report_state_fan(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test proactive state reports with fan instance."""
     aioclient_mock.post(TEST_URL, text="", status=202)
 
     hass.states.async_set(
@@ -275,7 +296,166 @@ async def test_report_state_instance(hass, aioclient_mock):
     assert call_json["event"]["endpoint"]["endpointId"] == "fan#test_fan"
 
 
-async def test_send_add_or_update_message(hass, aioclient_mock):
+async def test_report_state_humidifier(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test proactive state reports with humidifier instance."""
+    aioclient_mock.post(TEST_URL, text="", status=202)
+
+    hass.states.async_set(
+        "humidifier.test_humidifier",
+        "off",
+        {
+            "friendly_name": "Test humidifier",
+            "supported_features": 1,
+            "mode": None,
+            "available_modes": ["auto", "smart"],
+        },
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config(hass))
+
+    hass.states.async_set(
+        "humidifier.test_humidifier",
+        "on",
+        {
+            "friendly_name": "Test humidifier",
+            "supported_features": 1,
+            "mode": "smart",
+            "available_modes": ["auto", "smart"],
+            "humidity": 55,
+        },
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+    assert call_json["event"]["header"]["namespace"] == "Alexa"
+    assert call_json["event"]["header"]["name"] == "ChangeReport"
+
+    change_reports = call_json["event"]["payload"]["change"]["properties"]
+
+    checks = 0
+    for report in change_reports:
+        if report["name"] == "mode":
+            assert report["value"] == "mode.smart"
+            assert report["instance"] == "humidifier.mode"
+            assert report["namespace"] == "Alexa.ModeController"
+            checks += 1
+        if report["name"] == "rangeValue":
+            assert report["value"] == 55
+            assert report["instance"] == "humidifier.humidity"
+            assert report["namespace"] == "Alexa.RangeController"
+            checks += 1
+    assert checks == 2
+
+    assert call_json["event"]["endpoint"]["endpointId"] == "humidifier#test_humidifier"
+
+
+@pytest.mark.parametrize(
+    ("domain", "value", "unit", "label"),
+    [
+        (
+            "number",
+            50,
+            None,
+            AlexaGlobalCatalog.SETTING_PRESET,
+        ),
+        (
+            "input_number",
+            40,
+            UnitOfLength.METERS,
+            AlexaGlobalCatalog.UNIT_DISTANCE_METERS,
+        ),
+        (
+            "number",
+            20.5,
+            UnitOfTemperature.CELSIUS,
+            AlexaGlobalCatalog.UNIT_TEMPERATURE_CELSIUS,
+        ),
+        (
+            "input_number",
+            40.5,
+            UnitOfLength.MILLIMETERS,
+            AlexaGlobalCatalog.SETTING_PRESET,
+        ),
+        (
+            "number",
+            20.5,
+            PERCENTAGE,
+            AlexaGlobalCatalog.UNIT_PERCENT,
+        ),
+    ],
+)
+async def test_report_state_number(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    domain: str,
+    value: float,
+    unit: str | None,
+    label: AlexaGlobalCatalog,
+) -> None:
+    """Test proactive state reports with number or input_number instance."""
+    aioclient_mock.post(TEST_URL, text="", status=202)
+    state = {
+        "friendly_name": f"Test {domain}",
+        "min": 10,
+        "max": 100,
+        "step": 0.1,
+    }
+
+    if unit:
+        state["unit_of_measurement"]: unit
+
+    hass.states.async_set(
+        f"{domain}.test_{domain}",
+        None,
+        state,
+    )
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config(hass))
+
+    hass.states.async_set(
+        f"{domain}.test_{domain}",
+        value,
+        state,
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+    assert call_json["event"]["header"]["namespace"] == "Alexa"
+    assert call_json["event"]["header"]["name"] == "ChangeReport"
+
+    change_reports = call_json["event"]["payload"]["change"]["properties"]
+
+    checks = 0
+    for report in change_reports:
+        if report["name"] == "connectivity":
+            assert report["value"] == {"value": "OK"}
+            assert report["namespace"] == "Alexa.EndpointHealth"
+            checks += 1
+        if report["name"] == "rangeValue":
+            assert report["value"] == value
+            assert report["instance"] == f"{domain}.value"
+            assert report["namespace"] == "Alexa.RangeController"
+            checks += 1
+    assert checks == 2
+
+    assert call_json["event"]["endpoint"]["endpointId"] == f"{domain}#test_{domain}"
+
+
+async def test_send_add_or_update_message(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test sending an AddOrUpdateReport message."""
     aioclient_mock.post(TEST_URL, text="")
 
@@ -312,7 +492,9 @@ async def test_send_add_or_update_message(hass, aioclient_mock):
     )
 
 
-async def test_send_delete_message(hass, aioclient_mock):
+async def test_send_delete_message(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test sending an AddOrUpdateReport message."""
     aioclient_mock.post(TEST_URL, json={"data": "is irrelevant"})
 
@@ -339,14 +521,20 @@ async def test_send_delete_message(hass, aioclient_mock):
     )
 
 
-async def test_doorbell_event(hass, aioclient_mock):
+async def test_doorbell_event(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test doorbell press reports."""
     aioclient_mock.post(TEST_URL, text="", status=202)
 
     hass.states.async_set(
         "binary_sensor.test_doorbell",
         "off",
-        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "occupancy",
+            "linkquality": 42,
+        },
     )
 
     await state_report.async_enable_proactive_mode(hass, get_default_config(hass))
@@ -354,7 +542,21 @@ async def test_doorbell_event(hass, aioclient_mock):
     hass.states.async_set(
         "binary_sensor.test_doorbell",
         "on",
-        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "occupancy",
+            "linkquality": 42,
+        },
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "on",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "occupancy",
+            "linkquality": 99,
+        },
     )
 
     # To trigger event listener
@@ -386,7 +588,41 @@ async def test_doorbell_event(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 2
 
 
-async def test_doorbell_event_fail(hass, aioclient_mock, caplog):
+async def test_doorbell_event_from_unknown(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test doorbell press reports."""
+    aioclient_mock.post(TEST_URL, text="", status=202)
+
+    await state_report.async_enable_proactive_mode(hass, get_default_config(hass))
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "on",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "occupancy",
+        },
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+    assert call_json["event"]["header"]["namespace"] == "Alexa.DoorbellEventSource"
+    assert call_json["event"]["header"]["name"] == "DoorbellPress"
+    assert call_json["event"]["payload"]["cause"]["type"] == "PHYSICAL_INTERACTION"
+    assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_doorbell"
+
+
+async def test_doorbell_event_fail(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test proactive state retries once."""
     aioclient_mock.post(
         TEST_URL,
@@ -423,12 +659,17 @@ async def test_doorbell_event_fail(hass, aioclient_mock, caplog):
 
     # Check we log the entity id of the failing entity
     assert (
-        "Error when sending DoorbellPress event for binary_sensor.test_doorbell to Alexa: "
-        "THROTTLING_EXCEPTION: Request could not be processed due to throttling"
+        "Error when sending DoorbellPress event for binary_sensor.test_doorbell"
+        " to Alexa: THROTTLING_EXCEPTION: Request could not be processed"
+        " due to throttling"
     ) in caplog.text
 
 
-async def test_doorbell_event_timeout(hass, aioclient_mock, caplog):
+async def test_doorbell_event_timeout(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test proactive state retries once."""
     aioclient_mock.post(
         TEST_URL,
@@ -461,7 +702,9 @@ async def test_doorbell_event_timeout(hass, aioclient_mock, caplog):
     )
 
 
-async def test_proactive_mode_filter_states(hass, aioclient_mock):
+async def test_proactive_mode_filter_states(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test all the cases that filter states."""
     aioclient_mock.post(TEST_URL, text="", status=202)
     config = get_default_config(hass)

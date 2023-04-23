@@ -1,18 +1,14 @@
 """Support for Flick Electric Pricing data."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from pyflick import FlickAPI, FlickPrice
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_FRIENDLY_NAME,
-    CURRENCY_CENT,
-    ENERGY_KILO_WATT_HOUR,
-)
+from homeassistant.const import ATTR_FRIENDLY_NAME, CURRENCY_CENT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -23,7 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-ATTRIBUTION = "Data provided by Flick Electric"
 FRIENDLY_NAME = "Flick Power Price"
 
 
@@ -39,14 +34,14 @@ async def async_setup_entry(
 class FlickPricingSensor(SensorEntity):
     """Entity object for Flick Electric sensor."""
 
-    _attr_native_unit_of_measurement = f"{CURRENCY_CENT}/{ENERGY_KILO_WATT_HOUR}"
+    _attr_attribution = "Data provided by Flick Electric"
+    _attr_native_unit_of_measurement = f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}"
 
     def __init__(self, api: FlickAPI) -> None:
         """Entity object for Flick Electric sensor."""
         self._api: FlickAPI = api
         self._price: FlickPrice = None
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+        self._attributes: dict[str, Any] = {
             ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
         }
 
@@ -65,7 +60,7 @@ class FlickPricingSensor(SensorEntity):
         """Return the state attributes."""
         return self._attributes
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the Flick Pricing data from the web service."""
         if self._price and self._price.end_at >= utcnow():
             return  # Power price data is still valid

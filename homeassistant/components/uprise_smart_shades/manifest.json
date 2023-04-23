@@ -1,0 +1,6 @@
+{
+  "domain": "uprise_smart_shades",
+  "name": "Uprise Smart Shades",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

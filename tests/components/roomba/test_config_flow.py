@@ -9,6 +9,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.roomba import config_flow
 from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -112,7 +113,7 @@ def _mocked_connection_refused_on_getpassword(*_):
     return roomba_password
 
 
-async def test_form_user_discovery_and_password_fetch(hass):
+async def test_form_user_discovery_and_password_fetch(hass: HomeAssistant) -> None:
     """Test we can discovery and fetch the password."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -128,7 +129,7 @@ async def test_form_user_discovery_and_password_fetch(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -137,7 +138,7 @@ async def test_form_user_discovery_and_password_fetch(hass):
         {CONF_HOST: MOCK_IP},
     )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
     assert result2["step_id"] == "link"
 
@@ -157,7 +158,7 @@ async def test_form_user_discovery_and_password_fetch(hass):
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["title"] == "robot_name"
     assert result3["result"].unique_id == "BLID"
     assert result3["data"] == {
@@ -170,7 +171,7 @@ async def test_form_user_discovery_and_password_fetch(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discovery_skips_known(hass):
+async def test_form_user_discovery_skips_known(hass: HomeAssistant) -> None:
     """Test discovery proceeds to manual if all discovered are already known."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
@@ -184,12 +185,14 @@ async def test_form_user_discovery_skips_known(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
 
-async def test_form_user_no_devices_found_discovery_aborts_already_configured(hass):
+async def test_form_user_no_devices_found_discovery_aborts_already_configured(
+    hass: HomeAssistant,
+) -> None:
     """Test if we manually configure an existing host we abort."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
@@ -204,7 +207,7 @@ async def test_form_user_no_devices_found_discovery_aborts_already_configured(ha
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
@@ -213,11 +216,13 @@ async def test_form_user_no_devices_found_discovery_aborts_already_configured(ha
         {CONF_HOST: MOCK_IP},
     )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
+async def test_form_user_discovery_manual_and_auto_password_fetch(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery skipped and we can auto fetch the password."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -233,7 +238,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -242,7 +247,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
         {CONF_HOST: None},
     )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
     assert result2["step_id"] == "manual"
 
@@ -255,7 +260,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
         )
 
     await hass.async_block_till_done()
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["type"] == data_entry_flow.FlowResultType.FORM
     assert result3["errors"] is None
 
     with patch(
@@ -274,7 +279,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result4["title"] == "robot_name"
     assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
@@ -287,7 +292,9 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discover_fails_aborts_already_configured(hass):
+async def test_form_user_discover_fails_aborts_already_configured(
+    hass: HomeAssistant,
+) -> None:
     """Test if we manually configure an existing host we abort after failed discovery."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, unique_id="BLID")
@@ -302,7 +309,7 @@ async def test_form_user_discover_fails_aborts_already_configured(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
@@ -311,13 +318,13 @@ async def test_form_user_discover_fails_aborts_already_configured(hass):
         {CONF_HOST: MOCK_IP},
     )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
 async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_connect(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test discovery skipped and we can auto fetch the password then we fail to connect."""
 
     with patch(
@@ -328,7 +335,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -337,7 +344,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
         {CONF_HOST: None},
     )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
     assert result2["step_id"] == "manual"
 
@@ -351,11 +358,13 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
         )
     await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
     assert result3["reason"] == "cannot_connect"
 
 
-async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass):
+async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery finds no devices and we can auto fetch the password."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -372,7 +381,7 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
@@ -384,7 +393,7 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass
             {CONF_HOST: MOCK_IP},
         )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
 
     with patch(
@@ -403,7 +412,7 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["title"] == "robot_name"
     assert result3["result"].unique_id == "BLID"
     assert result3["data"] == {
@@ -416,7 +425,9 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(hass):
+async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery finds no devices and password fetch fails."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -433,7 +444,7 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(has
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
@@ -445,7 +456,7 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(has
             {CONF_HOST: MOCK_IP},
         )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
 
     with patch(
@@ -471,7 +482,7 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(has
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result4["title"] == "myroomba"
     assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
@@ -485,8 +496,8 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(has
 
 
 async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_and_cannot_connect(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test discovery finds no devices and password fetch fails then we cannot connect."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -504,7 +515,7 @@ async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_an
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
@@ -516,7 +527,7 @@ async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_an
             {CONF_HOST: MOCK_IP},
         )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
 
     with patch(
@@ -542,12 +553,14 @@ async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_an
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result4["type"] == data_entry_flow.FlowResultType.FORM
     assert result4["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_user_discovery_and_password_fetch_gets_connection_refused(hass):
+async def test_form_user_discovery_and_password_fetch_gets_connection_refused(
+    hass: HomeAssistant,
+) -> None:
     """Test we can discovery and fetch the password manually."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -563,7 +576,7 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(ha
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -572,7 +585,7 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(ha
         {CONF_HOST: MOCK_IP},
     )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
     assert result2["step_id"] == "link"
 
@@ -599,7 +612,7 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(ha
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result4["title"] == "myroomba"
     assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
@@ -613,7 +626,9 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(ha
 
 
 @pytest.mark.parametrize("discovery_data", DHCP_DISCOVERY_DEVICES)
-async def test_dhcp_discovery_and_roomba_discovery_finds(hass, discovery_data):
+async def test_dhcp_discovery_and_roomba_discovery_finds(
+    hass: HomeAssistant, discovery_data
+) -> None:
     """Test we can process the discovery from dhcp and roomba discovery matches the device."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -631,7 +646,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(hass, discovery_data):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "link"
     assert result["description_placeholders"] == {"name": "robot_name"}
@@ -652,7 +667,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(hass, discovery_data):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "robot_name"
     assert result2["result"].unique_id == "BLID"
     assert result2["data"] == {
@@ -666,7 +681,9 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(hass, discovery_data):
 
 
 @pytest.mark.parametrize("discovery_data", DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP)
-async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
+async def test_dhcp_discovery_falls_back_to_manual(
+    hass: HomeAssistant, discovery_data
+) -> None:
     """Test we can process the discovery from dhcp but roomba discovery cannot find the specific device."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -684,7 +701,7 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -693,7 +710,7 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
         {},
     )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
     assert result2["step_id"] == "manual"
 
@@ -705,7 +722,7 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
             {CONF_HOST: MOCK_IP},
         )
     await hass.async_block_till_done()
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["type"] == data_entry_flow.FlowResultType.FORM
     assert result3["errors"] is None
 
     with patch(
@@ -724,7 +741,7 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result4["title"] == "robot_name"
     assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
@@ -738,7 +755,9 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
 
 
 @pytest.mark.parametrize("discovery_data", DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP)
-async def test_dhcp_discovery_no_devices_falls_back_to_manual(hass, discovery_data):
+async def test_dhcp_discovery_no_devices_falls_back_to_manual(
+    hass: HomeAssistant, discovery_data
+) -> None:
     """Test we can process the discovery from dhcp but roomba discovery cannot find any devices."""
 
     mocked_roomba = _create_mocked_roomba(
@@ -757,7 +776,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(hass, discovery_da
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
@@ -769,7 +788,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(hass, discovery_da
             {CONF_HOST: MOCK_IP},
         )
     await hass.async_block_till_done()
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] is None
 
     with patch(
@@ -788,7 +807,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(hass, discovery_da
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["title"] == "robot_name"
     assert result3["result"].unique_id == "BLID"
     assert result3["data"] == {
@@ -801,7 +820,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(hass, discovery_da
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_discovery_with_ignored(hass):
+async def test_dhcp_discovery_with_ignored(hass: HomeAssistant) -> None:
     """Test ignored entries do not break checking for existing entries."""
 
     config_entry = MockConfigEntry(
@@ -826,7 +845,7 @@ async def test_dhcp_discovery_with_ignored(hass):
     assert result["type"] == "form"
 
 
-async def test_dhcp_discovery_already_configured_host(hass):
+async def test_dhcp_discovery_already_configured_host(hass: HomeAssistant) -> None:
     """Test we abort if the host is already configured."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: MOCK_IP})
@@ -850,7 +869,7 @@ async def test_dhcp_discovery_already_configured_host(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_discovery_already_configured_blid(hass):
+async def test_dhcp_discovery_already_configured_blid(hass: HomeAssistant) -> None:
     """Test we abort if the blid is already configured."""
 
     config_entry = MockConfigEntry(
@@ -876,7 +895,7 @@ async def test_dhcp_discovery_already_configured_blid(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_discovery_not_irobot(hass):
+async def test_dhcp_discovery_not_irobot(hass: HomeAssistant) -> None:
     """Test we abort if the discovered device is not an irobot device."""
 
     config_entry = MockConfigEntry(
@@ -902,7 +921,7 @@ async def test_dhcp_discovery_not_irobot(hass):
     assert result["reason"] == "not_irobot_device"
 
 
-async def test_dhcp_discovery_partial_hostname(hass):
+async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     """Test we abort flows when we have a partial hostname."""
 
     with patch(

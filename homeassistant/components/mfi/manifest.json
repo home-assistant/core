@@ -1,9 +1,9 @@
 {
   "domain": "mfi",
   "name": "Ubiquiti mFi mPort",
-  "documentation": "https://www.home-assistant.io/integrations/mfi",
-  "requirements": ["mficlient==0.3.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/mfi",
   "iot_class": "local_polling",
-  "loggers": ["mficlient"]
+  "loggers": ["mficlient"],
+  "requirements": ["mficlient==0.3.0"]
 }

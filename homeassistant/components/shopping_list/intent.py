@@ -1,8 +1,10 @@
 """Intents for the Shopping List integration."""
+from __future__ import annotations
+
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 
-from . import DOMAIN, EVENT
+from . import DOMAIN, EVENT_SHOPPING_LIST_UPDATED
 
 INTENT_ADD_ITEM = "HassShoppingListAddItem"
 INTENT_LAST_ITEMS = "HassShoppingListLastItems"
@@ -20,7 +22,7 @@ class AddItemIntent(intent.IntentHandler):
     intent_type = INTENT_ADD_ITEM
     slot_schema = {"item": cv.string}
 
-    async def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj: intent.Intent):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots["item"]["value"]
@@ -28,7 +30,7 @@ class AddItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(f"I've added {item} to your shopping list")
-        intent_obj.hass.bus.async_fire(EVENT)
+        intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
         return response
 
 
@@ -38,7 +40,7 @@ class ListTopItemsIntent(intent.IntentHandler):
     intent_type = INTENT_LAST_ITEMS
     slot_schema = {"item": cv.string}
 
-    async def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj: intent.Intent):
         """Handle the intent."""
         items = intent_obj.hass.data[DOMAIN].items[-5:]
         response = intent_obj.create_response()

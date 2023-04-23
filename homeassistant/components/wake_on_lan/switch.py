@@ -3,11 +3,15 @@ from __future__ import annotations
 
 import logging
 import subprocess as sp
+from typing import Any
 
 import voluptuous as vol
 import wakeonlan
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_BROADCAST_PORT,
@@ -31,7 +35,7 @@ CONF_OFF_ACTION = "turn_off"
 DEFAULT_NAME = "Wake on LAN"
 DEFAULT_PING_TIMEOUT = 1
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
@@ -50,12 +54,12 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a wake on lan switch."""
-    broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
-    broadcast_port = config.get(CONF_BROADCAST_PORT)
-    host = config.get(CONF_HOST)
-    mac_address = config[CONF_MAC]
-    name = config[CONF_NAME]
-    off_action = config.get(CONF_OFF_ACTION)
+    broadcast_address: str | None = config.get(CONF_BROADCAST_ADDRESS)
+    broadcast_port: int | None = config.get(CONF_BROADCAST_PORT)
+    host: str | None = config.get(CONF_HOST)
+    mac_address: str = config[CONF_MAC]
+    name: str = config[CONF_NAME]
+    off_action: list[Any] | None = config.get(CONF_OFF_ACTION)
 
     add_entities(
         [
@@ -78,17 +82,16 @@ class WolSwitch(SwitchEntity):
 
     def __init__(
         self,
-        hass,
-        name,
-        host,
-        mac_address,
-        off_action,
-        broadcast_address,
-        broadcast_port,
-    ):
+        hass: HomeAssistant,
+        name: str,
+        host: str | None,
+        mac_address: str,
+        off_action: list[Any] | None,
+        broadcast_address: str | None,
+        broadcast_port: int | None,
+    ) -> None:
         """Initialize the WOL switch."""
-        self._hass = hass
-        self._name = name
+        self._attr_name = name
         self._host = host
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
@@ -97,37 +100,18 @@ class WolSwitch(SwitchEntity):
             Script(hass, off_action, name, DOMAIN) if off_action else None
         )
         self._state = False
-        self._assumed_state = host is None
-        self._unique_id = dr.format_mac(mac_address)
+        self._attr_assumed_state = host is None
+        self._attr_should_poll = bool(not self._attr_assumed_state)
+        self._attr_unique_id = dr.format_mac(mac_address)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._state
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def assumed_state(self):
-        """Return true if no host is provided."""
-        return self._assumed_state
-
-    @property
-    def should_poll(self):
-        """Return false if assumed state is true."""
-        return not self._assumed_state
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this switch."""
-        return self._unique_id
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        service_kwargs = {}
+        service_kwargs: dict[str, Any] = {}
         if self._broadcast_address is not None:
             service_kwargs["ip_address"] = self._broadcast_address
         if self._broadcast_port is not None:
@@ -142,20 +126,20 @@ class WolSwitch(SwitchEntity):
 
         wakeonlan.send_magic_packet(self._mac_address, **service_kwargs)
 
-        if self._assumed_state:
+        if self._attr_assumed_state:
             self._state = True
             self.async_write_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
             self._off_script.run(context=self._context)
 
-        if self._assumed_state:
+        if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Check if device is on and update the state. Only called if assumed state is false."""
         ping_cmd = [
             "ping",

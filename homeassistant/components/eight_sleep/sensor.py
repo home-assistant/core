@@ -7,11 +7,18 @@ from typing import Any
 from pyeight.eight import EightSleep
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform as ep
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import EightSleepBaseEntity, EightSleepConfigEntryData
@@ -64,7 +71,7 @@ SERVICE_EIGHT_SCHEMA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: ep.AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the eight sleep sensors."""
     config_entry_data: EightSleepConfigEntryData = hass.data[DOMAIN][entry.entry_id]
@@ -91,7 +98,7 @@ async def async_setup_entry(
 
     async_add_entities(all_sensors)
 
-    platform = ep.async_get_current_platform()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_HEAT_SET,
         SERVICE_EIGHT_SCHEMA,
@@ -146,7 +153,7 @@ def _get_breakdown_percent(
     """Get a breakdown percent."""
     try:
         return round((attr["breakdown"][key] / denominator) * 100, 2)
-    except ZeroDivisionError:
+    except (ZeroDivisionError, KeyError):
         return 0
 
 
@@ -175,9 +182,12 @@ class EightUserSensor(EightSleepBaseEntity, SensorEntity):
         if self._sensor == "bed_temperature":
             self._attr_icon = "mdi:thermometer"
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
-            self._attr_native_unit_of_measurement = TEMP_CELSIUS
+            self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         elif self._sensor in ("current_sleep", "last_sleep", "current_sleep_fitness"):
             self._attr_native_unit_of_measurement = "Score"
+
+        if self._sensor != "sleep_stage":
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
@@ -272,7 +282,8 @@ class EightRoomSensor(EightSleepBaseEntity, SensorEntity):
 
     _attr_icon = "mdi:thermometer"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,

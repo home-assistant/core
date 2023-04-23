@@ -8,7 +8,7 @@ import prometheus_client
 import voluptuous as vol
 
 from homeassistant import core as hacore
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
@@ -16,11 +16,9 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     HVACAction,
 )
+from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.humidifier.const import (
-    ATTR_AVAILABLE_MODES,
-    ATTR_HUMIDITY,
-)
+from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -31,11 +29,14 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
+    STATE_CLOSED,
+    STATE_CLOSING,
     STATE_ON,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entityfilter, state as state_helper
@@ -43,7 +44,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.temperature import fahrenheit_to_celsius
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -233,10 +234,8 @@ class PrometheusMetrics:
                         sample.name,
                         entity_id,
                     )
-                    try:
+                    with suppress(KeyError):
                         metric.remove(*sample.labels.values())
-                    except KeyError:
-                        pass
 
     def _handle_attributes(self, state):
         for key, value in state.attributes.items():
@@ -350,8 +349,13 @@ class PrometheusMetrics:
 
         with suppress(ValueError):
             value = self.state_as_number(state)
-            if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-                value = fahrenheit_to_celsius(value)
+            if (
+                state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                == UnitOfTemperature.FAHRENHEIT
+            ):
+                value = TemperatureConverter.convert(
+                    value, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+                )
             metric.labels(**self._labels(state)).set(value)
 
     def _handle_device_tracker(self, state):
@@ -369,6 +373,38 @@ class PrometheusMetrics:
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
+
+    def _handle_cover(self, state):
+        metric = self._metric(
+            "cover_state",
+            self.prometheus_cli.Gauge,
+            "State of the cover (0/1)",
+            ["state"],
+        )
+
+        cover_states = [STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING]
+        for cover_state in cover_states:
+            metric.labels(**dict(self._labels(state), state=cover_state)).set(
+                float(cover_state == state.state)
+            )
+
+        position = state.attributes.get(ATTR_POSITION)
+        if position is not None:
+            position_metric = self._metric(
+                "cover_position",
+                self.prometheus_cli.Gauge,
+                "Position of the cover (0-100)",
+            )
+            position_metric.labels(**self._labels(state)).set(float(position))
+
+        tilt_position = state.attributes.get(ATTR_TILT_POSITION)
+        if tilt_position is not None:
+            tilt_position_metric = self._metric(
+                "cover_tilt_position",
+                self.prometheus_cli.Gauge,
+                "Tilt Position of the cover (0-100)",
+            )
+            tilt_position_metric.labels(**self._labels(state)).set(float(tilt_position))
 
     def _handle_light(self, state):
         metric = self._metric(
@@ -395,9 +431,11 @@ class PrometheusMetrics:
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_climate_temp(self, state, attr, metric_name, metric_description):
-        if temp := state.attributes.get(attr):
-            if self._climate_units == TEMP_FAHRENHEIT:
-                temp = fahrenheit_to_celsius(temp)
+        if (temp := state.attributes.get(attr)) is not None:
+            if self._climate_units == UnitOfTemperature.FAHRENHEIT:
+                temp = TemperatureConverter.convert(
+                    temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+                )
             metric = self._metric(
                 metric_name,
                 self.prometheus_cli.Gauge,
@@ -509,8 +547,13 @@ class PrometheusMetrics:
 
             try:
                 value = self.state_as_number(state)
-                if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-                    value = fahrenheit_to_celsius(value)
+                if (
+                    state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                    == UnitOfTemperature.FAHRENHEIT
+                ):
+                    value = TemperatureConverter.convert(
+                        value, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+                    )
                 _metric.labels(**self._labels(state)).set(value)
             except ValueError:
                 pass
@@ -558,8 +601,8 @@ class PrometheusMetrics:
             return
 
         units = {
-            TEMP_CELSIUS: "celsius",
-            TEMP_FAHRENHEIT: "celsius",  # F should go into C metric
+            UnitOfTemperature.CELSIUS: "celsius",
+            UnitOfTemperature.FAHRENHEIT: "celsius",  # F should go into C metric
             PERCENTAGE: "percent",
         }
         default = unit.replace("/", "_per_")

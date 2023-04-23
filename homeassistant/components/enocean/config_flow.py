@@ -15,7 +15,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MANUAL_PATH_VALUE = "Custom path"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
         self.dongle_path = None
         self.discovery_info = None

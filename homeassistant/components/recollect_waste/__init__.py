@@ -1,7 +1,7 @@
 """The ReCollect Waste integration."""
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
 
 from aiorecollect.client import Client, PickupEvent
@@ -18,7 +18,7 @@ from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -31,9 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_get_pickup_events() -> list[PickupEvent]:
         """Get the next pickup."""
         try:
-            return await client.async_get_pickup_events(
-                start_date=date.today(), end_date=date.today() + timedelta(weeks=4)
-            )
+            return await client.async_get_pickup_events()
         except RecollectError as err:
             raise UpdateFailed(
                 f"Error while requesting data from ReCollect: {err}"
@@ -42,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
-        name=f"Place {entry.data[CONF_PLACE_ID]}, Service {entry.data[CONF_SERVICE_ID]}",
+        name=(
+            f"Place {entry.data[CONF_PLACE_ID]}, Service {entry.data[CONF_SERVICE_ID]}"
+        ),
         update_interval=DEFAULT_UPDATE_INTERVAL,
         update_method=async_get_pickup_events,
     )
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 

@@ -1,13 +1,15 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
-
-from homeassistant.components.light import COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY
+from homeassistant.components.light import ColorMode
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 from .const import FAKE_DEVICE, FAKE_LIGHT, FAKE_ZIGBEE_CONNECTIVITY
 
 
-async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_lights(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test if all v2 lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -27,10 +29,10 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert light_1.state == "on"
     assert light_1.attributes["brightness"] == int(46.85 / 100 * 255)
     assert light_1.attributes["mode"] == "normal"
-    assert light_1.attributes["color_mode"] == COLOR_MODE_XY
+    assert light_1.attributes["color_mode"] == ColorMode.XY
     assert set(light_1.attributes["supported_color_modes"]) == {
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_XY,
+        ColorMode.COLOR_TEMP,
+        ColorMode.XY,
     }
     assert light_1.attributes["xy_color"] == (0.5614, 0.4058)
     assert light_1.attributes["min_mireds"] == 153
@@ -47,7 +49,7 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     )
     assert light_2.state == "off"
     assert light_2.attributes["mode"] == "normal"
-    assert light_2.attributes["supported_color_modes"] == [COLOR_MODE_COLOR_TEMP]
+    assert light_2.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
     assert light_2.attributes["min_mireds"] == 153
     assert light_2.attributes["max_mireds"] == 454
     assert light_2.attributes["dynamics"] == "none"
@@ -60,8 +62,8 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert light_3.state == "on"
     assert light_3.attributes["brightness"] == 128
     assert light_3.attributes["mode"] == "normal"
-    assert light_3.attributes["supported_color_modes"] == [COLOR_MODE_XY]
-    assert light_3.attributes["color_mode"] == COLOR_MODE_XY
+    assert light_3.attributes["supported_color_modes"] == [ColorMode.XY]
+    assert light_3.attributes["color_mode"] == ColorMode.XY
     assert light_3.attributes["dynamics"] == "dynamic_palette"
 
     # test light which supports on/off only
@@ -73,7 +75,9 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert light_4.attributes["supported_color_modes"] == []
 
 
-async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_light_turn_on_service(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test calling the turn on service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -113,8 +117,8 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     assert test_light is not None
     assert test_light.state == "on"
     assert test_light.attributes["mode"] == "normal"
-    assert test_light.attributes["supported_color_modes"] == [COLOR_MODE_COLOR_TEMP]
-    assert test_light.attributes["color_mode"] == COLOR_MODE_COLOR_TEMP
+    assert test_light.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
+    assert test_light.attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert test_light.attributes["brightness"] == 255
 
     # test again with sending transition with 250ms which should round up to 200ms
@@ -201,7 +205,9 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     assert mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["duration"] == 6000
 
 
-async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_light_turn_off_service(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test calling the turn off service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -271,13 +277,13 @@ async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_da
     assert mock_bridge_v2.mock_requests[3]["json"]["identify"]["action"] == "identify"
 
 
-async def test_light_added(hass, mock_bridge_v2):
+async def test_light_added(hass: HomeAssistant, mock_bridge_v2) -> None:
     """Test new light added to bridge."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
 
     await setup_platform(hass, mock_bridge_v2, "light")
 
-    test_entity_id = "light.hue_fake_light"
+    test_entity_id = "light.hue_mocked_device"
 
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None
@@ -290,10 +296,12 @@ async def test_light_added(hass, mock_bridge_v2):
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "off"
-    assert test_entity.attributes["friendly_name"] == FAKE_LIGHT["metadata"]["name"]
+    assert test_entity.attributes["friendly_name"] == FAKE_DEVICE["metadata"]["name"]
 
 
-async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_light_availability(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test light availability property."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -323,7 +331,9 @@ async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
         assert test_light.state == "on" if status == "connected" else "unavailable"
 
 
-async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_grouped_lights(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test if all v2 grouped lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -344,10 +354,10 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity.attributes["friendly_name"] == "Test Zone"
     assert test_entity.state == "on"
     assert test_entity.attributes["brightness"] == 119
-    assert test_entity.attributes["color_mode"] == COLOR_MODE_XY
+    assert test_entity.attributes["color_mode"] == ColorMode.XY
     assert set(test_entity.attributes["supported_color_modes"]) == {
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_XY,
+        ColorMode.COLOR_TEMP,
+        ColorMode.XY,
     }
     assert test_entity.attributes["min_mireds"] == 153
     assert test_entity.attributes["max_mireds"] == 500
@@ -365,11 +375,14 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity is not None
     assert test_entity.attributes["friendly_name"] == "Test Room"
     assert test_entity.state == "off"
-    assert test_entity.attributes["supported_color_modes"] == [COLOR_MODE_COLOR_TEMP]
+    assert test_entity.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
     assert test_entity.attributes["min_mireds"] == 153
     assert test_entity.attributes["max_mireds"] == 454
     assert test_entity.attributes["is_hue_group"] is True
-    assert test_entity.attributes["hue_scenes"] == {"Regular Test Scene"}
+    assert test_entity.attributes["hue_scenes"] == {
+        "Regular Test Scene",
+        "Smart Test Scene",
+    }
     assert test_entity.attributes["hue_type"] == "room"
     assert test_entity.attributes["lights"] == {
         "Hue on/off light",
@@ -417,7 +430,7 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "on"
-    assert test_light.attributes["color_mode"] == COLOR_MODE_XY
+    assert test_light.attributes["color_mode"] == ColorMode.XY
     assert test_light.attributes["brightness"] == 255
     assert test_light.attributes["xy_color"] == (0.123, 0.123)
 

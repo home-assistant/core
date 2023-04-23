@@ -52,6 +52,7 @@ class WanIpSensor(SensorEntity):
     """Implementation of a DNS IP sensor."""
 
     _attr_icon = "mdi:web"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -61,7 +62,7 @@ class WanIpSensor(SensorEntity):
         ipv6: bool,
     ) -> None:
         """Initialize the DNS IP sensor."""
-        self._attr_name = f"{name} IPv6" if ipv6 else name
+        self._attr_name = "IPv6" if ipv6 else None
         self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
         self.resolver = aiodns.DNSResolver()
@@ -73,10 +74,10 @@ class WanIpSensor(SensorEntity):
         }
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{hostname}_{ipv6}")},
+            identifiers={(DOMAIN, hostname)},
             manufacturer="DNS",
             model=aiodns.__version__,
-            name=hostname,
+            name=name,
         )
 
     async def async_update(self) -> None:

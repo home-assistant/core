@@ -5,11 +5,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.moehlenhoff_alpha2.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -33,7 +29,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
     with patch("moehlenhoff_alpha2.Alpha2Base.update_data", mock_update_data), patch(
@@ -46,7 +42,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_BASE_NAME
     assert result2["data"] == {"host": MOCK_BASE_HOST}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -64,13 +60,12 @@ async def test_form_duplicate_error(hass: HomeAssistant) -> None:
     assert config_entry.data["host"] == MOCK_BASE_HOST
 
     with patch("moehlenhoff_alpha2.Alpha2Base.update_data", mock_update_data):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data={"host": MOCK_BASE_HOST},
             context={"source": config_entries.SOURCE_USER},
         )
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -87,7 +82,7 @@ async def test_form_cannot_connect_error(hass: HomeAssistant) -> None:
             user_input={"host": MOCK_BASE_HOST},
         )
 
-        assert result2["type"] == RESULT_TYPE_FORM
+        assert result2["type"] == FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -102,5 +97,5 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
             user_input={"host": MOCK_BASE_HOST},
         )
 
-        assert result2["type"] == RESULT_TYPE_FORM
+        assert result2["type"] == FlowResultType.FORM
         assert result2["errors"] == {"base": "unknown"}

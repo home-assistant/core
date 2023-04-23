@@ -9,9 +9,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_BRAND, DOMAIN, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
@@ -22,7 +26,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=TYPE_TEMPERATURE,
         name="Temperature",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -53,7 +57,7 @@ async def async_setup_entry(
 class BlinkSensor(SensorEntity):
     """A Blink camera sensor."""
 
-    def __init__(self, data, camera, description: SensorEntityDescription):
+    def __init__(self, data, camera, description: SensorEntityDescription) -> None:
         """Initialize sensors from Blink camera."""
         self.entity_description = description
         self._attr_name = f"{DOMAIN} {camera} {description.name}"
@@ -72,7 +76,7 @@ class BlinkSensor(SensorEntity):
             model=self._camera.camera_type,
         )
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve sensor data from the camera."""
         self.data.refresh()
         try:

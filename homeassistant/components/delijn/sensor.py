@@ -92,7 +92,7 @@ class DeLijnPublicTransportSensor(SensorEntity):
         self.line = line
         self._attr_extra_state_attributes = {}
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from the De Lijn API."""
         try:
             await self.line.get_passages()
@@ -121,6 +121,6 @@ class DeLijnPublicTransportSensor(SensorEntity):
             self._attr_extra_state_attributes["next_passages"] = self.line.passages
 
             self._attr_available = True
-        except (KeyError) as error:
+        except KeyError as error:
             _LOGGER.error("Invalid data received from De Lijn: %s", error)
             self._attr_available = False

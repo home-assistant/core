@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Literal
+from typing import Any
 
 from bimmer_connected.vehicle import MyBMWVehicle
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,7 +31,10 @@ async def async_setup_entry(
         entities.append(BMWDeviceTracker(coordinator, vehicle))
         if not vehicle.is_vehicle_tracking_enabled:
             _LOGGER.info(
-                "Tracking is (currently) disabled for vehicle %s (%s), defaulting to unknown",
+                (
+                    "Tracking is (currently) disabled for vehicle %s (%s), defaulting"
+                    " to unknown"
+                ),
                 vehicle.name,
                 vehicle.vin,
             )
@@ -54,10 +56,10 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
         super().__init__(coordinator, vehicle)
 
         self._attr_unique_id = vehicle.vin
-        self._attr_name = vehicle.name
+        self._attr_name = None
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
         return {**self._attrs, ATTR_DIRECTION: self.vehicle.vehicle_location.heading}
 
@@ -67,6 +69,7 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
         return (
             self.vehicle.vehicle_location.location[0]
             if self.vehicle.is_vehicle_tracking_enabled
+            and self.vehicle.vehicle_location.location
             else None
         )
 
@@ -76,10 +79,11 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
         return (
             self.vehicle.vehicle_location.location[1]
             if self.vehicle.is_vehicle_tracking_enabled
+            and self.vehicle.vehicle_location.location
             else None
         )
 
     @property
-    def source_type(self) -> Literal["gps"]:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS

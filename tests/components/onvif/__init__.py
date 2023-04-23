@@ -6,7 +6,15 @@ from zeep.exceptions import Fault
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
 from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
-from homeassistant.components.onvif.models import Capabilities, DeviceInfo
+from homeassistant.components.onvif.models import (
+    Capabilities,
+    DeviceInfo,
+    Profile,
+    PullPointManagerState,
+    Resolution,
+    Video,
+    WebHookManagerState,
+)
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
 
 from tests.common import MockConfigEntry
@@ -95,8 +103,20 @@ def setup_mock_device(mock_device):
         SERIAL_NUMBER,
         MAC,
     )
-    mock_device.capabilities = Capabilities()
-    mock_device.profiles = []
+    mock_device.capabilities = Capabilities(imaging=True)
+    profile1 = Profile(
+        index=0,
+        token="dummy",
+        name="profile1",
+        video=Video("any", Resolution(640, 480)),
+        ptz=None,
+        video_source_token=None,
+    )
+    mock_device.profiles = [profile1]
+    mock_device.events = MagicMock(
+        webhook_manager=MagicMock(state=WebHookManagerState.STARTED),
+        pullpoint_manager=MagicMock(state=PullPointManagerState.PAUSED),
+    )
 
     def mock_constructor(hass, config):
         """Fake the controller constructor."""
@@ -112,7 +132,7 @@ async def setup_onvif_integration(
     unique_id=MAC,
     entry_id="1",
     source=config_entries.SOURCE_USER,
-):
+) -> tuple[MockConfigEntry, MagicMock, MagicMock]:
     """Create an ONVIF config entry."""
     if not config:
         config = {

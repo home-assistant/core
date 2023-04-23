@@ -30,7 +30,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
@@ -135,18 +135,21 @@ def validate_version_specific_config(conf: dict) -> dict:
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_TOKEN not in conf:
             raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are required when {CONF_API_VERSION} is {API_VERSION_2}"
+                f"{CONF_TOKEN} and {CONF_BUCKET} are required when"
+                f" {CONF_API_VERSION} is {API_VERSION_2}"
             )
 
         if CONF_USERNAME in conf:
             raise vol.Invalid(
-                f"{CONF_USERNAME} and {CONF_PASSWORD} are only allowed when {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
+                f"{CONF_USERNAME} and {CONF_PASSWORD} are only allowed when"
+                f" {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
             )
 
     else:
         if CONF_TOKEN in conf:
             raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when {CONF_API_VERSION} is {API_VERSION_2}"
+                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
+                f" {CONF_API_VERSION} is {API_VERSION_2}"
             )
 
     return conf
@@ -198,13 +201,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _generate_event_to_json(conf: dict) -> Callable[[dict], str]:
+def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | None]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
     tags = conf.get(CONF_TAGS)
-    tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
+    tags_attributes: list[str] = conf[CONF_TAGS_ATTRIBUTES]
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
-    measurement_attr = conf.get(CONF_MEASUREMENT_ATTR)
+    measurement_attr: str = conf[CONF_MEASUREMENT_ATTR]
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
     global_ignore_attributes = set(conf[CONF_IGNORE_ATTRIBUTES])
     component_config = EntityValues(
@@ -213,15 +216,15 @@ def _generate_event_to_json(conf: dict) -> Callable[[dict], str]:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
-    def event_to_json(event: dict) -> str:
+    def event_to_json(event: Event) -> dict[str, Any] | None:
         """Convert event into json in format Influx expects."""
-        state = event.data.get(EVENT_NEW_STATE)
+        state: State | None = event.data.get(EVENT_NEW_STATE)
         if (
             state is None
-            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
+            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE, None)
             or not entity_filter(state.entity_id)
         ):
-            return
+            return None
 
         try:
             _include_state = _include_value = False
@@ -263,7 +266,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[dict], str]:
                 else:
                     include_uom = measurement_attr != "unit_of_measurement"
 
-        json = {
+        json: dict[str, Any] = {
             INFLUX_CONF_MEASUREMENT: measurement,
             INFLUX_CONF_TAGS: {
                 CONF_DOMAIN: state.domain,
@@ -292,7 +295,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[dict], str]:
                     key = f"{key}_"
                 # Prevent column data errors in influxDB.
                 # For each value we try to cast it as float
-                # But if we can not do it we store the value
+                # But if we cannot do it we store the value
                 # as string add "_str" postfix to the field key
                 try:
                     json[INFLUX_CONF_FIELDS][key] = float(value)
@@ -328,7 +331,9 @@ class InfluxClient:
     close: Callable[[], None]
 
 
-def get_influx_connection(conf, test_write=False, test_read=False):  # noqa: C901
+def get_influx_connection(  # noqa: C901
+    conf, test_write=False, test_read=False
+) -> InfluxClient:
     """Create the correct influx connection for the API version."""
     kwargs = {
         CONF_TIMEOUT: TIMEOUT,
@@ -470,6 +475,10 @@ def get_influx_connection(conf, test_write=False, test_read=False):  # noqa: C90
     return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
+def _retry_setup(hass: HomeAssistant, config: ConfigType) -> None:
+    setup(hass, config)
+
+
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the InfluxDB component."""
     conf = config[DOMAIN]
@@ -477,7 +486,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         influx = get_influx_connection(conf, test_write=True)
     except ConnectionError as exc:
         _LOGGER.error(RETRY_MESSAGE, exc)
-        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
+        event_helper.call_later(
+            hass, RETRY_INTERVAL, lambda _: _retry_setup(hass, config)
+        )
         return True
 
     event_to_json = _generate_event_to_json(conf)

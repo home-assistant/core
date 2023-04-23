@@ -1,8 +1,0 @@
-{
-    "config": {
-        "error": {
-            "bad_dsn": "Neveljaven DSN",
-            "unknown": "Nepri\u010dakovana napaka"
-        }
-    }
-}

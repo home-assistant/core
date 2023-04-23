@@ -2,13 +2,20 @@
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_sensors(hass, config_entry, aioclient_mock_fixture):
+
+async def test_sensors(
+    hass: HomeAssistant, config_entry, aioclient_mock_fixture
+) -> None:
     """Test Flo by Moen sensors."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
@@ -18,55 +25,71 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
     assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
     # we should have 5 entities for the valve
-    assert hass.states.get("sensor.current_system_mode").state == "home"
-
-    assert hass.states.get("sensor.today_s_water_usage").state == "3.7"
     assert (
-        hass.states.get("sensor.today_s_water_usage").attributes[ATTR_STATE_CLASS]
+        hass.states.get("sensor.smart_water_shutoff_current_system_mode").state
+        == "home"
+    )
+
+    assert (
+        hass.states.get("sensor.smart_water_shutoff_today_s_water_usage").state == "3.7"
+    )
+    assert (
+        hass.states.get("sensor.smart_water_shutoff_today_s_water_usage").attributes[
+            ATTR_STATE_CLASS
+        ]
         == SensorStateClass.TOTAL_INCREASING
     )
 
-    assert hass.states.get("sensor.water_flow_rate").state == "0"
+    assert hass.states.get("sensor.smart_water_shutoff_water_flow_rate").state == "0"
     assert (
-        hass.states.get("sensor.water_flow_rate").attributes[ATTR_STATE_CLASS]
+        hass.states.get("sensor.smart_water_shutoff_water_flow_rate").attributes[
+            ATTR_STATE_CLASS
+        ]
         == SensorStateClass.MEASUREMENT
     )
 
-    assert hass.states.get("sensor.water_pressure").state == "54.2"
+    assert hass.states.get("sensor.smart_water_shutoff_water_pressure").state == "54.2"
     assert (
-        hass.states.get("sensor.water_pressure").attributes[ATTR_STATE_CLASS]
+        hass.states.get("sensor.smart_water_shutoff_water_pressure").attributes[
+            ATTR_STATE_CLASS
+        ]
         == SensorStateClass.MEASUREMENT
     )
 
-    assert hass.states.get("sensor.water_temperature").state == "21"
+    assert hass.states.get("sensor.smart_water_shutoff_water_temperature").state == "70"
     assert (
-        hass.states.get("sensor.water_temperature").attributes[ATTR_STATE_CLASS]
+        hass.states.get("sensor.smart_water_shutoff_water_temperature").attributes[
+            ATTR_STATE_CLASS
+        ]
         == SensorStateClass.MEASUREMENT
     )
 
     # and 3 entities for the detector
-    assert hass.states.get("sensor.temperature").state == "16"
+    assert hass.states.get("sensor.kitchen_sink_temperature").state == "61"
     assert (
-        hass.states.get("sensor.temperature").attributes[ATTR_STATE_CLASS]
+        hass.states.get("sensor.kitchen_sink_temperature").attributes[ATTR_STATE_CLASS]
         == SensorStateClass.MEASUREMENT
     )
 
-    assert hass.states.get("sensor.humidity").state == "43"
+    assert hass.states.get("sensor.kitchen_sink_humidity").state == "43"
     assert (
-        hass.states.get("sensor.humidity").attributes[ATTR_STATE_CLASS]
+        hass.states.get("sensor.kitchen_sink_humidity").attributes[ATTR_STATE_CLASS]
         == SensorStateClass.MEASUREMENT
     )
 
-    assert hass.states.get("sensor.battery").state == "100"
+    assert hass.states.get("sensor.kitchen_sink_battery").state == "100"
     assert (
-        hass.states.get("sensor.battery").attributes[ATTR_STATE_CLASS]
+        hass.states.get("sensor.kitchen_sink_battery").attributes[ATTR_STATE_CLASS]
         == SensorStateClass.MEASUREMENT
     )
 
 
 async def test_manual_update_entity(
-    hass, config_entry, aioclient_mock_fixture, aioclient_mock
-):
+    hass: HomeAssistant,
+    config_entry,
+    aioclient_mock_fixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test manual update entity via service homeasasistant/update_entity."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(
@@ -82,7 +105,7 @@ async def test_manual_update_entity(
     await hass.services.async_call(
         "homeassistant",
         "update_entity",
-        {ATTR_ENTITY_ID: ["sensor.current_system_mode"]},
+        {ATTR_ENTITY_ID: ["sensor.smart_water_shutoff_current_system_mode"]},
         blocking=True,
     )
     assert aioclient_mock.call_count == call_count + 3

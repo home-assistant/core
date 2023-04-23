@@ -248,6 +248,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class EnvisalinkDevice(Entity):
     """Representation of an Envisalink device."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, info, controller):
         """Initialize the device."""
         self._controller = controller
@@ -258,8 +260,3 @@ class EnvisalinkDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False

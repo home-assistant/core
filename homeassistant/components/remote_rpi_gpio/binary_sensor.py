@@ -66,6 +66,8 @@ def setup_platform(
 class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses a Remote Raspberry Pi GPIO."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, sensor, invert_logic):
         """Initialize the RPi binary sensor."""
         self._name = name
@@ -73,7 +75,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
         self._state = False
         self._sensor = sensor
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
         def read_gpio():
@@ -83,11 +85,6 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
 
         self._sensor.when_deactivated = read_gpio
         self._sensor.when_activated = read_gpio
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):
@@ -104,7 +101,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return
 
-    def update(self):
+    def update(self) -> None:
         """Update the GPIO state."""
         try:
             self._state = remote_rpi_gpio.read_input(self._sensor)

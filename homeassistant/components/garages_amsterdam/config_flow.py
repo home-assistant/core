@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from garages_amsterdam import GaragesAmsterdam
+from odp_amsterdam import ODPAmsterdam
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -30,7 +30,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._options is None:
             self._options = []
             try:
-                api_data = await GaragesAmsterdam(
+                api_data = await ODPAmsterdam(
                     session=aiohttp_client.async_get_clientsession(self.hass)
                 ).all_garages()
             except ClientResponseError:

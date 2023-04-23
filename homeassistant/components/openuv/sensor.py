@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES, UV_INDEX
+from homeassistant.const import UV_INDEX, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
@@ -28,6 +27,7 @@ from .const import (
     TYPE_SAFE_EXPOSURE_TIME_5,
     TYPE_SAFE_EXPOSURE_TIME_6,
 )
+from .coordinator import OpenUvCoordinator
 
 ATTR_MAX_UV_TIME = "time"
 
@@ -49,70 +49,69 @@ UV_LEVEL_LOW = "Low"
 SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_CURRENT_OZONE_LEVEL,
-        name="Current Ozone Level",
-        device_class=SensorDeviceClass.OZONE,
+        name="Current ozone level",
         native_unit_of_measurement="du",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_CURRENT_UV_INDEX,
-        name="Current UV Index",
+        name="Current UV index",
         icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_CURRENT_UV_LEVEL,
-        name="Current UV Level",
+        name="Current UV level",
         icon="mdi:weather-sunny",
     ),
     SensorEntityDescription(
         key=TYPE_MAX_UV_INDEX,
-        name="Max UV Index",
+        name="Max UV index",
         icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_1,
-        name="Skin Type 1 Safe Exposure Time",
+        name="Skin type 1 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_2,
-        name="Skin Type 2 Safe Exposure Time",
+        name="Skin type 2 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_3,
-        name="Skin Type 3 Safe Exposure Time",
+        name="Skin type 3 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_4,
-        name="Skin Type 4 Safe Exposure Time",
+        name="Skin type 4 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_5,
-        name="Skin Type 5 Safe Exposure Time",
+        name="Skin type 5 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_6,
-        name="Skin Type 6 Safe Exposure Time",
+        name="Skin type 6 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -122,9 +121,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][entry.entry_id]
+    coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
+
     async_add_entities(
-        [OpenUvSensor(openuv, description) for description in SENSOR_DESCRIPTIONS]
+        [
+            OpenUvSensor(coordinators[DATA_UV], description)
+            for description in SENSOR_DESCRIPTIONS
+        ]
     )
 
 
@@ -132,13 +135,9 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     """Define a binary sensor for OpenUV."""
 
     @callback
-    def update_from_latest_data(self) -> None:
+    def _update_from_latest_data(self) -> None:
         """Update the state."""
-        if (data := self.openuv.data[DATA_UV]) is None:
-            self._attr_available = False
-            return
-
-        self._attr_available = True
+        data = self.coordinator.data
 
         if self.entity_description.key == TYPE_CURRENT_OZONE_LEVEL:
             self._attr_native_value = data["ozone"]

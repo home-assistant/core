@@ -35,6 +35,7 @@ class HMDevice(Entity):
 
     _homematic: HMConnection
     _hmdevice: HMGeneric
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -68,11 +69,6 @@ class HMDevice(Entity):
     def unique_id(self):
         """Return unique ID. HomeMatic entity IDs are unique by default."""
         return self._unique_id.replace(" ", "_")
-
-    @property
-    def should_poll(self):
-        """Return false. HomeMatic states are pushed by the XML-RPC Server."""
-        return False
 
     @property
     def name(self):
@@ -213,6 +209,8 @@ class HMDevice(Entity):
 class HMHub(Entity):
     """The HomeMatic hub. (CCU2/HomeGear)."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, homematic, name):
         """Initialize HomeMatic hub."""
         self.hass = hass
@@ -233,11 +231,6 @@ class HMHub(Entity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Return false. HomeMatic Hub object updates variables."""
-        return False
 
     @property
     def state(self):

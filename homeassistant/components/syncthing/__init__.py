@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     syncthing.subscribe()
     hass.data[DOMAIN][entry.entry_id] = syncthing
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def cancel_listen_task(_):
         await syncthing.unsubscribe()
@@ -153,7 +153,10 @@ class SyncthingClient:
                     )
             except aiosyncthing.exceptions.SyncthingError:
                 _LOGGER.info(
-                    "The syncthing server '%s' is not available. Sleeping %i seconds and retrying",
+                    (
+                        "The syncthing server '%s' is not available. Sleeping %i"
+                        " seconds and retrying"
+                    ),
                     self._client.url,
                     RECONNECT_INTERVAL.total_seconds(),
                 )
@@ -169,5 +172,5 @@ class SyncthingClient:
             await self._client.system.ping()
         except aiosyncthing.exceptions.SyncthingError:
             return False
-        else:
-            return True
+
+        return True

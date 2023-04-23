@@ -48,7 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
         if not client.authorized:
             raise ConfigEntryAuthFailed(
-                "Could not authorize with Azure DevOps. You will need to update your token"
+                "Could not authorize with Azure DevOps. You will need to update your"
+                " token"
             )
 
     project = await client.get_project(
@@ -65,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entry.data[CONF_PROJECT],
                 BUILDS_QUERY,
             )
-        except (aiohttp.ClientError, aiohttp.ClientError) as exception:
+        except aiohttp.ClientError as exception:
             raise UpdateFailed from exception
 
     coordinator = DataUpdateCoordinator(
@@ -81,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator, project
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

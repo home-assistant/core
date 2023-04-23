@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Set up all platforms for this device/entry.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -145,5 +145,8 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
             name=self.coordinator.data.info.device_name,
             manufacturer="Modern Forms",
             model=self.coordinator.data.info.fan_type,
-            sw_version=f"{self.coordinator.data.info.firmware_version} / {self.coordinator.data.info.main_mcu_firmware_version}",
+            sw_version=(
+                f"{self.coordinator.data.info.firmware_version} /"
+                f" {self.coordinator.data.info.main_mcu_firmware_version}"
+            ),
         )

@@ -13,14 +13,22 @@ from homeassistant.components.flo.switch import (
     SYSTEM_MODE_HOME,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
-SWITCH_ENTITY_ID = "switch.shutoff_valve"
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+SWITCH_ENTITY_ID = "switch.smart_water_shutoff_shutoff_valve"
 
 
-async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mock):
+async def test_services(
+    hass: HomeAssistant,
+    config_entry,
+    aioclient_mock_fixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test Flo services."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(

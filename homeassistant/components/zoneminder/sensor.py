@@ -4,7 +4,8 @@ from __future__ import annotations
 import logging
 
 import voluptuous as vol
-from zoneminder.monitor import TimePeriod
+from zoneminder.monitor import Monitor, TimePeriod
+from zoneminder.zm import ZoneMinder
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
@@ -73,6 +74,7 @@ def setup_platform(
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
     sensors: list[SensorEntity] = []
+    zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
             _LOGGER.warning("Could not fetch any monitors from ZoneMinder")
@@ -95,34 +97,19 @@ def setup_platform(
 class ZMSensorMonitors(SensorEntity):
     """Get the status of each ZoneMinder monitor."""
 
-    def __init__(self, monitor):
+    def __init__(self, monitor: Monitor) -> None:
         """Initialize monitor sensor."""
         self._monitor = monitor
-        self._state = None
-        self._is_available = None
+        self._attr_available = False
+        self._attr_name = f"{self._monitor.name} Status"
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._monitor.name} Status"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return True if Monitor is available."""
-        return self._is_available
-
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         if not (state := self._monitor.function):
-            self._state = None
+            self._attr_native_value = None
         else:
-            self._state = state.value
-        self._is_available = self._monitor.is_available
+            self._attr_native_value = state.value
+        self._attr_available = self._monitor.is_available
 
 
 class ZMSensorEvents(SensorEntity):
@@ -130,20 +117,21 @@ class ZMSensorEvents(SensorEntity):
 
     _attr_native_unit_of_measurement = "Events"
 
-    def __init__(self, monitor, include_archived, description: SensorEntityDescription):
+    def __init__(
+        self,
+        monitor: Monitor,
+        include_archived: bool,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize event sensor."""
         self.entity_description = description
 
         self._monitor = monitor
         self._include_archived = include_archived
         self.time_period = TimePeriod.get_time_period(description.key)
+        self._attr_name = f"{monitor.name} {self.time_period.title}"
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._monitor.name} {self.time_period.title}"
-
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         self._attr_native_value = self._monitor.get_events(
             self.time_period, self._include_archived
@@ -153,28 +141,14 @@ class ZMSensorEvents(SensorEntity):
 class ZMSensorRunState(SensorEntity):
     """Get the ZoneMinder run state."""
 
-    def __init__(self, client):
+    _attr_name = "Run State"
+
+    def __init__(self, client: ZoneMinder) -> None:
         """Initialize run state sensor."""
-        self._state = None
-        self._is_available = None
+        self._attr_available = False
         self._client = client
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "Run State"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return True if ZoneMinder is available."""
-        return self._is_available
-
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
-        self._state = self._client.get_active_state()
-        self._is_available = self._client.is_available
+        self._attr_native_value = self._client.get_active_state()
+        self._attr_available = self._client.is_available

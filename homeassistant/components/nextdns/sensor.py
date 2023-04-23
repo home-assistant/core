@@ -3,7 +3,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Generic
+
+from nextdns import (
+    AnalyticsDnssec,
+    AnalyticsEncryption,
+    AnalyticsIpVersions,
+    AnalyticsProtocols,
+    AnalyticsStatus,
+)
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -11,14 +19,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NextDnsUpdateCoordinator
+from . import CoordinatorDataT, NextDnsUpdateCoordinator
 from .const import (
     ATTR_DNSSEC,
     ATTR_ENCRYPTION,
@@ -32,244 +39,289 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass
-class NextDnsSensorRequiredKeysMixin:
+class NextDnsSensorRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
     coordinator_type: str
-    value: Callable[[Any], StateType]
+    value: Callable[[CoordinatorDataT], StateType]
 
 
 @dataclass
 class NextDnsSensorEntityDescription(
-    SensorEntityDescription, NextDnsSensorRequiredKeysMixin
+    SensorEntityDescription,
+    NextDnsSensorRequiredKeysMixin[CoordinatorDataT],
 ):
     """NextDNS sensor entity description."""
 
 
-SENSORS = (
-    NextDnsSensorEntityDescription(
+SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
+    NextDnsSensorEntityDescription[AnalyticsStatus](
         key="all_queries",
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:dns",
-        name="{profile_name} DNS Queries",
+        translation_key="all_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.all_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsStatus](
         key="blocked_queries",
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:dns",
-        name="{profile_name} DNS Queries Blocked",
+        translation_key="blocked_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.blocked_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsStatus](
         key="relayed_queries",
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:dns",
-        name="{profile_name} DNS Queries Relayed",
+        translation_key="relayed_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.relayed_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsStatus](
         key="blocked_queries_ratio",
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:dns",
-        name="{profile_name} DNS Queries Blocked Ratio",
+        translation_key="blocked_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.blocked_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="doh_queries",
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
-        name="{profile_name} DNS-over-HTTPS Queries",
+        translation_key="doh_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.doh_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
+        key="doh3_queries",
+        coordinator_type=ATTR_PROTOCOLS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:dns",
+        translation_key="doh3_queries",
+        native_unit_of_measurement="queries",
+        state_class=SensorStateClass.TOTAL,
+        value=lambda data: data.doh3_queries,
+    ),
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="dot_queries",
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
-        name="{profile_name} DNS-over-TLS Queries",
+        translation_key="dot_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.dot_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="doq_queries",
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
-        name="{profile_name} DNS-over-QUIC Queries",
+        translation_key="doq_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.doq_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
+        key="tcp_queries",
+        coordinator_type=ATTR_PROTOCOLS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:dns",
+        translation_key="tcp_queries",
+        native_unit_of_measurement="queries",
+        state_class=SensorStateClass.TOTAL,
+        value=lambda data: data.tcp_queries,
+    ),
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="udp_queries",
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
-        name="{profile_name} UDP Queries",
+        translation_key="udp_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.udp_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="doh_queries_ratio",
         coordinator_type=ATTR_PROTOCOLS,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="{profile_name} DNS-over-HTTPS Queries Ratio",
+        translation_key="doh_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doh_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
+        key="doh3_queries_ratio",
+        coordinator_type=ATTR_PROTOCOLS,
+        entity_registry_enabled_default=False,
+        icon="mdi:dns",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="doh3_queries_ratio",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.doh3_queries_ratio,
+    ),
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="dot_queries_ratio",
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
-        name="{profile_name} DNS-over-TLS Queries Ratio",
+        translation_key="dot_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.dot_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="doq_queries_ratio",
         coordinator_type=ATTR_PROTOCOLS,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="{profile_name} DNS-over-QUIC Queries Ratio",
+        translation_key="doq_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doq_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
+        key="tcp_queries_ratio",
+        coordinator_type=ATTR_PROTOCOLS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:dns",
+        translation_key="tcp_queries_ratio",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.tcp_queries_ratio,
+    ),
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="udp_queries_ratio",
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
-        name="{profile_name} UDP Queries Ratio",
+        translation_key="udp_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.udp_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsEncryption](
         key="encrypted_queries",
         coordinator_type=ATTR_ENCRYPTION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lock",
-        name="{profile_name} Encrypted Queries",
+        translation_key="encrypted_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.encrypted_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsEncryption](
         key="unencrypted_queries",
         coordinator_type=ATTR_ENCRYPTION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lock-open",
-        name="{profile_name} Unencrypted Queries",
+        translation_key="unencrypted_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.unencrypted_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsEncryption](
         key="encrypted_queries_ratio",
         coordinator_type=ATTR_ENCRYPTION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lock",
-        name="{profile_name} Encrypted Queries Ratio",
+        translation_key="encrypted_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.encrypted_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsIpVersions](
         key="ipv4_queries",
         coordinator_type=ATTR_IP_VERSIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:ip",
-        name="{profile_name} IPv4 Queries",
+        translation_key="ipv4_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.ipv4_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsIpVersions](
         key="ipv6_queries",
         coordinator_type=ATTR_IP_VERSIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:ip",
-        name="{profile_name} IPv6 Queries",
+        translation_key="ipv6_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.ipv6_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsIpVersions](
         key="ipv6_queries_ratio",
         coordinator_type=ATTR_IP_VERSIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:ip",
-        name="{profile_name} IPv6 Queries Ratio",
+        translation_key="ipv6_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.ipv6_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsDnssec](
         key="validated_queries",
         coordinator_type=ATTR_DNSSEC,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lock-check",
-        name="{profile_name} DNSSEC Validated Queries",
+        translation_key="validated_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.validated_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsDnssec](
         key="not_validated_queries",
         coordinator_type=ATTR_DNSSEC,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lock-alert",
-        name="{profile_name} DNSSEC Not Validated Queries",
+        translation_key="not_validated_queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.not_validated_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsDnssec](
         key="validated_queries_ratio",
         coordinator_type=ATTR_DNSSEC,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lock-check",
-        name="{profile_name} DNSSEC Validated Queries Ratio",
+        translation_key="validated_queries_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.validated_queries_ratio,
@@ -294,21 +346,22 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class NextDnsSensor(CoordinatorEntity[NextDnsUpdateCoordinator], SensorEntity):
+class NextDnsSensor(
+    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]], SensorEntity
+):
     """Define an NextDNS sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: NextDnsUpdateCoordinator,
+        coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
         description: NextDnsSensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
-        self._attr_name = cast(str, description.name).format(
-            profile_name=coordinator.profile_name
-        )
         self._attr_native_value = description.value(coordinator.data)
         self.entity_description: NextDnsSensorEntityDescription = description
 

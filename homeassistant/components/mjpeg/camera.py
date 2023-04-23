@@ -10,6 +10,7 @@ from aiohttp import web
 import async_timeout
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from yarl import URL
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
@@ -85,7 +86,7 @@ class MjpegCamera(Camera):
     def __init__(
         self,
         *,
-        name: str,
+        name: str | None = None,
         mjpeg_url: str,
         still_image_url: str | None,
         authentication: str | None = None,
@@ -117,6 +118,15 @@ class MjpegCamera(Camera):
             self._attr_unique_id = unique_id
         if device_info is not None:
             self._attr_device_info = device_info
+
+    async def stream_source(self) -> str:
+        """Return the stream source."""
+        url = URL(self._mjpeg_url)
+        if self._username:
+            url = url.with_user(self._username)
+        if self._password:
+            url = url.with_password(self._password)
+        return str(url)
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

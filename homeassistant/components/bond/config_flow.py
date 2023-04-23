@@ -1,6 +1,7 @@
 """Config flow for Bond integration."""
 from __future__ import annotations
 
+import asyncio
 import contextlib
 from http import HTTPStatus
 import logging
@@ -83,7 +84,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         instead ask them to manually enter the token.
         """
         host = self._discovered[CONF_HOST]
-        if not (token := await async_get_token(self.hass, host)):
+        try:
+            if not (token := await async_get_token(self.hass, host)):
+                return
+        except asyncio.TimeoutError:
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token

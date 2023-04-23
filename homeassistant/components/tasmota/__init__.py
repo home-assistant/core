@@ -1,7 +1,6 @@
 """The Tasmota integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from hatasmota.const import (
@@ -75,21 +74,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, mac, config, entry, tasmota_mqtt, device_registry
         )
 
-    async def start_platforms() -> None:
-        await device_automation.async_setup_entry(hass, entry)
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
+    await device_automation.async_setup_entry(hass, entry)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    discovery_prefix = entry.data[CONF_DISCOVERY_PREFIX]
+    await discovery.async_start(
+        hass, discovery_prefix, entry, tasmota_mqtt, async_discover_device
+    )
 
-        discovery_prefix = entry.data[CONF_DISCOVERY_PREFIX]
-        await discovery.async_start(
-            hass, discovery_prefix, entry, tasmota_mqtt, async_discover_device
-        )
-
-    hass.async_create_task(start_platforms())
     return True
 
 
@@ -111,7 +102,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for platform in PLATFORMS:
         hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format(platform))()
 
-    # deattach device triggers
+    # detach device triggers
     device_registry = dr.async_get(hass)
     devices = async_entries_for_config_entry(device_registry, entry.entry_id)
     for device in devices:

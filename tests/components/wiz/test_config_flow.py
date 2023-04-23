@@ -9,7 +9,8 @@ from homeassistant.components import dhcp
 from homeassistant.components.wiz.config_flow import CONF_DEVICE
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     FAKE_DIMMABLE_BULB,
@@ -42,7 +43,7 @@ INTEGRATION_DISCOVERY = {
 }
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +72,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow_enters_dns_name(hass):
+async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
     """Test we reject dns names and want ips."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -85,7 +86,7 @@ async def test_user_flow_enters_dns_name(hass):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "no_ip"}
 
     with _patch_wizlight(), patch(
@@ -110,7 +111,7 @@ async def test_user_flow_enters_dns_name(hass):
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_base",
+    ("side_effect", "error_base"),
     [
         (WizLightTimeOutError, "bulb_time_out"),
         (WizLightConnectionError, "no_wiz_light"),
@@ -118,7 +119,9 @@ async def test_user_flow_enters_dns_name(hass):
         (ConnectionRefusedError, "cannot_connect"),
     ],
 )
-async def test_user_form_exceptions(hass, side_effect, error_base):
+async def test_user_form_exceptions(
+    hass: HomeAssistant, side_effect, error_base
+) -> None:
     """Test all user exceptions in the flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -137,7 +140,7 @@ async def test_user_form_exceptions(hass, side_effect, error_base):
     assert result2["errors"] == {"base": error_base}
 
 
-async def test_form_updates_unique_id(hass):
+async def test_form_updates_unique_id(hass: HomeAssistant) -> None:
     """Test a duplicate id aborts and updates existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -162,13 +165,15 @@ async def test_form_updates_unique_id(hass):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
     ],
 )
-async def test_discovered_by_dhcp_connection_fails(hass, source, data):
+async def test_discovered_by_dhcp_connection_fails(
+    hass: HomeAssistant, source, data
+) -> None:
     """Test we abort on connection failure."""
     with patch(
         "homeassistant.components.wiz.wizlight.getBulbConfig",
@@ -179,12 +184,12 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.parametrize(
-    "source, data, bulb_type, extended_white_range, name",
+    ("source", "data", "bulb_type", "extended_white_range", "name"),
     [
         (
             config_entries.SOURCE_DHCP,
@@ -245,8 +250,8 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
     ],
 )
 async def test_discovered_by_dhcp_or_integration_discovery(
-    hass, source, data, bulb_type, extended_white_range, name
-):
+    hass: HomeAssistant, source, data, bulb_type, extended_white_range, name
+) -> None:
     """Test we can configure when discovered from dhcp or discovery."""
     with _patch_wizlight(
         device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
@@ -256,7 +261,7 @@ async def test_discovered_by_dhcp_or_integration_discovery(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     with _patch_wizlight(
@@ -283,15 +288,15 @@ async def test_discovered_by_dhcp_or_integration_discovery(
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
     ],
 )
 async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test dhcp or discovery updates existing host."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -306,21 +311,21 @@ async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == FAKE_IP
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
     ],
 )
 async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_retry(
-    hass, source, data
-):
+    hass: HomeAssistant, source, data
+) -> None:
     """Test dhcp or discovery kicks off setup when in retry."""
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     bulb.getMac = AsyncMock(side_effect=OSError)
@@ -335,12 +340,12 @@ async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_ret
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
-async def test_setup_via_discovery(hass):
+async def test_setup_via_discovery(hass: HomeAssistant) -> None:
     """Test setting up via discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -409,7 +414,7 @@ async def test_setup_via_discovery(hass):
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_setup_via_discovery_cannot_connect(hass):
+async def test_setup_via_discovery_cannot_connect(hass: HomeAssistant) -> None:
     """Test setting up via discovery and we fail to connect to the discovered device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -441,7 +446,7 @@ async def test_setup_via_discovery_cannot_connect(hass):
     assert result3["reason"] == "cannot_connect"
 
 
-async def test_setup_via_discovery_exception_finds_nothing(hass):
+async def test_setup_via_discovery_exception_finds_nothing(hass: HomeAssistant) -> None:
     """Test we do not find anything if discovery throws."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -458,11 +463,11 @@ async def test_setup_via_discovery_exception_finds_nothing(hass):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
-async def test_discovery_with_firmware_update(hass):
+async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
     """Test we check the device again between first discovery and config entry creation."""
     with _patch_wizlight(
         device=None,
@@ -476,7 +481,7 @@ async def test_discovery_with_firmware_update(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     # In between discovery and when the user clicks to set it up the firmware
@@ -509,13 +514,13 @@ async def test_discovery_with_firmware_update(hass):
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
     ],
 )
-async def test_discovered_during_onboarding(hass, source, data):
+async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -> None:
     """Test dhcp or discovery during onboarding creates the config entry."""
     with _patch_wizlight(), patch(
         "homeassistant.components.wiz.async_setup_entry",

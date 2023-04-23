@@ -33,22 +33,3 @@ def tomorrowio_config_entry_update_fixture():
         mock_max_requests_per_day.return_value = 100
         mock_num_api_requests.return_value = 2
         yield mock_update
-
-
-@pytest.fixture(name="climacell_config_entry_update")
-def climacell_config_entry_update_fixture():
-    """Mock valid climacell config entry setup."""
-    with patch(
-        "homeassistant.components.climacell.ClimaCellV3.realtime",
-        return_value={},
-    ), patch(
-        "homeassistant.components.climacell.ClimaCellV3.forecast_hourly",
-        return_value={},
-    ), patch(
-        "homeassistant.components.climacell.ClimaCellV3.forecast_daily",
-        return_value={},
-    ), patch(
-        "homeassistant.components.climacell.ClimaCellV3.forecast_nowcast",
-        return_value={},
-    ):
-        yield

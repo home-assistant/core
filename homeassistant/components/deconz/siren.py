@@ -41,7 +41,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzSiren(DeconzDevice, SirenEntity):
+class DeconzSiren(DeconzDevice[Siren], SirenEntity):
     """Representation of a deCONZ siren."""
 
     TYPE = DOMAIN
@@ -50,7 +50,6 @@ class DeconzSiren(DeconzDevice, SirenEntity):
         | SirenEntityFeature.TURN_OFF
         | SirenEntityFeature.DURATION
     )
-    _device: Siren
 
     @property
     def is_on(self) -> bool:

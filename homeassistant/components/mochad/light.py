@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from pymochad import device
+from pymochad import controller, device
 from pymochad.exceptions import MochadException
 import voluptuous as vol
 
@@ -19,7 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK
+from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK, MochadCtrl
 
 _LOGGER = logging.getLogger(__name__)
 CONF_BRIGHTNESS_LEVELS = "brightness_levels"
@@ -48,74 +49,58 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up X10 dimmers over a mochad controller."""
-    mochad_controller = hass.data[DOMAIN]
-    devs = config[CONF_DEVICES]
+    mochad_controller: MochadCtrl = hass.data[DOMAIN]
+    devs: list[dict[str, Any]] = config[CONF_DEVICES]
     add_entities([MochadLight(hass, mochad_controller.ctrl, dev) for dev in devs])
 
 
 class MochadLight(LightEntity):
     """Representation of a X10 dimmer over Mochad."""
 
+    _attr_assumed_state = True  # X10 devices are normally 1-way
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, hass, ctrl, dev):
+    def __init__(
+        self, hass: HomeAssistant, ctrl: controller.PyMochad, dev: dict[str, Any]
+    ) -> None:
         """Initialize a Mochad Light Device."""
 
         self._controller = ctrl
-        self._address = dev[CONF_ADDRESS]
-        self._name = dev.get(CONF_NAME, f"x10_light_dev_{self._address}")
-        self._comm_type = dev.get(CONF_COMM_TYPE, "pl")
+        self._address: str = dev[CONF_ADDRESS]
+        self._attr_name: str = dev.get(CONF_NAME, f"x10_light_dev_{self._address}")
+        self._comm_type: str = dev.get(CONF_COMM_TYPE, "pl")
         self.light = device.Device(ctrl, self._address, comm_type=self._comm_type)
-        self._brightness = 0
-        self._state = self._get_device_status()
-        self._brightness_levels = dev.get(CONF_BRIGHTNESS_LEVELS) - 1
+        self._attr_brightness = 0
+        self._attr_is_on = self._get_device_status()
+        self._brightness_levels: int = dev[CONF_BRIGHTNESS_LEVELS] - 1
 
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
-
-    def _get_device_status(self):
+    def _get_device_status(self) -> bool:
         """Get the status of the light from mochad."""
         with REQ_LOCK:
             status = self.light.get_status().rstrip()
         return status == "on"
 
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if the light is on."""
-        return self._state
-
-    @property
-    def assumed_state(self):
-        """X10 devices are normally 1-way so we have to assume the state."""
-        return True
-
-    def _calculate_brightness_value(self, value):
+    def _calculate_brightness_value(self, value: int) -> int:
         return int(value * (float(self._brightness_levels) / 255.0))
 
-    def _adjust_brightness(self, brightness):
-        if self._brightness > brightness:
-            bdelta = self._brightness - brightness
+    def _adjust_brightness(self, brightness: int) -> None:
+        assert self.brightness is not None
+        if self.brightness > brightness:
+            bdelta = self.brightness - brightness
             mochad_brightness = self._calculate_brightness_value(bdelta)
             self.light.send_cmd(f"dim {mochad_brightness}")
             self._controller.read_data()
-        elif self._brightness < brightness:
-            bdelta = brightness - self._brightness
+        elif self.brightness < brightness:
+            bdelta = brightness - self.brightness
             mochad_brightness = self._calculate_brightness_value(bdelta)
             self.light.send_cmd(f"bright {mochad_brightness}")
             self._controller.read_data()
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Send the command to turn the light on."""
         _LOGGER.debug("Reconnect %s:%s", self._controller.server, self._controller.port)
-        brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+        brightness: int = kwargs.get(ATTR_BRIGHTNESS, 255)
         with REQ_LOCK:
             try:
                 # Recycle socket on new command to recover mochad connection
@@ -129,15 +114,15 @@ class MochadLight(LightEntity):
                     self._controller.read_data()
                     # There is no persistence for X10 modules so a fresh on command
                     # will be full brightness
-                    if self._brightness == 0:
-                        self._brightness = 255
+                    if self.brightness == 0:
+                        self._attr_brightness = 255
                     self._adjust_brightness(brightness)
-                self._brightness = brightness
-                self._state = True
+                self._attr_brightness = brightness
+                self._attr_is_on = True
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Send the command to turn the light on."""
         _LOGGER.debug("Reconnect %s:%s", self._controller.server, self._controller.port)
         with REQ_LOCK:
@@ -149,7 +134,7 @@ class MochadLight(LightEntity):
                 # There is no persistence for X10 modules so we need to prepare
                 # to track a fresh on command will full brightness
                 if self._brightness_levels == 31:
-                    self._brightness = 0
-                self._state = False
+                    self._attr_brightness = 0
+                self._attr_is_on = False
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)

@@ -6,27 +6,26 @@ import logging
 from nest.nest import APIError
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_SCAN_INTERVAL,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_NEST, DOMAIN, SIGNAL_NEST_UPDATE
 
@@ -62,14 +61,9 @@ PRESET_AWAY_AND_ECO = "Away and Eco"
 PRESET_MODES = [PRESET_NONE, PRESET_AWAY, PRESET_ECO, PRESET_AWAY_AND_ECO]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Nest thermostat.
-
-    No longer in use.
-    """
-
-
-async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_legacy_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Nest climate device based on a config entry."""
     temp_unit = hass.config.units.temperature_unit
 
@@ -86,6 +80,8 @@ async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
 class NestThermostat(ClimateEntity):
     """Representation of a Nest thermostat."""
 
+    _attr_should_poll = False
+
     def __init__(self, structure, device, temp_unit):
         """Initialize the thermostat."""
         self._unit = temp_unit
@@ -94,7 +90,7 @@ class NestThermostat(ClimateEntity):
         self._fan_modes = [FAN_ON, FAN_AUTO]
 
         # Set the default supported features
-        self._support_flags = (
+        self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
         )
 
@@ -103,7 +99,9 @@ class NestThermostat(ClimateEntity):
 
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(HVACMode.AUTO)
-            self._support_flags |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
 
         # Add supported nest thermostat features
         if self.device.can_heat:
@@ -117,7 +115,7 @@ class NestThermostat(ClimateEntity):
         # feature of device
         self._has_fan = self.device.has_fan
         if self._has_fan:
-            self._support_flags |= ClimateEntityFeature.FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         # data attributes
         self._away = None
@@ -136,11 +134,6 @@ class NestThermostat(ClimateEntity):
         self._min_temperature = None
         self._max_temperature = None
 
-    @property
-    def should_poll(self):
-        """Do not need poll thanks using Nest streaming API."""
-        return False
-
     async def async_added_to_hass(self):
         """Register update signal handler."""
 
@@ -151,11 +144,6 @@ class NestThermostat(ClimateEntity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
         )
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support_flags
 
     @property
     def unique_id(self):
@@ -346,6 +334,6 @@ class NestThermostat(ClimateEntity):
         self._max_temperature = self.device.max_temperature
         self._is_locked = self.device.is_locked
         if self.device.temperature_scale == "C":
-            self._temperature_scale = TEMP_CELSIUS
+            self._temperature_scale = UnitOfTemperature.CELSIUS
         else:
-            self._temperature_scale = TEMP_FAHRENHEIT
+            self._temperature_scale = UnitOfTemperature.FAHRENHEIT

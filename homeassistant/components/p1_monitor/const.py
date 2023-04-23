@@ -10,11 +10,6 @@ LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
 SERVICE_SMARTMETER: Final = "smartmeter"
+SERVICE_WATERMETER: Final = "watermeter"
 SERVICE_PHASES: Final = "phases"
 SERVICE_SETTINGS: Final = "settings"
-
-SERVICES: dict[str, str] = {
-    SERVICE_SMARTMETER: "SmartMeter",
-    SERVICE_PHASES: "Phases",
-    SERVICE_SETTINGS: "Settings",
-}

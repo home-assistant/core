@@ -8,7 +8,6 @@ from typing import Any
 import voluptuous as vol
 from withings_api.common import AuthScope
 
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
@@ -25,6 +24,7 @@ class WithingsFlowHandler(
 
     # Temporarily holds authorization data during the profile step.
     _current_data: dict[str, None | str | int] = {}
+    _reauth_profile: str | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -53,12 +53,7 @@ class WithingsFlowHandler(
     async def async_step_profile(self, data: dict[str, Any]) -> FlowResult:
         """Prompt the user to select a user profile."""
         errors = {}
-        reauth_profile = (
-            self.context.get(const.PROFILE)
-            if self.context.get("source") == SOURCE_REAUTH
-            else None
-        )
-        profile = data.get(const.PROFILE) or reauth_profile
+        profile = data.get(const.PROFILE) or self._reauth_profile
 
         if profile:
             existing_entries = [
@@ -67,7 +62,7 @@ class WithingsFlowHandler(
                 if slugify(config_entry.data.get(const.PROFILE)) == slugify(profile)
             ]
 
-            if reauth_profile or not existing_entries:
+            if self._reauth_profile or not existing_entries:
                 new_data = {**self._current_data, **data, const.PROFILE: profile}
                 self._current_data = {}
                 return await self.async_step_finish(new_data)
@@ -82,15 +77,22 @@ class WithingsFlowHandler(
 
     async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Prompt user to re-authenticate."""
+        self._reauth_profile = data.get(const.PROFILE)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, data: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Prompt user to re-authenticate."""
         if data is not None:
             return await self.async_step_user()
 
-        placeholders = {const.PROFILE: self.context["profile"]}
+        placeholders = {const.PROFILE: self._reauth_profile}
 
         self.context.update({"title_placeholders": placeholders})
 
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             description_placeholders=placeholders,
         )
 

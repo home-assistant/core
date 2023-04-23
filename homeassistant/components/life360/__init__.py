@@ -37,7 +37,7 @@ from .const import (
     SHOW_DRIVING,
     SHOW_MOVING,
 )
-from .coordinator import Life360DataUpdateCoordinator
+from .coordinator import Life360DataUpdateCoordinator, MissingLocReason
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
@@ -128,6 +128,10 @@ class IntegData:
     coordinators: dict[str, Life360DataUpdateCoordinator] = field(
         init=False, default_factory=dict
     )
+    # member_id: missing location reason
+    missing_loc_reason: dict[str, MissingLocReason] = field(
+        init=False, default_factory=dict
+    )
     # member_id: ConfigEntry.entry_id
     tracked_members: dict[str, str] = field(init=False, default_factory=dict)
     logged_circles: list[str] = field(init=False, default_factory=list)
@@ -164,7 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].coordinators[entry.entry_id] = coordinator
 
     # Set up components for our platforms.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

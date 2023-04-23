@@ -2,7 +2,13 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.onvif import config_flow
+from homeassistant.components import dhcp
+from homeassistant.components.onvif import DOMAIN, config_flow
+from homeassistant.config_entries import SOURCE_DHCP
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from . import (
     HOST,
@@ -33,6 +39,16 @@ DISCOVERY = [
         "MAC": "ee:dd:cc:bb:aa",
     },
 ]
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+    hostname="any",
+    ip="5.6.7.8",
+    macaddress=MAC,
+)
+DHCP_DISCOVERY_SAME_IP = dhcp.DhcpServiceInfo(
+    hostname="any",
+    ip="1.2.3.4",
+    macaddress=MAC,
+)
 
 
 def setup_mock_discovery(
@@ -66,14 +82,14 @@ def setup_mock_discovery(
     mock_discovery.return_value = services
 
 
-async def test_flow_discovered_devices(hass):
+async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
     """Test that config flow works for discovered devices."""
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -91,7 +107,7 @@ async def test_flow_discovered_devices(hass):
             result["flow_id"], user_input={"auto": True}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "device"
         assert len(result["data_schema"].schema[config_flow.CONF_HOST].container) == 3
 
@@ -99,7 +115,7 @@ async def test_flow_discovered_devices(hass):
             result["flow_id"], user_input={config_flow.CONF_HOST: f"{URN} ({HOST})"}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "configure"
 
         with patch(
@@ -116,7 +132,7 @@ async def test_flow_discovered_devices(hass):
             await hass.async_block_till_done()
             assert len(mock_setup_entry.mock_calls) == 1
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == f"{URN} - {MAC}"
         assert result["data"] == {
             config_flow.CONF_NAME: URN,
@@ -127,7 +143,9 @@ async def test_flow_discovered_devices(hass):
         }
 
 
-async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
+async def test_flow_discovered_devices_ignore_configured_manual_input(
+    hass: HomeAssistant,
+) -> None:
     """Test that config flow discovery ignores configured devices."""
     await setup_onvif_integration(hass)
 
@@ -135,7 +153,7 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -153,7 +171,7 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
             result["flow_id"], user_input={"auto": True}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "device"
         assert len(result["data_schema"].schema[config_flow.CONF_HOST].container) == 2
 
@@ -162,11 +180,11 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
             user_input={config_flow.CONF_HOST: config_flow.CONF_MANUAL_INPUT},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "configure"
 
 
-async def test_flow_discovered_no_device(hass):
+async def test_flow_discovered_no_device(hass: HomeAssistant) -> None:
     """Test that config flow discovery no device."""
     await setup_onvif_integration(hass)
 
@@ -174,7 +192,7 @@ async def test_flow_discovered_no_device(hass):
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -192,11 +210,11 @@ async def test_flow_discovered_no_device(hass):
             result["flow_id"], user_input={"auto": True}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "configure"
 
 
-async def test_flow_discovery_ignore_existing_and_abort(hass):
+async def test_flow_discovery_ignore_existing_and_abort(hass: HomeAssistant) -> None:
     """Test that config flow discovery ignores setup devices."""
     await setup_onvif_integration(hass)
     await setup_onvif_integration(
@@ -216,7 +234,7 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -235,7 +253,7 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
         )
 
         # It should skip to manual entry if the only devices are already configured
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "configure"
 
         result = await hass.config_entries.flow.async_configure(
@@ -250,16 +268,16 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
         )
 
         # It should abort if already configured and entered manually
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_flow_manual_entry(hass):
+async def test_flow_manual_entry(hass: HomeAssistant) -> None:
     """Test that config flow works for discovered devices."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -279,7 +297,7 @@ async def test_flow_manual_entry(hass):
             user_input={"auto": False},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "configure"
 
         with patch(
@@ -299,7 +317,7 @@ async def test_flow_manual_entry(hass):
             await hass.async_block_till_done()
             assert len(mock_setup_entry.mock_calls) == 1
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == f"{NAME} - {MAC}"
         assert result["data"] == {
             config_flow.CONF_NAME: NAME,
@@ -310,7 +328,7 @@ async def test_flow_manual_entry(hass):
         }
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     entry, _, _ = await setup_onvif_integration(hass)
 
@@ -318,7 +336,7 @@ async def test_option_flow(hass):
         entry.entry_id, context={"show_advanced_options": True}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "onvif_devices"
 
     result = await hass.config_entries.options.async_configure(
@@ -330,9 +348,94 @@ async def test_option_flow(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         config_flow.CONF_EXTRA_ARGUMENTS: "",
         config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
         config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
     }
+
+
+async def test_discovered_by_dhcp_updates_host(hass: HomeAssistant) -> None:
+    """Test dhcp updates existing host."""
+    config_entry, _camera, device = await setup_onvif_integration(hass)
+    device.profiles = device.async_get_profiles()
+    registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    assert len(devices) == 1
+    device = devices[0]
+    assert device.model == "TestModel"
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == DHCP_DISCOVERY.ip
+
+
+async def test_discovered_by_dhcp_does_nothing_if_host_is_the_same(
+    hass: HomeAssistant,
+) -> None:
+    """Test dhcp update does nothing if host is the same."""
+    config_entry, _camera, device = await setup_onvif_integration(hass)
+    device.profiles = device.async_get_profiles()
+    registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    assert len(devices) == 1
+    device = devices[0]
+    assert device.model == "TestModel"
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
+    assert config_entry.data[CONF_HOST] == DHCP_DISCOVERY_SAME_IP.ip
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY_SAME_IP
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == DHCP_DISCOVERY_SAME_IP.ip
+
+
+async def test_discovered_by_dhcp_does_not_update_if_already_loaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test dhcp does not update existing host if its already loaded."""
+    config_entry, _camera, device = await setup_onvif_integration(hass)
+    device.profiles = device.async_get_profiles()
+    registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(registry, config_entry.entry_id)
+    assert len(devices) == 1
+    device = devices[0]
+    assert device.model == "TestModel"
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] != DHCP_DISCOVERY.ip
+
+
+async def test_discovered_by_dhcp_does_not_update_if_no_matching_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test dhcp does not update existing host if there are no matching entries."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"

@@ -23,7 +23,7 @@ async def test_auth_failure(hass: HomeAssistant) -> None:
     """Test init with an authentication failure."""
     with patch(
         "homeassistant.components.aussie_broadband.config_flow.ConfigFlow.async_step_reauth",
-        return_value={"type": data_entry_flow.RESULT_TYPE_FORM},
+        return_value={"type": data_entry_flow.FlowResultType.FORM},
     ) as mock_async_step_reauth:
         await setup_platform(hass, side_effect=AuthenticationException())
         mock_async_step_reauth.assert_called_once()

@@ -3,11 +3,21 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.climate import DOMAIN, const, device_trigger
+from homeassistant.components.climate import (
+    DOMAIN,
+    HVACAction,
+    HVACMode,
+    const,
+    device_trigger,
+)
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -16,22 +26,8 @@ from tests.common import (
     assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -40,21 +36,27 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_reg, entity_reg):
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a climate device."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     entity_id = f"{DOMAIN}.test_5678"
     hass.states.async_set(
         entity_id,
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.IDLE,
+            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -81,7 +83,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -90,20 +92,20 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     ),
 )
 async def test_get_triggers_hidden_auxiliary(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected triggers from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -114,9 +116,9 @@ async def test_get_triggers_hidden_auxiliary(
     entity_id = f"{DOMAIN}.test_5678"
     hass.states.async_set(
         entity_id,
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_IDLE,
+            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -142,13 +144,13 @@ async def test_get_triggers_hidden_auxiliary(
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.IDLE,
+            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -166,7 +168,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "device_id": "",
                         "entity_id": "climate.entity",
                         "type": "hvac_mode_changed",
-                        "to": const.HVAC_MODE_AUTO,
+                        "to": HVACMode.AUTO,
                     },
                     "action": {
                         "service": "test.automation",
@@ -208,9 +210,9 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the HVAC mode is changing
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
+            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -222,9 +224,9 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the temperature is changing
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
+            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 23,
         },
@@ -236,9 +238,9 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the humidity is changing
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.HVACAction.COOLING,
+            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 7,
             const.ATTR_CURRENT_TEMPERATURE: 23,
         },
@@ -248,7 +250,7 @@ async def test_if_fires_on_state_change(hass, calls):
     assert calls[2].data["some"] == "current_humidity_changed"
 
 
-async def test_get_trigger_capabilities_hvac_mode(hass):
+async def test_get_trigger_capabilities_hvac_mode(hass: HomeAssistant) -> None:
     """Test we get the expected capabilities from a climate trigger."""
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
@@ -264,13 +266,29 @@ async def test_get_trigger_capabilities_hvac_mode(hass):
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "for", "optional": True, "type": "positive_time_period_dict"}]
+    ) == [
+        {
+            "name": "to",
+            "options": [
+                ("off", "off"),
+                ("heat", "heat"),
+                ("cool", "cool"),
+                ("heat_cool", "heat_cool"),
+                ("auto", "auto"),
+                ("dry", "dry"),
+                ("fan_only", "fan_only"),
+            ],
+            "required": True,
+            "type": "select",
+        },
+        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+    ]
 
 
 @pytest.mark.parametrize(
     "type", ["current_temperature_changed", "current_humidity_changed"]
 )
-async def test_get_trigger_capabilities_temp_humid(hass, type):
+async def test_get_trigger_capabilities_temp_humid(hass: HomeAssistant, type) -> None:
     """Test we get the expected capabilities from a climate trigger."""
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
@@ -289,13 +307,13 @@ async def test_get_trigger_capabilities_temp_humid(hass, type):
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "description": {"suffix": TEMP_CELSIUS},
+            "description": {"suffix": UnitOfTemperature.CELSIUS},
             "name": "above",
             "optional": True,
             "type": "float",
         },
         {
-            "description": {"suffix": TEMP_CELSIUS},
+            "description": {"suffix": UnitOfTemperature.CELSIUS},
             "name": "below",
             "optional": True,
             "type": "float",

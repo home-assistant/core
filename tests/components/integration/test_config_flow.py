@@ -6,7 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.integration.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -19,7 +19,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -39,7 +39,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "My integration"
     assert result["data"] == {}
     assert result["options"] == {
@@ -67,7 +67,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
-    for k in schema.keys():
+    for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:
                 return None
@@ -98,7 +98,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "round") == 1.0
@@ -109,7 +109,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "round": 2.0,
         },
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "method": "left",
         "name": "My integration",

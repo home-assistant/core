@@ -1,10 +1,10 @@
 {
   "domain": "brunt",
   "name": "Brunt Blind Engine",
+  "codeowners": ["@eavanvalkenburg"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/brunt",
-  "requirements": ["brunt==1.2.0"],
-  "codeowners": ["@eavanvalkenburg"],
   "iot_class": "cloud_polling",
-  "loggers": ["brunt"]
+  "loggers": ["brunt"],
+  "requirements": ["brunt==1.2.0"]
 }

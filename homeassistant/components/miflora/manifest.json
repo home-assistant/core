@@ -1,9 +1,8 @@
 {
   "domain": "miflora",
   "name": "Mi Flora",
-  "documentation": "https://www.home-assistant.io/integrations/miflora",
-  "requirements": ["bluepy==1.3.0", "miflora==0.7.2"],
   "codeowners": ["@danielhiversen", "@basnijholt"],
+  "documentation": "https://www.home-assistant.io/integrations/miflora",
   "iot_class": "local_polling",
-  "loggers": ["btlewrap", "miflora"]
+  "requirements": []
 }

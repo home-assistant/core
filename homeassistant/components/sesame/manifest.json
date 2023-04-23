@@ -1,9 +1,9 @@
 {
   "domain": "sesame",
   "name": "Sesame Smart Lock",
-  "documentation": "https://www.home-assistant.io/integrations/sesame",
-  "requirements": ["pysesame2==1.0.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/sesame",
   "iot_class": "cloud_polling",
-  "loggers": ["pysesame2"]
+  "loggers": ["pysesame2"],
+  "requirements": ["pysesame2==1.0.1"]
 }

@@ -1,4 +1,7 @@
 """Tests for the Mikrotik component."""
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components import mikrotik
@@ -16,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -57,6 +61,14 @@ DEVICE_3_DHCP_NUMERIC_NAME = {
     "active-address": "0.0.0.3",
     "host-name": 123,
     "comment": "Mobile",
+}
+DEVICE_4_DHCP = {
+    ".id": "*F7",
+    "address": "0.0.0.4",
+    "mac-address": "00:00:00:00:00:04",
+    "active-address": "0.0.0.4",
+    "host-name": "Device_4",
+    "comment": "Wifiwave2 device",
 }
 DEVICE_1_WIRELESS = {
     ".id": "*264",
@@ -105,9 +117,27 @@ DEVICE_3_WIRELESS = {
     "mac-address": "00:00:00:00:00:03",
     "last-ip": "0.0.0.3",
 }
+
+DEVICE_4_WIFIWAVE2 = {
+    ".id": "*F7",
+    "interface": "wifi1",
+    "ssid": "test-ssid",
+    "mac-address": "00:00:00:00:00:04",
+    "uptime": "2d15h28m27s",
+    "signal": -47,
+    "tx-rate": 54000000,
+    "rx-rate": 54000000,
+    "packets": "17748,18516",
+    "bytes": "1851474,2037295",
+    "tx-bits-per-second": 0,
+    "rx-bits-per-second": 0,
+    "authorized": True,
+}
+
 DHCP_DATA = [DEVICE_1_DHCP, DEVICE_2_DHCP]
 
 WIRELESS_DATA = [DEVICE_1_WIRELESS]
+WIFIWAVE2_DATA = [DEVICE_4_WIFIWAVE2]
 
 ARP_DATA = [
     {
@@ -137,33 +167,40 @@ ARP_DATA = [
 ]
 
 
-async def setup_mikrotik_entry(hass, **kwargs):
+async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
     """Set up Mikrotik integration successfully."""
-    support_wireless = kwargs.get("support_wireless", True)
-    dhcp_data = kwargs.get("dhcp_data", DHCP_DATA)
-    wireless_data = kwargs.get("wireless_data", WIRELESS_DATA)
+    support_wireless: bool = kwargs.get("support_wireless", True)
+    support_wifiwave2: bool = kwargs.get("support_wifiwave2", False)
+    dhcp_data: list[dict[str, Any]] = kwargs.get("dhcp_data", DHCP_DATA)
+    wireless_data: list[dict[str, Any]] = kwargs.get("wireless_data", WIRELESS_DATA)
+    wifiwave2_data: list[dict[str, Any]] = kwargs.get("wifiwave2_data", WIFIWAVE2_DATA)
 
-    def mock_command(self, cmd, params=None):
+    def mock_command(self, cmd: str, params: dict[str, Any] | None = None) -> Any:
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]:
             return support_wireless
+        if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIFIWAVE2]:
+            return support_wifiwave2
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.DHCP]:
             return dhcp_data
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIRELESS]:
             return wireless_data
+        if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIFIWAVE2]:
+            return wifiwave2_data
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ARP]:
             return ARP_DATA
         return {}
 
-    config_entry = MockConfigEntry(
-        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=MOCK_OPTIONS
-    )
-    config_entry.add_to_hass(hass)
-
+    options: dict[str, Any] = {}
     if "force_dhcp" in kwargs:
-        config_entry.options = {**config_entry.options, "force_dhcp": True}
+        options.update({"force_dhcp": True})
 
     if "arp_ping" in kwargs:
-        config_entry.options = {**config_entry.options, "arp_ping": True}
+        options.update({"arp_ping": True})
+
+    config_entry = MockConfigEntry(
+        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=options
+    )
+    config_entry.add_to_hass(hass)
 
     with patch("librouteros.connect"), patch.object(
         mikrotik.hub.MikrotikData, "command", new=mock_command

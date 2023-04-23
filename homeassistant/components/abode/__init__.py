@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from functools import partial
 
-from abodepy import Abode, AbodeAutomation as AbodeAuto
-from abodepy.devices import AbodeDevice as AbodeDev
-from abodepy.exceptions import AbodeAuthenticationException, AbodeException
-import abodepy.helpers.timeline as TIMELINE
+from jaraco.abode.automation import Automation as AbodeAuto
+from jaraco.abode.client import Client as Abode
+from jaraco.abode.devices.base import Device as AbodeDev
+from jaraco.abode.exceptions import (
+    AuthenticationException as AbodeAuthenticationException,
+    Exception as AbodeException,
+)
+from jaraco.abode.helpers.timeline import Groups as GROUPS
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -26,7 +30,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import ATTRIBUTION, CONF_POLLING, DEFAULT_CACHEDB, DOMAIN, LOGGER
+from .const import ATTRIBUTION, CONF_POLLING, DOMAIN, LOGGER
 
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
@@ -82,7 +86,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     polling = entry.data[CONF_POLLING]
-    cache = hass.config.path(DEFAULT_CACHEDB)
 
     # For previous config entries where unique_id is None
     if entry.unique_id is None:
@@ -92,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         abode = await hass.async_add_executor_job(
-            Abode, username, password, True, True, True, cache
+            Abode, username, password, True, True, True
         )
 
     except AbodeAuthenticationException as ex:
@@ -103,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN] = AbodeSystem(abode, polling)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await setup_hass_events(hass)
     await hass.async_add_executor_job(setup_hass_services, hass)
@@ -225,17 +228,17 @@ def setup_abode_events(hass: HomeAssistant) -> None:
         hass.bus.fire(event, data)
 
     events = [
-        TIMELINE.ALARM_GROUP,
-        TIMELINE.ALARM_END_GROUP,
-        TIMELINE.PANEL_FAULT_GROUP,
-        TIMELINE.PANEL_RESTORE_GROUP,
-        TIMELINE.AUTOMATION_GROUP,
-        TIMELINE.DISARM_GROUP,
-        TIMELINE.ARM_GROUP,
-        TIMELINE.ARM_FAULT_GROUP,
-        TIMELINE.TEST_GROUP,
-        TIMELINE.CAPTURE_GROUP,
-        TIMELINE.DEVICE_GROUP,
+        GROUPS.ALARM,
+        GROUPS.ALARM_END,
+        GROUPS.PANEL_FAULT,
+        GROUPS.PANEL_RESTORE,
+        GROUPS.AUTOMATION,
+        GROUPS.DISARM,
+        GROUPS.ARM,
+        GROUPS.ARM_FAULT,
+        GROUPS.TEST,
+        GROUPS.CAPTURE,
+        GROUPS.DEVICE,
     ]
 
     for event in events:
@@ -248,6 +251,7 @@ class AbodeEntity(entity.Entity):
     """Representation of an Abode entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(self, data: AbodeSystem) -> None:
         """Initialize Abode entity."""
@@ -283,7 +287,6 @@ class AbodeDevice(AbodeEntity):
         """Initialize Abode device."""
         super().__init__(data)
         self._device = device
-        self._attr_name = device.name
         self._attr_unique_id = device.device_uuid
 
     async def async_added_to_hass(self) -> None:

@@ -110,7 +110,9 @@ class XiaomiMiioEntity(Entity):
 class XiaomiCoordinatedMiioEntity(CoordinatorEntity[_T]):
     """Representation of a base a coordinated Xiaomi Miio Entity."""
 
-    def __init__(self, name, device, entry, unique_id, coordinator):
+    _attr_has_entity_name = True
+
+    def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the coordinated Xiaomi Miio Device."""
         super().__init__(coordinator)
         self._device = device
@@ -119,17 +121,11 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity[_T]):
         self._device_id = entry.unique_id
         self._device_name = entry.title
         self._unique_id = unique_id
-        self._name = name
 
     @property
     def unique_id(self):
         """Return an unique ID."""
         return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -184,9 +180,9 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity[_T]):
         return int(timedelta.total_seconds())
 
     @staticmethod
-    def _parse_datetime_time(time: datetime.time) -> str:
+    def _parse_datetime_time(initial_time: datetime.time) -> str:
         time = datetime.datetime.now().replace(
-            hour=time.hour, minute=time.minute, second=0, microsecond=0
+            hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
         if time < datetime.datetime.now():

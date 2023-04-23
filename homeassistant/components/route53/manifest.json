@@ -1,9 +1,9 @@
 {
   "domain": "route53",
   "name": "AWS Route53",
-  "documentation": "https://www.home-assistant.io/integrations/route53",
-  "requirements": ["boto3==1.20.24"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/route53",
   "iot_class": "cloud_push",
-  "loggers": ["boto3", "botocore", "s3transfer"]
+  "loggers": ["boto3", "botocore", "s3transfer"],
+  "requirements": ["boto3==1.20.24"]
 }

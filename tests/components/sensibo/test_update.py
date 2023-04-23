@@ -5,7 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from pysensibo.model import SensiboData
-from pytest import MonkeyPatch
+import pytest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -18,7 +18,7 @@ from tests.common import async_fire_time_changed
 async def test_select(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo update."""

@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except GatewayOfflineError as err:
         raise ConfigEntryNotReady from err
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     def shutdown(event: Event) -> None:
         for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:

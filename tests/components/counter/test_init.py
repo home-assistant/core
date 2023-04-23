@@ -1,5 +1,4 @@
 """The tests for the counter component."""
-# pylint: disable=protected-access
 import logging
 
 import pytest
@@ -20,16 +19,14 @@ from homeassistant.components.counter import (
     DOMAIN,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_restore_cache
-from tests.components.counter.common import (
-    async_decrement,
-    async_increment,
-    async_reset,
-)
+from .common import async_decrement, async_increment, async_reset
+
+from tests.common import MockUser, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +67,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [None, 1, {}, {"name with space": None}]
 
@@ -78,7 +75,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_config_options(hass):
+async def test_config_options(hass: HomeAssistant) -> None:
     """Test configuration options."""
     count_start = len(hass.states.async_entity_ids())
 
@@ -126,7 +123,7 @@ async def test_config_options(hass):
     assert state_3.attributes.get(ATTR_STEP) == DEFAULT_STEP
 
 
-async def test_methods(hass):
+async def test_methods(hass: HomeAssistant) -> None:
     """Test increment, decrement, and reset methods."""
     config = {DOMAIN: {"test_1": {}}}
 
@@ -162,7 +159,7 @@ async def test_methods(hass):
     assert int(state.state) == 0
 
 
-async def test_methods_with_config(hass):
+async def test_methods_with_config(hass: HomeAssistant) -> None:
     """Test increment, decrement, and reset methods with configuration."""
     config = {
         DOMAIN: {"test": {CONF_NAME: "Hello World", CONF_INITIAL: 10, CONF_STEP: 5}}
@@ -194,7 +191,7 @@ async def test_methods_with_config(hass):
     assert int(state.state) == 15
 
 
-async def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("counter.test1", "11"), State("counter.test2", "-22"))
@@ -222,7 +219,7 @@ async def test_initial_state_overrules_restore_state(hass):
     assert int(state.state) == 10
 
 
-async def test_restore_state_overrules_initial_state(hass):
+async def test_restore_state_overrules_initial_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
 
     attr = {"initial": 6, "minimum": 1, "maximum": 8, "step": 2}
@@ -259,7 +256,7 @@ async def test_restore_state_overrules_initial_state(hass):
     assert state.attributes.get("step") == 2
 
 
-async def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
@@ -270,7 +267,7 @@ async def test_no_initial_state_and_no_restore_state(hass):
     assert int(state.state) == 0
 
 
-async def test_counter_context(hass, hass_admin_user):
+async def test_counter_context(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that counter context works."""
     assert await async_setup_component(hass, "counter", {"counter": {"test": {}}})
 
@@ -291,7 +288,7 @@ async def test_counter_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_counter_min(hass, hass_admin_user):
+async def test_counter_min(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that min works."""
     assert await async_setup_component(
         hass, "counter", {"counter": {"test": {"minimum": "0", "initial": "0"}}}
@@ -326,7 +323,7 @@ async def test_counter_min(hass, hass_admin_user):
     assert state2.state == "1"
 
 
-async def test_counter_max(hass, hass_admin_user):
+async def test_counter_max(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that max works."""
     assert await async_setup_component(
         hass, "counter", {"counter": {"test": {"maximum": "0", "initial": "0"}}}
@@ -361,7 +358,7 @@ async def test_counter_max(hass, hass_admin_user):
     assert state2.state == "-1"
 
 
-async def test_configure(hass, hass_admin_user):
+async def test_configure(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test that setting values through configure works."""
     assert await async_setup_component(
         hass, "counter", {"counter": {"test": {"maximum": "10", "initial": "10"}}}
@@ -496,7 +493,7 @@ async def test_configure(hass, hass_admin_user):
     assert state.attributes.get("initial") == 6
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -505,7 +502,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(
         config={
@@ -531,7 +528,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert state.attributes[ATTR_EDITABLE] is False
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(
         config={
@@ -563,7 +562,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -588,20 +589,20 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_update_min_max(hass, hass_ws_client, storage_setup):
+async def test_update_min_max(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating min/max updates the state."""
 
-    items = [
-        {
-            "id": "from_storage",
-            "initial": 15,
-            "name": "from storage",
-            "maximum": 100,
-            "minimum": 10,
-            "step": 3,
-            "restore": True,
-        }
-    ]
+    settings = {
+        "initial": 15,
+        "name": "from storage",
+        "maximum": 100,
+        "minimum": 10,
+        "step": 3,
+        "restore": True,
+    }
+    items = [{"id": "from_storage"} | settings]
     assert await storage_setup(items)
 
     input_id = "from_storage"
@@ -618,16 +619,18 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = settings | {"minimum": 19}
     await client.send_json(
         {
             "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "minimum": 19,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 19
@@ -635,18 +638,18 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_MAXIMUM] == 100
     assert state.attributes[ATTR_STEP] == 3
 
+    updated_settings = settings | {"maximum": 5, "minimum": 2, "step": 5}
     await client.send_json(
         {
             "id": 7,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "maximum": 5,
-            "minimum": 2,
-            "step": 5,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 5
@@ -654,18 +657,18 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_MAXIMUM] == 5
     assert state.attributes[ATTR_STEP] == 5
 
+    updated_settings = settings | {"maximum": None, "minimum": None, "step": 6}
     await client.send_json(
         {
             "id": 8,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "maximum": None,
-            "minimum": None,
-            "step": 6,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert int(state.state) == 5
@@ -674,7 +677,9 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_STEP] == 6
 
 
-async def test_create(hass, hass_ws_client, storage_setup):
+async def test_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test creating counter using WS."""
 
     items = []

@@ -7,7 +7,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    ATTR_WHITE_VALUE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
@@ -50,7 +49,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_BRIGHTNESS) is None
     assert state.attributes.get(ATTR_HS_COLOR) is None
     assert state.attributes.get(ATTR_COLOR_TEMP) is None
-    assert state.attributes.get(ATTR_WHITE_VALUE) is None
     assert state.attributes.get(ATTR_EFFECT_LIST) is None
     assert state.attributes.get(ATTR_EFFECT) is None
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.ONOFF]
@@ -60,6 +58,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
 async def test_light_service_calls(hass: HomeAssistant) -> None:
     """Test service calls to light."""
     await async_setup_component(hass, "switch", {"switch": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -113,6 +112,7 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
 async def test_switch_service_calls(hass: HomeAssistant) -> None:
     """Test service calls to switch."""
     await async_setup_component(hass, "switch", {"switch": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -120,7 +120,7 @@ async def test_switch_service_calls(hass: HomeAssistant) -> None:
             CONF_ENTITY_ID: "switch.decorative_lights",
             CONF_TARGET_DOMAIN: Platform.LIGHT,
         },
-        title="decorative_lights",
+        title="Title is ignored",
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)

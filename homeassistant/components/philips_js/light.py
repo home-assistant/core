@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
@@ -16,6 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -137,6 +139,8 @@ class PhilipsTVLightEntity(
 ):
     """Representation of a Philips TV exposing the JointSpace API."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -146,12 +150,12 @@ class PhilipsTVLightEntity(
         self._hs = None
         self._brightness = None
         self._cache_keys = None
-        self._last_selected_effect: AmbilightEffect = None
+        self._last_selected_effect: AmbilightEffect | None = None
         super().__init__(coordinator)
 
         self._attr_supported_color_modes = {ColorMode.HS, ColorMode.ONOFF}
         self._attr_supported_features = LightEntityFeature.EFFECT
-        self._attr_name = f"{coordinator.system['name']} Ambilight"
+        self._attr_name = "Ambilight"
         self._attr_unique_id = coordinator.unique_id
         self._attr_icon = "mdi:television-ambient-light"
         self._attr_device_info = DeviceInfo(
@@ -284,11 +288,11 @@ class PhilipsTVLightEntity(
         }
 
         if not await self._tv.setAmbilightCached(data):
-            raise Exception("Failed to set ambilight color")
+            raise HomeAssistantError("Failed to set ambilight color")
 
         if effect.style != self._tv.ambilight_mode:
             if not await self._tv.setAmbilightMode(effect.style):
-                raise Exception("Failed to set ambilight mode")
+                raise HomeAssistantError("Failed to set ambilight mode")
 
     async def _set_ambilight_expert_config(
         self, effect: AmbilightEffect, hs_color: tuple[float, float], brightness: int
@@ -322,7 +326,7 @@ class PhilipsTVLightEntity(
             config["tuning"] = 0
 
         if not await self._tv.setAmbilightCurrentConfiguration(config):
-            raise Exception("Failed to set ambilight mode")
+            raise HomeAssistantError("Failed to set ambilight mode")
 
     async def _set_ambilight_config(self, effect: AmbilightEffect):
         """Set ambilight via current configuration."""
@@ -333,16 +337,16 @@ class PhilipsTVLightEntity(
         }
 
         if await self._tv.setAmbilightCurrentConfiguration(config) is False:
-            raise Exception("Failed to set ambilight mode")
+            raise HomeAssistantError("Failed to set ambilight mode")
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
         attr_effect = kwargs.get(ATTR_EFFECT, self.effect)
 
         if not self._tv.on:
-            raise Exception("TV is not available")
+            raise HomeAssistantError("TV is not available")
 
         effect = AmbilightEffect.from_str(attr_effect)
 
@@ -376,14 +380,14 @@ class PhilipsTVLightEntity(
         self._update_from_coordinator()
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn of ambilight."""
 
         if not self._tv.on:
-            raise Exception("TV is not available")
+            raise HomeAssistantError("TV is not available")
 
         if await self._tv.setAmbilightMode("internal") is False:
-            raise Exception("Failed to set ambilight mode")
+            raise HomeAssistantError("Failed to set ambilight mode")
 
         await self._set_ambilight_config(AmbilightEffect(EFFECT_MODE, "OFF", ""))
 

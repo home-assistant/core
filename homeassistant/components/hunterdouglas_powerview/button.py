@@ -9,8 +9,8 @@ from aiopvapi.resources.shade import BaseShade, factory as PvShade
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ROOM_ID_IN_SHADE, ROOM_NAME_UNICODE
@@ -47,6 +47,13 @@ BUTTONS: Final = [
         icon="mdi:crosshairs-question",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda shade: shade.jog(),
+    ),
+    PowerviewButtonDescription(
+        key="favorite",
+        name="Favorite",
+        icon="mdi:heart",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        press_action=lambda shade: shade.favorite(),
     ),
 ]
 

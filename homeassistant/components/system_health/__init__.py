@@ -37,7 +37,8 @@ def async_register_info(
     Deprecated.
     """
     _LOGGER.warning(
-        "Calling system_health.async_register_info is deprecated; Add a system_health platform instead"
+        "Calling system_health.async_register_info is deprecated; Add a system_health"
+        " platform instead"
     )
     hass.data.setdefault(DOMAIN, {})
     SystemHealthRegistration(hass, domain).async_register_info(info_callback)
@@ -187,7 +188,7 @@ async def handle_info(
     )
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(slots=True)
 class SystemHealthRegistration:
     """Helper class to track platform registration."""
 

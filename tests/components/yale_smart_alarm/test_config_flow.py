@@ -9,11 +9,7 @@ from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 from homeassistant import config_entries
 from homeassistant.components.yale_smart_alarm.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +20,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -43,7 +39,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
     assert result2["data"] == {
         "username": "test-username",
@@ -55,7 +51,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sideeffect,p_error",
+    ("sideeffect", "p_error"),
     [
         (AuthenticationError, "invalid_auth"),
         (ConnectionError, "cannot_connect"),
@@ -85,7 +81,7 @@ async def test_form_invalid_auth(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}
 
     with patch(
@@ -104,7 +100,7 @@ async def test_form_invalid_auth(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
     assert result2["data"] == {
         "username": "test-username",
@@ -138,7 +134,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         data=entry.data,
     )
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -156,7 +152,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "username": "test-username",
@@ -170,7 +166,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sideeffect,p_error",
+    ("sideeffect", "p_error"),
     [
         (AuthenticationError, "invalid_auth"),
         (ConnectionError, "cannot_connect"),
@@ -218,7 +214,7 @@ async def test_reauth_flow_error(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}
 
     with patch(
@@ -237,7 +233,7 @@ async def test_reauth_flow_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "username": "test-username",
@@ -265,7 +261,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -273,7 +269,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input={"code": "123456", "lock_code_digits": 6},
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {"code": "123456", "lock_code_digits": 6}
 
 
@@ -295,7 +291,7 @@ async def test_options_flow_format_mismatch(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {}
 
@@ -304,7 +300,7 @@ async def test_options_flow_format_mismatch(hass: HomeAssistant) -> None:
         user_input={"code": "123", "lock_code_digits": 6},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": "code_format_mismatch"}
 
@@ -313,5 +309,5 @@ async def test_options_flow_format_mismatch(hass: HomeAssistant) -> None:
         user_input={"code": "123456", "lock_code_digits": 6},
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {"code": "123456", "lock_code_digits": 6}

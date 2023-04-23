@@ -86,7 +86,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("No Rachio devices found in account %s", person.username)
         return False
     _LOGGER.info(
-        "%d Rachio device(s) found; The url %s must be accessible from the internet in order to receive updates",
+        (
+            "%d Rachio device(s) found; The url %s must be accessible from the internet"
+            " in order to receive updates"
+        ),
         len(person.controllers),
         webhook_url,
     )
@@ -95,6 +98,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = person
     async_register_webhook(hass, entry)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

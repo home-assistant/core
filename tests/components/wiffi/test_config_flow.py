@@ -7,11 +7,8 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wiffi.const import DOMAIN
 from homeassistant.const import CONF_PORT, CONF_TIMEOUT
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -72,12 +69,12 @@ def mock_start_server_failed():
         yield server
 
 
-async def test_form(hass, dummy_tcp_server):
+async def test_form(hass: HomeAssistant, dummy_tcp_server) -> None:
     """Test how we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == config_entries.SOURCE_USER
 
@@ -85,10 +82,10 @@ async def test_form(hass, dummy_tcp_server):
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
 
 
-async def test_form_addr_in_use(hass, addr_in_use):
+async def test_form_addr_in_use(hass: HomeAssistant, addr_in_use) -> None:
     """Test how we handle addr_in_use error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -98,11 +95,13 @@ async def test_form_addr_in_use(hass, addr_in_use):
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "addr_in_use"
 
 
-async def test_form_start_server_failed(hass, start_server_failed):
+async def test_form_start_server_failed(
+    hass: HomeAssistant, start_server_failed
+) -> None:
     """Test how we handle start_server_failed error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -112,11 +111,11 @@ async def test_form_start_server_failed(hass, start_server_failed):
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "start_server_failed"
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test option flow."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
@@ -125,13 +124,13 @@ async def test_option_flow(hass):
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_TIMEOUT: 9}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_TIMEOUT] == 9

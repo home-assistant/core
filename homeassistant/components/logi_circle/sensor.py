@@ -7,7 +7,6 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
@@ -58,7 +57,9 @@ async def async_setup_entry(
 class LogiSensor(SensorEntity):
     """A sensor implementation for a Logi Circle camera."""
 
-    def __init__(self, camera, time_zone, description: SensorEntityDescription):
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(self, camera, time_zone, description: SensorEntityDescription) -> None:
         """Initialize a sensor for Logi Circle camera."""
         self.entity_description = description
         self._camera = camera
@@ -82,7 +83,6 @@ class LogiSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         state = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "battery_saving_mode": (
                 STATE_ON if self._camera.battery_saving else STATE_OFF
             ),
@@ -112,7 +112,7 @@ class LogiSensor(SensorEntity):
             )
         return self.entity_description.icon
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and updates the state."""
         _LOGGER.debug("Pulling data from %s sensor", self.name)
         await self._camera.update()

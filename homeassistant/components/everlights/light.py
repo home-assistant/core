@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import pyeverlights
 import voluptuous as vol
@@ -64,9 +65,8 @@ async def async_setup_platform(
         except pyeverlights.ConnectionError as err:
             raise PlatformNotReady from err
 
-        else:
-            lights.append(EverLightsLight(api, pyeverlights.ZONE_1, status, effects))
-            lights.append(EverLightsLight(api, pyeverlights.ZONE_2, status, effects))
+        lights.append(EverLightsLight(api, pyeverlights.ZONE_1, status, effects))
+        lights.append(EverLightsLight(api, pyeverlights.ZONE_2, status, effects))
 
     async_add_entities(lights)
 
@@ -78,63 +78,35 @@ class EverLightsLight(LightEntity):
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT
 
-    def __init__(self, api, channel, status, effects):
+    def __init__(
+        self,
+        api: pyeverlights.EverLights,
+        channel: int,
+        status: dict[str, Any],
+        effects,
+    ) -> None:
         """Initialize the light."""
         self._api = api
         self._channel = channel
         self._status = status
-        self._effects = effects
+        self._attr_effect_list = effects
         self._mac = status["mac"]
         self._error_reported = False
-        self._hs_color = [255, 255]
-        self._brightness = 255
-        self._effect = None
-        self._available = True
+        self._attr_hs_color = (255, 255)
+        self._attr_brightness = 255
+
+        self._attr_name = f"EverLights {self._mac} Zone {self._channel}"
+        self._attr_unique_id = f"{self._mac}-{self._channel}"
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._mac}-{self._channel}"
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"EverLights {self._mac} Zone {self._channel}"
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status[f"ch{self._channel}Active"] == 1
 
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
-
-    @property
-    def hs_color(self):
-        """Return the color property."""
-        return self._hs_color
-
-    @property
-    def effect(self):
-        """Return the effect property."""
-        return self._effect
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects."""
-        return self._effects
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        hs_color = kwargs.get(ATTR_HS_COLOR, self._hs_color)
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
+        hs_color = kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
+        brightness = kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)
         effect = kwargs.get(ATTR_EFFECT)
 
         if effect is not None:
@@ -146,28 +118,30 @@ class EverLightsLight(LightEntity):
             brightness = hsv[2] / 100 * 255
 
         else:
-            rgb = color_util.color_hsv_to_RGB(*hs_color, brightness / 255 * 100)
+            rgb = color_util.color_hsv_to_RGB(
+                hs_color[0], hs_color[1], brightness / 255 * 100
+            )
             colors = [color_rgb_to_int(*rgb)]
 
             await self._api.set_pattern(self._channel, colors)
 
-        self._hs_color = hs_color
-        self._brightness = brightness
-        self._effect = effect
+        self._attr_hs_color = hs_color
+        self._attr_brightness = brightness
+        self._attr_effect = effect
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._api.clear_pattern(self._channel)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Synchronize state with control box."""
         try:
             self._status = await self._api.get_status()
         except pyeverlights.ConnectionError:
-            if self._available:
+            if self.available:
                 _LOGGER.warning("EverLights control box connection lost")
-            self._available = False
+            self._attr_available = False
         else:
-            if not self._available:
+            if not self.available:
                 _LOGGER.warning("EverLights control box connection restored")
-            self._available = True
+            self._attr_available = True

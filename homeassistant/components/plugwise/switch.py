@@ -9,8 +9,8 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -21,20 +21,26 @@ from .util import plugwise_command
 SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="dhw_cm_switch",
-        name="DHW Comfort Mode",
+        translation_key="dhw_cm_switch",
         icon="mdi:water-plus",
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="lock",
-        name="Lock",
+        translation_key="lock",
         icon="mdi:lock",
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="relay",
-        name="Relay",
+        translation_key="relay",
         device_class=SwitchDeviceClass.SWITCH,
+    ),
+    SwitchEntityDescription(
+        key="cooling_ena_switch",
+        name="Cooling",
+        icon="mdi:snowflake-thermometer",
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -68,7 +74,6 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
-        self._attr_name = (f"{self.device.get('name', '')} {description.name}").lstrip()
 
     @property
     def is_on(self) -> bool | None:

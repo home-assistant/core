@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from pymochad import device
+from pymochad import controller, device
 from pymochad.exceptions import MochadException
 import voluptuous as vol
 
@@ -14,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK
+from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK, MochadCtrl
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,35 +41,32 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up X10 switches over a mochad controller."""
-    mochad_controller = hass.data[DOMAIN]
-    devs = config[CONF_DEVICES]
+    mochad_controller: MochadCtrl = hass.data[DOMAIN]
+    devs: list[dict[str, str]] = config[CONF_DEVICES]
     add_entities([MochadSwitch(hass, mochad_controller.ctrl, dev) for dev in devs])
 
 
 class MochadSwitch(SwitchEntity):
     """Representation of a X10 switch over Mochad."""
 
-    def __init__(self, hass, ctrl, dev):
+    def __init__(
+        self, hass: HomeAssistant, ctrl: controller.PyMochad, dev: dict[str, str]
+    ) -> None:
         """Initialize a Mochad Switch Device."""
 
         self._controller = ctrl
-        self._address = dev[CONF_ADDRESS]
-        self._name = dev.get(CONF_NAME, f"x10_switch_dev_{self._address}")
-        self._comm_type = dev.get(CONF_COMM_TYPE, "pl")
+        self._address: str = dev[CONF_ADDRESS]
+        self._attr_name: str = dev.get(CONF_NAME, f"x10_switch_dev_{self._address}")
+        self._comm_type: str = dev.get(CONF_COMM_TYPE, "pl")
         self.switch = device.Device(ctrl, self._address, comm_type=self._comm_type)
         # Init with false to avoid locking HA for long on CM19A (goes from rf
         # to pl via TM751, but not other way around)
         if self._comm_type == "pl":
-            self._state = self._get_device_status()
+            self._attr_is_on = self._get_device_status()
         else:
-            self._state = False
+            self._attr_is_on = False
 
-    @property
-    def name(self):
-        """Get the name of the switch."""
-        return self._name
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
 
         _LOGGER.debug("Reconnect %s:%s", self._controller.server, self._controller.port)
@@ -80,11 +78,11 @@ class MochadSwitch(SwitchEntity):
                 # No read data on CM19A which is rf only
                 if self._comm_type == "pl":
                     self._controller.read_data()
-                self._state = True
+                self._attr_is_on = True
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
 
         _LOGGER.debug("Reconnect %s:%s", self._controller.server, self._controller.port)
@@ -96,17 +94,12 @@ class MochadSwitch(SwitchEntity):
                 # No read data on CM19A which is rf only
                 if self._comm_type == "pl":
                     self._controller.read_data()
-                self._state = False
+                self._attr_is_on = False
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)
 
-    def _get_device_status(self):
+    def _get_device_status(self) -> bool:
         """Get the status of the switch from mochad."""
         with REQ_LOCK:
             status = self.switch.get_status().rstrip()
         return status == "on"
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state

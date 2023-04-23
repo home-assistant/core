@@ -20,7 +20,22 @@
     "step": {
       "init": {
         "data": {
-          "sync_time": "Keep your Balboa Spa Client's time synchronized with Home Assistant"
+          "sync_time": "Keep your Balboa spa's time synchronized with Home Assistant"
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "balboa": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "ready": "Ready",
+              "rest": "Rest",
+              "ready_in_rest": "Ready-in-rest"
+            }
+          }
         }
       }
     }

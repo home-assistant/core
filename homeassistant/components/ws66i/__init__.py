@@ -6,7 +6,7 @@ import logging
 from pyws66i import WS66i, get_ws66i
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -16,7 +16,7 @@ from .models import SourceRep, Ws66iData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 @callback
@@ -41,7 +41,6 @@ def _find_zones(hass: HomeAssistant, ws66i: WS66i) -> list[int]:
     # Zones 21,31 - 26,36 are the daisy-chained amps
     zone_list = []
     for amp_num in range(1, 4):
-
         if amp_num > 1:
             # Don't add entities that aren't present
             status = ws66i.zone_status(amp_num * 10 + 1)
@@ -104,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

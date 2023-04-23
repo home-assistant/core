@@ -1,17 +1,18 @@
 """Test the Prosegur Alarm config flow."""
 from unittest.mock import MagicMock, patch
 
-from pytest import mark
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.prosegur.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.prosegur.const import DOMAIN
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -53,7 +54,7 @@ async def test_form(hass):
     assert len(mock_retrieve.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -76,7 +77,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -99,7 +100,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_exception(hass):
+async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -122,7 +123,7 @@ async def test_form_unknown_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_reauth_flow(hass):
+async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test a reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -145,7 +146,7 @@ async def test_reauth_flow(hass):
         data=entry.data,
     )
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     install = MagicMock()
@@ -167,7 +168,7 @@ async def test_reauth_flow(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "country": "PT",
@@ -179,15 +180,15 @@ async def test_reauth_flow(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@mark.parametrize(
-    "exception, base_error",
+@pytest.mark.parametrize(
+    ("exception", "base_error"),
     [
         (CannotConnect, "cannot_connect"),
         (InvalidAuth, "invalid_auth"),
         (Exception, "unknown"),
     ],
 )
-async def test_reauth_flow_error(hass, exception, base_error):
+async def test_reauth_flow_error(hass: HomeAssistant, exception, base_error) -> None:
     """Test a reauthentication flow with errors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -223,5 +224,5 @@ async def test_reauth_flow_error(hass, exception, base_error):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"]["base"] == base_error

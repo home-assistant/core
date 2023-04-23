@@ -1,13 +1,13 @@
 """Test the PECO Outage Counter config flow."""
 from unittest.mock import patch
 
-from pytest import raises
+import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components.peco.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -15,7 +15,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Philadelphia Outage Count"
     assert result2["data"] == {
         "county": "PHILADELPHIA",
@@ -42,10 +42,10 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with raises(MultipleInvalid):
+    with pytest.raises(MultipleInvalid):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -57,7 +57,7 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
     second_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert second_result["type"] == RESULT_TYPE_FORM
+    assert second_result["type"] == FlowResultType.FORM
     assert second_result["errors"] is None
 
     with patch(
@@ -72,7 +72,7 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert second_result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert second_result2["type"] == FlowResultType.CREATE_ENTRY
     assert second_result2["title"] == "Philadelphia Outage Count"
     assert second_result2["data"] == {
         "county": "PHILADELPHIA",

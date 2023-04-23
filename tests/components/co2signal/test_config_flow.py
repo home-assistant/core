@@ -6,7 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.co2signal import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import VALID_PAYLOAD
 
@@ -17,10 +17,13 @@ async def test_form_home(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
+    with patch(
+        "CO2Signal.get_latest",
+        return_value=VALID_PAYLOAD,
+    ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -33,7 +36,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "CO2 Signal"
     assert result2["data"] == {
         "api_key": "api_key",
@@ -47,7 +50,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -57,9 +60,12 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
             "api_key": "api_key",
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
-    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
+    with patch(
+        "CO2Signal.get_latest",
+        return_value=VALID_PAYLOAD,
+    ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -72,7 +78,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "12.3, 45.6"
     assert result3["data"] == {
         "latitude": 12.3,
@@ -88,7 +94,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -98,9 +104,12 @@ async def test_form_country(hass: HomeAssistant) -> None:
             "api_key": "api_key",
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
-    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
+    with patch(
+        "CO2Signal.get_latest",
+        return_value=VALID_PAYLOAD,
+    ), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -112,7 +121,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "fr"
     assert result3["data"] == {
         "country_code": "fr",
@@ -122,7 +131,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "err_str,err_code",
+    ("err_str", "err_code"),
     [
         ("Invalid authentication credentials", "invalid_auth"),
         ("API rate limit exceeded.", "api_ratelimit"),
@@ -147,7 +156,7 @@ async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> No
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": err_code}
 
 
@@ -169,7 +178,7 @@ async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -191,5 +200,5 @@ async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}

@@ -7,9 +7,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import COORDINATOR, DOMAIN
@@ -21,7 +20,7 @@ SENSOR_TYPES = (
         key="acfail",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Power Loss",
+        name="Power loss",
     ),
     BinarySensorEntityDescription(
         key="battery",
@@ -85,9 +84,6 @@ class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):
         """Initiate Yale Problem Sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_name = (
-            f"{coordinator.entry.data[CONF_NAME]} {entity_description.name}"
-        )
         self._attr_unique_id = f"{coordinator.entry.entry_id}-{entity_description.key}"
 
     @property

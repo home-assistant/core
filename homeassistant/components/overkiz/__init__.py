@@ -88,7 +88,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if coordinator.is_stateless:
         LOGGER.debug(
-            "All devices have an assumed state. Update interval has been reduced to: %s",
+            (
+                "All devices have an assumed state. Update interval has been reduced"
+                " to: %s"
+            ),
             UPDATE_INTERVAL_ALL_ASSUMED_STATE,
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
@@ -102,7 +105,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Map Overkiz entities to Home Assistant platform
     for device in coordinator.data.values():
         LOGGER.debug(
-            "The following device has been retrieved. Report an issue if not supported correctly (%s)",
+            (
+                "The following device has been retrieved. Report an issue if not"
+                " supported correctly (%s)"
+            ),
             device,
         )
 
@@ -110,8 +116,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device.widget
         ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
             platforms[platform].append(device)
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     device_registry = dr.async_get(hass)
 
@@ -127,6 +131,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             sw_version=gateway.connectivity.protocol_version,
             configuration_url=server.configuration_url,
         )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

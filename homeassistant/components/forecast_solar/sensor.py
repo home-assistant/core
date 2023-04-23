@@ -10,12 +10,10 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SENSORS
+from .coordinator import ForecastSolarDataUpdateCoordinator
 from .models import ForecastSolarSensorEntityDescription
 
 
@@ -23,7 +21,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: ForecastSolarDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         ForecastSolarSensorEntity(
@@ -35,16 +33,19 @@ async def async_setup_entry(
     )
 
 
-class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
+class ForecastSolarSensorEntity(
+    CoordinatorEntity[ForecastSolarDataUpdateCoordinator], SensorEntity
+):
     """Defines a Forecast.Solar sensor."""
 
     entity_description: ForecastSolarSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         *,
         entry_id: str,
-        coordinator: DataUpdateCoordinator,
+        coordinator: ForecastSolarDataUpdateCoordinator,
         entity_description: ForecastSolarSensorEntityDescription,
     ) -> None:
         """Initialize Forecast.Solar sensor."""
@@ -58,7 +59,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Forecast.Solar",
             model=coordinator.data.account_type.value,
-            name="Solar Production Forecast",
+            name="Solar production forecast",
             configuration_url="https://forecast.solar",
         )
 

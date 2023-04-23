@@ -5,6 +5,7 @@ import datetime as py_datetime
 import logging
 from typing import Any
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -61,17 +62,10 @@ def validate_set_datetime_attrs(config):
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-CREATE_FIELDS = {
+STORAGE_FIELDS = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
     vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_INITIAL): cv.string,
-}
-UPDATE_FIELDS = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_HAS_DATE): cv.boolean,
-    vol.Optional(CONF_HAS_TIME): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_INITIAL): cv.string,
 }
@@ -137,7 +131,7 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input datetime."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputDatetime](_LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
@@ -149,12 +143,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputDatetime.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputDatetime
     )
 
     storage_collection = DateTimeStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -166,8 +159,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    collection.DictStorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
@@ -210,34 +203,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class DateTimeStorageCollection(collection.StorageCollection):
+class DateTimeStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, has_date_or_time))
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, has_date_or_time))
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return has_date_or_time({**data, **update_data})
+        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
-class InputDatetime(RestoreEntity):
+class InputDatetime(collection.CollectionEntity, RestoreEntity):
     """Representation of a datetime input."""
 
-    def __init__(self, config: dict) -> None:
+    _attr_should_poll = False
+    editable: bool
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a select input."""
         self._config = config
-        self.editable = True
         self._current_datetime = None
 
         if not config.get(CONF_INITIAL):
@@ -256,8 +250,15 @@ class InputDatetime(RestoreEntity):
             )
 
     @classmethod
-    def from_yaml(cls, config: dict) -> InputDatetime:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from storage."""
+        input_dt = cls(config)
+        input_dt.editable = True
+        return input_dt
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from yaml."""
         input_dt = cls(config)
         input_dt.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_dt.editable = False
@@ -302,11 +303,6 @@ class InputDatetime(RestoreEntity):
         self._current_datetime = current_datetime.replace(
             tzinfo=dt_util.DEFAULT_TIME_ZONE
         )
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
 
     @property
     def name(self):
@@ -423,7 +419,7 @@ class InputDatetime(RestoreEntity):
         )
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()

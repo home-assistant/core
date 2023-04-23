@@ -12,7 +12,6 @@ from .auth import Auth
 from .config import AbstractConfig
 from .const import CONF_ENDPOINT, CONF_ENTITY_CONFIG, CONF_FILTER, CONF_LOCALE
 from .smart_home import async_handle_message
-from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
 SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"
@@ -104,7 +103,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     hass.http.register_view(SmartHomeView(smart_home_config))
 
     if smart_home_config.should_report_state:
-        await async_enable_proactive_mode(hass, smart_home_config)
+        await smart_home_config.async_enable_proactive_mode()
 
 
 class SmartHomeView(HomeAssistantView):

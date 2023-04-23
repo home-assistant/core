@@ -12,12 +12,7 @@ from homeassistant.components.github.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_SHOW_PROGRESS,
-    RESULT_TYPE_SHOW_PROGRESS_DONE,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from .common import MOCK_ACCESS_TOKEN
 
@@ -63,8 +58,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result["step_id"] == "device"
-    assert result["type"] == RESULT_TYPE_SHOW_PROGRESS
-    assert "flow_id" in result
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -76,7 +70,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result["title"] == ""
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_ACCESS_TOKEN] == MOCK_ACCESS_TOKEN
     assert "options" in result
@@ -96,7 +90,7 @@ async def test_flow_with_registration_failure(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result.get("reason") == "could_not_register"
 
 
@@ -125,10 +119,10 @@ async def test_flow_with_activation_failure(
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["step_id"] == "device"
-    assert result["type"] == RESULT_TYPE_SHOW_PROGRESS
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == RESULT_TYPE_SHOW_PROGRESS_DONE
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
     assert result["step_id"] == "could_not_register"
 
 
@@ -144,7 +138,7 @@ async def test_already_configured(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 

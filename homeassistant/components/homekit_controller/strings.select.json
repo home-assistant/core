@@ -1,9 +1,0 @@
-{
-  "state": {
-    "homekit_controller__ecobee_mode": {
-      "home": "Home",
-      "sleep": "Sleep",
-      "away": "Away"
-    }
-  }
-}

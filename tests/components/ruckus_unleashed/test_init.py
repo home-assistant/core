@@ -15,10 +15,11 @@ from homeassistant.components.ruckus_unleashed import (
     MANUFACTURER,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from tests.components.ruckus_unleashed import (
+from . import (
     DEFAULT_AP_INFO,
     DEFAULT_SYSTEM_INFO,
     DEFAULT_TITLE,
@@ -27,11 +28,11 @@ from tests.components.ruckus_unleashed import (
 )
 
 
-async def test_setup_entry_login_error(hass):
+async def test_setup_entry_login_error(hass: HomeAssistant) -> None:
     """Test entry setup failed due to login error."""
     entry = mock_config_entry()
     with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus",
+        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
         side_effect=AuthenticationError,
     ):
         entry.add_to_hass(hass)
@@ -41,11 +42,11 @@ async def test_setup_entry_login_error(hass):
     assert result is False
 
 
-async def test_setup_entry_connection_error(hass):
+async def test_setup_entry_connection_error(hass: HomeAssistant) -> None:
     """Test entry setup failed due to connection error."""
     entry = mock_config_entry()
     with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus",
+        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
         side_effect=ConnectionError,
     ):
         entry.add_to_hass(hass)
@@ -55,7 +56,7 @@ async def test_setup_entry_connection_error(hass):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_router_device_setup(hass):
+async def test_router_device_setup(hass: HomeAssistant) -> None:
     """Test a router device is created."""
     await init_integration(hass)
 
@@ -75,7 +76,7 @@ async def test_router_device_setup(hass):
     assert device.via_device_id is None
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 
@@ -89,7 +90,7 @@ async def test_unload_entry(hass):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_config_not_ready_during_setup(hass):
+async def test_config_not_ready_during_setup(hass: HomeAssistant) -> None:
     """Test we throw a ConfigNotReady if Coordinator update fails."""
     entry = mock_config_entry()
     with patch(

@@ -5,12 +5,13 @@ import asyncio
 from contextlib import suppress
 import datetime as dt
 import os
+import time
 
 from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, TransportError, XMLParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -37,25 +39,30 @@ from .const import (
 from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 
+# Some cameras don't support the GetServiceCapabilities call
+# and will return a 404 error which is caught by TransportError
+GET_CAPABILITIES_EXCEPTIONS = (ONVIFError, Fault, RequestError, TransportError)
+
 
 class ONVIFDevice:
     """Manages an ONVIF device."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
+    device: ONVIFCamera
+    events: EventManager
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
         self.config_entry: ConfigEntry = config_entry
         self.available: bool = True
 
-        self.device: ONVIFCamera = None
-        self.events: EventManager = None
-
         self.info: DeviceInfo = DeviceInfo()
         self.capabilities: Capabilities = Capabilities()
         self.profiles: list[Profile] = []
         self.max_resolution: int = 0
+        self.platforms: list[Platform] = []
 
-        self._dt_diff_seconds: int = 0
+        self._dt_diff_seconds: float = 0
 
     @property
     def name(self) -> str:
@@ -73,16 +80,16 @@ class ONVIFDevice:
         return self.config_entry.data[CONF_PORT]
 
     @property
-    def username(self) -> int:
+    def username(self) -> str:
         """Return the username of this device."""
         return self.config_entry.data[CONF_USERNAME]
 
     @property
-    def password(self) -> int:
+    def password(self) -> str:
         """Return the password of this device."""
         return self.config_entry.data[CONF_PASSWORD]
 
-    async def async_setup(self) -> bool:
+    async def async_setup(self) -> None:
         """Set up the device."""
         self.device = get_device(
             self.hass,
@@ -93,54 +100,34 @@ class ONVIFDevice:
         )
 
         # Get all device info
-        try:
-            await self.device.update_xaddrs()
-            await self.async_check_date_and_time()
+        await self.device.update_xaddrs()
+        await self.async_check_date_and_time()
 
-            # Create event manager
-            self.events = EventManager(
-                self.hass, self.device, self.config_entry.unique_id
-            )
+        # Create event manager
+        assert self.config_entry.unique_id
+        self.events = EventManager(self.hass, self.device, self.config_entry, self.name)
 
-            # Fetch basic device info and capabilities
-            self.info = await self.async_get_device_info()
-            LOGGER.debug("Camera %s info = %s", self.name, self.info)
-            self.capabilities = await self.async_get_capabilities()
-            LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
-            self.profiles = await self.async_get_profiles()
-            LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
+        # Fetch basic device info and capabilities
+        self.info = await self.async_get_device_info()
+        LOGGER.debug("Camera %s info = %s", self.name, self.info)
+        self.capabilities = await self.async_get_capabilities()
+        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
+        self.profiles = await self.async_get_profiles()
+        LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
 
-            # No camera profiles to add
-            if not self.profiles:
-                return False
+        # No camera profiles to add
+        if not self.profiles:
+            raise ONVIFError("No camera profiles found")
 
-            if self.capabilities.ptz:
-                self.device.create_ptz_service()
+        if self.capabilities.ptz:
+            self.device.create_ptz_service()
 
-            # Determine max resolution from profiles
-            self.max_resolution = max(
-                profile.video.resolution.width
-                for profile in self.profiles
-                if profile.video.encoding == "H264"
-            )
-        except RequestError as err:
-            LOGGER.warning(
-                "Couldn't connect to camera '%s', but will retry later. Error: %s",
-                self.name,
-                err,
-            )
-            self.available = False
-            await self.device.close()
-        except Fault as err:
-            LOGGER.error(
-                "Couldn't connect to camera '%s', please verify "
-                "that the credentials are correct. Error: %s",
-                self.name,
-                err,
-            )
-            return False
-
-        return True
+        # Determine max resolution from profiles
+        self.max_resolution = max(
+            profile.video.resolution.width
+            for profile in self.profiles
+            if profile.video.encoding == "H264"
+        )
 
     async def async_stop(self, event=None):
         """Shut it all down."""
@@ -148,12 +135,38 @@ class ONVIFDevice:
             await self.events.async_stop()
         await self.device.close()
 
-    async def async_check_date_and_time(self) -> None:
-        """Warns if device and system date not synced."""
-        LOGGER.debug("Setting up the ONVIF device management service")
+    async def async_manually_set_date_and_time(self) -> None:
+        """Set Date and Time Manually using SetSystemDateAndTime command."""
         device_mgmt = self.device.create_devicemgmt_service()
 
-        LOGGER.debug("Retrieving current device date/time")
+        # Retrieve DateTime object from camera to use as template for Set operation
+        device_time = await device_mgmt.GetSystemDateAndTime()
+
+        system_date = dt_util.utcnow()
+        LOGGER.debug("System date (UTC): %s", system_date)
+
+        dt_param = device_mgmt.create_type("SetSystemDateAndTime")
+        dt_param.DateTimeType = "Manual"
+        # Retrieve DST setting from system
+        dt_param.DaylightSavings = bool(time.localtime().tm_isdst)
+        dt_param.UTCDateTime = device_time.UTCDateTime
+        # Retrieve timezone from system
+        dt_param.TimeZone = str(system_date.astimezone().tzinfo)
+        dt_param.UTCDateTime.Date.Year = system_date.year
+        dt_param.UTCDateTime.Date.Month = system_date.month
+        dt_param.UTCDateTime.Date.Day = system_date.day
+        dt_param.UTCDateTime.Time.Hour = system_date.hour
+        dt_param.UTCDateTime.Time.Minute = system_date.minute
+        dt_param.UTCDateTime.Time.Second = system_date.second
+        LOGGER.debug("SetSystemDateAndTime: %s", dt_param)
+        await device_mgmt.SetSystemDateAndTime(dt_param)
+
+    async def async_check_date_and_time(self) -> None:
+        """Warns if device and system date not synced."""
+        LOGGER.debug("%s: Setting up the ONVIF device management service", self.name)
+        device_mgmt = self.device.create_devicemgmt_service()
+
+        LOGGER.debug("%s: Retrieving current device date/time", self.name)
         try:
             system_date = dt_util.utcnow()
             device_time = await device_mgmt.GetSystemDateAndTime()
@@ -165,6 +178,8 @@ class ONVIFDevice:
                 )
                 return
 
+            LOGGER.debug("%s: Device time: %s", self.name, device_time)
+
             tzone = dt_util.DEFAULT_TIME_ZONE
             cdate = device_time.LocalDateTime
             if device_time.UTCDateTime:
@@ -174,7 +189,9 @@ class ONVIFDevice:
                 tzone = dt_util.get_time_zone(device_time.TimeZone.TZ) or tzone
 
             if cdate is None:
-                LOGGER.warning("Could not retrieve date/time on this camera")
+                LOGGER.warning(
+                    "%s: Could not retrieve date/time on this camera", self.name
+                )
             else:
                 cam_date = dt.datetime(
                     cdate.Date.Year,
@@ -190,7 +207,8 @@ class ONVIFDevice:
                 cam_date_utc = cam_date.astimezone(dt_util.UTC)
 
                 LOGGER.debug(
-                    "Device date/time: %s | System date/time: %s",
+                    "%s: Device date/time: %s | System date/time: %s",
+                    self.name,
                     cam_date_utc,
                     system_date,
                 )
@@ -200,13 +218,18 @@ class ONVIFDevice:
 
                 if self._dt_diff_seconds > 5:
                     LOGGER.warning(
-                        "The date/time on %s (UTC) is '%s', "
-                        "which is different from the system '%s', "
-                        "this could lead to authentication issues",
+                        (
+                            "The date/time on %s (UTC) is '%s', "
+                            "which is different from the system '%s', "
+                            "this could lead to authentication issues"
+                        ),
                         self.name,
                         cam_date_utc,
                         system_date,
                     )
+                    if device_time.DateTimeType == "Manual":
+                        # Set Date and Time ourselves if Date and Time is set manually in the camera.
+                        await self.async_manually_set_date_and_time()
         except RequestError as err:
             LOGGER.warning(
                 "Couldn't get device '%s' date/time. Error: %s", self.name, err
@@ -245,27 +268,32 @@ class ONVIFDevice:
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
         snapshot = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
 
-        pullpoint = False
-        with suppress(ONVIFError, Fault, RequestError):
-            pullpoint = await self.events.async_start()
-
         ptz = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             self.device.get_definition("ptz")
             ptz = True
 
-        return Capabilities(snapshot, pullpoint, ptz)
+        imaging = False
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
+            self.device.create_imaging_service()
+            imaging = True
+
+        events = False
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS, XMLParseError):
+            events = await self.events.async_start()
+
+        return Capabilities(snapshot, events, ptz, imaging)
 
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
         result = await media_service.GetProfiles()
-        profiles = []
+        profiles: list[Profile] = []
 
         if not isinstance(result, list):
             return profiles
@@ -306,9 +334,15 @@ class ONVIFDevice:
                     ptz_service = self.device.create_ptz_service()
                     presets = await ptz_service.GetPresets(profile.token)
                     profile.ptz.presets = [preset.token for preset in presets if preset]
-                except (Fault, RequestError):
+                except GET_CAPABILITIES_EXCEPTIONS:
                     # It's OK if Presets aren't supported
                     profile.ptz.presets = []
+
+            # Configure Imaging options
+            if self.capabilities.imaging and onvif_profile.VideoSourceConfiguration:
+                profile.video_source_token = (
+                    onvif_profile.VideoSourceConfiguration.SourceToken
+                )
 
             profiles.append(profile)
 
@@ -351,7 +385,10 @@ class ONVIFDevice:
         speed_val = speed
         preset_val = preset
         LOGGER.debug(
-            "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed = %4.2f | Preset = %s",
+            (
+                "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed ="
+                " %4.2f | Preset = %s"
+            ),
             move_mode,
             pan_val,
             tilt_val,
@@ -364,7 +401,7 @@ class ONVIFDevice:
             req.ProfileToken = profile.token
             if move_mode == CONTINUOUS_MOVE:
                 # Guard against unsupported operation
-                if not profile.ptz.continuous:
+                if not profile.ptz or not profile.ptz.continuous:
                     LOGGER.warning(
                         "ContinuousMove not supported on device '%s'", self.name
                     )
@@ -387,7 +424,7 @@ class ONVIFDevice:
                 )
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
-                if not profile.ptz.relative:
+                if not profile.ptz or not profile.ptz.relative:
                     LOGGER.warning(
                         "RelativeMove not supported on device '%s'", self.name
                     )
@@ -404,7 +441,7 @@ class ONVIFDevice:
                 await ptz_service.RelativeMove(req)
             elif move_mode == ABSOLUTE_MOVE:
                 # Guard against unsupported operation
-                if not profile.ptz.absolute:
+                if not profile.ptz or not profile.ptz.absolute:
                     LOGGER.warning(
                         "AbsoluteMove not supported on device '%s'", self.name
                     )
@@ -421,9 +458,17 @@ class ONVIFDevice:
                 await ptz_service.AbsoluteMove(req)
             elif move_mode == GOTOPRESET_MOVE:
                 # Guard against unsupported operation
+                if not profile.ptz or not profile.ptz.presets:
+                    LOGGER.warning(
+                        "Absolute Presets not supported on device '%s'", self.name
+                    )
+                    return
                 if preset_val not in profile.ptz.presets:
                     LOGGER.warning(
-                        "PTZ preset '%s' does not exist on device '%s'. Available Presets: %s",
+                        (
+                            "PTZ preset '%s' does not exist on device '%s'. Available"
+                            " Presets: %s"
+                        ),
                         preset_val,
                         self.name,
                         ", ".join(profile.ptz.presets),
@@ -444,8 +489,71 @@ class ONVIFDevice:
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 
+    async def async_run_aux_command(
+        self,
+        profile: Profile,
+        cmd: str,
+    ) -> None:
+        """Execute a PTZ auxiliary command on the camera."""
+        if not self.capabilities.ptz:
+            LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
+            return
 
-def get_device(hass, host, port, username, password) -> ONVIFCamera:
+        ptz_service = self.device.create_ptz_service()
+
+        LOGGER.debug(
+            "Running Aux Command | Cmd = %s",
+            cmd,
+        )
+        try:
+            req = ptz_service.create_type("SendAuxiliaryCommand")
+            req.ProfileToken = profile.token
+            req.AuxiliaryData = cmd
+            await ptz_service.SendAuxiliaryCommand(req)
+        except ONVIFError as err:
+            if "Bad Request" in err.reason:
+                LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
+            else:
+                LOGGER.error("Error trying to send PTZ auxiliary command: %s", err)
+
+    async def async_set_imaging_settings(
+        self,
+        profile: Profile,
+        settings: dict,
+    ) -> None:
+        """Set an imaging setting on the ONVIF imaging service."""
+        # The Imaging Service is defined by ONVIF standard
+        # https://www.onvif.org/specs/srv/img/ONVIF-Imaging-Service-Spec-v210.pdf
+        if not self.capabilities.imaging:
+            LOGGER.warning(
+                "The imaging service is not supported on device '%s'", self.name
+            )
+            return
+
+        imaging_service = self.device.create_imaging_service()
+
+        LOGGER.debug("Setting Imaging Setting | Settings = %s", settings)
+        try:
+            req = imaging_service.create_type("SetImagingSettings")
+            req.VideoSourceToken = profile.video_source_token
+            req.ImagingSettings = settings
+            await imaging_service.SetImagingSettings(req)
+        except ONVIFError as err:
+            if "Bad Request" in err.reason:
+                LOGGER.warning(
+                    "Device '%s' doesn't support the Imaging Service", self.name
+                )
+            else:
+                LOGGER.error("Error trying to set Imaging settings: %s", err)
+
+
+def get_device(
+    hass: HomeAssistant,
+    host: str,
+    port: int,
+    username: str | None,
+    password: str | None,
+) -> ONVIFCamera:
     """Get ONVIFCamera instance."""
     return ONVIFCamera(
         host,

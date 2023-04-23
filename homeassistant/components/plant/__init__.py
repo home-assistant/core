@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONDUCTIVITY,
     CONF_SENSORS,
@@ -18,7 +17,7 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -29,35 +28,37 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+from .const import (
+    ATTR_DICT_OF_UNITS_OF_MEASUREMENT,
+    ATTR_MAX_BRIGHTNESS_HISTORY,
+    ATTR_PROBLEM,
+    ATTR_SENSORS,
+    CONF_CHECK_DAYS,
+    CONF_MAX_BRIGHTNESS,
+    CONF_MAX_CONDUCTIVITY,
+    CONF_MAX_MOISTURE,
+    CONF_MAX_TEMPERATURE,
+    CONF_MIN_BATTERY_LEVEL,
+    CONF_MIN_BRIGHTNESS,
+    CONF_MIN_CONDUCTIVITY,
+    CONF_MIN_MOISTURE,
+    CONF_MIN_TEMPERATURE,
+    DEFAULT_CHECK_DAYS,
+    DEFAULT_MAX_CONDUCTIVITY,
+    DEFAULT_MAX_MOISTURE,
+    DEFAULT_MIN_BATTERY_LEVEL,
+    DEFAULT_MIN_CONDUCTIVITY,
+    DEFAULT_MIN_MOISTURE,
+    DOMAIN,
+    PROBLEM_NONE,
+    READING_BATTERY,
+    READING_BRIGHTNESS,
+    READING_CONDUCTIVITY,
+    READING_MOISTURE,
+    READING_TEMPERATURE,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "plant"
-
-READING_BATTERY = "battery"
-READING_TEMPERATURE = ATTR_TEMPERATURE
-READING_MOISTURE = "moisture"
-READING_CONDUCTIVITY = "conductivity"
-READING_BRIGHTNESS = "brightness"
-
-ATTR_PROBLEM = "problem"
-ATTR_SENSORS = "sensors"
-PROBLEM_NONE = "none"
-ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
-
-# we're not returning only one value, we're returning a dict here. So we need
-# to have a separate literal for it to avoid confusion.
-ATTR_DICT_OF_UNITS_OF_MEASUREMENT = "unit_of_measurement_dict"
-
-CONF_MIN_BATTERY_LEVEL = f"min_{READING_BATTERY}"
-CONF_MIN_TEMPERATURE = f"min_{READING_TEMPERATURE}"
-CONF_MAX_TEMPERATURE = f"max_{READING_TEMPERATURE}"
-CONF_MIN_MOISTURE = f"min_{READING_MOISTURE}"
-CONF_MAX_MOISTURE = f"max_{READING_MOISTURE}"
-CONF_MIN_CONDUCTIVITY = f"min_{READING_CONDUCTIVITY}"
-CONF_MAX_CONDUCTIVITY = f"max_{READING_CONDUCTIVITY}"
-CONF_MIN_BRIGHTNESS = f"min_{READING_BRIGHTNESS}"
-CONF_MAX_BRIGHTNESS = f"max_{READING_BRIGHTNESS}"
-CONF_CHECK_DAYS = "check_days"
 
 CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
 CONF_SENSOR_MOISTURE = READING_MOISTURE
@@ -65,12 +66,6 @@ CONF_SENSOR_CONDUCTIVITY = READING_CONDUCTIVITY
 CONF_SENSOR_TEMPERATURE = READING_TEMPERATURE
 CONF_SENSOR_BRIGHTNESS = READING_BRIGHTNESS
 
-DEFAULT_MIN_BATTERY_LEVEL = 20
-DEFAULT_MIN_MOISTURE = 20
-DEFAULT_MAX_MOISTURE = 60
-DEFAULT_MIN_CONDUCTIVITY = 500
-DEFAULT_MAX_CONDUCTIVITY = 3000
-DEFAULT_CHECK_DAYS = 3
 
 SCHEMA_SENSORS = vol.Schema(
     {
@@ -104,14 +99,12 @@ PLANT_SCHEMA = vol.Schema(
     }
 )
 
-DOMAIN = "plant"
-
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[Plant](_LOGGER, DOMAIN, hass)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
@@ -130,13 +123,15 @@ class Plant(Entity):
     configurable min and max values.
     """
 
+    _attr_should_poll = False
+
     READINGS = {
         READING_BATTERY: {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             "min": CONF_MIN_BATTERY_LEVEL,
         },
         READING_TEMPERATURE: {
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             "min": CONF_MIN_TEMPERATURE,
             "max": CONF_MAX_TEMPERATURE,
         },
@@ -322,11 +317,6 @@ class Plant(Entity):
                 )
 
         _LOGGER.debug("Initializing from database completed")
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

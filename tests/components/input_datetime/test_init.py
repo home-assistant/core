@@ -1,5 +1,4 @@
 """Tests for the Input slider component."""
-# pylint: disable=protected-access
 import datetime
 from unittest.mock import patch
 
@@ -26,13 +25,14 @@ from homeassistant.components.input_datetime import (
     SERVICE_RELOAD,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_NAME
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import mock_restore_cache
+from tests.common import MockUser, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 INITIAL_DATE = "2020-01-10"
 INITIAL_TIME = "23:45:56"
@@ -115,13 +115,13 @@ async def async_set_timestamp(hass, entity_id, timestamp):
         {"test_no_value": {"has_time": False, "has_date": False}},
     ],
 )
-def test_invalid_configs(config):
+def test_invalid_configs(config) -> None:
     """Test config."""
     with pytest.raises(vol.Invalid):
         CONFIG_SCHEMA({DOMAIN: config})
 
 
-async def test_set_datetime(hass):
+async def test_set_datetime(hass: HomeAssistant) -> None:
     """Test set_datetime method using date & time."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_datetime": {"has_time": True, "has_date": True}}}
@@ -149,7 +149,7 @@ async def test_set_datetime(hass):
     assert state.attributes["timestamp"] == dt_obj.timestamp()
 
 
-async def test_set_datetime_2(hass):
+async def test_set_datetime_2(hass: HomeAssistant) -> None:
     """Test set_datetime method using datetime."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_datetime": {"has_time": True, "has_date": True}}}
@@ -177,7 +177,7 @@ async def test_set_datetime_2(hass):
     assert state.attributes["timestamp"] == dt_obj.timestamp()
 
 
-async def test_set_datetime_3(hass):
+async def test_set_datetime_3(hass: HomeAssistant) -> None:
     """Test set_datetime method using timestamp."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_datetime": {"has_time": True, "has_date": True}}}
@@ -205,7 +205,7 @@ async def test_set_datetime_3(hass):
     assert state.attributes["timestamp"] == dt_obj.timestamp()
 
 
-async def test_set_datetime_time(hass):
+async def test_set_datetime_time(hass: HomeAssistant) -> None:
     """Test set_datetime method with only time."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_time": {"has_time": True, "has_date": False}}}
@@ -225,7 +225,7 @@ async def test_set_datetime_time(hass):
     assert state.attributes["timestamp"] == (19 * 3600) + (46 * 60) + 30
 
 
-async def test_set_invalid(hass):
+async def test_set_invalid(hass: HomeAssistant) -> None:
     """Test set_datetime method with only time."""
     initial = "2017-01-01"
     await async_setup_component(
@@ -255,7 +255,7 @@ async def test_set_invalid(hass):
     assert state.state == initial
 
 
-async def test_set_invalid_2(hass):
+async def test_set_invalid_2(hass: HomeAssistant) -> None:
     """Test set_datetime method with date and datetime."""
     initial = "2017-01-01"
     await async_setup_component(
@@ -285,7 +285,7 @@ async def test_set_invalid_2(hass):
     assert state.state == initial
 
 
-async def test_set_datetime_date(hass):
+async def test_set_datetime_date(hass: HomeAssistant) -> None:
     """Test set_datetime method with only date."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_date": {"has_time": False, "has_date": True}}}
@@ -307,7 +307,7 @@ async def test_set_datetime_date(hass):
     assert state.attributes["timestamp"] == date_dt_obj.timestamp()
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -365,7 +365,7 @@ async def test_restore_state(hass):
     assert state_was_date.state == default.strftime(FMT_TIME)
 
 
-async def test_default_value(hass):
+async def test_default_value(hass: HomeAssistant) -> None:
     """Test default value if none has been set via initial or restore state."""
     await async_setup_component(
         hass,
@@ -393,7 +393,9 @@ async def test_default_value(hass):
     assert state_datetime.attributes.get("timestamp") is not None
 
 
-async def test_input_datetime_context(hass, hass_admin_user):
+async def test_input_datetime_context(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test that input_datetime context works."""
     assert await async_setup_component(
         hass, "input_datetime", {"input_datetime": {"only_date": {"has_date": True}}}
@@ -416,7 +418,9 @@ async def test_input_datetime_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_reload(hass, hass_admin_user, hass_read_only_user):
+async def test_reload(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
     ent_reg = er.async_get(hass)
@@ -490,7 +494,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt3") is None
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.datetime_from_storage")
@@ -498,7 +502,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(
         config={
@@ -522,7 +526,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes[ATTR_EDITABLE]
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(config={DOMAIN: {"from_yaml": {CONF_HAS_DATE: True}}})
 
@@ -542,7 +548,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "datetime from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -567,7 +575,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_update(hass, hass_ws_client, storage_setup):
+async def test_update(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating min/max updates the state."""
 
     assert await storage_setup()
@@ -583,24 +593,32 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = {
+        CONF_NAME: "even newer name",
+        CONF_HAS_DATE: False,
+        CONF_HAS_TIME: True,
+        CONF_INITIAL: INITIAL_DATETIME,
+    }
     await client.send_json(
         {
             "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            ATTR_NAME: "even newer name",
-            CONF_HAS_DATE: False,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert state.state == INITIAL_TIME
     assert state.attributes[ATTR_FRIENDLY_NAME] == "even newer name"
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
@@ -633,7 +651,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_EDITABLE]
 
 
-async def test_setup_no_config(hass, hass_admin_user):
+async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
     assert await async_setup_component(hass, DOMAIN, {})
@@ -651,7 +669,7 @@ async def test_setup_no_config(hass, hass_admin_user):
     assert count_start == len(hass.states.async_entity_ids())
 
 
-async def test_timestamp(hass):
+async def test_timestamp(hass: HomeAssistant) -> None:
     """Test timestamp."""
     hass.config.set_time_zone("America/Los_Angeles")
 
@@ -747,7 +765,7 @@ async def test_timestamp(hass):
 
 
 @pytest.mark.parametrize(
-    "config, error",
+    ("config", "error"),
     [
         (
             {"has_time": True, "has_date": True, "initial": "abc"},
@@ -763,7 +781,9 @@ async def test_timestamp(hass):
         ),
     ],
 )
-async def test_invalid_initial(hass, caplog, config, error):
+async def test_invalid_initial(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config, error
+) -> None:
     """Test configuration is rejected if the initial value is invalid."""
     assert not await async_setup_component(
         hass,

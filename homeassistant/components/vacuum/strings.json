@@ -14,16 +14,19 @@
       "dock": "Let {entity_name} return to the dock"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "cleaning": "Cleaning",
-      "docked": "Docked",
-      "error": "Error",
-      "idle": "[%key:common::state::idle%]",
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]",
-      "paused": "[%key:common::state::paused%]",
-      "returning": "Returning to dock"
+      "name": "[%key:component::vacuum::title%]",
+      "state": {
+        "cleaning": "Cleaning",
+        "docked": "Docked",
+        "error": "Error",
+        "idle": "[%key:common::state::idle%]",
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]",
+        "paused": "[%key:common::state::paused%]",
+        "returning": "Returning to dock"
+      }
     }
   }
 }

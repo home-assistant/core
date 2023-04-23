@@ -41,6 +41,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.NOTIFY,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 
@@ -127,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Set up all platforms except notify
-    hass.config_entries.async_setup_platforms(
+    await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
@@ -163,6 +164,7 @@ class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
 
     coordinator: BMWDataUpdateCoordinator
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -182,7 +184,7 @@ class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
             identifiers={(DOMAIN, self.vehicle.vin)},
             manufacturer=vehicle.brand.name,
             model=vehicle.name,
-            name=f"{vehicle.brand.name} {vehicle.name}",
+            name=vehicle.name,
         )
 
     async def async_added_to_hass(self) -> None:

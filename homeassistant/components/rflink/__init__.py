@@ -6,7 +6,7 @@ from collections import defaultdict
 import logging
 
 import async_timeout
-from rflink.protocol import create_rflink_connection
+from rflink.protocol import ProtocolBase, create_rflink_connection
 from serial import SerialException
 import voluptuous as vol
 
@@ -225,9 +225,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         keepalive_idle_timer = config[DOMAIN][CONF_KEEPALIVE_IDLE]
         if keepalive_idle_timer < 0:
             _LOGGER.error(
-                "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
-                "it will be disabled. "
-                "Recommended values: 60-3600 (seconds)",
+                (
+                    "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
+                    "it will be disabled. "
+                    "Recommended values: 60-3600 (seconds)"
+                ),
                 keepalive_idle_timer,
             )
             keepalive_idle_timer = None
@@ -235,9 +237,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             keepalive_idle_timer = None
         elif keepalive_idle_timer <= 30:
             _LOGGER.warning(
-                "A very short TCP Keepalive IDLE timer was provided (%d secs) "
-                "and may produce unexpected disconnections from RFlink device."
-                " Recommended values: 60-3600 (seconds)",
+                (
+                    "A very short TCP Keepalive IDLE timer was provided (%d secs) "
+                    "and may produce unexpected disconnections from RFlink device."
+                    " Recommended values: 60-3600 (seconds)"
+                ),
                 keepalive_idle_timer,
             )
 
@@ -337,6 +341,7 @@ class RflinkDevice(Entity):
         # Rflink specific attributes for every component type
         self._initial_event = initial_event
         self._device_id = device_id
+        self._attr_unique_id = device_id
         if name:
             self._name = name
         else:
@@ -473,12 +478,16 @@ class RflinkCommand(RflinkDevice):
 
     # Keep repetition tasks to cancel if state is changed before repetitions
     # are sent
-    _repetition_task = None
+    _repetition_task: asyncio.Task[None] | None = None
 
-    _protocol = None
+    _protocol: ProtocolBase | None = None
+
+    _wait_ack: bool | None = None
 
     @classmethod
-    def set_rflink_protocol(cls, protocol, wait_ack=None):
+    def set_rflink_protocol(
+        cls, protocol: ProtocolBase | None, wait_ack: bool | None = None
+    ) -> None:
         """Set the Rflink asyncio protocol as a class variable."""
         cls._protocol = protocol
         if wait_ack is not None:

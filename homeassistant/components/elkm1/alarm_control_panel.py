@@ -69,7 +69,7 @@ async def async_setup_entry(
     elk = elk_data["elk"]
     entities: list[ElkEntity] = []
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
 

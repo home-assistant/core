@@ -1,5 +1,4 @@
 """Test Mazda diagnostics."""
-
 import json
 
 import pytest
@@ -15,9 +14,12 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator
 
 
-async def test_config_entry_diagnostics(hass: HomeAssistant, hass_client):
+async def test_config_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test config entry diagnostics."""
     await init_integration(hass)
     assert hass.data[DOMAIN]
@@ -34,7 +36,9 @@ async def test_config_entry_diagnostics(hass: HomeAssistant, hass_client):
     )
 
 
-async def test_device_diagnostics(hass: HomeAssistant, hass_client):
+async def test_device_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test device diagnostics."""
     await init_integration(hass)
     assert hass.data[DOMAIN]
@@ -55,7 +59,9 @@ async def test_device_diagnostics(hass: HomeAssistant, hass_client):
     )
 
 
-async def test_device_diagnostics_vehicle_not_found(hass: HomeAssistant, hass_client):
+async def test_device_diagnostics_vehicle_not_found(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test device diagnostics when the vehicle cannot be found."""
     await init_integration(hass)
     assert hass.data[DOMAIN]

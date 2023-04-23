@@ -1,7 +1,6 @@
 """WiZ Platform integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -51,8 +50,10 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    asyncio.create_task(_async_discovery())
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    hass.async_create_background_task(_async_discovery(), "wiz-discovery")
+    async_track_time_interval(
+        hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
+    )
     return True
 
 
@@ -133,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
         coordinator=coordinator, bulb=bulb, scenes=scenes
     )
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True

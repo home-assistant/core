@@ -3,7 +3,6 @@ import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from simplipy.api import AuthStates
 from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.simplisafe.const import DOMAIN
@@ -16,23 +15,14 @@ from tests.common import MockConfigEntry, load_fixture
 
 CODE = "12345"
 PASSWORD = "password"
-SYSTEM_ID = "system_123"
-
-
-@pytest.fixture(name="api_auth_state")
-def api_auth_state_fixture():
-    """Define a SimpliSafe API auth state."""
-    return AuthStates.PENDING_2FA_SMS
+SYSTEM_ID = 12345
 
 
 @pytest.fixture(name="api")
-def api_fixture(api_auth_state, data_subscription, system_v3, websocket):
+def api_fixture(data_subscription, system_v3, websocket):
     """Define a simplisafe-python API object."""
     return Mock(
         async_get_systems=AsyncMock(return_value={SYSTEM_ID: system_v3}),
-        async_verify_2fa_email=AsyncMock(),
-        async_verify_2fa_sms=AsyncMock(),
-        auth_state=api_auth_state,
         refresh_token=REFRESH_TOKEN,
         subscription_data=data_subscription,
         user_id=USER_ID,
@@ -43,7 +33,9 @@ def api_fixture(api_auth_state, data_subscription, system_v3, websocket):
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config, unique_id):
     """Define a config entry."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=unique_id, data=config, options={CONF_CODE: "1234"}
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -66,28 +58,29 @@ def credentials_config_fixture():
     }
 
 
-@pytest.fixture(name="data_latest_event", scope="session")
+@pytest.fixture(name="data_latest_event", scope="package")
 def data_latest_event_fixture():
     """Define latest event data."""
     return json.loads(load_fixture("latest_event_data.json", "simplisafe"))
 
 
-@pytest.fixture(name="data_sensor", scope="session")
+@pytest.fixture(name="data_sensor", scope="package")
 def data_sensor_fixture():
     """Define sensor data."""
     return json.loads(load_fixture("sensor_data.json", "simplisafe"))
 
 
-@pytest.fixture(name="data_settings", scope="session")
+@pytest.fixture(name="data_settings", scope="package")
 def data_settings_fixture():
     """Define settings data."""
     return json.loads(load_fixture("settings_data.json", "simplisafe"))
 
 
-@pytest.fixture(name="data_subscription", scope="session")
+@pytest.fixture(name="data_subscription", scope="package")
 def data_subscription_fixture():
     """Define subscription data."""
-    return json.loads(load_fixture("subscription_data.json", "simplisafe"))
+    data = json.loads(load_fixture("subscription_data.json", "simplisafe"))
+    return {SYSTEM_ID: data}
 
 
 @pytest.fixture(name="reauth_config")
@@ -102,12 +95,10 @@ def reauth_config_fixture():
 async def setup_simplisafe_fixture(hass, api, config):
     """Define a fixture to set up SimpliSafe."""
     with patch(
-        "homeassistant.components.simplisafe.config_flow.DEFAULT_EMAIL_2FA_SLEEP", 0
-    ), patch(
-        "homeassistant.components.simplisafe.config_flow.API.async_from_credentials",
+        "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
         return_value=api,
     ), patch(
-        "homeassistant.components.simplisafe.API.async_from_credentials",
+        "homeassistant.components.simplisafe.API.async_from_auth",
         return_value=api,
     ), patch(
         "homeassistant.components.simplisafe.API.async_from_refresh_token",
