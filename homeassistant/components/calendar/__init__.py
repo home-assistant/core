@@ -42,6 +42,7 @@ from .const import (
     EVENT_IN,
     EVENT_IN_DAYS,
     EVENT_IN_WEEKS,
+    EVENT_LOCATION,
     EVENT_RECURRENCE_ID,
     EVENT_RECURRENCE_RANGE,
     EVENT_RRULE,
@@ -66,6 +67,30 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 # Don't support rrules more often than daily
 VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
 
+# Ensure events created in Home Assistant have a positive duration
+MIN_NEW_EVENT_DURATION = datetime.timedelta(seconds=1)
+
+# Events must have a non-negative duration e.g. Google Calendar can create zero
+# duration events in the UI.
+MIN_EVENT_DURATION = datetime.timedelta(seconds=0)
+
+
+def _has_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Assert that all datetime values have a timezone."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Validate that all datetime values have a timezone."""
+        for k in keys:
+            if (
+                (value := obj.get(k))
+                and isinstance(value, datetime.datetime)
+                and value.tzinfo is None
+            ):
+                raise vol.Invalid("Expected all values to have a timezone")
+        return obj
+
+    return validate
+
 
 def _has_consistent_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Verify that all datetime values have a consistent timezone."""
@@ -89,7 +114,7 @@ def _as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]
     """Convert all datetime values to the local timezone."""
 
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys that are datetime values have the same timezone."""
+        """Convert all keys that are datetime values to local timezone."""
         for k in keys:
             if (value := obj.get(k)) and isinstance(value, datetime.datetime):
                 obj[k] = dt.as_local(value)
@@ -98,21 +123,58 @@ def _as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]
     return validate
 
 
-def _is_sorted(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that the specified values are sequential."""
+def _has_min_duration(
+    start_key: str, end_key: str, min_duration: datetime.timedelta
+) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that the time span between start and end has a minimum duration."""
 
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys in the dict are in order."""
-        values = []
-        for k in keys:
-            if not (value := obj.get(k)):
-                return obj
-            values.append(value)
-        if all(values) and values != sorted(values):
-            raise vol.Invalid(f"Values were not in order: {values}")
+        if (start := obj.get(start_key)) and (end := obj.get(end_key)):
+            duration = end - start
+            if duration < min_duration:
+                raise vol.Invalid(
+                    f"Expected minimum event duration of {min_duration} ({start}, {end})"
+                )
         return obj
 
     return validate
+
+
+def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Verify that all values are of the same type."""
+
+    def validate(obj: dict[str, Any]) -> dict[str, Any]:
+        """Test that all keys in the dict have values of the same type."""
+        uniq_values = groupby(type(obj[k]) for k in keys)
+        if len(list(uniq_values)) > 1:
+            raise vol.Invalid(f"Expected all values to be the same type: {keys}")
+        return obj
+
+    return validate
+
+
+def _validate_rrule(value: Any) -> str:
+    """Validate a recurrence rule string."""
+    if value is None:
+        raise vol.Invalid("rrule value is None")
+
+    if not isinstance(value, str):
+        raise vol.Invalid("rrule value expected a string")
+
+    try:
+        rrulestr(value)
+    except ValueError as err:
+        raise vol.Invalid(f"Invalid rrule: {str(err)}") from err
+
+    # Example format: FREQ=DAILY;UNTIL=...
+    rule_parts = dict(s.split("=", 1) for s in value.split(";"))
+    if not (freq := rule_parts.get("FREQ")):
+        raise vol.Invalid("rrule did not contain FREQ")
+
+    if freq not in VALID_FREQS:
+        raise vol.Invalid(f"Invalid frequency for rule: {value}")
+
+    return str(value)
 
 
 CREATE_EVENT_SERVICE = "create_event"
@@ -123,6 +185,7 @@ CREATE_EVENT_SCHEMA = vol.All(
         {
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+            vol.Optional(EVENT_LOCATION): cv.string,
             vol.Inclusive(
                 EVENT_START_DATE, "dates", "Start and end dates must both be specified"
             ): cv.date,
@@ -149,8 +212,42 @@ CREATE_EVENT_SCHEMA = vol.All(
     ),
     _has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
     _as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
-    _is_sorted(EVENT_START_DATE, EVENT_END_DATE),
-    _is_sorted(EVENT_START_DATETIME, EVENT_END_DATETIME),
+    _has_min_duration(EVENT_START_DATE, EVENT_END_DATE, MIN_NEW_EVENT_DURATION),
+    _has_min_duration(EVENT_START_DATETIME, EVENT_END_DATETIME, MIN_NEW_EVENT_DURATION),
+)
+
+WEBSOCKET_EVENT_SCHEMA = vol.Schema(
+    vol.All(
+        {
+            vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
+            vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
+            vol.Required(EVENT_SUMMARY): cv.string,
+            vol.Optional(EVENT_DESCRIPTION): cv.string,
+            vol.Optional(EVENT_LOCATION): cv.string,
+            vol.Optional(EVENT_RRULE): _validate_rrule,
+        },
+        _has_same_type(EVENT_START, EVENT_END),
+        _has_consistent_timezone(EVENT_START, EVENT_END),
+        _as_local_timezone(EVENT_START, EVENT_END),
+        _has_min_duration(EVENT_START, EVENT_END, MIN_NEW_EVENT_DURATION),
+    )
+)
+
+# Validation for the CalendarEvent dataclass
+CALENDAR_EVENT_SCHEMA = vol.Schema(
+    vol.All(
+        {
+            vol.Required("start"): vol.Any(cv.date, cv.datetime),
+            vol.Required("end"): vol.Any(cv.date, cv.datetime),
+            vol.Required(EVENT_SUMMARY): cv.string,
+            vol.Optional(EVENT_RRULE): _validate_rrule,
+        },
+        _has_same_type("start", "end"),
+        _has_timezone("start", "end"),
+        _as_local_timezone("start", "end"),
+        _has_min_duration("start", "end", MIN_EVENT_DURATION),
+    ),
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -243,6 +340,29 @@ class CalendarEvent:
             "all_day": self.all_day,
         }
 
+    def __post_init__(self) -> None:
+        """Perform validation on the CalendarEvent."""
+
+        def skip_none(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
+            return {k: v for k, v in obj if v is not None}
+
+        try:
+            CALENDAR_EVENT_SCHEMA(dataclasses.asdict(self, dict_factory=skip_none))
+        except vol.Invalid as err:
+            raise HomeAssistantError(
+                f"Failed to validate CalendarEvent: {err}"
+            ) from err
+
+        # It is common to set a start an end date to be the same thing for
+        # an all day event, but that is not a valid duration. Fix to have a
+        # duration of one day.
+        if (
+            not isinstance(self.start, datetime.datetime)
+            and not isinstance(self.end, datetime.datetime)
+            and self.start == self.end
+        ):
+            self.end = self.start + datetime.timedelta(days=1)
+
 
 def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
@@ -314,30 +434,6 @@ def is_offset_reached(
     if offset_time == datetime.timedelta():
         return False
     return start + offset_time <= dt.now(start.tzinfo)
-
-
-def _validate_rrule(value: Any) -> str:
-    """Validate a recurrence rule string."""
-    if value is None:
-        raise vol.Invalid("rrule value is None")
-
-    if not isinstance(value, str):
-        raise vol.Invalid("rrule value expected a string")
-
-    try:
-        rrulestr(value)
-    except ValueError as err:
-        raise vol.Invalid(f"Invalid rrule: {str(err)}") from err
-
-    # Example format: FREQ=DAILY;UNTIL=...
-    rule_parts = dict(s.split("=", 1) for s in value.split(";"))
-    if not (freq := rule_parts.get("FREQ")):
-        raise vol.Invalid("rrule did not contain FREQ")
-
-    if freq not in VALID_FREQS:
-        raise vol.Invalid(f"Invalid frequency for rule: {value}")
-
-    return str(value)
 
 
 class CalendarEntity(Entity):
@@ -444,9 +540,10 @@ class CalendarEventView(http.HomeAssistantView):
 
         try:
             calendar_event_list = await entity.async_get_events(
-                request.app["hass"], start_date, end_date
+                request.app["hass"], dt.as_local(start_date), dt.as_local(end_date)
             )
         except HomeAssistantError as err:
+            _LOGGER.debug("Error reading events: %s", err)
             return self.json_message(
                 f"Error reading events: {err}", HTTPStatus.INTERNAL_SERVER_ERROR
             )
@@ -481,38 +578,11 @@ class CalendarListView(http.HomeAssistantView):
         return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))
 
 
-def _has_same_type(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that all values are of the same type."""
-
-    def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys in the dict have values of the same type."""
-        uniq_values = groupby(type(obj[k]) for k in keys)
-        if len(list(uniq_values)) > 1:
-            raise vol.Invalid(f"Expected all values to be the same type: {keys}")
-        return obj
-
-    return validate
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "calendar/event/create",
         vol.Required("entity_id"): cv.entity_id,
-        CONF_EVENT: vol.Schema(
-            vol.All(
-                {
-                    vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
-                    vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
-                    vol.Required(EVENT_SUMMARY): cv.string,
-                    vol.Optional(EVENT_DESCRIPTION): cv.string,
-                    vol.Optional(EVENT_RRULE): _validate_rrule,
-                },
-                _has_same_type(EVENT_START, EVENT_END),
-                _has_consistent_timezone(EVENT_START, EVENT_END),
-                _as_local_timezone(EVENT_START, EVENT_END),
-                _is_sorted(EVENT_START, EVENT_END),
-            )
-        ),
+        CONF_EVENT: WEBSOCKET_EVENT_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -595,21 +665,7 @@ async def handle_calendar_event_delete(
         vol.Required(EVENT_UID): cv.string,
         vol.Optional(EVENT_RECURRENCE_ID): cv.string,
         vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
-        vol.Required(CONF_EVENT): vol.Schema(
-            vol.All(
-                {
-                    vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
-                    vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
-                    vol.Required(EVENT_SUMMARY): cv.string,
-                    vol.Optional(EVENT_DESCRIPTION): cv.string,
-                    vol.Optional(EVENT_RRULE): _validate_rrule,
-                },
-                _has_same_type(EVENT_START, EVENT_END),
-                _has_consistent_timezone(EVENT_START, EVENT_END),
-                _as_local_timezone(EVENT_START, EVENT_END),
-                _is_sorted(EVENT_START, EVENT_END),
-            )
-        ),
+        vol.Required(CONF_EVENT): WEBSOCKET_EVENT_SCHEMA,
     }
 )
 @websocket_api.async_response

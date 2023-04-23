@@ -217,7 +217,9 @@ async def test_statistics_during_period(
     }
 
 
-@freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(
+    datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
+)
 @pytest.mark.parametrize("offset", (0, 1, 2))
 async def test_statistic_during_period(
     recorder_mock: Recorder,
@@ -632,7 +634,9 @@ async def test_statistic_during_period(
     }
 
 
-@freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(
+    datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
+)
 async def test_statistic_during_period_hole(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -795,7 +799,9 @@ async def test_statistic_during_period_hole(
     }
 
 
-@freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(
+    datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
+)
 @pytest.mark.parametrize(
     ("calendar_period", "start_time", "end_time"),
     (
@@ -2197,7 +2203,9 @@ async def test_recorder_info_migration_queue_exhausted(
         "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
     ), patch.object(
-        recorder.core, "MAX_QUEUE_BACKLOG", 1
+        recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1
+    ), patch.object(
+        recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
         wraps=stalled_migration,
@@ -2588,7 +2596,7 @@ async def test_import_statistics(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -2820,7 +2828,7 @@ async def test_adjust_sum_statistics_energy(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -3016,7 +3024,7 @@ async def test_adjust_sum_statistics_gas(
             "unit_class": "volume",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -3230,7 +3238,7 @@ async def test_adjust_sum_statistics_errors(
             "unit_class": unit_class,
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,

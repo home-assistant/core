@@ -12,6 +12,7 @@ from httpx import HTTPError, HTTPStatusError, TimeoutException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN
@@ -65,8 +66,9 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 401,
                 403,
             ):
-                # Clear refresh token only on issues with authorization
+                # Clear refresh token only and trigger reauth
                 self._update_config_entry_refresh_token(None)
+                raise ConfigEntryAuthFailed(str(err)) from err
             raise UpdateFailed(f"Error communicating with BMW API: {err}") from err
 
         if self.account.refresh_token != old_refresh_token:

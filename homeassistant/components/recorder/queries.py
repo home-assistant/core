@@ -12,12 +12,25 @@ from .const import SQLITE_MAX_BIND_VARS
 from .db_schema import (
     EventData,
     Events,
+    EventTypes,
     RecorderRuns,
     StateAttributes,
     States,
+    StatesMeta,
     StatisticsRuns,
     StatisticsShortTerm,
 )
+
+
+def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
+    """Generate a select for event type ids.
+
+    This query is intentionally not a lambda statement as it is used inside
+    other lambda statements.
+    """
+    return select(EventTypes.event_type_id).where(
+        EventTypes.event_type.in_(event_types)
+    )
 
 
 def get_shared_attributes(hashes: list[int]) -> StatementLambdaElement:
@@ -38,23 +51,26 @@ def get_shared_event_datas(hashes: list[int]) -> StatementLambdaElement:
     )
 
 
-def find_shared_attributes_id(
-    data_hash: int, shared_attrs: str
-) -> StatementLambdaElement:
-    """Find an attributes_id by hash and shared_attrs."""
+def find_event_type_ids(event_types: Iterable[str]) -> StatementLambdaElement:
+    """Find an event_type id by event_type."""
     return lambda_stmt(
-        lambda: select(StateAttributes.attributes_id)
-        .filter(StateAttributes.hash == data_hash)
-        .filter(StateAttributes.shared_attrs == shared_attrs)
+        lambda: select(EventTypes.event_type_id, EventTypes.event_type).filter(
+            EventTypes.event_type.in_(event_types)
+        )
     )
 
 
-def find_shared_data_id(attr_hash: int, shared_data: str) -> StatementLambdaElement:
-    """Find a data_id by hash and shared_data."""
+def find_all_states_metadata_ids() -> StatementLambdaElement:
+    """Find all metadata_ids and entity_ids."""
+    return lambda_stmt(lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id))
+
+
+def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElement:
+    """Find metadata_ids by entity_ids."""
     return lambda_stmt(
-        lambda: select(EventData.data_id)
-        .filter(EventData.hash == attr_hash)
-        .filter(EventData.shared_data == shared_data)
+        lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id).filter(
+            StatesMeta.entity_id.in_(entity_ids)
+        )
     )
 
 
@@ -667,3 +683,169 @@ def find_legacy_row() -> StatementLambdaElement:
     # https://github.com/sqlalchemy/sqlalchemy/issues/9189
     # pylint: disable-next=not-callable
     return lambda_stmt(lambda: select(func.max(States.event_id)))
+
+
+def find_events_context_ids_to_migrate() -> StatementLambdaElement:
+    """Find events context_ids to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            Events.event_id,
+            Events.time_fired_ts,
+            Events.context_id,
+            Events.context_user_id,
+            Events.context_parent_id,
+        )
+        .filter(Events.context_id_bin.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def find_event_type_to_migrate() -> StatementLambdaElement:
+    """Find events event_type to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            Events.event_id,
+            Events.event_type,
+        )
+        .filter(Events.event_type_id.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def find_entity_ids_to_migrate() -> StatementLambdaElement:
+    """Find entity_id to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            States.state_id,
+            States.entity_id,
+        )
+        .filter(States.metadata_id.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def batch_cleanup_entity_ids() -> StatementLambdaElement:
+    """Find entity_id to cleanup."""
+    # Self join because This version of MariaDB doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'
+    return lambda_stmt(
+        lambda: update(States)
+        .where(
+            States.state_id.in_(
+                select(States.state_id)
+                .join(
+                    states_with_entity_ids := select(
+                        States.state_id.label("state_id_with_entity_id")
+                    )
+                    .filter(States.entity_id.is_not(None))
+                    .limit(5000)
+                    .subquery(),
+                    States.state_id == states_with_entity_ids.c.state_id_with_entity_id,
+                )
+                .alias("states_with_entity_ids")
+                .select()
+            )
+        )
+        .values(entity_id=None)
+    )
+
+
+def has_used_states_event_ids() -> StatementLambdaElement:
+    """Check if there are used event_ids in the states table."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.event_id.isnot(None)).limit(1)
+    )
+
+
+def has_events_context_ids_to_migrate() -> StatementLambdaElement:
+    """Check if there are events context ids to migrate."""
+    return lambda_stmt(
+        lambda: select(Events.event_id).filter(Events.context_id_bin.is_(None)).limit(1)
+    )
+
+
+def has_states_context_ids_to_migrate() -> StatementLambdaElement:
+    """Check if there are states context ids to migrate."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.context_id_bin.is_(None)).limit(1)
+    )
+
+
+def has_event_type_to_migrate() -> StatementLambdaElement:
+    """Check if there are event_types to migrate."""
+    return lambda_stmt(
+        lambda: select(Events.event_id).filter(Events.event_type_id.is_(None)).limit(1)
+    )
+
+
+def has_entity_ids_to_migrate() -> StatementLambdaElement:
+    """Check if there are entity_id to migrate."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.metadata_id.is_(None)).limit(1)
+    )
+
+
+def find_states_context_ids_to_migrate() -> StatementLambdaElement:
+    """Find events context_ids to migrate."""
+    return lambda_stmt(
+        lambda: select(
+            States.state_id,
+            States.last_updated_ts,
+            States.context_id,
+            States.context_user_id,
+            States.context_parent_id,
+        )
+        .filter(States.context_id_bin.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
+def find_event_types_to_purge() -> StatementLambdaElement:
+    """Find event_type_ids to purge."""
+    return lambda_stmt(
+        lambda: select(EventTypes.event_type_id, EventTypes.event_type).where(
+            EventTypes.event_type_id.not_in(
+                select(EventTypes.event_type_id).join(
+                    used_event_type_ids := select(
+                        distinct(Events.event_type_id).label("used_event_type_id")
+                    ).subquery(),
+                    EventTypes.event_type_id
+                    == used_event_type_ids.c.used_event_type_id,
+                )
+            )
+        )
+    )
+
+
+def find_entity_ids_to_purge() -> StatementLambdaElement:
+    """Find entity_ids to purge."""
+    return lambda_stmt(
+        lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id).where(
+            StatesMeta.metadata_id.not_in(
+                select(StatesMeta.metadata_id).join(
+                    used_states_metadata_id := select(
+                        distinct(States.metadata_id).label("used_states_metadata_id")
+                    ).subquery(),
+                    StatesMeta.metadata_id
+                    == used_states_metadata_id.c.used_states_metadata_id,
+                )
+            )
+        )
+    )
+
+
+def delete_event_types_rows(event_type_ids: Iterable[int]) -> StatementLambdaElement:
+    """Delete EventTypes rows."""
+    return lambda_stmt(
+        lambda: delete(EventTypes)
+        .where(EventTypes.event_type_id.in_(event_type_ids))
+        .execution_options(synchronize_session=False)
+    )
+
+
+def delete_states_meta_rows(metadata_ids: Iterable[int]) -> StatementLambdaElement:
+    """Delete StatesMeta rows."""
+    return lambda_stmt(
+        lambda: delete(StatesMeta)
+        .where(StatesMeta.metadata_id.in_(metadata_ids))
+        .execution_options(synchronize_session=False)
+    )

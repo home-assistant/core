@@ -69,3 +69,4 @@ Receive some telegrams and assert state.
 - For `payload` in `assert_*` and `receive_*` use `int` for DPT 1, 2 and 3 payload values (DPTBinary) and `tuple` for other DPTs (DPTArray).
 - `await self.hass.async_block_till_done()` is called before `KNXTestKit.assert_*` and after `KNXTestKit.receive_*` so you don't have to explicitly call it.
 - Make sure to assert every outgoing telegram that was created in a test. `assert_no_telegram` is automatically called on teardown.
+- Make sure to `knx.receive_response()` for every Read-request sent form StateUpdater, or to pass its timeout, to not have lingering tasks when finishing the tests.
