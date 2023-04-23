@@ -9,6 +9,7 @@ import httpx
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
 from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.util.ssl import SSLCipherList
 
 DEFAULT_TIMEOUT = 10
 
@@ -29,6 +30,7 @@ class RestData:
         params: dict[str, str] | None,
         data: str | None,
         verify_ssl: bool,
+        ssl_cipher_list: str,
         timeout: int = DEFAULT_TIMEOUT,
     ) -> None:
         """Initialize the data object."""
@@ -42,6 +44,7 @@ class RestData:
         self._request_data = data
         self._timeout = timeout
         self._verify_ssl = verify_ssl
+        self._ssl_cipher_list = SSLCipherList(ssl_cipher_list)
         self._async_client: httpx.AsyncClient | None = None
         self.data: str | None = None
         self.last_exception: Exception | None = None
@@ -55,7 +58,10 @@ class RestData:
         """Get the latest data from REST service with provided method."""
         if not self._async_client:
             self._async_client = create_async_httpx_client(
-                self._hass, verify_ssl=self._verify_ssl, default_encoding=self._encoding
+                self._hass,
+                verify_ssl=self._verify_ssl,
+                default_encoding=self._encoding,
+                ssl_cipher_list=self._ssl_cipher_list,
             )
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)

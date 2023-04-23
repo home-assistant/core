@@ -1,7 +1,17 @@
 """Test Home Assistant language util methods."""
 from __future__ import annotations
 
+from homeassistant.const import MATCH_ALL
 from homeassistant.util import language
+
+
+def test_match_all() -> None:
+    """Test MATCH_ALL."""
+    assert language.matches(MATCH_ALL, ["fr-Fr", "en-US", "en-GB"]) == [
+        "fr-Fr",
+        "en-US",
+        "en-GB",
+    ]
 
 
 def test_region_match() -> None:
@@ -51,6 +61,26 @@ def test_country_preferred() -> None:
         "en-GB",
         "en-US",
     ]
+
+
+def test_country_preferred_over_family() -> None:
+    """Test that country hint is preferred over language family."""
+    assert (
+        language.matches(
+            "de",
+            ["de", "de-CH", "de-DE"],
+            country="CH",
+        )[0]
+        == "de-CH"
+    )
+    assert (
+        language.matches(
+            "de",
+            ["de", "de-CH", "de-DE"],
+            country="DE",
+        )[0]
+        == "de-DE"
+    )
 
 
 def test_language_as_region() -> None:

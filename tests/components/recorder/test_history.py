@@ -23,8 +23,11 @@ from homeassistant.components.recorder.db_schema import (
 )
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.history import legacy
-from homeassistant.components.recorder.models import LazyState, process_timestamp
-from homeassistant.components.recorder.models.legacy import LegacyLazyStatePreSchema31
+from homeassistant.components.recorder.models import process_timestamp
+from homeassistant.components.recorder.models.legacy import (
+    LegacyLazyState,
+    LegacyLazyStatePreSchema31,
+)
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
@@ -60,13 +63,11 @@ async def _async_get_states(
             return [
                 LegacyLazyStatePreSchema31(row, attr_cache, None)
                 if pre_31_schema
-                else LazyState(
+                else LegacyLazyState(
                     row,
                     attr_cache,
                     None,
                     row.entity_id,
-                    row.state,
-                    getattr(row, "last_updated_ts", None),
                 )
                 for row in legacy._get_rows_with_session(
                     hass,
@@ -338,7 +339,6 @@ def test_state_changes_during_period_descending(
         > hist_states[1].last_changed
         > hist_states[2].last_changed
     )
-
     hist = history.state_changes_during_period(
         hass,
         start_time,  # Pick a point where we will generate a start time state
@@ -904,6 +904,7 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
             conn.commit()
 
         with patch.object(instance, "schema_version", 24):
+            instance.states_meta_manager.active = False
             no_attributes = True
             hist = history.state_changes_during_period(
                 hass,
@@ -945,9 +946,8 @@ async def test_get_states_query_during_migration_to_schema_25(
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
     entity_id = "light.test"
-    await recorder.get_instance(hass).async_add_executor_job(
-        _add_db_entries, hass, point, [entity_id]
-    )
+    await instance.async_add_executor_job(_add_db_entries, hass, point, [entity_id])
+    assert instance.states_meta_manager.active
 
     no_attributes = True
     hist = await _async_get_states(hass, end, [entity_id], no_attributes=no_attributes)
@@ -965,6 +965,7 @@ async def test_get_states_query_during_migration_to_schema_25(
         conn.commit()
 
     with patch.object(instance, "schema_version", 24):
+        instance.states_meta_manager.active = False
         no_attributes = True
         hist = await _async_get_states(
             hass, end, [entity_id], no_attributes=no_attributes
@@ -999,9 +1000,8 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
     entity_id_2 = "switch.test"
     entity_ids = [entity_id_1, entity_id_2]
 
-    await recorder.get_instance(hass).async_add_executor_job(
-        _add_db_entries, hass, point, entity_ids
-    )
+    await instance.async_add_executor_job(_add_db_entries, hass, point, entity_ids)
+    assert instance.states_meta_manager.active
 
     no_attributes = True
     hist = await _async_get_states(hass, end, entity_ids, no_attributes=no_attributes)
@@ -1019,6 +1019,7 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
         conn.commit()
 
     with patch.object(instance, "schema_version", 24):
+        instance.states_meta_manager.active = False
         no_attributes = True
         hist = await _async_get_states(
             hass, end, entity_ids, no_attributes=no_attributes

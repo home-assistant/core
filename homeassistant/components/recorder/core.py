@@ -11,9 +11,10 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 import async_timeout
+import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import DBAPIConnection
@@ -24,8 +25,8 @@ from sqlalchemy.orm.session import Session
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
 )
@@ -45,14 +46,16 @@ from .const import (
     CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     DB_WORKER_PREFIX,
     DOMAIN,
+    ESTIMATED_QUEUE_ITEM_SIZE,
     EVENT_TYPE_IDS_SCHEMA_VERSION,
     KEEPALIVE_TIME,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
-    MAX_QUEUE_BACKLOG,
+    MAX_QUEUE_BACKLOG_MIN_VALUE,
     MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
+    QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY,
     SQLITE_URL_PREFIX,
     STATES_META_SCHEMA_VERSION,
     STATISTICS_ROWS_SCHEMA_VERSION,
@@ -148,7 +151,7 @@ WAIT_TASK = WaitTask()
 ADJUST_LRU_SIZE_TASK = AdjustLRUSizeTask()
 
 DB_LOCK_TIMEOUT = 30
-DB_LOCK_QUEUE_CHECK_TIMEOUT = 1
+DB_LOCK_QUEUE_CHECK_TIMEOUT = 10  # check every 10 seconds
 
 
 INVALIDATED_ERR = "Database connection invalidated"
@@ -201,6 +204,8 @@ class Recorder(threading.Thread):
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Engine | None = None
+        self.max_backlog: int = MAX_QUEUE_BACKLOG_MIN_VALUE
+        self._psutil: ha_psutil.PsutilWrapper | None = None
 
         # The entity_filter is exposed on the recorder instance so that
         # it can be used to see if an entity is being recorded and is called
@@ -343,7 +348,7 @@ class Recorder(threading.Thread):
         """
         size = self.backlog
         _LOGGER.debug("Recorder queue size is: %s", size)
-        if size <= MAX_QUEUE_BACKLOG:
+        if not self._reached_max_backlog_percentage(100):
             return
         _LOGGER.error(
             (
@@ -352,9 +357,32 @@ class Recorder(threading.Thread):
                 "is corrupt due to a disk problem; The recorder will stop "
                 "recording events to avoid running out of memory"
             ),
-            MAX_QUEUE_BACKLOG,
+            self.backlog,
         )
         self._async_stop_queue_watcher_and_event_listener()
+
+    def _available_memory(self) -> int:
+        """Return the available memory in bytes."""
+        if not self._psutil:
+            self._psutil = ha_psutil.PsutilWrapper()
+        return cast(int, self._psutil.psutil.virtual_memory().available)
+
+    def _reached_max_backlog_percentage(self, percentage: int) -> bool:
+        """Check if the system has reached the max queue backlog and return the maximum if it has."""
+        percentage_modifier = percentage / 100
+        current_backlog = self.backlog
+        # First check the minimum value since its cheap
+        if current_backlog < (MAX_QUEUE_BACKLOG_MIN_VALUE * percentage_modifier):
+            return False
+        # If they have more RAM available, keep filling the backlog
+        # since we do not want to stop recording events or give the
+        # user a bad backup when they have plenty of RAM available.
+        max_queue_backlog = int(
+            QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY
+            * (self._available_memory() / ESTIMATED_QUEUE_ITEM_SIZE)
+        )
+        self.max_backlog = max(max_queue_backlog, MAX_QUEUE_BACKLOG_MIN_VALUE)
+        return current_backlog >= (max_queue_backlog * percentage_modifier)
 
     @callback
     def _async_stop_queue_watcher_and_event_listener(self) -> None:
@@ -404,9 +432,8 @@ class Recorder(threading.Thread):
         # Unknown what it is.
         return True
 
-    @callback
-    def _async_empty_queue(self, event: Event) -> None:
-        """Empty the queue if its still present at final write."""
+    async def _async_close(self, event: Event) -> None:
+        """Empty the queue if its still present at close."""
 
         # If the queue is full of events to be processed because
         # the database is so broken that every event results in a retry
@@ -421,9 +448,10 @@ class Recorder(threading.Thread):
             except queue.Empty:
                 break
         self.queue_task(StopTask())
+        await self.hass.async_add_executor_job(self.join)
 
     async def _async_shutdown(self, event: Event) -> None:
-        """Shut down the Recorder."""
+        """Shut down the Recorder at final write."""
         if not self._hass_started.done():
             self._hass_started.set_result(SHUTDOWN_TASK)
         self.queue_task(StopTask())
@@ -439,15 +467,22 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_empty_queue)
-        bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, self._async_close)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_shutdown)
         async_at_started(self.hass, self._async_hass_started)
 
     @callback
-    def async_connection_failed(self) -> None:
-        """Connect failed tasks."""
-        self.async_db_connected.set_result(False)
-        self.async_db_ready.set_result(False)
+    def _async_startup_failed(self) -> None:
+        """Report startup failure."""
+        # If a live migration failed, we were able to connect (async_db_connected
+        # marked True), the database was marked ready (async_db_ready marked
+        # True), the data in the queue cannot be written to the database because
+        # the schema not in the correct format so we must stop listeners and report
+        # failure.
+        if not self.async_db_connected.done():
+            self.async_db_connected.set_result(False)
+        if not self.async_db_ready.done():
+            self.async_db_ready.set_result(False)
         persistent_notification.async_create(
             self.hass,
             "The recorder could not start, check [the logs](/config/logs)",
@@ -645,19 +680,26 @@ class Recorder(threading.Thread):
             return SHUTDOWN_TASK
 
     def run(self) -> None:
+        """Run the recorder thread."""
+        try:
+            self._run()
+        finally:
+            # Ensure shutdown happens cleanly if
+            # anything goes wrong in the run loop
+            self._shutdown()
+
+    def _run(self) -> None:
         """Start processing events to save."""
         self.thread_id = threading.get_ident()
         setup_result = self._setup_recorder()
 
         if not setup_result:
             # Give up if we could not connect
-            self.hass.add_job(self.async_connection_failed)
             return
 
         schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
-            self.hass.add_job(self.async_connection_failed)
             return
         self.schema_version = schema_status.current_version
 
@@ -684,7 +726,6 @@ class Recorder(threading.Thread):
                 self.migration_in_progress = False
                 # Make sure we cleanly close the run if
                 # we restart before startup finishes
-                self._shutdown()
                 return
 
         if not schema_status.valid:
@@ -692,8 +733,8 @@ class Recorder(threading.Thread):
                 self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:
                     # If the schema migration takes so long that the end
-                    # queue watcher safety kicks in because MAX_QUEUE_BACKLOG
-                    # is reached, we need to reinitialize the listener.
+                    # queue watcher safety kicks in because _reached_max_backlog
+                    # was True, we need to reinitialize the listener.
                     self.hass.add_job(self.async_initialize)
             else:
                 persistent_notification.create(
@@ -702,8 +743,6 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self.hass.add_job(self.async_set_db_ready)
-                self._shutdown()
                 return
 
         if not database_was_ready:
@@ -715,7 +754,6 @@ class Recorder(threading.Thread):
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
-        self._shutdown()
 
     def _activate_and_set_db_ready(self) -> None:
         """Activate the table managers or schedule migrations and mark the db as ready."""
@@ -936,12 +974,14 @@ class Recorder(threading.Thread):
             # Notify that lock is being held, wait until database can be used again.
             self.hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
-                if self.backlog > MAX_QUEUE_BACKLOG * 0.9:
+                if self._reached_max_backlog_percentage(90):
                     _LOGGER.warning(
-                        "Database queue backlog reached more than 90% of maximum queue "
+                        "Database queue backlog reached more than %s (%s events) of maximum queue "
                         "length while waiting for backup to finish; recorder will now "
                         "resume writing to database. The backup cannot be trusted and "
-                        "must be restarted"
+                        "must be restarted",
+                        "90%",
+                        self.backlog,
                     )
                     task.queue_overflow = True
                     break
@@ -971,7 +1011,7 @@ class Recorder(threading.Thread):
         event_type_manager = self.event_type_manager
         if pending_event_types := event_type_manager.get_pending(event.event_type):
             dbevent.event_type_rel = pending_event_types
-        elif event_type_id := event_type_manager.get(event.event_type, session):
+        elif event_type_id := event_type_manager.get(event.event_type, session, True):
             dbevent.event_type_id = event_type_id
         else:
             event_types = EventTypes(event_type=event.event_type)
@@ -1355,9 +1395,9 @@ class Recorder(threading.Thread):
 
     def _close_connection(self) -> None:
         """Close the connection."""
-        assert self.engine is not None
-        self.engine.dispose()
-        self.engine = None
+        if self.engine:
+            self.engine.dispose()
+            self.engine = None
         self._get_session = None
 
     def _setup_run(self) -> None:
@@ -1389,9 +1429,19 @@ class Recorder(threading.Thread):
     def _shutdown(self) -> None:
         """Save end time for current run."""
         _LOGGER.debug("Shutting down recorder")
-        self.hass.add_job(self._async_stop_listeners)
-        self._stop_executor()
+        if not self.schema_version or self.schema_version != SCHEMA_VERSION:
+            # If the schema version is not set, we never had a working
+            # connection to the database or the schema never reached a
+            # good state.
+            #
+            # In either case, we want to mark startup as failed.
+            #
+            self.hass.add_job(self._async_startup_failed)
+        else:
+            self.hass.add_job(self._async_stop_listeners)
+
         try:
             self._end_session()
         finally:
+            self._stop_executor()
             self._close_connection()
