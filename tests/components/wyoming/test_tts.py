@@ -27,7 +27,7 @@ async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     state = hass.states.get("tts.test_tts")
     assert state is not None
 
-    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.wyoming")
+    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.test_tts")
     assert entity is not None
 
     assert entity.supported_languages == ["en-US"]
@@ -54,7 +54,7 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
         extension, data = await tts.async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
-                hass, "Hello world", "tts.wyoming", hass.config.language
+                hass, "Hello world", "tts.test_tts", hass.config.language
             ),
         )
 
@@ -88,7 +88,7 @@ async def test_get_tts_audio_raw(
             tts.generate_media_source_id(
                 hass,
                 "Hello world",
-                "tts.wyoming",
+                "tts.test_tts",
                 hass.config.language,
                 options={tts.ATTR_AUDIO_OUTPUT: "raw"},
             ),
@@ -110,7 +110,7 @@ async def test_get_tts_audio_connection_lost(
         await tts.async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
-                hass, "Hello world", "tts.wyoming", hass.config.language
+                hass, "Hello world", "tts.test_tts", hass.config.language
             ),
         )
 
@@ -138,6 +138,6 @@ async def test_get_tts_audio_audio_oserror(
         await tts.async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
-                hass, "Hello world", "tts.wyoming", hass.config.language
+                hass, "Hello world", "tts.test_tts", hass.config.language
             ),
         )
