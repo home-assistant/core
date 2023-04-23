@@ -288,7 +288,7 @@ class FibaroController:
         for device in scenes:
             device.fibaro_controller = self
             self.fibaro_devices[Platform.SCENE].append(device)
-            _LOGGER.debug("%s scene -> %s", device.ha_id, device)
+            _LOGGER.debug("Scene -> %s", device)
 
     def _read_devices(self):
         """Read and process the device list."""

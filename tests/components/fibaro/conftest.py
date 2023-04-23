@@ -52,7 +52,7 @@ async def setup_platform(
     controller_mock.get_room_name.return_value = room_name
 
     for scene in scenes:
-        scene.controller = controller_mock
+        scene.fibaro_controller = controller_mock
 
     hass.data[DOMAIN] = {
         config_entry.entry_id: {

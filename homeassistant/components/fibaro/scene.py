@@ -41,7 +41,7 @@ class FibaroScene(Scene):
         """Initialize the Fibaro scene."""
         self._fibaro_scene = fibaro_scene
 
-        controller: FibaroController = fibaro_scene.controller
+        controller: FibaroController = fibaro_scene.fibaro_controller
         room_name = controller.get_room_name(fibaro_scene.room_id)
         if not room_name:
             room_name = "Unknown"
