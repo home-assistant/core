@@ -25,11 +25,10 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches."""
+    """Set up binary sensors."""
     controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
     omada_client = controller.omada_client
 
-    # Naming fun. Omada switches, as in the network hardware
     gateway_coordinator = await controller.get_gateway_coordinator()
     if not gateway_coordinator:
         return
