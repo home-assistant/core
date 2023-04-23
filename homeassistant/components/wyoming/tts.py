@@ -47,14 +47,19 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         tts_service = next(tts for tts in service.info.tts if tts.installed)
 
         voice_languages: set[str] = set()
-        self._voices: dict[str, list[str]] = defaultdict(list)
+        self._voices: dict[str, list[tts.Voice]] = defaultdict(list)
         for voice in tts_service.voices:
             if not voice.installed:
                 continue
 
             voice_languages.update(voice.languages)
             for language in voice.languages:
-                self._voices[language].append(voice.name)
+                self._voices[language].append(
+                    tts.Voice(
+                        voice_id=voice.name,
+                        name=voice.name,
+                    )
+                )
 
         self._supported_languages: list[str] = list(voice_languages)
 
@@ -85,7 +90,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         return {tts.ATTR_AUDIO_OUTPUT: "wav"}
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
         """Return a list of supported voices for a language."""
         return self._voices.get(language)
 

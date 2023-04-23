@@ -43,7 +43,6 @@ from tests.common import async_mock_service, mock_restore_cache
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
-TEST_DOMAIN = "test"
 
 
 @pytest.fixture

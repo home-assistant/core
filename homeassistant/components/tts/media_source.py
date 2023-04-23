@@ -15,7 +15,7 @@ from homeassistant.components.media_source import (
     Unresolvable,
     generate_media_source_id as ms_generate_media_source_id,
 )
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
