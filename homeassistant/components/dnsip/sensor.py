@@ -89,7 +89,7 @@ class WanIpSensor(SensorEntity):
             response = None
 
         if response:
-            self._attr_native_value = response[0].host
+            self._attr_native_value = ",".join(sorted([i.host for i in response]))
             self._attr_available = True
         else:
             self._attr_available = False
