@@ -35,6 +35,7 @@ _BUFFERED_CHUNKS_BEFORE_SPEECH = 100  # ~2 seconds
 _TONE_DELAY = 0.2  # seconds before playing tone
 _MESSAGE_DELAY = 1.0  # seconds before playing "not configured" message
 _LOOP_DELAY = 2.0  # seconds before replaying not-configured message
+_RTP_AUDIO_SETTINGS = {"rate": 16000, "width": 2, "channels": 1, "sleep_ratio": 1.01}
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -278,7 +279,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
         # Assume TTS audio is 16Khz 16-bit mono
         await self.hass.async_add_executor_job(
-            partial(self.send_audio, audio_bytes, rate=16000, width=2, channels=1)
+            partial(self.send_audio, audio_bytes, **_RTP_AUDIO_SETTINGS)
         )
 
     async def _play_listening_tone(self) -> None:
@@ -293,16 +294,14 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             partial(
                 self.send_audio,
                 self._tone_bytes,
-                rate=16000,
-                width=2,
-                channels=1,
                 silence_before=_TONE_DELAY,
+                **_RTP_AUDIO_SETTINGS,
             )
         )
 
     def _load_tone(self) -> bytes:
         """Load raw tone audio (16Khz, 16-bit mono)."""
-        return (Path(__file__).parent / "tone.raw").read_bytes()
+        return (Path(__file__).parent / "tone.pcm").read_bytes()
 
 
 class NotConfiguredRtpDatagramProtocol(RtpDatagramProtocol):
@@ -323,10 +322,11 @@ class NotConfiguredRtpDatagramProtocol(RtpDatagramProtocol):
         if self._audio_bytes is None:
             # 16Khz, 16-bit mono audio message
             self._audio_bytes = (
-                Path(__file__).parent / "not_configured.raw"
+                Path(__file__).parent / "not_configured.pcm"
             ).read_bytes()
 
         if self._audio_task is None:
+            _LOGGER.info("HERE")
             self._audio_task = self.hass.async_create_background_task(
                 self._play_message(),
                 "voip_not_connected",
@@ -337,10 +337,8 @@ class NotConfiguredRtpDatagramProtocol(RtpDatagramProtocol):
             partial(
                 self.send_audio,
                 self._audio_bytes,
-                16000,
-                2,
-                1,
                 silence_before=_MESSAGE_DELAY,
+                **_RTP_AUDIO_SETTINGS,
             )
         )
 
