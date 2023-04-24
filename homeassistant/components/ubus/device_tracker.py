@@ -108,7 +108,7 @@ class UbusDeviceScanner(DeviceScanner):
         name = self.mac2name.get(device.upper(), None)
         return name
 
-    def get_extra_attributes(self, device):
+    async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
         """Return the host to distinguish between multiple routers."""
         return {"host": self.host}
 
