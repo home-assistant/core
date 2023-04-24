@@ -126,6 +126,7 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -522,12 +523,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
 
         if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
+            _LOGGER.warning(
+                "The %s service is deprecated and will be removed in a future release, "
+                "use the corresponding clear_traffic_statistics button instead"
+            )
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return
             result = router.client.monitoring.set_clear_traffic()
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_REBOOT:
+            _LOGGER.warning(
+                "The %s service is deprecated and will be removed in a future release, "
+                "use the corresponding restart button instead"
+            )
             if router.suspended:
                 _LOGGER.debug("%s: ignored, integration suspended", service.service)
                 return
