@@ -274,7 +274,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     ):
         reauth_result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": entry.unique_id,
+                "entry_id": entry.entry_id,
+            },
             data={
                 CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
@@ -317,7 +321,11 @@ async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
     ):
         reauth_result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": entry.unique_id,
+                "entry_id": entry.entry_id,
+            },
             data={
                 CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
@@ -359,7 +367,11 @@ async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
     ):
         reauth_result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": entry.unique_id,
+                "entry_id": entry.entry_id,
+            },
             data={
                 CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
@@ -401,7 +413,11 @@ async def test_reauth_bad_login(hass: HomeAssistant) -> None:
     ):
         reauth_result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": entry.unique_id,
+                "entry_id": entry.entry_id,
+            },
             data={
                 CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
