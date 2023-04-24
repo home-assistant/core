@@ -10,8 +10,6 @@ def extract_subcodes_as_strings(subcodes: Any) -> list[str]:
     """Stringify ONVIF subcodes."""
     if isinstance(subcodes, list):
         return [code.text if hasattr(code, "text") else str(code) for code in subcodes]
-    if text := getattr(subcodes, "text", None):
-        return [text]
     return [str(subcodes)]
 
 
