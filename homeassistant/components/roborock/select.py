@@ -4,11 +4,13 @@ from dataclasses import dataclass
 
 from roborock.code_mappings import RoborockMopIntensityCode, RoborockMopModeCode
 from roborock.containers import Status
+from roborock.exceptions import RoborockException
 from roborock.typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -98,10 +100,15 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the mop intensity."""
-        await self.send(
-            self.entity_description.api_command,
-            self.entity_description.options_lambda(option),
-        )
+        try:
+            await self.send(
+                self.entity_description.api_command,
+                self.entity_description.options_lambda(option),
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                f"Error while setting {self.entity_description.key} to {option}"
+            ) from err
 
     @property
     def current_option(self) -> str | None:
