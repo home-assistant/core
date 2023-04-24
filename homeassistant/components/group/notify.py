@@ -8,6 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.automation import _async_process_if
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -21,12 +22,21 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_SERVICES = "services"
+CONF_CONDITION = "condition"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERVICES): vol.All(
             cv.ensure_list,
-            [{vol.Required(ATTR_SERVICE): cv.slug, vol.Optional(ATTR_DATA): dict}],
+            [
+                {
+                    vol.Required(ATTR_SERVICE): cv.slug,
+                    vol.Optional(CONF_CONDITION): vol.All(
+                        cv.ensure_list, [cv.CONDITION_SCHEMA]
+                    ),
+                    vol.Optional(ATTR_DATA): dict,
+                }
+            ],
         )
     }
 )
@@ -68,6 +78,14 @@ class GroupNotifyPlatform(BaseNotificationService):
 
         tasks: list[asyncio.Task[bool | None]] = []
         for entity in self.entities:
+            if CONF_CONDITION in entity:
+                cond_func = await _async_process_if(
+                    self.hass, entity[ATTR_SERVICE], entity
+                )
+
+                if cond_func is not None and not cond_func(entity):
+                    continue
+
             sending_payload = deepcopy(payload.copy())
             if (default_data := entity.get(ATTR_DATA)) is not None:
                 add_defaults(sending_payload, default_data)

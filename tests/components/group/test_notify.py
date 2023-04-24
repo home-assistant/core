@@ -5,6 +5,7 @@ from homeassistant import config as hass_config
 import homeassistant.components.demo.notify as demo
 from homeassistant.components.group import SERVICE_RELOAD
 import homeassistant.components.group.notify as group
+from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
 import homeassistant.components.notify as notify
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -45,11 +46,28 @@ async def test_send_message_with_data(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    await async_setup_component(
+        hass,
+        INPUT_BOOLEAN_DOMAIN,
+        {"input_boolean": {"test_toggle": {"name": "test_toggle", "initial": True}}},
+    )
+
+    await hass.async_block_till_done()
+
     service = await group.async_get_service(
         hass,
         {
             "services": [
-                {"service": "demo1"},
+                {
+                    "service": "demo1",
+                    "condition": [
+                        {
+                            "condition": "state",
+                            "entity_id": ["input_boolean.test_toggle"],
+                            "state": "on",
+                        }
+                    ],
+                },
                 {
                     "service": "demo2",
                     "data": {
@@ -100,6 +118,22 @@ async def test_send_message_with_data(hass: HomeAssistant) -> None:
         "title": "Test notification",
         "data": {"hello": "world", "test": "message", "default": "override"},
     }
+
+    """Test condition for sending a message."""
+    hass.states.async_set("input_boolean.test_toggle", False)
+
+    await hass.async_block_till_done()
+
+    await service.async_send_message(
+        "Hello",
+        title="Test notification",
+        data={"hello": "world", "default": "override"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(service1.send_message.mock_calls) == 2
+    assert len(service2.send_message.mock_calls) == 3
 
 
 async def test_reload_notify(hass: HomeAssistant) -> None:
