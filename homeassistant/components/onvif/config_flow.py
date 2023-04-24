@@ -131,7 +131,9 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             entry_data = entry.data
             self.onvif_config = entry_data | user_input
-            errors, description_placeholders = await self.async_setup_profiles()
+            errors, description_placeholders = await self.async_setup_profiles(
+                configure_unique_id=False
+            )
             if not errors:
                 hass = self.hass
                 entry_id = entry.entry_id
@@ -254,7 +256,9 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
-    async def async_setup_profiles(self) -> tuple[dict[str, str], dict[str, str]]:
+    async def async_setup_profiles(
+        self, configure_unique_id: bool = True
+    ) -> tuple[dict[str, str], dict[str, str]]:
         """Fetch ONVIF device profiles."""
         LOGGER.debug(
             "Fetching profiles from ONVIF device %s", pformat(self.onvif_config)
@@ -297,14 +301,15 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not self.device_id:
                 raise AbortFlow(reason="no_mac")
 
-            await self.async_set_unique_id(self.device_id, raise_on_progress=False)
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_HOST: self.onvif_config[CONF_HOST],
-                    CONF_PORT: self.onvif_config[CONF_PORT],
-                    CONF_NAME: self.onvif_config[CONF_NAME],
-                }
-            )
+            if configure_unique_id:
+                await self.async_set_unique_id(self.device_id, raise_on_progress=False)
+                self._abort_if_unique_id_configured(
+                    updates={
+                        CONF_HOST: self.onvif_config[CONF_HOST],
+                        CONF_PORT: self.onvif_config[CONF_PORT],
+                        CONF_NAME: self.onvif_config[CONF_NAME],
+                    }
+                )
             # Verify there is an H264 profile
             media_service = device.create_media_service()
             profiles = await media_service.GetProfiles()
