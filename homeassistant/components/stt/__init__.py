@@ -130,16 +130,6 @@ class SpeechToTextEntity(RestoreEntity):
 
     @property
     @final
-    def name(self) -> str:
-        """Return the name of the provider entity."""
-        # Only one entity is allowed per platform for now.
-        if self.platform is None:
-            raise RuntimeError("Entity is not added to hass yet.")
-
-        return self.platform.platform_name
-
-    @property
-    @final
     def state(self) -> str | None:
         """Return the state of the provider entity."""
         if self.__last_processed is None:
@@ -249,11 +239,7 @@ class SpeechToTextView(HomeAssistantView):
         hass: HomeAssistant = request.app["hass"]
         provider_entity: SpeechToTextEntity | None = None
         if (
-            not (
-                provider_entity := async_get_speech_to_text_entity(
-                    hass, f"{DOMAIN}.{provider}"
-                )
-            )
+            not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
         ):
             raise HTTPNotFound()
@@ -292,11 +278,7 @@ class SpeechToTextView(HomeAssistantView):
         """Return provider specific audio information."""
         hass: HomeAssistant = request.app["hass"]
         if (
-            not (
-                provider_entity := async_get_speech_to_text_entity(
-                    hass, f"{DOMAIN}.{provider}"
-                )
-            )
+            not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
         ):
             raise HTTPNotFound()
