@@ -46,7 +46,9 @@ def mock_roborock_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-async def setup_entry(hass: HomeAssistant, mock_roborock_entry) -> MockConfigEntry:
+async def setup_entry(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> MockConfigEntry:
     """Set up the Roborock platform."""
     with patch(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data",
