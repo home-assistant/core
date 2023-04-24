@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from lacrosse_view import Sensor
 
@@ -28,7 +29,9 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -169,7 +172,7 @@ async def async_setup_entry(
                     f"title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
                 )
 
-                LOGGER.warning(message)
+                _LOGGER.warning(message)
                 continue
             sensor_list.append(
                 LaCrosseViewSensor(
