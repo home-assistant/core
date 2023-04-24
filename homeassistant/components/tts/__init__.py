@@ -70,7 +70,6 @@ from .models import Voice
 
 __all__ = [
     "async_get_media_source_audio",
-    "async_resolve_engine",
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
     "CONF_LANG",

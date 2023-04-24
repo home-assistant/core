@@ -15,6 +15,7 @@ from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.collection import (
     CollectionError,
     ItemNotFound,
@@ -420,14 +421,7 @@ class PipelineRun:
 
     async def prepare_text_to_speech(self) -> None:
         """Prepare text to speech."""
-        engine = tts.async_resolve_engine(self.hass, self.pipeline.tts_engine)
-
-        if engine is None:
-            engine = self.pipeline.tts_engine or "default"
-            raise TextToSpeechError(
-                code="tts-not-supported",
-                message=f"Text to speech engine '{engine}' not found",
-            )
+        engine = self.pipeline.tts_engine
 
         tts_options = {}
         if self.pipeline.tts_voice is not None:
@@ -436,19 +430,26 @@ class PipelineRun:
         if self.tts_audio_output is not None:
             tts_options[tts.ATTR_AUDIO_OUTPUT] = self.tts_audio_output
 
-        if not await tts.async_support_options(
-            self.hass,
-            engine,
-            self.pipeline.tts_language,
-            tts_options,
-        ):
+        try:
+            # pipeline.tts_engine can't be None or this function is not called
+            if not await tts.async_support_options(
+                self.hass,
+                engine,  # type: ignore[arg-type]
+                self.pipeline.tts_language,
+                tts_options,
+            ):
+                raise TextToSpeechError(
+                    code="tts-not-supported",
+                    message=(
+                        f"Text to speech engine {engine} "
+                        f"does not support language {self.pipeline.tts_language} or options {tts_options}"
+                    ),
+                )
+        except HomeAssistantError as err:
             raise TextToSpeechError(
                 code="tts-not-supported",
-                message=(
-                    f"Text to speech engine {engine} "
-                    f"does not support language {self.pipeline.tts_language} or options {tts_options}"
-                ),
-            )
+                message=f"Text to speech engine '{engine}' not found",
+            ) from err
 
         self.tts_engine = engine
         self.tts_options = tts_options
@@ -595,6 +596,11 @@ class PipelineInput:
             if self.tts_input is None:
                 raise PipelineRunValidationError(
                     "tts_input is required for text to speech"
+                )
+        if self.run.end_stage == PipelineStage.TTS:
+            if self.run.pipeline.tts_engine is None:
+                raise PipelineRunValidationError(
+                    "the pipeline does not support text to speech"
                 )
 
         start_stage_index = PIPELINE_STAGE_ORDER.index(self.run.start_stage)
