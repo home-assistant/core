@@ -15,10 +15,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
 from .device import ONVIFDevice
+from .util import is_auth_error, stringify_onvif_error
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,10 +45,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
     except Fault as err:
         await device.device.close()
-        # We do no know if the credentials are wrong or the camera is
-        # still booting up, so we will retry later
+        if is_auth_error(err):
+            raise ConfigEntryAuthFailed(
+                f"Could not authenticate: {stringify_onvif_error(err)}"
+            ) from err
         raise ConfigEntryNotReady(
-            f"Could not connect to camera, verify credentials are correct: {err}"
+            f"Could not connect to camera: {stringify_onvif_error(err)}"
         ) from err
     except ONVIFError as err:
         await device.device.close()
