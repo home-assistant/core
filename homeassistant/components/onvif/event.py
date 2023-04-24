@@ -432,7 +432,10 @@ class PullPointManager:
 
     async def _async_unsubscribe_pullpoint(self) -> None:
         """Unsubscribe the pullpoint subscription."""
-        if not self._pullpoint_subscription:
+        if (
+            not self._pullpoint_subscription
+            or self._pullpoint_subscription.transport.client.is_closed
+        ):
             return
         LOGGER.debug("%s: Unsubscribing from PullPoint", self._name)
         try:
@@ -450,7 +453,10 @@ class PullPointManager:
 
     async def _async_renew_pullpoint(self) -> bool:
         """Renew the PullPoint subscription."""
-        if not self._pullpoint_subscription:
+        if (
+            not self._pullpoint_subscription
+            or self._pullpoint_subscription.transport.client.is_closed
+        ):
             return False
         try:
             # The first time we renew, we may get a Fault error so we
@@ -702,7 +708,10 @@ class WebHookManager:
 
     async def _async_renew_webhook(self) -> bool:
         """Renew webhook subscription."""
-        if not self._webhook_subscription:
+        if (
+            not self._webhook_subscription
+            or self._webhook_subscription.transport.client.is_closed
+        ):
             return False
         try:
             try:
@@ -839,7 +848,10 @@ class WebHookManager:
 
     async def _async_unsubscribe_webhook(self) -> None:
         """Unsubscribe from the webhook."""
-        if not self._webhook_subscription:
+        if (
+            not self._webhook_subscription
+            or self._webhook_subscription.transport.client.is_closed
+        ):
             return
         LOGGER.debug("%s: Unsubscribing from webhook", self._name)
         try:
