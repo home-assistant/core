@@ -44,7 +44,7 @@ IAS_ZONE_CLASS_MAPPING = {
 
 IAS_ZONE_NAME_MAPPING = {
     IasZone.ZoneType.Motion_Sensor: "Motion",
-    IasZone.ZoneType.Contact_Switch: "Open",
+    IasZone.ZoneType.Contact_Switch: "Opening",
     IasZone.ZoneType.Fire_Sensor: "Smoke",
     IasZone.ZoneType.Water_Sensor: "Moisture",
     IasZone.ZoneType.Carbon_Monoxide_Sensor: "Gas",
