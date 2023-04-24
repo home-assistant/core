@@ -158,7 +158,16 @@ class EventManager:
             if not msg.Topic:
                 continue
 
-            topic = msg.Topic._value_1
+            # Topic may look like the following
+            #
+            # tns1:RuleEngine/CellMotionDetector/Motion//.
+            # tns1:RuleEngine/CellMotionDetector/Motion
+            # tns1:RuleEngine/CellMotionDetector/Motion/
+            #
+            # Our parser expects the topic to be
+            # tns1:RuleEngine/CellMotionDetector/Motion
+            topic = msg.Topic._value_1.rstrip("/.")
+
             if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.info(
