@@ -1,14 +1,39 @@
 """Test the api module."""
 from unittest.mock import MagicMock, call
 
+from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import InvalidCommand, NodeCommissionFailed
 import pytest
 
 from homeassistant.components.matter.api import ID, TYPE
+from homeassistant.components.matter.const import DOMAIN
+from homeassistant.components.matter.helpers import get_node_id_from_ha_device_id
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.setup import async_setup_component
+
+from .common import setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(name="test_device")
+async def test_device_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a test device."""
+    return await setup_integration_with_node_fixture(
+        hass, "color-temperature-light", matter_client
+    )
+
+
+def get_test_device(hass: HomeAssistant) -> DeviceEntry:
+    """Get a device from the device registry."""
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    device_registry = dr.async_get(hass)
+    return dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)[0]
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -185,3 +210,88 @@ async def test_set_wifi_credentials(
     assert matter_client.set_wifi_credentials.call_args == call(
         ssid="test_network", credentials="test_password"
     )
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_get_fabrics(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    matter_client: MagicMock,
+    test_device: MatterNode,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the get fabrics command."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/get_fabrics",
+            "device_id": "fake_id",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+    device = get_test_device(hass)
+
+    await ws_client.send_json(
+        {ID: 2, TYPE: "matter/get_fabrics", "device_id": device.id}
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"fabric_count": 0, "fabric_limit": 16, "fabrics": []}
+
+    node_id = await get_node_id_from_ha_device_id(hass, device.id)
+    assert node_id
+
+    matter_client.get_matter_fabrics.assert_called_once_with(node_id)
+    matter_client.get_matter_fabrics.reset_mock()
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_remove_fabric(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    matter_client: MagicMock,
+    test_device: MatterNode,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the remove fabric command."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/remove_fabric",
+            "device_id": "fake_id",
+            "fabric_index": "fabric_test_id",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+    device = get_test_device(hass)
+    fabric_index = "test_fabric_id"
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "matter/remove_fabric",
+            "device_id": device.id,
+            "fabric_index": fabric_index,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    node_id = await get_node_id_from_ha_device_id(hass, device.id)
+    assert node_id
+
+    matter_client.remove_matter_fabric.assert_called_once_with(node_id, fabric_index)
+    matter_client.remove_matter_fabric.reset_mock()
