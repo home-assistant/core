@@ -12,6 +12,8 @@ from homeassistant.setup import async_setup_component
 
 from . import SUPERVISOR_TOKEN
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+
 
 @pytest.fixture(autouse=True)
 def disable_security_filter():
@@ -89,3 +91,77 @@ async def hassio_handler(hass, aioclient_mock):
     """Create mock hassio handler."""
     with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
         yield HassIO(hass.loop, async_get_clientsession(hass), "127.0.0.1")
+
+
+@pytest.fixture
+def all_setup_requests(
+    aioclient_mock: AiohttpClientMocker, request: pytest.FixtureRequest
+):
+    """Mock all setup requests."""
+    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://127.0.0.1/info",
+        json={
+            "result": "ok",
+            "data": {
+                "supervisor": "222",
+                "homeassistant": "0.110.0",
+                "hassos": "1.2.3",
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/store",
+        json={
+            "result": "ok",
+            "data": {"addons": [], "repositories": []},
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/host/info",
+        json={
+            "result": "ok",
+            "data": {
+                "result": "ok",
+                "data": {
+                    "chassis": "vm",
+                    "operating_system": "Debian GNU/Linux 10 (buster)",
+                    "kernel": "4.19.0-6-amd64",
+                },
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/core/info",
+        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/os/info",
+        json={
+            "result": "ok",
+            "data": {
+                "version_latest": "1.0.0",
+                "version": "1.0.0",
+                "update_available": False,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/info",
+        json={
+            "result": "ok",
+            "data": {
+                "result": "ok",
+                "version": "1.0.0",
+                "version_latest": "1.0.0",
+                "auto_update": True,
+                "addons": [],
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
+    )
+    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
