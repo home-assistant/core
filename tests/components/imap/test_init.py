@@ -41,8 +41,6 @@ async def test_entry_startup_and_unload(
     config = MOCK_CONFIG.copy()
     if cipher_list:
         config["ssl_cipher_list"] = cipher_list
-    else:
-        config.pop("ssl_cipher_list")
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)

@@ -50,11 +50,13 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_CHARSET, default="utf-8"): str,
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
-        vol.Optional(
-            CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
-        ): CIPHER_SELECTOR,
     }
 )
+CONFIG_SCHEMA_ADVANCED = {
+    vol.Optional(
+        CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
+    ): CIPHER_SELECTOR
+}
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -127,8 +129,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+
+        schema = CONFIG_SCHEMA
+        if self.show_advanced_options:
+            schema = schema.extend(CONFIG_SCHEMA_ADVANCED)
+
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
+            return self.async_show_form(step_id="user", data_schema=schema)
 
         self._async_abort_entries_match(
             {

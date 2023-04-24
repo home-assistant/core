@@ -28,7 +28,6 @@ MOCK_CONFIG = {
     "charset": "utf-8",
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
-    "ssl_cipher_list": "python_default",
 }
 
 MOCK_OPTIONS = {
@@ -434,7 +433,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         "charset": "utf-8",
         "folder": "INBOX",
         "search": "UnSeen UnDeleted",
-        "ssl_cipher_list": "python_default",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -474,7 +472,8 @@ async def test_config_flow_with_cipherlist(
     config = MOCK_CONFIG.copy()
     config["ssl_cipher_list"] = cipher_list
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
