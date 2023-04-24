@@ -2087,6 +2087,7 @@ async def test_logbook_stream_match_multiple_entities_one_with_broken_logbook_pl
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test logbook stream with a described integration that uses multiple entities.
 
@@ -2183,6 +2184,8 @@ async def test_logbook_stream_match_multiple_entities_one_with_broken_logbook_pl
     assert listeners_without_writes(
         hass.bus.async_listeners()
     ) == listeners_without_writes(init_listeners)
+
+    assert "Error with test describe event" in caplog.text
 
 
 async def test_event_stream_bad_end_time(
