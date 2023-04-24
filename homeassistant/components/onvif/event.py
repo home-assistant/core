@@ -30,7 +30,9 @@ from .models import Event, PullPointManagerState, WebHookManagerState
 from .parsers import PARSERS
 from .util import stringify_onvif_error
 
-UNHANDLED_TOPICS: set[str] = set()
+# Topics in this list are ignored because we do not want to create
+# entities for them.
+UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
 
 SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
 CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError)

@@ -1575,7 +1575,7 @@ pydaikin==2.9.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==110
+pydeconz==111
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -2712,7 +2712,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.56.0
+zeroconf==0.58.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

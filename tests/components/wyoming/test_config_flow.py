@@ -10,7 +10,7 @@ from homeassistant.components.wyoming.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import EMPTY_INFO, STT_INFO
+from . import EMPTY_INFO, STT_INFO, TTS_INFO
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +26,7 @@ ADDON_DISCOVERY = HassioServiceInfo(
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form_stt(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -49,6 +49,36 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test ASR"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "port": 1234,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_tts(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=TTS_INFO,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "port": 1234,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Test TTS"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": 1234,
