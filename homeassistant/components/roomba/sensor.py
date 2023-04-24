@@ -20,16 +20,21 @@ async def async_setup_entry(
     blid = domain_data[BLID]
 
     roomba_vac = RoombaBattery(roomba, blid)
+    roomba_battery_cycles = BatteryCycles(roomba, blid)
     roomba_cleaning_time = CleaningTime(roomba, blid)
+    roomba_average_mission_time = AverageMissionTime(roomba, blid)
     roomba_total_missions = MissionSensor(roomba, blid, "total", "nMssn")
     roomba_success_missions = MissionSensor(roomba, blid, "successful", "nMssnOk")
     roomba_canceled_missions = MissionSensor(roomba, blid, "canceled", "nMssnC")
     roomba_failed_missions = MissionSensor(roomba, blid, "failed", "nMssnF")
     roomba_scrubs_count = ScrubsCount(roomba, blid)
+
     async_add_entities(
         [
             roomba_vac,
+            roomba_battery_cycles,
             roomba_cleaning_time,
+            roomba_average_mission_time,
             roomba_total_missions,
             roomba_success_missions,
             roomba_canceled_missions,
@@ -56,6 +61,39 @@ class RoombaBattery(IRobotEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._battery_level
+
+
+class BatteryCycles(IRobotEntity, SensorEntity):
+    """Class to hold Roomba Sensor basic info."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._name} battery cycles"
+
+    @property
+    def unique_id(self):
+        """Return the ID of this sensor."""
+        return f"battery_cycles_{self._blid}"
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit_of_measurement of the device."""
+        return ""
+
+    @property
+    def icon(self):
+        """Return the counter icon."""
+        return "mdi:counter"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._battery_stats.get("nLithChrg") or self._battery_stats.get(
+            "nNimhChrg"
+        )
 
 
 class CleaningTime(IRobotEntity, SensorEntity):
@@ -87,6 +125,37 @@ class CleaningTime(IRobotEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._run_stats.get("hr")
+
+
+class AverageMissionTime(IRobotEntity, SensorEntity):
+    """Class to hold Roomba Sensor basic info."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._name} average mission time"
+
+    @property
+    def unique_id(self):
+        """Return the ID of this sensor."""
+        return f"average_mission_time_{self._blid}"
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit_of_measurement of the device."""
+        return UnitOfTime.MINUTES
+
+    @property
+    def icon(self):
+        """Return the icon for the average mission time."""
+        return "mdi:clock"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._mission_stats.get("aMssnM")
 
 
 class MissionSensor(IRobotEntity, SensorEntity):

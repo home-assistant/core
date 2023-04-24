@@ -31,8 +31,6 @@ ATTR_ERROR = "error"
 ATTR_ERROR_CODE = "error_code"
 ATTR_POSITION = "position"
 ATTR_SOFTWARE_VERSION = "software_version"
-ATTR_BATTERY_CYCLES = "battery_cycles"
-ATTR_AVERAGE_MISSION_TIME = "average_mission_time"
 
 # Commonly supported features
 SUPPORT_IROBOT = (
@@ -197,13 +195,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         if self.vacuum.error_code != 0:
             state_attrs[ATTR_ERROR] = self.vacuum.error_message
             state_attrs[ATTR_ERROR_CODE] = self.vacuum.error_code
-
-        state_attrs[ATTR_BATTERY_CYCLES] = self._battery_stats.get(
-            "nLithChrg"
-        ) or self._battery_stats.get("nNimhChrg")
-
-        average_mission_time = self._mission_stats.get("aMssnM")
-        state_attrs[ATTR_AVERAGE_MISSION_TIME] = f"{average_mission_time} minutes"
 
         # Not all Roombas expose position data
         # https://github.com/koalazak/dorita980/issues/48
