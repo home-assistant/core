@@ -190,8 +190,18 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         name="Volume",
         icon="mdi:volume-high",
+        options=["low", "medium", "high"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=cvt_volume,
+    ),
+    YoLinkSensorEntityDescription(
+        key="beep",
+        device_class=SensorDeviceClass.ENUM,
+        name="Beep",
+        icon="mdi:bullhorn",
+        options=["enable", "disable"],
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        value=lambda value: "enable" if value is True else "disable",
     ),
 )
 
