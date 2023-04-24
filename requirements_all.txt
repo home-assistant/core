@@ -1034,7 +1034,7 @@ krakenex==2.1.0
 lacrosse-view==0.0.9
 
 # homeassistant.components.eufy
-lakeside==0.12
+lakeside2==0.13
 
 # homeassistant.components.laundrify
 laundrify_aio==1.1.2

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import lakeside
+import lakeside2
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -51,7 +51,7 @@ class EufyHomeLight(LightEntity):
         self._address = device["address"]
         self._code = device["code"]
         self._type = device["type"]
-        self._bulb = lakeside.bulb(self._address, self._code, self._type)
+        self._bulb = lakeside2.bulb(self._address, self._code, self._type)
         self._colormode = False
         if self._type == "T1011":
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}

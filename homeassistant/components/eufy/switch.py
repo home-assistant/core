@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import lakeside
+import lakeside2
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -34,7 +34,7 @@ class EufyHomeSwitch(SwitchEntity):
         self._address = device["address"]
         self._code = device["code"]
         self._type = device["type"]
-        self._switch = lakeside.switch(self._address, self._code, self._type)
+        self._switch = lakeside2.switch(self._address, self._code, self._type)
         self._switch.connect()
 
     def update(self) -> None:
