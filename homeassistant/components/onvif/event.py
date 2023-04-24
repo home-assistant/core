@@ -29,7 +29,9 @@ from .const import DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
 from .parsers import PARSERS
 
-UNHANDLED_TOPICS: set[str] = set()
+# Topics in this list are ignored because we do not want to create
+# entities for them.
+UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
 
 SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
 CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError)
@@ -156,7 +158,16 @@ class EventManager:
             if not msg.Topic:
                 continue
 
-            topic = msg.Topic._value_1
+            # Topic may look like the following
+            #
+            # tns1:RuleEngine/CellMotionDetector/Motion//.
+            # tns1:RuleEngine/CellMotionDetector/Motion
+            # tns1:RuleEngine/CellMotionDetector/Motion/
+            #
+            # Our parser expects the topic to be
+            # tns1:RuleEngine/CellMotionDetector/Motion
+            topic = msg.Topic._value_1.rstrip("/.")
+
             if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.info(

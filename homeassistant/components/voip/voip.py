@@ -82,6 +82,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         pipeline_timeout: float = 30.0,
         audio_timeout: float = 2.0,
         listening_tone_enabled: bool = True,
+        processing_tone_enabled: bool = True,
     ) -> None:
         """Set up pipeline RTP server."""
         # STT expects 16Khz mono with 16-bit samples
@@ -94,6 +95,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self.pipeline_timeout = pipeline_timeout
         self.audio_timeout = audio_timeout
         self.listening_tone_enabled = listening_tone_enabled
+        self.processing_tone_enabled = processing_tone_enabled
 
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self._context = context
@@ -101,6 +103,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self._pipeline_task: asyncio.Task | None = None
         self._session_id: str | None = None
         self._tone_bytes: bytes | None = None
+        self._processing_bytes: bytes | None = None
 
     def connection_made(self, transport):
         """Server is ready."""
@@ -157,6 +160,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                         chunk_buffer,
                     ):
                         yield chunk
+
+                    if self.processing_tone_enabled:
+                        await self._play_processing_tone()
                 except asyncio.TimeoutError:
                     # Expected after caller hangs up
                     _LOGGER.debug("Audio timeout")
@@ -289,7 +295,8 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         if self._tone_bytes is None:
             # Do I/O in executor
             self._tone_bytes = await self.hass.async_add_executor_job(
-                self._load_tone,
+                self._load_pcm,
+                "tone.pcm",
             )
 
         await self.hass.async_add_executor_job(
@@ -301,9 +308,26 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             )
         )
 
-    def _load_tone(self) -> bytes:
-        """Load raw tone audio (16Khz, 16-bit mono)."""
-        return (Path(__file__).parent / "tone.pcm").read_bytes()
+    async def _play_processing_tone(self) -> None:
+        """Play a tone to indicate that Home Assistant is processing the voice command."""
+        if self._processing_bytes is None:
+            # Do I/O in executor
+            self._processing_bytes = await self.hass.async_add_executor_job(
+                self._load_pcm,
+                "processing.pcm",
+            )
+
+        await self.hass.async_add_executor_job(
+            partial(
+                self.send_audio,
+                self._processing_bytes,
+                **_RTP_AUDIO_SETTINGS,
+            )
+        )
+
+    def _load_pcm(self, file_name: str) -> bytes:
+        """Load raw audio (16Khz, 16-bit mono)."""
+        return (Path(__file__).parent / file_name).read_bytes()
 
 
 class NotConfiguredRtpDatagramProtocol(RtpDatagramProtocol):

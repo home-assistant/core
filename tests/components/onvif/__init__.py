@@ -91,7 +91,7 @@ def setup_mock_onvif_camera(
     mock_onvif_camera.side_effect = mock_constructor
 
 
-def setup_mock_device(mock_device):
+def setup_mock_device(mock_device, capabilities=None):
     """Prepare mock ONVIFDevice."""
     mock_device.async_setup = AsyncMock(return_value=True)
     mock_device.available = True
@@ -103,7 +103,7 @@ def setup_mock_device(mock_device):
         SERIAL_NUMBER,
         MAC,
     )
-    mock_device.capabilities = Capabilities(imaging=True)
+    mock_device.capabilities = capabilities or Capabilities(imaging=True, ptz=True)
     profile1 = Profile(
         index=0,
         token="dummy",
@@ -132,6 +132,7 @@ async def setup_onvif_integration(
     unique_id=MAC,
     entry_id="1",
     source=config_entries.SOURCE_USER,
+    capabilities=None,
 ) -> tuple[MockConfigEntry, MagicMock, MagicMock]:
     """Create an ONVIF config entry."""
     if not config:
@@ -164,7 +165,7 @@ async def setup_onvif_integration(
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
         mock_discovery.return_value = []
-        setup_mock_device(mock_device)
+        setup_mock_device(mock_device, capabilities=capabilities)
         mock_device.device = mock_onvif_camera
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
