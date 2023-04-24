@@ -304,7 +304,10 @@ class PipelineRun:
         if self.stt_provider is None:
             raise RuntimeError("Speech to text was not prepared")
 
-        engine = self.stt_provider.name
+        if isinstance(self.stt_provider, stt.Provider):
+            engine = self.stt_provider.name
+        else:
+            engine = self.stt_provider.entity_id
 
         self.process_event(
             PipelineEvent(

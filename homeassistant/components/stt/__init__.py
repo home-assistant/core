@@ -278,11 +278,7 @@ class SpeechToTextView(HomeAssistantView):
         """Return provider specific audio information."""
         hass: HomeAssistant = request.app["hass"]
         if (
-            not (
-                provider_entity := async_get_speech_to_text_entity(
-                    hass, f"{DOMAIN}.{provider}"
-                )
-            )
+            not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
         ):
             raise HTTPNotFound()

@@ -93,10 +93,13 @@ class BaseProvider:
 class MockProvider(BaseProvider, Provider):
     """Mock provider."""
 
+    url_path = TEST_DOMAIN
+
 
 class MockProviderEntity(BaseProvider, SpeechToTextEntity):
     """Mock provider entity."""
 
+    url_path = "stt.test"
     _attr_name = "test"
 
 
@@ -130,14 +133,18 @@ async def setup_fixture(
     hass: HomeAssistant,
     tmp_path: Path,
     request: pytest.FixtureRequest,
-) -> None:
+) -> MockProvider | MockProviderEntity:
     """Set up the test environment."""
     if request.param == "mock_setup":
-        await mock_setup(hass, tmp_path, MockProvider())
+        provider = MockProvider()
+        await mock_setup(hass, tmp_path, provider)
     elif request.param == "mock_config_entry_setup":
-        await mock_config_entry_setup(hass, tmp_path, MockProviderEntity())
+        provider = MockProviderEntity()
+        await mock_config_entry_setup(hass, tmp_path, provider)
     else:
         raise RuntimeError("Invalid setup fixture")
+
+    return provider
 
 
 async def mock_setup(
@@ -208,11 +215,11 @@ async def mock_config_entry_setup(
 async def test_get_provider_info(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
 ) -> None:
     """Test engine that doesn't exist."""
     client = await hass_client()
-    response = await client.get(f"/api/stt/{TEST_DOMAIN}")
+    response = await client.get(f"/api/stt/{setup.url_path}")
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
         "languages": ["de", "de-CH", "en-US"],
@@ -230,7 +237,7 @@ async def test_get_provider_info(
 async def test_non_existing_provider(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
 ) -> None:
     """Test streaming to engine that doesn't exist."""
     client = await hass_client()
@@ -257,19 +264,14 @@ async def test_non_existing_provider(
 async def test_stream_audio(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
 ) -> None:
     """Test streaming audio and getting response."""
     client = await hass_client()
 
-    if setup == "mock_setup":
-        provider = TEST_DOMAIN
-    else:
-        provider = "stt.test"
-
     # Language en is matched with en-US
     response = await client.post(
-        f"/api/stt/{provider}",
+        f"/api/stt/{setup.url_path}",
         headers={
             "X-Speech-Content": (
                 "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
@@ -325,7 +327,7 @@ async def test_metadata_errors(
     header: str | None,
     status: int,
     error: str,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
 ) -> None:
     """Test metadata errors."""
     client = await hass_client()
@@ -333,7 +335,7 @@ async def test_metadata_errors(
     if header:
         headers["X-Speech-Content"] = header
 
-    response = await client.post(f"/api/stt/{TEST_DOMAIN}", headers=headers)
+    response = await client.post(f"/api/stt/{setup.url_path}", headers=headers)
     assert response.status == status
     assert await response.text() == error
 
@@ -385,7 +387,7 @@ async def test_restore_state(
 async def test_ws_list_engines(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
     engine_id: str,
 ) -> None:
     """Test listing speech to text engines."""
