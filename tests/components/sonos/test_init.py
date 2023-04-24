@@ -168,10 +168,10 @@ async def test_async_poll_manual_hosts_ping_failure(
             "homeassistant.components.sonos.async_call_later"
         ) as mock_async_call_later, patch(
             "homeassistant.components.sonos.async_dispatcher_send"
-        ), patch.object(
-            hass, "async_add_executor_job", new=AsyncMock()
-        ) as mock_async_add_executor_job:
-            mock_async_add_executor_job.return_value = []
+        ), patch(
+            "homeassistant.components.sonos.sync_get_visible_zones"
+        ) as mock_sync_get_visible_zones:
+            mock_sync_get_visible_zones.return_value = []
             caplog.clear()
 
             mock_discovery_message.side_effect = asyncio.TimeoutError("TimeoutError")
@@ -194,6 +194,13 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
 
+    def _speaker_ping_success():
+        """Returns success on speaker ping."""
+
+    def _speaker_ping_fail():
+        """Raises exception on speaker ping."""
+        raise SonosUpdateError()
+
     with patch.object(manager, "_async_gethostbyname", side_effect=patch_gethostbyname):
         manager.hosts.add("10.10.10.1")
         manager.hosts.add("10.10.10.2")
@@ -205,14 +212,12 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             "homeassistant.components.sonos.async_call_later"
         ) as mock_async_call_later, patch(
             "homeassistant.components.sonos.async_dispatcher_send"
-        ), patch.object(
-            hass,
-            "async_add_executor_job",
-            new=AsyncMock(),
-        ) as mock_async_add_executor_job:
-            mock_async_add_executor_job.side_effect = [OSError(), []]
+        ), patch(
+            "homeassistant.components.sonos.sync_get_visible_zones"
+        ) as mock_sync_get_visible_zones:
+            mock_sync_get_visible_zones.side_effect = [OSError(), []]
             await manager.async_poll_manual_hosts()
-            assert mock_async_add_executor_job.call_count == 2
+            assert mock_sync_get_visible_zones.call_count == 2
             assert mock_discovery_message.call_count == 1
             assert mock_async_call_later.call_count == 1
 
@@ -223,12 +228,12 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             "homeassistant.components.sonos.async_call_later"
         ) as mock_async_call_later, patch(
             "homeassistant.components.sonos.async_dispatcher_send"
-        ), patch.object(
-            hass, "async_add_executor_job", new=AsyncMock()
-        ) as mock_async_add_executor_job:
-            mock_async_add_executor_job.side_effect = [[], OSError()]
+        ), patch(
+            "homeassistant.components.sonos.sync_get_visible_zones"
+        ) as mock_sync_get_visible_zones:
+            mock_sync_get_visible_zones.side_effect = [[], OSError()]
             await manager.async_poll_manual_hosts()
-            assert mock_async_add_executor_job.call_count == 2
+            assert mock_sync_get_visible_zones.call_count == 2
             assert mock_discovery_message.call_count == 1
             assert mock_async_call_later.call_count == 1
 
@@ -239,12 +244,12 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             "homeassistant.components.sonos.async_call_later"
         ) as mock_async_call_later, patch(
             "homeassistant.components.sonos.async_dispatcher_send"
-        ), patch.object(
-            hass, "async_add_executor_job", new=AsyncMock()
-        ) as mock_async_add_executor_job:
-            mock_async_add_executor_job.side_effect = OSError()
+        ), patch(
+            "homeassistant.components.sonos.sync_get_visible_zones"
+        ) as mock_sync_get_visible_zones:
+            mock_sync_get_visible_zones.side_effect = OSError()
             await manager.async_poll_manual_hosts()
-            assert mock_async_add_executor_job.call_count == 2
+            assert mock_sync_get_visible_zones.call_count == 2
             assert mock_discovery_message.call_count == 0
             assert mock_async_call_later.call_count == 1
 
@@ -255,12 +260,12 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             "homeassistant.components.sonos.async_call_later"
         ) as mock_async_call_later, patch(
             "homeassistant.components.sonos.async_dispatcher_send"
-        ), patch.object(
-            hass, "async_add_executor_job", new=AsyncMock()
-        ) as mock_async_add_executor_job:
-            mock_async_add_executor_job.return_value = []
+        ), patch(
+            "homeassistant.components.sonos.sync_get_visible_zones"
+        ) as mock_sync_get_visible_zones:
+            mock_sync_get_visible_zones.return_value = []
             await manager.async_poll_manual_hosts()
-            assert mock_async_add_executor_job.call_count == 2
+            assert mock_sync_get_visible_zones.call_count == 2
             assert mock_discovery_message.call_count == 2
             assert mock_async_call_later.call_count == 1
 
@@ -271,22 +276,24 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             "homeassistant.components.sonos.async_call_later"
         ) as mock_async_call_later, patch(
             "homeassistant.components.sonos.async_dispatcher_send"
-        ) as mock_async_dispatcher_send, patch.object(
-            hass, "async_add_executor_job", new=AsyncMock()
-        ) as mock_async_add_executor_job:
+        ) as mock_async_dispatcher_send, patch(
+            "homeassistant.components.sonos.sync_get_visible_zones"
+        ) as mock_sync_get_visible_zones:
             speaker_1_mock = Mock()
             speaker_1_mock.soco.ip_address = "10.10.10.1"
             speaker_1_mock.available = False
+            speaker_1_mock.ping = _speaker_ping_success
             speaker_2_mock = Mock()
             speaker_2_mock.soco.ip_address = "10.10.10.2"
             speaker_2_mock.available = False
+            speaker_2_mock.ping = _speaker_ping_success
             manager.data.discovered = {
                 "10.10.10.1": speaker_1_mock,
                 "10.10.10.2": speaker_2_mock,
             }
-            mock_async_add_executor_job.return_value = []
+            mock_sync_get_visible_zones.return_value = []
             await manager.async_poll_manual_hosts()
-            assert mock_async_add_executor_job.call_count == 4
+            assert mock_sync_get_visible_zones.call_count == 2
             assert mock_async_dispatcher_send.call_count == 2
             assert mock_discovery_message.call_count == 0
             assert mock_async_call_later.call_count == 1
@@ -299,27 +306,25 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             "homeassistant.components.sonos.async_call_later"
         ) as mock_async_call_later, patch(
             "homeassistant.components.sonos.async_dispatcher_send"
-        ) as mock_async_dispatcher_send, patch.object(
-            hass, "async_add_executor_job", new=AsyncMock()
-        ) as mock_async_add_executor_job:
+        ) as mock_async_dispatcher_send, patch(
+            "homeassistant.components.sonos.sync_get_visible_zones"
+        ) as mock_sync_get_visible_zones:
             speaker_1_mock = Mock()
             speaker_1_mock.soco.ip_address = "10.10.10.1"
             speaker_1_mock.available = False
+            speaker_1_mock.ping = _speaker_ping_fail
+
             speaker_2_mock = Mock()
             speaker_2_mock.soco.ip_address = "10.10.10.2"
             speaker_2_mock.available = False
+            speaker_2_mock.ping = _speaker_ping_fail
             manager.data.discovered = {
                 "10.10.10.1": speaker_1_mock,
                 "10.10.10.2": speaker_2_mock,
             }
-            mock_async_add_executor_job.side_effect = [
-                [],
-                [],
-                SonosUpdateError(),
-                SonosUpdateError(),
-            ]
+            mock_sync_get_visible_zones.return_value = []
             await manager.async_poll_manual_hosts()
-            assert mock_async_add_executor_job.call_count == 4
+            assert mock_sync_get_visible_zones.call_count == 2
             assert mock_async_dispatcher_send.call_count == 0
             assert mock_discovery_message.call_count == 0
             assert mock_async_call_later.call_count == 1
@@ -332,16 +337,16 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             "homeassistant.components.sonos.async_call_later"
         ) as mock_async_call_later, patch(
             "homeassistant.components.sonos.async_dispatcher_send"
-        ) as mock_async_dispatcher_send, patch.object(
-            hass, "async_add_executor_job", new=AsyncMock()
-        ) as mock_async_add_executor_job:
+        ) as mock_async_dispatcher_send, patch(
+            "homeassistant.components.sonos.sync_get_visible_zones"
+        ) as mock_sync_get_visible_zones:
             visible_zone_3_mock = Mock()
             visible_zone_3_mock.ip_address = "10.10.10.3"
             visible_zone_4_mock = Mock()
             visible_zone_4_mock.ip_address = "10.10.10.4"
             visible_zone_5_mock = Mock()
             visible_zone_5_mock.ip_address = "10.10.10.5"
-            mock_async_add_executor_job.side_effect = [
+            mock_sync_get_visible_zones.side_effect = [
                 [visible_zone_3_mock],
                 [visible_zone_4_mock, visible_zone_5_mock],
             ]
@@ -350,7 +355,7 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             assert "10.10.10.3" in manager.hosts
             assert "10.10.10.4" in manager.hosts
             assert "10.10.10.5" in manager.hosts
-            assert mock_async_add_executor_job.call_count == 2
+            assert mock_sync_get_visible_zones.call_count == 2
             assert mock_async_dispatcher_send.call_count == 0
             assert mock_discovery_message.call_count == 5
             assert mock_async_call_later.call_count == 1
@@ -371,17 +376,17 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
             "homeassistant.components.sonos.async_call_later"
         ) as mock_async_call_later, patch(
             "homeassistant.components.sonos.async_dispatcher_send"
-        ) as mock_async_dispatcher_send, patch.object(
-            hass, "async_add_executor_job", new=AsyncMock()
-        ) as mock_async_add_executor_job, patch.object(
+        ) as mock_async_dispatcher_send, patch(
+            "homeassistant.components.sonos.sync_get_visible_zones"
+        ) as mock_sync_get_visible_zones, patch.object(
             manager, "is_device_invisible"
         ) as mock_is_device_invisible:
-            mock_async_add_executor_job.return_value = []
+            mock_sync_get_visible_zones.return_value = []
             mock_is_device_invisible.side_effect = device_is_invisible
             await manager.async_poll_manual_hosts()
             assert len(manager.hosts) == 1
             assert "10.10.10.2" in manager.hosts
-            assert mock_async_add_executor_job.call_count == 2
+            assert mock_sync_get_visible_zones.call_count == 2
             assert mock_async_dispatcher_send.call_count == 0
             assert mock_discovery_message.call_count == 1
             assert mock_async_call_later.call_count == 1
