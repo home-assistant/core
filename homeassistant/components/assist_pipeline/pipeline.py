@@ -80,8 +80,8 @@ async def _async_create_default_pipeline(
 ) -> None:
     """Create a default pipeline.
 
-    Use cloud for stt / tts if there's a subscription, otherwise create a text
-    only pipeline.
+    The default pipeline will use the homeassistant conversation agent and the
+    default stt / tts engines.
     """
     conversation_language = "en"
     pipeline_language = "en"
@@ -119,6 +119,11 @@ async def _async_create_default_pipeline(
         if stt_languages:
             stt_language = stt_languages[0]
         else:
+            _LOGGER.debug(
+                "Speech to text engine '%s' does not support language %s",
+                stt_engine_id,
+                pipeline_language,
+            )
             stt_engine_id = None
 
     if (tts_engine_id := tts.async_default_engine(hass)) is not None and (
@@ -138,7 +143,15 @@ async def _async_create_default_pipeline(
             if tts_voices:
                 tts_voice = tts_voices[0]
         else:
+            _LOGGER.debug(
+                "Text to speech engine '%s' does not support language %s",
+                tts_engine_id,
+                pipeline_language,
+            )
             tts_engine_id = None
+
+    if stt_engine_id == "cloud" and tts_engine_id == "cloud":
+        pipeline_name = "Home Assistant Cloud"
 
     await pipeline_store.async_create_item(
         {
@@ -155,10 +168,11 @@ async def _async_create_default_pipeline(
     )
 
 
-async def async_get_pipeline(
+@callback
+def async_get_pipeline(
     hass: HomeAssistant, pipeline_id: str | None = None
 ) -> Pipeline | None:
-    """Get a pipeline by id or create one for a language."""
+    """Get a pipeline by id or the preferred pipeline."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
 
     if pipeline_id is None:

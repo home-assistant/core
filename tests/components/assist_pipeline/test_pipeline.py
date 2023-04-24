@@ -148,11 +148,11 @@ async def test_get_pipeline(hass: HomeAssistant) -> None:
     assert len(store.data) == 1
 
     # Test we get the preferred pipeline if none is speocifed
-    pipeline = await async_get_pipeline(hass, None)
+    pipeline = async_get_pipeline(hass, None)
     assert pipeline.id == store.async_get_preferred_item()
 
     # Test getting a specific pipeline
-    assert pipeline is await async_get_pipeline(hass, pipeline.id)
+    assert pipeline is async_get_pipeline(hass, pipeline.id)
 
 
 @pytest.mark.parametrize(
@@ -187,7 +187,7 @@ async def test_default_pipeline_no_stt_tts(
     assert len(store.data) == 1
 
     # Check the default pipeline
-    pipeline = await async_get_pipeline(hass, None)
+    pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
         conversation_engine="homeassistant",
         conversation_language=conv_language,
@@ -211,7 +211,7 @@ async def test_default_pipeline(hass: HomeAssistant, init_components) -> None:
     assert len(store.data) == 1
 
     # Check the default pipeline
-    pipeline = await async_get_pipeline(hass, None)
+    pipeline = async_get_pipeline(hass, None)
     assert pipeline == Pipeline(
         conversation_engine="homeassistant",
         conversation_language="en",
