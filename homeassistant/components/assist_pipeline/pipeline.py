@@ -83,14 +83,16 @@ async def async_get_pipeline(
     if pipeline_id is None:
         # There's no preferred pipeline, construct a pipeline for the
         # configured language
+        stt_engine = stt.async_default_provider(hass)
+        stt_language = hass.config.language if stt_engine else None
         return await pipeline_data.pipeline_store.async_create_item(
             {
                 "conversation_engine": None,
                 "conversation_language": None,
                 "language": hass.config.language,
                 "name": hass.config.language,
-                "stt_engine": None,
-                "stt_language": None,
+                "stt_engine": stt_engine,
+                "stt_language": stt_language,
                 "tts_engine": None,
                 "tts_language": None,
                 "tts_voice": None,
@@ -261,22 +263,14 @@ class PipelineRun:
         """Prepare speech to text."""
         stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
 
-        if self.pipeline.stt_engine is not None:
-            # Try entity first
-            stt_provider = stt.async_get_speech_to_text_entity(
-                self.hass,
-                self.pipeline.stt_engine,
-            )
+        # pipeline.stt_engine can't be None or this function is not called
+        stt_provider = stt.async_get_speech_to_text_engine(
+            self.hass,
+            self.pipeline.stt_engine,  # type: ignore[arg-type]
+        )
 
         if stt_provider is None:
-            # Try legacy provider second
-            stt_provider = stt.async_get_provider(
-                self.hass,
-                self.pipeline.stt_engine,
-            )
-
-        if stt_provider is None:
-            engine = self.pipeline.stt_engine or "default"
+            engine = self.pipeline.stt_engine
             raise SpeechToTextError(
                 code="stt-provider-missing",
                 message=f"No speech to text provider for: {engine}",
@@ -580,11 +574,14 @@ class PipelineInput:
     async def validate(self) -> None:
         """Validate pipeline input against start stage."""
         if self.run.start_stage == PipelineStage.STT:
+            if self.run.pipeline.stt_engine is None:
+                raise PipelineRunValidationError(
+                    "the pipeline does not support speech to text"
+                )
             if self.stt_metadata is None:
                 raise PipelineRunValidationError(
                     "stt_metadata is required for speech to text"
                 )
-
             if self.stt_stream is None:
                 raise PipelineRunValidationError(
                     "stt_stream is required for speech to text"
