@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import SERVICE_SELECT_OPTION, Platform
+from homeassistant.const import SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
 
-from .common import setup_platform
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -17,13 +17,13 @@ from .common import setup_platform
     ],
 )
 async def test_update_success(
-    hass: HomeAssistant, bypass_api_fixture, entity_id, value
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+    value: str,
 ) -> None:
     """Test allowed changing values for select entities."""
-
-    # Setup component
-    assert await setup_platform(hass, [Platform.SELECT])
-    # Test
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
     ) as mock_send_message:
