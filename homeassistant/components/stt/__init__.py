@@ -41,12 +41,14 @@ from .legacy import (
     Provider,
     SpeechMetadata,
     SpeechResult,
+    async_default_provider,
     async_get_provider,
     async_setup_legacy,
 )
 
 __all__ = [
     "async_get_provider",
+    "async_get_speech_to_text_engine",
     "async_get_speech_to_text_entity",
     "AudioBitRates",
     "AudioChannels",
@@ -65,6 +67,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
+def async_default_engine(hass: HomeAssistant) -> str | None:
+    """Return the domain or entity id of the default engine."""
+    return async_default_provider(hass) or next(
+        iter(hass.states.async_entity_ids(DOMAIN)), None
+    )
+
+
+@callback
 def async_get_speech_to_text_entity(
     hass: HomeAssistant, entity_id: str
 ) -> SpeechToTextEntity | None:
@@ -72,6 +82,16 @@ def async_get_speech_to_text_entity(
     component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
 
     return component.get_entity(entity_id)
+
+
+@callback
+def async_get_speech_to_text_engine(
+    hass: HomeAssistant, engine_id: str
+) -> SpeechToTextEntity | Provider | None:
+    """Return stt entity or legacy provider."""
+    if entity := async_get_speech_to_text_entity(hass, engine_id):
+        return entity
+    return async_get_provider(hass, engine_id)
 
 
 @callback

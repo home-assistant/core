@@ -15,6 +15,7 @@ from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.collection import (
     CollectionError,
     ItemNotFound,
@@ -83,16 +84,20 @@ async def async_get_pipeline(
     if pipeline_id is None:
         # There's no preferred pipeline, construct a pipeline for the
         # configured language
+        stt_engine = stt.async_default_provider(hass)
+        stt_language = hass.config.language if stt_engine else None
+        tts_engine = tts.async_default_engine(hass)
+        tts_language = hass.config.language if tts_engine else None
         return await pipeline_data.pipeline_store.async_create_item(
             {
                 "conversation_engine": None,
                 "conversation_language": None,
                 "language": hass.config.language,
                 "name": hass.config.language,
-                "stt_engine": None,
-                "stt_language": None,
-                "tts_engine": None,
-                "tts_language": None,
+                "stt_engine": stt_engine,
+                "stt_language": stt_language,
+                "tts_engine": tts_engine,
+                "tts_language": tts_language,
                 "tts_voice": None,
             }
         )
@@ -261,22 +266,14 @@ class PipelineRun:
         """Prepare speech to text."""
         stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
 
-        if self.pipeline.stt_engine is not None:
-            # Try entity first
-            stt_provider = stt.async_get_speech_to_text_entity(
-                self.hass,
-                self.pipeline.stt_engine,
-            )
+        # pipeline.stt_engine can't be None or this function is not called
+        stt_provider = stt.async_get_speech_to_text_engine(
+            self.hass,
+            self.pipeline.stt_engine,  # type: ignore[arg-type]
+        )
 
         if stt_provider is None:
-            # Try legacy provider second
-            stt_provider = stt.async_get_provider(
-                self.hass,
-                self.pipeline.stt_engine,
-            )
-
-        if stt_provider is None:
-            engine = self.pipeline.stt_engine or "default"
+            engine = self.pipeline.stt_engine
             raise SpeechToTextError(
                 code="stt-provider-missing",
                 message=f"No speech to text provider for: {engine}",
@@ -426,14 +423,7 @@ class PipelineRun:
 
     async def prepare_text_to_speech(self) -> None:
         """Prepare text to speech."""
-        engine = tts.async_resolve_engine(self.hass, self.pipeline.tts_engine)
-
-        if engine is None:
-            engine = self.pipeline.tts_engine or "default"
-            raise TextToSpeechError(
-                code="tts-not-supported",
-                message=f"Text to speech engine '{engine}' not found",
-            )
+        engine = self.pipeline.tts_engine
 
         tts_options = {}
         if self.pipeline.tts_voice is not None:
@@ -442,19 +432,26 @@ class PipelineRun:
         if self.tts_audio_output is not None:
             tts_options[tts.ATTR_AUDIO_OUTPUT] = self.tts_audio_output
 
-        if not await tts.async_support_options(
-            self.hass,
-            engine,
-            self.pipeline.tts_language,
-            tts_options,
-        ):
+        try:
+            # pipeline.tts_engine can't be None or this function is not called
+            if not await tts.async_support_options(
+                self.hass,
+                engine,  # type: ignore[arg-type]
+                self.pipeline.tts_language,
+                tts_options,
+            ):
+                raise TextToSpeechError(
+                    code="tts-not-supported",
+                    message=(
+                        f"Text to speech engine {engine} "
+                        f"does not support language {self.pipeline.tts_language} or options {tts_options}"
+                    ),
+                )
+        except HomeAssistantError as err:
             raise TextToSpeechError(
                 code="tts-not-supported",
-                message=(
-                    f"Text to speech engine {engine} "
-                    f"does not support language {self.pipeline.tts_language} or options {tts_options}"
-                ),
-            )
+                message=f"Text to speech engine '{engine}' not found",
+            ) from err
 
         self.tts_engine = engine
         self.tts_options = tts_options
@@ -580,11 +577,14 @@ class PipelineInput:
     async def validate(self) -> None:
         """Validate pipeline input against start stage."""
         if self.run.start_stage == PipelineStage.STT:
+            if self.run.pipeline.stt_engine is None:
+                raise PipelineRunValidationError(
+                    "the pipeline does not support speech to text"
+                )
             if self.stt_metadata is None:
                 raise PipelineRunValidationError(
                     "stt_metadata is required for speech to text"
                 )
-
             if self.stt_stream is None:
                 raise PipelineRunValidationError(
                     "stt_stream is required for speech to text"
@@ -598,6 +598,11 @@ class PipelineInput:
             if self.tts_input is None:
                 raise PipelineRunValidationError(
                     "tts_input is required for text to speech"
+                )
+        if self.run.end_stage == PipelineStage.TTS:
+            if self.run.pipeline.tts_engine is None:
+                raise PipelineRunValidationError(
+                    "the pipeline does not support text to speech"
                 )
 
         start_stage_index = PIPELINE_STAGE_ORDER.index(self.run.start_stage)
