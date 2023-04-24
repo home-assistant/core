@@ -6,7 +6,7 @@ CONF_ENTRY_CODE = "code"
 CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 
-PLATFORMS = [Platform.VACUUM, Platform.SENSOR]
+PLATFORMS = [Platform.VACUUM, Platform.SELECT, Platform.SENSOR]
 
 # Total time in seconds consumables have before Roborock recommends replacing
 MAIN_BRUSH_REPLACE_TIME = 1080000

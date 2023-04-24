@@ -11,9 +11,8 @@ from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import PipelineStorageCollection
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -36,6 +35,8 @@ _TRANSCRIPT = "test transcript"
 class BaseProvider:
     """Mock STT provider."""
 
+    _supported_languages = ["en-US"]
+
     def __init__(self, text: str) -> None:
         """Init test provider."""
         self.text = text
@@ -44,7 +45,7 @@ class BaseProvider:
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return ["en-US"]
+        return self._supported_languages
 
     @property
     def supported_formats(self) -> list[stt.AudioFormats]:
@@ -96,6 +97,13 @@ class MockTTSProvider(tts.Provider):
     """Mock TTS provider."""
 
     name = "Test"
+    _supported_languages = ["en-US"]
+    _supported_voices = {
+        "en-US": [
+            tts.Voice("james_earl_jones", "James Earl Jones"),
+            tts.Voice("fran_drescher", "Fran Drescher"),
+        ]
+    }
 
     @property
     def default_language(self) -> str:
@@ -105,7 +113,12 @@ class MockTTSProvider(tts.Provider):
     @property
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
-        return ["en-US"]
+        return self._supported_languages
+
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
+        """Return a list of supported voices for a language."""
+        return self._supported_voices.get(language)
 
     @property
     def supported_options(self) -> list[str]:
@@ -119,19 +132,21 @@ class MockTTSProvider(tts.Provider):
         return ("mp3", b"")
 
 
-class MockTTS(MockPlatform):
+class MockTTSPlatform(MockPlatform):
     """A mock TTS platform."""
 
     PLATFORM_SCHEMA = tts.PLATFORM_SCHEMA
 
-    async def async_get_engine(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        discovery_info: DiscoveryInfoType | None = None,
-    ) -> tts.Provider:
-        """Set up a mock speech component."""
-        return MockTTSProvider()
+    def __init__(self, *, async_get_engine, **kwargs):
+        """Initialize the tts platform."""
+        super().__init__(**kwargs)
+        self.async_get_engine = async_get_engine
+
+
+@pytest.fixture
+async def mock_tts_provider(hass) -> MockTTSProvider:
+    """Mock TTS provider."""
+    return MockTTSProvider()
 
 
 @pytest.fixture
@@ -169,10 +184,11 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
 
 
 @pytest.fixture
-async def init_components(
+async def init_supporting_components(
     hass: HomeAssistant,
     mock_stt_provider: MockSttProvider,
     mock_stt_provider_entity: MockSttProviderEntity,
+    mock_tts_provider: MockTTSProvider,
     config_flow_fixture,
     init_cache_dir_side_effect,  # noqa: F811
     mock_get_cache_files,  # noqa: F811
@@ -210,7 +226,13 @@ async def init_components(
             async_unload_entry=async_unload_entry_init,
         ),
     )
-    mock_platform(hass, "test.tts", MockTTS())
+    mock_platform(
+        hass,
+        "test.tts",
+        MockTTSPlatform(
+            async_get_engine=AsyncMock(return_value=mock_tts_provider),
+        ),
+    )
     mock_platform(
         hass,
         "test.stt",
@@ -224,12 +246,18 @@ async def init_components(
     assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
     assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "test"}})
     assert await async_setup_component(hass, "media_source", {})
-    assert await async_setup_component(hass, "assist_pipeline", {})
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def init_components(hass: HomeAssistant, init_supporting_components):
+    """Initialize relevant components with empty configs."""
+
+    assert await async_setup_component(hass, "assist_pipeline", {})
 
 
 @pytest.fixture
