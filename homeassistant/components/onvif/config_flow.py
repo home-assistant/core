@@ -1,6 +1,7 @@
 """Config flow for ONVIF."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pprint import pformat
 from typing import Any
 from urllib.parse import urlparse
@@ -98,6 +99,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.device_id = None
         self.devices = []
         self.onvif_config = {}
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle user flow."""
@@ -109,6 +111,40 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle re-authentication of an existing config entry."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm reauth."""
+        assert self._reauth_entry is not None
+        entry = self._reauth_entry
+        errors: dict[str, str] | None = {}
+        if user_input is not None:
+            entry_data = entry.data
+            self.onvif_config = entry_data | user_input
+            errors, description_placeholders = await self.async_setup_profiles()
+            if not errors:
+                hass = self.hass
+                entry_id = entry.entry_id
+                hass.config_entries.async_update_entry(entry, data=self.onvif_config)
+                await hass.config_entries.async_reload(entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
