@@ -16,7 +16,11 @@ def preferred_regions(
     country: str | None = None,
     code: str | None = None,
 ) -> Iterable[str | None]:
-    """Yield preferred regions for a language based on country/code hints."""
+    """Yield an ordered list of regions for a language based on country/code hints.
+
+    Regions should be checked for support in the returned order if no other
+    information is available.
+    """
     if country is not None:
         yield country.upper()
 
@@ -27,10 +31,8 @@ def preferred_regions(
     elif language == "zh":
         if code == "Hant":
             yield "HK"
-        elif code == "Hans":
             yield "TW"
         else:
-            # Prefer China if no matching code
             yield "CN"
 
     # fr -> fr-FR

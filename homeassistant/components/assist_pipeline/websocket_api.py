@@ -1,6 +1,8 @@
 """Assist pipeline Websocket API."""
 import asyncio
-import audioop
+
+# Suppressing disable=deprecated-module is needed for Python 3.11
+import audioop  # pylint: disable=deprecated-module
 from collections.abc import AsyncGenerator, Callable
 import logging
 from typing import Any
