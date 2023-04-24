@@ -69,21 +69,21 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     async_add_entities(
-        [
-            RoborockSelectEntity(
-                f"{description.key}_{slugify(device_id)}",
-                device_info,
-                coordinator,
-                description,
-            )
-            for device_id, device_info in coordinator.devices_info.items()
-            for description in SELECT_DESCRIPTIONS
-        ]
+        RoborockSelectEntity(
+            f"{description.key}_{slugify(device_id)}",
+            device_info,
+            coordinator,
+            description,
+        )
+        for device_id, device_info in coordinator.devices_info.items()
+        for description in SELECT_DESCRIPTIONS
     )
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
     """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
+
+    entity_description: RoborockSelectDescription
 
     def __init__(
         self,
@@ -95,19 +95,15 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         """Create a select entity."""
         self.entity_description = entity_description
         super().__init__(unique_id, device_info, coordinator)
-        self.api_command = entity_description.api_command
-        self.key = entity_description.key
-        self.option_lambda = self.entity_description.options_lambda
-        self.value_fn = self.entity_description.value_fn
 
     async def async_select_option(self, option: str) -> None:
         """Set the mop intensity."""
         await self.send(
-            self.api_command,
-            self.option_lambda(option),
+            self.entity_description.api_command,
+            self.entity_description.options_lambda(option),
         )
 
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        return self.value_fn(self._device_status)
+        return self.entity_description.value_fn(self._device_status)
