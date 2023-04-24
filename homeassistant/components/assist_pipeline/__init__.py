@@ -51,7 +51,7 @@ async def async_pipeline_from_audio_stream(
     tts_audio_output: str | None = None,
 ) -> None:
     """Create an audio pipeline from an audio stream."""
-    pipeline = await async_get_pipeline(hass, pipeline_id=pipeline_id)
+    pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
     if pipeline is None:
         raise PipelineNotFound(
             "pipeline_not_found", f"Pipeline {pipeline_id} not found"
