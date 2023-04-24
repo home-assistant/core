@@ -351,6 +351,9 @@ async def test_get_provider(
     await mock_setup(hass, tmp_path, mock_provider)
     assert mock_provider == async_get_provider(hass, TEST_DOMAIN)
 
+    # Test getting the default provider
+    assert mock_provider == async_get_provider(hass)
+
 
 async def test_config_entry_unload(
     hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
