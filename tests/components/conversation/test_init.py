@@ -1576,6 +1576,7 @@ async def test_get_agent_list(
     hass: HomeAssistant,
     init_components,
     mock_agent,
+    mock_agent_support_all,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
