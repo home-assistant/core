@@ -22,15 +22,16 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import setup_platforms
+from tests.common import MockConfigEntry
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
 
 
-async def test_registry_entries(hass: HomeAssistant, bypass_api_fixture) -> None:
+async def test_registry_entries(
+    hass: HomeAssistant, bypass_api_fixture, setup_entry: MockConfigEntry
+) -> None:
     """Tests devices are registered in the entity registry."""
-    await setup_platforms(hass)
     entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(ENTITY_ID)
     assert entry.unique_id == DEVICE_ID
@@ -63,13 +64,13 @@ async def test_registry_entries(hass: HomeAssistant, bypass_api_fixture) -> None
 async def test_commands(
     hass: HomeAssistant,
     bypass_api_fixture,
+    setup_entry: MockConfigEntry,
     service: str,
     command: str,
     service_params: dict[str, Any],
     called_params: list | None,
 ) -> None:
     """Test sending commands to the vacuum."""
-    await setup_platforms(hass)
 
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
