@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.tts import (
     ATTR_AUDIO_OUTPUT,
+    ATTR_VOICE,
     CONF_LANG,
     PLATFORM_SCHEMA,
     Provider,
@@ -16,7 +17,6 @@ from homeassistant.core import callback
 from .const import DOMAIN
 
 ATTR_GENDER = "gender"
-ATTR_VOICE = "voice"
 
 SUPPORT_LANGUAGES = list(TTS_VOICES)
 

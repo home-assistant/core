@@ -253,5 +253,33 @@
       "no_tunnel_discovered": "[%key:component::knx::config::error::no_tunnel_discovered%]",
       "unsupported_tunnel_type": "[%key:component::knx::config::error::unsupported_tunnel_type%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "individual_address": {
+        "name": "Individual address"
+      },
+      "connected_since": {
+        "name": "Connection established"
+      },
+      "connection_type": {
+        "name": "Connection type"
+      },
+      "telegrams_incoming": {
+        "name": "Incoming telegrams"
+      },
+      "telegrams_incoming_error": {
+        "name": "Incoming telegram errors"
+      },
+      "telegrams_outgoing": {
+        "name": "Outgoing telegrams"
+      },
+      "telegrams_outgoing_error": {
+        "name": "Outgoing telegram errors"
+      },
+      "telegram_count": {
+        "name": "Telegrams"
+      }
+    }
   }
 }

@@ -1111,9 +1111,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         # If at least one member has a color cluster and doesn't support it,
         # it's not used.
         for member in group.members:
-            for (
-                endpoint
-            ) in member.device._endpoints.values():  # pylint: disable=protected-access
+            for endpoint in member.device._endpoints.values():
                 for cluster_handler in endpoint.all_cluster_handlers.values():
                     if (
                         cluster_handler.name == CLUSTER_HANDLER_COLOR

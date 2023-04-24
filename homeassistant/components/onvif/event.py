@@ -28,8 +28,11 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from .const import DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
 from .parsers import PARSERS
+from .util import stringify_onvif_error
 
-UNHANDLED_TOPICS: set[str] = set()
+# Topics in this list are ignored because we do not want to create
+# entities for them.
+UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
 
 SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
 CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError)
@@ -56,13 +59,6 @@ SUBSCRIPTION_RENEW_INTERVAL_ON_ERROR = 60.0
 PULLPOINT_POLL_TIME = dt.timedelta(seconds=60)
 PULLPOINT_MESSAGE_LIMIT = 100
 PULLPOINT_COOLDOWN_TIME = 0.75
-
-
-def _stringify_onvif_error(error: Exception) -> str:
-    """Stringify ONVIF error."""
-    if isinstance(error, Fault):
-        return error.message or str(error) or "Device sent empty error"
-    return str(error)
 
 
 class EventManager:
@@ -156,7 +152,16 @@ class EventManager:
             if not msg.Topic:
                 continue
 
-            topic = msg.Topic._value_1
+            # Topic may look like the following
+            #
+            # tns1:RuleEngine/CellMotionDetector/Motion//.
+            # tns1:RuleEngine/CellMotionDetector/Motion
+            # tns1:RuleEngine/CellMotionDetector/Motion/
+            #
+            # Our parser expects the topic to be
+            # tns1:RuleEngine/CellMotionDetector/Motion
+            topic = msg.Topic._value_1.rstrip("/.")
+
             if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.info(
@@ -210,6 +215,12 @@ class EventManager:
             return
         LOGGER.debug("%s: Switching to webhook for events", self.name)
         self.pullpoint_manager.async_pause()
+
+    @callback
+    def async_mark_events_stale(self) -> None:
+        """Mark all events as stale when the subscriptions fail since we are out of sync."""
+        self._events.clear()
+        self.async_callback_listeners()
 
 
 class PullPointManager:
@@ -316,7 +327,13 @@ class PullPointManager:
         try:
             try:
                 started = await self._async_create_pullpoint_subscription()
-            except RemoteProtocolError:
+            except RequestError:
+                #
+                # We should only need to retry on RemoteProtocolError but some cameras
+                # are flaky and sometimes do not respond to the Renew request so we
+                # retry on RequestError as well.
+                #
+                # For RemoteProtocolError:
                 # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
                 # to close the connection at any time, we treat this as a normal and try again
                 # once since we do not want to declare the camera as not supporting PullPoint
@@ -326,7 +343,7 @@ class PullPointManager:
             LOGGER.debug(
                 "%s: Device does not support PullPoint service or has too many subscriptions: %s",
                 self._name,
-                _stringify_onvif_error(err),
+                stringify_onvif_error(err),
             )
             return False
 
@@ -409,7 +426,10 @@ class PullPointManager:
 
     async def _async_unsubscribe_pullpoint(self) -> None:
         """Unsubscribe the pullpoint subscription."""
-        if not self._pullpoint_subscription:
+        if (
+            not self._pullpoint_subscription
+            or self._pullpoint_subscription.transport.client.is_closed
+        ):
             return
         LOGGER.debug("%s: Unsubscribing from PullPoint", self._name)
         try:
@@ -421,26 +441,43 @@ class PullPointManager:
                     " This is normal if the device restarted: %s"
                 ),
                 self._name,
-                _stringify_onvif_error(err),
+                stringify_onvif_error(err),
             )
         self._pullpoint_subscription = None
 
     async def _async_renew_pullpoint(self) -> bool:
         """Renew the PullPoint subscription."""
-        if not self._pullpoint_subscription:
+        if (
+            not self._pullpoint_subscription
+            or self._pullpoint_subscription.transport.client.is_closed
+        ):
             return False
         try:
             # The first time we renew, we may get a Fault error so we
             # suppress it. The subscription will be restarted in
             # async_restart later.
-            await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            try:
+                await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            except RequestError:
+                #
+                # We should only need to retry on RemoteProtocolError but some cameras
+                # are flaky and sometimes do not respond to the Renew request so we
+                # retry on RequestError as well.
+                #
+                # For RemoteProtocolError:
+                # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
+                # to close the connection at any time, we treat this as a normal and try again
+                # once since we do not want to mark events as stale
+                # if it just happened to close the connection at the wrong time.
+                await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
             LOGGER.debug("%s: Renewed PullPoint subscription", self._name)
             return True
         except RENEW_ERRORS as err:
+            self._event_manager.async_mark_events_stale()
             LOGGER.debug(
                 "%s: Failed to renew PullPoint subscription; %s",
                 self._name,
-                _stringify_onvif_error(err),
+                stringify_onvif_error(err),
             )
         return False
 
@@ -479,7 +516,7 @@ class PullPointManager:
                 "%s: PullPoint subscription encountered a remote protocol error "
                 "(this is normal for some cameras): %s",
                 self._name,
-                _stringify_onvif_error(err),
+                stringify_onvif_error(err),
             )
             return True
         except (XMLParseError, *SUBSCRIPTION_ERRORS) as err:
@@ -488,7 +525,7 @@ class PullPointManager:
             LOGGER.debug(
                 "%s: Failed to fetch PullPoint subscription messages: %s",
                 self._name,
-                _stringify_onvif_error(err),
+                stringify_onvif_error(err),
             )
             # Treat errors as if the camera restarted. Assume that the pullpoint
             # subscription is no longer valid.
@@ -634,7 +671,13 @@ class WebHookManager:
         try:
             try:
                 await self._async_create_webhook_subscription()
-            except RemoteProtocolError:
+            except RequestError:
+                #
+                # We should only need to retry on RemoteProtocolError but some cameras
+                # are flaky and sometimes do not respond to the Renew request so we
+                # retry on RequestError as well.
+                #
+                # For RemoteProtocolError:
                 # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
                 # to close the connection at any time, we treat this as a normal and try again
                 # once since we do not want to declare the camera as not supporting webhooks
@@ -645,7 +688,7 @@ class WebHookManager:
             LOGGER.debug(
                 "%s: Device does not support notification service or too many subscriptions: %s",
                 self._name,
-                _stringify_onvif_error(err),
+                stringify_onvif_error(err),
             )
             return False
 
@@ -659,17 +702,34 @@ class WebHookManager:
 
     async def _async_renew_webhook(self) -> bool:
         """Renew webhook subscription."""
-        if not self._webhook_subscription:
+        if (
+            not self._webhook_subscription
+            or self._webhook_subscription.transport.client.is_closed
+        ):
             return False
         try:
-            await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            try:
+                await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            except RequestError:
+                #
+                # We should only need to retry on RemoteProtocolError but some cameras
+                # are flaky and sometimes do not respond to the Renew request so we
+                # retry on RequestError as well.
+                #
+                # For RemoteProtocolError:
+                # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
+                # to close the connection at any time, we treat this as a normal and try again
+                # once since we do not want to mark events as stale
+                # if it just happened to close the connection at the wrong time.
+                await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
             LOGGER.debug("%s: Renewed Webhook subscription", self._name)
             return True
         except RENEW_ERRORS as err:
+            self._event_manager.async_mark_events_stale()
             LOGGER.debug(
                 "%s: Failed to renew webhook subscription %s",
                 self._name,
-                _stringify_onvif_error(err),
+                stringify_onvif_error(err),
             )
         return False
 
@@ -782,7 +842,10 @@ class WebHookManager:
 
     async def _async_unsubscribe_webhook(self) -> None:
         """Unsubscribe from the webhook."""
-        if not self._webhook_subscription:
+        if (
+            not self._webhook_subscription
+            or self._webhook_subscription.transport.client.is_closed
+        ):
             return
         LOGGER.debug("%s: Unsubscribing from webhook", self._name)
         try:
@@ -794,6 +857,6 @@ class WebHookManager:
                     " This is normal if the device restarted: %s"
                 ),
                 self._name,
-                _stringify_onvif_error(err),
+                stringify_onvif_error(err),
             )
         self._webhook_subscription = None
