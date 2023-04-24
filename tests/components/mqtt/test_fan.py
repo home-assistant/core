@@ -532,7 +532,13 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     async_fire_mqtt_message(
         hass,
         "shared-state-topic",
-        '{"state":"ON","preset_mode":"eco","oscillation":"oscillate_on","percentage": 50, "direction": "forward"}',
+        """{
+        "state":"ON",
+        "preset_mode":"eco",
+        "oscillation":"oscillate_on",
+        "percentage": 50,
+        "direction": "forward"
+        }""",
     )
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
@@ -544,7 +550,13 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     async_fire_mqtt_message(
         hass,
         "shared-state-topic",
-        '{"state":"ON","preset_mode":"auto","oscillation":"oscillate_off","percentage": 10, "direction": "forward"}',
+        """{
+       "state":"ON",
+       "preset_mode":"auto",
+       "oscillation":"oscillate_off",
+       "percentage": 10,
+       "direction": "forward"
+       }""",
     )
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
@@ -556,7 +568,13 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     async_fire_mqtt_message(
         hass,
         "shared-state-topic",
-        '{"state":"OFF","preset_mode":"auto","oscillation":"oscillate_off","percentage": 0, "direction": "reverse"}',
+        """{
+        "state":"OFF",
+        "preset_mode":"auto",
+        "oscillation":"oscillate_off",
+        "percentage": 0,
+        "direction": "reverse"
+        }""",
     )
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
