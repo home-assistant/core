@@ -1,6 +1,7 @@
 """Test Voice Assistant init."""
 from dataclasses import asdict
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import assist_pipeline, stt
@@ -184,3 +185,63 @@ async def test_pipeline_from_audio_stream_entity(
 
     assert processed == snapshot
     assert mock_stt_provider_entity.received == [b"part1", b"part2"]
+
+
+async def test_pipeline_from_audio_stream_no_stt(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_stt_provider: MockSttProvider,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test creating a pipeline from an audio stream.
+
+    In this test, the pipeline does not support stt
+    """
+    client = await hass_ws_client(hass)
+
+    events = []
+
+    async def audio_data():
+        yield b"part1"
+        yield b"part2"
+        yield b""
+
+    # Create a pipeline without stt support
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "homeassistant",
+            "conversation_language": "en-US",
+            "language": "en",
+            "name": "test_name",
+            "stt_engine": None,
+            "stt_language": None,
+            "tts_engine": "test",
+            "tts_language": "en-AU",
+            "tts_voice": "Arnold Schwarzenegger",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id = msg["result"]["id"]
+
+    # Try to use the created pipeline
+    with pytest.raises(assist_pipeline.pipeline.PipelineRunValidationError):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            Context(),
+            events.append,
+            stt.SpeechMetadata(
+                language="en-UK",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            audio_data(),
+            pipeline_id=pipeline_id,
+        )
+
+    assert not events
