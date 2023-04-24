@@ -193,7 +193,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Handle authentication, make sure the panel we are re-authenticating against is listed among results
             # and verify its pin is correct.
             assert self._entry is not None
-            reauth_panel_id = self._entry.data[CONF_ELMAX_PANEL_ID]
             try:
                 # Test login.
                 client = await self._async_login(username=username, password=password)
@@ -224,7 +223,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     self._entry,
                     data={
-                        CONF_ELMAX_PANEL_ID: reauth_panel_id,
+                        CONF_ELMAX_PANEL_ID: self._entry.data[CONF_ELMAX_PANEL_ID],
                         CONF_ELMAX_PANEL_PIN: panel_pin,
                         CONF_ELMAX_USERNAME: username,
                         CONF_ELMAX_PASSWORD: password,
