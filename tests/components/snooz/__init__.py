@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from unittest.mock import patch
 
 from pysnooz.commands import SnoozCommandData
-from pysnooz.testing import MockSnoozDevice
+from pysnooz.device import DisconnectionReason
+from pysnooz.testing import MockSnoozDevice as ParentMockSnoozDevice
 
 from homeassistant.components.snooz.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
@@ -63,6 +64,18 @@ class SnoozFixture:
 
     entry: MockConfigEntry
     device: MockSnoozDevice
+
+
+class MockSnoozDevice(ParentMockSnoozDevice):
+    """Used for testing integration with Bleak.
+
+    Adjusted for https://github.com/AustinBrunkhorst/pysnooz/issues/6
+    """
+
+    def _on_device_disconnected(self, e) -> None:
+        if self._is_manually_disconnecting:
+            e.kwargs.set("reason", DisconnectionReason.USER)
+        return super()._on_device_disconnected(e)
 
 
 async def create_mock_snooz(

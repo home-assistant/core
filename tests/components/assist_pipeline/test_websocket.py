@@ -585,32 +585,44 @@ async def test_add_pipeline(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
             "language": "test_language",
             "name": "test_name",
             "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
             "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
         "conversation_engine": "test_conversation_engine",
+        "conversation_language": "test_language",
         "id": ANY,
         "language": "test_language",
         "name": "test_name",
         "stt_engine": "test_stt_engine",
+        "stt_language": "test_language",
         "tts_engine": "test_tts_engine",
+        "tts_language": "test_language",
+        "tts_voice": "Arnold Schwarzenegger",
     }
 
     assert len(pipeline_store.data) == 1
     pipeline = pipeline_store.data[msg["result"]["id"]]
     assert pipeline == Pipeline(
         conversation_engine="test_conversation_engine",
+        conversation_language="test_language",
         id=msg["result"]["id"],
         language="test_language",
         name="test_name",
         stt_engine="test_stt_engine",
+        stt_language="test_language",
         tts_engine="test_tts_engine",
+        tts_language="test_language",
+        tts_voice="Arnold Schwarzenegger",
     )
 
     await client.send_json_auto_id(
@@ -621,26 +633,52 @@ async def test_add_pipeline(
         }
     )
     msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {
-        "conversation_engine": None,
-        "id": ANY,
-        "language": "test_language",
-        "name": "test_name",
-        "stt_engine": None,
-        "tts_engine": None,
-    }
+    assert not msg["success"]
 
-    assert len(pipeline_store.data) == 2
-    pipeline = pipeline_store.data[msg["result"]["id"]]
-    assert pipeline == Pipeline(
-        conversation_engine=None,
-        id=msg["result"]["id"],
-        language="test_language",
-        name="test_name",
-        stt_engine=None,
-        tts_engine=None,
+
+async def test_add_pipeline_missing_language(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can't add a pipeline without specifying stt or tts language."""
+    client = await hass_ws_client(hass)
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_store = pipeline_data.pipeline_store
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "stt_language": None,
+            "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
+        }
     )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert len(pipeline_store.data) == 0
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
+            "tts_engine": "test_tts_engine",
+            "tts_language": None,
+            "tts_voice": "Arnold Schwarzenegger",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert len(pipeline_store.data) == 0
 
 
 async def test_delete_pipeline(
@@ -655,10 +693,14 @@ async def test_delete_pipeline(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
             "language": "test_language",
             "name": "test_name",
             "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
             "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()
@@ -669,10 +711,14 @@ async def test_delete_pipeline(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
             "language": "test_language",
             "name": "test_name",
             "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
             "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()
@@ -718,6 +764,100 @@ async def test_delete_pipeline(
     }
 
 
+async def test_get_pipeline(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
+) -> None:
+    """Test we can get a pipeline."""
+    client = await hass_ws_client(hass)
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_store = pipeline_data.pipeline_store
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": "Unable to find pipeline_id None",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+            "pipeline_id": "no_such_pipeline",
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_found",
+        "message": "Unable to find pipeline_id no_such_pipeline",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
+            "language": "test_language",
+            "name": "test_name",
+            "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
+            "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id = msg["result"]["id"]
+    assert len(pipeline_store.data) == 1
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": "test_conversation_engine",
+        "conversation_language": "test_language",
+        "id": pipeline_id,
+        "language": "test_language",
+        "name": "test_name",
+        "stt_engine": "test_stt_engine",
+        "stt_language": "test_language",
+        "tts_engine": "test_tts_engine",
+        "tts_language": "test_language",
+        "tts_voice": "Arnold Schwarzenegger",
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/get",
+            "pipeline_id": pipeline_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "conversation_engine": "test_conversation_engine",
+        "conversation_language": "test_language",
+        "id": pipeline_id,
+        "language": "test_language",
+        "name": "test_name",
+        "stt_engine": "test_stt_engine",
+        "stt_language": "test_language",
+        "tts_engine": "test_tts_engine",
+        "tts_language": "test_language",
+        "tts_voice": "Arnold Schwarzenegger",
+    }
+
+
 async def test_list_pipelines(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, init_components
 ) -> None:
@@ -735,10 +875,14 @@ async def test_list_pipelines(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
             "language": "test_language",
             "name": "test_name",
             "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
             "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()
@@ -752,11 +896,15 @@ async def test_list_pipelines(
         "pipelines": [
             {
                 "conversation_engine": "test_conversation_engine",
+                "conversation_language": "test_language",
                 "id": ANY,
                 "language": "test_language",
                 "name": "test_name",
                 "stt_engine": "test_stt_engine",
+                "stt_language": "test_language",
                 "tts_engine": "test_tts_engine",
+                "tts_language": "test_language",
+                "tts_voice": "Arnold Schwarzenegger",
             }
         ],
         "preferred_pipeline": ANY,
@@ -775,11 +923,15 @@ async def test_update_pipeline(
         {
             "type": "assist_pipeline/pipeline/update",
             "conversation_engine": "new_conversation_engine",
+            "conversation_language": "new_conversation_language",
             "language": "new_language",
             "name": "new_name",
             "pipeline_id": "no_such_pipeline",
             "stt_engine": "new_stt_engine",
+            "stt_language": "new_stt_language",
             "tts_engine": "new_tts_engine",
+            "tts_language": "new_tts_language",
+            "tts_voice": "new_tts_voice",
         }
     )
     msg = await client.receive_json()
@@ -793,10 +945,14 @@ async def test_update_pipeline(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
             "language": "test_language",
             "name": "test_name",
             "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
             "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()
@@ -808,65 +964,89 @@ async def test_update_pipeline(
         {
             "type": "assist_pipeline/pipeline/update",
             "conversation_engine": "new_conversation_engine",
+            "conversation_language": "new_conversation_language",
             "language": "new_language",
             "name": "new_name",
             "pipeline_id": pipeline_id,
             "stt_engine": "new_stt_engine",
+            "stt_language": "new_stt_language",
             "tts_engine": "new_tts_engine",
+            "tts_language": "new_tts_language",
+            "tts_voice": "new_tts_voice",
         }
     )
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
         "conversation_engine": "new_conversation_engine",
+        "conversation_language": "new_conversation_language",
         "id": pipeline_id,
         "language": "new_language",
         "name": "new_name",
         "stt_engine": "new_stt_engine",
+        "stt_language": "new_stt_language",
         "tts_engine": "new_tts_engine",
+        "tts_language": "new_tts_language",
+        "tts_voice": "new_tts_voice",
     }
 
     assert len(pipeline_store.data) == 1
     pipeline = pipeline_store.data[pipeline_id]
     assert pipeline == Pipeline(
         conversation_engine="new_conversation_engine",
+        conversation_language="new_conversation_language",
         id=pipeline_id,
         language="new_language",
         name="new_name",
         stt_engine="new_stt_engine",
+        stt_language="new_stt_language",
         tts_engine="new_tts_engine",
+        tts_language="new_tts_language",
+        tts_voice="new_tts_voice",
     )
 
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/update",
-            "conversation_engine": None,
+            "conversation_engine": "new_conversation_engine",
+            "conversation_language": "new_conversation_language",
             "language": "new_language",
             "name": "new_name",
             "pipeline_id": pipeline_id,
             "stt_engine": None,
+            "stt_language": None,
             "tts_engine": None,
+            "tts_language": None,
+            "tts_voice": None,
         }
     )
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "conversation_engine": None,
+        "conversation_engine": "new_conversation_engine",
+        "conversation_language": "new_conversation_language",
         "id": pipeline_id,
         "language": "new_language",
         "name": "new_name",
         "stt_engine": None,
+        "stt_language": None,
         "tts_engine": None,
+        "tts_language": None,
+        "tts_voice": None,
     }
 
     pipeline = pipeline_store.data[pipeline_id]
     assert pipeline == Pipeline(
-        conversation_engine=None,
+        conversation_engine="new_conversation_engine",
+        conversation_language="new_conversation_language",
         id=pipeline_id,
         language="new_language",
         name="new_name",
         stt_engine=None,
+        stt_language=None,
         tts_engine=None,
+        tts_language=None,
+        tts_voice=None,
     )
 
 
@@ -882,10 +1062,14 @@ async def test_set_preferred_pipeline(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
             "language": "test_language",
             "name": "test_name",
             "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
             "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()
@@ -896,10 +1080,14 @@ async def test_set_preferred_pipeline(
         {
             "type": "assist_pipeline/pipeline/create",
             "conversation_engine": "test_conversation_engine",
+            "conversation_language": "test_language",
             "language": "test_language",
             "name": "test_name",
             "stt_engine": "test_stt_engine",
+            "stt_language": "test_language",
             "tts_engine": "test_tts_engine",
+            "tts_language": "test_language",
+            "tts_voice": "Arnold Schwarzenegger",
         }
     )
     msg = await client.receive_json()
@@ -1130,3 +1318,19 @@ async def test_pipeline_debug_get_run_wrong_pipeline_run(
         "code": "not_found",
         "message": "pipeline_run_id blah not found",
     }
+
+
+async def test_list_pipeline_languages(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+) -> None:
+    """Test listing pipeline languages."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "assist_pipeline/language/list"})
+
+    # result
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"languages": ["en"]}

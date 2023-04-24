@@ -33,6 +33,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'test transcript',
+    'language': None,
   })
 # ---
 # name: test_audio_pipeline.4
@@ -60,7 +61,9 @@
 # name: test_audio_pipeline.5
   dict({
     'engine': 'test',
+    'language': 'en',
     'tts_input': "Sorry, I couldn't understand that",
+    'voice': None,
   })
 # ---
 # name: test_audio_pipeline.6
@@ -106,6 +109,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'test transcript',
+    'language': None,
   })
 # ---
 # name: test_audio_pipeline_debug.4
@@ -133,7 +137,9 @@
 # name: test_audio_pipeline_debug.5
   dict({
     'engine': 'test',
+    'language': 'en',
     'tts_input': "Sorry, I couldn't understand that",
+    'voice': None,
   })
 # ---
 # name: test_audio_pipeline_debug.6
@@ -159,6 +165,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'Are the lights on?',
+    'language': None,
   })
 # ---
 # name: test_intent_timeout
@@ -175,6 +182,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'Are the lights on?',
+    'language': None,
   })
 # ---
 # name: test_intent_timeout.2
@@ -243,6 +251,7 @@
   dict({
     'engine': 'homeassistant',
     'intent_input': 'Are the lights on?',
+    'language': None,
   })
 # ---
 # name: test_text_only_pipeline.2
@@ -286,6 +295,8 @@
 # name: test_tts_failed.1
   dict({
     'engine': 'test',
+    'language': 'en',
     'tts_input': 'Lights are on.',
+    'voice': None,
   })
 # ---

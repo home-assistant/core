@@ -145,6 +145,7 @@ class SonosSpeaker:
         self.volume: int | None = None
         self.muted: bool | None = None
         self.cross_fade: bool | None = None
+        self.balance: tuple[int, int] | None = None
         self.bass: int | None = None
         self.treble: int | None = None
         self.loudness: bool | None = None
@@ -536,7 +537,10 @@ class SonosSpeaker:
         variables = event.variables
 
         if "volume" in variables:
-            self.volume = int(variables["volume"]["Master"])
+            volume = variables["volume"]
+            self.volume = int(volume["Master"])
+            if "LF" in volume and "RF" in volume:
+                self.balance = (int(volume["LF"]), int(volume["RF"]))
 
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
