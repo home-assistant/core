@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from roborock.typing import RoborockDeviceProp
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -32,7 +34,7 @@ from .models import RoborockHassDeviceInfo
 class RoborockSensorDescriptionMixin:
     """A class that describes sensor entities."""
 
-    value_fn: Callable
+    value_fn: Callable[[RoborockDeviceProp], int]
 
 
 @dataclass
