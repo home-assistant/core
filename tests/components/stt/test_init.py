@@ -18,7 +18,7 @@ from homeassistant.components.stt import (
     SpeechResult,
     SpeechResultState,
     SpeechToTextEntity,
-    async_default_provider,
+    async_default_engine,
     async_get_provider,
     async_get_speech_to_text_engine,
 )
@@ -448,16 +448,16 @@ async def test_ws_list_engines(
     }
 
 
-async def test_default_provider_none(hass: HomeAssistant, tmp_path: Path) -> None:
-    """Test async_default_provider."""
+async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test async_default_engine."""
     assert await async_setup_component(hass, "stt", {"stt": {}})
     await hass.async_block_till_done()
 
-    assert async_default_provider(hass) is None
+    assert async_default_engine(hass) is None
 
 
-async def test_default_provider(hass: HomeAssistant, tmp_path: Path) -> None:
-    """Test async_default_provider."""
+async def test_default_engine(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test async_default_engine."""
     mock_stt_platform(
         hass,
         tmp_path,
@@ -467,13 +467,20 @@ async def test_default_provider(hass: HomeAssistant, tmp_path: Path) -> None:
     assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
     await hass.async_block_till_done()
 
-    assert async_default_provider(hass) == TEST_DOMAIN
+    assert async_default_engine(hass) == TEST_DOMAIN
 
 
-async def test_default_provider_prefer_cloud(
-    hass: HomeAssistant, tmp_path: Path
+async def test_default_engine_entity(
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
 ) -> None:
-    """Test async_default_provider."""
+    """Test async_default_engine."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+
+    assert async_default_engine(hass) == f"{DOMAIN}.{TEST_DOMAIN}"
+
+
+async def test_default_engine_prefer_cloud(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test async_default_engine."""
     mock_stt_platform(
         hass,
         tmp_path,
@@ -491,7 +498,7 @@ async def test_default_provider_prefer_cloud(
     )
     await hass.async_block_till_done()
 
-    assert async_default_provider(hass) == "cloud"
+    assert async_default_engine(hass) == "cloud"
 
 
 async def test_get_engine_legacy(

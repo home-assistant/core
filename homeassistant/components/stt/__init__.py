@@ -47,7 +47,6 @@ from .legacy import (
 )
 
 __all__ = [
-    "async_default_provider",
     "async_get_provider",
     "async_get_speech_to_text_engine",
     "async_get_speech_to_text_entity",
@@ -65,6 +64,14 @@ __all__ = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def async_default_engine(hass: HomeAssistant) -> str | None:
+    """Return the domain or entity id of the default engine."""
+    return async_default_provider(hass) or next(
+        iter(hass.states.async_entity_ids(DOMAIN)), None
+    )
 
 
 @callback
