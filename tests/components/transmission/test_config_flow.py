@@ -2,7 +2,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from transmission_rpc.error import TransmissionAuthError, TransmissionConnectError
+from transmission_rpc.error import (
+    TransmissionAuthError,
+    TransmissionConnectError,
+    TransmissionError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import transmission
@@ -135,6 +139,21 @@ async def test_error_on_wrong_credentials(
         "username": "invalid_auth",
         "password": "invalid_auth",
     }
+
+
+async def test_unexpected_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
+    """Test we handle unexpected error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_api.side_effect = TransmissionError()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG_DATA,
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_error_on_connection_failure(

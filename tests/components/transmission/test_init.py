@@ -3,7 +3,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from transmission_rpc.error import TransmissionAuthError, TransmissionConnectError
+from transmission_rpc.error import (
+    TransmissionAuthError,
+    TransmissionConnectError,
+    TransmissionError,
+)
 
 from homeassistant.components.transmission.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -55,6 +59,20 @@ async def test_setup_failed_auth_error(
     entry.add_to_hass(hass)
 
     mock_api.side_effect = TransmissionAuthError()
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_failed_unexpected_error(
+    hass: HomeAssistant, mock_api: MagicMock
+) -> None:
+    """Test integration failed due to unexpected error."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
+    entry.add_to_hass(hass)
+
+    mock_api.side_effect = TransmissionError()
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.SETUP_ERROR
