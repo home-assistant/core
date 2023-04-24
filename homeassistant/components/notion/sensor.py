@@ -69,7 +69,7 @@ class NotionSensor(NotionEntity, SensorEntity):
         listener = self.coordinator.data.listeners[self._listener_id]
 
         if listener.listener_kind == ListenerKind.TEMPERATURE:
-            self._attr_native_value = round(listener.status.temperature, 1)
+            self._attr_native_value = round(listener.status.temperature, 1)  # type: ignore[attr-defined]
         else:
             LOGGER.error(
                 "Unknown listener type for sensor %s",

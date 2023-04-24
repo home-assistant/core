@@ -18,7 +18,9 @@ from homeassistant.components.stt import (
     SpeechResult,
     SpeechResultState,
     SpeechToTextEntity,
+    async_default_engine,
     async_get_provider,
+    async_get_speech_to_text_engine,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.core import HomeAssistant, State
@@ -93,9 +95,14 @@ class BaseProvider:
 class MockProvider(BaseProvider, Provider):
     """Mock provider."""
 
+    url_path = TEST_DOMAIN
+
 
 class MockProviderEntity(BaseProvider, SpeechToTextEntity):
     """Mock provider entity."""
+
+    url_path = "stt.test"
+    _attr_name = "test"
 
 
 @pytest.fixture
@@ -128,14 +135,18 @@ async def setup_fixture(
     hass: HomeAssistant,
     tmp_path: Path,
     request: pytest.FixtureRequest,
-) -> None:
+) -> MockProvider | MockProviderEntity:
     """Set up the test environment."""
     if request.param == "mock_setup":
-        await mock_setup(hass, tmp_path, MockProvider())
+        provider = MockProvider()
+        await mock_setup(hass, tmp_path, provider)
     elif request.param == "mock_config_entry_setup":
-        await mock_config_entry_setup(hass, tmp_path, MockProviderEntity())
+        provider = MockProviderEntity()
+        await mock_config_entry_setup(hass, tmp_path, provider)
     else:
         raise RuntimeError("Invalid setup fixture")
+
+    return provider
 
 
 async def mock_setup(
@@ -206,11 +217,11 @@ async def mock_config_entry_setup(
 async def test_get_provider_info(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
 ) -> None:
     """Test engine that doesn't exist."""
     client = await hass_client()
-    response = await client.get(f"/api/stt/{TEST_DOMAIN}")
+    response = await client.get(f"/api/stt/{setup.url_path}")
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
         "languages": ["de", "de-CH", "en-US"],
@@ -228,7 +239,7 @@ async def test_get_provider_info(
 async def test_non_existing_provider(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
 ) -> None:
     """Test streaming to engine that doesn't exist."""
     client = await hass_client()
@@ -255,14 +266,14 @@ async def test_non_existing_provider(
 async def test_stream_audio(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
 ) -> None:
     """Test streaming audio and getting response."""
     client = await hass_client()
 
     # Language en is matched with en-US
     response = await client.post(
-        f"/api/stt/{TEST_DOMAIN}",
+        f"/api/stt/{setup.url_path}",
         headers={
             "X-Speech-Content": (
                 "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
@@ -318,7 +329,7 @@ async def test_metadata_errors(
     header: str | None,
     status: int,
     error: str,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
 ) -> None:
     """Test metadata errors."""
     client = await hass_client()
@@ -326,7 +337,7 @@ async def test_metadata_errors(
     if header:
         headers["X-Speech-Content"] = header
 
-    response = await client.post(f"/api/stt/{TEST_DOMAIN}", headers=headers)
+    response = await client.post(f"/api/stt/{setup.url_path}", headers=headers)
     assert response.status == status
     assert await response.text() == error
 
@@ -340,6 +351,9 @@ async def test_get_provider(
     await mock_setup(hass, tmp_path, mock_provider)
     assert mock_provider == async_get_provider(hass, TEST_DOMAIN)
 
+    # Test getting the default provider
+    assert mock_provider == async_get_provider(hass)
+
 
 async def test_config_entry_unload(
     hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
@@ -349,16 +363,6 @@ async def test_config_entry_unload(
     assert config_entry.state == ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-
-
-def test_entity_name_raises_before_addition(
-    hass: HomeAssistant,
-    tmp_path: Path,
-    mock_provider_entity: MockProviderEntity,
-) -> None:
-    """Test entity name raises before addition to Home Assistant."""
-    with pytest.raises(RuntimeError):
-        mock_provider_entity.name  # pylint: disable=pointless-statement
 
 
 async def test_restore_state(
@@ -388,7 +392,7 @@ async def test_restore_state(
 async def test_ws_list_engines(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    setup: str,
+    setup: MockProvider | MockProviderEntity,
     engine_id: str,
 ) -> None:
     """Test listing speech to text engines."""
@@ -445,3 +449,84 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [{"engine_id": engine_id, "supported_languages": ["de-CH", "de"]}]
     }
+
+
+async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test async_default_engine."""
+    assert await async_setup_component(hass, "stt", {"stt": {}})
+    await hass.async_block_till_done()
+
+    assert async_default_engine(hass) is None
+
+
+async def test_default_engine(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test async_default_engine."""
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        TEST_DOMAIN,
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
+    await hass.async_block_till_done()
+
+    assert async_default_engine(hass) == TEST_DOMAIN
+
+
+async def test_default_engine_entity(
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+) -> None:
+    """Test async_default_engine."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+
+    assert async_default_engine(hass) == f"{DOMAIN}.{TEST_DOMAIN}"
+
+
+async def test_default_engine_prefer_cloud(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test async_default_engine."""
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        TEST_DOMAIN,
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        "cloud",
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    assert await async_setup_component(
+        hass, "stt", {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
+    )
+    await hass.async_block_till_done()
+
+    assert async_default_engine(hass) == "cloud"
+
+
+async def test_get_engine_legacy(
+    hass: HomeAssistant, tmp_path: Path, mock_provider: MockProvider
+) -> None:
+    """Test async_get_speech_to_text_engine."""
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        TEST_DOMAIN,
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    assert await async_setup_component(
+        hass, "stt", {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
+    )
+    await hass.async_block_till_done()
+
+    assert async_get_speech_to_text_engine(hass, "no_such_provider") is None
+    assert async_get_speech_to_text_engine(hass, "test") is mock_provider
+
+
+async def test_get_engine_entity(
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+) -> None:
+    """Test async_get_speech_to_text_engine."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+
+    assert async_get_speech_to_text_engine(hass, "stt.test") is mock_provider_entity
