@@ -312,7 +312,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         if self._processing_bytes is None:
             # Do I/O in executor
             self._processing_bytes = await self.hass.async_add_executor_job(
-                partial(self._load_pcm, "processing.pcm")
+                self._load_pcm, "processing.pcm",
             )
 
         await self.hass.async_add_executor_job(
