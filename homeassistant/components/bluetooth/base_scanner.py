@@ -39,7 +39,7 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class BluetoothScannerDevice:
     """Data for a bluetooth device from a given scanner."""
 
@@ -101,7 +101,7 @@ class BaseHaScanner(ABC):
                 self.hass,
                 self._async_scanner_watchdog,
                 SCANNER_WATCHDOG_INTERVAL,
-                f"{self.name} Bluetooth scanner watchdog",
+                name=f"{self.name} Bluetooth scanner watchdog",
             )
 
     @hass_callback
@@ -230,7 +230,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             self.hass,
             self._async_expire_devices,
             timedelta(seconds=30),
-            f"{self.name} Bluetooth scanner device expire",
+            name=f"{self.name} Bluetooth scanner device expire",
         )
         cancel_stop = self.hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP, self._async_save_history
@@ -345,12 +345,27 @@ class BaseHaRemoteScanner(BaseHaScanner):
             tx_power=NO_RSSI_VALUE if tx_power is None else tx_power,
             platform_data=(),
         )
-        device = BLEDevice(
-            address=address,
-            name=local_name,
-            details=self._details | details,
-            rssi=rssi,  # deprecated, will be removed in newer bleak
-        )
+        if prev_discovery:
+            #
+            # Bleak updates the BLEDevice via create_or_update_device.
+            # We need to do the same to ensure integrations that already
+            # have the BLEDevice object get the updated details when they
+            # change.
+            #
+            # https://github.com/hbldh/bleak/blob/222618b7747f0467dbb32bd3679f8cfaa19b1668/bleak/backends/scanner.py#L203
+            #
+            device = prev_device
+            device.name = local_name
+            device.details = self._details | details
+            # pylint: disable-next=protected-access
+            device._rssi = rssi  # deprecated, will be removed in newer bleak
+        else:
+            device = BLEDevice(
+                address=address,
+                name=local_name,
+                details=self._details | details,
+                rssi=rssi,  # deprecated, will be removed in newer bleak
+            )
         self._discovered_device_advertisement_datas[address] = (
             device,
             advertisement_data,
