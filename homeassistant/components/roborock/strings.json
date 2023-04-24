@@ -36,6 +36,7 @@
       },
       "sensor_dirty_left": {
         "name": "Sensor dirty left"
+      }
     },
     "select": {
       "mop_mode": {
