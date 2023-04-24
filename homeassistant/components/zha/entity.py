@@ -159,13 +159,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     ) -> None:
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
-        self._name: str = (
-            self.__class__.__name__.lower()
-            .replace("zha", "")
-            .replace("entity", "")
-            .replace("sensor", "")
-            .capitalize()
-        )
+
         self.cluster_handlers: dict[str, ClusterHandler] = {}
         for cluster_handler in cluster_handlers:
             self.cluster_handlers[cluster_handler.name] = cluster_handler
