@@ -1,5 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -16,7 +17,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.setup import async_setup_component
 
-from tests.common import flush_store
+from . import MANY_LANGUAGES
+from .conftest import MockSttPlatform, MockSttProvider, MockTTSPlatform, MockTTSProvider
+
+from tests.common import MockModule, flush_store, mock_integration, mock_platform
 
 
 async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
@@ -165,9 +169,6 @@ async def test_get_pipeline(hass: HomeAssistant) -> None:
         ("en", "uk", "en", "en"),
         ("pt", "pt", "pt", "pt"),
         ("pt", "br", "pt-br", "pt"),
-        ("zh-Hans", "cn", "zh-cn", "zh-Hans"),
-        ("zh-Hant", "hk", "zh-hk", "zh-Hant"),
-        ("zh-Hant", "tw", "zh-hk", "zh-Hant"),
     ],
 )
 async def test_default_pipeline_no_stt_tts(
@@ -202,9 +203,103 @@ async def test_default_pipeline_no_stt_tts(
     )
 
 
-async def test_default_pipeline(hass: HomeAssistant, init_components) -> None:
+@pytest.mark.parametrize(
+    (
+        "ha_language",
+        "ha_country",
+        "conv_language",
+        "pipeline_language",
+        "stt_language",
+        "tts_language",
+    ),
+    [
+        ("en", None, "en", "en", "en", "en"),
+        ("de", "de", "de", "de", "de", "de"),
+        ("de", "ch", "de-CH", "de", "de-CH", "de-CH"),
+        ("en", "us", "en", "en", "en", "en"),
+        ("en", "uk", "en", "en", "en", "en"),
+        ("pt", "pt", "pt", "pt", "pt", "pt"),
+        ("pt", "br", "pt-br", "pt", "pt-br", "pt-br"),
+    ],
+)
+async def test_default_pipeline(
+    hass: HomeAssistant,
+    init_supporting_components,
+    mock_stt_provider: MockSttProvider,
+    mock_tts_provider: MockTTSProvider,
+    ha_language: str,
+    ha_country: str | None,
+    conv_language: str,
+    pipeline_language: str,
+    stt_language: str,
+    tts_language: str,
+) -> None:
     """Test async_get_pipeline."""
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    hass.config.country = ha_country
+    hass.config.language = ha_language
+
+    with patch.object(
+        mock_stt_provider, "_supported_languages", MANY_LANGUAGES
+    ), patch.object(mock_tts_provider, "_supported_languages", MANY_LANGUAGES):
+        assert await async_setup_component(hass, "assist_pipeline", {})
+
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
+    assert len(store.data) == 1
+
+    # Check the default pipeline
+    pipeline = async_get_pipeline(hass, None)
+    assert pipeline == Pipeline(
+        conversation_engine="homeassistant",
+        conversation_language=conv_language,
+        id=pipeline.id,
+        language=pipeline_language,
+        name="Home Assistant",
+        stt_engine="test",
+        stt_language=stt_language,
+        tts_engine="test",
+        tts_language=tts_language,
+        tts_voice=None,
+    )
+
+
+async def test_default_pipeline_unsupported_stt_language(
+    hass: HomeAssistant,
+    init_supporting_components,
+    mock_stt_provider: MockSttProvider,
+) -> None:
+    """Test async_get_pipeline."""
+    with patch.object(mock_stt_provider, "_supported_languages", ["smurfish"]):
+        assert await async_setup_component(hass, "assist_pipeline", {})
+
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
+    assert len(store.data) == 1
+
+    # Check the default pipeline
+    pipeline = async_get_pipeline(hass, None)
+    assert pipeline == Pipeline(
+        conversation_engine="homeassistant",
+        conversation_language="en",
+        id=pipeline.id,
+        language="en",
+        name="Home Assistant",
+        stt_engine=None,
+        stt_language=None,
+        tts_engine="test",
+        tts_language="en-US",
+        tts_voice="james_earl_jones",
+    )
+
+
+async def test_default_pipeline_unsupported_tts_language(
+    hass: HomeAssistant,
+    init_supporting_components,
+    mock_tts_provider: MockTTSProvider,
+) -> None:
+    """Test async_get_pipeline."""
+    with patch.object(mock_tts_provider, "_supported_languages", ["smurfish"]):
+        assert await async_setup_component(hass, "assist_pipeline", {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
@@ -220,7 +315,55 @@ async def test_default_pipeline(hass: HomeAssistant, init_components) -> None:
         name="Home Assistant",
         stt_engine="test",
         stt_language="en-US",
-        tts_engine="test",
-        tts_language="en-US",
+        tts_engine=None,
+        tts_language=None,
         tts_voice=None,
+    )
+
+
+async def test_default_pipeline_cloud(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSttProvider,
+    mock_tts_provider: MockTTSProvider,
+) -> None:
+    """Test async_get_pipeline."""
+
+    mock_integration(hass, MockModule("cloud"))
+    mock_platform(
+        hass,
+        "cloud.tts",
+        MockTTSPlatform(
+            async_get_engine=AsyncMock(return_value=mock_tts_provider),
+        ),
+    )
+    mock_platform(
+        hass,
+        "cloud.stt",
+        MockSttPlatform(
+            async_get_engine=AsyncMock(return_value=mock_stt_provider),
+        ),
+    )
+    mock_platform(hass, "test.config_flow")
+
+    assert await async_setup_component(hass, "tts", {"tts": {"platform": "cloud"}})
+    assert await async_setup_component(hass, "stt", {"stt": {"platform": "cloud"}})
+    assert await async_setup_component(hass, "assist_pipeline", {})
+
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
+    assert len(store.data) == 1
+
+    # Check the default pipeline
+    pipeline = async_get_pipeline(hass, None)
+    assert pipeline == Pipeline(
+        conversation_engine="homeassistant",
+        conversation_language="en",
+        id=pipeline.id,
+        language="en",
+        name="Home Assistant Cloud",
+        stt_engine="cloud",
+        stt_language="en-US",
+        tts_engine="cloud",
+        tts_language="en-US",
+        tts_voice="james_earl_jones",
     )

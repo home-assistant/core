@@ -119,7 +119,7 @@ async def _async_create_default_pipeline(
             stt_language = stt_languages[0]
         else:
             _LOGGER.debug(
-                "Speech to text engine '%s' does not support language %s",
+                "Speech to text engine '%s' does not support language '%s'",
                 stt_engine_id,
                 pipeline_language,
             )
@@ -137,13 +137,13 @@ async def _async_create_default_pipeline(
             country=hass.config.country,
         )
         if tts_languages:
-            tts_language = stt_languages[0]
+            tts_language = tts_languages[0]
             tts_voices = tts_engine.async_get_supported_voices(tts_language)
             if tts_voices:
-                tts_voice = tts_voices[0]
+                tts_voice = tts_voices[0].voice_id
         else:
             _LOGGER.debug(
-                "Text to speech engine '%s' does not support language %s",
+                "Text to speech engine '%s' does not support language '%s'",
                 tts_engine_id,
                 pipeline_language,
             )

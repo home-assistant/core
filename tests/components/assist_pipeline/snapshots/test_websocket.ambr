@@ -63,15 +63,15 @@
     'engine': 'test',
     'language': 'en-US',
     'tts_input': "Sorry, I couldn't understand that",
-    'voice': None,
+    'voice': 'james_earl_jones',
   })
 # ---
 # name: test_audio_pipeline.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US",
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
       'mime_type': 'audio/mpeg',
-      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
+      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
     }),
   })
 # ---
@@ -139,15 +139,15 @@
     'engine': 'test',
     'language': 'en-US',
     'tts_input': "Sorry, I couldn't understand that",
-    'voice': None,
+    'voice': 'james_earl_jones',
   })
 # ---
 # name: test_audio_pipeline_debug.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US",
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
       'mime_type': 'audio/mpeg',
-      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
+      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
     }),
   })
 # ---
@@ -297,6 +297,6 @@
     'engine': 'test',
     'language': 'en-US',
     'tts_input': 'Lights are on.',
-    'voice': None,
+    'voice': 'james_earl_jones',
   })
 # ---

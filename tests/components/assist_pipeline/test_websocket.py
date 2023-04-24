@@ -799,7 +799,7 @@ async def test_get_pipeline(
         "stt_language": "en-US",
         "tts_engine": "test",
         "tts_language": "en-US",
-        "tts_voice": None,
+        "tts_voice": "james_earl_jones",
     }
 
     await client.send_json_auto_id(
@@ -878,7 +878,7 @@ async def test_list_pipelines(
                 "stt_language": "en-US",
                 "tts_engine": "test",
                 "tts_language": "en-US",
-                "tts_voice": None,
+                "tts_voice": "james_earl_jones",
             }
         ],
         "preferred_pipeline": ANY,
