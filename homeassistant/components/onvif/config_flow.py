@@ -39,7 +39,7 @@ from .const import (
     LOGGER,
 )
 from .device import get_device
-from .util import stringify_onvif_error
+from .util import is_auth_error, stringify_onvif_error
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -274,7 +274,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Fault as err:
             stringified_error = stringify_onvif_error(err)
             description_placeholders = {"error": stringified_error}
-            if "auth" in stringified_error.lower():
+            if is_auth_error(err):
                 LOGGER.debug(
                     "%s: Could not authenticate with camera: %s",
                     self.onvif_config[CONF_NAME],
