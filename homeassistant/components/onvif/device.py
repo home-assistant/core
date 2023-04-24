@@ -232,7 +232,8 @@ class ONVIFDevice:
                 dt_diff = cam_date - system_date
                 self._dt_diff_seconds = dt_diff.total_seconds()
 
-                if self._dt_diff_seconds > 5:
+                # It could be off either direction, so we need to check the absolute value
+                if abs(self._dt_diff_seconds) > 5:
                     LOGGER.warning(
                         (
                             "The date/time on %s (UTC) is '%s', "
