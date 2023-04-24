@@ -311,10 +311,7 @@ async def async_start(  # noqa: C901
                     and result["reason"]
                     in ("already_configured", "single_instance_allowed")
                 ):
-                    unsub = mqtt_data.integration_unsubscribe.pop(key, None)
-                    if unsub is None:
-                        return
-                    unsub()
+                    mqtt_data.integration_unsubscribe.pop(key)()
 
         for topic in topics:
             key = f"{integration}_{topic}"

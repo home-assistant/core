@@ -40,6 +40,7 @@ FLOWS = {
         "android_ip_webcam",
         "androidtv",
         "androidtv_remote",
+        "anova",
         "anthemav",
         "apcupsd",
         "apple_tv",

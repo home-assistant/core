@@ -243,7 +243,9 @@ class TraccarScanner:
             return False
 
         await self._async_update()
-        async_track_time_interval(self._hass, self._async_update, self._scan_interval)
+        async_track_time_interval(
+            self._hass, self._async_update, self._scan_interval, cancel_on_shutdown=True
+        )
         return True
 
     async def _async_update(self, now=None):

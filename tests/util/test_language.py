@@ -1,7 +1,17 @@
 """Test Home Assistant language util methods."""
 from __future__ import annotations
 
+from homeassistant.const import MATCH_ALL
 from homeassistant.util import language
+
+
+def test_match_all() -> None:
+    """Test MATCH_ALL."""
+    assert language.matches(MATCH_ALL, ["fr-Fr", "en-US", "en-GB"]) == [
+        "fr-Fr",
+        "en-US",
+        "en-GB",
+    ]
 
 
 def test_region_match() -> None:
@@ -53,6 +63,26 @@ def test_country_preferred() -> None:
     ]
 
 
+def test_country_preferred_over_family() -> None:
+    """Test that country hint is preferred over language family."""
+    assert (
+        language.matches(
+            "de",
+            ["de", "de-CH", "de-DE"],
+            country="CH",
+        )[0]
+        == "de-CH"
+    )
+    assert (
+        language.matches(
+            "de",
+            ["de", "de-CH", "de-DE"],
+            country="DE",
+        )[0]
+        == "de-DE"
+    )
+
+
 def test_language_as_region() -> None:
     """Test that the language itself can be interpreted as a region."""
     assert language.matches(
@@ -65,31 +95,40 @@ def test_language_as_region() -> None:
 
 
 def test_zh_hant() -> None:
-    """Test that the zh-Hant defaults to HK."""
+    """Test that the zh-Hant matches HK or TW first."""
     assert language.matches(
         "zh-Hant",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
     ) == [
         "zh-HK",
-        "zh-CN",
         "zh-TW",
+        "zh-CN",
+    ]
+
+    assert language.matches(
+        "zh-Hant",
+        ["en-US", "en-GB", "zh-CN", "zh-TW", "zh-HK"],
+    ) == [
+        "zh-TW",
+        "zh-HK",
+        "zh-CN",
     ]
 
 
 def test_zh_hans() -> None:
-    """Test that the zh-Hans defaults to TW."""
+    """Test that the zh-Hans matches CN first."""
     assert language.matches(
         "zh-Hans",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
     ) == [
-        "zh-TW",
         "zh-CN",
         "zh-HK",
+        "zh-TW",
     ]
 
 
 def test_zh_no_code() -> None:
-    """Test that the zh defaults to CN."""
+    """Test that the zh defaults to CN first."""
     assert language.matches(
         "zh",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],

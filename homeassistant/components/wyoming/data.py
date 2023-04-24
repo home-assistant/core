@@ -25,8 +25,10 @@ class WyomingService:
         self.port = port
         self.info = info
         platforms = []
-        if info.asr:
+        if any(asr.installed for asr in info.asr):
             platforms.append(Platform.STT)
+        if any(tts.installed for tts in info.tts):
+            platforms.append(Platform.TTS)
         self.platforms = platforms
 
     @classmethod
@@ -39,14 +41,20 @@ class WyomingService:
         return cls(host, port, info)
 
 
-async def load_wyoming_info(host: str, port: int) -> Info | None:
+async def load_wyoming_info(
+    host: str,
+    port: int,
+    retries: int = _INFO_RETRIES,
+    retry_wait: float = _INFO_RETRY_WAIT,
+    timeout: float = _INFO_TIMEOUT,
+) -> Info | None:
     """Load info from Wyoming server."""
     wyoming_info: Info | None = None
 
-    for _ in range(_INFO_RETRIES):
+    for _ in range(retries + 1):
         try:
             async with AsyncTcpClient(host, port) as client:
-                with async_timeout.timeout(_INFO_TIMEOUT):
+                with async_timeout.timeout(timeout):
                     # Describe -> Info
                     await client.write_event(Describe().event())
                     while True:
@@ -58,9 +66,12 @@ async def load_wyoming_info(host: str, port: int) -> Info | None:
 
                         if Info.is_type(event.type):
                             wyoming_info = Info.from_event(event)
-                            break
+                            break  # while
+
+                    if wyoming_info is not None:
+                        break  # for
         except (asyncio.TimeoutError, OSError, WyomingError):
             # Sleep and try again
-            await asyncio.sleep(_INFO_RETRY_WAIT)
+            await asyncio.sleep(retry_wait)
 
     return wyoming_info

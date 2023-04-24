@@ -21,8 +21,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.ssl import SSLCipherList, client_context
 
-from .const import CONF_CHARSET, CONF_FOLDER, CONF_SEARCH, CONF_SERVER, DOMAIN
+from .const import (
+    CONF_CHARSET,
+    CONF_FOLDER,
+    CONF_SEARCH,
+    CONF_SERVER,
+    CONF_SSL_CIPHER_LIST,
+    DOMAIN,
+)
 from .errors import InvalidAuth, InvalidFolder
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,8 +42,13 @@ EVENT_IMAP = "imap_content"
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
-    client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT])
+    ssl_context = client_context(
+        ssl_cipher_list=data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
+    )
+    client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT], ssl_context=ssl_context)
+
     await client.wait_hello_from_server()
+
     if client.protocol.state == NONAUTH:
         await client.login(data[CONF_USERNAME], data[CONF_PASSWORD])
     if client.protocol.state not in {AUTH, SELECTED}:
