@@ -1,25 +1,30 @@
+"""Support for Home Connect button entities."""
 from __future__ import annotations
 
-from .entity import HomeConnectEntity
-from . import _get_appliance_by_device_id
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-
-from .const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    BSH_PAUSE,
-    BSH_RESUME,
-)
+from . import _get_appliance_by_device_id
+from .api import HomeConnectDevice
+from .const import BSH_PAUSE, BSH_RESUME, DOMAIN
 
 _PAUSE_KEY = "pause"
 _RESUME_KEY = "resume"
 _STOP_KEY = "stop"
+
+
+@dataclass
+class HomeConnectEntityDescription(ButtonEntityDescription):
+    """Class to describe a Home Connect button."""
+
+    remote_function: Callable[[HomeAssistant, str], Coroutine[Any, Any, Any]]
 
 
 async def async_service_pause_program(hass: HomeAssistant, device_id: str):
@@ -57,18 +62,50 @@ async def async_setup_entry(
     entities: list[HomeConnectButton] = []
 
     for device_dict in hc_api.devices:
-        entities.append(HomeConnectButton(device_dict[CONF_DEVICE], ButtonEntityDescription(key=_PAUSE_KEY, name="Pause")))
-        entities.append(HomeConnectButton(device_dict[CONF_DEVICE], ButtonEntityDescription(key=_RESUME_KEY, name="Resume")))
-        entities.append(HomeConnectButton(device_dict[CONF_DEVICE], ButtonEntityDescription(key=_STOP_KEY, name="Stop")))       
-                                        
+        entities.append(
+            HomeConnectButton(
+                device_dict[CONF_DEVICE],
+                HomeConnectEntityDescription(
+                    key=_PAUSE_KEY,
+                    name="Pause",
+                    remote_function=async_service_pause_program,
+                ),
+            )
+        )
+        entities.append(
+            HomeConnectButton(
+                device_dict[CONF_DEVICE],
+                HomeConnectEntityDescription(
+                    key=_RESUME_KEY,
+                    name="Resume",
+                    remote_function=async_service_resume_program,
+                ),
+            )
+        )
+        entities.append(
+            HomeConnectButton(
+                device_dict[CONF_DEVICE],
+                HomeConnectEntityDescription(
+                    key=_STOP_KEY,
+                    name="Stop",
+                    remote_function=async_service_stop_program,
+                ),
+            )
+        )
+
     async_add_entities(entities, True)
 
 
-class HomeConnectButton(HomeConnectEntity, ButtonEntity):
+class HomeConnectButton(HomeConnectDevice, ButtonEntity):
     """HomeConnect Button Device."""
 
+    entity_description: HomeConnectEntityDescription
+    device: HomeConnectDevice
+
     def __init__(
-        self, description: ButtonEntityDescription, device: HomeConnectEntity
+        self,
+        device: HomeConnectDevice,
+        description: HomeConnectEntityDescription,
     ) -> None:
         """Initialize the button."""
         super().__init__(device, "Button")
@@ -77,9 +114,6 @@ class HomeConnectButton(HomeConnectEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        if self.entity_description.key == _PAUSE_KEY:
-            await async_service_pause_program(self.hass, self.device.appliance.haId)
-        elif self.entity_description.key == _RESUME_KEY:
-            await async_service_resume_program(self.hass, self.device.appliance.haId)
-        elif self.entity_description.key == _STOP_KEY:
-            await async_service_stop_program(self.hass, self.device.appliance.haId)
+        await self.entity_description.remote_function(
+            self.hass, self.device.appliance.haId
+        )
