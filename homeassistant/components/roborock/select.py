@@ -1,11 +1,9 @@
 """Support for Roborock select."""
+from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.code_mappings import (
-    RoborockEnum,
-    RoborockMopIntensityCode,
-    RoborockMopModeCode,
-)
+from roborock.code_mappings import RoborockMopIntensityCode, RoborockMopModeCode
+from roborock.containers import Status
 from roborock.typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -25,7 +23,8 @@ class RoborockSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
     api_command: RoborockCommand
-    option_code: RoborockEnum
+    value_fn: Callable[[Status], str]
+    options_lambda: Callable[[str], list[int]]
 
 
 @dataclass
@@ -41,14 +40,20 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         translation_key="mop_intensity",
         options=RoborockMopIntensityCode.values(),
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
-        option_code=RoborockMopIntensityCode,
+        value_fn=lambda data: data.water_box_mode,
+        options_lambda=lambda data: [
+            k for k, v in RoborockMopIntensityCode.items() if v == data
+        ],
     ),
     RoborockSelectDescription(
         key="mop_mode",
         translation_key="mop_mode",
         options=RoborockMopModeCode.values(),
         api_command=RoborockCommand.SET_MOP_MODE,
-        option_code=RoborockMopModeCode,
+        value_fn=lambda data: data.mop_mode,
+        options_lambda=lambda data: [
+            k for k, v in RoborockMopModeCode.items() if v == data
+        ],
     ),
 ]
 
@@ -63,18 +68,18 @@ async def async_setup_entry(
     coordinator: RoborockDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    entities: list[RoborockSelectEntity] = []
-    for device_id, device_info in coordinator.devices_info.items():
-        for description in SELECT_DESCRIPTIONS:
-            entities.append(
-                RoborockSelectEntity(
-                    f"{description.key}_{slugify(device_id)}",
-                    device_info,
-                    coordinator,
-                    description,
-                )
+    async_add_entities(
+        [
+            RoborockSelectEntity(
+                f"{description.key}_{slugify(device_id)}",
+                device_info,
+                coordinator,
+                description,
             )
-    async_add_entities(entities)
+            for device_id, device_info in coordinator.devices_info.items()
+            for description in SELECT_DESCRIPTIONS
+        ]
+    )
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
@@ -91,17 +96,18 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         self.entity_description = entity_description
         super().__init__(unique_id, device_info, coordinator)
         self.api_command = entity_description.api_command
-        self.option_code = entity_description.option_code
         self.key = entity_description.key
+        self.option_lambda = self.entity_description.options_lambda
+        self.value_fn = self.entity_description.value_fn
 
     async def async_select_option(self, option: str) -> None:
         """Set the mop intensity."""
         await self.send(
             self.api_command,
-            [k for k, v in self.option_code.items() if v == option],
+            self.option_lambda(option),
         )
 
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        return getattr(self._device_status, self.key)
+        return self.value_fn(self._device_status)
