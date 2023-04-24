@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+import math
 import operator
 import re
-import sys
 
 from homeassistant.const import MATCH_ALL
 
@@ -71,7 +71,7 @@ class Dialect:
             # Regions are upper-cased
             self.region = self.region.upper()
 
-    def score(self, dialect: Dialect, country: str | None = None) -> int:
+    def score(self, dialect: Dialect, country: str | None = None) -> float:
         """Return score for match with another dialect where higher is better.
 
         Score < 0 indicates a failure to match.
@@ -87,7 +87,7 @@ class Dialect:
         if (self.region is not None) and (dialect.region is not None):
             if self.region == dialect.region:
                 # Exact language + region match
-                return sys.maxsize
+                return math.inf
 
             # Regions are both set, but don't match
             return 0
