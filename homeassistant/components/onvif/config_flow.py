@@ -127,6 +127,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._reauth_entry is not None
         entry = self._reauth_entry
         errors: dict[str, str] | None = {}
+        description_placeholders: dict[str, str] | None = None
         if user_input is not None:
             entry_data = entry.data
             self.onvif_config = entry_data | user_input

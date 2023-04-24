@@ -44,7 +44,7 @@
           "include": "Create camera entity"
         }
       },
-      "reauth_confim": {
+      "reauth_confirm": {
         "title": "Reauthenticate the ONVIF device",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",

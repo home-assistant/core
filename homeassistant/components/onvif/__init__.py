@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.device.close()
         if is_auth_error(err):
             raise ConfigEntryAuthFailed(
-                f"Could not authenticate: {stringify_onvif_error(err)}"
+                f"Auth Failed: {stringify_onvif_error(err)}"
             ) from err
         raise ConfigEntryNotReady(
             f"Could not connect to camera: {stringify_onvif_error(err)}"
