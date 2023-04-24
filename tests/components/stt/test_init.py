@@ -97,6 +97,8 @@ class MockProvider(BaseProvider, Provider):
 class MockProviderEntity(BaseProvider, SpeechToTextEntity):
     """Mock provider entity."""
 
+    _attr_name = "test"
+
 
 @pytest.fixture
 def mock_provider() -> MockProvider:
@@ -260,9 +262,14 @@ async def test_stream_audio(
     """Test streaming audio and getting response."""
     client = await hass_client()
 
+    if setup == "mock_setup":
+        provider = TEST_DOMAIN
+    else:
+        provider = "stt.test"
+
     # Language en is matched with en-US
     response = await client.post(
-        f"/api/stt/{TEST_DOMAIN}",
+        f"/api/stt/{provider}",
         headers={
             "X-Speech-Content": (
                 "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
@@ -349,16 +356,6 @@ async def test_config_entry_unload(
     assert config_entry.state == ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-
-
-def test_entity_name_raises_before_addition(
-    hass: HomeAssistant,
-    tmp_path: Path,
-    mock_provider_entity: MockProviderEntity,
-) -> None:
-    """Test entity name raises before addition to Home Assistant."""
-    with pytest.raises(RuntimeError):
-        mock_provider_entity.name  # pylint: disable=pointless-statement
 
 
 async def test_restore_state(
