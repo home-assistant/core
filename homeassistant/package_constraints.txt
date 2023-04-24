@@ -19,19 +19,20 @@ bluetooth-data-tools==0.4.0
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==40.0.2
-dbus-fast==1.84.2
+dbus-fast==1.85.0
 fnv-hash-fast==0.3.1
 ha-av==10.0.0
-hass-nabucasa==0.64.1
+hass-nabucasa==0.65.0
 hassil==1.0.6
 home-assistant-bluetooth==1.9.3
 home-assistant-frontend==20230411.1
-home-assistant-intents==2023.3.29
+home-assistant-intents==2023.4.17-1
 httpx==0.24.0
 ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
+mutagen==1.46.0
 orjson==3.8.10
 paho-mqtt==1.6.1
 pillow==9.5.0
@@ -46,11 +47,12 @@ requests==2.28.2
 scapy==2.5.0
 sqlalchemy==2.0.9
 typing-extensions>=4.5.0,<5.0
-ulid-transform==0.6.3
+ulid-transform==0.7.0
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
-yarl==1.8.1
-zeroconf==0.56.0
+webrtcvad==2.0.10
+yarl==1.9.1
+zeroconf==0.58.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

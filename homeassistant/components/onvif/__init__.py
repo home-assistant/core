@@ -1,7 +1,9 @@
 """The ONVIF integration."""
+import logging
+
 from httpx import RequestError
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, TransportError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
@@ -18,6 +20,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
 from .device import ONVIFDevice
 
+LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ONVIF from a config entry."""
@@ -31,6 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await device.async_setup()
+        if not entry.data.get(CONF_SNAPSHOT_AUTH):
+            await async_populate_snapshot_auth(hass, device, entry)
     except RequestError as err:
         await device.device.close()
         raise ConfigEntryNotReady(
@@ -51,9 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not device.available:
         raise ConfigEntryNotReady()
-
-    if not entry.data.get(CONF_SNAPSHOT_AUTH):
-        await async_populate_snapshot_auth(hass, device, entry)
 
     hass.data[DOMAIN][entry.unique_id] = device
 
@@ -80,7 +83,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device: ONVIFDevice = hass.data[DOMAIN][entry.unique_id]
 
     if device.capabilities.events and device.events.started:
-        await device.events.async_stop()
+        try:
+            await device.events.async_stop()
+        except (ONVIFError, Fault, RequestError, TransportError):
+            LOGGER.warning("Error while stopping events: %s", device.name)
 
     return await hass.config_entries.async_unload_platforms(entry, device.platforms)
 

@@ -1,4 +1,8 @@
 """Support for Notion sensors."""
+from dataclasses import dataclass
+
+from aionotion.sensor.models import ListenerKind
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -12,14 +16,22 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
 from .const import DOMAIN, LOGGER, SENSOR_TEMPERATURE
+from .model import NotionEntityDescriptionMixin
+
+
+@dataclass
+class NotionSensorDescription(SensorEntityDescription, NotionEntityDescriptionMixin):
+    """Describe a Notion sensor."""
+
 
 SENSOR_DESCRIPTIONS = (
-    SensorEntityDescription(
+    NotionSensorDescription(
         key=SENSOR_TEMPERATURE,
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        listener_kind=ListenerKind.TEMPERATURE,
     ),
 )
 
@@ -34,16 +46,16 @@ async def async_setup_entry(
         [
             NotionSensor(
                 coordinator,
-                task_id,
-                sensor["id"],
-                sensor["bridge"]["id"],
-                sensor["system_id"],
+                listener_id,
+                sensor.uuid,
+                sensor.bridge.id,
+                sensor.system_id,
                 description,
             )
-            for task_id, task in coordinator.data["tasks"].items()
+            for listener_id, listener in coordinator.data.listeners.items()
             for description in SENSOR_DESCRIPTIONS
-            if description.key == task["task_type"]
-            and (sensor := coordinator.data["sensors"][task["sensor_id"]])
+            if description.listener_kind == listener.listener_kind
+            and (sensor := coordinator.data.sensors[listener.sensor_id])
         ]
     )
 
@@ -54,13 +66,12 @@ class NotionSensor(NotionEntity, SensorEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        task = self.coordinator.data["tasks"][self._task_id]
+        listener = self.coordinator.data.listeners[self._listener_id]
 
-        if task["task_type"] == SENSOR_TEMPERATURE:
-            self._attr_native_value = round(float(task["status"]["value"]), 1)
+        if listener.listener_kind == ListenerKind.TEMPERATURE:
+            self._attr_native_value = round(listener.status.temperature, 1)  # type: ignore[attr-defined]
         else:
             LOGGER.error(
-                "Unknown task type: %s: %s",
-                self.coordinator.data["sensors"][self._sensor_id],
-                task["task_type"],
+                "Unknown listener type for sensor %s",
+                self.coordinator.data.sensors[self._sensor_id],
             )

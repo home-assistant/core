@@ -1,21 +1,24 @@
 """Support for the cloud for text to speech service."""
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import MAP_VOICE, AudioOutput, VoiceError
+from hass_nabucasa.voice import MAP_VOICE, TTS_VOICES, AudioOutput, VoiceError
 import voluptuous as vol
 
 from homeassistant.components.tts import (
     ATTR_AUDIO_OUTPUT,
+    ATTR_VOICE,
     CONF_LANG,
     PLATFORM_SCHEMA,
     Provider,
+    Voice,
 )
+from homeassistant.core import callback
 
 from .const import DOMAIN
 
 ATTR_GENDER = "gender"
 
-SUPPORT_LANGUAGES = list({key[0] for key in MAP_VOICE})
+SUPPORT_LANGUAGES = list(TTS_VOICES)
 
 
 def validate_lang(value):
@@ -92,7 +95,14 @@ class CloudProvider(Provider):
     @property
     def supported_options(self):
         """Return list of supported options like voice, emotion."""
-        return [ATTR_GENDER, ATTR_AUDIO_OUTPUT]
+        return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
+
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
+        """Return a list of supported voices for a language."""
+        if not (voices := TTS_VOICES.get(language)):
+            return None
+        return [Voice(voice, voice) for voice in voices]
 
     @property
     def default_options(self):
@@ -107,9 +117,10 @@ class CloudProvider(Provider):
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
-                message,
-                language,
-                gender=options[ATTR_GENDER],
+                text=message,
+                language=language,
+                gender=options.get(ATTR_GENDER),
+                voice=options.get(ATTR_VOICE),
                 output=options[ATTR_AUDIO_OUTPUT],
             )
         except VoiceError:
