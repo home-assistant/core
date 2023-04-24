@@ -195,10 +195,10 @@ async def test_async_poll_manual_hosts(hass: HomeAssistant) -> None:
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
 
     def _speaker_ping_success():
-        """Returns success on speaker ping."""
+        """Return success on speaker ping."""
 
     def _speaker_ping_fail():
-        """Raises exception on speaker ping."""
+        """Raise exception on speaker ping."""
         raise SonosUpdateError()
 
     with patch.object(manager, "_async_gethostbyname", side_effect=patch_gethostbyname):
