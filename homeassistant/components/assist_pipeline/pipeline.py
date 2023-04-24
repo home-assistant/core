@@ -93,12 +93,11 @@ async def _async_create_default_pipeline(
     tts_voice = None
 
     # Find a matching language supported by the Home Assistant conversation agent
-    conversation_agent = await conversation.async_get_agent(
-        hass, conversation.HOME_ASSISTANT_AGENT
-    )
     conversation_languages = language_util.matches(
         hass.config.language,
-        conversation_agent.supported_languages,
+        await conversation.async_get_conversation_languages(
+            hass, conversation.HOME_ASSISTANT_AGENT
+        ),
         country=hass.config.country,
     )
     if conversation_languages:
