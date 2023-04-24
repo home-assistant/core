@@ -5,7 +5,6 @@ from pprint import pformat
 from typing import Any
 from urllib.parse import urlparse
 
-from onvif.exceptions import ONVIFError
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.scope import Scope
@@ -28,11 +27,19 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_DEVICE_ID, DEFAULT_ARGUMENTS, DEFAULT_PORT, DOMAIN, LOGGER
+from .const import (
+    CONF_DEVICE_ID,
+    DEFAULT_ARGUMENTS,
+    DEFAULT_PORT,
+    DOMAIN,
+    GET_CAPABILITIES_EXCEPTIONS,
+    LOGGER,
+)
 from .device import get_device
+from .util import stringify_onvif_error
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -175,15 +182,18 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_configure()
 
-    async def async_step_configure(self, user_input=None):
+    async def async_step_configure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Device configuration."""
-        errors = {}
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         if user_input:
             self.onvif_config = user_input
-            try:
-                return await self.async_setup_profiles()
-            except Fault:
-                errors["base"] = "cannot_connect"
+            errors, description_placeholders = await self.async_setup_profiles()
+            if not errors:
+                title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
+                return self.async_create_entry(title=title, data=self.onvif_config)
 
         def conf(name, default=None):
             return self.onvif_config.get(name, default)
@@ -204,9 +214,10 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
-    async def async_setup_profiles(self):
+    async def async_setup_profiles(self) -> tuple[dict[str, str], dict[str, str]]:
         """Fetch ONVIF device profiles."""
         LOGGER.debug(
             "Fetching profiles from ONVIF device %s", pformat(self.onvif_config)
@@ -223,7 +234,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await device.update_xaddrs()
             device_mgmt = device.create_devicemgmt_service()
-
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
                 try:
@@ -237,23 +247,18 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except Fault as fault:
                     if "not implemented" not in fault.message:
                         raise fault
-
                     LOGGER.debug(
-                        (
-                            "Couldn't get network interfaces from ONVIF deivice '%s'."
-                            " Error: %s"
-                        ),
+                        "%s: Could not get network interfaces: %s",
                         self.onvif_config[CONF_NAME],
-                        fault,
+                        stringify_onvif_error(fault),
                     )
-
             # If no network interfaces are exposed, fallback to serial number
             if not self.device_id:
                 device_info = await device_mgmt.GetDeviceInformation()
                 self.device_id = device_info.SerialNumber
 
             if not self.device_id:
-                return self.async_abort(reason="no_mac")
+                raise AbortFlow(reason="no_mac")
 
             await self.async_set_unique_id(self.device_id, raise_on_progress=False)
             self._abort_if_unique_id_configured(
@@ -263,30 +268,42 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_NAME: self.onvif_config[CONF_NAME],
                 }
             )
-
             # Verify there is an H264 profile
             media_service = device.create_media_service()
             profiles = await media_service.GetProfiles()
-            h264 = any(
+        except Fault as err:
+            stringified_error = stringify_onvif_error(err)
+            description_placeholders = {"error": stringified_error}
+            if "auth" in stringified_error.lower():
+                LOGGER.debug(
+                    "%s: Could not authenticate with camera: %s",
+                    self.onvif_config[CONF_NAME],
+                    stringified_error,
+                )
+                return {CONF_PASSWORD: "auth_failed"}, description_placeholders
+            LOGGER.debug(
+                "%s: Could not determine camera capabilities: %s",
+                self.onvif_config[CONF_NAME],
+                stringified_error,
+                exc_info=True,
+            )
+            return {"base": "onvif_error"}, description_placeholders
+        except GET_CAPABILITIES_EXCEPTIONS as err:
+            LOGGER.debug(
+                "%s: Could not determine camera capabilities: %s",
+                self.onvif_config[CONF_NAME],
+                stringify_onvif_error(err),
+                exc_info=True,
+            )
+            return {"base": "onvif_error"}, {"error": stringify_onvif_error(err)}
+        else:
+            if not any(
                 profile.VideoEncoderConfiguration
                 and profile.VideoEncoderConfiguration.Encoding == "H264"
                 for profile in profiles
-            )
-
-            if not h264:
-                return self.async_abort(reason="no_h264")
-
-            title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
-            return self.async_create_entry(title=title, data=self.onvif_config)
-
-        except ONVIFError as err:
-            LOGGER.error(
-                "Couldn't setup ONVIF device '%s'. Error: %s",
-                self.onvif_config[CONF_NAME],
-                err,
-            )
-            return self.async_abort(reason="onvif_error")
-
+            ):
+                raise AbortFlow(reason="no_h264")
+            return {}, {}
         finally:
             await device.close()
 
