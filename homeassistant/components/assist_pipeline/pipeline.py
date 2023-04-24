@@ -86,6 +86,8 @@ async def async_get_pipeline(
         # configured language
         stt_engine = stt.async_default_provider(hass)
         stt_language = hass.config.language if stt_engine else None
+        tts_engine = tts.async_default_engine(hass)
+        tts_language = hass.config.language if tts_engine else None
         return await pipeline_data.pipeline_store.async_create_item(
             {
                 "conversation_engine": None,
@@ -94,8 +96,8 @@ async def async_get_pipeline(
                 "name": hass.config.language,
                 "stt_engine": stt_engine,
                 "stt_language": stt_language,
-                "tts_engine": None,
-                "tts_language": None,
+                "tts_engine": tts_engine,
+                "tts_language": tts_language,
                 "tts_voice": None,
             }
         )
