@@ -341,6 +341,14 @@ def async_get_agent_info(
     return None
 
 
+async def async_get_agent(
+    hass: core.HomeAssistant, agent_id: str
+) -> AbstractConversationAgent:
+    """Get an agent."""
+    agent_manager = _get_agent_manager(hass)
+    return await agent_manager.async_get_agent(agent_id)
+
+
 async def async_converse(
     hass: core.HomeAssistant,
     text: str,

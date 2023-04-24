@@ -1,10 +1,13 @@
 """Websocket tests for Voice Assistant integration."""
 from typing import Any
 
+import pytest
+
 from homeassistant.components.assist_pipeline.const import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
+    Pipeline,
     PipelineData,
     PipelineStorageCollection,
     async_get_pipeline,
@@ -60,17 +63,17 @@ async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
     store1 = pipeline_data.pipeline_store
     for pipeline in pipelines:
         pipeline_ids.append((await store1.async_create_item(pipeline)).id)
-    assert len(store1.data) == 3
+    assert len(store1.data) == 4  # 3 manually created plus a default pipeline
     assert store1.async_get_preferred_item() == list(store1.data)[0]
 
     await store1.async_delete_item(pipeline_ids[1])
-    assert len(store1.data) == 2
+    assert len(store1.data) == 3
 
     store2 = PipelineStorageCollection(Store(hass, STORAGE_VERSION, STORAGE_KEY))
     await flush_store(store1.store)
     await store2.async_load()
 
-    assert len(store2.data) == 2
+    assert len(store2.data) == 3
 
     assert store1.data is not store2.data
     assert store1.data == store2.data
@@ -142,16 +145,82 @@ async def test_get_pipeline(hass: HomeAssistant) -> None:
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
     store = pipeline_data.pipeline_store
-    assert len(store.data) == 0
+    assert len(store.data) == 1
 
-    # Test a pipeline is created
+    # Test we get the preferred pipeline if none is speocifed
     pipeline = await async_get_pipeline(hass, None)
-    assert len(store.data) == 1
-
-    # Test we get the same pipeline again
-    assert pipeline is await async_get_pipeline(hass, None)
-    assert len(store.data) == 1
+    assert pipeline.id == store.async_get_preferred_item()
 
     # Test getting a specific pipeline
     assert pipeline is await async_get_pipeline(hass, pipeline.id)
+
+
+@pytest.mark.parametrize(
+    ("ha_language", "ha_country", "conv_language", "pipeline_language"),
+    [
+        ("en", None, "en", "en"),
+        ("de", "de", "de", "de"),
+        ("de", "ch", "de-CH", "de"),
+        ("en", "us", "en", "en"),
+        ("en", "uk", "en", "en"),
+        ("pt", "pt", "pt", "pt"),
+        ("pt", "br", "pt-br", "pt"),
+        ("zh-Hans", "cn", "zh-cn", "zh-Hans"),
+        ("zh-Hant", "hk", "zh-hk", "zh-Hant"),
+        ("zh-Hant", "tw", "zh-hk", "zh-Hant"),
+    ],
+)
+async def test_default_pipeline_no_stt_tts(
+    hass: HomeAssistant,
+    ha_language: str,
+    ha_country: str | None,
+    conv_language: str,
+    pipeline_language: str,
+) -> None:
+    """Test async_get_pipeline."""
+    hass.config.country = ha_country
+    hass.config.language = ha_language
+    assert await async_setup_component(hass, "assist_pipeline", {})
+
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
     assert len(store.data) == 1
+
+    # Check the default pipeline
+    pipeline = await async_get_pipeline(hass, None)
+    assert pipeline == Pipeline(
+        conversation_engine="homeassistant",
+        conversation_language=conv_language,
+        id=pipeline.id,
+        language=pipeline_language,
+        name="Home Assistant",
+        stt_engine=None,
+        stt_language=None,
+        tts_engine=None,
+        tts_language=None,
+        tts_voice=None,
+    )
+
+
+async def test_default_pipeline(hass: HomeAssistant, init_components) -> None:
+    """Test async_get_pipeline."""
+    assert await async_setup_component(hass, "assist_pipeline", {})
+
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
+    assert len(store.data) == 1
+
+    # Check the default pipeline
+    pipeline = await async_get_pipeline(hass, None)
+    assert pipeline == Pipeline(
+        conversation_engine="homeassistant",
+        conversation_language="en",
+        id=pipeline.id,
+        language="en",
+        name="Home Assistant",
+        stt_engine="test",
+        stt_language="en-US",
+        tts_engine="test",
+        tts_language="en-US",
+        tts_voice=None,
+    )
