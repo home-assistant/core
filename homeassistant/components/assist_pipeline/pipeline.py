@@ -206,9 +206,10 @@ class PipelineRun:
     stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
     intent_agent: str | None = None
     tts_engine: str | None = None
-    tts_options: dict | None = None
+    tts_audio_output: str | None = None
 
     id: str = field(default_factory=ulid_util.ulid)
+    tts_options: dict | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
         """Set language for pipeline."""
@@ -281,12 +282,14 @@ class PipelineRun:
                 message=f"No speech to text provider for: {engine}",
             )
 
+        metadata.language = self.pipeline.stt_language or self.language
+
         if not stt_provider.check_metadata(metadata):
             raise SpeechToTextError(
                 code="stt-provider-unsupported-metadata",
                 message=(
                     f"Provider {stt_provider.name} does not support input speech "
-                    "to text metadata"
+                    "to text metadata {metadata}"
                 ),
             )
 
@@ -301,7 +304,10 @@ class PipelineRun:
         if self.stt_provider is None:
             raise RuntimeError("Speech to text was not prepared")
 
-        engine = self.stt_provider.name
+        if isinstance(self.stt_provider, stt.Provider):
+            engine = self.stt_provider.name
+        else:
+            engine = self.stt_provider.entity_id
 
         self.process_event(
             PipelineEvent(
@@ -381,6 +387,7 @@ class PipelineRun:
                 PipelineEventType.INTENT_START,
                 {
                     "engine": self.intent_agent,
+                    "language": self.pipeline.conversation_language,
                     "intent_input": intent_input,
                 },
             )
@@ -392,7 +399,7 @@ class PipelineRun:
                 text=intent_input,
                 conversation_id=conversation_id,
                 context=self.context,
-                language=self.language,
+                language=self.pipeline.conversation_language,
                 agent_id=self.intent_agent,
             )
         except Exception as src_error:
@@ -428,21 +435,29 @@ class PipelineRun:
                 message=f"Text to speech engine '{engine}' not found",
             )
 
+        tts_options = {}
+        if self.pipeline.tts_voice is not None:
+            tts_options[tts.ATTR_VOICE] = self.pipeline.tts_voice
+
+        if self.tts_audio_output is not None:
+            tts_options[tts.ATTR_AUDIO_OUTPUT] = self.tts_audio_output
+
         if not await tts.async_support_options(
             self.hass,
             engine,
-            self.language,
-            self.tts_options,
+            self.pipeline.tts_language,
+            tts_options,
         ):
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=(
                     f"Text to speech engine {engine} "
-                    f"does not support language {self.language} or options {self.tts_options}"
+                    f"does not support language {self.pipeline.tts_language} or options {tts_options}"
                 ),
             )
 
         self.tts_engine = engine
+        self.tts_options = tts_options
 
     async def text_to_speech(self, tts_input: str) -> str:
         """Run text to speech portion of pipeline. Returns URL of TTS audio."""
@@ -454,6 +469,8 @@ class PipelineRun:
                 PipelineEventType.TTS_START,
                 {
                     "engine": self.tts_engine,
+                    "language": self.pipeline.tts_language,
+                    "voice": self.pipeline.tts_voice,
                     "tts_input": tts_input,
                 },
             )
@@ -465,7 +482,7 @@ class PipelineRun:
                 self.hass,
                 tts_input,
                 engine=self.tts_engine,
-                language=self.language,
+                language=self.pipeline.tts_language,
                 options=self.tts_options,
             )
             tts_media = await media_source.async_resolve_media(
