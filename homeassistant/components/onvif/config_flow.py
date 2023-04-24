@@ -274,7 +274,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Fault as err:
             stringified_error = stringify_onvif_error(err)
             description_placeholders = {"error": stringified_error}
-            if "authority" in stringified_error.lower():
+            if "auth" in stringified_error.lower():
                 LOGGER.debug(
                     "%s: Could not authenticate with camera: %s",
                     self.onvif_config[CONF_NAME],
