@@ -295,7 +295,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         if self._tone_bytes is None:
             # Do I/O in executor
             self._tone_bytes = await self.hass.async_add_executor_job(
-                partial(self._load_pcm, "tone.pcm")
+                self._load_pcm, "tone.pcm",
             )
 
         await self.hass.async_add_executor_job(
