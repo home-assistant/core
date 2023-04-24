@@ -21,10 +21,17 @@ _STOP_KEY = "stop"
 
 
 @dataclass
-class HomeConnectEntityDescription(ButtonEntityDescription):
-    """Class to describe a Home Connect button."""
+class HomeConnectEntityDescriptionMixin:
+    """Mixin for required Home Connect Device description keys."""
 
     remote_function: Callable[[HomeAssistant, str], Coroutine[Any, Any, Any]]
+
+
+@dataclass
+class HomeConnectEntityDescription(
+    ButtonEntityDescription, HomeConnectEntityDescriptionMixin
+):
+    """Class to describe a Home Connect button."""
 
 
 async def async_service_pause_program(hass: HomeAssistant, device_id: str):
