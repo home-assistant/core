@@ -203,7 +203,7 @@ async def websocket_get_fabrics(
     {
         vol.Required(TYPE): "matter/remove_fabric",
         vol.Required("device_id"): str,
-        vol.Required("fabric_index"): str,
+        vol.Required("fabric_index"): int,
     }
 )
 @websocket_api.async_response

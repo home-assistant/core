@@ -268,7 +268,7 @@ async def test_remove_fabric(
             ID: 1,
             TYPE: "matter/remove_fabric",
             "device_id": "fake_id",
-            "fabric_index": "fabric_test_id",
+            "fabric_index": 10,
         }
     )
 
@@ -276,14 +276,13 @@ async def test_remove_fabric(
     assert not msg["success"]
 
     device = get_test_device(hass)
-    fabric_index = "test_fabric_id"
 
     await ws_client.send_json(
         {
             ID: 2,
             TYPE: "matter/remove_fabric",
             "device_id": device.id,
-            "fabric_index": fabric_index,
+            "fabric_index": 10,
         }
     )
 
@@ -293,5 +292,5 @@ async def test_remove_fabric(
     node_id = await get_node_id_from_ha_device_id(hass, device.id)
     assert node_id
 
-    matter_client.remove_matter_fabric.assert_called_once_with(node_id, fabric_index)
+    matter_client.remove_matter_fabric.assert_called_once_with(node_id, 10)
     matter_client.remove_matter_fabric.reset_mock()
