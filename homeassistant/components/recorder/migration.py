@@ -1481,6 +1481,7 @@ def migrate_event_type_ids(instance: Recorder) -> bool:
                     event_type_to_id[
                         db_event_type.event_type
                     ] = db_event_type.event_type_id
+                    event_type_manager.clear_non_existent(db_event_type.event_type)
 
             session.execute(
                 update(Events),
