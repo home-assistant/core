@@ -88,6 +88,7 @@ async def test_pipeline(
             voip_device,
             Context(),
             listening_tone_enabled=False,
+            processing_tone_enabled=False,
         )
         rtp_protocol.transport = Mock()
 
@@ -137,6 +138,7 @@ async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) ->
             Context(),
             pipeline_timeout=0.001,
             listening_tone_enabled=False,
+            processing_tone_enabled=False,
         )
         transport = Mock(spec=["close"])
         rtp_protocol.connection_made(transport)
@@ -175,6 +177,7 @@ async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) 
             Context(),
             audio_timeout=0.001,
             listening_tone_enabled=False,
+            processing_tone_enabled=False,
         )
         transport = Mock(spec=["close"])
         rtp_protocol.connection_made(transport)
