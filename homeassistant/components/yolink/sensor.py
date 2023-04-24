@@ -113,6 +113,14 @@ def cvt_battery(val: int | None) -> int | None:
     return 0
 
 
+def cvt_volume(val: int | None) -> str | None:
+    """Convert volume to string."""
+    if val is None:
+        return None
+    volume_level = {1: "low", 2: "medium", 3: "high"}
+    return volume_level.get(val, None)
+
+
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="battery",
@@ -166,7 +174,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         name="State",
         icon="mdi:flash",
         options=["normal", "alert", "off"],
-        translation_key="power_failed_state",
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
     ),
     YoLinkSensorEntityDescription(
@@ -174,10 +181,17 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         name="Mute",
         icon="mdi:volume-mute",
-        options=["Yes", "No"],
-        translation_key="power_failed_mute",
+        options=["yes", "no"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
-        value=lambda value: "Yes" if value is True else "No",
+        value=lambda value: "yes" if value is True else "no",
+    ),
+    YoLinkSensorEntityDescription(
+        key="sound",
+        device_class=SensorDeviceClass.ENUM,
+        name="Volume",
+        icon="mdi:volume-high",
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        value=cvt_volume,
     ),
 )
 
