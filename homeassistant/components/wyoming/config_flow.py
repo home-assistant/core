@@ -52,10 +52,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # ASR = automated speech recognition (STT)
         asr_installed = [asr for asr in service.info.asr if asr.installed]
-        if not asr_installed:
-            return self.async_abort(reason="no_services")
+        tts_installed = [tts for tts in service.info.tts if tts.installed]
 
-        name = asr_installed[0].name
+        if asr_installed:
+            name = asr_installed[0].name
+        elif tts_installed:
+            name = tts_installed[0].name
+        else:
+            return self.async_abort(reason="no_services")
 
         return self.async_create_entry(title=name, data=user_input)
 

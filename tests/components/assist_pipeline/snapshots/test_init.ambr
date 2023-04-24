@@ -34,6 +34,7 @@
       'data': dict({
         'engine': 'homeassistant',
         'intent_input': 'test transcript',
+        'language': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -63,14 +64,16 @@
     dict({
       'data': dict({
         'engine': 'test',
+        'language': None,
         'tts_input': "Sorry, I couldn't understand that",
+        'voice': None,
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
     }),
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en",
+          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that",
           'mime_type': 'audio/mpeg',
           'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
         }),
@@ -87,7 +90,7 @@
   list([
     dict({
       'data': dict({
-        'language': 'en-US',
+        'language': 'en',
         'pipeline': 'test_name',
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
@@ -118,6 +121,7 @@
       'data': dict({
         'engine': 'homeassistant',
         'intent_input': 'test transcript',
+        'language': 'en-US',
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -147,14 +151,16 @@
     dict({
       'data': dict({
         'engine': 'test',
+        'language': 'en-UA',
         'tts_input': "Sorry, I couldn't understand that",
+        'voice': 'Arnold Schwarzenegger',
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
     }),
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=Arnold+Schwarzenegger",
+          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-UA&voice=Arnold+Schwarzenegger",
           'mime_type': 'audio/mpeg',
           'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_2657c1a8ee_test.mp3',
         }),
@@ -171,7 +177,7 @@
   list([
     dict({
       'data': dict({
-        'language': 'en-US',
+        'language': 'en',
         'pipeline': 'test_name',
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
@@ -202,6 +208,7 @@
       'data': dict({
         'engine': 'homeassistant',
         'intent_input': 'test transcript',
+        'language': 'en-US',
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -231,14 +238,16 @@
     dict({
       'data': dict({
         'engine': 'test',
+        'language': 'en-AU',
         'tts_input': "Sorry, I couldn't understand that",
+        'voice': 'Arnold Schwarzenegger',
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
     }),
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=Arnold+Schwarzenegger",
+          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-AU&voice=Arnold+Schwarzenegger",
           'mime_type': 'audio/mpeg',
           'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_2657c1a8ee_test.mp3',
         }),

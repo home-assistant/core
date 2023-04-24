@@ -55,7 +55,7 @@ async def test_diagnostics(
             "capabilities": {
                 "snapshot": False,
                 "events": False,
-                "ptz": False,
+                "ptz": True,
                 "imaging": True,
             },
             "profiles": [
