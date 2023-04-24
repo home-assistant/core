@@ -308,6 +308,8 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOST: self.onvif_config[CONF_HOST],
                         CONF_PORT: self.onvif_config[CONF_PORT],
                         CONF_NAME: self.onvif_config[CONF_NAME],
+                        CONF_USERNAME: self.onvif_config[CONF_USERNAME],
+                        CONF_PASSWORD: self.onvif_config[CONF_PASSWORD],
                     }
                 )
             # Verify there is an H264 profile
