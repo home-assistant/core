@@ -89,6 +89,8 @@ class MockSttProvider(BaseProvider, stt.Provider):
 class MockSttProviderEntity(BaseProvider, stt.SpeechToTextEntity):
     """Mock provider entity."""
 
+    _attr_name = "Mock STT"
+
 
 class MockTTSProvider(tts.Provider):
     """Mock TTS provider."""
