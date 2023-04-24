@@ -77,7 +77,7 @@ SAVE_DELAY = 10
 
 async def _async_create_default_pipeline(
     hass: HomeAssistant, pipeline_store: PipelineStorageCollection
-) -> None:
+) -> Pipeline:
     """Create a default pipeline.
 
     The default pipeline will use the homeassistant conversation agent and the
@@ -153,7 +153,7 @@ async def _async_create_default_pipeline(
     if stt_engine_id == "cloud" and tts_engine_id == "cloud":
         pipeline_name = "Home Assistant Cloud"
 
-    await pipeline_store.async_create_item(
+    return await pipeline_store.async_create_item(
         {
             "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": conversation_language,
@@ -178,9 +178,6 @@ def async_get_pipeline(
     if pipeline_id is None:
         # A pipeline was not specified, use the preferred one
         pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
-
-    if pipeline_id is None:
-        raise HomeAssistantError("no default assist pipeline")
 
     return pipeline_data.pipeline_store.data.get(pipeline_id)
 
@@ -715,7 +712,7 @@ class PipelinePreferred(CollectionError):
 class SerializedPipelineStorageCollection(SerializedStorageCollection):
     """Serialized pipeline storage collection."""
 
-    preferred_item: str | None
+    preferred_item: str
 
 
 class PipelineStorageCollection(
@@ -723,11 +720,13 @@ class PipelineStorageCollection(
 ):
     """Pipeline storage collection."""
 
-    _preferred_item: str | None = None
+    _preferred_item: str
 
     async def _async_load_data(self) -> SerializedPipelineStorageCollection | None:
         """Load the data."""
         if not (data := await super()._async_load_data()):
+            pipeline = await _async_create_default_pipeline(self.hass, self)
+            self._preferred_item = pipeline.id
             return data
 
         self._preferred_item = data["preferred_item"]
@@ -751,8 +750,6 @@ class PipelineStorageCollection(
 
     def _create_item(self, item_id: str, data: dict) -> Pipeline:
         """Create an item from validated config."""
-        if self._preferred_item is None:
-            self._preferred_item = item_id
         return Pipeline(id=item_id, **data)
 
     def _deserialize_item(self, data: dict) -> Pipeline:
@@ -770,7 +767,7 @@ class PipelineStorageCollection(
         await super().async_delete_item(item_id)
 
     @callback
-    def async_get_preferred_item(self) -> str | None:
+    def async_get_preferred_item(self) -> str:
         """Get the id of the preferred item."""
         return self._preferred_item
 
@@ -919,8 +916,6 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
         Store(hass, STORAGE_VERSION, STORAGE_KEY)
     )
     await pipeline_store.async_load()
-    if not pipeline_store.async_get_preferred_item():
-        await _async_create_default_pipeline(hass, pipeline_store)
     PipelineStorageCollectionWebsocket(
         pipeline_store,
         f"{DOMAIN}/pipeline",

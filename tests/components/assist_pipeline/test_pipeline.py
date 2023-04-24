@@ -147,7 +147,7 @@ async def test_get_pipeline(hass: HomeAssistant) -> None:
     store = pipeline_data.pipeline_store
     assert len(store.data) == 1
 
-    # Test we get the preferred pipeline if none is speocifed
+    # Test we get the preferred pipeline if none is specified
     pipeline = async_get_pipeline(hass, None)
     assert pipeline.id == store.async_get_preferred_item()
 
