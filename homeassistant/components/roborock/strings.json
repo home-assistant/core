@@ -22,5 +22,21 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "main_brush_left": {
+        "name": "Main brush left"
+      },
+      "side_brush_left": {
+        "name": "Side brush left"
+      },
+      "filter_left": {
+        "name": "Filter left"
+      },
+      "sensor_dirty_left": {
+        "name": "Sensor dirty left"
+      }
+    }
   }
 }

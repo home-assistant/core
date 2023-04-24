@@ -53,7 +53,12 @@ async def setup_entry(
     with patch(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data",
         return_value=HOME_DATA,
-    ), patch("homeassistant.components.roborock.RoborockMqttClient.get_networking"):
+    ), patch(
+        "homeassistant.components.roborock.RoborockMqttClient.get_networking"
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
+        return_value=PROP,
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     return mock_roborock_entry
