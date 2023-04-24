@@ -15,7 +15,7 @@ from .mock_data import BASE_URL, HOME_DATA, USER_DATA, USER_EMAIL
 from tests.common import MockConfigEntry
 
 
-async def setup_platform(hass: HomeAssistant, platforms: list[str]) -> MockConfigEntry:
+async def setup_platforms(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Roborock platform."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -28,7 +28,7 @@ async def setup_platform(hass: HomeAssistant, platforms: list[str]) -> MockConfi
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.roborock.PLATFORMS", platforms), patch(
+    with patch(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data",
         return_value=HOME_DATA,
     ), patch("homeassistant.components.roborock.RoborockMqttClient.get_networking"):
