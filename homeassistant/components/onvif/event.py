@@ -164,7 +164,7 @@ class EventManager:
             #
             # Our parser expects the topic to be
             # tns1:RuleEngine/CellMotionDetector/Motion
-            topic = msg.Topic._value_1.rstrip(".").rstrip("/")
+            topic = msg.Topic._value_1.rstrip("/.")
 
             if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
