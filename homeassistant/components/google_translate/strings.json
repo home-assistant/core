@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "language": "Language",
+          "tld": "TLD"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Google Translate Text-to-Speech configuration is being removed",
+      "description": "Your Google Translate Text-to-Speech configuration was already imported into the UI. \n\nRemove the Google Translate Text-to-Speech YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "migration": {
+      "title": "The Google Translate Text-to-Speech configuration is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Migrate your Google Translate Text-to-Speech configuration",
+            "description": "The Google Translate Text-to-Speech configuration is being removed. \n\nYour Google Translate Text-to-Speech configuration can be imported automatically to the UI by clicking submit below. Remove the `google_translate` platform configuration under the `tts` section from your `configuration.yaml` after the import is done.\n\nIf you have automations or scripts that use the `tts.google_translate_say` service you will need to update these to use the `tts.speak` service instead.\n\nDo not forget to clean up the your `configuration.yaml` after migration.\n\nSubmit to import your Google Translate Text-to-Speech configuration to the UI."
+          }
+        },
+        "abort": {
+          "already_configured": "The Google Translate Text-to-Speech config was already imported to the UI. Remove the `google_translate` platform configuration from your `configuration.yaml` file and restart Home Assistant to fix this issue."
+        }
+      }
+    }
+  }
+}
