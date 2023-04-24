@@ -110,16 +110,6 @@ class AccuWeatherEntity(
         return cast(float, self.coordinator.data["Visibility"][API_METRIC]["Value"])
 
     @property
-    def ozone(self) -> int | None:
-        """Return the ozone level."""
-        # We only have ozone data for certain locations and only in the forecast data.
-        if self.coordinator.forecast and self.coordinator.data[ATTR_FORECAST][0].get(
-            "Ozone"
-        ):
-            return cast(int, self.coordinator.data[ATTR_FORECAST][0]["Ozone"]["Value"])
-        return None
-
-    @property
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if not self.coordinator.forecast:
