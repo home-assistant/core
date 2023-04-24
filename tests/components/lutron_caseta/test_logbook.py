@@ -18,6 +18,7 @@ from homeassistant.components.lutron_caseta.const import (
 from homeassistant.components.lutron_caseta.models import LutronCasetaData
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import MockBridge
@@ -78,3 +79,62 @@ async def test_humanify_lutron_caseta_button_event(hass: HomeAssistant) -> None:
     assert event1["name"] == "Dining Room Pico"
     assert event1["domain"] == DOMAIN
     assert event1["message"] == "press stop"
+
+
+async def test_humanify_lutron_caseta_button_event_integration_not_loaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test humanifying lutron_caseta_button_events when the integration fails to load."""
+    hass.config.components.add("recorder")
+    assert await async_setup_component(hass, "logbook", {})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_KEYFILE: "",
+            CONF_CERTFILE: "",
+            CONF_CA_CERTS: "",
+        },
+        unique_id="abc",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
+        return_value=MockBridge(can_connect=True),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    for device in device_registry.devices.values():
+        if device.config_entries == {config_entry.entry_id}:
+            dr_device_id = device.id
+            break
+
+    assert dr_device_id is not None
+    (event1,) = mock_humanify(
+        hass,
+        [
+            MockRow(
+                LUTRON_CASETA_BUTTON_EVENT,
+                {
+                    ATTR_SERIAL: "68551522",
+                    ATTR_DEVICE_ID: dr_device_id,
+                    ATTR_TYPE: "Pico3ButtonRaiseLower",
+                    ATTR_LEAP_BUTTON_NUMBER: 1,
+                    ATTR_BUTTON_NUMBER: 1,
+                    ATTR_DEVICE_NAME: "Pico",
+                    ATTR_AREA_NAME: "Dining Room",
+                    ATTR_ACTION: "press",
+                },
+            ),
+        ],
+    )
+
+    assert event1["name"] == "Dining Room Pico"
+    assert event1["domain"] == DOMAIN
+    assert event1["message"] == "press Error retrieving button description"
