@@ -119,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         resource_collection = resources.ResourceStorageCollection(hass, default_config)
 
-        collection.StorageCollectionWebsocket(
+        collection.DictStorageCollectionWebsocket(
             resource_collection,
             "lovelace/resources",
             "resource",
@@ -198,7 +198,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         dashboards_collection,
         "lovelace/dashboards",
         "dashboard",

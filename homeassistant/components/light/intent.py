@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry, config_validation as cv, intent
+from homeassistant.helpers import area_registry as ar, config_validation as cv, intent
 import homeassistant.util.color as color_util
 
 from . import (
@@ -56,9 +56,9 @@ class SetIntentHandler(intent.IntentHandler):
 
         # Look up area first to fail early
         area_name = slots.get("area", {}).get("value")
-        area: area_registry.AreaEntry | None = None
+        area: ar.AreaEntry | None = None
         if area_name is not None:
-            areas = area_registry.async_get(hass)
+            areas = ar.async_get(hass)
             area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
                 area_name
             )

@@ -40,7 +40,6 @@ class DiscoveryInfo(TypedDict):
     """Represent the discovery info type for mysensors platforms."""
 
     devices: list[DevId]
-    name: str  # CONF_NAME is used in the notify base integration.
     gateway_id: GatewayId
 
 
@@ -92,8 +91,6 @@ LIGHT_TYPES: dict[SensorType, set[ValueType]] = {
     "S_RGBW_LIGHT": {"V_RGBW"},
 }
 
-NOTIFY_TYPES: dict[SensorType, set[ValueType]] = {"S_INFO": {"V_TEXT"}}
-
 REMOTE_TYPES: dict[SensorType, set[ValueType]] = {"S_IR": {"V_IR_SEND"}}
 
 SENSOR_TYPES: dict[SensorType, set[ValueType]] = {
@@ -135,7 +132,6 @@ SWITCH_TYPES: dict[SensorType, set[ValueType]] = {
     "S_SOUND": {"V_ARMED"},
     "S_VIBRATION": {"V_ARMED"},
     "S_MOISTURE": {"V_ARMED"},
-    "S_IR": {"V_IR_SEND"},
     "S_LOCK": {"V_LOCK_STATUS"},
     "S_WATER_QUALITY": {"V_STATUS"},
 }
@@ -148,7 +144,6 @@ PLATFORM_TYPES: dict[Platform, dict[SensorType, set[ValueType]]] = {
     Platform.COVER: COVER_TYPES,
     Platform.DEVICE_TRACKER: DEVICE_TRACKER_TYPES,
     Platform.LIGHT: LIGHT_TYPES,
-    Platform.NOTIFY: NOTIFY_TYPES,
     Platform.REMOTE: REMOTE_TYPES,
     Platform.SENSOR: SENSOR_TYPES,
     Platform.SWITCH: SWITCH_TYPES,
@@ -167,6 +162,4 @@ for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:
         TYPE_TO_PLATFORMS[s_type_name].append(platform)
 
-PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
-    Platform.NOTIFY,
-}
+PLATFORMS = tuple(PLATFORM_TYPES)

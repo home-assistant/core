@@ -153,6 +153,7 @@ async def test_list_get_dataset(
     assert msg["result"] == {
         "datasets": [
             {
+                "channel": 15,
                 "created": dataset_1.created.isoformat(),
                 "dataset_id": dataset_1.id,
                 "extended_pan_id": "1111111122222222",
@@ -162,6 +163,7 @@ async def test_list_get_dataset(
                 "source": "Google",
             },
             {
+                "channel": 15,
                 "created": dataset_2.created.isoformat(),
                 "dataset_id": dataset_2.id,
                 "extended_pan_id": "1111111122222222",
@@ -171,6 +173,7 @@ async def test_list_get_dataset(
                 "source": "Multipan",
             },
             {
+                "channel": 15,
                 "created": dataset_3.created.isoformat(),
                 "dataset_id": dataset_3.id,
                 "extended_pan_id": "1111111122222222",
@@ -195,6 +198,56 @@ async def test_list_get_dataset(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {"code": "not_found", "message": "unknown dataset"}
+
+
+async def test_set_preferred_dataset(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test we set a dataset as default."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    datasets = [
+        {"source": "Google", "tlv": DATASET_1},
+        {"source": "Multipan", "tlv": DATASET_2},
+        {"source": "🎅", "tlv": DATASET_3},
+    ]
+    for dataset in datasets:
+        await dataset_store.async_add_dataset(hass, dataset["source"], dataset["tlv"])
+
+    store = await dataset_store.async_get_store(hass)
+
+    for dataset in store.datasets.values():
+        if dataset.source == "🎅":
+            dataset_3 = dataset
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 1, "type": "thread/set_preferred_dataset", "dataset_id": dataset_3.id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    store = await dataset_store.async_get_store(hass)
+    assert store.preferred_dataset == dataset_3.id
+
+
+async def test_set_preferred_dataset_wrong_id(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test we set a dataset as default."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 1, "type": "thread/set_preferred_dataset", "dataset_id": "don_t_exist"}
+    )
+    msg = await client.receive_json()
+    assert msg["error"]["code"] == "not_found"
 
 
 async def test_discover_routers(
@@ -234,14 +287,16 @@ async def test_discover_routers(
     assert msg == {
         "event": {
             "data": {
+                "addresses": ["192.168.0.115"],
                 "brand": "homeassistant",
+                "extended_address": "aeeb2f594b570bbf",
                 "extended_pan_id": "e60fc7c186212ce5",
                 "model_name": "OpenThreadBorderRouter",
                 "network_name": "OpenThread HC",
                 "server": "core-silabs-multiprotocol.local.",
-                "vendor_name": "HomeAssistant",
-                "addresses": ["192.168.0.115"],
                 "thread_version": "1.3.0",
+                "unconfigured": None,
+                "vendor_name": "HomeAssistant",
             },
             "key": "aeeb2f594b570bbf",
             "type": "router_discovered",
@@ -261,14 +316,16 @@ async def test_discover_routers(
     assert msg == {
         "event": {
             "data": {
+                "addresses": ["192.168.0.124"],
                 "brand": "google",
+                "extended_address": "f6a99b425a67abed",
                 "extended_pan_id": "9e75e256f61409a3",
                 "model_name": "Google Nest Hub",
                 "network_name": "NEST-PAN-E1AF",
                 "server": "2d99f293-cd8e-2770-8dd2-6675de9fa000.local.",
-                "vendor_name": "Google Inc.",
                 "thread_version": "1.3.0",
-                "addresses": ["192.168.0.124"],
+                "unconfigured": None,
+                "vendor_name": "Google Inc.",
             },
             "key": "f6a99b425a67abed",
             "type": "router_discovered",

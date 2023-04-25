@@ -13,9 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import device_registry
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
@@ -36,6 +34,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -55,10 +54,8 @@ async def velbus_connect_task(
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
     """Migrate old device indentifiers."""
-    dev_reg = device_registry.async_get(hass)
-    devices: list[DeviceEntry] = device_registry.async_entries_for_config_entry(
-        dev_reg, entry_id
-    )
+    dev_reg = dr.async_get(hass)
+    devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(dev_reg, entry_id)
     for device in devices:
         old_identifier = list(next(iter(device.identifiers)))
         if len(old_identifier) > 2:
@@ -213,8 +210,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             await hass.async_add_executor_job(shutil.rmtree, cache_path)
         # set the new version
         config_entry.version = 2
-        # update the entry
-        hass.config_entries.async_update_entry(config_entry)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
     return True

@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONFIG_ENTRY_HOST,
@@ -118,11 +118,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.serial_number:
         identifiers.add((IDENTIFIER_SERIAL_NUMBER, device.serial_number))
 
-    connections = {(device_registry.CONNECTION_UPNP, device.udn)}
+    connections = {(dr.CONNECTION_UPNP, device.udn)}
     if device_mac_address:
-        connections.add((device_registry.CONNECTION_NETWORK_MAC, device_mac_address))
+        connections.add((dr.CONNECTION_NETWORK_MAC, device_mac_address))
 
-    dev_registry = device_registry.async_get(hass)
+    dev_registry = dr.async_get(hass)
     device_entry = dev_registry.async_get_device(
         identifiers=identifiers, connections=connections
     )

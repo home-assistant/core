@@ -13,6 +13,10 @@ on:
       - "requirements.txt"
       - "requirements_all.txt"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name}}
+  cancel-in-progress: true
+
 jobs:
   init:
     name: Initialize wheels builder
@@ -22,7 +26,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.5.2
 
       - name: Get information
         id: info
@@ -54,6 +58,9 @@ jobs:
             # OpenCV headless installation
             echo "CI_BUILD=1"
             echo "ENABLE_HEADLESS=1"
+
+            # Use C-Extension for sqlalchemy
+            echo "REQUIRE_SQLALCHEMY_CEXT=1"
           ) > .env_file
 
       - name: Upload env_file
@@ -69,17 +76,18 @@ jobs:
           path: ./requirements_diff.txt
 
   core:
-    name: Build musllinux wheels with musllinux_1_2 / cp310 at ${{ matrix.arch }} for core
+    name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
     if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        abi: ["cp310", "cp311"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.5.2
 
       - name: Download env_file
         uses: actions/download-artifact@v3
@@ -92,9 +100,9 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.10.1
+        uses: home-assistant/wheels@2023.04.0
         with:
-          abi: cp310
+          abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
@@ -105,18 +113,19 @@ jobs:
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
 
-  integrations:
-    name: Build musllinux wheels with musllinux_1_2 / cp310 at ${{ matrix.arch }} for integrations
+  integrations_cp310:
+    name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
     if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        abi: ["cp310"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.5.2
 
       - name: Download env_file
         uses: actions/download-artifact@v3
@@ -132,6 +141,7 @@ jobs:
         run: |
           requirement_files="requirements_all.txt requirements_diff.txt"
           for requirement_file in ${requirement_files}; do
+            sed -i "s|# azure-servicebus|azure-servicebus|g" ${requirement_file}
             sed -i "s|# pybluez|pybluez|g" ${requirement_file}
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
@@ -168,30 +178,177 @@ jobs:
           sed -i "/numpy/d" homeassistant/package_constraints.txt
 
       - name: Build wheels (part 1)
-        uses: home-assistant/wheels@2022.10.1
+        uses: home-assistant/wheels@2023.04.0
         with:
-          abi: cp310
+          abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;grpcio
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
+          skip-binary: aiohttp;grpcio;sqlalchemy;protobuf
           legacy: true
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtaa"
 
       - name: Build wheels (part 2)
-        uses: home-assistant/wheels@2022.10.1
+        uses: home-assistant/wheels@2023.04.0
         with:
-          abi: cp310
+          abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;grpcio
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
+          skip-binary: aiohttp;grpcio;sqlalchemy;protobuf
+          legacy: true
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_all.txtab"
+
+  # Wheels building for the cp311 ABI is currently split
+  # This is mainly until we have figured out to get all wheels built.
+  # Without harming our current workflow.
+  integrations_cp311:
+    name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
+    if: github.repository_owner == 'home-assistant'
+    needs: init
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: ["cp311"]
+        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3.5.2
+
+      - name: Write alternative env-file for cp311
+        run: |
+          (
+            echo "GRPC_BUILD_WITH_BORING_SSL_ASM=false"
+            echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
+            echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
+            echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
+
+            # GRPC on armv7 needed -lexecinfo (issue #56669) since home assistant installed
+            # execinfo-dev when building wheels. However, this package is no longer available
+            # Alpine 3.17, which we use for the cp311 ABI, so the flag should no longer be needed.
+            echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc" # -lexecinfo
+
+            # Fix out of memory issues with rust
+            echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
+
+            # OpenCV headless installation
+            echo "CI_BUILD=1"
+            echo "ENABLE_HEADLESS=1"
+
+            # Use C-Extension for sqlalchemy
+            echo "REQUIRE_SQLALCHEMY_CEXT=1"
+          ) > .env_file
+
+      - name: Download requirements_diff
+        uses: actions/download-artifact@v3
+        with:
+          name: requirements_diff
+
+      - name: (Un)comment packages
+        run: |
+          requirement_files="requirements_all.txt requirements_diff.txt"
+          for requirement_file in ${requirement_files}; do
+
+            # PyBluez no longer compiles. Commented it out for now.
+            # It need further cleanup down the line, as all machine images
+            # try to install it.
+            # sed -i "s|# pybluez|pybluez|g" ${requirement_file}
+
+            # beacontools requires PyBluez.
+            # sed -i "s|# beacontools|beacontools|g" ${requirement_file}
+
+            # azure-servicebus requires uamqp, which requires OpenSSL 1.1 to
+            # compile/build. This is not available on Alpine 3.17. The compat
+            # layer offered by Alpine conflicts, so we have no way to build
+            # this package.
+            # sed -i "s|# azure-servicebus|azure-servicebus|g" ${requirement_file}
+
+            # It doesn't build for some reason, so we skip it for now.
+            # Bumping to the latest version (4.7.0.72) supporting Python 3.11
+            # doesn't help. Reverted bump in #91871. There are 8 registered
+            # instances using this integration according to analytics.
+            # sed -i "s|# opencv-python-headless|opencv-python-headless|g" ${requirement_file}
+
+            sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
+            sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
+            sed -i "s|# evdev|evdev|g" ${requirement_file}
+            sed -i "s|# pycups|pycups|g" ${requirement_file}
+            sed -i "s|# homekit|homekit|g" ${requirement_file}
+            sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
+            sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
+
+            # Some packages are not buildable on armhf anymore
+            if [ "${{ matrix.arch }}" = "armhf" ]; then
+
+              # Pandas has issues building on armhf, it is expected they
+              # will drop the platform in the near future (they consider it
+              # "flimsy" on 386). The following packages depend on pandas,
+              # so we comment them out.
+              sed -i "s|env_canada|# env_canada|g" ${requirement_file}
+              sed -i "s|noaa-coops|# noaa-coops|g" ${requirement_file}
+              sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
+              sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}
+            fi
+          done
+
+      - name: Split requirements all
+        run: |
+          # We split requirements all into two different files.
+          # This is to prevent the build from running out of memory when
+          # resolving packages on 32-bits systems (like armhf, armv7).
+
+          split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 2) requirements_all.txt requirements_all.txt
+
+      - name: Adjust build env
+        run: |
+          if [ "${{ matrix.arch }}" = "i386" ]; then
+            echo "NPY_DISABLE_SVML=1" >> .env_file
+          fi
+
+          # Probably not an issue anymore. Removing for now.
+          # (
+          #   # cmake > 3.22.2 have issue on arm
+          #   # Tested until 3.22.5
+          #   echo "cmake==3.22.2"
+          # ) >> homeassistant/package_constraints.txt
+
+          # Do not pin numpy in wheels building
+          sed -i "/numpy/d" homeassistant/package_constraints.txt
+
+      - name: Build wheels (part 1)
+        uses: home-assistant/wheels@2023.04.0
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
+          skip-binary: aiohttp;grpcio;sqlalchemy;protobuf
+          legacy: true
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_all.txtaa"
+
+      - name: Build wheels (part 2)
+        uses: home-assistant/wheels@2023.04.0
+        with:
+          abi: ${{ matrix.abi }}
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
+          skip-binary: aiohttp;grpcio;sqlalchemy;protobuf
           legacy: true
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"

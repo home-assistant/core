@@ -23,7 +23,7 @@ from zigpy.zcl.clusters.general import Groups, Identify
 from zigpy.zcl.foundation import Status as ZclStatus, ZCLCommandDef
 import zigpy.zdo.types as zdo_types
 
-from homeassistant.const import ATTR_COMMAND, ATTR_NAME
+from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import (
@@ -32,7 +32,8 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import channels
+from . import const
+from .cluster_handlers import ClusterHandler, ZDOClusterHandler
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
     ATTR_ARGS,
@@ -81,10 +82,11 @@ from .const import (
     UNKNOWN_MODEL,
     ZHA_OPTIONS,
 )
+from .endpoint import Endpoint
 from .helpers import LogMixin, async_get_zha_config_value, convert_to_zcl_values
 
 if TYPE_CHECKING:
-    from ..api import ClusterBinding
+    from ..websocket_api import ClusterBinding
     from .gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,14 +141,26 @@ class ZHADevice(LogMixin):
                 CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
             )
 
-        keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
-        self.unsubs.append(
-            async_track_time_interval(
-                self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
-            )
-        )
+        self._zdo_handler: ZDOClusterHandler = ZDOClusterHandler(self)
+        self._power_config_ch: ClusterHandler | None = None
+        self._identify_ch: ClusterHandler | None = None
+        self._basic_ch: ClusterHandler | None = None
         self.status: DeviceStatus = DeviceStatus.CREATED
-        self._channels = channels.Channels(self)
+
+        self._endpoints: dict[int, Endpoint] = {}
+        for ep_id, endpoint in zigpy_device.endpoints.items():
+            if ep_id != 0:
+                self._endpoints[ep_id] = Endpoint.new(endpoint, self)
+
+        if not self.is_coordinator:
+            keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
+            self.unsubs.append(
+                async_track_time_interval(
+                    self.hass,
+                    self._check_available,
+                    timedelta(seconds=keep_alive_interval),
+                )
+            )
 
     @property
     def device_id(self) -> str:
@@ -161,17 +175,6 @@ class ZHADevice(LogMixin):
     def device(self) -> zigpy.device.Device:
         """Return underlying Zigpy device."""
         return self._zigpy_device
-
-    @property
-    def channels(self) -> channels.Channels:
-        """Return ZHA channels."""
-        return self._channels
-
-    @channels.setter
-    def channels(self, value: channels.Channels) -> None:
-        """Channels setter."""
-        assert isinstance(value, channels.Channels)
-        self._channels = value
 
     @property
     def name(self) -> str:
@@ -336,11 +339,61 @@ class ZHADevice(LogMixin):
         self._available = new_availability
 
     @property
+    def power_configuration_ch(self) -> ClusterHandler | None:
+        """Return power configuration cluster handler."""
+        return self._power_config_ch
+
+    @power_configuration_ch.setter
+    def power_configuration_ch(self, cluster_handler: ClusterHandler) -> None:
+        """Power configuration cluster handler setter."""
+        if self._power_config_ch is None:
+            self._power_config_ch = cluster_handler
+
+    @property
+    def basic_ch(self) -> ClusterHandler | None:
+        """Return basic cluster handler."""
+        return self._basic_ch
+
+    @basic_ch.setter
+    def basic_ch(self, cluster_handler: ClusterHandler) -> None:
+        """Set the basic cluster handler."""
+        if self._basic_ch is None:
+            self._basic_ch = cluster_handler
+
+    @property
+    def identify_ch(self) -> ClusterHandler | None:
+        """Return power configuration cluster handler."""
+        return self._identify_ch
+
+    @identify_ch.setter
+    def identify_ch(self, cluster_handler: ClusterHandler) -> None:
+        """Power configuration cluster handler setter."""
+        if self._identify_ch is None:
+            self._identify_ch = cluster_handler
+
+    @property
+    def zdo_cluster_handler(self) -> ZDOClusterHandler:
+        """Return ZDO cluster handler."""
+        return self._zdo_handler
+
+    @property
+    def endpoints(self) -> dict[int, Endpoint]:
+        """Return the endpoints for this device."""
+        return self._endpoints
+
+    @property
     def zigbee_signature(self) -> dict[str, Any]:
         """Get zigbee signature for this device."""
         return {
             ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),
-            ATTR_ENDPOINTS: self._channels.zigbee_signature,
+            ATTR_ENDPOINTS: {
+                signature[0]: signature[1]
+                for signature in [
+                    endpoint.zigbee_signature for endpoint in self._endpoints.values()
+                ]
+            },
+            ATTR_MANUFACTURER: self.manufacturer,
+            ATTR_MODEL: self.model,
         }
 
     @classmethod
@@ -353,11 +406,10 @@ class ZHADevice(LogMixin):
     ) -> Self:
         """Create new device."""
         zha_dev = cls(hass, zigpy_dev, gateway)
-        zha_dev.channels = channels.Channels.new(zha_dev)
         zha_dev.unsubs.append(
             async_dispatcher_connect(
                 hass,
-                SIGNAL_UPDATE_DEVICE.format(zha_dev.channels.unique_id),
+                SIGNAL_UPDATE_DEVICE.format(str(zha_dev.ieee)),
                 zha_dev.async_update_sw_build_id,
             )
         )
@@ -393,7 +445,7 @@ class ZHADevice(LogMixin):
         if (
             self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
             or self.manufacturer == "LUMI"
-            or not self._channels.pools
+            or not self._endpoints
         ):
             self.debug(
                 (
@@ -410,14 +462,13 @@ class ZHADevice(LogMixin):
             "Attempting to checkin with device - missed checkins: %s",
             self._checkins_missed_count,
         )
-        try:
-            pool = self._channels.pools[0]
-            basic_ch = pool.all_channels[f"{pool.id}:0x0000"]
-        except KeyError:
+        if not self.basic_ch:
             self.debug("does not have a mandatory basic cluster")
             self.update_available(False)
             return
-        res = await basic_ch.get_attribute_value(ATTR_MANUFACTURER, from_cache=False)
+        res = await self.basic_ch.get_attribute_value(
+            ATTR_MANUFACTURER, from_cache=False
+        )
         if res is not None:
             self._checkins_missed_count = 0
 
@@ -435,21 +486,34 @@ class ZHADevice(LogMixin):
         availability_changed = self.available ^ available
         self.available = available
         if availability_changed and available:
-            # reinit channels then signal entities
+            # reinit cluster handlers then signal entities
             self.debug(
                 "Device availability changed and device became available,"
-                " reinitializing channels"
+                " reinitializing cluster handlers"
             )
             self.hass.async_create_task(self._async_became_available())
             return
         if availability_changed and not available:
             self.debug("Device availability changed and device became unavailable")
-            self._channels.zha_send_event(
+            self.zha_send_event(
                 {
                     "device_event_type": "device_offline",
                 },
             )
         async_dispatcher_send(self.hass, f"{self._available_signal}_entity")
+
+    @callback
+    def zha_send_event(self, event_data: dict[str, str | int]) -> None:
+        """Relay events to hass."""
+        self.hass.bus.async_fire(
+            const.ZHA_EVENT,
+            {
+                const.ATTR_DEVICE_IEEE: str(self.ieee),
+                const.ATTR_UNIQUE_ID: str(self.ieee),
+                ATTR_DEVICE_ID: self.device_id,
+                **event_data,
+            },
+        )
 
     async def _async_became_available(self) -> None:
         """Update device availability and signal entities."""
@@ -489,23 +553,41 @@ class ZHADevice(LogMixin):
             True,
         )
         self.debug("started configuration")
-        await self._channels.async_configure()
+        await self._zdo_handler.async_configure()
+        self._zdo_handler.debug("'async_configure' stage succeeded")
+        await asyncio.gather(
+            *(endpoint.async_configure() for endpoint in self._endpoints.values())
+        )
+        async_dispatcher_send(
+            self.hass,
+            const.ZHA_CLUSTER_HANDLER_MSG,
+            {
+                const.ATTR_TYPE: const.ZHA_CLUSTER_HANDLER_CFG_DONE,
+            },
+        )
         self.debug("completed configuration")
 
         if (
             should_identify
-            and self._channels.identify_ch is not None
+            and self.identify_ch is not None
             and not self.skip_configuration
         ):
-            await self._channels.identify_ch.trigger_effect(
+            await self.identify_ch.trigger_effect(
                 effect_id=Identify.EffectIdentifier.Okay,
                 effect_variant=Identify.EffectVariant.Default,
             )
 
     async def async_initialize(self, from_cache: bool = False) -> None:
-        """Initialize channels."""
+        """Initialize cluster handlers."""
         self.debug("started initialization")
-        await self._channels.async_initialize(from_cache)
+        await self._zdo_handler.async_initialize(from_cache)
+        self._zdo_handler.debug("'async_initialize' stage succeeded")
+        await asyncio.gather(
+            *(
+                endpoint.async_initialize(from_cache)
+                for endpoint in self._endpoints.values()
+            )
+        )
         self.debug("power source: %s", self.power_source)
         self.status = DeviceStatus.INITIALIZED
         self.debug("completed initialization")

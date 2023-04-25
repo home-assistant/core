@@ -1,4 +1,4 @@
-"""This component provides HA Siren support for Ring Chimes."""
+"""Component providing HA Siren support for Ring Chimes."""
 import logging
 from typing import Any
 

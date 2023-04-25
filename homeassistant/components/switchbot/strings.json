@@ -58,5 +58,56 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "calibration": {
+        "name": "Calibration"
+      },
+      "motion": {
+        "name": "[%key:component::binary_sensor::entity_component::motion::name%]"
+      },
+      "door_open": {
+        "name": "[%key:component::binary_sensor::entity_component::door::name%]"
+      },
+      "door_timeout": {
+        "name": "Timeout"
+      },
+      "light": {
+        "name": "[%key:component::binary_sensor::entity_component::light::name%]"
+      },
+      "door_unclosed_alarm": {
+        "name": "Unclosed alarm"
+      },
+      "door_unlocked_alarm": {
+        "name": "Unlocked alarm"
+      },
+      "door_auto_lock_paused": {
+        "name": "Auto-lock paused"
+      }
+    },
+    "sensor": {
+      "bluetooth_signal": {
+        "name": "Bluetooth signal"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]"
+      },
+      "light_level": {
+        "name": "Light level"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "power": {
+        "name": "[%key:component::sensor::entity_component::power::name%]"
+      }
+    }
   }
 }

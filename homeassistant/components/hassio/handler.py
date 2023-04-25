@@ -5,6 +5,7 @@ import asyncio
 from http import HTTPStatus
 import logging
 import os
+from typing import Any
 
 import aiohttp
 
@@ -17,7 +18,7 @@ from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_DISCOVERY, DOMAIN
+from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -249,6 +250,18 @@ async def async_update_core(
     )
 
 
+@bind_hass
+@_api_bool
+async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> bool:
+    """Apply a suggestion from supervisor's resolution center.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/resolution/suggestion/{suggestion_uuid}"
+    return await hassio.send_command(command, timeout=None)
+
+
 class HassIO:
     """Small API wrapper for Hass.io."""
 
@@ -320,12 +333,28 @@ class HassIO:
         return self.send_command(f"/addons/{addon}/info", method="get")
 
     @api_data
+    def get_core_stats(self):
+        """Return stats for the core.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/core/stats", method="get")
+
+    @api_data
     def get_addon_stats(self, addon):
         """Return stats for an Add-on.
 
         This method returns a coroutine.
         """
         return self.send_command(f"/addons/{addon}/stats", method="get")
+
+    @api_data
+    def get_supervisor_stats(self):
+        """Return stats for the supervisor.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/supervisor/stats", method="get")
 
     def get_addon_changelog(self, addon):
         """Return changelog for an Add-on.
@@ -400,6 +429,16 @@ class HassIO:
         """
         return self.send_command("/resolution/info", method="get")
 
+    @api_data
+    def get_suggestions_for_issue(self, issue_id: str) -> dict[str, Any]:
+        """Return suggestions for issue from Supervisor resolution center.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(
+            f"/resolution/issue/{issue_id}/suggestions", method="get"
+        )
+
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
         """Update Home Assistant API data on Hass.io."""
@@ -438,6 +477,14 @@ class HassIO:
             "/supervisor/options", payload={"diagnostics": diagnostics}
         )
 
+    @_api_bool
+    def apply_suggestion(self, suggestion_uuid: str):
+        """Apply a suggestion from supervisor's resolution center.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(f"/resolution/suggestion/{suggestion_uuid}")
+
     async def send_command(
         self,
         command,
@@ -445,6 +492,8 @@ class HassIO:
         payload=None,
         timeout=10,
         return_text=False,
+        *,
+        source="core.handler",
     ):
         """Send API command to Hass.io.
 
@@ -458,7 +507,8 @@ class HassIO:
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
                         f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
-                    )
+                    ),
+                    X_HASS_SOURCE: source,
                 },
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )

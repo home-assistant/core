@@ -36,7 +36,6 @@ async def test_light_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     knx.assert_state("light.test", STATE_OFF)
     # turn on light

@@ -17,8 +17,6 @@ BYTE_SIZES = [
 ]
 
 # Defaults
-DEFAULT_DAYS = "1"
-DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Lidarr"
 DEFAULT_UNIT = UnitOfInformation.GIGABYTES
 DEFAULT_MAX_RECORDS = 20

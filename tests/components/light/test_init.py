@@ -2159,6 +2159,26 @@ async def test_light_service_call_white_mode(
     _, data = entity0.last_call("turn_off")
     assert data == {}
 
+    entity0.calls = []
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], "white": True},
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"white": 100}
+
+    entity0.calls = []
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], "brightness_pct": 50, "white": True},
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"white": 128}
+
 
 async def test_light_state_color_conversion(
     hass: HomeAssistant, enable_custom_integrations: None

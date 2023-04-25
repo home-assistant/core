@@ -11,5 +11,5 @@
   "documentation": "https://www.home-assistant.io/integrations/dormakaba_dkey",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["py-dormakaba-dkey==1.0.2"]
+  "requirements": ["py-dormakaba-dkey==1.0.4"]
 }
