@@ -197,7 +197,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
 
             # Shelly TRV sends information about changing the configuration for no
             # reason, reloading the config entry is not needed for it.
-            if self.model != "SHTRV-01":
+            if self.model == "SHTRV-01":
                 self._last_cfg_changed = None
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
