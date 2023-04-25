@@ -85,7 +85,7 @@ class CloudProvider(Provider):
                 language=metadata.language,
             )
         except VoiceError as err:
-            _LOGGER.debug("Voice error: %s", err)
+            _LOGGER.error("Voice error: %s", err)
             return SpeechResult(None, SpeechResultState.ERROR)
 
         # Return Speech as Text

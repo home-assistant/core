@@ -3,7 +3,7 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'hassio',
-      'unique_id': 'mock_piper',
+      'unique_id': '1234',
     }),
     'data': dict({
       'host': 'mock-piper',
@@ -29,7 +29,7 @@
       'pref_disable_polling': False,
       'source': 'hassio',
       'title': 'Piper',
-      'unique_id': 'mock_piper',
+      'unique_id': '1234',
       'version': 1,
     }),
     'title': 'Piper',

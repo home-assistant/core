@@ -84,9 +84,9 @@ async def test_pipeline_from_audio_stream_legacy(
             "language": "en",
             "name": "test_name",
             "stt_engine": "test",
-            "stt_language": "en-UK",
+            "stt_language": "en-US",
             "tts_engine": "test",
-            "tts_language": "en-AU",
+            "tts_language": "en-US",
             "tts_voice": "Arnold Schwarzenegger",
         }
     )
@@ -150,9 +150,9 @@ async def test_pipeline_from_audio_stream_entity(
             "language": "en",
             "name": "test_name",
             "stt_engine": mock_stt_provider_entity.entity_id,
-            "stt_language": "en-UK",
+            "stt_language": "en-US",
             "tts_engine": "test",
-            "tts_language": "en-UA",
+            "tts_language": "en-US",
             "tts_voice": "Arnold Schwarzenegger",
         }
     )
