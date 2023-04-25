@@ -1225,9 +1225,29 @@ async def test_multicast_set_value(
             blocking=True,
         )
 
-    # Test that when a command fails we raise an exception
+    # Test that when a command is unsuccessful we raise an exception
     client.async_send_command.return_value = {"success": False}
 
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: [
+                    CLIMATE_DANFOSS_LC13_ENTITY,
+                    CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
+                ],
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_PROPERTY: "setpoint",
+                ATTR_PROPERTY_KEY: 1,
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+
+    # Test that when we get an exception from the library we raise an exception
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 12, "test")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
