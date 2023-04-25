@@ -7,6 +7,7 @@ from unittest.mock import call, patch
 import aiohttp
 import pytest
 
+from homeassistant.components import conversation
 from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -333,6 +334,9 @@ async def test_conversation_agent(
         entry, options={"enable_conversation_agent": True}
     )
     await hass.async_block_till_done()
+
+    agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    assert agent.supported_languages == ["en-US"]
 
     text1 = "tell me a joke"
     text2 = "tell me another one"

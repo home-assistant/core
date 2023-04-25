@@ -68,6 +68,7 @@ from .const import (  # noqa: F401
     CONF_WS_HEADERS,
     CONF_WS_PATH,
     DATA_MQTT,
+    DATA_MQTT_AVAILABLE,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
@@ -87,8 +88,9 @@ from .models import (  # noqa: F401
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import (
+from .util import (  # noqa: F401
     async_create_certificate_temp_files,
+    async_wait_for_mqtt_client,
     get_mqtt_data,
     mqtt_config_entry_enabled,
     valid_publish_topic,
@@ -183,34 +185,54 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf = dict(entry.data)
-    # Fetch configuration
-    hass_config = await conf_util.async_hass_config_yaml(hass)
-    mqtt_yaml = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
-    client = MQTT(hass, entry, conf)
-    if DOMAIN in hass.data:
-        mqtt_data = get_mqtt_data(hass)
-        mqtt_data.config = mqtt_yaml
-        mqtt_data.client = client
-    else:
-        # Initial setup
-        websocket_api.async_register_command(hass, websocket_subscribe)
-        websocket_api.async_register_command(hass, websocket_mqtt_info)
-        hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
-    client.start(mqtt_data)
+    conf: dict[str, Any]
+    mqtt_data: MqttData
 
-    await async_create_certificate_temp_files(hass, dict(entry.data))
-    # Restore saved subscriptions
-    if mqtt_data.subscriptions_to_restore:
-        mqtt_data.client.async_restore_tracked_subscriptions(
-            mqtt_data.subscriptions_to_restore
+    async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
+        """Set up the MQTT client."""
+        # Fetch configuration
+        conf = dict(entry.data)
+        hass_config = await conf_util.async_hass_config_yaml(hass)
+        mqtt_yaml = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+        client = MQTT(hass, entry, conf)
+        if DOMAIN in hass.data:
+            mqtt_data = get_mqtt_data(hass)
+            mqtt_data.config = mqtt_yaml
+            mqtt_data.client = client
+        else:
+            # Initial setup
+            websocket_api.async_register_command(hass, websocket_subscribe)
+            websocket_api.async_register_command(hass, websocket_mqtt_info)
+            hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
+        client.start(mqtt_data)
+
+        await async_create_certificate_temp_files(hass, dict(entry.data))
+        # Restore saved subscriptions
+        if mqtt_data.subscriptions_to_restore:
+            mqtt_data.client.async_restore_tracked_subscriptions(
+                mqtt_data.subscriptions_to_restore
+            )
+            mqtt_data.subscriptions_to_restore = []
+        mqtt_data.reload_dispatchers.append(
+            entry.add_update_listener(_async_config_entry_updated)
         )
-        mqtt_data.subscriptions_to_restore = []
-    mqtt_data.reload_dispatchers.append(
-        entry.add_update_listener(_async_config_entry_updated)
-    )
 
-    await mqtt_data.client.async_connect()
+        await mqtt_data.client.async_connect()
+        return (mqtt_data, conf)
+
+    client_available: asyncio.Future[bool]
+    if DATA_MQTT_AVAILABLE not in hass.data:
+        client_available = hass.data[DATA_MQTT_AVAILABLE] = asyncio.Future()
+    else:
+        client_available = hass.data[DATA_MQTT_AVAILABLE]
+
+    setup_ok: bool = False
+    try:
+        mqtt_data, conf = await _setup_client()
+        setup_ok = True
+    finally:
+        if not client_available.done():
+            client_available.set_result(setup_ok)
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
@@ -565,6 +587,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         registry_hooks.popitem()[1]()
     # Wait for all ACKs and stop the loop
     await mqtt_client.async_disconnect()
+
+    # Cleanup MQTT client availability
+    hass.data.pop(DATA_MQTT_AVAILABLE, None)
     # Store remaining subscriptions to be able to restore or reload them
     # when the entry is set up again
     if subscriptions := mqtt_client.subscriptions:
