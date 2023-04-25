@@ -2,6 +2,7 @@
 from typing import Any
 from unittest.mock import patch
 
+from hass_nabucasa import Cloud
 import pytest
 
 from homeassistant.components import cloud
@@ -134,9 +135,9 @@ async def test_setup_existing_cloud_user(
 
 async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test cloud on connect triggers."""
-    cl = hass.data["cloud"]
+    cl: Cloud = hass.data["cloud"]
 
-    assert len(cl.iot._on_connect) == 3
+    assert len(cl.iot._on_connect) == 4
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 0
 
@@ -150,6 +151,11 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
 
     assert "async_setup" in str(cl.iot._on_connect[-1])
     await cl.iot._on_connect[-1]()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 0
+
+    await cl.client.cloud_started()
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 1

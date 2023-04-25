@@ -105,7 +105,9 @@ async def test_google_actions_sync_fails(
 
 async def test_login_view(hass: HomeAssistant, cloud_client) -> None:
     """Test logging in."""
-    hass.data["cloud"] = MagicMock(login=AsyncMock())
+    hass.data["cloud"] = MagicMock(
+        login=AsyncMock(), client=Mock(cloud_pipeline="12345")
+    )
 
     req = await cloud_client.post(
         "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
@@ -113,7 +115,7 @@ async def test_login_view(hass: HomeAssistant, cloud_client) -> None:
 
     assert req.status == HTTPStatus.OK
     result = await req.json()
-    assert result == {"success": True}
+    assert result == {"success": True, "cloud_pipeline": "12345"}
 
 
 async def test_login_view_random_exception(cloud_client) -> None:

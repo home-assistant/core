@@ -298,23 +298,31 @@ async def test_google_config_should_2fa(
     assert not gconf.should_2fa(state)
 
 
-async def test_set_username(hass: HomeAssistant) -> None:
+@patch(
+    "homeassistant.components.cloud.client.assist_pipeline.async_get_pipelines",
+    return_value=[],
+)
+async def test_set_username(async_get_pipelines, hass: HomeAssistant) -> None:
     """Test we set username during login."""
     prefs = MagicMock(
         alexa_enabled=False,
         google_enabled=False,
         async_set_username=AsyncMock(return_value=None),
     )
-    client = CloudClient(hass, prefs, None, {}, {})
+    client = CloudClient(hass, prefs, None, {}, {}, AsyncMock())
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
-    await client.cloud_started()
+    await client.on_cloud_connected()
 
     assert len(prefs.async_set_username.mock_calls) == 1
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
 
 
+@patch(
+    "homeassistant.components.cloud.client.assist_pipeline.async_get_pipelines",
+    return_value=[],
+)
 async def test_login_recovers_bad_internet(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    async_get_pipelines, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test Alexa can recover bad auth."""
     prefs = Mock(
@@ -322,12 +330,12 @@ async def test_login_recovers_bad_internet(
         google_enabled=False,
         async_set_username=AsyncMock(return_value=None),
     )
-    client = CloudClient(hass, prefs, None, {}, {})
+    client = CloudClient(hass, prefs, None, {}, {}, AsyncMock())
     client.cloud = Mock()
     client._alexa_config = Mock(
         async_enable_proactive_mode=Mock(side_effect=aiohttp.ClientError)
     )
-    await client.cloud_started()
+    await client.on_cloud_connected()
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 1
     assert "Unable to activate Alexa Report State" in caplog.text
 
