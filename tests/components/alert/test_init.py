@@ -38,6 +38,7 @@ from tests.common import MockUser, async_mock_service
 NAME = "alert_test"
 NAME_MODIFIED = "alert_test_modified"
 DONE_MESSAGE = "alert_gone"
+DONE_MESSAGE_MODIFIED = "alert_gone_modified"
 NOTIFIER = "test"
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_ENTITY = "sensor.test"
@@ -335,17 +336,21 @@ async def test_reload(
 ) -> None:
     """Test reloading the YAML config."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
+    expected_notifications = 0
     hass.states.async_set("sensor.test", STATE_ON)
+    expected_notifications += 1
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     assert len(hass.states.async_entity_ids()) == 2
+    assert len(mock_notifier) == expected_notifications
 
     hass.states.async_set("sensor.test", STATE_OFF)
+    expected_notifications += 1
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_IDLE
-
+    assert len(mock_notifier) == expected_notifications
     state_1 = hass.states.get(ENTITY_ID)
 
     assert state_1 is not None
@@ -354,6 +359,7 @@ async def test_reload(
     config = deepcopy(TEST_CONFIG)
     config[DOMAIN][NAME][CONF_NAME] = NAME_MODIFIED
     config[DOMAIN][NAME][CONF_ENTITY_ID] = TEST_ENTITY_MODIFIED
+    config[DOMAIN][NAME][CONF_DONE_MESSAGE] = DONE_MESSAGE_MODIFIED
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -368,6 +374,7 @@ async def test_reload(
         )
         await hass.async_block_till_done()
 
+    assert len(mock_notifier) == expected_notifications
     assert len(hass.states.async_entity_ids()) == 2
 
     state_1 = hass.states.get(ENTITY_ID)
@@ -375,17 +382,35 @@ async def test_reload(
     assert state_1 is not None
     assert state_1.name == NAME_MODIFIED
 
-    # Assert the original watched entity and check that the alert does not fire
+    # Assert the original watched entity and check that the alert/notification does not fire
     hass.states.async_set(TEST_ENTITY, STATE_ON)
     await hass.async_block_till_done()
-
+    assert len(mock_notifier) == expected_notifications
     assert hass.states.get(ENTITY_ID).state == STATE_IDLE
 
-    # Assert the new watched entity and check that the alert does fire
+    # Deassert the original watched entity and check that the done notification does not fire
     hass.states.async_set(TEST_ENTITY, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == expected_notifications
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+
+    # Assert the new watched entity and check that the modified alert does fire
     hass.states.async_set(TEST_ENTITY_MODIFIED, STATE_ON)
+    expected_notifications += 1
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
-
+    assert len(mock_notifier) == expected_notifications
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_MESSAGE] == NAME_MODIFIED
     assert len(hass.states.async_entity_ids()) == 3
+
+    # Deassert the new watched entity and check that the modified alert does send done message
+    hass.states.async_set(TEST_ENTITY_MODIFIED, STATE_OFF)
+    expected_notifications += 1
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+    assert len(mock_notifier) == expected_notifications
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_MESSAGE] == DONE_MESSAGE_MODIFIED
