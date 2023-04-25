@@ -65,7 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle Supervisor add-on discovery."""
-        await self.async_set_unique_id(discovery_info.slug)
+        await self.async_set_unique_id(discovery_info.uuid)
         self._abort_if_unique_id_configured()
 
         self._hassio_discovery = discovery_info
