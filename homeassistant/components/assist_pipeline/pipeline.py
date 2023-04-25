@@ -88,7 +88,9 @@ async def _async_resolve_default_pipeline_settings(
     conversation_language = "en"
     pipeline_language = "en"
     pipeline_name = "Home Assistant"
+    stt_engine = None
     stt_language = None
+    tts_engine = None
     tts_language = None
     tts_voice = None
 
@@ -107,12 +109,12 @@ async def _async_resolve_default_pipeline_settings(
     if stt_engine_id is None:
         stt_engine_id = stt.async_default_engine(hass)
 
-    if stt_engine_id is not None and (
-        stt_engine := stt.async_get_speech_to_text_engine(
-            hass,
-            stt_engine_id,
-        )
-    ):
+    if stt_engine_id is not None:
+        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
+        if stt_engine is None:
+            stt_engine_id = None
+
+    if stt_engine:
         stt_languages = language_util.matches(
             pipeline_language,
             stt_engine.supported_languages,
@@ -131,12 +133,12 @@ async def _async_resolve_default_pipeline_settings(
     if tts_engine_id is None:
         tts_engine_id = tts.async_default_engine(hass)
 
-    if tts_engine_id is not None and (
-        tts_engine := tts.get_engine_instance(
-            hass,
-            tts_engine_id,
-        )
-    ):
+    if tts_engine_id is not None:
+        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
+        if tts_engine is None:
+            tts_engine_id = None
+
+    if tts_engine:
         tts_languages = language_util.matches(
             pipeline_language,
             tts_engine.supported_languages,
