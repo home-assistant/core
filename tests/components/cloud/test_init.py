@@ -160,7 +160,7 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
 
     assert len(mock_load.mock_calls) == 0
 
-    assert len(cloud_states) == 1
+    assert len(cloud_states) == 2
     assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
 
     assert len(cl.iot._on_disconnect) == 2
@@ -168,7 +168,7 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     await cl.iot._on_disconnect[-1]()
     await hass.async_block_till_done()
 
-    assert len(cloud_states) == 2
+    assert len(cloud_states) == 3
     assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
 
 
