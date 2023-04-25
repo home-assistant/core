@@ -85,7 +85,7 @@ async def websocket_run(
 ) -> None:
     """Run a pipeline."""
     pipeline_id = msg.get("pipeline")
-    pipeline = await async_get_pipeline(hass, pipeline_id=pipeline_id)
+    pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
     if pipeline is None:
         connection.send_error(
             msg["id"],
