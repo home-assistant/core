@@ -21,6 +21,7 @@ ADDON_DISCOVERY = HassioServiceInfo(
     },
     name="Piper",
     slug="mock_piper",
+    uuid="1234",
 )
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")

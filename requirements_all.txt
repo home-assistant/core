@@ -2727,19 +2727,19 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.20.0
+zigpy-deconz==0.21.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.17.0
+zigpy-xbee==0.18.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.10.3
+zigpy-zigate==0.11.0
 
 # homeassistant.components.zha
-zigpy-znp==0.10.0
+zigpy-znp==0.11.1
 
 # homeassistant.components.zha
-zigpy==0.54.1
+zigpy==0.55.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
