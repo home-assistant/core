@@ -33,13 +33,22 @@ from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 # Zigbee Cluster Library Zone Type to Home Assistant device class
-CLASS_MAPPING = {
-    0x000D: BinarySensorDeviceClass.MOTION,
-    0x0015: BinarySensorDeviceClass.OPENING,
-    0x0028: BinarySensorDeviceClass.SMOKE,
-    0x002A: BinarySensorDeviceClass.MOISTURE,
-    0x002B: BinarySensorDeviceClass.GAS,
-    0x002D: BinarySensorDeviceClass.VIBRATION,
+IAS_ZONE_CLASS_MAPPING = {
+    IasZone.ZoneType.Motion_Sensor: BinarySensorDeviceClass.MOTION,
+    IasZone.ZoneType.Contact_Switch: BinarySensorDeviceClass.OPENING,
+    IasZone.ZoneType.Fire_Sensor: BinarySensorDeviceClass.SMOKE,
+    IasZone.ZoneType.Water_Sensor: BinarySensorDeviceClass.MOISTURE,
+    IasZone.ZoneType.Carbon_Monoxide_Sensor: BinarySensorDeviceClass.GAS,
+    IasZone.ZoneType.Vibration_Movement_Sensor: BinarySensorDeviceClass.VIBRATION,
+}
+
+IAS_ZONE_NAME_MAPPING = {
+    IasZone.ZoneType.Motion_Sensor: "Motion",
+    IasZone.ZoneType.Contact_Switch: "Opening",
+    IasZone.ZoneType.Fire_Sensor: "Smoke",
+    IasZone.ZoneType.Water_Sensor: "Moisture",
+    IasZone.ZoneType.Carbon_Monoxide_Sensor: "Gas",
+    IasZone.ZoneType.Vibration_Movement_Sensor: "Vibration",
 }
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
@@ -108,6 +117,7 @@ class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "acceleration"
+    _attr_name: str = "Accelerometer"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOVING
 
 
@@ -116,6 +126,7 @@ class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "occupancy"
+    _attr_name: str = "Occupancy"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
 
 
@@ -124,6 +135,7 @@ class Opening(BinarySensor):
     """ZHA OnOff BinarySensor."""
 
     SENSOR_ATTR = "on_off"
+    _attr_name: str = "Opening"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
 
     # Client/out cluster attributes aren't stored in the zigpy database, but are properly stored in the runtime cache.
@@ -142,6 +154,7 @@ class BinaryInput(BinarySensor):
     """ZHA BinarySensor."""
 
     SENSOR_ATTR = "present_value"
+    _attr_name: str = "Binary input"
 
 
 @STRICT_MATCH(
@@ -159,6 +172,7 @@ class BinaryInput(BinarySensor):
 class Motion(Opening):
     """ZHA OnOff BinarySensor with motion device class."""
 
+    _attr_name: str = "Motion"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.MOTION
 
 
@@ -169,9 +183,16 @@ class IASZone(BinarySensor):
     SENSOR_ATTR = "zone_status"
 
     @property
+    def name(self) -> str | None:
+        """Return the name of the sensor."""
+        zone_type = self._cluster_handler.cluster.get("zone_type")
+        return IAS_ZONE_NAME_MAPPING.get(zone_type, "iaszone")
+
+    @property
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return device class from component DEVICE_CLASSES."""
-        return CLASS_MAPPING.get(self._cluster_handler.cluster.get("zone_type"))
+        zone_type = self._cluster_handler.cluster.get("zone_type")
+        return IAS_ZONE_CLASS_MAPPING.get(zone_type)
 
     @staticmethod
     def parse(value: bool | int) -> bool:
@@ -220,6 +241,7 @@ class FrostLock(BinarySensor, id_suffix="frost_lock"):
 
     SENSOR_ATTR = "frost_lock"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK
+    _attr_name: str = "Frost lock"
 
 
 @MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
@@ -228,6 +250,7 @@ class ReplaceFilter(BinarySensor, id_suffix="replace_filter"):
 
     SENSOR_ATTR = "replace_filter"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+    _attr_name: str = "Replace filter"
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
