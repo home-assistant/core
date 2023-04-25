@@ -156,9 +156,10 @@ class FreeboxRouter:
             self.disks[fbx_disk["id"]] = fbx_disk
 
     async def update_home_devices(self) -> None:
-        """Update Home devices (light, cover, alarm, sensors ...)."""
-        new_device = False
-        # Home sensors (alarm, pir, switch, remote ...)
+        """Update Home devices (alarm, light, sensor, switch, remote ...)."""
+        if not self.home_granted:
+            return
+
         try:
             home_nodes: list[Any] = await self.home.get_home_nodes() or []
         except HttpRequestError:
@@ -166,6 +167,7 @@ class FreeboxRouter:
             _LOGGER.warning("Home access is not granted")
             return
 
+        new_device = False
         for home_node in home_nodes:
             if home_node["category"] in HOME_COMPATIBLE_PLATFORMS:
                 if self.home_devices.get(home_node["id"]) is None:
