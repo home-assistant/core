@@ -159,10 +159,8 @@ class CloudClient(Interface):
                 return pipeline.id
         return None
 
-    async def _ensure_cloud_assist_pipeline(self) -> None:
-        """Ensure a cloud-enabled assist pipeline exists."""
-        if self._cloud_assist_pipeline():
-            return
+    async def create_cloud_assist_pipeline(self) -> None:
+        """Create a cloud-enabled assist pipeline."""
         await assist_pipeline.async_create_default_pipeline(self._hass, DOMAIN, DOMAIN)
         self.cloud_pipeline = self._cloud_assist_pipeline()
 
@@ -218,8 +216,6 @@ class CloudClient(Interface):
             self.stt_platform_loaded.wait(),
             self.tts_platform_loaded.wait(),
         )
-
-        await self._ensure_cloud_assist_pipeline()
 
     async def cloud_stopped(self) -> None:
         """When the cloud is stopped."""
