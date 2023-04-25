@@ -20,9 +20,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    diag_data = {
+    return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "coordinator_data": coordinator.data,
     }
-
-    return diag_data

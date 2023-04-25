@@ -34,21 +34,20 @@ async def async_setup_entry(
     coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     data = coordinator.data
 
-    device_list = []
+    device_list: list[LinearCoverEntity] = []
 
     for device_id in data:
-        for subdev in data[device_id]["subdevices"]:
-            if subdev in SUPPORTED_SUBDEVICES:
-                device_list.append(
-                    LinearCoverEntity(
-                        device_id=device_id,
-                        device_name=data[device_id]["name"],
-                        subdevice=subdev,
-                        config_entry=config_entry,
-                        coordinator=coordinator,
-                    )
-                )
-
+        device_list.extend(
+            LinearCoverEntity(
+                device_id=device_id,
+                device_name=data[device_id]["name"],
+                subdevice=subdev,
+                config_entry=config_entry,
+                coordinator=coordinator,
+            )
+            for subdev in data[device_id]["subdevices"]
+            if subdev in SUPPORTED_SUBDEVICES
+        )
     async_add_entities(device_list)
 
 
@@ -88,7 +87,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         )
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool:  # sourcery skip: remove-unnecessary-cast
         """Return if cover is closed."""
         return bool(
             self.coordinator.data[self._device_id]["subdevices"][self._subdevice][
@@ -98,7 +97,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         )
 
     @property
-    def is_opened(self) -> bool:
+    def is_opened(self) -> bool:  # sourcery skip: remove-unnecessary-cast
         """Return if cover is open."""
         return bool(
             self.coordinator.data[self._device_id]["subdevices"][self._subdevice][
@@ -108,7 +107,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         )
 
     @property
-    def is_opening(self) -> bool:
+    def is_opening(self) -> bool:  # sourcery skip: remove-unnecessary-cast
         """Return if cover is opening."""
         return bool(
             self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(
@@ -118,7 +117,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         )
 
     @property
-    def is_closing(self) -> bool:
+    def is_closing(self) -> bool:  # sourcery skip: remove-unnecessary-cast
         """Return if cover is closing."""
         return bool(
             self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(
