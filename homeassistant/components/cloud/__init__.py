@@ -272,8 +272,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if subscription_info := await async_subscription_info(cloud):
             async_manage_legacy_subscription_issue(hass, subscription_info)
 
-    async def _on_connect():
-        """Discover RemoteUI binary sensor."""
+    async def _discover_platforms():
+        """Discover platforms."""
         nonlocal loaded
 
         # Prevent multiple discovery
@@ -284,6 +284,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
         await async_load_platform(hass, Platform.STT, DOMAIN, {}, config)
         await async_load_platform(hass, Platform.TTS, DOMAIN, {}, config)
+
+    async def _on_connect():
+        """Handle cloud connect."""
+        await _discover_platforms()
 
         async_dispatcher_send(
             hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
