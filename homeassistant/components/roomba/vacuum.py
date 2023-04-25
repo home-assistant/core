@@ -7,6 +7,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import roomba_reported_state
 from .braava import BraavaJet
+from .combo import RoombaCombo
 from .const import BLID, DOMAIN, ROOMBA_SESSION
 from .irobot_base import IRobotVacuum
 from .roomba import RoombaVacuum, RoombaVacuumCarpetBoost
@@ -27,8 +28,11 @@ async def async_setup_entry(
     capabilities = state.get("cap", {})
     cap_carpet_boost = capabilities.get("carpetBoost")
     detected_pad = state.get("detectedPad")
+    sku = state.get("sku")
     constructor: type[IRobotVacuum]
-    if detected_pad is not None:
+    if sku == "R113840":
+        constructor = RoombaCombo
+    elif detected_pad is not None:
         constructor = BraavaJet
     elif cap_carpet_boost == 1:
         constructor = RoombaVacuumCarpetBoost
