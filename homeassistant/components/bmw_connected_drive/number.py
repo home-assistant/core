@@ -96,7 +96,6 @@ class BMWNumber(BMWBaseEntity, NumberEntity):
         super().__init__(coordinator, vehicle)
         self.entity_description = description
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
-        self._attr_native_value = description.value_fn(vehicle)
         self._attr_mode = description.mode
 
     @property
