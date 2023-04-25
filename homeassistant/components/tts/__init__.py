@@ -66,10 +66,11 @@ from .const import (
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
+from .models import Voice
 
 __all__ = [
+    "async_default_engine",
     "async_get_media_source_audio",
-    "async_resolve_engine",
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
     "CONF_LANG",
@@ -80,6 +81,7 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "Provider",
     "TtsAudioType",
+    "Voice",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,6 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
+ATTR_VOICE = "voice"
 
 CONF_LANG = "language"
 
@@ -114,6 +117,26 @@ class TTSCache(TypedDict):
 
 
 @callback
+def async_default_engine(hass: HomeAssistant) -> str | None:
+    """Return the domain or entity id of the default engine.
+
+    Returns None if no engines found.
+    """
+    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
+    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+
+    if "cloud" in manager.providers:
+        return "cloud"
+
+    entity = next(iter(component.entities), None)
+
+    if entity is not None:
+        return entity.entity_id
+
+    return next(iter(manager.providers), None)
+
+
+@callback
 def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
     """Resolve engine.
 
@@ -127,15 +150,7 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
             return None
         return engine
 
-    if "cloud" in manager.providers:
-        return "cloud"
-
-    entity = next(iter(component.entities), None)
-
-    if entity is not None:
-        return entity.entity_id
-
-    return next(iter(manager.providers), None)
+    return async_default_engine(hass)
 
 
 async def async_support_options(
@@ -302,7 +317,7 @@ class TextToSpeechEntity(RestoreEntity):
         return None
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
         return None
 

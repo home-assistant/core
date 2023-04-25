@@ -48,17 +48,14 @@ async def async_pipeline_from_audio_stream(
     stt_stream: AsyncIterable[bytes],
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
-    tts_options: dict | None = None,
+    tts_audio_output: str | None = None,
 ) -> None:
     """Create an audio pipeline from an audio stream."""
-    pipeline = await async_get_pipeline(hass, pipeline_id=pipeline_id)
+    pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
     if pipeline is None:
         raise PipelineNotFound(
             "pipeline_not_found", f"Pipeline {pipeline_id} not found"
         )
-
-    if stt_metadata.language == "":
-        stt_metadata.language = pipeline.language
 
     pipeline_input = PipelineInput(
         conversation_id=conversation_id,
@@ -71,7 +68,7 @@ async def async_pipeline_from_audio_stream(
             start_stage=PipelineStage.STT,
             end_stage=PipelineStage.TTS,
             event_callback=event_callback,
-            tts_options=tts_options,
+            tts_audio_output=tts_audio_output,
         ),
     )
 
