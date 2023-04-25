@@ -57,7 +57,7 @@ class CloudClient(Interface):
         self._google_config_init_lock = asyncio.Lock()
         self._relayer_region: str | None = None
         self._on_started_cb = on_started_cb
-        self.cloud_pipeline_created = self._cloud_assist_pipeline_exists()
+        self.cloud_pipeline = self._cloud_assist_pipeline()
 
     @property
     def base_path(self) -> Path:
@@ -146,23 +146,23 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    def _cloud_assist_pipeline_exists(self) -> bool:
-        """Check if a cloud-enabled assist pipeline exists."""
+    def _cloud_assist_pipeline(self) -> str | None:
+        """Return the ID of a cloud-enabled assist pipeline or None."""
         for pipeline in assist_pipeline.async_get_pipelines(self._hass):
             if (
                 pipeline.conversation_engine == conversation.HOME_ASSISTANT_AGENT
                 and pipeline.stt_engine == DOMAIN
                 and pipeline.tts_engine == DOMAIN
             ):
-                return True
-        return False
+                return pipeline.id
+        return None
 
     async def _ensure_cloud_assist_pipeline(self) -> None:
         """Ensure a cloud-enabled assist pipeline exists."""
-        if self._cloud_assist_pipeline_exists():
+        if self._cloud_assist_pipeline():
             return
         await assist_pipeline.async_create_default_pipeline(self._hass)
-        self.cloud_pipeline_created = self._cloud_assist_pipeline_exists()
+        self.cloud_pipeline = self._cloud_assist_pipeline()
 
     async def cloud_started(self) -> None:
         """When cloud is started."""

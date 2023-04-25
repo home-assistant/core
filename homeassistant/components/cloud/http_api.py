@@ -184,14 +184,10 @@ class CloudLoginView(HomeAssistantView):
         """Handle login request."""
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
-        cloud_pipeline_existed = cloud.client.cloud_pipeline_created
         await cloud.login(data["email"], data["password"])
-        cloud_pipeline_created = (
-            cloud_pipeline_existed is False and cloud.client.cloud_pipeline_created
-        )
 
         return self.json(
-            {"success": True, "cloud_pipeline_created": cloud_pipeline_created}
+            {"success": True, "cloud_pipeline": cloud.client.cloud_pipeline}
         )
 
 
