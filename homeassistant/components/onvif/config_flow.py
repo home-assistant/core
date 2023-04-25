@@ -124,7 +124,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm reauth."""
-        assert self._reauth_entry is not None
         entry = self._reauth_entry
         errors: dict[str, str] | None = {}
         description_placeholders: dict[str, str] | None = None
