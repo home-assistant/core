@@ -79,7 +79,7 @@ async def _async_resolve_default_pipeline_settings(
     hass: HomeAssistant,
     stt_engine_id: str | None,
     tts_engine_id: str | None,
-) -> dict[str, str]:
+) -> dict[str, str | None]:
     """Resolve settings for a default pipeline.
 
     The default pipeline will use the homeassistant conversation agent and the
