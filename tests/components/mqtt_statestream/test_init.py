@@ -96,6 +96,10 @@ async def test_setup_and_stop_waits_for_ha(
     mqtt_mock.async_publish.assert_not_called()
 
 
+# We xfail this test because it will assert an error occurs
+# after the mqtt_statestream component was set up.
+# The error is triggered by mock_state_change_event which will call mqtt.async_publish.
+# This will raise an error if mqtt is not set up correctly.
 @pytest.mark.xfail()
 async def test_startup_no_mqtt(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
