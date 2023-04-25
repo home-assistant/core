@@ -58,6 +58,8 @@ class CloudClient(Interface):
         self._relayer_region: str | None = None
         self._on_started_cb = on_started_cb
         self.cloud_pipeline = self._cloud_assist_pipeline()
+        self.stt_platform_loaded = asyncio.Event()
+        self.tts_platform_loaded = asyncio.Event()
 
     @property
     def base_path(self) -> Path:
@@ -161,7 +163,7 @@ class CloudClient(Interface):
         """Ensure a cloud-enabled assist pipeline exists."""
         if self._cloud_assist_pipeline():
             return
-        await assist_pipeline.async_create_default_pipeline(self._hass)
+        await assist_pipeline.async_create_default_pipeline(self._hass, DOMAIN, DOMAIN)
         self.cloud_pipeline = self._cloud_assist_pipeline()
 
     async def cloud_started(self) -> None:
@@ -210,6 +212,10 @@ class CloudClient(Interface):
             await asyncio.gather(*(task(None) for task in tasks))
 
         await self._on_started_cb()
+        await asyncio.gather(
+            self.stt_platform_loaded.wait(),
+            self.tts_platform_loaded.wait(),
+        )
 
         await self._ensure_cloud_assist_pipeline()
 
