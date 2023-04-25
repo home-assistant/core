@@ -1,12 +1,21 @@
 """Tests for the ONVIF integration."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from onvif.exceptions import ONVIFError
 from zeep.exceptions import Fault
 
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
 from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
-from homeassistant.components.onvif.models import Capabilities, DeviceInfo, Profile
+from homeassistant.components.onvif.models import (
+    Capabilities,
+    DeviceInfo,
+    Profile,
+    PullPointManagerState,
+    Resolution,
+    Video,
+    WebHookManagerState,
+)
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
 
 from tests.common import MockConfigEntry
@@ -31,6 +40,11 @@ def setup_mock_onvif_camera(
     with_interfaces=True,
     with_interfaces_not_implemented=False,
     with_serial=True,
+    profiles_transient_failure=False,
+    auth_fail=False,
+    update_xaddrs_fail=False,
+    no_profiles=False,
+    auth_failure=False,
 ):
     """Prepare mock onvif.ONVIFCamera."""
     devicemgmt = MagicMock()
@@ -59,9 +73,27 @@ def setup_mock_onvif_camera(
     profile2 = MagicMock()
     profile2.VideoEncoderConfiguration.Encoding = "H264" if two_profiles else "MJPEG"
 
-    media_service.GetProfiles = AsyncMock(return_value=[profile1, profile2])
+    if auth_fail:
+        media_service.GetProfiles = AsyncMock(side_effect=Fault("Authority failure"))
+    elif profiles_transient_failure:
+        media_service.GetProfiles = AsyncMock(side_effect=Fault("camera not ready"))
+    elif no_profiles:
+        media_service.GetProfiles = AsyncMock(return_value=[])
+    else:
+        media_service.GetProfiles = AsyncMock(return_value=[profile1, profile2])
 
-    mock_onvif_camera.update_xaddrs = AsyncMock(return_value=True)
+    if auth_failure:
+        mock_onvif_camera.update_xaddrs = AsyncMock(
+            side_effect=Fault(
+                "not authorized", subcodes=[MagicMock(text="NotAuthorized")]
+            )
+        )
+    elif update_xaddrs_fail:
+        mock_onvif_camera.update_xaddrs = AsyncMock(
+            side_effect=ONVIFError("camera not ready")
+        )
+    else:
+        mock_onvif_camera.update_xaddrs = AsyncMock(return_value=True)
     mock_onvif_camera.create_devicemgmt_service = MagicMock(return_value=devicemgmt)
     mock_onvif_camera.create_media_service = MagicMock(return_value=media_service)
     mock_onvif_camera.close = AsyncMock(return_value=None)
@@ -83,7 +115,7 @@ def setup_mock_onvif_camera(
     mock_onvif_camera.side_effect = mock_constructor
 
 
-def setup_mock_device(mock_device):
+def setup_mock_device(mock_device, capabilities=None):
     """Prepare mock ONVIFDevice."""
     mock_device.async_setup = AsyncMock(return_value=True)
     mock_device.available = True
@@ -95,16 +127,20 @@ def setup_mock_device(mock_device):
         SERIAL_NUMBER,
         MAC,
     )
-    mock_device.capabilities = Capabilities(imaging=True)
+    mock_device.capabilities = capabilities or Capabilities(imaging=True, ptz=True)
     profile1 = Profile(
         index=0,
         token="dummy",
         name="profile1",
-        video=None,
+        video=Video("any", Resolution(640, 480)),
         ptz=None,
         video_source_token=None,
     )
     mock_device.profiles = [profile1]
+    mock_device.events = MagicMock(
+        webhook_manager=MagicMock(state=WebHookManagerState.STARTED),
+        pullpoint_manager=MagicMock(state=PullPointManagerState.PAUSED),
+    )
 
     def mock_constructor(hass, config):
         """Fake the controller constructor."""
@@ -120,7 +156,8 @@ async def setup_onvif_integration(
     unique_id=MAC,
     entry_id="1",
     source=config_entries.SOURCE_USER,
-):
+    capabilities=None,
+) -> tuple[MockConfigEntry, MagicMock, MagicMock]:
     """Create an ONVIF config entry."""
     if not config:
         config = {
@@ -152,7 +189,7 @@ async def setup_onvif_integration(
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
         mock_discovery.return_value = []
-        setup_mock_device(mock_device)
+        setup_mock_device(mock_device, capabilities=capabilities)
         mock_device.device = mock_onvif_camera
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

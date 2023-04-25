@@ -99,7 +99,7 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
             datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 20,
             datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 200,
         }
-        estimate.wh_hours = {
+        estimate.wh_period = {
             datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 30,
             datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 300,
         }
