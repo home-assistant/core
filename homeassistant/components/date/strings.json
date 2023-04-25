@@ -2,18 +2,7 @@
   "title": "Date",
   "entity_component": {
     "_": {
-      "name": "[%key:component::date::title%]",
-      "state_attributes": {
-        "day": {
-          "name": "Day"
-        },
-        "month": {
-          "name": "Month"
-        },
-        "year": {
-          "name": "Year"
-        }
-      }
+      "name": "[%key:component::date::title%]"
     }
   }
 }
