@@ -118,6 +118,11 @@ class Endpoint:
             cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
                 cluster_id, ClusterHandler
             )
+
+            # Allow cluster handler to filter out bad matches
+            if not cluster_handler_class.matches(cluster, self):
+                cluster_handler_class = ClusterHandler
+
             _LOGGER.info(
                 "Creating cluster handler for cluster id: %s class: %s",
                 cluster_id,

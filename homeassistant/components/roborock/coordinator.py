@@ -74,7 +74,7 @@ class RoborockDataUpdateCoordinator(
     async def _async_update_data(self) -> dict[str, RoborockDeviceProp]:
         """Update data via library."""
         try:
-            asyncio.gather(
+            await asyncio.gather(
                 *(
                     self._update_device_prop(device_info)
                     for device_info in self.devices_info.values()

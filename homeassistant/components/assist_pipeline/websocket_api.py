@@ -1,5 +1,7 @@
 """Assist pipeline Websocket API."""
 import asyncio
+
+# Suppressing disable=deprecated-module is needed for Python 3.11
 import audioop  # pylint: disable=deprecated-module
 from collections.abc import AsyncGenerator, Callable
 import logging
@@ -83,7 +85,7 @@ async def websocket_run(
 ) -> None:
     """Run a pipeline."""
     pipeline_id = msg.get("pipeline")
-    pipeline = await async_get_pipeline(hass, pipeline_id=pipeline_id)
+    pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
     if pipeline is None:
         connection.send_error(
             msg["id"],
@@ -137,7 +139,7 @@ async def websocket_run(
 
         # Audio input must be raw PCM at 16Khz with 16-bit mono samples
         input_args["stt_metadata"] = stt.SpeechMetadata(
-            language=pipeline.language,
+            language=pipeline.stt_language or pipeline.language,
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
             bit_rate=stt.AudioBitRates.BITRATE_16,

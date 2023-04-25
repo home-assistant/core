@@ -23,6 +23,7 @@ COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
     "avea",  # depends on bluepy
     "avion",
+    "azure-servicebus",  # depends on uamqp, which requires OpenSSL 1.1
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",

@@ -114,6 +114,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
 
         self._debounced_refresh = request_refresh_debouncer
 
+        if self.config_entry:
+            self.config_entry.async_on_unload(self.async_shutdown)
+
     @callback
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
