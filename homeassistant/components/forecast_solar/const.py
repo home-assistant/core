@@ -26,7 +26,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=0,
+        suggested_display_precision=1,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_production_tomorrow",
@@ -35,7 +35,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=0,
+        suggested_display_precision=1,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_highest_peak_time_today",
@@ -92,7 +92,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=0,
+        suggested_display_precision=1,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_next_hour",
@@ -101,6 +101,6 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=0,
+        suggested_display_precision=1,
     ),
 )
