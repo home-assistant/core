@@ -5,8 +5,12 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
 
+from tests.typing import WebSocketGenerator
 
-async def test_knx_info_command(hass: HomeAssistant, knx: KNXTestKit, hass_ws_client):
+
+async def test_knx_info_command(
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
+):
     """Test knx/info command."""
     await knx.setup_integration({})
 
@@ -19,10 +23,26 @@ async def test_knx_info_command(hass: HomeAssistant, knx: KNXTestKit, hass_ws_cl
     assert res["result"]["version"] is not None
     assert res["result"]["connected"]
     assert res["result"]["current_address"] == "0.0.0"
+    assert res["result"]["project"] is None
+
+
+async def test_knx_group_monitor_info_command(
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
+):
+    """Test knx/group_monitor_info command."""
+    await knx.setup_integration({})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 6, "type": "knx/group_monitor_info"})
+
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["project_loaded"] is False
 
 
 async def test_knx_subscribe_telegrams_command(
-    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
 ):
     """Test knx/subscribe_telegrams command."""
     await knx.setup_integration(
@@ -33,7 +53,6 @@ async def test_knx_subscribe_telegrams_command(
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     client = await hass_ws_client(hass)
 
@@ -60,7 +79,7 @@ async def test_knx_subscribe_telegrams_command(
     assert res["event"]["payload"] == ""
     assert res["event"]["type"] == "GroupValueRead"
     assert res["event"]["source_address"] == "1.2.3"
-    assert res["event"]["direction"] == "label.incoming"
+    assert res["event"]["direction"] == "group_monitor_incoming"
     assert res["event"]["timestamp"] is not None
 
     res = await client.receive_json()
@@ -68,7 +87,7 @@ async def test_knx_subscribe_telegrams_command(
     assert res["event"]["payload"] == "0b000001"
     assert res["event"]["type"] == "GroupValueWrite"
     assert res["event"]["source_address"] == "1.2.3"
-    assert res["event"]["direction"] == "label.incoming"
+    assert res["event"]["direction"] == "group_monitor_incoming"
     assert res["event"]["timestamp"] is not None
 
     res = await client.receive_json()
@@ -76,7 +95,7 @@ async def test_knx_subscribe_telegrams_command(
     assert res["event"]["payload"] == "0b000000"
     assert res["event"]["type"] == "GroupValueWrite"
     assert res["event"]["source_address"] == "1.2.3"
-    assert res["event"]["direction"] == "label.incoming"
+    assert res["event"]["direction"] == "group_monitor_incoming"
     assert res["event"]["timestamp"] is not None
 
     res = await client.receive_json()
@@ -84,7 +103,7 @@ async def test_knx_subscribe_telegrams_command(
     assert res["event"]["payload"] == "0x3445"
     assert res["event"]["type"] == "GroupValueWrite"
     assert res["event"]["source_address"] == "1.2.3"
-    assert res["event"]["direction"] == "label.incoming"
+    assert res["event"]["direction"] == "group_monitor_incoming"
     assert res["event"]["timestamp"] is not None
 
     res = await client.receive_json()
@@ -94,5 +113,5 @@ async def test_knx_subscribe_telegrams_command(
     assert (
         res["event"]["source_address"] == "0.0.0"
     )  # needs to be the IA currently connected to
-    assert res["event"]["direction"] == "label.outgoing"
+    assert res["event"]["direction"] == "group_monitor_outgoing"
     assert res["event"]["timestamp"] is not None

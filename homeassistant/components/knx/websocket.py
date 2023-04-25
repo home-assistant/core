@@ -10,6 +10,7 @@ from xknx.dpt import DPTArray
 from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -29,6 +30,8 @@ URL_BASE: Final = "/knx_static"
 async def register_panel(hass: HomeAssistant) -> None:
     """Register the KNX Panel and Websocket API."""
     websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_project_file_process)
+    websocket_api.async_register_command(hass, ws_project_file_remove)
     websocket_api.async_register_command(hass, ws_group_monitor_info)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
 
@@ -63,14 +66,71 @@ def ws_info(
 ) -> None:
     """Handle get info command."""
     xknx = hass.data[DOMAIN].xknx
+
+    _project_info = None
+    if project_info := hass.data[DOMAIN].project.info:
+        _project_info = {
+            "name": project_info["name"],
+            "last_modified": project_info["last_modified"],
+            "tool_version": project_info["tool_version"],
+        }
+
     connection.send_result(
         msg["id"],
         {
             "version": xknx.version,
             "connected": xknx.connection_manager.connected.is_set(),
             "current_address": str(xknx.current_address),
+            "project": _project_info,
         },
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/project_file_process",
+        vol.Required("file_id"): str,
+        vol.Required("password"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_project_file_process(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get info command."""
+    knx_project = hass.data[DOMAIN].project
+    try:
+        await knx_project.process_project_file(
+            file_id=msg["file_id"],
+            password=msg["password"],
+        )
+    except (ValueError, XknxProjectException) as err:
+        # ValueError could raise from file_upload integration
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
+
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/project_file_remove",
+    }
+)
+@websocket_api.async_response
+async def ws_project_file_remove(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get info command."""
+    knx_project = hass.data[DOMAIN].project
+    await knx_project.remove_project_file()
+    connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(
@@ -88,7 +148,7 @@ def ws_group_monitor_info(
     project_loaded = hass.data[DOMAIN].project.loaded
     connection.send_result(
         msg["id"],
-        {"project_data": bool(project_loaded)},
+        {"project_loaded": bool(project_loaded)},
     )
 
 
@@ -141,18 +201,17 @@ def ws_subscribe_telegram(
         )
         if project.loaded:
             if ga_infos := project.group_addresses.get(_dst):
-                bus_message["destination_text"] = ga_infos["name"]
-                if (
-                    dpt_payload is not None
-                    and (transcoder := ga_infos.get("transcoder")) is not None
-                ):
+                bus_message["destination_text"] = ga_infos.name
+                if dpt_payload is not None and ga_infos.transcoder is not None:
                     try:
-                        value = transcoder.from_knx(dpt_payload)
+                        value = ga_infos.transcoder.from_knx(dpt_payload)
                     except XKNXException:
                         bus_message["value"] = "Error decoding value"
                     else:
                         unit = (
-                            f" {transcoder.unit}" if transcoder.unit is not None else ""
+                            f" {ga_infos.transcoder.unit}"
+                            if ga_infos.transcoder.unit is not None
+                            else ""
                         )
                         bus_message["value"] = f"{value}{unit}"
             if ia_infos := project.devices.get(_src):
@@ -160,18 +219,16 @@ def ws_subscribe_telegram(
                     "source_text"
                 ] = f"{ia_infos['manufacturer_name']} {ia_infos['name']}"
 
-        connection.send_message(
-            websocket_api.event_message(
-                msg["id"],
-                bus_message,
-            )
+        connection.send_event(
+            msg["id"],
+            bus_message,
         )
 
     connection.subscriptions[msg["id"]] = async_subscribe_telegrams(
         hass, forward_telegrams
     )
 
-    connection.send_message(websocket_api.result_message(msg["id"]))
+    connection.send_result(msg["id"])
 
 
 def async_subscribe_telegrams(
