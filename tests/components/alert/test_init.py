@@ -1,6 +1,7 @@
 """The tests for the Alert component."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 import pytest
 
@@ -21,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
+    SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -28,16 +30,18 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import MockUser, async_mock_service
 
 NAME = "alert_test"
+NAME_MODIFIED = "alert_test_modified"
 DONE_MESSAGE = "alert_gone"
 NOTIFIER = "test"
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_ENTITY = "sensor.test"
+TEST_ENTITY_MODIFIED = "sensor.test2"
 TITLE = "{{ states.sensor.test.entity_id }}"
 TEST_TITLE = "sensor.test"
 TEST_DATA = {"data": {"inline_keyboard": ["Close garage:/close_garage"]}}
@@ -324,3 +328,64 @@ async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -
     hass.async_add_job(entity.end_alerting)
     await hass.async_block_till_done()
     assert entity._send_done_message is False
+
+
+async def test_reload(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], hass_admin_user: MockUser
+) -> None:
+    """Test reloading the YAML config."""
+    assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert len(hass.states.async_entity_ids()) == 2
+
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+
+    state_1 = hass.states.get(ENTITY_ID)
+
+    assert state_1 is not None
+    assert state_1.name == NAME
+
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME][CONF_NAME] = NAME_MODIFIED
+    config[DOMAIN][NAME][CONF_ENTITY_ID] = TEST_ENTITY_MODIFIED
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 2
+
+    state_1 = hass.states.get(ENTITY_ID)
+
+    assert state_1 is not None
+    assert state_1.name == NAME_MODIFIED
+
+    # Assert the original watched entity and check that the alert does not fire
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+
+    # Assert the new watched entity and check that the alert does fire
+    hass.states.async_set(TEST_ENTITY, STATE_OFF)
+    hass.states.async_set(TEST_ENTITY_MODIFIED, STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    assert len(hass.states.async_entity_ids()) == 3
