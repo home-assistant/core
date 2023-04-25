@@ -7,7 +7,7 @@ import requests
 from .hassfest.serializer import format_python_namespace
 
 URL = "https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support"
-XPATH_QUERY = "//*[@data-tab='tts']//tr/td[1]/code/text()"
+XPATH_QUERY = "//section[@data-tab='tts']/table[1]/tbody/tr/td[1]/code/text()"
 
 req = requests.get(URL)
 req.raise_for_status()
