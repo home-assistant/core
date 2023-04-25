@@ -337,7 +337,7 @@ async def test_reload(
     """Test reloading the YAML config."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     expected_notifications = 0
-    hass.states.async_set("sensor.test", STATE_ON)
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
     expected_notifications += 1
     await hass.async_block_till_done()
 
@@ -345,7 +345,7 @@ async def test_reload(
     assert len(hass.states.async_entity_ids()) == 2
     assert len(mock_notifier) == expected_notifications
 
-    hass.states.async_set("sensor.test", STATE_OFF)
+    hass.states.async_set(TEST_ENTITY, STATE_OFF)
     expected_notifications += 1
     await hass.async_block_till_done()
 

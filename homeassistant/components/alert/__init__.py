@@ -86,7 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component."""
     component = EntityComponent[Alert](LOGGER, DOMAIN, hass)
 
-    entities = await async_get_entities(hass, config)
+    entities = await async_build_alerts_from_config(hass, config)
 
     if not entities:
         return False
@@ -104,7 +104,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf = await component.async_prepare_reload()
         if conf is None:
             conf = {DOMAIN: {}}
-        entities = await async_get_entities(hass, conf)
+        entities = await async_build_alerts_from_config(hass, conf)
         if entities:
             await component.async_add_entities(entities)
 
@@ -121,7 +121,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_get_entities(hass: HomeAssistant, config: ConfigType) -> list[Alert]:
+async def async_build_alerts_from_config(
+    hass: HomeAssistant, config: ConfigType
+) -> list[Alert]:
     """Prepare a list of Alert objects from the config."""
     entities: list[Alert] = []
 
