@@ -22,5 +22,28 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "select": {
+      "mop_mode": {
+        "name": "Mop mode",
+        "state": {
+          "standard": "Standard",
+          "deep": "Deep",
+          "deep_plus": "Deep+",
+          "custom": "Custom"
+        }
+      },
+      "mop_intensity": {
+        "name": "Mop intensity",
+        "state": {
+          "off": "Off",
+          "mild": "Mild",
+          "moderate": "Moderate",
+          "intense": "Intense",
+          "custom": "Custom"
+        }
+      }
+    }
   }
 }

@@ -82,6 +82,8 @@ build.json @home-assistant/supervisor
 /tests/components/androidtv/ @JeffLIrion @ollo69
 /homeassistant/components/androidtv_remote/ @tronikos
 /tests/components/androidtv_remote/ @tronikos
+/homeassistant/components/anova/ @Lash-L
+/tests/components/anova/ @Lash-L
 /homeassistant/components/anthemav/ @hyralex
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
@@ -823,8 +825,8 @@ build.json @home-assistant/supervisor
 /tests/components/numato/ @clssn
 /homeassistant/components/number/ @home-assistant/core @Shulyaka
 /tests/components/number/ @home-assistant/core @Shulyaka
-/homeassistant/components/nut/ @bdraco @ollo69
-/tests/components/nut/ @bdraco @ollo69
+/homeassistant/components/nut/ @bdraco @ollo69 @pestevez
+/tests/components/nut/ @bdraco @ollo69 @pestevez
 /homeassistant/components/nws/ @MatthewFlamm @kamiyo
 /tests/components/nws/ @MatthewFlamm @kamiyo
 /homeassistant/components/nzbget/ @chriscla
@@ -897,8 +899,8 @@ build.json @home-assistant/supervisor
 /tests/components/plaato/ @JohNan
 /homeassistant/components/plex/ @jjlawren
 /tests/components/plex/ @jjlawren
-/homeassistant/components/plugwise/ @CoMPaTech @bouwew @brefra @frenck
-/tests/components/plugwise/ @CoMPaTech @bouwew @brefra @frenck
+/homeassistant/components/plugwise/ @CoMPaTech @bouwew @frenck
+/tests/components/plugwise/ @CoMPaTech @bouwew @frenck
 /homeassistant/components/plum_lightpad/ @ColinHarrington @prystupa
 /tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
@@ -1274,8 +1276,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifiled/ @florisvdk
-/homeassistant/components/unifiprotect/ @briis @AngellusMortis @bdraco
-/tests/components/unifiprotect/ @briis @AngellusMortis @bdraco
+/homeassistant/components/unifiprotect/ @AngellusMortis @bdraco
+/tests/components/unifiprotect/ @AngellusMortis @bdraco
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff

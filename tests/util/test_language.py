@@ -1,6 +1,8 @@
 """Test Home Assistant language util methods."""
 from __future__ import annotations
 
+import pytest
+
 from homeassistant.const import MATCH_ALL
 from homeassistant.util import language
 
@@ -95,31 +97,68 @@ def test_language_as_region() -> None:
 
 
 def test_zh_hant() -> None:
-    """Test that the zh-Hant defaults to HK."""
+    """Test that the zh-Hant matches HK or TW."""
     assert language.matches(
         "zh-Hant",
-        ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
+        ["en-US", "en-GB", "zh-CN", "zh-HK"],
     ) == [
         "zh-HK",
         "zh-CN",
+    ]
+
+    assert language.matches(
+        "zh-Hant",
+        ["en-US", "en-GB", "zh-CN", "zh-TW"],
+    ) == [
         "zh-TW",
+        "zh-CN",
     ]
 
 
+@pytest.mark.parametrize("target", ["zh-Hant", "zh-Hans"])
+def test_zh_with_country(target: str) -> None:
+    """Test that the zh-Hant/zh-Hans still matches country when provided."""
+    supported = ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"]
+    assert (
+        language.matches(
+            target,
+            supported,
+            country="TW",
+        )[0]
+        == "zh-TW"
+    )
+    assert (
+        language.matches(
+            target,
+            supported,
+            country="HK",
+        )[0]
+        == "zh-HK"
+    )
+    assert (
+        language.matches(
+            target,
+            supported,
+            country="CN",
+        )[0]
+        == "zh-CN"
+    )
+
+
 def test_zh_hans() -> None:
-    """Test that the zh-Hans defaults to TW."""
+    """Test that the zh-Hans matches CN first."""
     assert language.matches(
         "zh-Hans",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
     ) == [
-        "zh-TW",
         "zh-CN",
         "zh-HK",
+        "zh-TW",
     ]
 
 
 def test_zh_no_code() -> None:
-    """Test that the zh defaults to CN."""
+    """Test that the zh defaults to CN first."""
     assert language.matches(
         "zh",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
