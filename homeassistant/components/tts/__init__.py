@@ -488,7 +488,7 @@ class SpeechManager:
             or engine_instance.supported_languages is None
             or language not in engine_instance.supported_languages
         ):
-            raise HomeAssistantError(f"Not supported language {language}")
+            raise HomeAssistantError(f"Language '{language}' not supported")
 
         # Options
         if (default_options := engine_instance.default_options) and options:
