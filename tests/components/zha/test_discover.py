@@ -36,6 +36,7 @@ import homeassistant.helpers.entity_registry as er
 from .common import get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from .zha_devices_list import (
+    DEV_SIG_ATTRIBUTES,
     DEV_SIG_CLUSTER_HANDLERS,
     DEV_SIG_ENT_MAP,
     DEV_SIG_ENT_MAP_CLASS,
@@ -89,11 +90,12 @@ async def test_devices(
     entity_registry = er.async_get(hass_disable_services)
 
     zigpy_device = zigpy_device_mock(
-        device[SIG_ENDPOINTS],
-        "00:11:22:33:44:55:66:77",
-        device[SIG_MANUFACTURER],
-        device[SIG_MODEL],
+        endpoints=device[SIG_ENDPOINTS],
+        ieee="00:11:22:33:44:55:66:77",
+        manufacturer=device[SIG_MANUFACTURER],
+        model=device[SIG_MODEL],
         node_descriptor=device[SIG_NODE_DESC],
+        attributes=device.get(DEV_SIG_ATTRIBUTES),
         patch_cluster=False,
     )
 
