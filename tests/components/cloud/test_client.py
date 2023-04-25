@@ -6,6 +6,11 @@ import aiohttp
 from aiohttp import web
 import pytest
 
+from homeassistant.components.assist_pipeline import (
+    Pipeline,
+    async_get_pipeline,
+    async_get_pipelines,
+)
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import (
@@ -362,3 +367,29 @@ async def test_system_msg(hass: HomeAssistant) -> None:
 
     assert response is None
     assert cloud.client.relayer_region == "xx-earth-616"
+
+
+async def test_create_cloud_assist_pipeline(
+    hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
+) -> None:
+    """Test creating a cloud enabled assist pipeline."""
+    cloud_client: CloudClient = hass.data[DOMAIN].client
+    await cloud_client.cloud_started()
+    assert cloud_client.cloud_pipeline is None
+    assert len(async_get_pipelines(hass)) == 1
+
+    await cloud_client.create_cloud_assist_pipeline()
+    assert cloud_client.cloud_pipeline is not None
+    assert len(async_get_pipelines(hass)) == 2
+    assert async_get_pipeline(hass, cloud_client.cloud_pipeline) == Pipeline(
+        conversation_engine="homeassistant",
+        conversation_language="en",
+        id=cloud_client.cloud_pipeline,
+        language="en",
+        name="Home Assistant Cloud",
+        stt_engine="cloud",
+        stt_language="en-US",
+        tts_engine="cloud",
+        tts_language="en-US",
+        tts_voice="JennyNeural",
+    )
