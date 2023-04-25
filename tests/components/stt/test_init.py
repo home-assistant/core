@@ -54,7 +54,7 @@ class BaseProvider:
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return ["de", "de-CH", "en-US"]
+        return ["de", "de-CH", "en"]
 
     @property
     def supported_formats(self) -> list[AudioFormats]:
@@ -224,7 +224,7 @@ async def test_get_provider_info(
     response = await client.get(f"/api/stt/{setup.url_path}")
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
-        "languages": ["de", "de-CH", "en-US"],
+        "languages": ["de", "de-CH", "en"],
         "formats": ["wav", "ogg"],
         "codecs": ["pcm", "opus"],
         "sample_rates": [16000],
@@ -247,7 +247,6 @@ async def test_non_existing_provider(
     response = await client.get("/api/stt/not_exist")
     assert response.status == HTTPStatus.NOT_FOUND
 
-    # Language en is matched with en-US
     response = await client.post(
         "/api/stt/not_exist",
         headers={
@@ -270,8 +269,6 @@ async def test_stream_audio(
 ) -> None:
     """Test streaming audio and getting response."""
     client = await hass_client()
-
-    # Language en is matched with en-US
     response = await client.post(
         f"/api/stt/{setup.url_path}",
         headers={
@@ -404,7 +401,7 @@ async def test_ws_list_engines(
     assert msg["success"]
     assert msg["result"] == {
         "providers": [
-            {"engine_id": engine_id, "supported_languages": ["de", "de-CH", "en-US"]}
+            {"engine_id": engine_id, "supported_languages": ["de", "de-CH", "en"]}
         ]
     }
 
@@ -421,7 +418,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en-US"]}]
+        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en-UK"})
@@ -429,7 +426,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en-US"]}]
+        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "de"})
