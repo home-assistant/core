@@ -1,14 +1,7 @@
 """The tests for the time component."""
 from datetime import time
 
-from homeassistant.components.time import (
-    ATTR_HOUR,
-    ATTR_MINUTE,
-    ATTR_SECOND,
-    DOMAIN,
-    SERVICE_SET_VALUE,
-    TimeEntity,
-)
+from homeassistant.components.time import DOMAIN, SERVICE_SET_VALUE, TimeEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -41,12 +34,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
 
     state = hass.states.get("time.test")
     assert state.state == "01:02:03"
-    assert state.attributes == {
-        ATTR_HOUR: 1,
-        ATTR_MINUTE: 2,
-        ATTR_SECOND: 3,
-        ATTR_FRIENDLY_NAME: "test",
-    }
+    assert state.attributes == {ATTR_FRIENDLY_NAME: "test"}
 
     await hass.services.async_call(
         DOMAIN,
@@ -61,8 +49,4 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
 
     date_entity = MockTimeEntity(native_value=None)
     assert date_entity.state is None
-    assert date_entity.state_attributes == {
-        ATTR_HOUR: None,
-        ATTR_MINUTE: None,
-        ATTR_SECOND: None,
-    }
+    assert date_entity.state_attributes is None

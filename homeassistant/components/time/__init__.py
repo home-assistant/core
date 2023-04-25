@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_HOUR, ATTR_MINUTE, ATTR_SECOND, DOMAIN, SERVICE_SET_VALUE
+from .const import DOMAIN, SERVICE_SET_VALUE
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -83,15 +83,9 @@ class TimeEntity(Entity):
 
     @property
     @final
-    def state_attributes(self) -> dict[str, int] | dict[str, None]:
+    def state_attributes(self) -> None:
         """Return the state attributes."""
-        if self.native_value is None:
-            return {ATTR_HOUR: None, ATTR_MINUTE: None, ATTR_SECOND: None}
-        return {
-            ATTR_HOUR: self.native_value.hour,
-            ATTR_MINUTE: self.native_value.minute,
-            ATTR_SECOND: self.native_value.second,
-        }
+        return None
 
     @property
     @final
