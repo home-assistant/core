@@ -166,8 +166,8 @@ class CloudClient(Interface):
         await assist_pipeline.async_create_default_pipeline(self._hass, DOMAIN, DOMAIN)
         self.cloud_pipeline = self._cloud_assist_pipeline()
 
-    async def cloud_started(self) -> None:
-        """When cloud is started."""
+    async def on_cloud_connected(self) -> None:
+        """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_):
@@ -211,6 +211,8 @@ class CloudClient(Interface):
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
 
+    async def cloud_started(self) -> None:
+        """When cloud is started."""
         await self._on_started_cb()
         await asyncio.gather(
             self.stt_platform_loaded.wait(),
