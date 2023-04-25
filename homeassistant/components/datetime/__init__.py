@@ -25,14 +25,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_DATETIME,
-    ATTR_DAY,
-    ATTR_HOUR,
-    ATTR_MINUTE,
-    ATTR_MONTH,
-    ATTR_SECOND,
     ATTR_TIME_ZONE,
     ATTR_TIMESTAMP,
-    ATTR_YEAR,
     DOMAIN,
     SERVICE_SET_VALUE,
 )
@@ -163,27 +157,9 @@ class DateTimeEntity(Entity):
 
     @property
     @final
-    def state_attributes(self) -> dict[str, int | float] | dict[str, None]:
+    def state_attributes(self) -> None:
         """Return the state attributes."""
-        if self.native_value is None:
-            return {
-                ATTR_DAY: None,
-                ATTR_MONTH: None,
-                ATTR_YEAR: None,
-                ATTR_HOUR: None,
-                ATTR_MINUTE: None,
-                ATTR_SECOND: None,
-                ATTR_TIMESTAMP: None,
-            }
-        return {
-            ATTR_DAY: self.native_value.day,
-            ATTR_MONTH: self.native_value.month,
-            ATTR_YEAR: self.native_value.year,
-            ATTR_HOUR: self.native_value.hour,
-            ATTR_MINUTE: self.native_value.minute,
-            ATTR_SECOND: self.native_value.second,
-            ATTR_TIMESTAMP: self.native_value.timestamp(),
-        }
+        return None
 
     @property
     @final

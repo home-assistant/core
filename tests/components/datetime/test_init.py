@@ -6,13 +6,6 @@ import pytest
 
 from homeassistant.components.datetime import (
     ATTR_DATETIME,
-    ATTR_DAY,
-    ATTR_HOUR,
-    ATTR_MINUTE,
-    ATTR_MONTH,
-    ATTR_SECOND,
-    ATTR_TIMESTAMP,
-    ATTR_YEAR,
     DOMAIN,
     SERVICE_SET_VALUE,
     DateTimeEntity,
@@ -54,16 +47,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
 
     state = hass.states.get("datetime.test")
     assert state.state == "2020-01-01T01:02:03+00:00"
-    assert state.attributes == {
-        ATTR_DAY: 1,
-        ATTR_MONTH: 1,
-        ATTR_YEAR: 2020,
-        ATTR_HOUR: 1,
-        ATTR_MINUTE: 2,
-        ATTR_SECOND: 3,
-        ATTR_TIMESTAMP: 1577840523.0,
-        ATTR_FRIENDLY_NAME: "test",
-    }
+    assert state.attributes == {ATTR_FRIENDLY_NAME: "test"}
 
     # Test updating just the time
     await hass.services.async_call(
@@ -112,15 +96,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
     # Test None state
     date_entity = MockDateTimeEntity(native_value=None)
     assert date_entity.state is None
-    assert date_entity.state_attributes == {
-        ATTR_DAY: None,
-        ATTR_MONTH: None,
-        ATTR_YEAR: None,
-        ATTR_HOUR: None,
-        ATTR_MINUTE: None,
-        ATTR_SECOND: None,
-        ATTR_TIMESTAMP: None,
-    }
+    assert date_entity.state_attributes is None
 
     # Test setting partial value with None state is not allowed
     with pytest.raises(ValueError):
