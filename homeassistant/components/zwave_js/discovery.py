@@ -1090,7 +1090,7 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         schema.any_available_states is not None
         and value.metadata.states is not None
         and not any(
-            value.metadata.states.get(str(key)) == val
+            str(key) in value.metadata.states and value.metadata.states[str(key)] == val
             for key, val in schema.any_available_states
         )
     ):
