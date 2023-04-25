@@ -362,7 +362,7 @@ class PipelineRun:
                 code="stt-provider-unsupported-metadata",
                 message=(
                     f"Provider {stt_provider.name} does not support input speech "
-                    "to text metadata {metadata}"
+                    f"to text metadata {metadata}"
                 ),
             )
 

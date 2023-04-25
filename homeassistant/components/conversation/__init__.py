@@ -442,7 +442,7 @@ class AgentManager:
             agents.append(
                 AgentInfo(
                     id=agent_id,
-                    name=config_entry.title,
+                    name=config_entry.title or config_entry.domain,
                 )
             )
         return agents
