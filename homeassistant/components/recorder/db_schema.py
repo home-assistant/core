@@ -69,7 +69,7 @@ class Base(DeclarativeBase):
     """Base class for tables."""
 
 
-SCHEMA_VERSION = 41
+SCHEMA_VERSION = 42
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,7 +152,6 @@ def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     return "CHAR(0)"  # Uses 1 byte on MySQL (no change on sqlite)
 
 
-@compiles(UnusedDateTime, "postgresql")  # type: ignore[misc,no-untyped-call]
 @compiles(Unused, "postgresql")  # type: ignore[misc,no-untyped-call]
 def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     """Compile UnusedDateTime and Unused as CHAR(1) on postgresql."""
