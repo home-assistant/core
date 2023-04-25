@@ -69,8 +69,8 @@ from .media_source import generate_media_source_id, media_source_id_to_kwargs
 from .models import Voice
 
 __all__ = [
+    "async_default_engine",
     "async_get_media_source_audio",
-    "async_resolve_engine",
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
     "CONF_LANG",
@@ -117,6 +117,26 @@ class TTSCache(TypedDict):
 
 
 @callback
+def async_default_engine(hass: HomeAssistant) -> str | None:
+    """Return the domain or entity id of the default engine.
+
+    Returns None if no engines found.
+    """
+    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
+    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+
+    if "cloud" in manager.providers:
+        return "cloud"
+
+    entity = next(iter(component.entities), None)
+
+    if entity is not None:
+        return entity.entity_id
+
+    return next(iter(manager.providers), None)
+
+
+@callback
 def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
     """Resolve engine.
 
@@ -130,15 +150,7 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
             return None
         return engine
 
-    if "cloud" in manager.providers:
-        return "cloud"
-
-    entity = next(iter(component.entities), None)
-
-    if entity is not None:
-        return entity.entity_id
-
-    return next(iter(manager.providers), None)
+    return async_default_engine(hass)
 
 
 async def async_support_options(

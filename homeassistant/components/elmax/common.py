@@ -11,6 +11,7 @@ from elmax_api.exceptions import (
     ElmaxBadLoginError,
     ElmaxBadPinError,
     ElmaxNetworkError,
+    ElmaxPanelBusyError,
 )
 from elmax_api.http import Elmax
 from elmax_api.model.actuator import Actuator
@@ -124,6 +125,10 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
             raise ConfigEntryAuthFailed("Refused username/password") from err
         except ElmaxApiError as err:
             raise UpdateFailed(f"Error communicating with ELMAX API: {err}") from err
+        except ElmaxPanelBusyError as err:
+            raise UpdateFailed(
+                "Communication with the panel failed, as it is currently busy"
+            ) from err
         except ElmaxNetworkError as err:
             raise UpdateFailed(
                 "A network error occurred while communicating with Elmax cloud."
