@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Callable
+from collections.abc import AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 import logging
 from typing import Any
@@ -167,6 +167,16 @@ async def _async_create_default_pipeline(
     )
 
 
+async def async_create_default_pipeline(hass: HomeAssistant) -> None:
+    """Create a default pipeline.
+
+    The default pipeline will use the homeassistant conversation agent and the
+    default stt / tts engines.
+    """
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    await _async_create_default_pipeline(hass, pipeline_data.pipeline_store)
+
+
 @callback
 def async_get_pipeline(
     hass: HomeAssistant, pipeline_id: str | None = None
@@ -179,6 +189,14 @@ def async_get_pipeline(
         pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
 
     return pipeline_data.pipeline_store.data.get(pipeline_id)
+
+
+@callback
+def async_get_pipelines(hass: HomeAssistant) -> Iterable[Pipeline]:
+    """Get all pipelines."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+
+    return pipeline_data.pipeline_store.data.values()
 
 
 class PipelineEventType(StrEnum):
