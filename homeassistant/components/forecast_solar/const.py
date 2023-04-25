@@ -33,7 +33,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=0,
+        suggested_display_precision=1,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_production_tomorrow",
