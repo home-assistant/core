@@ -11,7 +11,6 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import _get_appliance_by_device_id
 from .api import HomeConnectDevice
 from .const import BSH_PAUSE, BSH_RESUME, DOMAIN
 
@@ -22,9 +21,11 @@ _STOP_KEY = "stop"
 
 @dataclass
 class HomeConnectEntityDescriptionMixin:
-    """Mixin for required Home Connect Device description keys."""
+    """Mixin for required Home Connect Device description."""
 
-    remote_function: Callable[[HomeAssistant, str], Coroutine[Any, Any, Any]]
+    remote_function: Callable[
+        [HomeAssistant, HomeConnectDevice], Coroutine[Any, Any, Any]
+    ]
 
 
 @dataclass
@@ -34,26 +35,27 @@ class HomeConnectEntityDescription(
     """Class to describe a Home Connect button."""
 
 
-async def async_service_pause_program(hass: HomeAssistant, device_id: str):
+async def async_service_pause_program(hass: HomeAssistant, device: HomeConnectDevice):
     """Service for pausing a program."""
-    await async_service_command(hass, device_id, BSH_PAUSE)
+    await async_service_command(hass, device, BSH_PAUSE)
 
 
-async def async_service_resume_program(hass: HomeAssistant, device_id: str):
+async def async_service_resume_program(hass: HomeAssistant, device: HomeConnectDevice):
     """Service for resuming a paused program."""
-    await async_service_command(hass, device_id, BSH_RESUME)
+    await async_service_command(hass, device, BSH_RESUME)
 
 
-async def async_service_stop_program(hass: HomeAssistant, device_id: str):
+async def async_service_stop_program(hass: HomeAssistant, device: HomeConnectDevice):
     """Execute calls to services executing a stop of active program."""
-
-    appliance = _get_appliance_by_device_id(hass, device_id)
+    appliance = device.appliance
     await hass.async_add_executor_job(appliance.stop_program)
 
 
-async def async_service_command(hass: HomeAssistant, device_id: str, command):
+async def async_service_command(
+    hass: HomeAssistant, device: HomeConnectDevice, command
+):
     """Execute calls to services executing a command."""
-    appliance = _get_appliance_by_device_id(hass, device_id)
+    appliance = device.appliance
     await hass.async_add_executor_job(appliance.execute_command, command)
 
 
@@ -121,6 +123,4 @@ class HomeConnectButton(HomeConnectDevice, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.entity_description.remote_function(
-            self.hass, self.device.appliance.haId
-        )
+        await self.entity_description.remote_function(self.hass, self.device)
