@@ -58,7 +58,7 @@ def make_protocol(
     return PipelineRtpDatagramProtocol(
         hass,
         hass.config.language,
-        devices.async_get_or_create(call_info),
+        voip_device,
         Context(user_id=devices.config_entry.data["user"]),
     )
 
