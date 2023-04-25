@@ -1,14 +1,7 @@
 """The tests for the date component."""
 from datetime import date
 
-from homeassistant.components.date import (
-    ATTR_DAY,
-    ATTR_MONTH,
-    ATTR_YEAR,
-    DOMAIN,
-    SERVICE_SET_VALUE,
-    DateEntity,
-)
+from homeassistant.components.date import DOMAIN, SERVICE_SET_VALUE, DateEntity
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_ENTITY_ID,
@@ -43,12 +36,7 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
 
     state = hass.states.get("date.test")
     assert state.state == "2020-01-01"
-    assert state.attributes == {
-        ATTR_DAY: 1,
-        ATTR_MONTH: 1,
-        ATTR_YEAR: 2020,
-        ATTR_FRIENDLY_NAME: "test",
-    }
+    assert state.attributes == {ATTR_FRIENDLY_NAME: "test"}
 
     await hass.services.async_call(
         DOMAIN,
@@ -63,8 +51,4 @@ async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> No
 
     date_entity = MockDateEntity(native_value=None)
     assert date_entity.state is None
-    assert date_entity.state_attributes == {
-        ATTR_DAY: None,
-        ATTR_MONTH: None,
-        ATTR_YEAR: None,
-    }
+    assert date_entity.state_attributes is None

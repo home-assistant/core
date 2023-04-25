@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_DAY, ATTR_MONTH, ATTR_YEAR, DOMAIN, SERVICE_SET_VALUE
+from .const import DOMAIN, SERVICE_SET_VALUE
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -83,15 +83,9 @@ class DateEntity(Entity):
 
     @property
     @final
-    def state_attributes(self) -> dict[str, int] | dict[str, None]:
+    def state_attributes(self) -> None:
         """Return the state attributes."""
-        if self.native_value:
-            return {
-                ATTR_DAY: self.native_value.day,
-                ATTR_MONTH: self.native_value.month,
-                ATTR_YEAR: self.native_value.year,
-            }
-        return {ATTR_DAY: None, ATTR_MONTH: None, ATTR_YEAR: None}
+        return None
 
     @property
     @final

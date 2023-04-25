@@ -2,8 +2,4 @@
 
 DOMAIN = "date"
 
-ATTR_DAY = "day"
-ATTR_MONTH = "month"
-ATTR_YEAR = "year"
-
 SERVICE_SET_VALUE = "set_value"
