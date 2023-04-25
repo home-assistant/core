@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
@@ -16,6 +16,7 @@ from .data import WyomingService
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT): int,
     }
@@ -41,6 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         service = await WyomingService.create(
             user_input[CONF_HOST],
             user_input[CONF_PORT],
+            user_input.get(CONF_NAME),
         )
 
         if service is None:
@@ -55,13 +57,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         tts_installed = [tts for tts in service.info.tts if tts.installed]
 
         if asr_installed:
-            name = asr_installed[0].name
+            service_name = asr_installed[0].name
         elif tts_installed:
-            name = tts_installed[0].name
+            service_name = tts_installed[0].name
         else:
             return self.async_abort(reason="no_services")
 
-        return self.async_create_entry(title=name, data=user_input)
+        title = service_name
+        name_prefix = user_input.get(CONF_NAME)
+        if name_prefix:
+            title = f"{name_prefix} {service_name}"
+
+        return self.async_create_entry(title=title, data=user_input)
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle Supervisor add-on discovery."""
@@ -79,7 +86,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             uri = urlparse(self._hassio_discovery.config["uri"])
-            if service := await WyomingService.create(uri.hostname, uri.port):
+            if service := await WyomingService.create(
+                uri.hostname,
+                uri.port,
+                None,
+            ):
                 if not any(asr for asr in service.info.asr if asr.installed):
                     return self.async_abort(reason="no_services")
 

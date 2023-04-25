@@ -44,11 +44,11 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
     ) -> None:
         """Set up provider."""
         self.service = service
-        self._tts_service = next(tts for tts in service.info.tts if tts.installed)
+        tts_service = next(tts for tts in service.info.tts if tts.installed)
 
         voice_languages: set[str] = set()
         self._voices: dict[str, list[tts.Voice]] = defaultdict(list)
-        for voice in self._tts_service.voices:
+        for voice in tts_service.voices:
             if not voice.installed:
                 continue
 
@@ -63,7 +63,11 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
         self._supported_languages: list[str] = list(voice_languages)
 
-        self._attr_name = self._tts_service.name
+        if service.name_prefix:
+            self._attr_name = f"{service.name_prefix}_{tts_service.name}"
+        else:
+            self._attr_name = tts_service.name
+
         self._attr_unique_id = f"{config_entry.entry_id}-tts"
 
     @property

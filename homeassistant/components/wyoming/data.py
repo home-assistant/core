@@ -19,11 +19,14 @@ _INFO_RETRIES = 3
 class WyomingService:
     """Hold info for Wyoming service."""
 
-    def __init__(self, host: str, port: int, info: Info) -> None:
+    def __init__(
+        self, host: str, port: int, info: Info, name_prefix: str | None = None
+    ) -> None:
         """Initialize Wyoming service."""
         self.host = host
         self.port = port
         self.info = info
+        self.name_prefix = name_prefix
         platforms = []
         if any(asr.installed for asr in info.asr):
             platforms.append(Platform.STT)
@@ -32,13 +35,15 @@ class WyomingService:
         self.platforms = platforms
 
     @classmethod
-    async def create(cls, host: str, port: int) -> WyomingService | None:
+    async def create(
+        cls, host: str, port: int, name_prefix: str | None
+    ) -> WyomingService | None:
         """Create a Wyoming service."""
         info = await load_wyoming_info(host, port)
         if info is None:
             return None
 
-        return cls(host, port, info)
+        return cls(host, port, info, name_prefix)
 
 
 async def load_wyoming_info(

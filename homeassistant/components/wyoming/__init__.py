@@ -15,7 +15,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load Wyoming."""
-    service = await WyomingService.create(entry.data["host"], entry.data["port"])
+    service = await WyomingService.create(
+        entry.data["host"],
+        entry.data["port"],
+        entry.data.get("name"),
+    )
 
     if service is None:
         raise ConfigEntryNotReady("Unable to connect")

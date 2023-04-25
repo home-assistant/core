@@ -50,7 +50,12 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
                 model_languages.update(asr_model.languages)
 
         self._supported_languages = list(model_languages)
-        self._attr_name = asr_service.name
+
+        if service.name_prefix:
+            self._attr_name = f"{service.name_prefix}_{asr_service.name}"
+        else:
+            self._attr_name = asr_service.name
+
         self._attr_unique_id = f"{config_entry.entry_id}-stt"
 
     @property
