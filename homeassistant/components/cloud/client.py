@@ -136,7 +136,7 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    async def on_cloud_connected(self) -> None:
+    async def cloud_connected(self) -> None:
         """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
