@@ -55,7 +55,6 @@ DEVICE_ICONS = {
 }
 
 ATTR_DETECTION = "detection"
-ATTR_FLIP = "flip"
 
 
 CATEGORY_TO_MODEL = {
