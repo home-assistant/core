@@ -340,7 +340,7 @@ arcam-fmj==1.3.0
 async-upnp-client==0.33.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.3.3
+asyncsleepiq==1.3.4
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
@@ -673,7 +673,7 @@ ha-philipsjs==3.0.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.65.0
+hass-nabucasa==0.66.1
 
 # homeassistant.components.conversation
 hassil==1.0.6
@@ -1090,7 +1090,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.1
 
 # homeassistant.components.tibber
-pyTibber==0.27.0
+pyTibber==0.27.1
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1381,7 +1381,7 @@ pypoint==2.3.0
 pyprof2calltree==1.4.5
 
 # homeassistant.components.prosegur
-pyprosegur==0.0.8
+pyprosegur==0.0.9
 
 # homeassistant.components.prusalink
 pyprusalink==1.1.0
@@ -1730,7 +1730,7 @@ spotipy==2.23.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.9
+sqlalchemy==2.0.10
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -1967,22 +1967,22 @@ zeversolar==0.3.1
 zha-quirks==0.0.97
 
 # homeassistant.components.zha
-zigpy-deconz==0.20.0
+zigpy-deconz==0.21.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.17.0
+zigpy-xbee==0.18.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.10.3
+zigpy-zigate==0.11.0
 
 # homeassistant.components.zha
-zigpy-znp==0.10.0
+zigpy-znp==0.11.1
 
 # homeassistant.components.zha
-zigpy==0.54.1
+zigpy==0.55.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.47.3
+zwave-js-server-python==0.48.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.4.2
