@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import Literal
 
 import openai
 from openai import error
@@ -71,9 +72,9 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         return {"name": "Powered by OpenAI", "url": "https://www.openai.com"}
 
     @property
-    def supported_languages(self) -> list[str]:
+    def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
-        return [MATCH_ALL]
+        return MATCH_ALL
 
     async def async_process(
         self, user_input: conversation.ConversationInput

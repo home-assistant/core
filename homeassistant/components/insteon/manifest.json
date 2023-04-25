@@ -17,7 +17,7 @@
   "iot_class": "local_push",
   "loggers": ["pyinsteon", "pypubsub"],
   "requirements": [
-    "pyinsteon==1.4.1",
+    "pyinsteon==1.4.2",
     "insteon-frontend-home-assistant==0.3.4"
   ],
   "usb": [

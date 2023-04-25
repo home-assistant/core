@@ -35,6 +35,7 @@ CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
 
 DATA_MQTT = "mqtt"
+DATA_MQTT_AVAILABLE = "mqtt_client_available"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"

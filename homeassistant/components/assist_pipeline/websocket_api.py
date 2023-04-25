@@ -1,5 +1,7 @@
 """Assist pipeline Websocket API."""
 import asyncio
+
+# Suppressing disable=deprecated-module is needed for Python 3.11
 import audioop  # pylint: disable=deprecated-module
 from collections.abc import AsyncGenerator, Callable
 import logging
@@ -8,9 +10,11 @@ from typing import Any
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components import stt, websocket_api
+from homeassistant.components import conversation, stt, tts, websocket_api
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import language as language_util
 
 from .const import DOMAIN
 from .pipeline import (
@@ -33,47 +37,46 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
-    websocket_api.async_register_command(
-        hass,
-        "assist_pipeline/run",
-        websocket_run,
-        vol.All(
-            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                {
-                    vol.Required("type"): "assist_pipeline/run",
-                    # pylint: disable-next=unnecessary-lambda
-                    vol.Required("start_stage"): lambda val: PipelineStage(val),
-                    # pylint: disable-next=unnecessary-lambda
-                    vol.Required("end_stage"): lambda val: PipelineStage(val),
-                    vol.Optional("input"): dict,
-                    vol.Optional("pipeline"): str,
-                    vol.Optional("conversation_id"): vol.Any(str, None),
-                    vol.Optional("timeout"): vol.Any(float, int),
-                },
-            ),
-            cv.key_value_schemas(
-                "start_stage",
-                {
-                    PipelineStage.STT: vol.Schema(
-                        {vol.Required("input"): {vol.Required("sample_rate"): int}},
-                        extra=vol.ALLOW_EXTRA,
-                    ),
-                    PipelineStage.INTENT: vol.Schema(
-                        {vol.Required("input"): {"text": str}},
-                        extra=vol.ALLOW_EXTRA,
-                    ),
-                    PipelineStage.TTS: vol.Schema(
-                        {vol.Required("input"): {"text": str}},
-                        extra=vol.ALLOW_EXTRA,
-                    ),
-                },
-            ),
-        ),
-    )
+    websocket_api.async_register_command(hass, websocket_run)
+    websocket_api.async_register_command(hass, websocket_list_languages)
     websocket_api.async_register_command(hass, websocket_list_runs)
     websocket_api.async_register_command(hass, websocket_get_run)
 
 
+@websocket_api.websocket_command(
+    vol.All(
+        websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+            {
+                vol.Required("type"): "assist_pipeline/run",
+                # pylint: disable-next=unnecessary-lambda
+                vol.Required("start_stage"): lambda val: PipelineStage(val),
+                # pylint: disable-next=unnecessary-lambda
+                vol.Required("end_stage"): lambda val: PipelineStage(val),
+                vol.Optional("input"): dict,
+                vol.Optional("pipeline"): str,
+                vol.Optional("conversation_id"): vol.Any(str, None),
+                vol.Optional("timeout"): vol.Any(float, int),
+            },
+        ),
+        cv.key_value_schemas(
+            "start_stage",
+            {
+                PipelineStage.STT: vol.Schema(
+                    {vol.Required("input"): {vol.Required("sample_rate"): int}},
+                    extra=vol.ALLOW_EXTRA,
+                ),
+                PipelineStage.INTENT: vol.Schema(
+                    {vol.Required("input"): {"text": str}},
+                    extra=vol.ALLOW_EXTRA,
+                ),
+                PipelineStage.TTS: vol.Schema(
+                    {vol.Required("input"): {"text": str}},
+                    extra=vol.ALLOW_EXTRA,
+                ),
+            },
+        ),
+    ),
+)
 @websocket_api.async_response
 async def websocket_run(
     hass: HomeAssistant,
@@ -82,7 +85,7 @@ async def websocket_run(
 ) -> None:
     """Run a pipeline."""
     pipeline_id = msg.get("pipeline")
-    pipeline = await async_get_pipeline(hass, pipeline_id=pipeline_id)
+    pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
     if pipeline is None:
         connection.send_error(
             msg["id"],
@@ -136,7 +139,7 @@ async def websocket_run(
 
         # Audio input must be raw PCM at 16Khz with 16-bit mono samples
         input_args["stt_metadata"] = stt.SpeechMetadata(
-            language=pipeline.language,
+            language=pipeline.stt_language or pipeline.language,
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
             bit_rate=stt.AudioBitRates.BITRATE_16,
@@ -272,4 +275,59 @@ def websocket_get_run(
     connection.send_result(
         msg["id"],
         {"events": pipeline_runs[pipeline_run_id].events},
+    )
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/language/list",
+    }
+)
+@websocket_api.async_response
+async def websocket_list_languages(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List languages which are supported by a complete pipeline.
+
+    This will return a list of languages which are supported by at least one stt, tts
+    and conversation engine respectively.
+    """
+    conv_language_tags = await conversation.async_get_conversation_languages(hass)
+    stt_language_tags = stt.async_get_speech_to_text_languages(hass)
+    tts_language_tags = tts.async_get_text_to_speech_languages(hass)
+    pipeline_languages: set[str] | None = None
+
+    if conv_language_tags and conv_language_tags != MATCH_ALL:
+        languages = set()
+        for language_tag in conv_language_tags:
+            dialect = language_util.Dialect.parse(language_tag)
+            languages.add(dialect.language)
+        pipeline_languages = languages
+
+    if stt_language_tags:
+        languages = set()
+        for language_tag in stt_language_tags:
+            dialect = language_util.Dialect.parse(language_tag)
+            languages.add(dialect.language)
+        if pipeline_languages is not None:
+            pipeline_languages &= languages
+        else:
+            pipeline_languages = languages
+
+    if tts_language_tags:
+        languages = set()
+        for language_tag in tts_language_tags:
+            dialect = language_util.Dialect.parse(language_tag)
+            languages.add(dialect.language)
+        if pipeline_languages is not None:
+            pipeline_languages &= languages
+        else:
+            pipeline_languages = languages
+
+    connection.send_result(
+        msg["id"],
+        {"languages": pipeline_languages},
     )
