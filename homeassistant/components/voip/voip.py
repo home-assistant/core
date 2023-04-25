@@ -106,6 +106,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         listening_tone_enabled: bool = True,
         processing_tone_enabled: bool = True,
         tone_delay: float = 0.2,
+        tts_extra_timeout: float = 1.0,
     ) -> None:
         """Set up pipeline RTP server."""
         super().__init__(rate=RATE, width=WIDTH, channels=CHANNELS)
@@ -120,6 +121,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self.listening_tone_enabled = listening_tone_enabled
         self.processing_tone_enabled = processing_tone_enabled
         self.tone_delay = tone_delay
+        self.tts_extra_timeout = tts_extra_timeout
 
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self._context = context
@@ -219,8 +221,11 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                     tts_audio_output="raw",
                 )
 
-                # Block until TTS is done speaking
-                await self._tts_done.wait()
+            # Block until TTS is done speaking.
+            #
+            # This is set in _send_tts and has a timeout that's based on the
+            # length of the TTS audio.
+            await self._tts_done.wait()
 
             _LOGGER.debug("Pipeline finished")
         except asyncio.TimeoutError:
@@ -316,10 +321,18 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
             _LOGGER.debug("Sending %s byte(s) of audio", len(audio_bytes))
 
-            # Assume TTS audio is 16Khz 16-bit mono
-            await self.hass.async_add_executor_job(
-                partial(self.send_audio, audio_bytes, **RTP_AUDIO_SETTINGS)
-            )
+            # Time out 1 second after TTS audio should be finished
+            tts_samples = len(audio_bytes) / (WIDTH * CHANNELS)
+            tts_seconds = tts_samples / RATE
+
+            async with async_timeout.timeout(tts_seconds + self.tts_extra_timeout):
+                # Assume TTS audio is 16Khz 16-bit mono
+                await self.hass.async_add_executor_job(
+                    partial(self.send_audio, audio_bytes, **RTP_AUDIO_SETTINGS)
+                )
+        except asyncio.TimeoutError as err:
+            _LOGGER.warning("TTS timeout")
+            raise err
         finally:
             # Signal pipeline to restart
             self._tts_done.set()
