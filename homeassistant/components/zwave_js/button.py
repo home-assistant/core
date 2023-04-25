@@ -124,7 +124,7 @@ class ZWaveNotificationIdleButton(ZWaveBaseEntity, ButtonEntity):
         self._attr_name = self.generate_name(
             include_value_name=True, name_prefix="Idle"
         )
-        self._attr_unique_id = f"{self._attr_unique_id}.idle"
+        self._attr_unique_id = f"{self._attr_unique_id}.notification_idle"
 
     async def async_press(self) -> None:
         """Press the button."""
