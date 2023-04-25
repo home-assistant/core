@@ -343,6 +343,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
             },
             name="Mosquitto",
             slug="mosquitto",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -373,6 +374,7 @@ async def test_hassio_confirm(
             },
             name="Mock Addon",
             slug="mosquitto",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -421,6 +423,7 @@ async def test_hassio_cannot_connect(
             },
             name="Mock Addon",
             slug="mosquitto",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
