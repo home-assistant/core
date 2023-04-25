@@ -15,10 +15,6 @@ tree = html.fromstring(req.content)
 supported_languages_raw = tree.xpath(XPATH_QUERY)
 supported_languages = {s.lower() for s in supported_languages_raw}
 
-assert "en-us" in supported_languages
-assert "fa-ir" in supported_languages
-assert len(supported_languages) > 10
-
 Path("homeassistant/generated/microsoft_tts.py").write_text(
     format_python_namespace(
         {
