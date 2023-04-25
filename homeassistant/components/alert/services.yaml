@@ -18,3 +18,7 @@ turn_on:
   target:
     entity:
       domain: alert
+
+reload:
+  name: Reload
+  description: Reload the alert configuration.

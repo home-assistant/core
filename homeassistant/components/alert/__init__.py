@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
+    SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -25,7 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -33,6 +34,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
+import homeassistant.helpers.service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
@@ -77,12 +79,50 @@ ALERT_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: cv.schema_with_slug_keys(ALERT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component."""
     component = EntityComponent[Alert](LOGGER, DOMAIN, hass)
 
+    entities = await async_get_entities(hass, config)
+
+    if not entities:
+        return False
+
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+
+    async def async_reload_yaml(call: ServiceCall) -> None:
+        """Reload yaml entities."""
+
+        for entity in component.entities:
+            await entity.unregister_state_change_listener()
+
+        conf = await component.async_prepare_reload()
+        if conf is None:
+            conf = {DOMAIN: {}}
+        entities = await async_get_entities(hass, conf)
+        if entities:
+            await component.async_add_entities(entities)
+
+    homeassistant.helpers.service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        async_reload_yaml,
+        schema=RELOAD_SERVICE_SCHEMA,
+    )
+
+    await component.async_add_entities(entities)
+
+    return True
+
+
+async def async_get_entities(hass: HomeAssistant, config: ConfigType) -> list[Alert]:
+    """Prepare a list of Alert objects from the config."""
     entities: list[Alert] = []
 
     for object_id, cfg in config[DOMAIN].items():
@@ -119,16 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
-    if not entities:
-        return False
-
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
-
-    await component.async_add_entities(entities)
-
-    return True
+    return entities
 
 
 class Alert(Entity):
@@ -183,7 +214,7 @@ class Alert(Entity):
         self._send_done_message = False
         self.entity_id = f"{DOMAIN}.{entity_id}"
 
-        async_track_state_change_event(
+        self.unsub = async_track_state_change_event(
             hass, [watched_entity_id], self.watched_entity_change
         )
 
@@ -195,6 +226,10 @@ class Alert(Entity):
                 return STATE_OFF
             return STATE_ON
         return STATE_IDLE
+
+    async def unregister_state_change_listener(self) -> None:
+        """Unregister from state change listener."""
+        self.unsub()
 
     async def watched_entity_change(self, event: Event) -> None:
         """Determine if the alert should start or stop."""
