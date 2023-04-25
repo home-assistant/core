@@ -113,6 +113,7 @@ class FreeboxSensor(SensorEntity):
         self.entity_description = description
         self._router = router
         self._attr_unique_id = f"{router.mac} {description.name}"
+        self._attr_device_info = router.device_info
 
     @callback
     def async_update_state(self) -> None:
@@ -122,11 +123,6 @@ class FreeboxSensor(SensorEntity):
             self._attr_native_value = round(state / 1000, 2)
         else:
             self._attr_native_value = state
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return self._router.device_info
 
     @callback
     def async_on_demand_update(self):
