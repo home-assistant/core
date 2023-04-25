@@ -50,9 +50,9 @@ from .const import (
     CONF_RELAYER_SERVER,
     CONF_REMOTE_SNI_SERVER,
     CONF_REMOTESTATE_SERVER,
+    CONF_SERVICEHANDLERS_SERVER,
     CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
-    CONF_VOICE_SERVER,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
@@ -119,7 +119,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_REMOTE_SNI_SERVER): str,
                 vol.Optional(CONF_REMOTESTATE_SERVER): str,
                 vol.Optional(CONF_THINGTALK_SERVER): str,
-                vol.Optional(CONF_VOICE_SERVER): str,
+                vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
             }
         )
     },
