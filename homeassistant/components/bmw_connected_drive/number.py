@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BMWBaseEntity
@@ -40,8 +40,8 @@ class BMWNumberEntityDescription(NumberEntityDescription, BMWRequiredKeysMixin):
     mode: NumberMode = NumberMode.AUTO
 
 
-NUMBER_TYPES: dict[str, BMWNumberEntityDescription] = {
-    "target_soc": BMWNumberEntityDescription(
+NUMBER_TYPES: list[BMWNumberEntityDescription] = [
+    BMWNumberEntityDescription(
         key="target_soc",
         name="Target SoC",
         device_class=NumberDeviceClass.BATTERY,
@@ -56,7 +56,7 @@ NUMBER_TYPES: dict[str, BMWNumberEntityDescription] = {
         ),
         icon="mdi:battery-charging-medium",
     ),
-}
+]
 
 
 async def async_setup_entry(
@@ -74,7 +74,7 @@ async def async_setup_entry(
             entities.extend(
                 [
                     BMWNumber(coordinator, vehicle, description)
-                    for description in NUMBER_TYPES.values()
+                    for description in NUMBER_TYPES
                     if description.is_available(vehicle)
                 ]
             )
@@ -99,14 +99,10 @@ class BMWNumber(BMWBaseEntity, NumberEntity):
         self._attr_native_value = description.value_fn(vehicle)
         self._attr_mode = description.mode
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        _LOGGER.debug(
-            "Updating Number '%s' of %s", self.entity_description.key, self.vehicle.name
-        )
-        self._attr_native_value = self.entity_description.value_fn(self.vehicle)
-        super()._handle_coordinator_update()
+    @property
+    def native_value(self) -> float | None:
+        """Return the entity value to represent the entity state."""
+        return self.entity_description.value_fn(self.vehicle)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update to the vehicle."""
