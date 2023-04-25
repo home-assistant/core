@@ -1245,8 +1245,9 @@ async def test_multicast_set_value(
             blocking=True,
         )
 
-    # Test that when we get an exception from the library we raise an exception
     client.async_send_command.reset_mock()
+
+    # Test that when we get an exception from the library we raise an exception
     client.async_send_command.side_effect = FailedZWaveCommand("test", 12, "test")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -1264,6 +1265,8 @@ async def test_multicast_set_value(
             },
             blocking=True,
         )
+
+    client.async_send_command.reset_mock()
 
     # Create a fake node with a different home ID from a real node and patch it into
     # return of helper function to check the validation for two nodes having different
