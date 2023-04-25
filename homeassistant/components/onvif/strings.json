@@ -2,12 +2,15 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "onvif_error": "Error setting up ONVIF device.  Check logs for more information.",
       "no_h264": "There were no H264 streams available.  Check the profile configuration on your device.",
-      "no_mac": "Could not configure unique ID for ONVIF device."
+      "no_mac": "Could not configure unique ID for ONVIF device.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "onvif_error": "Error setting up ONVIF device: {error}. Check logs for more information.",
+      "auth_failed": "Could not authenticate: {error}",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
@@ -39,6 +42,13 @@
         "title": "Configure Profiles",
         "data": {
           "include": "Create camera entity"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate the ONVIF device",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     }

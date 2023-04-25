@@ -13,7 +13,7 @@ from typing import IO, Any
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
 from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
-from home_assistant_intents import get_intents
+from home_assistant_intents import get_domains_and_languages, get_intents
 import yaml
 
 from homeassistant import core, setup
@@ -85,6 +85,11 @@ class DefaultAgent(AbstractConversationAgent):
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
         self._slot_lists: dict[str, SlotList] | None = None
+
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return a list of supported languages."""
+        return get_domains_and_languages()["homeassistant"]
 
     async def async_initialize(self, config_intents):
         """Initialize the default agent."""

@@ -244,7 +244,6 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
         },
         _has_same_type("start", "end"),
         _has_timezone("start", "end"),
-        _has_consistent_timezone("start", "end"),
         _as_local_timezone("start", "end"),
         _has_min_duration("start", "end", MIN_EVENT_DURATION),
     ),

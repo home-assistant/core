@@ -23,6 +23,7 @@ COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
     "avea",  # depends on bluepy
     "avion",
+    "azure-servicebus",  # depends on uamqp, which requires OpenSSL 1.1
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
@@ -158,6 +159,10 @@ pyOpenSSL>=23.1.0
 # uamqp newer versions we currently can't build for armv7/armhf
 # Limit this to Python 3.10, to not block Python 3.11 dev for now
 uamqp==1.6.0;python_version<'3.11'
+
+# protobuf must be in package constraints for the wheel
+# builder to build binary wheels
+protobuf==4.22.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
