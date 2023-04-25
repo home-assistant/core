@@ -196,7 +196,6 @@ async def async_remove_config_entry_device(
         return True
 
     if node.is_bridge_device:
-        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
         device_registry = dr.async_get(hass)
         devices = dr.async_entries_for_config_entry(
             device_registry, config_entry.entry_id
