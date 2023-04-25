@@ -26,7 +26,11 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -43,6 +47,8 @@ from .const import (
     SONOS_REBOOTED,
     SONOS_SPEAKER_ACTIVITY,
     SONOS_VANISHED,
+    SUB_FAIL_ISSUE_ID,
+    SUB_FAIL_URL,
     SUBSCRIPTION_TIMEOUT,
     UPNP_ST,
 )
@@ -227,6 +233,24 @@ class SonosDiscoveryManager:
 
         async def async_subscription_failed(now: datetime.datetime) -> None:
             """Fallback logic if the subscription callback never arrives."""
+            addr, port = sub.event_listener.address
+            listener_address = f"{addr}:{port}"
+            if advertise_ip := soco_config.EVENT_ADVERTISE_IP:
+                listener_address += f" (advertising as {advertise_ip})"
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                SUB_FAIL_ISSUE_ID,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="subscriptions_failed",
+                translation_placeholders={
+                    "device_ip": ip_address,
+                    "listener_address": listener_address,
+                    "sub_fail_url": SUB_FAIL_URL,
+                },
+            )
+
             _LOGGER.warning(
                 "Subscription to %s failed, attempting to poll directly", ip_address
             )
@@ -256,6 +280,11 @@ class SonosDiscoveryManager:
             """Create SonosSpeakers when subscription callbacks successfully arrive."""
             _LOGGER.debug("Subscription to %s succeeded", ip_address)
             cancel_failure_callback()
+            ir.async_delete_issue(
+                self.hass,
+                DOMAIN,
+                SUB_FAIL_ISSUE_ID,
+            )
             _async_add_visible_zones(subscription_succeeded=True)
 
         sub.callback = _async_subscription_succeeded

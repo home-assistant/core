@@ -28,5 +28,9 @@ async def async_get_config_entry_diagnostics(
         "capabilities": asdict(device.capabilities),
         "profiles": [asdict(profile) for profile in device.profiles],
     }
+    data["events"] = {
+        "webhook_manager_state": device.events.webhook_manager.state,
+        "pullpoint_manager_state": device.events.pullpoint_manager.state,
+    }
 
     return data
