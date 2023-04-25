@@ -1,7 +1,7 @@
 """Test VoIP protocol."""
 import asyncio
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import async_timeout
 
@@ -271,7 +271,7 @@ async def test_tts_timeout(
             rtp_protocol._send_tts(*args, **kwargs)
             done.set()
 
-        rtp_protocol._send_tts = Mock(side_effect=send_tts)
+        rtp_protocol._send_tts = AsyncMock(side_effect=send_tts)
 
         # silence
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
