@@ -275,82 +275,90 @@ ENTITY_DESCRIPTION_KEY_MAP = {
     ),
 }
 
+
+class StatisticsEntityDescription(SensorEntityDescription):
+    """Description for statistics entity."""
+
+    entity_registry_enabled_default = False
+    entity_category = EntityCategory.DIAGNOSTIC
+
+
 # Controller statistics descriptions
 ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "messagesTX",
         name="Successful messages (TX)",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "messagesRX",
         name="Successful messages (RX)",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "messagesDroppedTX",
         name="Messages dropped (TX)",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "messagesDroppedRX",
         name="Messages dropped (RX)",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "NAK",
         name="Messages not accepted",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "CAN", name="Collisions", state_class=SensorStateClass.TOTAL
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "timeoutACK", name="Missing ACKs", state_class=SensorStateClass.TOTAL
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "timeoutResponse",
         name="Timed out responses",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "timeoutCallback",
         name="Timed out callbacks",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "backgroundRSSI.channel0.average",
         name="Average background RSSI (channel 0)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "backgroundRSSI.channel0.current",
         name="Current background RSSI (channel 0)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "backgroundRSSI.channel1.average",
         name="Average background RSSI (channel 1)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "backgroundRSSI.channel1.current",
         name="Current background RSSI (channel 1)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "backgroundRSSI.channel2.average",
         name="Average background RSSI (channel 2)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "backgroundRSSI.channel2.current",
         name="Current background RSSI (channel 2)",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -361,39 +369,39 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
 
 # Node statistics descriptions
 ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "commandsRX",
         name="Successful commands (RX)",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "commandsTX",
         name="Successful commands (TX)",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "commandsDroppedRX",
         name="Commands dropped (RX)",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "commandsDroppedTX",
         name="Commands dropped (TX)",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "timeoutResponse",
         name="Timed out responses",
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "rtt",
         name="Round Trip Time",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    StatisticsEntityDescription(
         "rssi",
         name="RSSI",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
