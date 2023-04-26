@@ -217,9 +217,9 @@ async def test_service(
     ).is_file()
 
 
-# Language de is matched with de_DE
 @pytest.mark.parametrize(
-    ("mock_provider", "mock_tts_entity"), [(MockProvider("de"), MockTTSEntity("de"))]
+    ("mock_provider", "mock_tts_entity"),
+    [(MockProvider("de_DE"), MockTTSEntity("de_DE"))],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -346,7 +346,7 @@ async def test_service_default_special_language(
             {
                 ATTR_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
             },
             "test",
         ),
@@ -357,7 +357,7 @@ async def test_service_default_special_language(
                 ATTR_ENTITY_ID: "tts.test",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
             },
             "tts.test",
         ),
@@ -455,7 +455,7 @@ async def test_service_wrong_language(
             {
                 ATTR_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
                 tts.ATTR_OPTIONS: {"voice": "alex", "age": 5},
             },
             "test",
@@ -467,7 +467,7 @@ async def test_service_wrong_language(
                 ATTR_ENTITY_ID: "tts.test",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
                 tts.ATTR_OPTIONS: {"voice": "alex", "age": 5},
             },
             "tts.test",
@@ -541,7 +541,7 @@ class MockEntityWithDefaults(MockTTSEntity):
             {
                 ATTR_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
             },
             "test",
         ),
@@ -552,7 +552,7 @@ class MockEntityWithDefaults(MockTTSEntity):
                 ATTR_ENTITY_ID: "tts.test",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
             },
             "tts.test",
         ),
@@ -607,7 +607,7 @@ async def test_service_default_options(
             {
                 ATTR_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
                 tts.ATTR_OPTIONS: {"age": 5},
             },
             "test",
@@ -619,7 +619,7 @@ async def test_service_default_options(
                 ATTR_ENTITY_ID: "tts.test",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
                 tts.ATTR_OPTIONS: {"age": 5},
             },
             "tts.test",
@@ -674,7 +674,7 @@ async def test_merge_default_service_options(
             {
                 ATTR_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
                 tts.ATTR_OPTIONS: {"speed": 1},
             },
             "test",
@@ -686,7 +686,7 @@ async def test_merge_default_service_options(
                 ATTR_ENTITY_ID: "tts.test",
                 tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
                 tts.ATTR_MESSAGE: "There is someone at the door.",
-                tts.ATTR_LANGUAGE: "de",
+                tts.ATTR_LANGUAGE: "de_DE",
                 tts.ATTR_OPTIONS: {"speed": 1},
             },
             "tts.test",
@@ -855,7 +855,8 @@ async def test_service_receive_voice(
 
 
 @pytest.mark.parametrize(
-    ("mock_provider", "mock_tts_entity"), [(MockProvider("de"), MockTTSEntity("de"))]
+    ("mock_provider", "mock_tts_entity"),
+    [(MockProvider("de_DE"), MockTTSEntity("de_DE"))],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -1047,7 +1048,6 @@ async def test_setup_legacy_cache_dir(
     """Set up a TTS platform with cache and call service without cache."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-    # Language en is matched with en_US
     tts_data = b""
     cache_file = (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
@@ -1084,7 +1084,6 @@ async def test_setup_cache_dir(
     """Set up a TTS platform with cache and call service without cache."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-    # Language en is matched with en_US
     tts_data = b""
     cache_file = empty_cache_dir / (
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
@@ -1187,10 +1186,9 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
-    # Language en is matched with en_US
     tts_data = b""
     cache_file = (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
     )
 
     with open(cache_file, "wb") as voice_file:
@@ -1200,7 +1198,7 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
 
     client = await hass_client()
 
-    url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
+    url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
 
     req = await client.get(url)
     assert req.status == HTTPStatus.OK
@@ -1214,7 +1212,6 @@ async def test_load_cache_retrieve_without_mem_cache(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Set up component and load cache and get without mem cache."""
-    # Language en is matched with en_US
     tts_data = b""
     cache_file = empty_cache_dir / (
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
@@ -1306,7 +1303,7 @@ async def test_tags_with_wave() -> None:
     )
 
     tagged_data = ORIG_WRITE_TAGS(
-        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.wav",
+        "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.wav",
         tts_data,
         "Test",
         "AI person is in front of your door.",
@@ -1367,9 +1364,9 @@ def test_invalid_base_url(value) -> None:
     ("engine", "language", "options", "cache", "result_query"),
     (
         (None, None, None, None, ""),
-        (None, "de", None, None, "language=de"),
-        (None, "de", {"voice": "henk"}, None, "language=de&voice=henk"),
-        (None, "de", None, True, "cache=true&language=de"),
+        (None, "de_DE", None, None, "language=de_DE"),
+        (None, "de_DE", {"voice": "henk"}, None, "language=de_DE&voice=henk"),
+        (None, "de_DE", None, True, "cache=true&language=de_DE"),
     ),
 )
 async def test_generate_media_source_id(
@@ -1456,11 +1453,12 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
 )
 async def test_support_options(hass: HomeAssistant, setup: str, engine_id: str) -> None:
     """Test supporting options."""
-    # Language en is matched with en_US
-    assert await tts.async_support_options(hass, engine_id, "en") is True
+    assert await tts.async_support_options(hass, engine_id, "en_US") is True
     assert await tts.async_support_options(hass, engine_id, "nl") is False
     assert (
-        await tts.async_support_options(hass, engine_id, "en", {"invalid_option": "yo"})
+        await tts.async_support_options(
+            hass, engine_id, "en_US", {"invalid_option": "yo"}
+        )
         is False
     )
 
@@ -1496,7 +1494,7 @@ async def test_legacy_fetching_in_async(
 
     # Test async_get_media_source_audio
     media_source_id = tts.generate_media_source_id(
-        hass, "test message", "test", "en", None, None
+        hass, "test message", "test", "en_US", None, None
     )
 
     task = hass.async_create_task(
@@ -1526,7 +1524,7 @@ async def test_legacy_fetching_in_async(
 
     # Test error is not cached
     media_source_id = tts.generate_media_source_id(
-        hass, "test message 2", "test", "en", None, None
+        hass, "test message 2", "test", "en_US", None, None
     )
     tts_audio = asyncio.Future()
     tts_audio.set_exception(HomeAssistantError("test error"))
@@ -1569,7 +1567,7 @@ async def test_fetching_in_async(
 
     # Test async_get_media_source_audio
     media_source_id = tts.generate_media_source_id(
-        hass, "test message", "tts.test", "en", None, None
+        hass, "test message", "tts.test", "en_US", None, None
     )
 
     task = hass.async_create_task(
@@ -1599,7 +1597,7 @@ async def test_fetching_in_async(
 
     # Test error is not cached
     media_source_id = tts.generate_media_source_id(
-        hass, "test message 2", "tts.test", "en", None, None
+        hass, "test message 2", "tts.test", "en_US", None, None
     )
     tts_audio = asyncio.Future()
     tts_audio.set_exception(HomeAssistantError("test error"))
