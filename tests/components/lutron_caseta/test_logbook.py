@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from . import MockBridge
+from . import MockBridge, async_setup_integration
 
 from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
@@ -136,5 +136,77 @@ async def test_humanify_lutron_caseta_button_event_integration_not_loaded(
     )
 
     assert event1["name"] == "Dining Room Pico"
+    assert event1["domain"] == DOMAIN
+    assert event1["message"] == "press stop"
+
+
+async def test_humanify_lutron_caseta_button_event_ra3(hass: HomeAssistant) -> None:
+    """Test humanifying lutron_caseta_button_events from an RA3 hub."""
+    hass.config.components.add("recorder")
+    assert await async_setup_component(hass, "logbook", {})
+    await async_setup_integration(hass, MockBridge)
+
+    registry = dr.async_get(hass)
+    keypad = registry.async_get_device(
+        identifiers={(DOMAIN, 66286451)}, connections=set()
+    )
+    assert keypad
+
+    (event1,) = mock_humanify(
+        hass,
+        [
+            MockRow(
+                LUTRON_CASETA_BUTTON_EVENT,
+                {
+                    ATTR_SERIAL: "66286451",
+                    ATTR_DEVICE_ID: keypad.id,
+                    ATTR_TYPE: keypad.model,
+                    ATTR_LEAP_BUTTON_NUMBER: 3,
+                    ATTR_BUTTON_NUMBER: 3,
+                    ATTR_DEVICE_NAME: "Keypad",
+                    ATTR_AREA_NAME: "Breakfast",
+                    ATTR_ACTION: "press",
+                },
+            ),
+        ],
+    )
+
+    assert event1["name"] == "Breakfast Keypad"
+    assert event1["domain"] == DOMAIN
+    assert event1["message"] == "press Kitchen Pendants"
+
+
+async def test_humanify_lutron_caseta_button_unknown_type(hass: HomeAssistant) -> None:
+    """Test humanifying lutron_caseta_button_events with an unknown type."""
+    hass.config.components.add("recorder")
+    assert await async_setup_component(hass, "logbook", {})
+    await async_setup_integration(hass, MockBridge)
+
+    registry = dr.async_get(hass)
+    keypad = registry.async_get_device(
+        identifiers={(DOMAIN, 66286451)}, connections=set()
+    )
+    assert keypad
+
+    (event1,) = mock_humanify(
+        hass,
+        [
+            MockRow(
+                LUTRON_CASETA_BUTTON_EVENT,
+                {
+                    ATTR_SERIAL: "66286451",
+                    ATTR_DEVICE_ID: "removed",
+                    ATTR_TYPE: keypad.model,
+                    ATTR_LEAP_BUTTON_NUMBER: 3,
+                    ATTR_BUTTON_NUMBER: 3,
+                    ATTR_DEVICE_NAME: "Keypad",
+                    ATTR_AREA_NAME: "Breakfast",
+                    ATTR_ACTION: "press",
+                },
+            ),
+        ],
+    )
+
+    assert event1["name"] == "Breakfast Keypad"
     assert event1["domain"] == DOMAIN
     assert event1["message"] == "press Error retrieving button description"
