@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from binascii import unhexlify
 from copy import deepcopy
-from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, patch
+from typing import TYPE_CHECKING, Any
+from unittest.mock import ANY, AsyncMock, call, patch
 
 import pytest
 import voluptuous as vol
@@ -38,6 +38,7 @@ from homeassistant.components.zha.websocket_api import (
     ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
     ID,
+    SERVICE_CHANGE_CHANNEL,
     SERVICE_PERMIT,
     TYPE,
     async_load_api,
@@ -857,3 +858,53 @@ async def test_restore_network_backup_failure(
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
+
+
+@pytest.mark.parametrize("new_channel", ["auto", 15])
+async def test_websocket_change_channel(
+    new_channel: int | str, app_controller: ControllerApplication, zha_client
+) -> None:
+    """Test websocket API to migrate the network to a new channel."""
+
+    with patch(
+        "homeassistant.components.zha.websocket_api.change_channel",
+        autospec=True,
+    ) as change_channel_mock:
+        await zha_client.send_json(
+            {
+                ID: 6,
+                TYPE: f"{DOMAIN}/network/change_channel",
+                "new_channel": new_channel,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    change_channel_mock.mock_calls == [call(ANY, new_channel)]
+
+
+@pytest.mark.parametrize("params", [{"new_channel": "auto"}, {"new_channel": 15}])
+async def test_service_change_channel(
+    hass: HomeAssistant,
+    app_controller: ControllerApplication,
+    hass_admin_user: MockUser,
+    params: dict[str, Any],
+) -> None:
+    """Test service to migrate the network to a new channel."""
+
+    with patch(
+        "homeassistant.components.zha.websocket_api.change_channel",
+        autospec=True,
+    ) as change_channel_mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CHANGE_CHANNEL,
+            params,
+            True,
+            Context(user_id=hass_admin_user.id),
+        )
+
+    change_channel_mock.mock_calls == [call(ANY, params["new_channel"])]
