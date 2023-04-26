@@ -364,7 +364,7 @@ def test_thread_status_to_str() -> None:
 async def test_rssi_sensor(
     hass: HomeAssistant,
     utcnow,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
     enable_bluetooth: None,
 ) -> None:
     """Test an rssi sensor."""
@@ -389,7 +389,7 @@ async def test_rssi_sensor(
 async def test_migrate_rssi_sensor_unique_id(
     hass: HomeAssistant,
     utcnow,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
     enable_bluetooth: None,
 ) -> None:
     """Test an rssi sensor unique id migration."""

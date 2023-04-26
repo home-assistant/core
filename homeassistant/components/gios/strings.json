@@ -26,6 +26,7 @@
   "entity": {
     "sensor": {
       "aqi": {
+        "name": "[%key:component::sensor::entity_component::aqi::name%]",
         "state": {
           "very_bad": "Very bad",
           "bad": "Bad",
@@ -33,6 +34,82 @@
           "moderate": "Moderate",
           "good": "Good",
           "very_good": "Very good"
+        }
+      },
+      "c6h6": {
+        "name": "Benzene"
+      },
+      "co": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+      },
+      "no2": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
+      "no2_index": {
+        "name": "Nitrogen dioxide index",
+        "state": {
+          "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
+          "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
+          "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
+          "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
+          "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
+          "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
+        }
+      },
+      "o3": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
+      "o3_index": {
+        "name": "Ozone index",
+        "state": {
+          "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
+          "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
+          "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
+          "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
+          "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
+          "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
+        }
+      },
+      "pm10": {
+        "name": "[%key:component::sensor::entity_component::pm10::name%]"
+      },
+      "pm10_index": {
+        "name": "PM10 index",
+        "state": {
+          "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
+          "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
+          "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
+          "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
+          "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
+          "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
+        }
+      },
+      "pm25": {
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
+      },
+      "pm25_index": {
+        "name": "PM2.5 index",
+        "state": {
+          "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
+          "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
+          "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
+          "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
+          "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
+          "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
+        }
+      },
+      "so2": {
+        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+      },
+      "so2_index": {
+        "name": "Sulphur dioxide index",
+        "state": {
+          "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
+          "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
+          "sufficient": "[%key:component::gios::entity::sensor::aqi::state::sufficient%]",
+          "moderate": "[%key:component::gios::entity::sensor::aqi::state::moderate%]",
+          "good": "[%key:component::gios::entity::sensor::aqi::state::good%]",
+          "very_good": "[%key:component::gios::entity::sensor::aqi::state::very_good%]"
         }
       }
     }

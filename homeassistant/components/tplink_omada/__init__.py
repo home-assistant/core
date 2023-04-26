@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unexpected error connecting to Omada controller: {ex}"
         ) from ex
 
-    site_client = await client.get_site_client(OmadaSite(None, entry.data[CONF_SITE]))
+    site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
     controller = OmadaSiteController(hass, site_client)
     hass.data[DOMAIN][entry.entry_id] = controller
 

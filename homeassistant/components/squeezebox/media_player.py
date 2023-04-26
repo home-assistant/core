@@ -469,7 +469,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_set_power(True)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         index = None
@@ -634,7 +634,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:

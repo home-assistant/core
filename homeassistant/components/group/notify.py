@@ -32,18 +32,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def update(input_dict: dict[str, Any], update_source: dict[str, Any]) -> dict[str, Any]:
-    """Deep update a dictionary.
-
-    Async friendly.
-    """
-    for key, val in update_source.items():
+def add_defaults(
+    input_data: dict[str, Any], default_data: dict[str, Any]
+) -> dict[str, Any]:
+    """Deep update a dictionary with default values."""
+    for key, val in default_data.items():
         if isinstance(val, Mapping):
-            recurse = update(input_dict.get(key, {}), val)  # type: ignore[arg-type]
-            input_dict[key] = recurse
-        else:
-            input_dict[key] = update_source[key]
-    return input_dict
+            input_data[key] = add_defaults(input_data.get(key, {}), val)  # type: ignore[arg-type]
+        elif key not in input_data:
+            input_data[key] = val
+    return input_data
 
 
 async def async_get_service(
@@ -71,8 +69,8 @@ class GroupNotifyPlatform(BaseNotificationService):
         tasks: list[asyncio.Task[bool | None]] = []
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
-            if (data := entity.get(ATTR_DATA)) is not None:
-                update(sending_payload, data)
+            if (default_data := entity.get(ATTR_DATA)) is not None:
+                add_defaults(sending_payload, default_data)
             tasks.append(
                 asyncio.create_task(
                     self.hass.services.async_call(

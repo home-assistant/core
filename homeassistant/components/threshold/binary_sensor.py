@@ -114,6 +114,15 @@ async def async_setup_platform(
     )
 
 
+def _threshold_type(lower: float | None, upper: float | None) -> str:
+    """Return the type of threshold this sensor represents."""
+    if lower is not None and upper is not None:
+        return TYPE_RANGE
+    if lower is not None:
+        return TYPE_LOWER
+    return TYPE_UPPER
+
+
 class ThresholdSensor(BinarySensorEntity):
     """Representation of a Threshold sensor."""
 
@@ -134,8 +143,11 @@ class ThresholdSensor(BinarySensorEntity):
         self._attr_unique_id = unique_id
         self._entity_id = entity_id
         self._name = name
-        self._threshold_lower = lower
-        self._threshold_upper = upper
+        if lower is not None:
+            self._threshold_lower = lower
+        if upper is not None:
+            self._threshold_upper = upper
+        self.threshold_type = _threshold_type(lower, upper)
         self._hysteresis: float = hysteresis
         self._device_class = device_class
         self._state_position = POSITION_UNKNOWN
@@ -188,25 +200,16 @@ class ThresholdSensor(BinarySensorEntity):
         return self._device_class
 
     @property
-    def threshold_type(self) -> str:
-        """Return the type of threshold this sensor represents."""
-        if self._threshold_lower is not None and self._threshold_upper is not None:
-            return TYPE_RANGE
-        if self._threshold_lower is not None:
-            return TYPE_LOWER
-        return TYPE_UPPER
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
             ATTR_HYSTERESIS: self._hysteresis,
-            ATTR_LOWER: self._threshold_lower,
+            ATTR_LOWER: getattr(self, "_threshold_lower", None),
             ATTR_POSITION: self._state_position,
             ATTR_SENSOR_VALUE: self.sensor_value,
             ATTR_TYPE: self.threshold_type,
-            ATTR_UPPER: self._threshold_upper,
+            ATTR_UPPER: getattr(self, "_threshold_upper", None),
         }
 
     @callback
@@ -223,30 +226,42 @@ class ThresholdSensor(BinarySensorEntity):
 
         if self.sensor_value is None:
             self._state_position = POSITION_UNKNOWN
-            self._state = False
+            self._state = None
             return
 
-        if self.threshold_type == TYPE_LOWER and self._threshold_lower is not None:
+        if self.threshold_type == TYPE_LOWER:
+            if self._state is None:
+                self._state = False
+                self._state_position = POSITION_ABOVE
+
             if below(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_BELOW
                 self._state = True
             elif above(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_ABOVE
                 self._state = False
+            return
 
-        if self.threshold_type == TYPE_UPPER and self._threshold_upper is not None:
+        if self.threshold_type == TYPE_UPPER:
+            assert self._threshold_upper is not None
+
+            if self._state is None:
+                self._state = False
+                self._state_position = POSITION_BELOW
+
             if above(self.sensor_value, self._threshold_upper):
                 self._state_position = POSITION_ABOVE
                 self._state = True
             elif below(self.sensor_value, self._threshold_upper):
                 self._state_position = POSITION_BELOW
                 self._state = False
+            return
 
-        if (
-            self.threshold_type == TYPE_RANGE
-            and self._threshold_lower is not None
-            and self._threshold_upper is not None
-        ):
+        if self.threshold_type == TYPE_RANGE:
+            if self._state is None:
+                self._state = True
+                self._state_position = POSITION_IN_RANGE
+
             if below(self.sensor_value, self._threshold_lower):
                 self._state_position = POSITION_BELOW
                 self._state = False
@@ -258,3 +273,4 @@ class ThresholdSensor(BinarySensorEntity):
             ):
                 self._state_position = POSITION_IN_RANGE
                 self._state = True
+            return

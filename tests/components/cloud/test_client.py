@@ -6,6 +6,11 @@ import aiohttp
 from aiohttp import web
 import pytest
 
+from homeassistant.components.assist_pipeline import (
+    Pipeline,
+    async_get_pipeline,
+    async_get_pipelines,
+)
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import (
@@ -13,8 +18,13 @@ from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
 )
+from homeassistant.components.homeassistant.exposed_entities import (
+    DATA_EXPOSED_ENTITIES,
+    ExposedEntities,
+)
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -245,14 +255,25 @@ async def test_google_config_expose_entity(
     hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
 ) -> None:
     """Test Google config exposing entity method uses latest config."""
+    entity_registry = er.async_get(hass)
+
+    # Enable exposing new entities to Google
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_expose_new_entities("cloud.google_assistant", True)
+
+    # Register a light entity
+    entity_entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+
     cloud_client = hass.data[DOMAIN].client
-    state = State("light.kitchen", "on")
+    state = State(entity_entry.entity_id, "on")
     gconf = await cloud_client.get_google_config()
 
     assert gconf.should_expose(state)
 
-    await cloud_client.prefs.async_update_google_entity_config(
-        entity_id="light.kitchen", should_expose=False
+    exposed_entities.async_expose_entity(
+        "cloud.google_assistant", entity_entry.entity_id, False
     )
 
     assert not gconf.should_expose(state)
@@ -262,36 +283,51 @@ async def test_google_config_should_2fa(
     hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
 ) -> None:
     """Test Google config disabling 2FA method uses latest config."""
+    entity_registry = er.async_get(hass)
+
+    # Register a light entity
+    entity_entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+
     cloud_client = hass.data[DOMAIN].client
     gconf = await cloud_client.get_google_config()
-    state = State("light.kitchen", "on")
+    state = State(entity_entry.entity_id, "on")
 
     assert gconf.should_2fa(state)
 
-    await cloud_client.prefs.async_update_google_entity_config(
-        entity_id="light.kitchen", disable_2fa=True
+    entity_registry.async_update_entity_options(
+        entity_entry.entity_id, "cloud.google_assistant", {"disable_2fa": True}
     )
 
     assert not gconf.should_2fa(state)
 
 
-async def test_set_username(hass: HomeAssistant) -> None:
+@patch(
+    "homeassistant.components.cloud.client.assist_pipeline.async_get_pipelines",
+    return_value=[],
+)
+async def test_set_username(async_get_pipelines, hass: HomeAssistant) -> None:
     """Test we set username during login."""
     prefs = MagicMock(
         alexa_enabled=False,
         google_enabled=False,
         async_set_username=AsyncMock(return_value=None),
     )
-    client = CloudClient(hass, prefs, None, {}, {})
+    client = CloudClient(hass, prefs, None, {}, {}, AsyncMock())
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
-    await client.cloud_started()
+    await client.on_cloud_connected()
 
     assert len(prefs.async_set_username.mock_calls) == 1
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
 
 
+@patch(
+    "homeassistant.components.cloud.client.assist_pipeline.async_get_pipelines",
+    return_value=[],
+)
 async def test_login_recovers_bad_internet(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    async_get_pipelines, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test Alexa can recover bad auth."""
     prefs = Mock(
@@ -299,12 +335,12 @@ async def test_login_recovers_bad_internet(
         google_enabled=False,
         async_set_username=AsyncMock(return_value=None),
     )
-    client = CloudClient(hass, prefs, None, {}, {})
+    client = CloudClient(hass, prefs, None, {}, {}, AsyncMock())
     client.cloud = Mock()
     client._alexa_config = Mock(
         async_enable_proactive_mode=Mock(side_effect=aiohttp.ClientError)
     )
-    await client.cloud_started()
+    await client.on_cloud_connected()
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 1
     assert "Unable to activate Alexa Report State" in caplog.text
 
@@ -312,3 +348,48 @@ async def test_login_recovers_bad_internet(
     await hass.async_block_till_done()
 
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 2
+
+
+async def test_system_msg(hass: HomeAssistant) -> None:
+    """Test system msg."""
+    with patch("hass_nabucasa.Cloud.initialize"):
+        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        assert setup
+    cloud = hass.data["cloud"]
+
+    assert cloud.client.relayer_region is None
+
+    response = await cloud.client.async_system_message(
+        {
+            "region": "xx-earth-616",
+        }
+    )
+
+    assert response is None
+    assert cloud.client.relayer_region == "xx-earth-616"
+
+
+async def test_create_cloud_assist_pipeline(
+    hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
+) -> None:
+    """Test creating a cloud enabled assist pipeline."""
+    cloud_client: CloudClient = hass.data[DOMAIN].client
+    await cloud_client.cloud_started()
+    assert cloud_client.cloud_pipeline is None
+    assert len(async_get_pipelines(hass)) == 1
+
+    await cloud_client.create_cloud_assist_pipeline()
+    assert cloud_client.cloud_pipeline is not None
+    assert len(async_get_pipelines(hass)) == 2
+    assert async_get_pipeline(hass, cloud_client.cloud_pipeline) == Pipeline(
+        conversation_engine="homeassistant",
+        conversation_language="en",
+        id=cloud_client.cloud_pipeline,
+        language="en",
+        name="Home Assistant Cloud",
+        stt_engine="cloud",
+        stt_language="en-US",
+        tts_engine="cloud",
+        tts_language="en-US",
+        tts_voice="JennyNeural",
+    )

@@ -479,7 +479,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         if not (self.device and "playback" in self._device_protocol_capabilities):
             raise HomeAssistantError(
@@ -539,7 +541,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
         )
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         is_internal = is_internal_request(self.hass)

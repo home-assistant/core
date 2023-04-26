@@ -48,15 +48,11 @@ async def test_turn_on_trigger_device_id(
         },
     )
 
-    with patch("homeassistant.components.samsungtv.media_player.send_magic_packet"):
-        await hass.services.async_call(
-            "media_player",
-            "turn_on",
-            {"entity_id": ENTITY_ID},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
 
-        await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0
@@ -66,16 +62,17 @@ async def test_turn_on_trigger_device_id(
 
     calls.clear()
 
-    with patch("homeassistant.components.samsungtv.media_player.send_magic_packet"):
+    # Ensure WOL backup is called when trigger not present
+    with patch(
+        "homeassistant.components.samsungtv.media_player.send_magic_packet"
+    ) as mock_send_magic_packet:
         await hass.services.async_call(
-            "media_player",
-            "turn_on",
-            {"entity_id": ENTITY_ID},
-            blocking=True,
+            "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
         )
-
         await hass.async_block_till_done()
+
     assert len(calls) == 0
+    mock_send_magic_packet.assert_called()
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
@@ -107,15 +104,11 @@ async def test_turn_on_trigger_entity_id(
         },
     )
 
-    with patch("homeassistant.components.samsungtv.media_player.send_magic_packet"):
-        await hass.services.async_call(
-            "media_player",
-            "turn_on",
-            {"entity_id": ENTITY_ID},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
 
-        await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == ENTITY_ID
     assert calls[0].data["id"] == 0

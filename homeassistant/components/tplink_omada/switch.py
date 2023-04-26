@@ -14,8 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .controller import OmadaSiteController
-from .coordinator import OmadaCoordinator
+from .controller import OmadaSiteController, OmadaSwitchPortCoordinator
 from .entity import OmadaDeviceEntity
 
 POE_SWITCH_ICON = "mdi:ethernet"
@@ -68,7 +67,7 @@ class OmadaNetworkSwitchPortPoEControl(
 
     def __init__(
         self,
-        coordinator: OmadaCoordinator[OmadaSwitchPortDetails],
+        coordinator: OmadaSwitchPortCoordinator,
         device: OmadaSwitch,
         port_id: str,
     ) -> None:
