@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your Roborock email address.",
+        "data": {
+          "username": "Email"
+        }
+      },
+      "code": {
+        "description": "Type the verification code sent to your email",
+        "data": {
+          "code": "Verification code"
+        }
+      }
+    },
+    "error": {
+      "invalid_code": "The code you entered was incorrect, please check it and try again.",
+      "invalid_email": "There is no account associated with the email you entered, please try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "select": {
+      "mop_mode": {
+        "name": "Mop mode",
+        "state": {
+          "standard": "Standard",
+          "deep": "Deep",
+          "deep_plus": "Deep+",
+          "custom": "Custom"
+        }
+      },
+      "mop_intensity": {
+        "name": "Mop intensity",
+        "state": {
+          "off": "Off",
+          "mild": "Mild",
+          "moderate": "Moderate",
+          "intense": "Intense",
+          "custom": "Custom"
+        }
+      }
+    }
+  }
+}

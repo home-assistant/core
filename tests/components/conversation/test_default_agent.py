@@ -1,4 +1,5 @@
 """Test for the default agent."""
+from unittest.mock import patch
 
 import pytest
 
@@ -121,3 +122,18 @@ async def test_exposed_areas(
     # This should be an intent match failure because the area isn't in the slot list
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+
+
+async def test_conversation_agent(
+    hass: HomeAssistant,
+    init_components,
+) -> None:
+    """Test DefaultAgent."""
+    agent = await conversation._get_agent_manager(hass).async_get_agent(
+        conversation.HOME_ASSISTANT_AGENT
+    )
+    with patch(
+        "homeassistant.components.conversation.default_agent.get_domains_and_languages",
+        return_value={"homeassistant": ["dwarvish", "elvish", "entish"]},
+    ):
+        assert agent.supported_languages == ["dwarvish", "elvish", "entish"]
