@@ -21,6 +21,7 @@ HASSIO_DATA = hassio.HassioServiceInfo(
     config={"host": "core-silabs-multiprotocol", "port": 8081},
     name="Silicon Labs Multiprotocol",
     slug="otbr",
+    uuid="12345",
 )
 
 
@@ -203,7 +204,7 @@ async def test_hassio_discovery_flow(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 async def test_hassio_discovery_flow_router_not_setup(
@@ -255,7 +256,7 @@ async def test_hassio_discovery_flow_router_not_setup(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 async def test_hassio_discovery_flow_router_not_setup_has_preferred(
@@ -304,7 +305,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
@@ -366,7 +367,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 async def test_hassio_discovery_flow_404(
