@@ -321,10 +321,11 @@ class ControllerEvents:
 
     async def async_on_node_added(self, node: ZwaveNode) -> None:
         """Handle node added event."""
+        # Every node including the controller will have at least one sensor
+        await self.driver_events.async_setup_platform(Platform.SENSOR)
         # No need for a ping button or node status sensor for controller nodes
         if not node.is_controller_node:
             # Create a node status sensor for each device
-            await self.driver_events.async_setup_platform(Platform.SENSOR)
             async_dispatcher_send(
                 self.hass,
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_node_status_sensor",
@@ -340,7 +341,6 @@ class ControllerEvents:
             )
 
         # Create statistics sensors for each device
-        await self.driver_events.async_setup_platform(Platform.SENSOR)
         async_dispatcher_send(
             self.hass,
             f"{DOMAIN}_{self.config_entry.entry_id}_add_statistics_sensors",
