@@ -22,7 +22,7 @@ cryptography==40.0.2
 dbus-fast==1.85.0
 fnv-hash-fast==0.3.1
 ha-av==10.0.0
-hass-nabucasa==0.66.1
+hass-nabucasa==0.66.2
 hassil==1.0.6
 home-assistant-bluetooth==1.10.0
 home-assistant-frontend==20230411.1
@@ -52,7 +52,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtcvad==2.0.10
 yarl==1.9.1
-zeroconf==0.58.0
+zeroconf==0.58.2
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

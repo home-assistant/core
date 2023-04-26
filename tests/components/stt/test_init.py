@@ -511,6 +511,12 @@ async def test_get_engine_legacy(
         TEST_DOMAIN,
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        "cloud",
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
     assert await async_setup_component(
         hass, "stt", {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
     )

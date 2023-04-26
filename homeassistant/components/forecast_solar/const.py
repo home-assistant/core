@@ -22,9 +22,11 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ForecastSolarSensorEntityDescription(
         key="energy_production_today",
         name="Estimated energy production - today",
-        state=lambda estimate: estimate.energy_production_today / 1000,
+        state=lambda estimate: estimate.energy_production_today,
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_production_today_remaining",
@@ -38,9 +40,11 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ForecastSolarSensorEntityDescription(
         key="energy_production_tomorrow",
         name="Estimated energy production - tomorrow",
-        state=lambda estimate: estimate.energy_production_tomorrow / 1000,
+        state=lambda estimate: estimate.energy_production_tomorrow,
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_highest_peak_time_today",
@@ -93,15 +97,19 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ForecastSolarSensorEntityDescription(
         key="energy_current_hour",
         name="Estimated energy production - this hour",
-        state=lambda estimate: estimate.energy_current_hour / 1000,
+        state=lambda estimate: estimate.energy_current_hour,
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_next_hour",
-        state=lambda estimate: estimate.sum_energy_production(1) / 1000,
+        state=lambda estimate: estimate.sum_energy_production(1),
         name="Estimated energy production - next hour",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
     ),
 )
