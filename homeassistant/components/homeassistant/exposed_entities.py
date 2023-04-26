@@ -157,6 +157,21 @@ class ExposedEntities:
         return result
 
     @callback
+    def async_get_entity_settings(self, entity_id: str) -> dict[str, Mapping[str, Any]]:
+        """Get assistant expose settings for an entity."""
+        entity_registry = er.async_get(self._hass)
+        result: dict[str, Mapping[str, Any]] = {}
+
+        if not (registry_entry := entity_registry.async_get(entity_id)):
+            raise HomeAssistantError("Unknown entity")
+
+        for assistant in KNOWN_ASSISTANTS:
+            if options := registry_entry.options.get(assistant):
+                result[assistant] = options
+
+        return result
+
+    @callback
     def async_should_expose(self, assistant: str, entity_id: str) -> bool:
         """Return True if an entity should be exposed to an assistant."""
         should_expose: bool
@@ -346,6 +361,27 @@ def async_get_assistant_settings(
     """Get all entity expose settings for an assistant."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     return exposed_entities.async_get_assistant_settings(assistant)
+
+
+@callback
+def async_get_entity_settings(
+    hass: HomeAssistant, entity_id: str
+) -> dict[str, Mapping[str, Any]]:
+    """Get assistant expose settings for an entity."""
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    return exposed_entities.async_get_entity_settings(entity_id)
+
+
+@callback
+def async_expose_entity(
+    hass: HomeAssistant,
+    assistant: str,
+    entity_id: str,
+    should_expose: bool,
+) -> None:
+    """Get assistant expose settings for an entity."""
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_expose_entity(assistant, entity_id, should_expose)
 
 
 @callback
