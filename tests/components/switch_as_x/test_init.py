@@ -811,3 +811,56 @@ async def test_import_expose_settings_2(
     )
     for assistant in EXPOSE_SETTINGS:
         assert expose_settings[assistant]["should_expose"] == EXPOSE_SETTINGS[assistant]
+
+
+@pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
+async def test_restore_expose_settings(
+    hass: HomeAssistant,
+    target_domain: Platform,
+) -> None:
+    """Test removing a config entry restores assistant expose settings."""
+    await async_setup_component(hass, "homeassistant", {})
+    registry = er.async_get(hass)
+
+    switch_entity_entry = registry.async_get_or_create(
+        "switch",
+        "test",
+        "unique",
+        original_name="ABC",
+    )
+
+    # Add the config entry
+    switch_as_x_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_TARGET_DOMAIN: target_domain,
+        },
+        title="ABC",
+    )
+    switch_as_x_config_entry.add_to_hass(hass)
+
+    # Register the switch as x entity
+    switch_as_x_entity_entry = registry.async_get_or_create(
+        target_domain,
+        "switch_as_x",
+        switch_as_x_config_entry.entry_id,
+        config_entry=switch_as_x_config_entry,
+        suggested_object_id="abc",
+    )
+    for assistant, should_expose in EXPOSE_SETTINGS.items():
+        exposed_entities.async_expose_entity(
+            hass, assistant, switch_as_x_entity_entry.entity_id, should_expose
+        )
+
+    # Remove the config entry
+    assert await hass.config_entries.async_remove(switch_as_x_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the switch expose settings were restored
+    expose_settings = exposed_entities.async_get_entity_settings(
+        hass, switch_entity_entry.entity_id
+    )
+    for assistant in EXPOSE_SETTINGS:
+        assert expose_settings[assistant]["should_expose"] == EXPOSE_SETTINGS[assistant]
