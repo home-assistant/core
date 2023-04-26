@@ -102,7 +102,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await entity.unregister_state_change_listener()
 
         conf = await component.async_prepare_reload()
-        if conf is None:
+        if conf is None or DOMAIN not in conf:
             conf = {DOMAIN: {}}
         entities = await async_build_alerts_from_config(hass, conf)
         if entities:

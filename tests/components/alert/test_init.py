@@ -414,3 +414,67 @@ async def test_reload(
     assert len(mock_notifier) == expected_notifications
     last_event = mock_notifier[-1]
     assert last_event.data[notify.ATTR_MESSAGE] == DONE_MESSAGE_MODIFIED
+
+
+async def test_delete_and_reload(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], hass_admin_user: MockUser
+) -> None:
+    """Test reload after deleting alerts (for code coverage)."""
+    assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
+    expected_notifications = 0
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    expected_notifications += 1
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert len(hass.states.async_entity_ids()) == 2
+    assert len(mock_notifier) == expected_notifications
+
+    state_1 = hass.states.get(ENTITY_ID)
+    assert state_1 is not None
+    assert state_1.name == NAME
+
+    # Delete the alert from yaml, leaving only the domain, with no alerts
+    config = deepcopy(TEST_CONFIG)
+    del config[DOMAIN][NAME]
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_notifier) == expected_notifications
+    assert len(hass.states.async_entity_ids()) == 1
+
+    state_1 = hass.states.get(ENTITY_ID)
+    assert state_1 is None
+
+    # Delete the domain completely, and reload again
+    config = deepcopy(TEST_CONFIG)
+    del config[DOMAIN]
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_notifier) == expected_notifications
+    assert len(hass.states.async_entity_ids()) == 1
+
+    state_1 = hass.states.get(ENTITY_ID)
+    assert state_1 is None
