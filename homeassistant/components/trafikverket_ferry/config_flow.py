@@ -24,7 +24,9 @@ DATA_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_FROM): selector.TextSelector(selector.TextSelectorConfig()),
         vol.Optional(CONF_TO): selector.TextSelector(selector.TextSelectorConfig()),
-        vol.Optional(CONF_TIME): selector.TimeSelector(selector.TimeSelectorConfig()),
+        vol.Optional(CONF_TIME): selector.TimeSelector(
+            selector.TimeSelectorConfig(multiple=False)
+        ),
         vol.Required(CONF_WEEKDAY, default=WEEKDAYS): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=WEEKDAYS,
