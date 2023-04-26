@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from ipaddress import ip_address as ip
 import logging
 from typing import Any, cast
 from urllib.parse import urlparse
@@ -37,10 +38,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
-from homeassistant.util.network import (
-    is_ip_address as is_ip,
-    is_ipv4_address as is_ipv4,
-)
+from homeassistant.util.network import is_ip_address as is_ip
 
 from .const import (
     CONF_DEVICE_TOKEN,
@@ -282,8 +280,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if (
             existing_entry
             and is_ip(existing_entry.data[CONF_HOST])
+            and is_ip(host)
             and existing_entry.data[CONF_HOST] != host
-            and is_ipv4(existing_entry.data[CONF_HOST]) == is_ipv4(host)
+            and ip(existing_entry.data[CONF_HOST]).version == ip(host).version
         ):
             _LOGGER.info(
                 "Update host from '%s' to '%s' for NAS '%s' via discovery",
