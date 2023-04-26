@@ -153,6 +153,48 @@ async def test_udp_server(
         assert voice_assistant_udp_server_v1.transport.is_closing()
 
 
+async def test_udp_server_queue(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
+) -> None:
+    """Test the UDP server queues incoming data."""
+
+    voice_assistant_udp_server_v1.started = True
+
+    assert voice_assistant_udp_server_v1.queue.qsize() == 0
+
+    voice_assistant_udp_server_v1.datagram_received(bytes(1024), ("localhost", 0))
+
+    assert voice_assistant_udp_server_v1.queue.qsize() == 1
+
+    voice_assistant_udp_server_v1.datagram_received(bytes(1024), ("localhost", 0))
+
+    assert voice_assistant_udp_server_v1.queue.qsize() == 2
+
+    async for data in voice_assistant_udp_server_v1._iterate_packets():
+        assert data == bytes(1024)
+        break
+
+    voice_assistant_udp_server_v1.stop()
+    voice_assistant_udp_server_v1.close()
+
+    with pytest.raises(RuntimeError):
+        async for data in voice_assistant_udp_server_v1._iterate_packets():
+            assert data == bytes(1024)
+
+
+async def test_error_calls_handle_finished(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
+) -> None:
+    """Test that the handle_finished callback is called when an error occurs."""
+    voice_assistant_udp_server_v1.handle_finished = Mock()
+
+    voice_assistant_udp_server_v1.error_received(Exception())
+
+    voice_assistant_udp_server_v1.handle_finished.assert_called()
+
+
 async def test_udp_server_multiple(
     hass: HomeAssistant,
     socket_enabled,
