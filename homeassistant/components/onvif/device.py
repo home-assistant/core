@@ -11,7 +11,7 @@ from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault, TransportError, XMLParseError
+from zeep.exceptions import Fault, XMLParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,6 +28,7 @@ import homeassistant.util.dt as dt_util
 from .const import (
     ABSOLUTE_MOVE,
     CONTINUOUS_MOVE,
+    GET_CAPABILITIES_EXCEPTIONS,
     GOTOPRESET_MOVE,
     LOGGER,
     PAN_FACTOR,
@@ -38,10 +39,6 @@ from .const import (
 )
 from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
-
-# Some cameras don't support the GetServiceCapabilities call
-# and will return a 404 error which is caught by TransportError
-GET_CAPABILITIES_EXCEPTIONS = (ONVIFError, Fault, RequestError, TransportError)
 
 
 class ONVIFDevice:
@@ -151,15 +148,31 @@ class ONVIFDevice:
         dt_param.DaylightSavings = bool(time.localtime().tm_isdst)
         dt_param.UTCDateTime = device_time.UTCDateTime
         # Retrieve timezone from system
-        dt_param.TimeZone = str(system_date.astimezone().tzinfo)
         dt_param.UTCDateTime.Date.Year = system_date.year
         dt_param.UTCDateTime.Date.Month = system_date.month
         dt_param.UTCDateTime.Date.Day = system_date.day
         dt_param.UTCDateTime.Time.Hour = system_date.hour
         dt_param.UTCDateTime.Time.Minute = system_date.minute
         dt_param.UTCDateTime.Time.Second = system_date.second
-        LOGGER.debug("SetSystemDateAndTime: %s", dt_param)
-        await device_mgmt.SetSystemDateAndTime(dt_param)
+        system_timezone = str(system_date.astimezone().tzinfo)
+        timezone_names: list[str | None] = [system_timezone]
+        if (time_zone := device_time.TimeZone) and system_timezone != time_zone.TZ:
+            timezone_names.append(time_zone.TZ)
+        timezone_names.append(None)
+        timezone_max_idx = len(timezone_names) - 1
+        LOGGER.debug(
+            "%s: SetSystemDateAndTime: timezone_names:%s", self.name, timezone_names
+        )
+        for idx, timezone_name in enumerate(timezone_names):
+            dt_param.TimeZone = timezone_name
+            LOGGER.debug("%s: SetSystemDateAndTime: %s", self.name, dt_param)
+            try:
+                await device_mgmt.SetSystemDateAndTime(dt_param)
+                LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
+                return
+            except Fault:
+                if idx == timezone_max_idx:
+                    raise
 
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
@@ -216,7 +229,8 @@ class ONVIFDevice:
                 dt_diff = cam_date - system_date
                 self._dt_diff_seconds = dt_diff.total_seconds()
 
-                if self._dt_diff_seconds > 5:
+                # It could be off either direction, so we need to check the absolute value
+                if abs(self._dt_diff_seconds) > 5:
                     LOGGER.warning(
                         (
                             "The date/time on %s (UTC) is '%s', "
