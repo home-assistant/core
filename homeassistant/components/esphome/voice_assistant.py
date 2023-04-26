@@ -14,10 +14,13 @@ from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
     async_pipeline_from_audio_stream,
+    select as pipeline_select,
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
 
+from .const import DOMAIN
+from .entry_data import RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,10 +51,18 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     queue: asyncio.Queue[bytes] | None = None
     transport: asyncio.DatagramTransport | None = None
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_data: RuntimeEntryData,
+    ) -> None:
         """Initialize UDP receiver."""
         self.context = Context()
         self.hass = hass
+
+        assert entry_data.device_info is not None
+        self.device_info = entry_data.device_info
+
         self.queue = asyncio.Queue()
 
     async def start_server(self) -> int:
@@ -155,7 +166,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             context=self.context,
             event_callback=handle_pipeline_event,
             stt_metadata=stt.SpeechMetadata(
-                language="",
+                language="",  # set in async_pipeline_from_audio_stream
                 format=stt.AudioFormats.WAV,
                 codec=stt.AudioCodecs.PCM,
                 bit_rate=stt.AudioBitRates.BITRATE_16,
@@ -163,4 +174,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=self._iterate_packets(),
+            pipeline_id=pipeline_select.get_chosen_pipeline(
+                self.hass, DOMAIN, self.device_info.mac_address
+            ),
         )
