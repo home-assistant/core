@@ -6,11 +6,6 @@ import aiohttp
 from aiohttp import web
 import pytest
 
-from homeassistant.components.assist_pipeline import (
-    Pipeline,
-    async_get_pipeline,
-    async_get_pipelines,
-)
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import (
@@ -303,18 +298,14 @@ async def test_google_config_should_2fa(
     assert not gconf.should_2fa(state)
 
 
-@patch(
-    "homeassistant.components.cloud.client.assist_pipeline.async_get_pipelines",
-    return_value=[],
-)
-async def test_set_username(async_get_pipelines, hass: HomeAssistant) -> None:
+async def test_set_username(hass: HomeAssistant) -> None:
     """Test we set username during login."""
     prefs = MagicMock(
         alexa_enabled=False,
         google_enabled=False,
         async_set_username=AsyncMock(return_value=None),
     )
-    client = CloudClient(hass, prefs, None, {}, {}, AsyncMock())
+    client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
     await client.on_cloud_connected()
 
@@ -322,12 +313,8 @@ async def test_set_username(async_get_pipelines, hass: HomeAssistant) -> None:
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
 
 
-@patch(
-    "homeassistant.components.cloud.client.assist_pipeline.async_get_pipelines",
-    return_value=[],
-)
 async def test_login_recovers_bad_internet(
-    async_get_pipelines, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test Alexa can recover bad auth."""
     prefs = Mock(
@@ -335,7 +322,7 @@ async def test_login_recovers_bad_internet(
         google_enabled=False,
         async_set_username=AsyncMock(return_value=None),
     )
-    client = CloudClient(hass, prefs, None, {}, {}, AsyncMock())
+    client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = Mock()
     client._alexa_config = Mock(
         async_enable_proactive_mode=Mock(side_effect=aiohttp.ClientError)
@@ -367,29 +354,3 @@ async def test_system_msg(hass: HomeAssistant) -> None:
 
     assert response is None
     assert cloud.client.relayer_region == "xx-earth-616"
-
-
-async def test_create_cloud_assist_pipeline(
-    hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
-) -> None:
-    """Test creating a cloud enabled assist pipeline."""
-    cloud_client: CloudClient = hass.data[DOMAIN].client
-    await cloud_client.cloud_started()
-    assert cloud_client.cloud_pipeline is None
-    assert len(async_get_pipelines(hass)) == 1
-
-    await cloud_client.create_cloud_assist_pipeline()
-    assert cloud_client.cloud_pipeline is not None
-    assert len(async_get_pipelines(hass)) == 2
-    assert async_get_pipeline(hass, cloud_client.cloud_pipeline) == Pipeline(
-        conversation_engine="homeassistant",
-        conversation_language="en",
-        id=cloud_client.cloud_pipeline,
-        language="en",
-        name="Home Assistant Cloud",
-        stt_engine="cloud",
-        stt_language="en-US",
-        tts_engine="cloud",
-        tts_language="en-US",
-        tts_voice="JennyNeural",
-    )
