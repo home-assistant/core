@@ -1,8 +1,11 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
-import logging
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.switch import SwitchEntity
+import transmission_rpc
+
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
@@ -11,9 +14,42 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SWITCH_TYPES
+from . import TransmissionClient
+from .const import DOMAIN
 
-_LOGGING = logging.getLogger(__name__)
+
+@dataclass
+class TransmissionSwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    state_fn: Callable[[transmission_rpc.Client], bool | None]
+    on_fn: Callable[[transmission_rpc.Client], None]
+    off_fn: Callable[[transmission_rpc.Client], None]
+
+
+@dataclass
+class TransmissionSwitchEntityDescription(
+    SwitchEntityDescription, TransmissionSwitchEntityDescriptionMixin
+):
+    """Describes Transmission switch entity."""
+
+
+ENTITY_DESCRIPTIONS = [
+    TransmissionSwitchEntityDescription(
+        key="Switch",
+        name="Switch",
+        state_fn=lambda api: api.data.active_torrent_count > 0 if api.data else None,
+        on_fn=lambda api: api.start_torrents(),
+        off_fn=lambda api: api.stop_torrents(),
+    ),
+    TransmissionSwitchEntityDescription(
+        key="Turtle Mode",
+        name="Turtle mode",
+        state_fn=lambda api: api.get_alt_speed_enabled(),
+        on_fn=lambda api: api.set_alt_speed_enabled(True),
+        off_fn=lambda api: api.set_alt_speed_enabled(False),
+    ),
+]
 
 
 async def async_setup_entry(
@@ -24,11 +60,12 @@ async def async_setup_entry(
     """Set up the Transmission switch."""
 
     tm_client = hass.data[DOMAIN][config_entry.entry_id]
-    name = config_entry.data[CONF_NAME]
+    client_name = config_entry.data[CONF_NAME]
 
-    dev = []
-    for switch_type, switch_name in SWITCH_TYPES.items():
-        dev.append(TransmissionSwitch(switch_type, switch_name, tm_client, name))
+    dev = [
+        TransmissionSwitch(entity_description, tm_client, client_name)
+        for entity_description in ENTITY_DESCRIPTIONS
+    ]
 
     async_add_entities(dev, True)
 
@@ -36,17 +73,26 @@ async def async_setup_entry(
 class TransmissionSwitch(SwitchEntity):
     """Representation of a Transmission switch."""
 
+    entity_description: TransmissionSwitchEntityDescription
+
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, switch_type, switch_name, tm_client, client_name):
+    def __init__(
+        self,
+        entity_description: TransmissionSwitchEntityDescription,
+        tm_client: TransmissionClient,
+        client_name: str,
+    ) -> None:
         """Initialize the Transmission switch."""
-        self._name = switch_name
-        self.client_name = client_name
-        self.type = switch_type
+        self.entity_description = entity_description
         self._tm_client = tm_client
         self._state = STATE_OFF
-        self._data = None
-        self.unsub_update = None
+        self.unsub_update: Callable[[], None] | None = None
+
+        self._attr_unique_id = (
+            f"{self._tm_client.api.host}-{client_name} {entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
@@ -55,17 +101,7 @@ class TransmissionSwitch(SwitchEntity):
         )
 
     @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._tm_client.api.host}-{self.name}"
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state == STATE_ON
 
@@ -76,22 +112,12 @@ class TransmissionSwitch(SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if self.type == "on_off":
-            _LOGGING.debug("Starting all torrents")
-            self._tm_client.api.start_torrents()
-        elif self.type == "turtle_mode":
-            _LOGGING.debug("Turning Turtle Mode of Transmission on")
-            self._tm_client.api.set_alt_speed_enabled(True)
+        self.entity_description.on_fn(self._tm_client.api)
         self._tm_client.api.update()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self.type == "on_off":
-            _LOGGING.debug("Stopping all torrents")
-            self._tm_client.api.stop_torrents()
-        if self.type == "turtle_mode":
-            _LOGGING.debug("Turning Turtle Mode of Transmission off")
-            self._tm_client.api.set_alt_speed_enabled(False)
+        self.entity_description.off_fn(self._tm_client.api)
         self._tm_client.api.update()
 
     async def async_added_to_hass(self) -> None:
@@ -114,14 +140,7 @@ class TransmissionSwitch(SwitchEntity):
 
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
-        active = None
-        if self.type == "on_off":
-            self._data = self._tm_client.api.data
-            if self._data:
-                active = self._data.active_torrent_count > 0
-
-        elif self.type == "turtle_mode":
-            active = self._tm_client.api.get_alt_speed_enabled()
+        active = self.entity_description.state_fn(self._tm_client.api)
 
         if active is None:
             return
