@@ -94,16 +94,14 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        [
-            RoborockSensorEntity(
-                f"{description.key}_{slugify(device_id)}",
-                device_info,
-                coordinator,
-                description,
-            )
-            for device_id, device_info in coordinator.devices_info.items()
-            for description in CONSUMABLE_SENSORS
-        ]
+        RoborockSensorEntity(
+            f"{description.key}_{slugify(device_id)}",
+            device_info,
+            coordinator,
+            description,
+        )
+        for device_id, device_info in coordinator.devices_info.items()
+        for description in CONSUMABLE_SENSORS
     )
 
 
