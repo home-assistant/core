@@ -4,6 +4,7 @@ import asyncio
 import socket
 from unittest.mock import Mock, patch
 
+from aioesphomeapi import VoiceAssistantEventType
 import async_timeout
 import pytest
 
@@ -188,6 +189,39 @@ async def test_udp_server_after_stopped(
         await voice_assistant_udp_server_v1.start_server()
 
 
+async def test_unknown_event_type(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
+) -> None:
+    """Test the UDP server runs and queues incoming data."""
+    voice_assistant_udp_server_v1._event_callback(
+        PipelineEvent(
+            type="unknown-event",
+            data={},
+        )
+    )
+
+    assert not voice_assistant_udp_server_v1.handle_event.called
+
+
+async def test_error_event_type(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
+) -> None:
+    """Test the UDP server runs and queues incoming data."""
+    voice_assistant_udp_server_v1._event_callback(
+        PipelineEvent(
+            type=PipelineEventType.ERROR,
+            data={"code": "code", "message": "message"},
+        )
+    )
+
+    assert voice_assistant_udp_server_v1.handle_event.called_with(
+        VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
+        {"code": "code", "message": "message"},
+    )
+
+
 async def test_send_tts_not_called(
     hass: HomeAssistant,
     socket_enabled,
@@ -241,4 +275,35 @@ async def test_send_tts_called(
             )
         )
 
-        mock_send_tts.assert_called()
+        mock_send_tts.assert_called_with(_TEST_MEDIA_ID)
+
+
+async def test_send_tts(
+    hass: HomeAssistant,
+    socket_enabled,
+    unused_udp_port_factory,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test the UDP server runs and queues incoming data."""
+    port_to_use = unused_udp_port_factory()
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.UDP_PORT", new=port_to_use
+    ), patch(
+        "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
+        return_value=("raw", bytes(1024)),
+    ):
+        voice_assistant_udp_server_v2.transport = Mock(spec=asyncio.DatagramTransport)
+
+        voice_assistant_udp_server_v2._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
+                data={
+                    "tts_output": {"media_id": _TEST_MEDIA_ID, "url": _TEST_OUTPUT_URL}
+                },
+            )
+        )
+
+        await voice_assistant_udp_server_v2._tts_done.wait()
+
+        voice_assistant_udp_server_v2.transport.sendto.assert_called()
