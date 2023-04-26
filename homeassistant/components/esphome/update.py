@@ -52,7 +52,7 @@ async def async_setup_entry(
 
         async_add_entities([ESPHomeUpdateEntity(entry_data, dashboard)])
 
-    if entry_data.available:
+    if entry_data.available and dashboard.last_update_success:
         await setup_update_entity()
         return
 
