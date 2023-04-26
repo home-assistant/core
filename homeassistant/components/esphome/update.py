@@ -33,26 +33,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome update based on a config entry."""
-    dashboard = async_get_dashboard(hass)
-
-    if dashboard is None:
+    if (dashboard := async_get_dashboard(hass)) is None:
         return
-
     entry_data = DomainData.get(hass).get_entry_data(entry)
     unsub = None
 
     async def setup_update_entity() -> None:
         """Set up the update entity."""
         nonlocal unsub
+        assert dashboard is not None
 
         # Keep listening until device is available
-        if not entry_data.available:
+        if not entry_data.available or not dashboard.last_update_success:
             return
 
         if unsub is not None:
             unsub()  # type: ignore[unreachable]
 
-        assert dashboard is not None
         async_add_entities([ESPHomeUpdateEntity(entry_data, dashboard)])
 
     if entry_data.available:
@@ -88,7 +85,11 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
 
         # If the device has deep sleep, we can't assume we can install updates
         # as the ESP will not be connectable (by design).
-        if coordinator.supports_update and not self._device_info.has_deep_sleep:
+        if (
+            coordinator.last_update_success
+            and coordinator.supports_update
+            and not self._device_info.has_deep_sleep
+        ):
             self._attr_supported_features = UpdateEntityFeature.INSTALL
 
     @property
