@@ -98,6 +98,7 @@ ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
 ATTR_QR_CODE = "qr_code"
 
+SERVICE_CHANGE_CHANNEL = "change_channel"
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = "set_zigbee_cluster_attribute"
@@ -136,6 +137,13 @@ SERVICE_PERMIT_PARAMS = {
 }
 
 SERVICE_SCHEMAS = {
+    SERVICE_CHANGE_CHANNEL: vol.Schema(
+        {
+            vol.Required(ATTR_NEW_CHANNEL): vol.Any(
+                "auto", vol.All(cv.positive_int, vol.Range(11, 26))
+            ),
+        }
+    ),
     SERVICE_PERMIT: vol.Schema(
         vol.All(
             cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
@@ -1218,7 +1226,7 @@ async def websocket_restore_network_backup(
 async def websocket_change_channel(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Migrate to a new channel."""
+    """Migrate the Zigbee network to a new channel."""
     new_channel = cast(Literal["auto"] | int, msg[ATTR_NEW_CHANNEL])
     await change_channel(hass, new_channel=new_channel)
     connection.send_result(msg[ID])
@@ -1518,6 +1526,26 @@ def async_load_api(hass: HomeAssistant) -> None:
         SERVICE_WARNING_DEVICE_WARN,
         warning_device_warn,
         schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
+    )
+
+    async def service_change_channel(service: ServiceCall) -> None:
+        """Migrate the Zigbee network to a new channel."""
+
+        new_channel: Literal["auto"] | int
+
+        if service.data[ATTR_NEW_CHANNEL] != "auto":
+            new_channel = int(service.data[ATTR_NEW_CHANNEL])
+        else:
+            new_channel = "auto"
+
+        await change_channel(hass, new_channel=new_channel)
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_CHANGE_CHANNEL,
+        service_change_channel,
+        schema=SERVICE_SCHEMAS[SERVICE_CHANGE_CHANNEL],
     )
 
     websocket_api.async_register_command(hass, websocket_permit_devices)
