@@ -1552,10 +1552,8 @@ def _statistics_during_period_with_session(
         has_sum = False
         for metadata_id, stats_metadata in metadata.values():
             metadata_ids.append(metadata_id)
-            if stats_metadata["has_mean"]:
-                has_mean = True
-            if stats_metadata["has_sum"]:
-                has_sum = True
+            has_mean |= stats_metadata["has_mean"]
+            has_sum |= stats_metadata["has_sum"]
         if not has_mean:
             types.discard("mean")
             types.discard("min")
