@@ -491,7 +491,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
 
 
 class ZWaveListSensor(ZwaveSensorBase):
-    """Representation of a Z-Wave Numeric sensor with multiple states."""
+    """Representation of a Z-Wave List sensor with multiple states."""
 
     def __init__(
         self,
