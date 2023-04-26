@@ -129,7 +129,7 @@ async def test_login_view(hass: HomeAssistant, cloud_client) -> None:
 
     assert req.status == HTTPStatus.OK
     result = await req.json()
-    assert result == {"success": True, "cloud_pipeline": "12345"}
+    assert result == {"success": True, "cloud_pipeline": None}
     create_pipeline_mock.assert_not_awaited()
 
 
