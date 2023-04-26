@@ -328,7 +328,6 @@ async def async_setup_entry(  # noqa: C901
 
         if voice_assistant_udp_server is not None:
             voice_assistant_udp_server.stop()
-            # voice_assistant_udp_server = None
 
     async def on_connect() -> None:
         """Subscribe to states and list entities on successful API login."""

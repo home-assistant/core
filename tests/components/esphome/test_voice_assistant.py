@@ -164,18 +164,26 @@ async def test_udp_server_queue(
     assert voice_assistant_udp_server_v1.queue.qsize() == 0
 
     voice_assistant_udp_server_v1.datagram_received(bytes(1024), ("localhost", 0))
-
     assert voice_assistant_udp_server_v1.queue.qsize() == 1
 
     voice_assistant_udp_server_v1.datagram_received(bytes(1024), ("localhost", 0))
-
     assert voice_assistant_udp_server_v1.queue.qsize() == 2
 
     async for data in voice_assistant_udp_server_v1._iterate_packets():
         assert data == bytes(1024)
         break
+    assert voice_assistant_udp_server_v1.queue.qsize() == 1  # One message removed
 
     voice_assistant_udp_server_v1.stop()
+    assert (
+        voice_assistant_udp_server_v1.queue.qsize() == 2
+    )  # An empty message added by stop
+
+    voice_assistant_udp_server_v1.datagram_received(bytes(1024), ("localhost", 0))
+    assert (
+        voice_assistant_udp_server_v1.queue.qsize() == 2
+    )  # No new messages added after stop
+
     voice_assistant_udp_server_v1.close()
 
     with pytest.raises(RuntimeError):
