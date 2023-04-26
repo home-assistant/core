@@ -198,6 +198,9 @@ class CloudLoginView(HomeAssistantView):
         cloud = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
+        # Make sure the pipeline store is loaded, needed because assist_pipeline
+        # is an after dependency of cloud
+        await assist_pipeline.async_setup_pipeline_store(hass)
         if (cloud_pipeline_id := cloud_assist_pipeline(hass)) is None:
             if cloud_pipeline := await assist_pipeline.async_create_default_pipeline(
                 hass, DOMAIN, DOMAIN
