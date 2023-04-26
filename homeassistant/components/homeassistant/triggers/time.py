@@ -25,9 +25,10 @@ import homeassistant.util.dt as dt_util
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
+    cv.datetime,
     vol.All(str, cv.entity_domain(["input_datetime", "sensor"])),
     msg=(
-        "Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+        "Expected HH:MM, HH:MM:SS, YYYY-MM-DD, YYYY-MM-DD HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
     ),
 )
 

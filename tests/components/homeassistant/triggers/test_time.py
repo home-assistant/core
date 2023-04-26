@@ -10,6 +10,7 @@ from homeassistant.components.homeassistant.triggers import time
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -22,7 +23,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -508,6 +509,8 @@ async def test_if_fires_using_at_sensor(hass: HomeAssistant, calls) -> None:
         {"platform": "time", "at": "input_datetime.bla"},
         {"platform": "time", "at": "sensor.bla"},
         {"platform": "time", "at": "12:34"},
+        {"platform": "time", "at": "2023-04-08"},
+        {"platform": "time", "at": "2023-04-08 12:34:45"},
     ],
 )
 def test_schema_valid(conf) -> None:
@@ -521,12 +524,52 @@ def test_schema_valid(conf) -> None:
         {"platform": "time", "at": "binary_sensor.bla"},
         {"platform": "time", "at": 745},
         {"platform": "time", "at": "25:00"},
+        {"platform": "time", "at": "04-08-2023"},
     ],
 )
 def test_schema_invalid(conf) -> None:
     """Make sure we don't accept number for 'at' value."""
     with pytest.raises(vol.Invalid):
         time.TRIGGER_SCHEMA(conf)
+
+
+@pytest.mark.parametrize(
+    "val",
+    [
+        "2051-05-08 11:34:56",
+        "2051-05-08",
+    ],
+)
+async def test_date_and_datetime(hass: HomeAssistant, calls, val) -> None:
+    """Make sure we handle date or datetime string."""
+    when = cv.datetime(val)
+    before = when - timedelta(minutes=1)
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.as_utc(before),
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {"platform": "time", "at": val},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "val": val,
+                        },
+                    },
+                }
+            },
+        )
+        await hass.async_block_till_done()
+    assert len(calls) == 0
+    after = when + timedelta(seconds=1)
+    async_fire_time_changed(hass, after)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["val"] == val
 
 
 async def test_datetime_in_past_on_load(hass: HomeAssistant, calls) -> None:

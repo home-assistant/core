@@ -483,6 +483,8 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
 class DateSelectorConfig(TypedDict):
     """Class to represent a date selector config."""
 
+    multiple: bool
+
 
 @SELECTORS.register("date")
 class DateSelector(Selector[DateSelectorConfig]):
@@ -490,7 +492,11 @@ class DateSelector(Selector[DateSelectorConfig]):
 
     selector_type = "date"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
 
     def __init__(self, config: DateSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -498,12 +504,18 @@ class DateSelector(Selector[DateSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        cv.date(data)
-        return data
+        if not self.config["multiple"]:
+            cv.date(data)
+            return data
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class DateTimeSelectorConfig(TypedDict):
     """Class to represent a date time selector config."""
+
+    multiple: bool
 
 
 @SELECTORS.register("datetime")
@@ -512,7 +524,11 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
 
     selector_type = "datetime"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
 
     def __init__(self, config: DateTimeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -520,8 +536,12 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        cv.datetime(data)
-        return data
+        if not self.config["multiple"]:
+            cv.datetime(data)
+            return data
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class DeviceSelectorConfig(TypedDict, total=False):
@@ -1133,6 +1153,8 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 class TimeSelectorConfig(TypedDict):
     """Class to represent a time selector config."""
 
+    multiple: bool
+
 
 @SELECTORS.register("time")
 class TimeSelector(Selector[TimeSelectorConfig]):
@@ -1140,16 +1162,24 @@ class TimeSelector(Selector[TimeSelectorConfig]):
 
     selector_type = "time"
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
 
     def __init__(self, config: TimeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        cv.time(data)
-        return cast(str, data)
+        if not self.config["multiple"]:
+            cv.time(data)
+            return cast(str, data)
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class FileSelectorConfig(TypedDict):

@@ -454,7 +454,18 @@ def test_config_entry_selector_schema(
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    (({}, ("00:00:00",), ("blah", None)),),
+    (
+        (
+            {},
+            ("00:00:00",),
+            ("blah", None, ["00:00:00"]),
+        ),
+        (
+            {"multiple": True},
+            (["00:00:00", "12:34:56"],),
+            (None, "00:00:00", ["00:00:00", None]),
+        ),
+    ),
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test time selector."""
@@ -865,7 +876,12 @@ def test_color_tempselector_schema(
         (
             {},
             ("2022-03-24",),
-            (None, "abc", "00:00", "2022-03-24 00:00", "2022-03-32"),
+            (None, "abc", "00:00", "2022-03-24 00:00", "2022-03-32", ["2022-03-24"]),
+        ),
+        (
+            {"multiple": True},
+            (["2022-03-24", "2023-04-08"],),
+            (None, "2022-03-24", ["2022-03-24", None]),
         ),
     ),
 )
@@ -881,7 +897,12 @@ def test_date_selector_schema(schema, valid_selections, invalid_selections) -> N
         (
             {},
             ("2022-03-24 00:00", "2022-03-24"),
-            (None, "abc", "00:00", "2022-03-24 24:01"),
+            (None, "abc", "00:00", "2022-03-24 24:01", ["2022-03-24 00:00"]),
+        ),
+        (
+            {"multiple": True},
+            (["2022-03-24 00:00", "2022-03-24"],),
+            (None, "2022-03-24 00:00", ["2022-03-24 00:00", None]),
         ),
     ),
 )
