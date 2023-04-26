@@ -80,12 +80,13 @@ class MatterAdapter:
             return name.strip()
 
         basic_info = endpoint.device_info
-        device_type = next(x for x in endpoint.device_types if x != BridgedDevice)
+        # use (first) DeviceType of the endpoint as fallback product name
+        device_type = next((x for x in endpoint.device_types if x != BridgedDevice), None)
         name = (
             get_clean_name(basic_info.nodeLabel)
             or get_clean_name(basic_info.productLabel)
             or get_clean_name(basic_info.productName)
-            or device_type.__name__
+            or device_type.__name__ if device_type else None
         )
 
         # handle bridged devices
@@ -114,7 +115,7 @@ class MatterAdapter:
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
-            model=basic_info.productName or device_type.__name__,
+            model=basic_info.productName or device_type.__name__ if device_type else None,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
 
