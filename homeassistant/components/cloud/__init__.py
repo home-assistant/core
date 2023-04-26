@@ -238,25 +238,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await prefs.async_initialize()
 
     # Initialize Cloud
-    loaded = False
-
-    async def _discover_platforms():
-        """Discover platforms."""
-        nonlocal loaded
-
-        # Prevent multiple discovery
-        if loaded:
-            return
-        loaded = True
-
-        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.STT, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.TTS, DOMAIN, {}, config)
-
     websession = async_get_clientsession(hass)
-    client = CloudClient(
-        hass, prefs, websession, alexa_conf, google_conf, _discover_platforms
-    )
+    client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
     cloud.iot.register_on_connect(client.on_cloud_connected)
 
@@ -288,6 +271,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if subscription_info := await async_subscription_info(cloud):
             async_manage_legacy_subscription_issue(hass, subscription_info)
 
+    loaded = False
+
+    async def _on_start():
+        """Discover platforms."""
+        nonlocal loaded
+
+        # Prevent multiple discovery
+        if loaded:
+            return
+        loaded = True
+
+        stt_platform_loaded = asyncio.Event()
+        tts_platform_loaded = asyncio.Event()
+        stt_info = {"platform_loaded": stt_platform_loaded}
+        tts_info = {"platform_loaded": tts_platform_loaded}
+
+        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+        await async_load_platform(hass, Platform.STT, DOMAIN, stt_info, config)
+        await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
+        await asyncio.gather(stt_platform_loaded.wait(), tts_platform_loaded.wait())
+
     async def _on_connect():
         """Handle cloud connect."""
         async_dispatcher_send(
@@ -304,6 +308,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Update preferences."""
         await prefs.async_update(remote_domain=cloud.remote.instance_domain)
 
+    cloud.register_on_start(_on_start)
     cloud.iot.register_on_connect(_on_connect)
     cloud.iot.register_on_disconnect(_on_disconnect)
     cloud.register_on_initialized(_on_initialized)
