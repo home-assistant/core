@@ -346,20 +346,20 @@ class BaseHaRemoteScanner(BaseHaScanner):
             device._rssi = rssi  # deprecated, will be removed in newer bleak
         else:
             device = BLEDevice(
-                address,
-                local_name,
-                self._details | details,
-                rssi,  # deprecated, will be removed in newer bleak
+                address=address,
+                name=local_name,
+                details=self._details | details,
+                rssi=rssi,  # deprecated, will be removed in newer bleak
             )
 
         advertisement_data = AdvertisementData(
-            None if local_name == "" else local_name,
-            manufacturer_data,
-            service_data,
-            service_uuids,
-            NO_RSSI_VALUE if tx_power is None else tx_power,
-            rssi,
-            (),
+            local_name=None if local_name == "" else local_name,
+            manufacturer_data=manufacturer_data,
+            service_data=service_data,
+            service_uuids=service_uuids,
+            tx_power=NO_RSSI_VALUE if tx_power is None else tx_power,
+            rssi=rssi,
+            platform_data=(),
         )
         self._discovered_device_advertisement_datas[address] = (
             device,
@@ -368,17 +368,17 @@ class BaseHaRemoteScanner(BaseHaScanner):
         self._discovered_device_timestamps[address] = now
         self._new_info_callback(
             BluetoothServiceInfoBleak(
-                local_name or address,
-                address,
-                rssi,
-                manufacturer_data,
-                service_data,
-                service_uuids,
-                self.source,
-                device,
-                advertisement_data,
-                self.connectable,
-                now,
+                name=local_name or address,
+                address=address,
+                rssi=rssi,
+                manufacturer_data=manufacturer_data,
+                service_data=service_data,
+                service_uuids=service_uuids,
+                source=self.source,
+                device=device,
+                advertisement=advertisement_data,
+                connectable=self.connectable,
+                time=now,
             )
         )
 
