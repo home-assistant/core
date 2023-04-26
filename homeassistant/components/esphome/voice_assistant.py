@@ -59,7 +59,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         hass: HomeAssistant,
         entry_data: RuntimeEntryData,
         handle_event: Callable[[VoiceAssistantEventType, dict[str, str] | None], None],
-        handle_finished: Callable[[None], None],
+        handle_finished: Callable[[], None],
     ) -> None:
         """Initialize UDP receiver."""
         self.context = Context()

@@ -7,7 +7,8 @@ from unittest.mock import Mock, patch
 import async_timeout
 import pytest
 
-from homeassistant.components import assist_pipeline, esphome
+from homeassistant.components import esphome
+from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.esphome import DomainData
 from homeassistant.components.esphome.voice_assistant import VoiceAssistantUDPServer
 from homeassistant.core import HomeAssistant
@@ -15,6 +16,7 @@ from homeassistant.core import HomeAssistant
 _TEST_INPUT_TEXT = "This is an input test"
 _TEST_OUTPUT_TEXT = "This is an output test"
 _TEST_OUTPUT_URL = "output.mp3"
+_TEST_MEDIA_ID = "12345"
 
 
 @pytest.fixture
@@ -24,11 +26,40 @@ def voice_assistant_udp_server_v1(
 ) -> VoiceAssistantUDPServer:
     """Return the UDP server."""
     entry_data = DomainData.get(hass).get_entry_data(mock_voice_assistant_v1_entry)
-    return VoiceAssistantUDPServer(hass, entry_data)
+
+    server: VoiceAssistantUDPServer = None
+
+    def handle_finished():
+        nonlocal server
+        assert server is not None
+        server.close()
+
+    server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
+    return server
+
+
+@pytest.fixture
+def voice_assistant_udp_server_v2(
+    hass: HomeAssistant,
+    mock_voice_assistant_v2_entry,
+) -> VoiceAssistantUDPServer:
+    """Return the UDP server."""
+    entry_data = DomainData.get(hass).get_entry_data(mock_voice_assistant_v2_entry)
+
+    server: VoiceAssistantUDPServer = None
+
+    def handle_finished():
+        nonlocal server
+        assert server is not None
+        server.close()
+
+    server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
+    return server
 
 
 async def test_pipeline_events(
-    hass: HomeAssistant, voice_assistant_udp_server_v1: VoiceAssistantUDPServer
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
 ) -> None:
     """Test that the pipeline function is called."""
 
@@ -37,29 +68,29 @@ async def test_pipeline_events(
 
         # Fake events
         event_callback(
-            assist_pipeline.PipelineEvent(
-                type=assist_pipeline.PipelineEventType.STT_START,
+            PipelineEvent(
+                type=PipelineEventType.STT_START,
                 data={},
             )
         )
 
         event_callback(
-            assist_pipeline.PipelineEvent(
-                type=assist_pipeline.PipelineEventType.STT_END,
+            PipelineEvent(
+                type=PipelineEventType.STT_END,
                 data={"stt_output": {"text": _TEST_INPUT_TEXT}},
             )
         )
 
         event_callback(
-            assist_pipeline.PipelineEvent(
-                type=assist_pipeline.PipelineEventType.TTS_START,
+            PipelineEvent(
+                type=PipelineEventType.TTS_START,
                 data={"tts_input": _TEST_OUTPUT_TEXT},
             )
         )
 
         event_callback(
-            assist_pipeline.PipelineEvent(
-                type=assist_pipeline.PipelineEventType.TTS_END,
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
                 data={"tts_output": {"url": _TEST_OUTPUT_URL}},
             )
         )
@@ -77,13 +108,15 @@ async def test_pipeline_events(
             assert data is not None
             assert data["url"] == _TEST_OUTPUT_URL
 
+    voice_assistant_udp_server_v1.handle_event = handle_event
+
     with patch(
         "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
     ):
         voice_assistant_udp_server_v1.transport = Mock()
 
-        await voice_assistant_udp_server_v1.run_pipeline(handle_event)
+        await voice_assistant_udp_server_v1.run_pipeline()
 
 
 async def test_udp_server(
@@ -114,6 +147,7 @@ async def test_udp_server(
         assert voice_assistant_udp_server_v1.queue.qsize() == 1
 
         voice_assistant_udp_server_v1.stop()
+        voice_assistant_udp_server_v1.close()
 
         assert voice_assistant_udp_server_v1.transport.is_closing()
 
@@ -146,9 +180,65 @@ async def test_udp_server_after_stopped(
     voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
 ) -> None:
     """Test that the UDP server raises an error if started after stopped."""
-    voice_assistant_udp_server_v1.stop()
+    voice_assistant_udp_server_v1.close()
     with patch(
         "homeassistant.components.esphome.voice_assistant.UDP_PORT",
         new=unused_udp_port_factory(),
     ), pytest.raises(RuntimeError):
         await voice_assistant_udp_server_v1.start_server()
+
+
+async def test_send_tts_not_called(
+    hass: HomeAssistant,
+    socket_enabled,
+    unused_udp_port_factory,
+    voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
+) -> None:
+    """Test the UDP server runs and queues incoming data."""
+    port_to_use = unused_udp_port_factory()
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.UDP_PORT", new=port_to_use
+    ), patch(
+        "homeassistant.components.esphome.voice_assistant.VoiceAssistantUDPServer._send_tts"
+    ) as mock_send_tts:
+        await voice_assistant_udp_server_v1.start_server()
+
+        voice_assistant_udp_server_v1._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
+                data={
+                    "tts_output": {"media_id": _TEST_MEDIA_ID, "url": _TEST_OUTPUT_URL}
+                },
+            )
+        )
+
+        mock_send_tts.assert_not_called()
+
+
+async def test_send_tts_called(
+    hass: HomeAssistant,
+    socket_enabled,
+    unused_udp_port_factory,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test the UDP server runs and queues incoming data."""
+    port_to_use = unused_udp_port_factory()
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.UDP_PORT", new=port_to_use
+    ), patch(
+        "homeassistant.components.esphome.voice_assistant.VoiceAssistantUDPServer._send_tts"
+    ) as mock_send_tts:
+        await voice_assistant_udp_server_v2.start_server()
+
+        voice_assistant_udp_server_v2._event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
+                data={
+                    "tts_output": {"media_id": _TEST_MEDIA_ID, "url": _TEST_OUTPUT_URL}
+                },
+            )
+        )
+
+        mock_send_tts.assert_called()
