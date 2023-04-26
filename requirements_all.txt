@@ -2378,7 +2378,7 @@ snapcast==2.3.2
 soco==0.29.1
 
 # homeassistant.components.solaredge_local
-solaredge-local==0.2.0
+solaredge-local==0.2.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -2569,6 +2569,12 @@ upb_lib==0.5.3
 
 # homeassistant.components.upcloud
 upcloud-api==2.0.0
+
+# homeassistant.components.solaredge_local
+uplink-protobuf==0.1.0
+
+# homeassistant.components.solaredge_local
+uplink==0.9.7
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
