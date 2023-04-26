@@ -867,7 +867,7 @@ async def test_websocket_change_channel(
     """Test websocket API to migrate the network to a new channel."""
 
     with patch(
-        "homeassistant.components.zha.websocket_api.change_channel",
+        "homeassistant.components.zha.websocket_api.async_change_channel",
         autospec=True,
     ) as change_channel_mock:
         await zha_client.send_json(
@@ -896,7 +896,7 @@ async def test_service_change_channel(
     """Test service to migrate the network to a new channel."""
 
     with patch(
-        "homeassistant.components.zha.websocket_api.change_channel",
+        "homeassistant.components.zha.websocket_api.async_change_channel",
         autospec=True,
     ) as change_channel_mock:
         await hass.services.async_call(

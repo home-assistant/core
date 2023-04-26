@@ -115,7 +115,7 @@ def async_get_radio_path(
     return config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
 
 
-async def change_channel(
+async def async_change_channel(
     hass: HomeAssistant, new_channel: int | Literal["auto"]
 ) -> None:
     """Migrate the ZHA network to a new channel."""

@@ -117,7 +117,7 @@ async def test_change_channel(
     with patch.object(
         zigpy_app_controller, "move_network_to_channel", autospec=True
     ) as mock_move_network_to_channel:
-        await api.change_channel(hass, 20)
+        await api.async_change_channel(hass, 20)
 
     assert mock_move_network_to_channel.mock_calls == [call(20)]
 
@@ -138,6 +138,6 @@ async def test_change_channel_auto(
     ), patch.object(
         api, "pick_optimal_channel", autospec=True, return_value=25
     ):
-        await api.change_channel(hass, "auto")
+        await api.async_change_channel(hass, "auto")
 
     assert mock_move_network_to_channel.mock_calls == [call(25)]

@@ -19,7 +19,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
 
-from .api import async_get_active_network_settings, async_get_radio_type, change_channel
+from .api import (
+    async_change_channel,
+    async_get_active_network_settings,
+    async_get_radio_type,
+)
 from .core.const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -1228,7 +1232,7 @@ async def websocket_change_channel(
 ) -> None:
     """Migrate the Zigbee network to a new channel."""
     new_channel = cast(Literal["auto"] | int, msg[ATTR_NEW_CHANNEL])
-    await change_channel(hass, new_channel=new_channel)
+    await async_change_channel(hass, new_channel=new_channel)
     connection.send_result(msg[ID])
 
 
@@ -1538,7 +1542,7 @@ def async_load_api(hass: HomeAssistant) -> None:
         else:
             new_channel = "auto"
 
-        await change_channel(hass, new_channel=new_channel)
+        await async_change_channel(hass, new_channel=new_channel)
 
     async_register_admin_service(
         hass,
