@@ -1547,7 +1547,22 @@ def _statistics_during_period_with_session(
 
     metadata_ids = None
     if statistic_ids is not None:
-        metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
+        metadata_ids = []
+        has_mean = False
+        has_sum = False
+        for metadata_id, stats_metadata in metadata.values():
+            metadata_ids.append(metadata_id)
+            if stats_metadata["has_mean"]:
+                has_mean = True
+            if stats_metadata["has_sum"]:
+                has_sum = True
+        if not has_mean:
+            types.discard("mean")
+            types.discard("min")
+            types.discard("max")
+        if not has_sum:
+            types.discard("sum")
+            types.discard("state")
 
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
