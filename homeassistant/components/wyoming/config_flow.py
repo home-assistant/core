@@ -52,16 +52,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # ASR = automated speech recognition (STT)
         asr_installed = [asr for asr in service.info.asr if asr.installed]
-        if not asr_installed:
-            return self.async_abort(reason="no_services")
+        tts_installed = [tts for tts in service.info.tts if tts.installed]
 
-        name = asr_installed[0].name
+        if asr_installed:
+            name = asr_installed[0].name
+        elif tts_installed:
+            name = tts_installed[0].name
+        else:
+            return self.async_abort(reason="no_services")
 
         return self.async_create_entry(title=name, data=user_input)
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle Supervisor add-on discovery."""
-        await self.async_set_unique_id(discovery_info.slug)
+        await self.async_set_unique_id(discovery_info.uuid)
         self._abort_if_unique_id_configured()
 
         self._hassio_discovery = discovery_info

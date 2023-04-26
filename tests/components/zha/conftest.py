@@ -199,6 +199,7 @@ def zigpy_device_mock(zigpy_app_controller):
         nwk=0xB79C,
         patch_cluster=True,
         quirk=None,
+        attributes=None,
     ):
         """Make a fake device using the specified cluster classes."""
         device = zigpy.device.Device(
