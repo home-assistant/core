@@ -201,12 +201,13 @@ class CloudLoginView(HomeAssistantView):
         # Make sure the pipeline store is loaded, needed because assist_pipeline
         # is an after dependency of cloud
         await assist_pipeline.async_setup_pipeline_store(hass)
-        if (cloud_pipeline_id := cloud_assist_pipeline(hass)) is None:
+        new_cloud_pipeline_id: str | None = None
+        if (cloud_assist_pipeline(hass)) is None:
             if cloud_pipeline := await assist_pipeline.async_create_default_pipeline(
                 hass, DOMAIN, DOMAIN
             ):
-                cloud_pipeline_id = cloud_pipeline.id
-        return self.json({"success": True, "cloud_pipeline": cloud_pipeline_id})
+                new_cloud_pipeline_id = cloud_pipeline.id
+        return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
 class CloudLogoutView(HomeAssistantView):
