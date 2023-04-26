@@ -120,7 +120,9 @@ class TransmissionSensor(SensorEntity):
         self._tm_client: TransmissionClient = tm_client
         self._state: Any | None = None
 
-        self._attr_unique_id = f"{client_name} {self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{self._tm_client.api.host}-{client_name} {self.entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
