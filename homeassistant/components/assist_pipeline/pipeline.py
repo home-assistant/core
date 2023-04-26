@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Callable
+from collections.abc import AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 import logging
 from typing import Any
@@ -75,20 +75,22 @@ STORED_PIPELINE_RUNS = 10
 SAVE_DELAY = 10
 
 
-async def _async_create_default_pipeline(
-    hass: HomeAssistant, pipeline_store: PipelineStorageCollection
-) -> Pipeline:
-    """Create a default pipeline.
+async def _async_resolve_default_pipeline_settings(
+    hass: HomeAssistant,
+    stt_engine_id: str | None,
+    tts_engine_id: str | None,
+) -> dict[str, str | None]:
+    """Resolve settings for a default pipeline.
 
     The default pipeline will use the homeassistant conversation agent and the
-    default stt / tts engines.
+    default stt / tts engines if none are specified.
     """
     conversation_language = "en"
     pipeline_language = "en"
     pipeline_name = "Home Assistant"
-    stt_engine_id = None
+    stt_engine = None
     stt_language = None
-    tts_engine_id = None
+    tts_engine = None
     tts_language = None
     tts_voice = None
 
@@ -104,12 +106,15 @@ async def _async_create_default_pipeline(
         pipeline_language = hass.config.language
         conversation_language = conversation_languages[0]
 
-    if (stt_engine_id := stt.async_default_engine(hass)) is not None and (
-        stt_engine := stt.async_get_speech_to_text_engine(
-            hass,
-            stt_engine_id,
-        )
-    ):
+    if stt_engine_id is None:
+        stt_engine_id = stt.async_default_engine(hass)
+
+    if stt_engine_id is not None:
+        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
+        if stt_engine is None:
+            stt_engine_id = None
+
+    if stt_engine:
         stt_languages = language_util.matches(
             pipeline_language,
             stt_engine.supported_languages,
@@ -125,12 +130,15 @@ async def _async_create_default_pipeline(
             )
             stt_engine_id = None
 
-    if (tts_engine_id := tts.async_default_engine(hass)) is not None and (
-        tts_engine := tts.get_engine_instance(
-            hass,
-            tts_engine_id,
-        )
-    ):
+    if tts_engine_id is None:
+        tts_engine_id = tts.async_default_engine(hass)
+
+    if tts_engine_id is not None:
+        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
+        if tts_engine is None:
+            tts_engine_id = None
+
+    if tts_engine:
         tts_languages = language_util.matches(
             pipeline_language,
             tts_engine.supported_languages,
@@ -152,19 +160,50 @@ async def _async_create_default_pipeline(
     if stt_engine_id == "cloud" and tts_engine_id == "cloud":
         pipeline_name = "Home Assistant Cloud"
 
-    return await pipeline_store.async_create_item(
-        {
-            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
-            "conversation_language": conversation_language,
-            "language": hass.config.language,
-            "name": pipeline_name,
-            "stt_engine": stt_engine_id,
-            "stt_language": stt_language,
-            "tts_engine": tts_engine_id,
-            "tts_language": tts_language,
-            "tts_voice": tts_voice,
-        }
+    return {
+        "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
+        "conversation_language": conversation_language,
+        "language": hass.config.language,
+        "name": pipeline_name,
+        "stt_engine": stt_engine_id,
+        "stt_language": stt_language,
+        "tts_engine": tts_engine_id,
+        "tts_language": tts_language,
+        "tts_voice": tts_voice,
+    }
+
+
+async def _async_create_default_pipeline(
+    hass: HomeAssistant, pipeline_store: PipelineStorageCollection
+) -> Pipeline:
+    """Create a default pipeline.
+
+    The default pipeline will use the homeassistant conversation agent and the
+    default stt / tts engines.
+    """
+    pipeline_settings = await _async_resolve_default_pipeline_settings(hass, None, None)
+    return await pipeline_store.async_create_item(pipeline_settings)
+
+
+async def async_create_default_pipeline(
+    hass: HomeAssistant, stt_engine_id: str, tts_engine_id: str
+) -> Pipeline | None:
+    """Create a pipeline with default settings.
+
+    The default pipeline will use the homeassistant conversation agent and the
+    specified stt / tts engines.
+    """
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_settings = await _async_resolve_default_pipeline_settings(
+        hass, stt_engine_id, tts_engine_id
     )
+    if (
+        pipeline_settings["stt_engine"] != stt_engine_id
+        or pipeline_settings["tts_engine"] != tts_engine_id
+    ):
+        return None
+    return await pipeline_store.async_create_item(pipeline_settings)
 
 
 @callback
@@ -179,6 +218,14 @@ def async_get_pipeline(
         pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
 
     return pipeline_data.pipeline_store.data.get(pipeline_id)
+
+
+@callback
+def async_get_pipelines(hass: HomeAssistant) -> Iterable[Pipeline]:
+    """Get all pipelines."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+
+    return pipeline_data.pipeline_store.data.values()
 
 
 class PipelineEventType(StrEnum):

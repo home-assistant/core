@@ -63,7 +63,9 @@ async def async_get_engine(hass, config, discovery_info=None):
         language = config[CONF_LANG]
         gender = config[ATTR_GENDER]
 
-    return CloudProvider(cloud, language, gender)
+    cloud_provider = CloudProvider(cloud, language, gender)
+    cloud.client.tts_platform_loaded.set()
+    return cloud_provider
 
 
 class CloudProvider(Provider):
