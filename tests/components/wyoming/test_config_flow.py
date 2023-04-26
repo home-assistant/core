@@ -165,7 +165,7 @@ async def test_hassio_addon_already_configured(hass: HomeAssistant) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         data={"host": "mock-piper", "port": "10200"},
-        unique_id="mock_piper",
+        unique_id="1234",
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

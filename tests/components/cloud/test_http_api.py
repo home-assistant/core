@@ -105,7 +105,14 @@ async def test_google_actions_sync_fails(
 
 async def test_login_view(hass: HomeAssistant, cloud_client) -> None:
     """Test logging in."""
-    hass.data["cloud"] = MagicMock(login=AsyncMock())
+    create_cloud_assist_pipeline_mock = AsyncMock()
+    hass.data["cloud"] = MagicMock(
+        login=AsyncMock(),
+        client=Mock(
+            cloud_pipeline="12345",
+            create_cloud_assist_pipeline=create_cloud_assist_pipeline_mock,
+        ),
+    )
 
     req = await cloud_client.post(
         "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
@@ -113,7 +120,29 @@ async def test_login_view(hass: HomeAssistant, cloud_client) -> None:
 
     assert req.status == HTTPStatus.OK
     result = await req.json()
-    assert result == {"success": True}
+    assert result == {"success": True, "cloud_pipeline": "12345"}
+    create_cloud_assist_pipeline_mock.assert_not_awaited()
+
+
+async def test_login_view_create_pipeline(hass: HomeAssistant, cloud_client) -> None:
+    """Test logging in when no assist pipeline is available."""
+    create_cloud_assist_pipeline_mock = AsyncMock()
+    hass.data["cloud"] = MagicMock(
+        login=AsyncMock(),
+        client=Mock(
+            cloud_pipeline=None,
+            create_cloud_assist_pipeline=create_cloud_assist_pipeline_mock,
+        ),
+    )
+
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert req.status == HTTPStatus.OK
+    result = await req.json()
+    assert result == {"success": True, "cloud_pipeline": None}
+    create_cloud_assist_pipeline_mock.assert_awaited_once()
 
 
 async def test_login_view_random_exception(cloud_client) -> None:

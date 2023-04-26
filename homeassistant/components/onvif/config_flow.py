@@ -1,6 +1,7 @@
 """Config flow for ONVIF."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pprint import pformat
 from typing import Any
 from urllib.parse import urlparse
@@ -39,7 +40,7 @@ from .const import (
     LOGGER,
 )
 from .device import get_device
-from .util import stringify_onvif_error
+from .util import is_auth_error, stringify_onvif_error
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -84,6 +85,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a ONVIF config flow."""
 
     VERSION = 1
+    _reauth_entry: config_entries.ConfigEntry
 
     @staticmethod
     @callback
@@ -109,6 +111,44 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle re-authentication of an existing config entry."""
+        reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert reauth_entry is not None
+        self._reauth_entry = reauth_entry
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm reauth."""
+        entry = self._reauth_entry
+        errors: dict[str, str] | None = {}
+        description_placeholders: dict[str, str] | None = None
+        if user_input is not None:
+            entry_data = entry.data
+            self.onvif_config = entry_data | user_input
+            errors, description_placeholders = await self.async_setup_profiles(
+                configure_unique_id=False
+            )
+            if not errors:
+                hass = self.hass
+                entry_id = entry.entry_id
+                hass.config_entries.async_update_entry(entry, data=self.onvif_config)
+                hass.async_create_task(hass.config_entries.async_reload(entry_id))
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
@@ -217,7 +257,9 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
-    async def async_setup_profiles(self) -> tuple[dict[str, str], dict[str, str]]:
+    async def async_setup_profiles(
+        self, configure_unique_id: bool = True
+    ) -> tuple[dict[str, str], dict[str, str]]:
         """Fetch ONVIF device profiles."""
         LOGGER.debug(
             "Fetching profiles from ONVIF device %s", pformat(self.onvif_config)
@@ -260,21 +302,24 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not self.device_id:
                 raise AbortFlow(reason="no_mac")
 
-            await self.async_set_unique_id(self.device_id, raise_on_progress=False)
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_HOST: self.onvif_config[CONF_HOST],
-                    CONF_PORT: self.onvif_config[CONF_PORT],
-                    CONF_NAME: self.onvif_config[CONF_NAME],
-                }
-            )
+            if configure_unique_id:
+                await self.async_set_unique_id(self.device_id, raise_on_progress=False)
+                self._abort_if_unique_id_configured(
+                    updates={
+                        CONF_HOST: self.onvif_config[CONF_HOST],
+                        CONF_PORT: self.onvif_config[CONF_PORT],
+                        CONF_NAME: self.onvif_config[CONF_NAME],
+                        CONF_USERNAME: self.onvif_config[CONF_USERNAME],
+                        CONF_PASSWORD: self.onvif_config[CONF_PASSWORD],
+                    }
+                )
             # Verify there is an H264 profile
             media_service = device.create_media_service()
             profiles = await media_service.GetProfiles()
         except Fault as err:
             stringified_error = stringify_onvif_error(err)
             description_placeholders = {"error": stringified_error}
-            if "auth" in stringified_error.lower():
+            if is_auth_error(err):
                 LOGGER.debug(
                     "%s: Could not authenticate with camera: %s",
                     self.onvif_config[CONF_NAME],

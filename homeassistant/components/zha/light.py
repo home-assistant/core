@@ -637,6 +637,7 @@ class BaseLight(LogMixin, light.LightEntity):
 class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
+    _attr_name: str = "Light"
     _attr_supported_color_modes: set[ColorMode]
     _REFRESH_INTERVAL = (45, 75)
 
@@ -1065,6 +1066,7 @@ class Light(BaseLight, ZhaEntity):
 class HueLight(Light):
     """Representation of a HUE light which does not report attributes."""
 
+    _attr_name: str = "Light"
     _REFRESH_INTERVAL = (3, 5)
 
 
@@ -1076,6 +1078,7 @@ class HueLight(Light):
 class ForceOnLight(Light):
     """Representation of a light which does not respect move_to_level_with_on_off."""
 
+    _attr_name: str = "Light"
     _FORCE_ON = True
 
 
@@ -1087,6 +1090,7 @@ class ForceOnLight(Light):
 class MinTransitionLight(Light):
     """Representation of a light which does not react to any "move to" calls with 0 as a transition."""
 
+    _attr_name: str = "Light"
     _DEFAULT_MIN_TRANSITION_TIME = 1
 
 

@@ -186,7 +186,11 @@ class CloudLoginView(HomeAssistantView):
         cloud = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
-        return self.json({"success": True})
+        if cloud.client.cloud_pipeline is None:
+            await cloud.client.create_cloud_assist_pipeline()
+        return self.json(
+            {"success": True, "cloud_pipeline": cloud.client.cloud_pipeline}
+        )
 
 
 class CloudLogoutView(HomeAssistantView):
