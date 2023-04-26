@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from matter_server.common.models import EventType, ServerInfoMessage
+from matter_server.client.models.device_types import BridgedDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -17,7 +18,10 @@ from .helpers import get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
-    from matter_server.client.models.node import MatterEndpoint, MatterNode
+    from matter_server.client.models.node import (
+        MatterEndpoint,
+        MatterNode,
+    )
 
 
 class MatterAdapter:
@@ -69,12 +73,24 @@ class MatterAdapter:
         """Create a device registry entry for a MatterNode."""
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
 
+        def get_clean_name(name: str | None):
+            if name is None:
+                return name
+            name = name.replace("\x00", "")
+            return name.strip()
+
         basic_info = endpoint.device_info
-        name = basic_info.nodeLabel or basic_info.productLabel or basic_info.productName
+        device_type = next(x for x in endpoint.device_types if x != BridgedDevice)
+        name = (
+            get_clean_name(basic_info.nodeLabel)
+            or get_clean_name(basic_info.productLabel)
+            or get_clean_name(basic_info.productName)
+            or device_type.__name__
+        )
 
         # handle bridged devices
         bridge_device_id = None
-        if endpoint.is_bridged_device:
+        if endpoint.is_bridged_device and endpoint.node.endpoints[0] != endpoint:
             bridge_device_id = get_device_id(
                 server_info,
                 endpoint.node.endpoints[0],
@@ -97,8 +113,8 @@ class MatterAdapter:
             identifiers=identifiers,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
-            manufacturer=basic_info.vendorName,
-            model=basic_info.productName,
+            manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
+            model=basic_info.productName or device_type.__name__,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
 
