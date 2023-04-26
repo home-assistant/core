@@ -18,13 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 
-from .const import (
-    DOMAIN,
-    FILTER_REPLACE_TIME,
-    MAIN_BRUSH_REPLACE_TIME,
-    SENSOR_DIRTY_REPLACE_TIME,
-    SIDE_BRUSH_REPLACE_TIME,
-)
+from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 from .models import RoborockHassDeviceInfo
@@ -50,35 +44,32 @@ CONSUMABLE_SENSORS = [
         key="main_brush_work_time",
         icon="mdi:brush",
         device_class=SensorDeviceClass.DURATION,
-        translation_key="main_brush_left",
-        value_fn=lambda data: MAIN_BRUSH_REPLACE_TIME
-        - data.consumable.main_brush_work_time,
+        translation_key="main_brush_work_time",
+        value_fn=lambda data: data.consumable.main_brush_work_time,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="side_brush_work_time",
         icon="mdi:brush",
         device_class=SensorDeviceClass.DURATION,
-        translation_key="side_brush_left",
-        value_fn=lambda data: SIDE_BRUSH_REPLACE_TIME
-        - data.consumable.side_brush_work_time,
+        translation_key="side_brush_work_time",
+        value_fn=lambda data: data.consumable.side_brush_work_time,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="filter_work_time",
         icon="mdi:air-filter",
         device_class=SensorDeviceClass.DURATION,
-        translation_key="filter_left",
-        value_fn=lambda data: FILTER_REPLACE_TIME - data.consumable.filter_work_time,
+        translation_key="filter_work_time",
+        value_fn=lambda data: data.consumable.filter_work_time,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="sensor_dirty_time",
         icon="mdi:eye-outline",
         device_class=SensorDeviceClass.DURATION,
-        translation_key="sensor_dirty_left",
-        value_fn=lambda data: SENSOR_DIRTY_REPLACE_TIME
-        - data.consumable.sensor_dirty_time,
+        translation_key="sensor_dirty_work_time",
+        value_fn=lambda data: data.consumable.sensor_dirty_time,
     ),
 ]
 
