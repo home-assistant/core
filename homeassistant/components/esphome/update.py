@@ -13,7 +13,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -36,29 +36,33 @@ async def async_setup_entry(
     if (dashboard := async_get_dashboard(hass)) is None:
         return
     entry_data = DomainData.get(hass).get_entry_data(entry)
-    unsub = None
+    unsubs: list[CALLBACK_TYPE] = []
 
-    async def setup_update_entity() -> None:
+    @callback
+    def _async_setup_update_entity() -> None:
         """Set up the update entity."""
-        nonlocal unsub
+        nonlocal unsubs
         assert dashboard is not None
-
         # Keep listening until device is available
         if not entry_data.available or not dashboard.last_update_success:
             return
 
-        if unsub is not None:
-            unsub()  # type: ignore[unreachable]
+        for unsub in unsubs:
+            unsub()
+        unsubs.clear()
 
         async_add_entities([ESPHomeUpdateEntity(entry_data, dashboard)])
 
     if entry_data.available and dashboard.last_update_success:
-        await setup_update_entity()
+        _async_setup_update_entity()
         return
 
-    unsub = async_dispatcher_connect(
-        hass, entry_data.signal_device_updated, setup_update_entity
-    )
+    unsubs = [
+        async_dispatcher_connect(
+            hass, entry_data.signal_device_updated, _async_setup_update_entity
+        ),
+        dashboard.async_add_listener(_async_setup_update_entity),
+    ]
 
 
 class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
