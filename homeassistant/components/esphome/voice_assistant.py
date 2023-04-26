@@ -187,6 +187,9 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     ) -> None:
         """Run the Voice Assistant pipeline."""
         try:
+            tts_audio_output = (
+                "raw" if self.device_info.voice_assistant_version >= 2 else "mp3"
+            )
             async with async_timeout.timeout(pipeline_timeout):
                 await async_pipeline_from_audio_stream(
                     self.hass,
@@ -204,7 +207,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                     pipeline_id=pipeline_select.get_chosen_pipeline(
                         self.hass, DOMAIN, self.device_info.mac_address
                     ),
-                    tts_audio_output="raw",
+                    tts_audio_output=tts_audio_output,
                 )
 
                 # Block until TTS is done sending
