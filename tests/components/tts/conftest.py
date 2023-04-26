@@ -2,13 +2,14 @@
 
 From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 """
-from collections.abc import Callable, Generator
+from collections.abc import Generator
+import os
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.tts import _get_cache_files
+from homeassistant.components.tts import DEFAULT_CACHE_DIR, _get_cache_files
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
@@ -49,9 +50,14 @@ def mock_get_cache_files():
 
 @pytest.fixture(autouse=True)
 def mock_init_cache_dir(
+    hass: HomeAssistant,
     init_cache_dir_side_effect: Any,
 ) -> Generator[MagicMock, None, None]:
-    """Mock the TTS cache dir in memory."""
+    """Prevent the TTS cache from being created and fail the test if it exists."""
+    cache_dir = hass.config.path(DEFAULT_CACHE_DIR)
+    if os.path.isdir(cache_dir):
+        pytest.fail(f"Default TTS cache dir '{cache_dir}' already exists")
+
     with patch(
         "homeassistant.components.tts._init_tts_cache_dir",
         side_effect=init_cache_dir_side_effect,
@@ -60,22 +66,14 @@ def mock_init_cache_dir(
 
 
 @pytest.fixture
-def init_cache_dir_side_effect(
-    hass: HomeAssistant,
-) -> Callable[[HomeAssistant, str], str]:
+def init_cache_dir_side_effect() -> Any:
     """Return the cache dir."""
-
-    def side_effect(hass: HomeAssistant, cache_dir: str) -> str:
-        """Return the cache dir."""
-        return hass.config.path(cache_dir)
-
-    return side_effect
+    return None
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request):
     """Mock the TTS cache dir with empty dir."""
-    mock_init_cache_dir.side_effect = None
     mock_init_cache_dir.return_value = str(tmp_path)
 
     # Restore original get cache files behavior, we're working with a real dir.

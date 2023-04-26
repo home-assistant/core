@@ -28,7 +28,10 @@ async def async_get_engine(hass, config, discovery_info=None):
     """Set up Cloud speech component."""
     cloud: Cloud = hass.data[DOMAIN]
 
-    return CloudProvider(cloud)
+    cloud_provider = CloudProvider(cloud)
+    if discovery_info is not None:
+        discovery_info["platform_loaded"].set()
+    return cloud_provider
 
 
 class CloudProvider(Provider):

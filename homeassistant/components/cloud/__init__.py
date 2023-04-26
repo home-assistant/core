@@ -241,6 +241,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websession = async_get_clientsession(hass)
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
+    cloud.iot.register_on_connect(client.on_cloud_connected)
 
     async def _shutdown(event):
         """Shutdown event."""
@@ -262,8 +263,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
-    loaded = False
-
     async def async_startup_repairs(_=None) -> None:
         """Create repair issues after startup."""
         if not cloud.is_logged_in:
@@ -272,7 +271,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if subscription_info := await async_subscription_info(cloud):
             async_manage_legacy_subscription_issue(hass, subscription_info)
 
-    async def _discover_platforms():
+    loaded = False
+
+    async def _on_start():
         """Discover platforms."""
         nonlocal loaded
 
@@ -281,14 +282,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
+        stt_platform_loaded = asyncio.Event()
+        tts_platform_loaded = asyncio.Event()
+        stt_info = {"platform_loaded": stt_platform_loaded}
+        tts_info = {"platform_loaded": tts_platform_loaded}
+
         await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.STT, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.TTS, DOMAIN, {}, config)
+        await async_load_platform(hass, Platform.STT, DOMAIN, stt_info, config)
+        await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
+        await asyncio.gather(stt_platform_loaded.wait(), tts_platform_loaded.wait())
 
     async def _on_connect():
         """Handle cloud connect."""
-        await _discover_platforms()
-
         async_dispatcher_send(
             hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
         )
@@ -303,6 +308,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Update preferences."""
         await prefs.async_update(remote_domain=cloud.remote.instance_domain)
 
+    cloud.register_on_start(_on_start)
     cloud.iot.register_on_connect(_on_connect)
     cloud.iot.register_on_disconnect(_on_disconnect)
     cloud.register_on_initialized(_on_initialized)

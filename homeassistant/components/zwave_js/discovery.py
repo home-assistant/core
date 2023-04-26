@@ -147,6 +147,8 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     property_key_name: set[str | None] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
+    # [optional] the value's states map must include ANY of these key/value pairs
+    any_available_states: set[tuple[int, str]] | None = None
 
 
 @dataclass
@@ -897,6 +899,17 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.NUMBER},
         ),
     ),
+    # button
+    # Notification CC idle
+    ZWaveDiscoverySchema(
+        platform=Platform.BUTTON,
+        hint="notification idle",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states={(0, "idle")},
+        ),
+    ),
 ]
 
 
@@ -1071,6 +1084,16 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check metadata_type
     if schema.type is not None and value.metadata.type not in schema.type:
+        return False
+    # check available states
+    if (
+        schema.any_available_states is not None
+        and value.metadata.states is not None
+        and not any(
+            str(key) in value.metadata.states and value.metadata.states[str(key)] == val
+            for key, val in schema.any_available_states
+        )
+    ):
         return False
     return True
 
