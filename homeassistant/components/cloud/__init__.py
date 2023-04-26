@@ -50,9 +50,9 @@ from .const import (
     CONF_RELAYER_SERVER,
     CONF_REMOTE_SNI_SERVER,
     CONF_REMOTESTATE_SERVER,
+    CONF_SERVICEHANDLERS_SERVER,
     CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
-    CONF_VOICE_SERVER,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
@@ -119,7 +119,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_REMOTE_SNI_SERVER): str,
                 vol.Optional(CONF_REMOTESTATE_SERVER): str,
                 vol.Optional(CONF_THINGTALK_SERVER): str,
-                vol.Optional(CONF_VOICE_SERVER): str,
+                vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
             }
         )
     },
@@ -238,9 +238,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await prefs.async_initialize()
 
     # Initialize Cloud
+    loaded = False
+
+    async def _discover_platforms():
+        """Discover platforms."""
+        nonlocal loaded
+
+        # Prevent multiple discovery
+        if loaded:
+            return
+        loaded = True
+
+        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+        await async_load_platform(hass, Platform.STT, DOMAIN, {}, config)
+        await async_load_platform(hass, Platform.TTS, DOMAIN, {}, config)
+
     websession = async_get_clientsession(hass)
-    client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
+    client = CloudClient(
+        hass, prefs, websession, alexa_conf, google_conf, _discover_platforms
+    )
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
+    cloud.iot.register_on_connect(client.on_cloud_connected)
 
     async def _shutdown(event):
         """Shutdown event."""
@@ -262,8 +280,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
-    loaded = False
-
     async def async_startup_repairs(_=None) -> None:
         """Create repair issues after startup."""
         if not cloud.is_logged_in:
@@ -273,18 +289,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_manage_legacy_subscription_issue(hass, subscription_info)
 
     async def _on_connect():
-        """Discover RemoteUI binary sensor."""
-        nonlocal loaded
-
-        # Prevent multiple discovery
-        if loaded:
-            return
-        loaded = True
-
-        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.STT, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.TTS, DOMAIN, {}, config)
-
+        """Handle cloud connect."""
         async_dispatcher_send(
             hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
         )

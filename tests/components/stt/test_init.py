@@ -18,7 +18,9 @@ from homeassistant.components.stt import (
     SpeechResult,
     SpeechResultState,
     SpeechToTextEntity,
+    async_default_engine,
     async_get_provider,
+    async_get_speech_to_text_engine,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.core import HomeAssistant, State
@@ -52,7 +54,7 @@ class BaseProvider:
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return ["de", "de-CH", "en-US"]
+        return ["de", "de-CH", "en"]
 
     @property
     def supported_formats(self) -> list[AudioFormats]:
@@ -222,7 +224,7 @@ async def test_get_provider_info(
     response = await client.get(f"/api/stt/{setup.url_path}")
     assert response.status == HTTPStatus.OK
     assert await response.json() == {
-        "languages": ["de", "de-CH", "en-US"],
+        "languages": ["de", "de-CH", "en"],
         "formats": ["wav", "ogg"],
         "codecs": ["pcm", "opus"],
         "sample_rates": [16000],
@@ -245,7 +247,6 @@ async def test_non_existing_provider(
     response = await client.get("/api/stt/not_exist")
     assert response.status == HTTPStatus.NOT_FOUND
 
-    # Language en is matched with en-US
     response = await client.post(
         "/api/stt/not_exist",
         headers={
@@ -268,8 +269,6 @@ async def test_stream_audio(
 ) -> None:
     """Test streaming audio and getting response."""
     client = await hass_client()
-
-    # Language en is matched with en-US
     response = await client.post(
         f"/api/stt/{setup.url_path}",
         headers={
@@ -349,6 +348,9 @@ async def test_get_provider(
     await mock_setup(hass, tmp_path, mock_provider)
     assert mock_provider == async_get_provider(hass, TEST_DOMAIN)
 
+    # Test getting the default provider
+    assert mock_provider == async_get_provider(hass)
+
 
 async def test_config_entry_unload(
     hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
@@ -399,7 +401,7 @@ async def test_ws_list_engines(
     assert msg["success"]
     assert msg["result"] == {
         "providers": [
-            {"engine_id": engine_id, "supported_languages": ["de", "de-CH", "en-US"]}
+            {"engine_id": engine_id, "supported_languages": ["de", "de-CH", "en"]}
         ]
     }
 
@@ -416,7 +418,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en-US"]}]
+        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en-UK"})
@@ -424,7 +426,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en-US"]}]
+        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "de"})
@@ -444,3 +446,90 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [{"engine_id": engine_id, "supported_languages": ["de-CH", "de"]}]
     }
+
+
+async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test async_default_engine."""
+    assert await async_setup_component(hass, "stt", {"stt": {}})
+    await hass.async_block_till_done()
+
+    assert async_default_engine(hass) is None
+
+
+async def test_default_engine(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test async_default_engine."""
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        TEST_DOMAIN,
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    assert await async_setup_component(hass, "stt", {"stt": {"platform": TEST_DOMAIN}})
+    await hass.async_block_till_done()
+
+    assert async_default_engine(hass) == TEST_DOMAIN
+
+
+async def test_default_engine_entity(
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+) -> None:
+    """Test async_default_engine."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+
+    assert async_default_engine(hass) == f"{DOMAIN}.{TEST_DOMAIN}"
+
+
+async def test_default_engine_prefer_cloud(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test async_default_engine."""
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        TEST_DOMAIN,
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        "cloud",
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    assert await async_setup_component(
+        hass, "stt", {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
+    )
+    await hass.async_block_till_done()
+
+    assert async_default_engine(hass) == "cloud"
+
+
+async def test_get_engine_legacy(
+    hass: HomeAssistant, tmp_path: Path, mock_provider: MockProvider
+) -> None:
+    """Test async_get_speech_to_text_engine."""
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        TEST_DOMAIN,
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        "cloud",
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    assert await async_setup_component(
+        hass, "stt", {"stt": [{"platform": TEST_DOMAIN}, {"platform": "cloud"}]}
+    )
+    await hass.async_block_till_done()
+
+    assert async_get_speech_to_text_engine(hass, "no_such_provider") is None
+    assert async_get_speech_to_text_engine(hass, "test") is mock_provider
+
+
+async def test_get_engine_entity(
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+) -> None:
+    """Test async_get_speech_to_text_engine."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+
+    assert async_get_speech_to_text_engine(hass, "stt.test") is mock_provider_entity
