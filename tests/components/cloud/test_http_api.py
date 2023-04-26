@@ -16,6 +16,7 @@ from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util.location import LocationInfo
 
 from . import mock_cloud, mock_cloud_prefs
@@ -106,6 +107,8 @@ async def test_google_actions_sync_fails(
 async def test_login_view(hass: HomeAssistant, cloud_client) -> None:
     """Test logging in when an assist pipeline is available."""
     hass.data["cloud"] = MagicMock(login=AsyncMock())
+    await async_setup_component(hass, "stt", {})
+    await async_setup_component(hass, "tts", {})
 
     with patch(
         "homeassistant.components.cloud.http_api.assist_pipeline.async_get_pipelines",
@@ -133,6 +136,8 @@ async def test_login_view(hass: HomeAssistant, cloud_client) -> None:
 async def test_login_view_create_pipeline(hass: HomeAssistant, cloud_client) -> None:
     """Test logging in when no assist pipeline is available."""
     hass.data["cloud"] = MagicMock(login=AsyncMock())
+    await async_setup_component(hass, "stt", {})
+    await async_setup_component(hass, "tts", {})
 
     with patch(
         "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
@@ -153,6 +158,8 @@ async def test_login_view_create_pipeline_fail(
 ) -> None:
     """Test logging in when no assist pipeline is available."""
     hass.data["cloud"] = MagicMock(login=AsyncMock())
+    await async_setup_component(hass, "stt", {})
+    await async_setup_component(hass, "tts", {})
 
     with patch(
         "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
