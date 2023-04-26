@@ -301,7 +301,7 @@ async def async_setup_entry(  # noqa: C901
         if voice_assistant_udp_server is not None:
             return None
 
-        voice_assistant_udp_server = VoiceAssistantUDPServer(hass)
+        voice_assistant_udp_server = VoiceAssistantUDPServer(hass, entry_data)
         port = await voice_assistant_udp_server.start_server()
 
         hass.async_create_background_task(
