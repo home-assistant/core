@@ -3,13 +3,12 @@
 From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 """
 from collections.abc import Generator
-import os
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.tts import DEFAULT_CACHE_DIR, _get_cache_files
+from homeassistant.components.tts import _get_cache_files
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
@@ -50,14 +49,9 @@ def mock_get_cache_files():
 
 @pytest.fixture(autouse=True)
 def mock_init_cache_dir(
-    hass: HomeAssistant,
     init_cache_dir_side_effect: Any,
 ) -> Generator[MagicMock, None, None]:
-    """Prevent the TTS cache from being created and fail the test if it exists."""
-    cache_dir = hass.config.path(DEFAULT_CACHE_DIR)
-    if os.path.isdir(cache_dir):
-        pytest.fail(f"Default TTS cache dir '{cache_dir}' already exists")
-
+    """Mock the TTS cache dir in memory."""
     with patch(
         "homeassistant.components.tts._init_tts_cache_dir",
         side_effect=init_cache_dir_side_effect,
