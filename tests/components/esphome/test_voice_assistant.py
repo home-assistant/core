@@ -193,7 +193,7 @@ async def test_unknown_event_type(
     hass: HomeAssistant,
     voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
 ) -> None:
-    """Test the UDP server runs and queues incoming data."""
+    """Test the UDP server does not call handle_event for unknown events."""
     voice_assistant_udp_server_v1._event_callback(
         PipelineEvent(
             type="unknown-event",
@@ -208,7 +208,7 @@ async def test_error_event_type(
     hass: HomeAssistant,
     voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
 ) -> None:
-    """Test the UDP server runs and queues incoming data."""
+    """Test the UDP server calls event handler with error."""
     voice_assistant_udp_server_v1._event_callback(
         PipelineEvent(
             type=PipelineEventType.ERROR,
@@ -224,20 +224,12 @@ async def test_error_event_type(
 
 async def test_send_tts_not_called(
     hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
     voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
 ) -> None:
-    """Test the UDP server runs and queues incoming data."""
-    port_to_use = unused_udp_port_factory()
-
+    """Test the UDP server with a v1 device does not call _send_tts."""
     with patch(
-        "homeassistant.components.esphome.voice_assistant.UDP_PORT", new=port_to_use
-    ), patch(
         "homeassistant.components.esphome.voice_assistant.VoiceAssistantUDPServer._send_tts"
     ) as mock_send_tts:
-        await voice_assistant_udp_server_v1.start_server()
-
         voice_assistant_udp_server_v1._event_callback(
             PipelineEvent(
                 type=PipelineEventType.TTS_END,
@@ -252,20 +244,12 @@ async def test_send_tts_not_called(
 
 async def test_send_tts_called(
     hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
 ) -> None:
-    """Test the UDP server runs and queues incoming data."""
-    port_to_use = unused_udp_port_factory()
-
+    """Test the UDP server with a v2 device calls _send_tts."""
     with patch(
-        "homeassistant.components.esphome.voice_assistant.UDP_PORT", new=port_to_use
-    ), patch(
         "homeassistant.components.esphome.voice_assistant.VoiceAssistantUDPServer._send_tts"
     ) as mock_send_tts:
-        await voice_assistant_udp_server_v2.start_server()
-
         voice_assistant_udp_server_v2._event_callback(
             PipelineEvent(
                 type=PipelineEventType.TTS_END,
@@ -280,16 +264,10 @@ async def test_send_tts_called(
 
 async def test_send_tts(
     hass: HomeAssistant,
-    socket_enabled,
-    unused_udp_port_factory,
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
 ) -> None:
-    """Test the UDP server runs and queues incoming data."""
-    port_to_use = unused_udp_port_factory()
-
+    """Test the UDP server calls sendto to transmit audio data to device."""
     with patch(
-        "homeassistant.components.esphome.voice_assistant.UDP_PORT", new=port_to_use
-    ), patch(
         "homeassistant.components.esphome.voice_assistant.tts.async_get_media_source_audio",
         return_value=("raw", bytes(1024)),
     ):
