@@ -453,6 +453,7 @@ async def test_delete_and_reload(
 
     assert len(mock_notifier) == expected_notifications
     assert len(hass.states.async_entity_ids()) == 1
+    assert TEST_ENTITY in hass.states.async_entity_ids()
 
     state_1 = hass.states.get(ENTITY_ID)
     assert state_1 is None
@@ -475,6 +476,24 @@ async def test_delete_and_reload(
 
     assert len(mock_notifier) == expected_notifications
     assert len(hass.states.async_entity_ids()) == 1
+    assert TEST_ENTITY in hass.states.async_entity_ids()
 
     state_1 = hass.states.get(ENTITY_ID)
     assert state_1 is None
+
+
+async def test_setup_failure(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], hass_admin_user: MockUser
+) -> None:
+    """Test a setup with no entities (for code coverage)."""
+    config = deepcopy(TEST_CONFIG)
+    del config[DOMAIN][NAME]
+    await async_setup_component(hass, DOMAIN, config)
+    expected_notifications = 0
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 2
+    assert "persistent_notification.invalid_config" in hass.states.async_entity_ids()
+    assert TEST_ENTITY in hass.states.async_entity_ids()
+    assert len(mock_notifier) == expected_notifications
