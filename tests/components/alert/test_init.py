@@ -20,6 +20,7 @@ import homeassistant.components.notify as notify
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
+    CONF_ID,
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
@@ -541,3 +542,15 @@ async def test_delete_and_reload(
 
     state_1 = hass.states.get(ENTITY_ID)
     assert state_1 is None
+
+
+async def test_from_storage(hass: HomeAssistant) -> None:
+    """Test the from_storage method of the alert."""
+    config = deepcopy(TEST_CONFIG[DOMAIN][NAME])
+    config[CONF_ID] = NAME
+    config[CONF_CAN_ACK] = False
+    config[CONF_REPEAT] = []
+    entity = alert.Alert.from_storage(config)
+    entity.entity_id = ENTITY_ID
+
+    assert entity._watched_entity_id == TEST_ENTITY
