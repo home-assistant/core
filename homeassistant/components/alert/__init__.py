@@ -163,8 +163,7 @@ class Alert(collection.CollectionEntity, Entity):
         self._ack = False
         self._cancel: Callable[[], None] | None = None
         self._send_done_message = False
-
-        self.unsub: Callable[[], None] | None = None
+        self._unsub: Callable[[], None] | None = None
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Self:
@@ -190,7 +189,7 @@ class Alert(collection.CollectionEntity, Entity):
         return STATE_IDLE
 
     async def async_added_to_hass(self) -> None:
-        """Register device trackers."""
+        """Add hass to templates and register for tracking state changes."""
         await super().async_added_to_hass()
         if self._message_template is not None:
             self._message_template.hass = self.hass
@@ -199,14 +198,14 @@ class Alert(collection.CollectionEntity, Entity):
         if self._title_template is not None:
             self._title_template.hass = self.hass
 
-        self.unsub = async_track_state_change_event(
+        self._unsub = async_track_state_change_event(
             self.hass, [self._watched_entity_id], self.watched_entity_change
         )
 
     async def unregister_state_change_listener(self) -> None:
         """Unregister from state change listener."""
-        if self.unsub:
-            self.unsub()
+        if self._unsub:
+            self._unsub()
 
     async def watched_entity_change(self, event: Event) -> None:
         """Determine if the alert should start or stop."""
