@@ -2,7 +2,7 @@
   "entity": {
     "select": {
       "pipeline": {
-        "name": "Assist Pipeline",
+        "name": "Assist pipeline",
         "state": {
           "preferred": "Preferred"
         }

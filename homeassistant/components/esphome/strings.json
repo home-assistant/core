@@ -49,7 +49,7 @@
   "entity": {
     "binary_sensor": {
       "call_active": {
-        "name": "Call Active"
+        "name": "[%key:component::voip::entity::binary_sensor::call_active::name%]"
       }
     },
     "select": {
