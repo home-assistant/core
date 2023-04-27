@@ -172,6 +172,10 @@ faust-cchardet>=2.1.18
 # which break wheel builds so we need at least 11.0.1
 # https://github.com/aaugustin/websockets/issues/1329
 websockets>=11.0.1
+
+# gql needs to be a modern version and packages
+# that use it do not require a high enough version
+gql>=3.4.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
