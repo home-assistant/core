@@ -65,7 +65,7 @@ SUPPORTED_DOMAINS = {
     "fan",
     "group",
     "humidifier",
-    "iamge_processing",
+    "image_processing",
     "input_boolean",
     "input_button",
     "input_number",
