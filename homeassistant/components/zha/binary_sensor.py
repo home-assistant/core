@@ -132,12 +132,10 @@ class Occupancy(BinarySensor):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY)
-class HueOccupancy(BinarySensor):
-    """ZHA BinarySensor."""
+class HueOccupancy(Occupancy):
+    """ZHA Hue occupancy."""
 
     SENSOR_ATTR = "hue_occupancy"
-    _attr_name: str = "Occupancy"
-    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
 
 
 @STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ON_OFF)
