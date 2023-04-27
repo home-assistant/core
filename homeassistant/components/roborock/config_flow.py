@@ -49,14 +49,11 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._client = RoborockApiClient(username)
             try:
                 await self._client.request_code()
-            except RoborockAccountDoesNotExist as ex:
-                _LOGGER.exception(ex)
+            except RoborockAccountDoesNotExist:
                 errors["base"] = "invalid_email"
-            except RoborockUrlException as ex:
-                _LOGGER.exception(ex)
+            except RoborockUrlException:
                 errors["base"] = "unknown_url"
-            except RoborockInvalidEmail as ex:
-                _LOGGER.exception(ex)
+            except RoborockInvalidEmail:
                 errors["base"] = "invalid_email_format"
             except RoborockException as ex:
                 _LOGGER.exception(ex)
@@ -85,8 +82,7 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Logging into Roborock account using email provided code")
             try:
                 login_data = await self._client.code_login(code)
-            except RoborockInvalidCode as ex:
-                _LOGGER.exception(ex)
+            except RoborockInvalidCode:
                 errors["base"] = "invalid_code"
             except RoborockException as ex:
                 _LOGGER.exception(ex)
