@@ -135,8 +135,6 @@ class Occupancy(BinarySensor):
 class HueOccupancy(Occupancy):
     """ZHA Hue occupancy."""
 
-    SENSOR_ATTR = "hue_occupancy"
-
 
 @STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ON_OFF)
 class Opening(BinarySensor):
