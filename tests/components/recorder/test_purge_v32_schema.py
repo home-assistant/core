@@ -1111,7 +1111,7 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
     hass: HomeAssistant,
     recorder_db_url: str,
 ) -> None:
-    """Test purging with legacy a new events with a detached state."""
+    """Test purging with legacy and new events with a detached state."""
     if recorder_db_url.startswith(("mysql://", "postgresql://")):
         return pytest.skip("This tests disables foreign key checks on SQLite")
 
