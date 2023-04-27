@@ -31,8 +31,8 @@
   },
   "issues": {
     "deprecated_yaml": {
-      "title": "The Netxcloud YAML configuration has been deprecated",
-      "description": "Configuring Netxcloud using YAML has been deprecated.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `nextcloud` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+      "title": "The Nextcloud YAML configuration has been deprecated",
+      "description": "Configuring Nextcloud using YAML has been deprecated.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `nextcloud` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }
