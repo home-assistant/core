@@ -1,15 +1,9 @@
 """Constants for 1-Wire integration."""
 from pyownet.protocol import Error as ProtocolError
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.onewire.const import Platform
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
     PERCENTAGE,
@@ -25,7 +19,6 @@ ATTR_INJECT_READS = "inject_reads"
 ATTR_UNIQUE_ID = "unique_id"
 
 FIXED_ATTRIBUTES = (
-    ATTR_DEVICE_CLASS,
     ATTR_STATE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
 )
@@ -53,7 +46,6 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    25.123",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
@@ -74,13 +66,11 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    25.123",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.PRESSURE,
                 ATTR_INJECT_READS: b"  1025.123",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPressure.MBAR,
@@ -153,7 +143,6 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: ProtocolError,
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
@@ -166,67 +155,56 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    25.123",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: b"    72.7563",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: b"    73.7563",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: b"    74.7563",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: b"    75.7563",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: ProtocolError,
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.PRESSURE,
                 ATTR_INJECT_READS: b"    969.265",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPressure.MBAR,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.ILLUMINANCE,
                 ATTR_INJECT_READS: b"    65.8839",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
                 ATTR_INJECT_READS: b"     2.97",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfElectricPotential.VOLT,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
                 ATTR_INJECT_READS: b"    4.74",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfElectricPotential.VOLT,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
                 ATTR_INJECT_READS: b"    0.12",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfElectricPotential.VOLT,
@@ -245,7 +223,6 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    26.984",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
@@ -259,7 +236,6 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_DEVICE_FILE: "/28.222222222222/temperature9",
                 ATTR_INJECT_READS: b"    26.984",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -274,7 +250,6 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_DEVICE_FILE: "/28.222222222223/temperature",
                 ATTR_INJECT_READS: b"    26.984",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -369,26 +344,22 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    26.984",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_DEVICE_FILE: "/30.111111111111/typeK/temperature",
                 ATTR_INJECT_READS: b"    173.7563",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
                 ATTR_INJECT_READS: b"     2.97",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfElectricPotential.VOLT,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
                 ATTR_INJECT_READS: b"    0.12",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfElectricPotential.VOLT,
@@ -422,7 +393,6 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    28.243",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
@@ -435,7 +405,6 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    29.123",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
@@ -448,19 +417,16 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: b"    67.745",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: b"    65.541",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    25.123",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
@@ -477,25 +443,21 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: b"    41.745",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: b"    42.541",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.PRESSURE,
                 ATTR_INJECT_READS: b"    43.123",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPressure.CBAR,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.PRESSURE,
                 ATTR_INJECT_READS: b"    44.123",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPressure.CBAR,
@@ -542,22 +504,18 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.BINARY_SENSOR: [
             {
-                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
                 ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
                 ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
                 ATTR_INJECT_READS: b"0",
             },
             {
-                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
                 ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PROBLEM,
                 ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
                 ATTR_INJECT_READS: b"0",
             },
@@ -588,25 +546,21 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    13.9375",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.PRESSURE,
                 ATTR_INJECT_READS: b"  1012.21",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPressure.MBAR,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.ILLUMINANCE,
                 ATTR_INJECT_READS: b"  65.8839",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_INJECT_READS: b"    41.375",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
@@ -620,13 +574,11 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_INJECT_READS: b"    13.9375",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             },
             {
-                ATTR_DEVICE_CLASS: SensorDeviceClass.PRESSURE,
                 ATTR_INJECT_READS: b"  1012.21",
                 ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfPressure.MBAR,
