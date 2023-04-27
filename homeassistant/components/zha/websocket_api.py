@@ -1213,9 +1213,7 @@ async def websocket_restore_network_backup(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/network/change_channel",
-        vol.Required(ATTR_NEW_CHANNEL): vol.Any(
-            "auto", vol.Range(11, 26)
-        ),
+        vol.Required(ATTR_NEW_CHANNEL): vol.Any("auto", vol.Range(11, 26)),
     }
 )
 @websocket_api.async_response
