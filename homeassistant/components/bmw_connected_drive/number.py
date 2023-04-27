@@ -1,9 +1,11 @@
 """Number platform for BMW."""
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any
 
+from bimmer_connected.models import MyBMWAPIError
 from bimmer_connected.vehicle import MyBMWVehicle
 
 from homeassistant.components.number import (
@@ -14,6 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BMWBaseEntity
@@ -111,4 +114,9 @@ class BMWNumber(BMWBaseEntity, NumberEntity):
             self.vehicle.vin,
             value,
         )
-        await self.entity_description.remote_service(self.vehicle, value)
+        try:
+            await self.entity_description.remote_service(self.vehicle, value)
+        except MyBMWAPIError as ex:
+            raise HomeAssistantError(str(ex)) from ex
+        except TypeError as ex:
+            raise ValueError(str(ex)) from ex

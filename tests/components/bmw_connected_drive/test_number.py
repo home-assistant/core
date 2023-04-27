@@ -1,10 +1,14 @@
 """Test BMW numbers."""
+from unittest.mock import AsyncMock
+
+from bimmer_connected.models import MyBMWAPIError, MyBMWRemoteServiceError
 from bimmer_connected.vehicle.remote_services import RemoteServices
 import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_mocked_integration
 
@@ -78,3 +82,43 @@ async def test_update_triggers_fail(
             target={"entity_id": entity_id},
         )
     assert RemoteServices.trigger_remote_service.call_count == 0
+
+
+@pytest.mark.parametrize(
+    ("raised", "expected"),
+    [
+        (MyBMWRemoteServiceError, HomeAssistantError),
+        (MyBMWAPIError, HomeAssistantError),
+        (TypeError, ValueError),
+        (ValueError, ValueError),
+    ],
+)
+async def test_update_triggers_exceptions(
+    hass: HomeAssistant,
+    raised: Exception,
+    expected: Exception,
+    bmw_fixture: respx.Router,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test not allowed values for number inputs."""
+
+    # Setup component
+    assert await setup_mocked_integration(hass)
+
+    # Setup exception
+    monkeypatch.setattr(
+        RemoteServices,
+        "trigger_remote_service",
+        AsyncMock(side_effect=raised),
+    )
+
+    # Test
+    with pytest.raises(expected):
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            service_data={"value": "80"},
+            blocking=True,
+            target={"entity_id": "number.i4_edrive40_target_soc"},
+        )
+    assert RemoteServices.trigger_remote_service.call_count == 1
