@@ -272,7 +272,7 @@ class FritzBoxTools(
 
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
-        enity_data: UpdateCoordinatorDataType = {
+        entity_data: UpdateCoordinatorDataType = {
             "call_deflections": {},
             "entity_states": {},
         }
@@ -280,20 +280,20 @@ class FritzBoxTools(
             await self.async_scan_devices()
             for key, update_fn in self._entity_update_functions.items():
                 _LOGGER.debug("update entity %s", key)
-                enity_data["entity_states"][
+                entity_data["entity_states"][
                     key
                 ] = await self.hass.async_add_executor_job(
                     update_fn, self.fritz_status, self.data.get(key)
                 )
             if self.has_call_deflections:
-                enity_data[
+                entity_data[
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
         except FRITZ_EXCEPTIONS as ex:
             raise update_coordinator.UpdateFailed(ex) from ex
 
-        _LOGGER.debug("enity_data: %s", enity_data)
-        return enity_data
+        _LOGGER.debug("enity_data: %s", entity_data)
+        return entity_data
 
     @property
     def unique_id(self) -> str:
