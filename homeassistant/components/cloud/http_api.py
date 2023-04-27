@@ -688,17 +688,18 @@ async def alexa_get(
     """Get data for a single alexa entity."""
     entity_registry = er.async_get(hass)
     entity_id: str = msg["entity_id"]
-    state = hass.states.get(entity_id)
 
-    if not entity_registry.async_is_registered(entity_id) or not state:
+    if not entity_registry.async_is_registered(entity_id):
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
-            f"{entity_id} unknown or not in the entity registry",
+            f"{entity_id} not in the entity registry",
         )
         return
 
-    if not entity_supported_by_alexa(hass, entity_id):
+    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
+        hass, entity_id
+    ):
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_SUPPORTED,
