@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
+import logging
 from typing import Any
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -15,6 +17,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
+    CONF_ID,
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
@@ -27,6 +30,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -35,7 +39,6 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 import homeassistant.helpers.service
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
 
@@ -86,27 +89,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component."""
     component = EntityComponent[Alert](LOGGER, DOMAIN, hass)
 
-    entities = await async_build_alerts_from_config(hass, config)
-
-    if not entities:
-        return False
+    id_manager = collection.IDManager()
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+    )
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Alert
+    )
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **(conf or {})} for id_, conf in config.get(DOMAIN, {}).items()]
+    )
 
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
 
-    async def async_reload_yaml(call: ServiceCall) -> None:
-        """Reload yaml entities."""
-
+    async def async_reload_yaml(service_call: ServiceCall) -> None:
+        """Remove all Alerts and load new ones from config."""
         for entity in component.entities:
             await entity.unregister_state_change_listener()
 
         conf = await component.async_prepare_reload()
-        if conf is None or DOMAIN not in conf:
-            conf = {DOMAIN: {}}
-        entities = await async_build_alerts_from_config(hass, conf)
-        if entities:
-            await component.async_add_entities(entities)
+        if conf is None or not conf:
+            return
+        id_manager = collection.IDManager()
+        yaml_collection = collection.YamlCollection(
+            logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+        )
+        collection.sync_entity_lifecycle(
+            hass, DOMAIN, DOMAIN, component, yaml_collection, Alert
+        )
+        await yaml_collection.async_load(
+            [
+                {CONF_ID: id_, **(conf or {})}
+                for id_, conf in conf.get(DOMAIN, {}).items()
+            ]
+        )
 
     homeassistant.helpers.service.async_register_admin_service(
         hass,
@@ -116,109 +134,51 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
-    await component.async_add_entities(entities)
-
     return True
 
 
-async def async_build_alerts_from_config(
-    hass: HomeAssistant, config: ConfigType
-) -> list[Alert]:
-    """Prepare a list of Alert objects from the config."""
-    entities: list[Alert] = []
-
-    for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
-
-        name = cfg[CONF_NAME]
-        watched_entity_id = cfg[CONF_ENTITY_ID]
-        alert_state = cfg[CONF_STATE]
-        repeat = cfg[CONF_REPEAT]
-        skip_first = cfg[CONF_SKIP_FIRST]
-        message_template = cfg.get(CONF_ALERT_MESSAGE)
-        done_message_template = cfg.get(CONF_DONE_MESSAGE)
-        notifiers = cfg[CONF_NOTIFIERS]
-        can_ack = cfg[CONF_CAN_ACK]
-        title_template = cfg.get(CONF_TITLE)
-        data = cfg.get(CONF_DATA)
-
-        entities.append(
-            Alert(
-                hass,
-                object_id,
-                name,
-                watched_entity_id,
-                alert_state,
-                repeat,
-                skip_first,
-                message_template,
-                done_message_template,
-                notifiers,
-                can_ack,
-                title_template,
-                data,
-            )
-        )
-
-    return entities
-
-
-class Alert(Entity):
+class Alert(collection.CollectionEntity, Entity):
     """Representation of an alert."""
 
     _attr_should_poll = False
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entity_id: str,
-        name: str,
-        watched_entity_id: str,
-        state: str,
-        repeat: list[float],
-        skip_first: bool,
-        message_template: Template | None,
-        done_message_template: Template | None,
-        notifiers: list[str],
-        can_ack: bool,
-        title_template: Template | None,
-        data: dict[Any, Any],
-    ) -> None:
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the alert."""
-        self.hass = hass
-        self._attr_name = name
-        self._alert_state = state
-        self._skip_first = skip_first
-        self._data = data
 
-        self._message_template = message_template
-        if self._message_template is not None:
-            self._message_template.hass = hass
+        self.entity_id = f"{DOMAIN}.{config[CONF_NAME]}"
+        self._attr_name = config[CONF_NAME]
+        self._alert_state = config[CONF_STATE]
+        self._skip_first = config[CONF_SKIP_FIRST]
+        self._data = config.get(CONF_DATA)
+        self._watched_entity_id = config[CONF_ENTITY_ID]
+        self._message_template = config.get(CONF_ALERT_MESSAGE)
+        self._done_message_template = config.get(CONF_DONE_MESSAGE)
+        self._title_template = config.get(CONF_TITLE)
+        self._notifiers = config[CONF_NOTIFIERS]
+        self._can_ack = config[CONF_CAN_ACK]
+        self._delay = [timedelta(minutes=val) for val in config[CONF_REPEAT]]
 
-        self._done_message_template = done_message_template
-        if self._done_message_template is not None:
-            self._done_message_template.hass = hass
-
-        self._title_template = title_template
-        if self._title_template is not None:
-            self._title_template.hass = hass
-
-        self._notifiers = notifiers
-        self._can_ack = can_ack
-
-        self._delay = [timedelta(minutes=val) for val in repeat]
         self._next_delay = 0
-
         self._firing = False
         self._ack = False
         self._cancel: Callable[[], None] | None = None
         self._send_done_message = False
-        self.entity_id = f"{DOMAIN}.{entity_id}"
 
-        self.unsub = async_track_state_change_event(
-            hass, [watched_entity_id], self.watched_entity_change
-        )
+        self.unsub: Callable[[], None] | None = None
+
+    @classmethod
+    def from_storage(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from storage."""
+        alert = cls(config)
+        alert.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
+        return alert
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from yaml."""
+        alert = cls(config)
+        alert.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
+        return alert
 
     @property
     def state(self) -> str:
@@ -229,9 +189,24 @@ class Alert(Entity):
             return STATE_ON
         return STATE_IDLE
 
+    async def async_added_to_hass(self) -> None:
+        """Register device trackers."""
+        await super().async_added_to_hass()
+        if self._message_template is not None:
+            self._message_template.hass = self.hass
+        if self._done_message_template is not None:
+            self._done_message_template.hass = self.hass
+        if self._title_template is not None:
+            self._title_template.hass = self.hass
+
+        self.unsub = async_track_state_change_event(
+            self.hass, [self._watched_entity_id], self.watched_entity_change
+        )
+
     async def unregister_state_change_listener(self) -> None:
         """Unregister from state change listener."""
-        self.unsub()
+        if self.unsub:
+            self.unsub()
 
     async def watched_entity_change(self, event: Event) -> None:
         """Determine if the alert should start or stop."""
@@ -348,3 +323,7 @@ class Alert(Entity):
         if self._ack:
             return await self.async_turn_on()
         return await self.async_turn_off()
+
+    async def async_update_config(self, config: ConfigType) -> None:
+        """Handle when the config is updated."""
+        return

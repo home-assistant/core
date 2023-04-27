@@ -8,6 +8,7 @@ import pytest
 import homeassistant.components.alert as alert
 from homeassistant.components.alert.const import (
     CONF_ALERT_MESSAGE,
+    CONF_CAN_ACK,
     CONF_DATA,
     CONF_DONE_MESSAGE,
     CONF_NOTIFIERS,
@@ -61,21 +62,17 @@ TEST_CONFIG = {
         }
     }
 }
-TEST_NOACK = [
-    NAME,
-    NAME,
-    "sensor.test",
-    STATE_ON,
-    [30],
-    False,
-    None,
-    None,
-    NOTIFIER,
-    False,
-    None,
-    None,
-]
+TEST_NOACK = {
+    CONF_NAME: NAME,
+    CONF_ENTITY_ID: "sensor.test",
+    CONF_STATE: STATE_ON,
+    CONF_REPEAT: [30],
+    CONF_SKIP_FIRST: False,
+    CONF_NOTIFIERS: NOTIFIER,
+    CONF_CAN_ACK: False,
+}
 ENTITY_ID = f"{DOMAIN}.{NAME}"
+ENTITY_ID_MODIFIED = f"{DOMAIN}.{NAME_MODIFIED}"
 
 
 @pytest.fixture
@@ -322,7 +319,9 @@ async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) 
 
 async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -> None:
     """Test that the done message is reset when canceled."""
-    entity = alert.Alert(hass, *TEST_NOACK)
+    entity = alert.Alert(TEST_NOACK)
+    entity.hass = hass
+    await entity.async_added_to_hass()
     entity._cancel = lambda *args: None
     assert entity._send_done_message is False
     entity._send_done_message = True
@@ -356,6 +355,7 @@ async def test_reload(
     assert state_1 is not None
     assert state_1.name == NAME
 
+    # Change properties of the original entity name
     config = deepcopy(TEST_CONFIG)
     config[DOMAIN][NAME][CONF_NAME] = NAME_MODIFIED
     config[DOMAIN][NAME][CONF_ENTITY_ID] = TEST_ENTITY_MODIFIED
@@ -414,6 +414,66 @@ async def test_reload(
     assert len(mock_notifier) == expected_notifications
     last_event = mock_notifier[-1]
     assert last_event.data[notify.ATTR_MESSAGE] == DONE_MESSAGE_MODIFIED
+
+    # Change the entity id to a new id
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME_MODIFIED] = config[DOMAIN][NAME]
+    del config[DOMAIN][NAME]
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_notifier) == expected_notifications
+    assert len(hass.states.async_entity_ids()) == 3
+    assert ENTITY_ID_MODIFIED in hass.states.async_entity_ids()
+    assert ENTITY_ID not in hass.states.async_entity_ids()
+
+    state_1 = hass.states.get(ENTITY_ID_MODIFIED)
+    assert state_1 is not None
+    assert state_1.name == NAME
+
+    # Assert the new watched entity and check that the alert/notification does not fire
+    hass.states.async_set(TEST_ENTITY_MODIFIED, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == expected_notifications
+    assert hass.states.get(ENTITY_ID_MODIFIED).state == STATE_IDLE
+
+    # Deassert the new watched entity and check that the done notification does not fire
+    hass.states.async_set(TEST_ENTITY_MODIFIED, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == expected_notifications
+    assert hass.states.get(ENTITY_ID_MODIFIED).state == STATE_IDLE
+
+    # Assert the original watched entity and check that the modified alert does fire
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    expected_notifications += 1
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID_MODIFIED).state == STATE_ON
+    assert len(mock_notifier) == expected_notifications
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_MESSAGE] == NAME
+    assert len(hass.states.async_entity_ids()) == 3
+
+    # Deassert the original watched entity and check that the modified alert does send done message
+    hass.states.async_set(TEST_ENTITY, STATE_OFF)
+    expected_notifications += 1
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID_MODIFIED).state == STATE_IDLE
+    assert len(mock_notifier) == expected_notifications
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_MESSAGE] == DONE_MESSAGE
 
 
 async def test_delete_and_reload(
@@ -480,20 +540,3 @@ async def test_delete_and_reload(
 
     state_1 = hass.states.get(ENTITY_ID)
     assert state_1 is None
-
-
-async def test_setup_failure(
-    hass: HomeAssistant, mock_notifier: list[ServiceCall], hass_admin_user: MockUser
-) -> None:
-    """Test a setup with no entities (for code coverage)."""
-    config = deepcopy(TEST_CONFIG)
-    del config[DOMAIN][NAME]
-    await async_setup_component(hass, DOMAIN, config)
-    expected_notifications = 0
-    hass.states.async_set(TEST_ENTITY, STATE_ON)
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_entity_ids()) == 2
-    assert "persistent_notification.invalid_config" in hass.states.async_entity_ids()
-    assert TEST_ENTITY in hass.states.async_entity_ids()
-    assert len(mock_notifier) == expected_notifications
