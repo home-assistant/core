@@ -68,6 +68,7 @@ ATTR_CONDITION_WINDY = "windy"
 ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
 ATTR_FORECAST = "forecast"
 ATTR_FORECAST_CONDITION: Final = "condition"
+ATTR_FORECAST_HUMIDITY: Final = "humidity"
 ATTR_FORECAST_NATIVE_PRECIPITATION: Final = "native_precipitation"
 ATTR_FORECAST_PRECIPITATION: Final = "precipitation"
 ATTR_FORECAST_PRECIPITATION_PROBABILITY: Final = "precipitation_probability"
@@ -116,6 +117,7 @@ class Forecast(TypedDict, total=False):
     """
 
     condition: str | None
+    humidity: int | None
     datetime: Required[str]
     precipitation_probability: int | None
     native_precipitation: float | None
