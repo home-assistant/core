@@ -684,9 +684,11 @@ def find_legacy_detached_states_and_attributes_to_purge(
     """Find states rows with event_id set but not linked event_id in Events."""
     return lambda_stmt(
         lambda: select(States.state_id, States.attributes_id)
-        .outerjoin(Events, States.event_id == States.event_id)
+        .outerjoin(Events, States.event_id == Events.event_id)
         .filter(States.event_id.isnot(None))
-        .filter(States.last_updated_ts < purge_before)
+        .filter(
+            (States.last_updated_ts < purge_before) | States.last_updated_ts.is_(None)
+        )
         .filter(Events.event_id.is_(None))
         .limit(SQLITE_MAX_BIND_VARS)
     )
