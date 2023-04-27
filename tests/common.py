@@ -67,6 +67,7 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
@@ -1445,3 +1446,23 @@ def async_get_persistent_notifications(
 ) -> dict[str, pn.Notification]:
     """Get the current persistent notifications."""
     return pn._async_get_or_create_notifications(hass)
+
+
+async def async_remove_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Force unload entity, used only to avoid lingering timers in tests.
+
+    Should only be used for entities which are not linked to a config entry.
+    """
+    domain = entity_id.partition(".")[0]
+    entity_component: EntityComponent[entity.Entity] = hass.data[domain]
+    entity: entity.Entity | None = entity_component.get_entity(entity_id)
+    assert entity, f"Entity {entity_id} not found in EntityComponent."
+    assert (
+        not entity.platform.config_entry
+    ), f"Entity {entity_id} should be unloaded via the config entry."
+    if entity.unique_id:
+        entity_registry = er.async_get(hass)
+        entity_registry.async_remove(entity_id)
+        await hass.async_block_till_done()
+    else:
+        await entity.async_remove()
