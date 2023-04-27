@@ -15,7 +15,7 @@ from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import MAP_VOICE
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import assist_pipeline, conversation, websocket_api
 from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
@@ -182,11 +182,32 @@ class CloudLoginView(HomeAssistantView):
     )
     async def post(self, request, data):
         """Handle login request."""
+
+        def cloud_assist_pipeline(hass: HomeAssistant) -> str | None:
+            """Return the ID of a cloud-enabled assist pipeline or None."""
+            for pipeline in assist_pipeline.async_get_pipelines(hass):
+                if (
+                    pipeline.conversation_engine == conversation.HOME_ASSISTANT_AGENT
+                    and pipeline.stt_engine == DOMAIN
+                    and pipeline.tts_engine == DOMAIN
+                ):
+                    return pipeline.id
+            return None
+
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
-        return self.json({"success": True})
+        # Make sure the pipeline store is loaded, needed because assist_pipeline
+        # is an after dependency of cloud
+        await assist_pipeline.async_setup_pipeline_store(hass)
+        new_cloud_pipeline_id: str | None = None
+        if (cloud_assist_pipeline(hass)) is None:
+            if cloud_pipeline := await assist_pipeline.async_create_default_pipeline(
+                hass, DOMAIN, DOMAIN
+            ):
+                new_cloud_pipeline_id = cloud_pipeline.id
+        return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
 class CloudLogoutView(HomeAssistantView):

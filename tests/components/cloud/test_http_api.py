@@ -16,6 +16,7 @@ from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util.location import LocationInfo
 
 from . import mock_cloud, mock_cloud_prefs
@@ -104,16 +105,74 @@ async def test_google_actions_sync_fails(
 
 
 async def test_login_view(hass: HomeAssistant, cloud_client) -> None:
-    """Test logging in."""
+    """Test logging in when an assist pipeline is available."""
     hass.data["cloud"] = MagicMock(login=AsyncMock())
+    await async_setup_component(hass, "stt", {})
+    await async_setup_component(hass, "tts", {})
 
-    req = await cloud_client.post(
-        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
-    )
+    with patch(
+        "homeassistant.components.cloud.http_api.assist_pipeline.async_get_pipelines",
+        return_value=[
+            Mock(
+                conversation_engine="homeassistant",
+                id="12345",
+                stt_engine=DOMAIN,
+                tts_engine=DOMAIN,
+            )
+        ],
+    ), patch(
+        "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
+    ) as create_pipeline_mock:
+        req = await cloud_client.post(
+            "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+        )
 
     assert req.status == HTTPStatus.OK
     result = await req.json()
-    assert result == {"success": True}
+    assert result == {"success": True, "cloud_pipeline": None}
+    create_pipeline_mock.assert_not_awaited()
+
+
+async def test_login_view_create_pipeline(hass: HomeAssistant, cloud_client) -> None:
+    """Test logging in when no assist pipeline is available."""
+    hass.data["cloud"] = MagicMock(login=AsyncMock())
+    await async_setup_component(hass, "stt", {})
+    await async_setup_component(hass, "tts", {})
+
+    with patch(
+        "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
+        return_value=AsyncMock(id="12345"),
+    ) as create_pipeline_mock:
+        req = await cloud_client.post(
+            "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+        )
+
+    assert req.status == HTTPStatus.OK
+    result = await req.json()
+    assert result == {"success": True, "cloud_pipeline": "12345"}
+    create_pipeline_mock.assert_awaited_once_with(hass, "cloud", "cloud")
+
+
+async def test_login_view_create_pipeline_fail(
+    hass: HomeAssistant, cloud_client
+) -> None:
+    """Test logging in when no assist pipeline is available."""
+    hass.data["cloud"] = MagicMock(login=AsyncMock())
+    await async_setup_component(hass, "stt", {})
+    await async_setup_component(hass, "tts", {})
+
+    with patch(
+        "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
+        return_value=None,
+    ) as create_pipeline_mock:
+        req = await cloud_client.post(
+            "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+        )
+
+    assert req.status == HTTPStatus.OK
+    result = await req.json()
+    assert result == {"success": True, "cloud_pipeline": None}
+    create_pipeline_mock.assert_awaited_once_with(hass, "cloud", "cloud")
 
 
 async def test_login_view_random_exception(cloud_client) -> None:
