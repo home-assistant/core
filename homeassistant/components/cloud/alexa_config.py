@@ -94,7 +94,7 @@ SUPPORTED_SENSOR_DEVICE_CLASSES = {
 }
 
 
-def _supported_legacy(hass: HomeAssistant, entity_id: str) -> bool:
+def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the entity is supported.
 
     This is called when migrating from legacy config format to avoid exposing
@@ -249,12 +249,12 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         # Backwards compat
         if (default_expose := self._prefs.alexa_default_expose) is None:
-            return not auxiliary_entity and _supported_legacy(self.hass, entity_id)
+            return not auxiliary_entity and entity_supported(self.hass, entity_id)
 
         return (
             not auxiliary_entity
             and split_entity_id(entity_id)[0] in default_expose
-            and _supported_legacy(self.hass, entity_id)
+            and entity_supported(self.hass, entity_id)
         )
 
     def should_expose(self, entity_id):
