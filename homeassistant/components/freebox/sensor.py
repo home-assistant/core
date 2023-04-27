@@ -15,9 +15,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
+from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,6 +103,34 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
+def add_entities(
+    hass: HomeAssistant,
+    router: FreeboxRouter,
+    async_add_entities: AddEntitiesCallback,
+    tracked: set[str],
+):
+    """Add new sensors from the router."""
+    new_tracked = []
+    for nodeid, node in router.home_devices.items():
+        if nodeid in tracked:
+            continue
+
+        battery_node = next(
+            filter(
+                lambda x: (x["name"] == "battery" and x["ep_type"] == "signal"),
+                node["show_endpoints"],
+            ),
+            None,
+        )
+        if battery_node and battery_node.get("value") is not None:
+            new_tracked.append(FreeboxBatterySensor(hass, router, node, battery_node))
+
+        tracked.add(nodeid)
+
+    if new_tracked:
+        async_add_entities(new_tracked, True)
+
+
 class FreeboxSensor(SensorEntity):
     """Representation of a Freebox sensor."""
 
@@ -125,7 +155,7 @@ class FreeboxSensor(SensorEntity):
             self._attr_native_value = state
 
     @callback
-    def async_on_demand_update(self):
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_update_state()
         self.async_write_ha_state()
@@ -213,3 +243,26 @@ class FreeboxDiskSensor(FreeboxSensor):
                 self._partition["free_bytes"] * 100 / self._partition["total_bytes"], 2
             )
         self._attr_native_value = value
+
+
+class FreeboxBatterySensor(FreeboxHomeEntity):
+    """Representation of a Freebox battery sensor."""
+
+    def __init__(self, hass: HomeAssistant, router, node, sub_node) -> None:
+        """Initialize a Pir."""
+        super().__init__(hass, router, node, sub_node)
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the devices' state attributes."""
+        return SensorDeviceClass.BATTERY
+
+    @property
+    def state(self) -> StateType | None | str | int | float:
+        """Return the current state of the device."""
+        return self.get_value("signal", "battery")
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit_of_measurement of the device."""
+        return PERCENTAGE

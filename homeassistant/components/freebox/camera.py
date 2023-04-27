@@ -80,7 +80,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         )
 
         self._command_motion_detection = self.get_command_id(
-            node["type"]["endpoints"], ATTR_DETECTION
+            node["type"]["endpoints"], "slot", ATTR_DETECTION
         )
         self._attr_extra_state_attributes = {}
         self.update_node(node)
@@ -100,7 +100,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
         self.update_node(self._router.home_devices[self._id])
         self.async_write_ha_state()
 
-    def update_node(self, node):
+    def update_node(self, node: dict[str, Any]) -> None:
         """Update params."""
         self._name = node["label"].strip()
 

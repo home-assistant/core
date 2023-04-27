@@ -3,7 +3,14 @@ from __future__ import annotations
 
 import socket
 
-from homeassistant.const import Platform
+from homeassistant.backports.enum import StrEnum
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_TRIGGERED,
+    Platform,
+)
 
 DOMAIN = "freebox"
 SERVICE_REBOOT = "reboot"
@@ -21,7 +28,10 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.COVER,
+    Platform.ALARM_CONTROL_PANEL,
     Platform.CAMERA,
+    Platform.BINARY_SENSOR,
 ]
 
 DEFAULT_DEVICE_NAME = "Unknown device"
@@ -57,6 +67,21 @@ DEVICE_ICONS = {
 ATTR_DETECTION = "detection"
 
 
+class Freeboxlabel(StrEnum):
+    """Available Freebox label."""
+
+    ALARM = "alarm"
+    BSHUTTER = "basic_shutter"
+    CAMERA = "camera"
+    DWS = "dws"
+    IOHOME = "iohome"
+    KFB = "kfb"
+    OPENER = "opener"
+    PIR = "pir"
+    RTS = "rts"
+    SHUTTER = "shutter"
+
+
 CATEGORY_TO_MODEL = {
     "pir": "F-HAPIR01A",
     "camera": "F-HACAM01A",
@@ -67,6 +92,23 @@ CATEGORY_TO_MODEL = {
     "iohome": "IOHome",
 }
 
+LABEL_TO_STATE = {
+    "alarm1_arming": STATE_ALARM_ARMING,
+    "alarm2_arming": STATE_ALARM_ARMING,
+    "alarm1_armed": STATE_ALARM_ARMED_AWAY,
+    "alarm2_armed": STATE_ALARM_ARMED_NIGHT,
+    "alarm1_alert_timer": STATE_ALARM_TRIGGERED,
+    "alarm2_alert_timer": STATE_ALARM_TRIGGERED,
+    "alert": STATE_ALARM_TRIGGERED,
+}
+
 HOME_COMPATIBLE_PLATFORMS = [
-    Platform.CAMERA,
+    Freeboxlabel.ALARM,
+    Freeboxlabel.BSHUTTER,
+    Freeboxlabel.CAMERA,
+    Freeboxlabel.DWS,
+    Freeboxlabel.KFB,
+    Freeboxlabel.OPENER,
+    Freeboxlabel.PIR,
+    Freeboxlabel.SHUTTER,
 ]

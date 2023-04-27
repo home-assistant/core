@@ -76,25 +76,55 @@ class FreeboxHomeEntity(Entity):
             )
         self.async_write_ha_state()
 
-    async def set_home_endpoint_value(self, command_id: Any, value=None) -> None:
+    async def set_home_endpoint_value(self, command_id: Any, value=None) -> bool:
         """Set Home endpoint value."""
         if command_id is None:
             _LOGGER.error("Unable to SET a value through the API. Command is None")
-            return
+            return False
         await self._router.home.set_home_endpoint_value(
             self._id, command_id, {"value": value}
         )
+        return True
 
-    def get_command_id(self, nodes, name) -> int | None:
+    async def get_home_endpoint_value(self, command_id: Any) -> Any | None:
+        """Get Home endpoint value."""
+        if command_id is None:
+            _LOGGER.error("Unable to GET a value through the API. Command is None")
+            return None
+        try:
+            node = await self._router.home.get_home_endpoint_value(self._id, command_id)
+        except TimeoutError:
+            _LOGGER.warning("The Freebox API Timeout during a value retrieval")
+            return None
+        return node.get("value")
+
+    def get_command_id(self, nodes, ep_type, name) -> int | None:
         """Get the command id."""
         node = next(
-            filter(lambda x: (x["name"] == name), nodes),
+            filter(lambda x: (x["name"] == name and x["ep_type"] == ep_type), nodes),
             None,
         )
         if not node:
             _LOGGER.warning("The Freebox Home device has no value for: %s", name)
             return None
         return node["id"]
+
+    async def async_set_value(self, ep_type, name, value) -> None:
+        """Set the value."""
+        node = next(
+            filter(
+                lambda x: (x["name"] == name and x["ep_type"] == ep_type),
+                self._node["show_endpoints"],
+            ),
+            None,
+        )
+        if node is None:
+            _LOGGER.warning(
+                "The Freebox Home device has no node for: " + ep_type + "/" + name
+            )
+            return
+        node["value"] = value
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register state update callback."""
