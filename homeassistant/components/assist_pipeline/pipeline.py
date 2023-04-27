@@ -370,7 +370,7 @@ class PipelineRun:
     def start(self) -> None:
         """Emit run start event."""
         data = {
-            "pipeline": self.pipeline.name,
+            "pipeline": self.pipeline.id,
             "language": self.language,
         }
         if self.runner_data is not None:
