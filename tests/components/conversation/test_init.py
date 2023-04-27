@@ -1642,6 +1642,13 @@ async def test_get_agent_info(
     assert conversation.async_get_agent_info(hass, mock_agent.agent_id) == snapshot
     assert conversation.async_get_agent_info(hass, "not exist") is None
 
+    # Test the name when config entry title is empty
+    agent_entry = hass.config_entries.async_get_entry("mock-entry")
+    hass.config_entries.async_update_entry(agent_entry, title="")
+
+    agent_info = conversation.async_get_agent_info(hass)
+    assert agent_info == snapshot
+
 
 async def test_ws_get_agent_info(
     hass: HomeAssistant,

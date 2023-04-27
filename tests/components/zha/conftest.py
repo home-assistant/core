@@ -116,7 +116,9 @@ def zigpy_app_controller():
     app.state.network_info.channel = 15
     app.state.network_info.network_key.key = zigpy.types.KeyData(range(16))
 
-    with patch("zigpy.device.Device.request"):
+    with patch("zigpy.device.Device.request"), patch.object(
+        app, "permit", autospec=True
+    ), patch.object(app, "permit_with_key", autospec=True):
         yield app
 
 
@@ -199,6 +201,7 @@ def zigpy_device_mock(zigpy_app_controller):
         nwk=0xB79C,
         patch_cluster=True,
         quirk=None,
+        attributes=None,
     ):
         """Make a fake device using the specified cluster classes."""
         device = zigpy.device.Device(
