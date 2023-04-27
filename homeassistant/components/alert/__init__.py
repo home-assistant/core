@@ -106,16 +106,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_reload_yaml(service_call: ServiceCall) -> None:
         """Remove all Alerts and load new ones from config."""
-        conf = await component.async_prepare_reload()
+        conf = await component.async_prepare_reload(skip_reset=True)
         if conf is None or not conf:
             return
-        id_manager = collection.IDManager()
-        yaml_collection = collection.YamlCollection(
-            logging.getLogger(f"{__name__}.yaml_collection"), id_manager
-        )
-        collection.sync_entity_lifecycle(
-            hass, DOMAIN, DOMAIN, component, yaml_collection, Alert
-        )
+
         await yaml_collection.async_load(
             [
                 {CONF_ID: id_, **(conf or {})}
@@ -318,5 +312,23 @@ class Alert(collection.CollectionEntity, Entity):
         return await self.async_turn_off()
 
     async def async_update_config(self, config: ConfigType) -> None:
-        """Handle when the config is updated. This function is unused."""
-        return
+        """Handle when the config is updated."""
+        self._attr_name = config[CONF_NAME]
+        self._alert_state = config[CONF_STATE]
+        self._skip_first = config[CONF_SKIP_FIRST]
+        self._data = config.get(CONF_DATA)
+        self._watched_entity_id = config[CONF_ENTITY_ID]
+        self._message_template = config.get(CONF_ALERT_MESSAGE)
+        self._done_message_template = config.get(CONF_DONE_MESSAGE)
+        self._title_template = config.get(CONF_TITLE)
+        self._notifiers = config[CONF_NOTIFIERS]
+        self._can_ack = config[CONF_CAN_ACK]
+        self._delay = [timedelta(minutes=val) for val in config[CONF_REPEAT]]
+
+        if self._unsub:
+            self._unsub()
+        self._unsub = async_track_state_change_event(
+            self.hass, [self._watched_entity_id], self.watched_entity_change
+        )
+
+        self.async_write_ha_state()
