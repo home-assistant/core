@@ -151,7 +151,9 @@ CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 
 CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): cv.positive_int,
+        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=2**16 / 10)
+        ),
         vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
         vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
         vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
