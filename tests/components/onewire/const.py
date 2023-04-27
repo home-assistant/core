@@ -7,14 +7,12 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
     PERCENTAGE,
-    EntityCategory,
     UnitOfElectricPotential,
     UnitOfPressure,
     UnitOfTemperature,
 )
 
 ATTR_DEVICE_FILE = "device_file"
-ATTR_ENTITY_CATEGORY = "entity_category"
 ATTR_INJECT_READS = "inject_reads"
 
 FIXED_ATTRIBUTES = (
@@ -211,7 +209,6 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SWITCH: [
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"    1",
             },
         ],
@@ -464,35 +461,27 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SWITCH: [
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"0",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"0",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"0",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"0",
             },
         ],
@@ -503,37 +492,29 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.BINARY_SENSOR: [
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
                 ATTR_INJECT_READS: b"0",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
                 ATTR_INJECT_READS: b"0",
             },
         ],
         Platform.SWITCH: [
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"0",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"1",
             },
             {
-                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_INJECT_READS: b"0",
             },
         ],
