@@ -16,7 +16,6 @@ from homeassistant.const import (
 ATTR_DEVICE_FILE = "device_file"
 ATTR_ENTITY_CATEGORY = "entity_category"
 ATTR_INJECT_READS = "inject_reads"
-ATTR_UNIQUE_ID = "unique_id"
 
 FIXED_ATTRIBUTES = (
     ATTR_STATE_CLASS,
