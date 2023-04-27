@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.typing import RoborockDeviceProp
+from roborock.typing import DeviceProp
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,7 +28,7 @@ from .models import RoborockHassDeviceInfo
 class RoborockSensorDescriptionMixin:
     """A class that describes sensor entities."""
 
-    value_fn: Callable[[RoborockDeviceProp], int]
+    value_fn: Callable[[DeviceProp], int]
 
 
 @dataclass
@@ -41,35 +41,35 @@ class RoborockSensorDescription(
 CONSUMABLE_SENSORS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        key="main_brush_work_time",
+        key="main_brush_time_left",
         icon="mdi:brush",
         device_class=SensorDeviceClass.DURATION,
-        translation_key="main_brush_work_time",
-        value_fn=lambda data: data.consumable.main_brush_work_time,
+        translation_key="main_brush_time_left",
+        value_fn=lambda data: data.consumable.main_brush_time_left,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        key="side_brush_work_time",
+        key="side_brush_time_left",
         icon="mdi:brush",
         device_class=SensorDeviceClass.DURATION,
-        translation_key="side_brush_work_time",
-        value_fn=lambda data: data.consumable.side_brush_work_time,
+        translation_key="side_brush_time_left",
+        value_fn=lambda data: data.consumable.side_brush_time_left,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        key="filter_work_time",
+        key="filter_time_left",
         icon="mdi:air-filter",
         device_class=SensorDeviceClass.DURATION,
-        translation_key="filter_work_time",
-        value_fn=lambda data: data.consumable.filter_work_time,
+        translation_key="filter_time_left",
+        value_fn=lambda data: data.consumable.filter_time_left,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        key="sensor_dirty_time",
+        key="sensor_time_left",
         icon="mdi:eye-outline",
         device_class=SensorDeviceClass.DURATION,
-        translation_key="sensor_dirty_work_time",
-        value_fn=lambda data: data.consumable.sensor_dirty_time,
+        translation_key="sensor_time_left",
+        value_fn=lambda data: data.consumable.sensor_time_left,
     ),
 ]
 

@@ -28,17 +28,17 @@
   },
   "entity": {
     "sensor": {
-      "main_brush_work_time": {
-        "name": "Main brush work time"
+      "main_brush_time_left": {
+        "name": "Main brush time left"
       },
-      "side_brush_work_time": {
-        "name": "Side brush work time"
+      "side_brush_time_left": {
+        "name": "Side brush time left"
       },
-      "filter_work_time": {
-        "name": "Filter work time"
+      "filter_time_left": {
+        "name": "Filter time left"
       },
-      "sensor_dirty_work_time": {
-        "name": "Sensor work time"
+      "sensor_time_left": {
+        "name": "Sensor time left"
       }
     },
     "select": {
