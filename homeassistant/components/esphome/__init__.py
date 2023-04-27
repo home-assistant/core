@@ -288,39 +288,46 @@ async def async_setup_entry(  # noqa: C901
 
     voice_assistant_udp_server: VoiceAssistantUDPServer | None = None
 
-    def handle_pipeline_event(
+    def _handle_pipeline_event(
         event_type: VoiceAssistantEventType, data: dict[str, str] | None
     ) -> None:
-        """Handle a voice assistant pipeline event."""
         cli.send_voice_assistant_event(event_type, data)
 
-    async def handle_pipeline_start() -> int | None:
+    def _handle_pipeline_finished() -> None:
+        nonlocal voice_assistant_udp_server
+
+        entry_data.async_set_assist_pipeline_state(False)
+
+        if voice_assistant_udp_server is not None:
+            voice_assistant_udp_server.close()
+            voice_assistant_udp_server = None
+
+    async def _handle_pipeline_start() -> int | None:
         """Start a voice assistant pipeline."""
         nonlocal voice_assistant_udp_server
 
         if voice_assistant_udp_server is not None:
             return None
 
-        voice_assistant_udp_server = VoiceAssistantUDPServer(hass)
+        voice_assistant_udp_server = VoiceAssistantUDPServer(
+            hass, entry_data, _handle_pipeline_event, _handle_pipeline_finished
+        )
         port = await voice_assistant_udp_server.start_server()
 
         hass.async_create_background_task(
-            voice_assistant_udp_server.run_pipeline(handle_pipeline_event),
+            voice_assistant_udp_server.run_pipeline(),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
         entry_data.async_set_assist_pipeline_state(True)
 
         return port
 
-    async def handle_pipeline_stop() -> None:
+    async def _handle_pipeline_stop() -> None:
         """Stop a voice assistant pipeline."""
         nonlocal voice_assistant_udp_server
 
-        entry_data.async_set_assist_pipeline_state(False)
-
         if voice_assistant_udp_server is not None:
             voice_assistant_udp_server.stop()
-            voice_assistant_udp_server = None
 
     async def on_connect() -> None:
         """Subscribe to states and list entities on successful API login."""
@@ -369,8 +376,8 @@ async def async_setup_entry(  # noqa: C901
             if device_info.voice_assistant_version:
                 entry_data.disconnect_callbacks.append(
                     await cli.subscribe_voice_assistant(
-                        handle_pipeline_start,
-                        handle_pipeline_stop,
+                        _handle_pipeline_start,
+                        _handle_pipeline_stop,
                     )
                 )
 
