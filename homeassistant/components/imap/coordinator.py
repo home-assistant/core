@@ -177,7 +177,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "search": self.config_entry.data[CONF_SEARCH],
                 "folder": self.config_entry.data[CONF_FOLDER],
                 "date": message.date,
-                "text": message.text,
+                "text": message.text[:2048],
                 "sender": message.sender,
                 "subject": message.subject,
                 "headers": message.headers,
