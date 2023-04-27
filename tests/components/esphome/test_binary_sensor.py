@@ -9,7 +9,7 @@ async def test_assist_in_progress(
     hass: HomeAssistant,
     mock_voice_assistant_v1_entry,
 ) -> None:
-    """Test call in progress binary sensor."""
+    """Test assist in progress binary sensor."""
 
     entry_data = DomainData.get(hass).get_entry_data(mock_voice_assistant_v1_entry)
 
