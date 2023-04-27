@@ -428,7 +428,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.1
+bellows==0.35.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.13.0
@@ -2718,7 +2718,7 @@ zeroconf==0.58.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.97
+zha-quirks==0.0.98
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
