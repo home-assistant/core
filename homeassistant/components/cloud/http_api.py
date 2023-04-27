@@ -29,6 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
 
+from .alexa_config import entity_supported as entity_supported_by_alexa
 from .const import (
     DOMAIN,
     PREF_ALEXA_REPORT_STATE,
@@ -73,6 +74,7 @@ async def async_setup(hass):
     websocket_api.async_register_command(hass, google_assistant_list)
     websocket_api.async_register_command(hass, google_assistant_update)
 
+    websocket_api.async_register_command(hass, alexa_get)
     websocket_api.async_register_command(hass, alexa_list)
     websocket_api.async_register_command(hass, alexa_sync)
 
@@ -665,6 +667,46 @@ async def google_assistant_update(
     entity_registry.async_update_entity_options(
         entity_id, CLOUD_GOOGLE, assistant_options
     )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        "type": "cloud/alexa/entities/get",
+        "entity_id": str,
+    }
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def alexa_get(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get data for a single alexa entity."""
+    entity_registry = er.async_get(hass)
+    entity_id: str = msg["entity_id"]
+
+    if not entity_registry.async_is_registered(entity_id):
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_FOUND,
+            f"{entity_id} not in the entity registry",
+        )
+        return
+
+    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
+        hass, entity_id
+    ):
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            f"{entity_id} not supported by Alexa",
+        )
+        return
+
     connection.send_result(msg["id"])
 
 
