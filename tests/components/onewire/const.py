@@ -2,13 +2,7 @@
 from pyownet.protocol import Error as ProtocolError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.onewire.const import (
-    DOMAIN,
-    MANUFACTURER_EDS,
-    MANUFACTURER_HOBBYBOARDS,
-    MANUFACTURER_MAXIM,
-    Platform,
-)
+from homeassistant.components.onewire.const import Platform
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -17,13 +11,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_VIA_DEVICE,
     LIGHT_LUX,
     PERCENTAGE,
     STATE_OFF,
@@ -37,11 +26,9 @@ from homeassistant.const import (
 
 ATTR_DEFAULT_DISABLED = "default_disabled"
 ATTR_DEVICE_FILE = "device_file"
-ATTR_DEVICE_INFO = "device_info"
 ATTR_ENTITY_CATEGORY = "entity_category"
 ATTR_INJECT_READS = "inject_reads"
 ATTR_UNIQUE_ID = "unique_id"
-ATTR_UNKNOWN_DEVICE = "unknown_device"
 
 FIXED_ATTRIBUTES = (
     ATTR_DEVICE_CLASS,
@@ -55,18 +42,11 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"",  # read device type
         ],
-        ATTR_UNKNOWN_DEVICE: True,
     },
     "05.111111111111": {
         ATTR_INJECT_READS: [
             b"DS2405",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "05.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS2405",
-            ATTR_NAME: "05.111111111111",
-        },
         Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
@@ -81,12 +61,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS18S20",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "10.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS18S20",
-            ATTR_NAME: "10.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -103,12 +77,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2406",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "12.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS2406",
-            ATTR_NAME: "12.111111111111",
-        },
         Platform.BINARY_SENSOR: [
             {
                 ATTR_DEFAULT_DISABLED: True,
@@ -182,12 +150,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2423",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS2423",
-            ATTR_NAME: "1D.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_a",
@@ -210,21 +172,6 @@ MOCK_OWPROXY_DEVICES = {
     "1F.111111111111": {
         ATTR_INJECT_READS: [
             b"DS2409",  # read device type
-        ],
-        ATTR_DEVICE_INFO: [
-            {
-                ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
-                ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-                ATTR_MODEL: "DS2409",
-                ATTR_NAME: "1F.111111111111",
-            },
-            {
-                ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
-                ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-                ATTR_MODEL: "DS2423",
-                ATTR_NAME: "1D.111111111111",
-                ATTR_VIA_DEVICE: (DOMAIN, "1F.111111111111"),
-            },
         ],
         "branches": {
             "aux": {},
@@ -261,12 +208,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS1822",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "22.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS1822",
-            ATTR_NAME: "22.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -283,12 +224,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2438",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "26.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS2438",
-            ATTR_NAME: "26.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -415,12 +350,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS18B20",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "28.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS18B20",
-            ATTR_NAME: "28.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -438,12 +367,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS18B20",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "28.222222222222")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS18B20",
-            ATTR_NAME: "28.222222222222",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -462,12 +385,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS18B20",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "28.222222222223")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS18B20",
-            ATTR_NAME: "28.222222222223",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -485,12 +402,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2408",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "29.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS2408",
-            ATTR_NAME: "29.111111111111",
-        },
         Platform.BINARY_SENSOR: [
             {
                 ATTR_DEFAULT_DISABLED: True,
@@ -668,12 +579,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2760",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "30.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS2760",
-            ATTR_NAME: "30.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -721,12 +626,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2413",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "3A.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS2413",
-            ATTR_NAME: "3A.111111111111",
-        },
         Platform.BINARY_SENSOR: [
             {
                 ATTR_DEFAULT_DISABLED: True,
@@ -764,12 +663,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS1825",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "3B.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS1825",
-            ATTR_NAME: "3B.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -786,12 +679,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS28EA00",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "42.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
-            ATTR_MODEL: "DS28EA00",
-            ATTR_NAME: "42.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -808,12 +695,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"HobbyBoards_EF",  # read type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_HOBBYBOARDS,
-            ATTR_MODEL: "HobbyBoards_EF",
-            ATTR_NAME: "EF.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
@@ -852,12 +733,6 @@ MOCK_OWPROXY_DEVICES = {
             b"         0",  # read is_leaf_2
             b"         0",  # read is_leaf_3
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111112")},
-            ATTR_MANUFACTURER: MANUFACTURER_HOBBYBOARDS,
-            ATTR_MODEL: "HB_MOISTURE_METER",
-            ATTR_NAME: "EF.111111111112",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
@@ -967,12 +842,6 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"HB_HUB",  # read type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111113")},
-            ATTR_MANUFACTURER: MANUFACTURER_HOBBYBOARDS,
-            ATTR_MODEL: "HB_HUB",
-            ATTR_NAME: "EF.111111111113",
-        },
         Platform.BINARY_SENSOR: [
             {
                 ATTR_DEFAULT_DISABLED: True,
@@ -1051,12 +920,6 @@ MOCK_OWPROXY_DEVICES = {
             b"EDS",  # read type
             b"EDS0068",  # read device_type - note EDS specific
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "7E.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER_EDS,
-            ATTR_MODEL: "EDS0068",
-            ATTR_NAME: "7E.111111111111",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -1101,12 +964,6 @@ MOCK_OWPROXY_DEVICES = {
             b"EDS",  # read type
             b"EDS0066",  # read device_type - note EDS specific
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "7E.222222222222")},
-            ATTR_MANUFACTURER: MANUFACTURER_EDS,
-            ATTR_MODEL: "EDS0066",
-            ATTR_NAME: "7E.222222222222",
-        },
         Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
