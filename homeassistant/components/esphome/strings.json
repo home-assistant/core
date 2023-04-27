@@ -48,8 +48,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "call_active": {
-        "name": "[%key:component::voip::entity::binary_sensor::call_active::name%]"
+      "assist_in_progress": {
+        "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"
       }
     },
     "select": {

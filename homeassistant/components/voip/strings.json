@@ -11,8 +11,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "call_active": {
-        "name": "Call active"
+      "call_in_progress": {
+        "name": "Call in progress"
       }
     },
     "switch": {
