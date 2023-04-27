@@ -17,7 +17,9 @@ from zigpy.zcl.clusters.general import (
     Groups,
     Identify,
     MultistateInput,
+    OnOff,
     Ota,
+    PowerConfiguration,
     Scenes,
 )
 
@@ -5370,6 +5372,52 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_lqi",
+            },
+        },
+    },
+    {
+        DEV_SIG_DEV_NO: 100,
+        SIG_MANUFACTURER: "Konke",
+        SIG_MODEL: "3AFE170100510001",
+        SIG_NODE_DESC: b"\x02@\x80\x02\x10RR\x00\x00,R\x00\x00",
+        SIG_ENDPOINTS: {
+            1: {
+                PROFILE_ID: 260,
+                DEVICE_TYPE: zha.DeviceType.ON_OFF_OUTPUT,
+                INPUT_CLUSTERS: [
+                    Basic.cluster_id,
+                    PowerConfiguration.cluster_id,
+                    Identify.cluster_id,
+                    Groups.cluster_id,
+                    Scenes.cluster_id,
+                    OnOff.cluster_id,
+                ],
+                OUTPUT_CLUSTERS: [
+                    Identify.cluster_id,
+                ],
+            }
+        },
+        DEV_SIG_EVT_CLUSTER_HANDLERS: [],
+        DEV_SIG_ENT_MAP: {
+            ("button", "00:11:22:33:44:55:66:77-1-3"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.konke_3afe170100510001_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.konke_3afe170100510001_battery",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.konke_3afe170100510001_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.konke_3afe170100510001_lqi",
             },
         },
     },
