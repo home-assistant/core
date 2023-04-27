@@ -2,26 +2,25 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from aio_geojson_generic_client import GenericFeedManager
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-    CONF_URL,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY
+from .const import (
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_UPDATE_ENTITY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +49,6 @@ class GeoJsonFeedEntityManager:
             config_entry.data[CONF_URL],
             filter_radius=config_entry.data[CONF_RADIUS],
         )
-        self._scan_interval: timedelta = timedelta(
-            seconds=config_entry.data[CONF_SCAN_INTERVAL]
-        )
         self._track_time_remove_callback: Callable[[], None] | None = None
         self.listeners: list[Callable[[], None]] = []
         self.signal_new_entity: str = (
@@ -68,7 +64,7 @@ class GeoJsonFeedEntityManager:
 
         # Trigger updates at regular intervals.
         self._track_time_remove_callback = async_track_time_interval(
-            self._hass, update, self._scan_interval
+            self._hass, update, DEFAULT_UPDATE_INTERVAL
         )
 
         _LOGGER.debug("Feed entity manager initialized")

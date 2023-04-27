@@ -78,6 +78,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
             CONF_LATITUDE: -41.2,
             CONF_LONGITUDE: 174.7,
             CONF_RADIUS: 25,
+            # This custom scan interval will not be carried over into the configuration.
             CONF_SCAN_INTERVAL: timedelta(minutes=4),
         },
     )
@@ -90,7 +91,6 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_SCAN_INTERVAL: 240.0,
     }
 
 
@@ -122,5 +122,4 @@ async def test_step_user(hass: HomeAssistant) -> None:
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25.0,
-        CONF_SCAN_INTERVAL: 300,
     }

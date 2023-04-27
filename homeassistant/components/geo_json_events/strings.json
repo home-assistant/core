@@ -5,8 +5,7 @@
         "title": "Fill in your GeoJSON feed details.",
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "location": "[%key:common::config_flow::data::location%]",
-          "scan_interval": "Update Interval (seconds)"
+          "location": "[%key:common::config_flow::data::location%]"
         }
       }
     },

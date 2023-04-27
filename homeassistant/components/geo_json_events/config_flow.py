@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -14,7 +13,6 @@ from homeassistant.const import (
     CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     CONF_URL,
     UnitOfLength,
 )
@@ -22,12 +20,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.util.unit_conversion import DistanceConverter
 
-from .const import (
-    DEFAULT_RADIUS_IN_KM,
-    DEFAULT_RADIUS_IN_M,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import DEFAULT_RADIUS_IN_KM, DEFAULT_RADIUS_IN_M, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -35,9 +28,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_LOCATION): selector.LocationSelector(
             selector.LocationSelectorConfig(radius=True, icon="")
         ),
-        vol.Required(
-            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-        ): cv.positive_int,
     }
 )
 
@@ -49,10 +39,6 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        legacy_scan_interval: timedelta | None = import_config.get(CONF_SCAN_INTERVAL)
-        # Convert scan interval because it now has to be in seconds.
-        if legacy_scan_interval:
-            import_config[CONF_SCAN_INTERVAL] = legacy_scan_interval.total_seconds()
         url: str = import_config[CONF_URL]
         latitude: float = import_config.get(CONF_LATITUDE, self.hass.config.latitude)
         longitude: float = import_config.get(CONF_LONGITUDE, self.hass.config.longitude)
@@ -70,9 +56,6 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
                 CONF_RADIUS: import_config.get(CONF_RADIUS, DEFAULT_RADIUS_IN_KM),
-                CONF_SCAN_INTERVAL: import_config.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
             },
         )
 
@@ -118,6 +101,5 @@ class GeoJsonEventsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     UnitOfLength.METERS,
                     UnitOfLength.KILOMETERS,
                 ),
-                CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
             },
         )

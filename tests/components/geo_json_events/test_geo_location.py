@@ -7,7 +7,7 @@ from freezegun import freeze_time
 
 from homeassistant.components.geo_json_events.const import (
     ATTR_EXTERNAL_ID,
-    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL,
 )
 from homeassistant.components.geo_location import (
     ATTR_SOURCE,
@@ -136,7 +136,7 @@ async def test_entity_lifecycle(
             "OK",
             [mock_entry_1, mock_entry_4, mock_entry_3],
         )
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+        async_fire_time_changed(hass, utcnow + DEFAULT_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
         assert len(hass.states.async_entity_ids(GEO_LOCATION_DOMAIN)) == 3
@@ -144,18 +144,14 @@ async def test_entity_lifecycle(
         # Simulate an update - empty data, but successful update,
         # so no changes to entities.
         mock_feed_update.return_value = "OK_NO_DATA", None
-        async_fire_time_changed(
-            hass, utcnow + 2 * timedelta(seconds=DEFAULT_SCAN_INTERVAL)
-        )
+        async_fire_time_changed(hass, utcnow + 2 * DEFAULT_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
         assert len(hass.states.async_entity_ids(GEO_LOCATION_DOMAIN)) == 3
 
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
-        async_fire_time_changed(
-            hass, utcnow + 3 * timedelta(seconds=DEFAULT_SCAN_INTERVAL)
-        )
+        async_fire_time_changed(hass, utcnow + 3 * DEFAULT_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
         assert len(hass.states.async_entity_ids(GEO_LOCATION_DOMAIN)) == 0
