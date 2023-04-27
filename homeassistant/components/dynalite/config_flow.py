@@ -43,9 +43,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Step when user initializes a integration."""
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            port = user_input[CONF_PORT]
-            return await self._try_create({CONF_HOST: host, CONF_PORT: port})
+            return await self._try_create(user_input)
 
         schema = vol.Schema(
             {
