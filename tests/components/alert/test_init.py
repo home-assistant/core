@@ -320,6 +320,7 @@ async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) 
 async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -> None:
     """Test that the done message is reset when canceled."""
     entity = alert.Alert(TEST_NOACK)
+    entity.entity_id = ENTITY_ID
     entity.hass = hass
     await entity.async_added_to_hass()
     entity._cancel = lambda *args: None

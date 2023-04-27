@@ -106,9 +106,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_reload_yaml(service_call: ServiceCall) -> None:
         """Remove all Alerts and load new ones from config."""
-        for entity in component.entities:
-            await entity.unregister_state_change_listener()
-
         conf = await component.async_prepare_reload()
         if conf is None or not conf:
             return
@@ -144,8 +141,6 @@ class Alert(collection.CollectionEntity, Entity):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the alert."""
-
-        self.entity_id = f"{DOMAIN}.{config[CONF_NAME]}"
         self._attr_name = config[CONF_NAME]
         self._alert_state = config[CONF_STATE]
         self._skip_first = config[CONF_SKIP_FIRST]
@@ -167,7 +162,7 @@ class Alert(collection.CollectionEntity, Entity):
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Self:
-        """Return entity instance initialized from storage."""
+        """Return entity instance initialized from storage. This function is unused."""
         alert = cls(config)
         alert.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         return alert
@@ -190,7 +185,6 @@ class Alert(collection.CollectionEntity, Entity):
 
     async def async_added_to_hass(self) -> None:
         """Add hass to templates and register for tracking state changes."""
-        await super().async_added_to_hass()
         if self._message_template is not None:
             self._message_template.hass = self.hass
         if self._done_message_template is not None:
@@ -202,8 +196,8 @@ class Alert(collection.CollectionEntity, Entity):
             self.hass, [self._watched_entity_id], self.watched_entity_change
         )
 
-    async def unregister_state_change_listener(self) -> None:
-        """Unregister from state change listener."""
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from tracking watched entity."""
         if self._unsub:
             self._unsub()
 
@@ -324,5 +318,5 @@ class Alert(collection.CollectionEntity, Entity):
         return await self.async_turn_off()
 
     async def async_update_config(self, config: ConfigType) -> None:
-        """Handle when the config is updated."""
+        """Handle when the config is updated. This function is unused."""
         return
