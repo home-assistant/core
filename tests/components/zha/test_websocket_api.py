@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from binascii import unhexlify
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, call, patch
 
 import pytest
@@ -38,7 +38,6 @@ from homeassistant.components.zha.websocket_api import (
     ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
     ID,
-    SERVICE_CHANGE_CHANNEL,
     SERVICE_PERMIT,
     TYPE,
     async_load_api,
@@ -884,27 +883,3 @@ async def test_websocket_change_channel(
     assert msg["success"]
 
     change_channel_mock.mock_calls == [call(ANY, new_channel)]
-
-
-@pytest.mark.parametrize("params", [{"new_channel": "auto"}, {"new_channel": 15}])
-async def test_service_change_channel(
-    hass: HomeAssistant,
-    app_controller: ControllerApplication,
-    hass_admin_user: MockUser,
-    params: dict[str, Any],
-) -> None:
-    """Test service to migrate the network to a new channel."""
-
-    with patch(
-        "homeassistant.components.zha.websocket_api.async_change_channel",
-        autospec=True,
-    ) as change_channel_mock:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_CHANGE_CHANNEL,
-            params,
-            True,
-            Context(user_id=hass_admin_user.id),
-        )
-
-    change_channel_mock.mock_calls == [call(ANY, params["new_channel"])]

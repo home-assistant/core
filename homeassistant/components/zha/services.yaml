@@ -435,36 +435,3 @@ set_lock_user_code:
       example: 1234
       selector:
         text:
-
-change_channel:
-  name: Change the Zigbee network channel
-  description: >-
-    Attempts to migrate devices to a new channel. Not all devices will migrate so use with care!
-    The default of `auto` should generally be used, as the radio will scan all available channels and the least noisy one will be picked.
-  fields:
-    new_channel:
-      name: New channel
-      description: New channel for the network
-      required: true
-      default: "auto"
-      example: "auto"
-      selector:
-        select:
-          options:
-            - "auto"
-            - "11"
-            - "12"
-            - "13"
-            - "14"
-            - "15"
-            - "16"
-            - "17"
-            - "18"
-            - "19"
-            - "20"
-            - "21"
-            - "22"
-            - "23"
-            - "24"
-            - "25"
-            - "26"
