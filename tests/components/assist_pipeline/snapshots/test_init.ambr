@@ -4,7 +4,7 @@
     dict({
       'data': dict({
         'language': 'en',
-        'pipeline': '01gz07vkzqa8rhnsfprm2eahr7',
+        'pipeline': <ANY>,
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -91,7 +91,7 @@
     dict({
       'data': dict({
         'language': 'en',
-        'pipeline': '01gz07vm2y8ex02faygbxx2mvj',
+        'pipeline': <ANY>,
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -178,7 +178,7 @@
     dict({
       'data': dict({
         'language': 'en',
-        'pipeline': '01gz07vm1h64zmv9zpd5kb4s5d',
+        'pipeline': <ANY>,
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
