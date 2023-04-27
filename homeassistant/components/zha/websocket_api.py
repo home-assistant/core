@@ -1214,7 +1214,7 @@ async def websocket_restore_network_backup(
     {
         vol.Required(TYPE): "zha/network/change_channel",
         vol.Required(ATTR_NEW_CHANNEL): vol.Any(
-            "auto", vol.All(cv.positive_int, vol.Range(11, 26))
+            "auto", vol.Range(11, 26)
         ),
     }
 )
