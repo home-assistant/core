@@ -2,13 +2,16 @@
 from typing import Any
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
+    ATTR_TEMPERATURE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -36,7 +39,7 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
     _attr_has_entity_name = True
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF, HVACMode.AUTO]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_step = 0.5
+    _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, device: BroadlinkDevice) -> None:
@@ -90,3 +93,25 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        await self._async_restore_state()
+
+    async def _async_restore_state(self) -> None:
+        """Restore latest state."""
+        if (old_state := await self.async_get_last_state()) is not None:
+            if old_state.state is not None:
+                self._attr_hvac_mode = old_state.state
+            if old_state.attributes is not None:
+                if old_state.attributes.get(ATTR_HVAC_ACTION) is not None:
+                    self._attr_hvac_action = old_state.attributes[ATTR_HVAC_ACTION]
+                if old_state.attributes.get(ATTR_TEMPERATURE) is not None:
+                    self._attr_target_temperature = float(
+                        old_state.attributes[ATTR_TEMPERATURE]
+                    )
+                if old_state.attributes.get(ATTR_CURRENT_TEMPERATURE) is not None:
+                    self._attr_current_temperature = float(
+                        old_state.attributes[ATTR_CURRENT_TEMPERATURE]
+                    )
