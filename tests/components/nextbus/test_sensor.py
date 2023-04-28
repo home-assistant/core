@@ -1,7 +1,9 @@
 """The tests for the nexbus sensor component."""
 from collections.abc import Generator
 from copy import deepcopy
+from json.decoder import JSONDecodeError
 from unittest.mock import MagicMock, patch
+from urllib.error import HTTPError
 
 import pytest
 
@@ -12,11 +14,13 @@ from homeassistant.components.nextbus.const import (
     CONF_STOP,
     DOMAIN,
 )
+from homeassistant.components.nextbus.coordinator import NextBusDataUpdateCoordinator
 from homeassistant.components.nextbus.util import UserConfig
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -72,7 +76,7 @@ BASIC_RESULTS = {
 def mock_nextbus() -> Generator[MagicMock, None, None]:
     """Create a mock py_nextbus module."""
     with patch(
-        "homeassistant.components.nextbus.sensor.NextBusClient",
+        "homeassistant.components.nextbus.coordinator.NextBusClient"
     ) as NextBusClient:
         yield NextBusClient
 
@@ -155,9 +159,11 @@ async def test_verify_valid_state(
 ) -> None:
     """Verify all attributes are set from a valid response."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
+    entity = er.async_get(hass).async_get(SENSOR_ID_SHORT)
+    assert entity
 
     mock_nextbus_predictions.assert_called_once_with(
-        [{"stop_tag": VALID_STOP, "route_tag": VALID_ROUTE}], VALID_AGENCY
+        [{"stop_tag": VALID_STOP, "route_tag": VALID_ROUTE}]
     )
 
     state = hass.states.get(SENSOR_ID_SHORT)
@@ -281,6 +287,29 @@ async def test_direction_list(
     assert state.attributes["stop"] == VALID_STOP_TITLE
     assert state.attributes["direction"] == "Outbound, Outbound 2"
     assert state.attributes["upcoming"] == "0, 1, 2, 3"
+
+
+@pytest.mark.parametrize(
+    "client_exception",
+    (
+        HTTPError("url", 500, "error", MagicMock(), None),
+        JSONDecodeError("error with json", "{}", 0),
+        Exception,
+    ),
+)
+async def test_prediction_exceptions(
+    hass: HomeAssistant,
+    mock_nextbus: MagicMock,
+    mock_nextbus_lists: MagicMock,
+    mock_nextbus_predictions: MagicMock,
+    client_exception: Exception,
+) -> None:
+    """Test that some coodinator exceptions raise UpdateFailed exceptions."""
+    await assert_setup_sensor(hass, CONFIG_BASIC)
+    coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN][VALID_AGENCY]
+    mock_nextbus_predictions.side_effect = client_exception
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
 
 
 async def test_custom_name(
