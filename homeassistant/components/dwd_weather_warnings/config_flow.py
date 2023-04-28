@@ -73,14 +73,20 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
         region_identifier = import_config.pop(CONF_REGION_NAME)
         import_config[CONF_REGION_IDENTIFIER] = region_identifier
 
+        # Set the unique ID for this imported entry.
+        await self.async_set_unique_id(import_config[CONF_REGION_IDENTIFIER])
+        self._abort_if_unique_id_configured()
+
+        # Validate region identifier using the API
+        if not await self.hass.async_add_executor_job(
+            DwdWeatherWarningsAPI, region_identifier
+        ):
+            return self.async_abort(reason="invalid_identifier")
+
         if CONF_NAME not in import_config:
             import_config[
                 CONF_NAME
             ] = f"{DEFAULT_NAME} {import_config[CONF_REGION_IDENTIFIER]}"
-
-        # Set the unique ID for this imported entry.
-        await self.async_set_unique_id(import_config[CONF_REGION_IDENTIFIER])
-        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=import_config[CONF_NAME], data=import_config

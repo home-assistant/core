@@ -11,6 +11,8 @@ Wetterwarnungen (Stufe 1)
 
 from __future__ import annotations
 
+from typing import Final
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -45,7 +47,6 @@ from .const import (
     ATTR_WARNING_COUNT,
     CONF_REGION_NAME,
     CURRENT_WARNING_SENSOR,
-    DEFAULT_MONITORED_CONDITIONS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
@@ -64,13 +65,16 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+# Should be removed together with the old YAML configuration.
+YAML_MONITORED_CONDITIONS: Final = [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_REGION_NAME): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED_CONDITIONS
-        ): vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)]),
+            CONF_MONITORED_CONDITIONS, default=YAML_MONITORED_CONDITIONS
+        ): vol.All(cv.ensure_list, [vol.In(YAML_MONITORED_CONDITIONS)]),
     }
 )
 
@@ -87,7 +91,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.7.0",
+        breaks_in_ha_version="2023.8.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",

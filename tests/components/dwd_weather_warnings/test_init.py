@@ -3,8 +3,9 @@
 from typing import Final
 
 from homeassistant.components.dwd_weather_warnings.const import (
+    ADVANCE_WARNING_SENSOR,
     CONF_REGION_IDENTIFIER,
-    DEFAULT_MONITORED_CONDITIONS,
+    CURRENT_WARNING_SENSOR,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry
 DEMO_CONFIG_ENTRY: Final = {
     CONF_NAME: "Unit Test",
     CONF_REGION_IDENTIFIER: "807111000",
-    CONF_MONITORED_CONDITIONS: DEFAULT_MONITORED_CONDITIONS,
+    CONF_MONITORED_CONDITIONS: [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR],
 }
 
 
@@ -28,6 +29,7 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
+    assert entry.entry_id in hass.data[DOMAIN]
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

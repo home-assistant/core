@@ -36,6 +36,5 @@ ADVANCE_WARNING_SENSOR: Final = "advance_warning_level"
 
 DEFAULT_NAME: Final = "DWD Weather Warnings"
 DEFAULT_SCAN_INTERVAL: Final = timedelta(minutes=15)
-DEFAULT_MONITORED_CONDITIONS: Final = [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR]
 
 PLATFORMS: Final[list[Platform]] = [Platform.SENSOR]
