@@ -77,12 +77,12 @@ class AndroidTVRemoteBaseEntity(Entity):
             ) from exc
 
     async def _send_key_commands(
-        self, key_codes: list[str], direction: str = "SHORT", delay: float = 0.1
+        self, key_codes: list[str], delay: float = 0.1
     ) -> None:
         """Send key press sequence to Android TV."""
         try:
             for index, key_code in enumerate(key_codes):
-                self._api.send_key_command(key_code, direction)
+                self._api.send_key_command(key_code)
                 if index != (len(key_codes) - 1):
                     await asyncio.sleep(delay)
         except ConnectionClosed as exc:

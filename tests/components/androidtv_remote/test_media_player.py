@@ -161,7 +161,7 @@ async def test_media_player_volume_set(
         blocking=True,
     )
 
-    mock_api.send_key_command.assert_called_with("VOLUME_UP", "SHORT")
+    mock_api.send_key_command.assert_called_with("VOLUME_UP")
     assert mock_api.send_key_command.call_count == 3
     mock_api.send_key_command.reset_mock()
 
@@ -174,7 +174,7 @@ async def test_media_player_volume_set(
         blocking=True,
     )
 
-    mock_api.send_key_command.assert_called_with("VOLUME_DOWN", "SHORT")
+    mock_api.send_key_command.assert_called_with("VOLUME_DOWN")
     assert mock_api.send_key_command.call_count == 2
 
 
@@ -260,8 +260,8 @@ async def test_media_player_play_media(
         blocking=True,
     )
     assert mock_api.send_key_command.mock_calls == [
-        call("4", "SHORT"),
-        call("5", "SHORT"),
+        call("4"),
+        call("5"),
     ]
 
     assert await hass.services.async_call(
