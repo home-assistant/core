@@ -146,6 +146,13 @@ async def test_media_player_volume_set(
         & MediaPlayerEntityFeature.VOLUME_SET
         == 0
     )
+    with pytest.raises(HomeAssistantError):
+        assert await hass.services.async_call(
+            "media_player",
+            "volume_set",
+            {"entity_id": MEDIA_PLAYER_ENTITY, "volume_level": 0.1},
+            blocking=True,
+        )
 
     mock_api._on_volume_info_updated({"level": 10, "muted": False, "max": 100})
     assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") == 0.1
