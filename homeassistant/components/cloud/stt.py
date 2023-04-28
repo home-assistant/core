@@ -29,7 +29,8 @@ async def async_get_engine(hass, config, discovery_info=None):
     cloud: Cloud = hass.data[DOMAIN]
 
     cloud_provider = CloudProvider(cloud)
-    cloud.client.stt_platform_loaded.set()
+    if discovery_info is not None:
+        discovery_info["platform_loaded"].set()
     return cloud_provider
 
 

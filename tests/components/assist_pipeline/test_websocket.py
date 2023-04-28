@@ -1,6 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 import asyncio
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, patch
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -37,6 +37,7 @@ async def test_text_only_pipeline(
     # run start
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
@@ -101,6 +102,7 @@ async def test_audio_pipeline(
     # run start
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
@@ -196,6 +198,7 @@ async def test_intent_timeout(
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
         assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
@@ -292,7 +295,7 @@ async def test_intent_failed(
 
     with patch(
         "homeassistant.components.conversation.async_converse",
-        new=MagicMock(return_value=RuntimeError),
+        side_effect=RuntimeError,
     ):
         await client.send_json_auto_id(
             {
@@ -310,6 +313,7 @@ async def test_intent_failed(
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
         assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
@@ -405,7 +409,7 @@ async def test_stt_provider_missing(
     """Test events from a pipeline run with a non-existent STT provider."""
     with patch(
         "homeassistant.components.stt.async_get_provider",
-        new=MagicMock(return_value=None),
+        return_value=None,
     ):
         client = await hass_ws_client(hass)
 
@@ -438,7 +442,7 @@ async def test_stt_stream_failed(
 
     with patch(
         "tests.components.assist_pipeline.conftest.MockSttProvider.async_process_audio_stream",
-        new=MagicMock(side_effect=RuntimeError),
+        side_effect=RuntimeError,
     ):
         await client.send_json_auto_id(
             {
@@ -458,6 +462,7 @@ async def test_stt_stream_failed(
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
         assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
@@ -504,7 +509,7 @@ async def test_tts_failed(
 
     with patch(
         "homeassistant.components.media_source.async_resolve_media",
-        new=MagicMock(return_value=RuntimeError),
+        side_effect=RuntimeError,
     ):
         await client.send_json_auto_id(
             {
@@ -522,6 +527,7 @@ async def test_tts_failed(
         # run start
         msg = await client.receive_json()
         assert msg["event"]["type"] == "run-start"
+        msg["event"]["data"]["pipeline"] = ANY
         assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
@@ -1105,6 +1111,7 @@ async def test_audio_pipeline_debug(
     # run start
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-start"
+    msg["event"]["data"]["pipeline"] = ANY
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 

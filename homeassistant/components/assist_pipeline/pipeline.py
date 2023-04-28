@@ -23,6 +23,7 @@ from homeassistant.helpers.collection import (
     StorageCollection,
     StorageCollectionWebsocket,
 )
+from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util import (
     dt as dt_util,
@@ -369,7 +370,7 @@ class PipelineRun:
     def start(self) -> None:
         """Emit run start event."""
         data = {
-            "pipeline": self.pipeline.name,
+            "pipeline": self.pipeline.id,
             "language": self.language,
         }
         if self.runner_data is not None:
@@ -956,7 +957,8 @@ class PipelineRunDebug:
     )
 
 
-async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
+@singleton(DOMAIN)
+async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
     """Set up the pipeline storage collection."""
     pipeline_store = PipelineStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY)
@@ -969,4 +971,4 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
         PIPELINE_FIELDS,
         PIPELINE_FIELDS,
     ).async_setup(hass)
-    hass.data[DOMAIN] = PipelineData({}, pipeline_store)
+    return PipelineData({}, pipeline_store)

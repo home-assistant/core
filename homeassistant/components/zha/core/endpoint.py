@@ -205,11 +205,13 @@ class Endpoint:
 
     def send_event(self, signal: dict[str, Any]) -> None:
         """Broadcast an event from this endpoint."""
-        signal["endpoint"] = {
-            "id": self.id,
-            "unique_id": self.unique_id,
-        }
-        self.device.zha_send_event(signal)
+        self.device.zha_send_event(
+            {
+                const.ATTR_UNIQUE_ID: self.unique_id,
+                const.ATTR_ENDPOINT_ID: self.id,
+                **signal,
+            }
+        )
 
     def claim_cluster_handlers(self, cluster_handlers: list[ClusterHandler]) -> None:
         """Claim cluster handlers."""
