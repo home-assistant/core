@@ -14,7 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from . import MockRestData, return_integration_config
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, async_remove_entity
 
 
 async def test_setup_config(hass: HomeAssistant) -> None:
@@ -39,6 +39,9 @@ async def test_setup_config(hass: HomeAssistant) -> None:
     assert state.state == "Current Version: 2021.12.10"
 
     assert len(mock_setup.mock_calls) == 1
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_version")
 
 
 async def test_setup_no_data_fails_with_recovery(
@@ -72,6 +75,9 @@ async def test_setup_no_data_fails_with_recovery(
 
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_version")
 
 
 async def test_setup_config_no_configuration(hass: HomeAssistant) -> None:

@@ -34,7 +34,7 @@ from homeassistant.util import dt as dt_util
 
 from . import MockRestData, return_integration_config
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, async_remove_entity
 
 DOMAIN = "scrape"
 
@@ -59,6 +59,9 @@ async def test_scrape_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_version")
 
 
 async def test_scrape_sensor_value_template(hass: HomeAssistant) -> None:
@@ -87,6 +90,9 @@ async def test_scrape_sensor_value_template(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.ha_version")
     assert state.state == "2021.12.10"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_version")
 
 
 async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
@@ -122,6 +128,9 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
     assert state.attributes[CONF_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.current_temp")
+
 
 async def test_scrape_unique_id(hass: HomeAssistant) -> None:
     """Test Scrape sensor for unique id."""
@@ -153,6 +162,9 @@ async def test_scrape_unique_id(hass: HomeAssistant) -> None:
     entry = registry.async_get("sensor.current_temp")
     assert entry
     assert entry.unique_id == "very_unique_id"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.current_temp")
 
 
 async def test_scrape_sensor_authentication(hass: HomeAssistant) -> None:
@@ -195,6 +207,10 @@ async def test_scrape_sensor_authentication(hass: HomeAssistant) -> None:
     assert state.state == "secret text"
     state2 = hass.states.get("sensor.auth_page2")
     assert state2.state == "secret text"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.auth_page")
+    await async_remove_entity(hass, "sensor.auth_page2")
 
 
 async def test_scrape_sensor_no_data(
@@ -251,6 +267,9 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_version")
+
 
 async def test_scrape_sensor_attribute_and_tag(hass: HomeAssistant) -> None:
     """Test Scrape sensor with attribute and tag."""
@@ -283,6 +302,10 @@ async def test_scrape_sensor_attribute_and_tag(hass: HomeAssistant) -> None:
     state2 = hass.states.get("sensor.ha_template")
     assert state2.state == "Trying to get"
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_class")
+    await async_remove_entity(hass, "sensor.ha_template")
+
 
 async def test_scrape_sensor_device_date(hass: HomeAssistant) -> None:
     """Test Scrape sensor with a device of type DATE."""
@@ -312,6 +335,9 @@ async def test_scrape_sensor_device_date(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.ha_date")
     assert state.state == "2022-01-17"
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_date")
+
 
 async def test_scrape_sensor_device_date_errors(hass: HomeAssistant) -> None:
     """Test Scrape sensor with a device of type DATE."""
@@ -339,6 +365,9 @@ async def test_scrape_sensor_device_date_errors(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.ha_date")
     assert state.state == STATE_UNKNOWN
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_date")
 
 
 async def test_scrape_sensor_device_timestamp(hass: HomeAssistant) -> None:
@@ -368,6 +397,9 @@ async def test_scrape_sensor_device_timestamp(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.ha_timestamp")
     assert state.state == "2022-12-22T13:15:30+00:00"
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_timestamp")
+
 
 async def test_scrape_sensor_device_timestamp_error(hass: HomeAssistant) -> None:
     """Test Scrape sensor with a device of type TIMESTAMP."""
@@ -395,6 +427,9 @@ async def test_scrape_sensor_device_timestamp_error(hass: HomeAssistant) -> None
 
     state = hass.states.get("sensor.ha_timestamp")
     assert state.state == STATE_UNKNOWN
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_timestamp")
 
 
 async def test_scrape_sensor_errors(hass: HomeAssistant) -> None:
@@ -432,6 +467,10 @@ async def test_scrape_sensor_errors(hass: HomeAssistant) -> None:
     state2 = hass.states.get("sensor.ha_class2")
     assert state2.state == STATE_UNKNOWN
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_class")
+    await async_remove_entity(hass, "sensor.ha_class2")
+
 
 async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     """Test Scrape sensor with unique_id."""
@@ -464,6 +503,9 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     entity = entity_reg.async_get("sensor.ha_version")
 
     assert entity.unique_id == "ha_version_unique_id"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.ha_version")
 
 
 async def test_setup_config_entry(
