@@ -349,7 +349,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==47
+axis==48
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -361,7 +361,7 @@ base36==0.1.1
 beautifulsoup4==4.11.1
 
 # homeassistant.components.zha
-bellows==0.35.1
+bellows==0.35.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.13.0
@@ -1516,7 +1516,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.2
 
 # homeassistant.components.roborock
-python-roborock==0.8.1
+python-roborock==0.8.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -1566,7 +1566,7 @@ pyvera==0.3.13
 pyvesync==2.1.1
 
 # homeassistant.components.vizio
-pyvizio==0.1.60
+pyvizio==0.1.61
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
@@ -1964,7 +1964,7 @@ zeroconf==0.58.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.97
+zha-quirks==0.0.98
 
 # homeassistant.components.zha
 zigpy-deconz==0.21.0
