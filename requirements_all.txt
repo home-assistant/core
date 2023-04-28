@@ -1028,7 +1028,7 @@ konnected==1.2.0
 krakenex==2.1.0
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==1.0.1
+lacrosse-view==0.0.9
 
 # homeassistant.components.eufy
 lakeside==0.13
