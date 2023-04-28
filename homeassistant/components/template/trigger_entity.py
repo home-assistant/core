@@ -1,13 +1,9 @@
 """Trigger entity."""
 from __future__ import annotations
 
-from contextlib import suppress
-from typing import Any
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import TriggerUpdateCoordinator
 
@@ -58,34 +54,3 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
         """Handle updated data from the coordinator."""
         self._process_data()
         self.async_write_ha_state()
-
-
-class ManualTriggerEntity(TriggerBaseEntity):
-    """Template entity based on manual trigger data."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: dict,
-    ) -> None:
-        """Initialize the entity."""
-        TriggerBaseEntity.__init__(self, hass, config)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
-        await TriggerBaseEntity.async_added_to_hass(self)
-
-    @callback
-    def _process_manual_data(self, value: str | None = None) -> None:
-        """Process new data manually."""
-
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
-
-        run_variables: dict[str, Any] = {"value": value}
-        with suppress(*JSON_DECODE_EXCEPTIONS):
-            run_variables["value_json"] = json_loads(run_variables["value"])
-        variables = {"this": this, **(run_variables or {})}
-
-        self._render_templates(variables)
