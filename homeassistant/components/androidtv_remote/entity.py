@@ -81,10 +81,9 @@ class AndroidTVRemoteBaseEntity(Entity):
     ) -> None:
         """Send key press sequence to Android TV."""
         try:
-            for index, key_code in enumerate(key_codes):
+            for key_code in key_codes:
                 self._api.send_key_command(key_code)
-                if index != (len(key_codes) - 1):
-                    await asyncio.sleep(delay)
+                await asyncio.sleep(delay)
         except ConnectionClosed as exc:
             raise HomeAssistantError(
                 "Connection to Android TV device is closed"
