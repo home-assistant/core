@@ -90,6 +90,7 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_COOLDOWN = 2
 INITIAL_SUBSCRIBE_COOLDOWN = 1.0
 SUBSCRIBE_COOLDOWN = 0.1
+UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 
 SubscribePayloadType = str | bytes  # Only bytes if encoding is None
@@ -387,6 +388,10 @@ class MQTT:
         )
         self._max_qos: dict[str, int] = {}  # topic, max qos
         self._pending_subscriptions: dict[str, int] = {}  # topic, qos
+        self._unsubscribe_debouncer = EnsureJobAfterCooldown(
+            UNSUBSCRIBE_COOLDOWN, self._async_perform_unsubscribes
+        )
+        self._pending_unsubscribes: set[str] = set()  # topic
 
         if self.hass.state == CoreState.running:
             self._ha_started.set()
@@ -617,13 +622,6 @@ class MQTT:
 
         This method is a coroutine.
         """
-
-        def _client_unsubscribe(topic: str) -> int:
-            result, mid = self._mqttc.unsubscribe(topic)
-            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
-            _raise_on_error(result)
-            return mid
-
         if self._is_active_subscription(topic):
             if self._max_qos[topic] == 0:
                 return
@@ -636,11 +634,9 @@ class MQTT:
         if topic in self._pending_subscriptions:
             # avoid any pending subscription to be executed
             del self._pending_subscriptions[topic]
-        async with self._paho_lock:
-            mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
-            await self._register_mid(mid)
 
-        self.hass.async_create_task(self._wait_for_mid(mid))
+        self._pending_unsubscribes.add(topic)
+        self._unsubscribe_debouncer.async_schedule()
 
     async def _async_perform_subscriptions(self) -> None:
         """Perform MQTT client subscriptions."""
@@ -662,6 +658,11 @@ class MQTT:
         subscriptions: dict[str, int] = self._pending_subscriptions
         self._pending_subscriptions = {}
 
+        for topic in subscriptions:
+            # Do not unsubscribe if subscribe is pending
+            if topic in set(self._pending_unsubscribes):
+                self._pending_unsubscribes.remove(topic)
+
         async with self._paho_lock:
             subscription_list = list(subscriptions.items())
             result, mid = await self.hass.async_add_executor_job(
@@ -676,6 +677,29 @@ class MQTT:
             await self._wait_for_mid(mid)
         else:
             _raise_on_error(result)
+
+    async def _async_perform_unsubscribes(self) -> None:
+        """Perform pending MQTT client unsubscribes."""
+        if not self._pending_unsubscribes:
+            return
+
+        topics = set(self._pending_unsubscribes)
+        self._pending_unsubscribes = set()
+
+        def _process_client_unsubscribes() -> tuple[int, int]:
+            """Initiate all subscriptions on the MQTT client and return the results."""
+            result, mid = self._mqttc.unsubscribe(list(topics))
+            for topic in topics:
+                _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+            return result, mid
+
+        async with self._paho_lock:
+            result, mid = await self.hass.async_add_executor_job(
+                _process_client_unsubscribes
+            )
+            _raise_on_error(result)
+
+        await self._wait_for_mid(mid)
 
     def _mqtt_on_connect(
         self,
