@@ -285,12 +285,9 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             add_province_to_schema, DATA_SCHEMA_OPT, self.options
         )
 
-        combined_options = self.options.copy()
-        if combined_options[CONF_PROVINCE] is None:
-            combined_options[CONF_PROVINCE] = NONE_SENTINEL
-        if user_input:
-            combined_options.update(user_input)
-        new_schema = self.add_suggested_values_to_schema(schema, combined_options)
+        new_schema = self.add_suggested_values_to_schema(
+            schema, user_input or self.options
+        )
 
         return self.async_show_form(
             step_id="init",
