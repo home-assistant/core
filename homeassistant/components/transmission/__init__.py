@@ -24,7 +24,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, entity_registry, selector
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    selector,
+)
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -107,6 +111,27 @@ MIGRATION_NAME_TO_KEY = {
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Transmission Component."""
+
+    @callback
+    def update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, Any] | None:
+        """Update unique ID of entity entry."""
+        match = re.search(
+            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.*)",
+            entity_entry.unique_id,
+        )
+
+        if (
+            name := match.group("name") if match is not None else None
+        ) in MIGRATION_NAME_TO_KEY:
+            return {
+                "new_unique_id": f"{config_entry.entry_id}-{MIGRATION_NAME_TO_KEY[name]}"
+            }
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
     client = TransmissionClient(hass, config_entry)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
@@ -194,31 +219,6 @@ class TransmissionClient:
         """Return the TransmissionData object."""
         return self._tm_data
 
-    async def migrate_unique_ids(self) -> None:
-        """Migrate old unique ids to current format."""
-
-        @callback
-        def update_unique_id(
-            entity_entry: entity_registry.RegistryEntry,
-        ) -> dict[str, Any] | None:
-            """Update unique ID of entity entry."""
-            match = re.search(
-                f"{self._tm_data.host}-{self.config_entry.data[CONF_NAME]} (?P<name>.*)",
-                entity_entry.unique_id,
-            )
-
-            if (
-                name := match.group("name") if match is not None else None
-            ) in MIGRATION_NAME_TO_KEY:
-                return {
-                    "new_unique_id": f"{self.config_entry.entry_id}-{MIGRATION_NAME_TO_KEY[name]}"
-                }
-            return None
-
-        await entity_registry.async_migrate_entries(
-            self.hass, self.config_entry.entry_id, update_unique_id
-        )
-
     async def async_setup(self) -> None:
         """Set up the Transmission client."""
 
@@ -230,8 +230,6 @@ class TransmissionClient:
             raise ConfigEntryAuthFailed from error
 
         self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
-
-        await self.migrate_unique_ids()
 
         await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
         await self.hass.async_add_executor_job(self._tm_data.update)
