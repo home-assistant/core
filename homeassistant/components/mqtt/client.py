@@ -898,22 +898,13 @@ class MQTT:
             )
 
 
-def _raise_on_errors(result_codes: Iterable[int]) -> None:
+def _raise_on_error(result_code: int) -> None:
     """Raise error if error result."""
     # pylint: disable-next=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
-    if messages := [
-        mqtt.error_string(result_code)
-        for result_code in result_codes
-        if result_code != 0
-    ]:
-        raise HomeAssistantError(f"Error talking to MQTT: {', '.join(messages)}")
-
-
-def _raise_on_error(result_code: int) -> None:
-    """Raise error if error result."""
-    _raise_on_errors((result_code,))
+    if result_code and (message := mqtt.error_string(result_code)):
+        raise HomeAssistantError(f"Error talking to MQTT: {message}")
 
 
 def _matcher_for_topic(subscription: str) -> Any:
