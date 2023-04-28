@@ -336,8 +336,10 @@ class PipelineRun:
     tts_audio_output: str | None = None
 
     id: str = field(default_factory=ulid_util.ulid)
-    stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
-    tts_engine: str = field(init=False)
+    stt_provider: stt.SpeechToTextEntity | stt.Provider | None = field(
+        init=False, default=None
+    )
+    tts_engine: str | None = field(init=False, default=None)
     tts_options: dict | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -420,6 +422,9 @@ class PipelineRun:
         stream: AsyncIterable[bytes],
     ) -> str:
         """Run speech to text portion of pipeline. Returns the spoken text."""
+        # This method is not called if stt_provider is None
+        assert self.stt_provider is not None
+
         if isinstance(self.stt_provider, stt.Provider):
             engine = self.stt_provider.name
         else:
@@ -553,26 +558,25 @@ class PipelineRun:
             tts_options[tts.ATTR_AUDIO_OUTPUT] = self.tts_audio_output
 
         try:
-            if not await tts.async_support_options(
+            options_supported = await tts.async_support_options(
                 self.hass,
                 engine,
                 self.pipeline.tts_language,
                 tts_options,
-            ):
-                raise TextToSpeechError(
-                    code="tts-not-supported",
-                    message=(
-                        f"Text to speech engine {engine} "
-                        f"does not support language {self.pipeline.tts_language} or options {tts_options}"
-                    ),
-                )
+            )
         except HomeAssistantError as err:
-            if isinstance(err, TextToSpeechError):
-                raise
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=f"Text to speech engine '{engine}' not found",
             ) from err
+        if not options_supported:
+            raise TextToSpeechError(
+                code="tts-not-supported",
+                message=(
+                    f"Text to speech engine {engine} "
+                    f"does not support language {self.pipeline.tts_language} or options {tts_options}"
+                ),
+            )
 
         self.tts_engine = engine
         self.tts_options = tts_options
