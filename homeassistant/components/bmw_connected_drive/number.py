@@ -118,5 +118,3 @@ class BMWNumber(BMWBaseEntity, NumberEntity):
             await self.entity_description.remote_service(self.vehicle, value)
         except MyBMWAPIError as ex:
             raise HomeAssistantError(str(ex)) from ex
-        except TypeError as ex:
-            raise ValueError(str(ex)) from ex

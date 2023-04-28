@@ -89,7 +89,6 @@ async def test_update_triggers_fail(
     [
         (MyBMWRemoteServiceError, HomeAssistantError),
         (MyBMWAPIError, HomeAssistantError),
-        (TypeError, ValueError),
         (ValueError, ValueError),
     ],
 )
