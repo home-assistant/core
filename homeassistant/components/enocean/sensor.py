@@ -43,6 +43,7 @@ SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_POWER = "powersensor"
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
+SENSOR_TYPE_WINDOWSENSOR = "windowsensor"
 
 
 @dataclass
@@ -96,6 +97,12 @@ SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}",
 )
 
+SENSOR_DESC_WINDOWSENSOR = EnOceanSensorEntityDescription(
+    key=SENSOR_TYPE_WINDOWSENSOR,
+    name="WindowSensor",
+    icon="mdi:window-open-variant",
+    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWSENSOR}",
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -147,6 +154,9 @@ def setup_platform(
 
     elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
         entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
+
+    elif sensor_type == SENSOR_TYPE_WINDOWSENSOR:
+        entities = [EnOceanWindowSensor(dev_id, dev_name, SENSOR_DESC_WINDOWSENSOR)]
 
     add_entities(entities)
 
@@ -263,7 +273,6 @@ class EnOceanHumiditySensor(EnOceanSensor):
         self._attr_native_value = round(humidity, 1)
         self.schedule_update_ha_state()
 
-
 class EnOceanWindowHandle(EnOceanSensor):
     """Representation of an EnOcean window handle device.
 
@@ -282,4 +291,22 @@ class EnOceanWindowHandle(EnOceanSensor):
         if action == 0x05:
             self._attr_native_value = "tilt"
 
+        self.schedule_update_ha_state()
+
+class EnOceanWindowSensor(EnOceanSensor):
+    """Representation of an EnOcean window sensor device.
+
+    EEPs (EnOcean Equipment Profiles):
+    - D5-00-01 e.g. NodON Reed contact window sensor
+    """
+
+    def value_changed(self, packet):
+        """Update the internal state of the sensor."""
+        action = (packet.data[1] & 0x01)
+
+        if action == 0x01:
+            self._attr_native_value = STATE_CLOSED
+        else:
+            self._attr_native_value = STATE_OPEN
+       
         self.schedule_update_ha_state()
