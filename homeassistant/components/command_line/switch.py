@@ -16,7 +16,9 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_COMMAND_STATE,
     CONF_FRIENDLY_NAME,
+    CONF_ICON,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
     CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -26,6 +28,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
@@ -65,6 +68,10 @@ async def async_setup_platform(
     switches = []
 
     for object_id, device_config in devices.items():
+        _config = {CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID)}
+        _config[CONF_NAME] = Template(
+            device_config.get(CONF_FRIENDLY_NAME, object_id), hass
+        )
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
@@ -73,18 +80,17 @@ async def async_setup_platform(
         icon_template: Template | None = device_config.get(CONF_ICON_TEMPLATE)
         if icon_template is not None:
             icon_template.hass = hass
+            _config[CONF_ICON] = icon_template
 
         switches.append(
             CommandSwitch(
+                _config,
                 object_id,
-                device_config.get(CONF_FRIENDLY_NAME, object_id),
                 device_config[CONF_COMMAND_ON],
                 device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
-                icon_template,
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
-                device_config.get(CONF_UNIQUE_ID),
             )
         )
 
@@ -95,32 +101,28 @@ async def async_setup_platform(
     async_add_entities(switches)
 
 
-class CommandSwitch(SwitchEntity):
+class CommandSwitch(ManualTriggerEntity, SwitchEntity):
     """Representation a switch that can be toggled using shell commands."""
 
     def __init__(
         self,
+        config: ConfigType,
         object_id: str,
-        friendly_name: str,
         command_on: str,
         command_off: str,
         command_state: str | None,
-        icon_template: Template | None,
         value_template: Template | None,
         timeout: int,
-        unique_id: str | None,
     ) -> None:
         """Initialize the switch."""
+        super().__init__(self.hass, config)
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._attr_name = friendly_name
         self._attr_is_on = False
         self._command_on = command_on
         self._command_off = command_off
         self._command_state = command_state
-        self._icon_template = icon_template
         self._value_template = value_template
         self._timeout = timeout
-        self._attr_unique_id = unique_id
         self._attr_should_poll = bool(command_state)
 
     async def _switch(self, command: str) -> bool:
@@ -169,10 +171,7 @@ class CommandSwitch(SwitchEntity):
         """Update device state."""
         if self._command_state:
             payload = str(await self.hass.async_add_executor_job(self._query_state))
-            if self._icon_template:
-                self._attr_icon = (
-                    self._icon_template.async_render_with_possible_json_value(payload)
-                )
+            self._process_manual_data(payload)
             if self._value_template:
                 payload = self._value_template.async_render_with_possible_json_value(
                     payload, None
