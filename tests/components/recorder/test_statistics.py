@@ -583,15 +583,14 @@ async def test_import_statistics(
 
     import_fn(hass, external_metadata, (external_statistics1, external_statistics2))
     await async_wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero, period="hour")
+    stats = statistics_during_period(
+        hass, zero, period="hour", statistic_ids={statistic_id}
+    )
     assert stats == {
         statistic_id: [
             {
                 "start": process_timestamp(period1).timestamp(),
                 "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
                 "state": pytest.approx(0.0),
                 "sum": pytest.approx(2.0),
@@ -599,9 +598,6 @@ async def test_import_statistics(
             {
                 "start": process_timestamp(period2).timestamp(),
                 "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -647,9 +643,6 @@ async def test_import_statistics(
             {
                 "start": process_timestamp(period2).timestamp(),
                 "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -666,15 +659,14 @@ async def test_import_statistics(
     }
     import_fn(hass, external_metadata, (external_statistics,))
     await async_wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero, period="hour")
+    stats = statistics_during_period(
+        hass, zero, period="hour", statistic_ids={statistic_id}
+    )
     assert stats == {
         statistic_id: [
             {
                 "start": process_timestamp(period1).timestamp(),
                 "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(5.0),
                 "sum": pytest.approx(6.0),
@@ -682,9 +674,6 @@ async def test_import_statistics(
             {
                 "start": process_timestamp(period2).timestamp(),
                 "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -732,15 +721,14 @@ async def test_import_statistics(
             },
         )
     }
-    stats = statistics_during_period(hass, zero, period="hour")
+    stats = statistics_during_period(
+        hass, zero, period="hour", statistic_ids={statistic_id}
+    )
     assert stats == {
         statistic_id: [
             {
                 "start": process_timestamp(period1).timestamp(),
                 "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
-                "max": pytest.approx(1.0),
-                "mean": pytest.approx(2.0),
-                "min": pytest.approx(3.0),
                 "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
                 "state": pytest.approx(4.0),
                 "sum": pytest.approx(5.0),
@@ -748,9 +736,6 @@ async def test_import_statistics(
             {
                 "start": process_timestamp(period2).timestamp(),
                 "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -773,15 +758,14 @@ async def test_import_statistics(
     assert response["success"]
 
     await async_wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero, period="hour")
+    stats = statistics_during_period(
+        hass, zero, period="hour", statistic_ids={statistic_id}
+    )
     assert stats == {
         statistic_id: [
             {
                 "start": process_timestamp(period1).timestamp(),
                 "end": process_timestamp(period1 + timedelta(hours=1)).timestamp(),
-                "max": pytest.approx(1.0),
-                "mean": pytest.approx(2.0),
-                "min": pytest.approx(3.0),
                 "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
                 "state": pytest.approx(4.0),
                 "sum": pytest.approx(5.0),
@@ -789,9 +773,6 @@ async def test_import_statistics(
             {
                 "start": process_timestamp(period2).timestamp(),
                 "end": process_timestamp(period2 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": datetime_to_timestamp_or_none(last_reset_utc),
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(1000 * 1000 + 3.0),
@@ -1036,7 +1017,9 @@ def test_weekly_statistics(
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
     wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero, period="week")
+    stats = statistics_during_period(
+        hass, zero, period="week", statistic_ids={"test:total_energy_import"}
+    )
     week1_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-03 00:00:00"))
     week1_end = dt_util.as_utc(dt_util.parse_datetime("2022-10-10 00:00:00"))
     week2_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-10 00:00:00"))
@@ -1046,9 +1029,6 @@ def test_weekly_statistics(
             {
                 "start": week1_start.timestamp(),
                 "end": week1_end.timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": 1.0,
                 "sum": 3.0,
@@ -1056,9 +1036,6 @@ def test_weekly_statistics(
             {
                 "start": week2_start.timestamp(),
                 "end": week2_end.timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": 3.0,
                 "sum": 5.0,
@@ -1077,9 +1054,6 @@ def test_weekly_statistics(
             {
                 "start": week1_start.timestamp(),
                 "end": week1_end.timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": 1.0,
                 "sum": 3.0,
@@ -1087,9 +1061,6 @@ def test_weekly_statistics(
             {
                 "start": week2_start.timestamp(),
                 "end": week2_end.timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": 3.0,
                 "sum": 5.0,
@@ -1174,7 +1145,9 @@ def test_monthly_statistics(
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
     wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero, period="month")
+    stats = statistics_during_period(
+        hass, zero, period="month", statistic_ids={"test:total_energy_import"}
+    )
     sep_start = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     sep_end = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
     oct_start = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
@@ -1184,9 +1157,6 @@ def test_monthly_statistics(
             {
                 "start": sep_start.timestamp(),
                 "end": sep_end.timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -1194,9 +1164,6 @@ def test_monthly_statistics(
             {
                 "start": oct_start.timestamp(),
                 "end": oct_end.timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(3.0),
                 "sum": pytest.approx(5.0),
@@ -1219,9 +1186,6 @@ def test_monthly_statistics(
             {
                 "start": sep_start.timestamp(),
                 "end": sep_end.timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -1229,9 +1193,6 @@ def test_monthly_statistics(
             {
                 "start": oct_start.timestamp(),
                 "end": oct_end.timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(3.0),
                 "sum": pytest.approx(5.0),
