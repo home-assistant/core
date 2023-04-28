@@ -428,7 +428,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.1
+bellows==0.35.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.13.0
@@ -949,9 +949,6 @@ iaqualink==0.5.0
 # homeassistant.components.ibeacon
 ibeacon_ble==1.0.1
 
-# homeassistant.components.watson_tts
-ibm-watson==5.2.2
-
 # homeassistant.components.watson_iot
 ibmiotf==0.3.4
 
@@ -1161,9 +1158,6 @@ mutagen==1.46.0
 
 # homeassistant.components.mutesync
 mutesync==0.0.1
-
-# homeassistant.components.mycroft
-mycroftapi==2.0
 
 # homeassistant.components.nad
 nad_receiver==0.3.0
@@ -1977,9 +1971,6 @@ pysmartapp==0.3.3
 # homeassistant.components.smartthings
 pysmartthings==0.7.6
 
-# homeassistant.components.smarty
-pysmarty==0.8
-
 # homeassistant.components.edl21
 pysml==0.0.10
 
@@ -2718,7 +2709,7 @@ zeroconf==0.58.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.97
+zha-quirks==0.0.98
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

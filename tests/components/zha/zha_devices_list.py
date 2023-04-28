@@ -10,15 +10,25 @@ from zigpy.const import (
     SIG_MODEL,
     SIG_NODE_DESC,
 )
-from zigpy.profiles import zha
+from zigpy.profiles import zha, zll
+from zigpy.types import Bool, uint8_t
 from zigpy.zcl.clusters.closures import DoorLock
 from zigpy.zcl.clusters.general import (
     Basic,
     Groups,
     Identify,
+    LevelControl,
     MultistateInput,
+    OnOff,
     Ota,
+    PowerConfiguration,
     Scenes,
+)
+from zigpy.zcl.clusters.lighting import Color
+from zigpy.zcl.clusters.measurement import (
+    IlluminanceMeasurement,
+    OccupancySensing,
+    TemperatureMeasurement,
 )
 
 DEV_SIG_CLUSTER_HANDLERS = "cluster_handlers"
@@ -5370,6 +5380,158 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_lqi",
+            },
+        },
+    },
+    {
+        DEV_SIG_DEV_NO: 100,
+        SIG_MANUFACTURER: "Konke",
+        SIG_MODEL: "3AFE170100510001",
+        SIG_NODE_DESC: b"\x02@\x80\x02\x10RR\x00\x00,R\x00\x00",
+        SIG_ENDPOINTS: {
+            1: {
+                PROFILE_ID: 260,
+                DEVICE_TYPE: zha.DeviceType.ON_OFF_OUTPUT,
+                INPUT_CLUSTERS: [
+                    Basic.cluster_id,
+                    PowerConfiguration.cluster_id,
+                    Identify.cluster_id,
+                    Groups.cluster_id,
+                    Scenes.cluster_id,
+                    OnOff.cluster_id,
+                ],
+                OUTPUT_CLUSTERS: [
+                    Identify.cluster_id,
+                ],
+            }
+        },
+        DEV_SIG_EVT_CLUSTER_HANDLERS: [],
+        DEV_SIG_ENT_MAP: {
+            ("button", "00:11:22:33:44:55:66:77-1-3"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.konke_3afe170100510001_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.konke_3afe170100510001_battery",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.konke_3afe170100510001_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.konke_3afe170100510001_lqi",
+            },
+        },
+    },
+    {
+        DEV_SIG_DEV_NO: 101,
+        SIG_MANUFACTURER: "Philips",
+        SIG_MODEL: "SML001",
+        SIG_NODE_DESC: b"\x02@\x80\x0b\x10Y?\x00\x00\x00?\x00\x00",
+        SIG_ENDPOINTS: {
+            1: {
+                PROFILE_ID: zll.PROFILE_ID,
+                DEVICE_TYPE: zll.DeviceType.ON_OFF_SENSOR,
+                INPUT_CLUSTERS: [Basic.cluster_id],
+                OUTPUT_CLUSTERS: [
+                    Basic.cluster_id,
+                    Identify.cluster_id,
+                    Groups.cluster_id,
+                    Scenes.cluster_id,
+                    OnOff.cluster_id,
+                    LevelControl.cluster_id,
+                    Color.cluster_id,
+                ],
+            },
+            2: {
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.OCCUPANCY_SENSOR,
+                INPUT_CLUSTERS: [
+                    Basic.cluster_id,
+                    PowerConfiguration.cluster_id,
+                    Identify.cluster_id,
+                    IlluminanceMeasurement.cluster_id,
+                    TemperatureMeasurement.cluster_id,
+                    OccupancySensing.cluster_id,
+                ],
+                OUTPUT_CLUSTERS: [
+                    Ota.cluster_id,
+                ],
+            },
+        },
+        DEV_SIG_ATTRIBUTES: {
+            2: {
+                "basic": {
+                    "trigger_indicator": Bool(False),
+                },
+                "philips_occupancy": {
+                    "sensitivity": uint8_t(1),
+                },
+            }
+        },
+        DEV_SIG_EVT_CLUSTER_HANDLERS: [
+            "1:0x0005",
+            "1:0x0006",
+            "1:0x0008",
+            "1:0x0300",
+            "2:0x0019",
+        ],
+        DEV_SIG_ENT_MAP: {
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.philips_sml001_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-2-1"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.philips_sml001_battery",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.philips_sml001_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.philips_sml001_lqi",
+            },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-1-6"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["on_off"],
+                DEV_SIG_ENT_MAP_CLASS: "Motion",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.philips_sml001_motion",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-2-1024"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["illuminance"],
+                DEV_SIG_ENT_MAP_CLASS: "Illuminance",
+                DEV_SIG_ENT_MAP_ID: "sensor.philips_sml001_illuminance",
+            },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-2-1030"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["philips_occupancy"],
+                DEV_SIG_ENT_MAP_CLASS: "HueOccupancy",
+                DEV_SIG_ENT_MAP_ID: "binary_sensor.philips_sml001_occupancy",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-2-1026"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "Temperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.philips_sml001_temperature",
+            },
+            ("switch", "00:11:22:33:44:55:66:77-2-0-trigger_indicator"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "HueMotionTriggerIndicatorSwitch",
+                DEV_SIG_ENT_MAP_ID: "switch.philips_sml001_led_trigger_indicator",
+            },
+            ("select", "00:11:22:33:44:55:66:77-2-1030-motion_sensitivity"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["philips_occupancy"],
+                DEV_SIG_ENT_MAP_CLASS: "HueV1MotionSensitivity",
+                DEV_SIG_ENT_MAP_ID: "select.philips_sml001_hue_motion_sensitivity",
             },
         },
     },

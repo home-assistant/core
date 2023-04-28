@@ -140,7 +140,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install packaging tomli
-          python3 -m pip install --use-deprecated=legacy-resolver .
+          python3 -m pip install .
           version="$(python3 script/version_bump.py nightly)"
 
           if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
