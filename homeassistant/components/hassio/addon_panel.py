@@ -30,7 +30,11 @@ async def async_setup_addon_panel(hass: HomeAssistant, hassio):
     for addon, data in panels.items():
         if not data[ATTR_ENABLE]:
             continue
-        jobs.append(_register_panel(hass, addon, data))
+        jobs.append(
+            asyncio.create_task(
+                _register_panel(hass, addon, data), name=f"register panel {addon}"
+            )
+        )
 
     if jobs:
         await asyncio.wait(jobs)
