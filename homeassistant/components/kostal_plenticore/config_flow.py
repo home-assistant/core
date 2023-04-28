@@ -32,9 +32,17 @@ async def test_connection(hass: HomeAssistant, data) -> str:
     session = async_get_clientsession(hass)
     async with ApiClient(session, data["host"]) as client:
         await client.login(data["password"])
-        values = await client.get_setting_values("scb:network", "Hostname")
 
-    return values["scb:network"]["Hostname"]
+        # get name of the hostname setting id
+        all_settings = await client.get_settings()
+        for entry in all_settings["scb:network"]:
+            if "Hostname" in entry.id:
+                hostname_id = entry.id
+                break
+
+        values = await client.get_setting_values("scb:network", hostname_id)
+
+    return values["scb:network"][hostname_id]
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

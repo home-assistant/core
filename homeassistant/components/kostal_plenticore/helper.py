@@ -68,6 +68,13 @@ class Plenticore:
             EVENT_HOMEASSISTANT_STOP, self._async_shutdown
         )
 
+        # get name of the hostname setting id
+        all_settings = await self.client.get_settings()
+        for entry in all_settings["scb:network"]:
+            if "Hostname" in entry.id:
+                hostname_id = entry.id
+                break
+
         # get some device meta data
         settings = await self._client.get_setting_values(
             {
@@ -78,7 +85,7 @@ class Plenticore:
                     "Properties:VersionIOC",
                     "Properties:VersionMC",
                 ],
-                "scb:network": ["Hostname"],
+                "scb:network": [hostname_id],
             }
         )
 
@@ -91,7 +98,7 @@ class Plenticore:
             identifiers={(DOMAIN, device_local["Properties:SerialNo"])},
             manufacturer="Kostal",
             model=f"{prod1} {prod2}",
-            name=settings["scb:network"]["Hostname"],
+            name=settings["scb:network"][hostname_id],
             sw_version=f'IOC: {device_local["Properties:VersionIOC"]}'
             + f' MC: {device_local["Properties:VersionMC"]}',
         )
