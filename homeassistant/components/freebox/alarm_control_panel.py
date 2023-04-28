@@ -7,7 +7,12 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ALARM_ARMING, STATE_ALARM_DISARMED, STATE_IDLE
+from homeassistant.const import (
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+    STATE_IDLE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -67,10 +72,10 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
 
         self._attr_extra_state_attributes = {}
         self._state: str | Any
-        # # Trigger
-        # self._command_trigger = self.get_command_id(
-        #     node["type"]["endpoints"], "slot", "trigger"
-        # )
+        # Trigger
+        self._command_trigger = self.get_command_id(
+            node["type"]["endpoints"], "slot", "trigger"
+        )
         # Alarme principale
         self._command_alarm1 = self.get_command_id(
             node["type"]["endpoints"], "slot", "alarm1"
@@ -87,42 +92,12 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         self._command_off = self.get_command_id(
             node["type"]["endpoints"], "slot", "off"
         )
-        # # Code PIN
-        # self._command_pin = self.get_command_id(
-        #     node["type"]["endpoints"], "slot", "pin"
-        # )
-        # # Puissance des bips
-        # self._command_sound = self.get_command_id(
-        #     node["type"]["endpoints"], "slot", "sound"
-        # )
-        # # Puissance de la sirène
-        # self._command_volume = self.get_command_id(
-        #     node["type"]["endpoints"], "slot", "volume"
-        # )
-        # # Délai avant armement
-        # self._command_timeout1 = self.get_command_id(
-        #     node["type"]["endpoints"], "slot", "timeout1"
-        # )
-        # # Délai avant sirène
-        # self._command_timeout2 = self.get_command_id(
-        #     node["type"]["endpoints"], "slot", "timeout2"
-        # )
-        # # Durée de la sirène
-        # self._command_timeout3 = self.get_command_id(
-        #     node["type"]["endpoints"], "slot", "timeout3"
-        # )
         # État
         self._command_state = self.get_command_id(
             node["type"]["endpoints"], "signal", "state"
         )
 
         self.set_state(STATE_IDLE)
-        # self._timeout1 = 15
-        # self._attr_supported_features = (
-        #     AlarmControlPanelEntityFeature.ARM_AWAY
-        #     | AlarmControlPanelEntityFeature.ARM_HOME
-        # )
-        # self.update_node()
         self.update_node(self._router.home_devices[self._id])
 
     @property
@@ -148,10 +123,15 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
             self.set_state(STATE_ALARM_ARMING)
             self.async_write_ha_state()
 
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Send alarm trigger command."""
+        if await self.set_home_endpoint_value(self._command_trigger):
+            self.set_state(STATE_ALARM_TRIGGERED)
+            self.async_write_ha_state()
+
     async def async_update_signal(self):
         """Update signal."""
         self.set_state(await self.get_home_endpoint_value(self._command_state))
-        # self.update_node()
         self.update_node(self._router.home_devices[self._id])
         self.async_write_ha_state()
 
@@ -186,44 +166,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
             lambda x: (x["ep_type"] == "signal"), node["show_endpoints"]
         ):
             self._attr_extra_state_attributes[endpoint["name"]] = endpoint["value"]
-
-        # # Parse all endpoints values
-        # for endpoint in filter(
-        #     lambda x: (x["ep_type"] == "signal"), self._node["show_endpoints"]
-        # ):
-        #     if endpoint["name"] == "pin":
-        #         self._pin = endpoint["value"]
-        #     elif endpoint["name"] == "sound":
-        #         self._sound = endpoint["value"]
-        #     elif endpoint["name"] == "volume":
-        #         self._high_volume = endpoint["value"]
-        #     elif endpoint["name"] == "timeout1":
-        #         self._timeout1 = endpoint["value"]
-        #     elif endpoint["name"] == "timeout3":
-        #         self._timeout2 = endpoint["value"]
-        #     elif endpoint["name"] == "timeout3":
-        #         self._timeout3 = endpoint["value"]
-        #     elif endpoint["name"] == "battery":
-        #         self._battery = endpoint["value"]
-
-    # def set_state2(self, state: str):
-    #     """Update state."""
-    #     if state == "alarm1_arming":
-    #         self._state = STATE_ALARM_ARMING
-    #     elif state == "alarm2_arming":
-    #         self._state = STATE_ALARM_ARMING
-    #     elif state == "alarm1_armed":
-    #         self._state = STATE_ALARM_ARMED_AWAY
-    #     elif state == "alarm2_armed":
-    #         self._state = STATE_ALARM_ARMED_NIGHT
-    #     elif state == "alarm1_alert_timer":
-    #         self._state = STATE_ALARM_TRIGGERED
-    #     elif state == "alarm2_alert_timer":
-    #         self._state = STATE_ALARM_TRIGGERED
-    #     elif state == "alert":
-    #         self._state = STATE_ALARM_TRIGGERED
-    #     else:
-    #         self._state = STATE_ALARM_DISARMED
 
     def set_state(self, state: str) -> None:
         """Update state."""

@@ -23,7 +23,7 @@ async def async_setup_entry(
     """Set up binary sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
     tracked: set = set()
-    new_tracked = []
+    new_trackedpir = []
     new_trackeddws = []
     new_trackedcover = []
 
@@ -31,7 +31,7 @@ async def async_setup_entry(
         if nodeid in tracked:
             continue
         if node["category"] == "pir":
-            new_tracked.append(FreeboxPir(hass, router, node))
+            new_trackedpir.append(FreeboxPir(hass, router, node))
         elif node["category"] == "dws":
             new_trackeddws.append(FreeboxDws(hass, router, node))
 
@@ -47,8 +47,8 @@ async def async_setup_entry(
 
         tracked.add(nodeid)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    if new_trackedpir:
+        async_add_entities(new_trackedpir, True)
     if new_trackeddws:
         async_add_entities(new_trackeddws, True)
     if new_trackedcover:

@@ -49,7 +49,7 @@ def add_entities(
     tracked: set[str],
 ):
     """Add new covers from the router."""
-    new_tracked = []
+    new_trackedshutter = []
     new_trackedbasic = []
 
     for nodeid, node in router.home_devices.items():
@@ -59,11 +59,11 @@ def add_entities(
             new_trackedbasic.append(FreeboxBasicShutter(hass, router, node))
             tracked.add(nodeid)
         elif node["category"] == "shutter" or node["category"] == "opener":
-            new_tracked.append(FreeboxShutter(hass, router, node))
+            new_trackedshutter.append(FreeboxShutter(hass, router, node))
             tracked.add(nodeid)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    if new_trackedshutter:
+        async_add_entities(new_trackedshutter, True)
     if new_trackedbasic:
         async_add_entities(new_trackedbasic, True)
 
@@ -239,7 +239,8 @@ class FreeboxShutter(FreeboxHomeEntity, CoverEntity):
 
         # Dump
         _LOGGER.debug(
-            "Details [%s/%s/%s] with state: %s ",
+            "Details [%s-%s/%s/%s] with state: %s ",
+            str(self._attr_current_cover_position),
             str(position_set),
             val_1,
             val_2,
