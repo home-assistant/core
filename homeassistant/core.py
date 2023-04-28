@@ -863,20 +863,22 @@ class Context:
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event | None = None
-        self._as_dict: dict[str, str | None] | None = None
+        self._as_dict: ReadOnlyDict[str, str | None] | None = None
 
     def __eq__(self, other: Any) -> bool:
         """Compare contexts."""
         return bool(self.__class__ == other.__class__ and self.id == other.id)
 
-    def as_dict(self) -> dict[str, str | None]:
+    def as_dict(self) -> ReadOnlyDict[str, str | None]:
         """Return a dictionary representation of the context."""
         if not self._as_dict:
-            self._as_dict = {
-                "id": self.id,
-                "parent_id": self.parent_id,
-                "user_id": self.user_id,
-            }
+            self._as_dict = ReadOnlyDict(
+                {
+                    "id": self.id,
+                    "parent_id": self.parent_id,
+                    "user_id": self.user_id,
+                }
+            )
         return self._as_dict
 
 
@@ -912,21 +914,23 @@ class Event:
         self.context: Context = context or Context(
             id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
         )
-        self._as_dict: dict[str, Any] | None = None
+        self._as_dict: ReadOnlyDict[str, Any] | None = None
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> ReadOnlyDict[str, Any]:
         """Create a dict representation of this Event.
 
         Async friendly.
         """
         if not self._as_dict:
-            self._as_dict = {
-                "event_type": self.event_type,
-                "data": dict(self.data),
-                "origin": str(self.origin.value),
-                "time_fired": self.time_fired.isoformat(),
-                "context": self.context.as_dict(),
-            }
+            self._as_dict = ReadOnlyDict(
+                {
+                    "event_type": self.event_type,
+                    "data": dict(self.data),
+                    "origin": str(self.origin.value),
+                    "time_fired": self.time_fired.isoformat(),
+                    "context": self.context.as_dict(),
+                }
+            )
         return self._as_dict
 
     def __repr__(self) -> str:
