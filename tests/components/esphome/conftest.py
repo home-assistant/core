@@ -15,6 +15,7 @@ from homeassistant.components.esphome import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
@@ -29,6 +30,12 @@ def mock_bluetooth(enable_bluetooth):
 @pytest.fixture(autouse=True)
 def esphome_mock_async_zeroconf(mock_async_zeroconf):
     """Auto mock zeroconf."""
+
+
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass) -> None:
+    """Load the homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
