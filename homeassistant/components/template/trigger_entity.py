@@ -1,6 +1,9 @@
 """Trigger entity."""
 from __future__ import annotations
 
+from contextlib import suppress
+from typing import Any
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
