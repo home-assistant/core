@@ -14,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
+from .const import CONF_SIP_PORT, DOMAIN
 from .devices import VoIPDevices
 from .voip import HassVoipDatagramProtocol
 
@@ -56,13 +56,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, "user": voip_user.id}
         )
 
+    sip_port = entry.data.get(CONF_SIP_PORT, SIP_PORT)
     devices = VoIPDevices(hass, entry)
     devices.async_setup()
     transport = await _create_sip_server(
         hass,
         lambda: HassVoipDatagramProtocol(hass, devices),
+        sip_port,
     )
-    _LOGGER.debug("Listening for VoIP calls on port %s", SIP_PORT)
+    _LOGGER.debug("Listening for VoIP calls on port %s", sip_port)
 
     hass.data[DOMAIN] = DomainData(transport, devices)
 
@@ -77,10 +79,11 @@ async def _create_sip_server(
         [],
         asyncio.DatagramProtocol,
     ],
+    sip_port: int,
 ) -> asyncio.DatagramTransport:
     transport, _protocol = await hass.loop.create_datagram_endpoint(
         protocol_factory,
-        local_addr=(_IP_WILDCARD, SIP_PORT),
+        local_addr=(_IP_WILDCARD, sip_port),
     )
 
     return transport

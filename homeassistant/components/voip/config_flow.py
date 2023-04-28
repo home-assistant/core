@@ -3,10 +3,22 @@ from __future__ import annotations
 
 from typing import Any
 
+from voip_utils import SIP_PORT
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import CONF_SIP_PORT, DOMAIN
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_SIP_PORT,
+            description={"suggested_value": SIP_PORT},
+        ): int,
+    }
+)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -22,7 +34,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
-            return self.async_show_form(step_id="user")
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+            )
 
         return self.async_create_entry(
             title="Voice over IP",
