@@ -283,18 +283,6 @@ async def test_media_player_play_media(
     )
     assert mock_api.send_key_command.call_count == 4
 
-    with pytest.raises(ValueError):
-        assert await hass.services.async_call(
-            "media_player",
-            "play_media",
-            {
-                "entity_id": MEDIA_PLAYER_ENTITY,
-                "media_content_type": "channel",
-                "media_content_id": "abc",
-            },
-            blocking=True,
-        )
-
     assert await hass.services.async_call(
         "media_player",
         "play_media",
@@ -306,6 +294,18 @@ async def test_media_player_play_media(
         blocking=True,
     )
     mock_api.send_launch_app_command.assert_called_with("https://www.youtube.com")
+
+    with pytest.raises(ValueError):
+        assert await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": MEDIA_PLAYER_ENTITY,
+                "media_content_type": "channel",
+                "media_content_id": "abc",
+            },
+            blocking=True,
+        )
 
     with pytest.raises(ValueError):
         assert await hass.services.async_call(
