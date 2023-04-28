@@ -73,6 +73,26 @@ def _get_language_variations(language: str) -> Iterable[str]:
         yield lang
 
 
+@core.callback
+def async_setup(hass: core.HomeAssistant) -> None:
+    """Set up entity registry listener for the default agent."""
+    entity_registry = er.async_get(hass)
+    for entity_id in entity_registry.entities:
+        async_should_expose(hass, DOMAIN, entity_id)
+
+    @core.callback
+    def async_handle_entity_registry_changed(event: core.Event) -> None:
+        """Set expose flag on newly created entities."""
+        if event.data["action"] == "create":
+            async_should_expose(hass, DOMAIN, event.data["entity_id"])
+
+    hass.bus.async_listen(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        async_handle_entity_registry_changed,
+        run_immediately=True,
+    )
+
+
 class DefaultAgent(AbstractConversationAgent):
     """Default agent for conversation agent."""
 
@@ -113,10 +133,6 @@ class DefaultAgent(AbstractConversationAgent):
         async_listen_entity_updates(
             self.hass, DOMAIN, self._async_exposed_entities_updated
         )
-
-        entity_registry = er.async_get(self.hass)
-        for entity_id in entity_registry.entities:
-            async_should_expose(self.hass, DOMAIN, entity_id)
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
@@ -463,8 +479,6 @@ class DefaultAgent(AbstractConversationAgent):
             field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         ):
             return
-        if event.data["action"] == "create":
-            async_should_expose(self.hass, DOMAIN, event.data["entity_id"])
         self._slot_lists = None
 
     @core.callback

@@ -23,7 +23,7 @@ from homeassistant.util import language as language_util
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import HOME_ASSISTANT_AGENT
-from .default_agent import DefaultAgent
+from .default_agent import DefaultAgent, async_setup as async_setup_default_agent
 
 __all__ = [
     "DOMAIN",
@@ -389,7 +389,8 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
-        self._default_agent_init_lock = asyncio.Lock()
+        self._builtin_agent_init_lock = asyncio.Lock()
+        async_setup_default_agent(hass)
 
     async def async_get_agent(
         self, agent_id: str | None = None
@@ -402,7 +403,7 @@ class AgentManager:
             if self._builtin_agent is not None:
                 return self._builtin_agent
 
-            async with self._default_agent_init_lock:
+            async with self._builtin_agent_init_lock:
                 if self._builtin_agent is not None:
                     return self._builtin_agent
 
