@@ -613,15 +613,13 @@ class MQTT:
             self._matching_subscriptions.cache_clear()
             # Only unsubscribe if currently connected
             if self.connected:
-                self.hass.async_create_task(self._async_unsubscribe(topic))
+                self._async_unsubscribe(topic)
 
         return async_remove
 
-    async def _async_unsubscribe(self, topic: str) -> None:
-        """Unsubscribe from a topic.
-
-        This method is a coroutine.
-        """
+    @callback
+    def _async_unsubscribe(self, topic: str) -> None:
+        """Unsubscribe from a topic."""
         if self._is_active_subscription(topic):
             if self._max_qos[topic] == 0:
                 return
