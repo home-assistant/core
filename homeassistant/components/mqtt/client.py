@@ -644,7 +644,6 @@ class MQTT:
 
     async def _async_perform_subscriptions(self) -> None:
         """Perform MQTT client subscriptions."""
-        subscriptions: dict[str, int]
         # Section 3.3.1.3 in the specification:
         # http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
         # When sending a PUBLISH Packet to a Client the Server MUST
@@ -657,36 +656,31 @@ class MQTT:
         # Since we do not know if a published value is retained we need to
         # (re)subscribe, to ensure retained messages are replayed
 
-        def _process_client_subscriptions() -> list[tuple[int, int]]:
-            """Initiate all subscriptions on the MQTT client and return the results."""
-            subscribe_result_list = []
-            for topic, qos in subscriptions.items():
-                result, mid = self._mqttc.subscribe(topic, qos)
-                subscribe_result_list.append((result, mid))
-                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
-            return subscribe_result_list
+        if not self._pending_subscriptions:
+            return
 
-        subscriptions = self._pending_subscriptions
+        subscriptions: dict[str, int] = self._pending_subscriptions
         self._pending_subscriptions = {}
 
+        def _process_client_subscriptions() -> tuple[int, int]:
+            """Initiate all subscriptions on the MQTT client and return the results."""
+            subscribe_result_list: list[tuple[int, int]] = []
+            result, mid = self._mqttc.subscribe(list(subscriptions.items()))
+            subscribe_result_list.append((result, mid))
+            for topic, qos in subscriptions.items():
+                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
+            return result, mid
+
         async with self._paho_lock:
-            results = await self.hass.async_add_executor_job(
+            result, mid = await self.hass.async_add_executor_job(
                 _process_client_subscriptions
             )
         self._last_subscribe = time.time()
 
-        tasks: list[Coroutine[Any, Any, None]] = []
-        errors: list[int] = []
-        for result, mid in results:
-            if result == 0:
-                tasks.append(self._wait_for_mid(mid))
-            else:
-                errors.append(result)
-
-        if tasks:
-            await asyncio.gather(*tasks)
-        if errors:
-            _raise_on_errors(errors)
+        if result == 0:
+            await self._wait_for_mid(mid)
+        else:
+            _raise_on_error(result)
 
     def _mqtt_on_connect(
         self,
