@@ -58,6 +58,7 @@ async def test_setup_component(hass: HomeAssistant) -> None:
 
     with assert_setup_component(1, ip.DOMAIN):
         assert await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_setup_component_with_service(hass: HomeAssistant) -> None:
@@ -66,6 +67,7 @@ async def test_setup_component_with_service(hass: HomeAssistant) -> None:
 
     with assert_setup_component(1, ip.DOMAIN):
         assert await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert hass.services.has_service(ip.DOMAIN, "scan")
 

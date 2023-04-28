@@ -6,5 +6,9 @@
   "integration_type": "system",
   "iot_class": "local_push",
   "quality_scale": "internal",
-  "requirements": ["sqlalchemy==2.0.5.post1", "fnvhash==0.1.0"]
+  "requirements": [
+    "sqlalchemy==2.0.11",
+    "fnv-hash-fast==0.3.1",
+    "psutil-home-assistant==0.0.1"
+  ]
 }

@@ -1,6 +1,7 @@
-PyJWT==2.5.0
+PyJWT==2.6.0
 PyNaCl==1.5.0
-aiodiscover==1.4.14
+PyTurboJPEG==1.6.7
+aiodiscover==1.4.16
 aiohttp==3.8.4
 aiohttp_cors==0.7.0
 astral==2.2
@@ -10,45 +11,48 @@ atomicwrites-homeassistant==1.4.1
 attrs==22.2.0
 awesomeversion==22.9.0
 bcrypt==4.0.1
-bleak-retry-connector==2.13.0
-bleak==0.19.5
-bluetooth-adapters==0.15.2
+bleak-retry-connector==3.0.2
+bleak==0.20.1
+bluetooth-adapters==0.15.3
 bluetooth-auto-recovery==1.0.3
-bluetooth-data-tools==0.3.1
+bluetooth-data-tools==0.4.0
 certifi>=2021.5.30
 ciso8601==2.3.0
-cryptography==39.0.1
-dbus-fast==1.84.1
-fnvhash==0.1.0
-hass-nabucasa==0.61.0
+cryptography==40.0.2
+dbus-fast==1.85.0
+fnv-hash-fast==0.3.1
+ha-av==10.0.0
+hass-nabucasa==0.66.2
 hassil==1.0.6
-home-assistant-bluetooth==1.9.3
-home-assistant-frontend==20230306.0
-home-assistant-intents==2023.2.28
-httpx==0.23.3
+home-assistant-bluetooth==1.10.0
+home-assistant-frontend==20230427.0
+home-assistant-intents==2023.4.26
+httpx==0.24.0
 ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
-orjson==3.8.7
+mutagen==1.46.0
+orjson==3.8.10
 paho-mqtt==1.6.1
-pillow==9.4.0
-pip>=21.0,<23.1
+pillow==9.5.0
+pip>=21.0,<23.2
 psutil-home-assistant==0.0.1
-pyOpenSSL==23.0.0
+pyOpenSSL==23.1.0
 pyserial==3.5
 python-slugify==4.0.1
 pyudev==0.23.2
 pyyaml==6.0
 requests==2.28.2
 scapy==2.5.0
-sqlalchemy==2.0.5.post1
+sqlalchemy==2.0.11
 typing-extensions>=4.5.0,<5.0
-ulid-transform==0.4.0
+ulid-transform==0.7.0
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
-yarl==1.8.1
-zeroconf==0.47.3
+webrtcvad==2.0.10
+yarl==1.9.2
+zeroconf==0.58.2
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -98,7 +102,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.6.2
 h11==0.14.0
-httpcore==0.16.3
+httpcore==0.17.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -144,14 +148,23 @@ pandas==1.4.3;python_version<'3.11'
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
 
-# pyOpenSSL 23.0.0 or later required to avoid import errors when
-# cryptography 39.0.0 is installed with botocore
-pyOpenSSL>=23.0.0
+# pyOpenSSL 23.1.0 or later required to avoid import errors when
+# cryptography 40.0.1 is installed with botocore
+pyOpenSSL>=23.1.0
 
 # uamqp newer versions we currently can't build for armv7/armhf
 # Limit this to Python 3.10, to not block Python 3.11 dev for now
 uamqp==1.6.0;python_version<'3.11'
 
+# protobuf must be in package constraints for the wheel
+# builder to build binary wheels
+protobuf==4.22.3
+
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
+
+# websockets 11.0 is missing files in the source distribution
+# which break wheel builds so we need at least 11.0.1
+# https://github.com/aaugustin/websockets/issues/1329
+websockets>=11.0.1

@@ -80,9 +80,7 @@ DEFAULT_FILTER_TIME_CONSTANT = 10
 NAME_TEMPLATE = "{} filter"
 ICON = "mdi:chart-line-variant"
 
-FILTER_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int)}
-)
+FILTER_SCHEMA = vol.Schema({vol.Optional(CONF_FILTER_PRECISION): vol.Coerce(int)})
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend(
     {
@@ -383,9 +381,9 @@ class FilterState:
         except ValueError:
             self.state = state.state
 
-    def set_precision(self, precision: int) -> None:
+    def set_precision(self, precision: int | None) -> None:
         """Set precision of Number based states."""
-        if isinstance(self.state, Number):
+        if precision is not None and isinstance(self.state, Number):
             value = round(float(self.state), precision)
             self.state = int(value) if precision == 0 else value
 
@@ -417,8 +415,8 @@ class Filter:
         self,
         name: str,
         window_size: int | timedelta,
-        precision: int,
         entity: str,
+        precision: int | None,
     ) -> None:
         """Initialize common attributes.
 
@@ -467,6 +465,7 @@ class Filter:
 
         filtered = self._filter_state(fstate)
         filtered.set_precision(self.filter_precision)
+
         if self._store_raw:
             self.states.append(copy(FilterState(new_state)))
         else:
@@ -485,8 +484,9 @@ class RangeFilter(Filter, SensorEntity):
 
     def __init__(
         self,
+        *,
         entity: str,
-        precision: int,
+        precision: int | None = None,
         lower_bound: float | None = None,
         upper_bound: float | None = None,
     ) -> None:
@@ -495,7 +495,9 @@ class RangeFilter(Filter, SensorEntity):
         :param upper_bound: band upper bound
         :param lower_bound: band lower bound
         """
-        super().__init__(FILTER_NAME_RANGE, DEFAULT_WINDOW_SIZE, precision, entity)
+        super().__init__(
+            FILTER_NAME_RANGE, DEFAULT_WINDOW_SIZE, precision=precision, entity=entity
+        )
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._stats_internal: Counter = Counter()
@@ -539,13 +541,20 @@ class OutlierFilter(Filter, SensorEntity):
     """
 
     def __init__(
-        self, window_size: int, precision: int, entity: str, radius: float
+        self,
+        *,
+        window_size: int,
+        entity: str,
+        radius: float,
+        precision: int | None = None,
     ) -> None:
         """Initialize Filter.
 
         :param radius: band radius
         """
-        super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
+        super().__init__(
+            FILTER_NAME_OUTLIER, window_size, precision=precision, entity=entity
+        )
         self._radius = radius
         self._stats_internal: Counter = Counter()
         self._store_raw = True
@@ -579,10 +588,17 @@ class LowPassFilter(Filter, SensorEntity):
     """BASIC Low Pass Filter."""
 
     def __init__(
-        self, window_size: int, precision: int, entity: str, time_constant: int
+        self,
+        *,
+        window_size: int,
+        entity: str,
+        time_constant: int,
+        precision: int = DEFAULT_PRECISION,
     ) -> None:
         """Initialize Filter."""
-        super().__init__(FILTER_NAME_LOWPASS, window_size, precision, entity)
+        super().__init__(
+            FILTER_NAME_LOWPASS, window_size, precision=precision, entity=entity
+        )
         self._time_constant = time_constant
 
     def _filter_state(self, new_state: FilterState) -> FilterState:
@@ -610,16 +626,19 @@ class TimeSMAFilter(Filter, SensorEntity):
 
     def __init__(
         self,
+        *,
         window_size: timedelta,
-        precision: int,
         entity: str,
         type: str,  # pylint: disable=redefined-builtin
+        precision: int = DEFAULT_PRECISION,
     ) -> None:
         """Initialize Filter.
 
         :param type: type of algorithm used to connect discrete values
         """
-        super().__init__(FILTER_NAME_TIME_SMA, window_size, precision, entity)
+        super().__init__(
+            FILTER_NAME_TIME_SMA, window_size, precision=precision, entity=entity
+        )
         self._time_window = window_size
         self.last_leak: FilterState | None = None
         self.queue = deque[FilterState]()
@@ -660,9 +679,13 @@ class ThrottleFilter(Filter, SensorEntity):
     One sample per window.
     """
 
-    def __init__(self, window_size: int, precision: int, entity: str) -> None:
+    def __init__(
+        self, *, window_size: int, entity: str, precision: None = None
+    ) -> None:
         """Initialize Filter."""
-        super().__init__(FILTER_NAME_THROTTLE, window_size, precision, entity)
+        super().__init__(
+            FILTER_NAME_THROTTLE, window_size, precision=precision, entity=entity
+        )
         self._only_numbers = False
 
     def _filter_state(self, new_state: FilterState) -> FilterState:
@@ -683,9 +706,13 @@ class TimeThrottleFilter(Filter, SensorEntity):
     One sample per time period.
     """
 
-    def __init__(self, window_size: timedelta, precision: int, entity: str) -> None:
+    def __init__(
+        self, *, window_size: timedelta, entity: str, precision: int | None = None
+    ) -> None:
         """Initialize Filter."""
-        super().__init__(FILTER_NAME_TIME_THROTTLE, window_size, precision, entity)
+        super().__init__(
+            FILTER_NAME_TIME_THROTTLE, window_size, precision=precision, entity=entity
+        )
         self._time_window = window_size
         self._last_emitted_at: datetime | None = None
         self._only_numbers = False

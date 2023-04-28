@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -10,14 +11,23 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.sql.const import DOMAIN
+from homeassistant.components.sql.const import CONF_QUERY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import CONF_UNIQUE_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from . import YAML_CONFIG, init_integration
+from . import (
+    YAML_CONFIG,
+    YAML_CONFIG_BINARY,
+    YAML_CONFIG_FULL_TABLE_SCAN,
+    YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID,
+    YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS,
+    YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID,
+    init_integration,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -182,6 +192,7 @@ async def test_invalid_url_setup(
 
 
 async def test_invalid_url_on_update(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -192,34 +203,25 @@ async def test_invalid_url_on_update(
         "column": "value",
         "name": "count_tables",
     }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data={},
-        options=config,
-        entry_id="1",
-    )
 
-    entry.add_to_hass(hass)
+    class MockSession:
+        """Mock session."""
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        def execute(self, query: Any) -> None:
+            """Execute the query."""
+            raise SQLAlchemyError("sqlite://homeassistant:hunter2@homeassistant.local")
 
     with patch(
-        "homeassistant.components.recorder",
-    ), patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
-        side_effect=SQLAlchemyError(
-            "sqlite://homeassistant:hunter2@homeassistant.local"
-        ),
+        "homeassistant.components.sql.sensor.scoped_session",
+        return_value=MockSession,
     ):
+        await init_integration(hass, config)
         async_fire_time_changed(
             hass,
             dt.utcnow() + timedelta(minutes=1),
         )
         await hass.async_block_till_done()
 
-    assert "sqlite://homeassistant:hunter2@homeassistant.local" not in caplog.text
     assert "sqlite://****:****@homeassistant.local" in caplog.text
 
 
@@ -317,3 +319,141 @@ async def test_attributes_from_yaml_setup(
     assert state.attributes["device_class"] == SensorDeviceClass.DATA_RATE
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert state.attributes["unit_of_measurement"] == "MiB"
+
+
+async def test_binary_data_from_yaml_setup(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test binary data from yaml config."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG_BINARY)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.get_binary_value")
+    assert state.state == "0xd34324324230392032"
+    assert state.attributes["test_attr"] == "0xd343aa"
+
+
+async def test_issue_when_using_old_query(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we create an issue for an old query that will do a full table scan."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG_FULL_TABLE_SCAN)
+    await hass.async_block_till_done()
+    assert "Query contains entity_id but does not reference states_meta" in caplog.text
+
+    assert not hass.states.async_all()
+    issue_registry = ir.async_get(hass)
+
+    config = YAML_CONFIG_FULL_TABLE_SCAN["sql"]
+
+    unique_id = config[CONF_UNIQUE_ID]
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"entity_id_query_does_full_table_scan_{unique_id}"
+    )
+    assert issue.translation_placeholders == {"query": config[CONF_QUERY]}
+
+
+@pytest.mark.parametrize(
+    "yaml_config",
+    [
+        YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID,
+        YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS,
+    ],
+)
+async def test_issue_when_using_old_query_without_unique_id(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    yaml_config: dict[str, Any],
+) -> None:
+    """Test we create an issue for an old query that will do a full table scan."""
+
+    assert await async_setup_component(hass, DOMAIN, yaml_config)
+    await hass.async_block_till_done()
+    assert "Query contains entity_id but does not reference states_meta" in caplog.text
+
+    assert not hass.states.async_all()
+    issue_registry = ir.async_get(hass)
+
+    config = yaml_config["sql"]
+    query = config[CONF_QUERY]
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"entity_id_query_does_full_table_scan_{query}"
+    )
+    assert issue.translation_placeholders == {"query": query}
+
+
+async def test_no_issue_when_view_has_the_text_entity_id_in_it(
+    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we do not trigger the full table scan issue for a custom view."""
+
+    with patch(
+        "homeassistant.components.sql.sensor.scoped_session",
+    ):
+        await init_integration(
+            hass, YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID["sql"]
+        )
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done()
+
+    assert (
+        "Query contains entity_id but does not reference states_meta" not in caplog.text
+    )
+    assert hass.states.get("sensor.get_entity_id") is not None
+
+
+async def test_multiple_sensors_using_same_db(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test multiple sensors using the same db."""
+    config = {
+        "db_url": "sqlite:///",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "name": "Select value SQL query",
+    }
+    config2 = {
+        "db_url": "sqlite:///",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "name": "Select value SQL query 2",
+    }
+    await init_integration(hass, config)
+    await init_integration(hass, config2, entry_id="2")
+
+    state = hass.states.get("sensor.select_value_sql_query")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+
+    state = hass.states.get("sensor.select_value_sql_query_2")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+
+
+async def test_engine_is_disposed_at_stop(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test we dispose of the engine at stop."""
+    config = {
+        "db_url": "sqlite:///",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "name": "Select value SQL query",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.select_value_sql_query")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+
+    with patch("sqlalchemy.engine.base.Engine.dispose") as mock_engine_dispose:
+        await hass.async_stop()
+
+    assert mock_engine_dispose.call_count == 2

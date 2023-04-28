@@ -1336,7 +1336,17 @@ async def test_entity_play_media_playlist(
     )
 
 
-async def test_entity_media_content_type(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("cast_type", "default_content_type"),
+    [
+        (pychromecast.const.CAST_TYPE_AUDIO, "music"),
+        (pychromecast.const.CAST_TYPE_GROUP, "music"),
+        (pychromecast.const.CAST_TYPE_CHROMECAST, "video"),
+    ],
+)
+async def test_entity_media_content_type(
+    hass: HomeAssistant, cast_type, default_content_type
+) -> None:
     """Test various content types."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -1344,6 +1354,7 @@ async def test_entity_media_content_type(hass: HomeAssistant) -> None:
     info = get_fake_chromecast_info()
 
     chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = cast_type
     _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -1364,7 +1375,7 @@ async def test_entity_media_content_type(hass: HomeAssistant) -> None:
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes.get("media_content_type") is None
+    assert state.attributes.get("media_content_type") == default_content_type
 
     media_status.media_is_tvshow = True
     media_status_cb(media_status)

@@ -31,6 +31,7 @@ from .helpers import (
     entity_registry,
     issue_registry,
     recorder,
+    template,
 )
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
@@ -238,12 +239,14 @@ async def load_registries(hass: core.HomeAssistant) -> None:
 
     # Load the registries and cache the result of platform.uname().processor
     entity.async_setup(hass)
+    template.async_setup(hass)
     await asyncio.gather(
         area_registry.async_load(hass),
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
+        template.async_load_custom_templates(hass),
     )
 
 
@@ -513,16 +516,15 @@ async def async_setup_multi_components(
         )
         for domain in domains
     }
-    await asyncio.wait(futures.values())
-    errors = [domain for domain in domains if futures[domain].exception()]
-    for domain in errors:
-        exception = futures[domain].exception()
-        assert exception is not None
-        _LOGGER.error(
-            "Error setting up integration %s - received exception",
-            domain,
-            exc_info=(type(exception), exception, exception.__traceback__),
-        )
+    results = await asyncio.gather(*futures.values(), return_exceptions=True)
+    for idx, domain in enumerate(futures):
+        result = results[idx]
+        if isinstance(result, BaseException):
+            _LOGGER.error(
+                "Error setting up integration %s - received exception",
+                domain,
+                exc_info=(type(result), result, result.__traceback__),
+            )
 
 
 async def _async_set_up_integrations(
@@ -627,6 +629,9 @@ async def _async_set_up_integrations(
         - stage_1_domains
     )
 
+    # Enables after dependencies when setting up stage 1 domains
+    async_set_domains_to_be_loaded(hass, stage_1_domains)
+
     # Start setup
     if stage_1_domains:
         _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
@@ -638,7 +643,7 @@ async def _async_set_up_integrations(
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
-    # Enables after dependencies
+    # Add after dependencies when setting up stage 2 domains
     async_set_domains_to_be_loaded(hass, stage_2_domains)
 
     if stage_2_domains:
