@@ -172,6 +172,9 @@ faust-cchardet>=2.1.18
 # which break wheel builds so we need at least 11.0.1
 # https://github.com/aaugustin/websockets/issues/1329
 websockets>=11.0.1
+
+# force greenlet 2.0.2 builds for sqlalchemy
+greenlet==2.0.2
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
