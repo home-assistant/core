@@ -122,9 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             entity_entry.unique_id,
         )
 
-        if (
-            name := match.group("name") if match is not None else None
-        ) in MIGRATION_NAME_TO_KEY:
+        if match and (name := match.group("name")) in MIGRATION_NAME_TO_KEY:
             return {
                 "new_unique_id": f"{config_entry.entry_id}-{MIGRATION_NAME_TO_KEY[name]}"
             }
