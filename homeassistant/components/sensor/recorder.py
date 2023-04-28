@@ -557,6 +557,9 @@ def _compile_statistics(  # noqa: C901
                 last_stat = last_stats[entity_id][0]
                 last_reset = _timestamp_to_isoformat_or_none(last_stat["last_reset"])
                 old_last_reset = last_reset
+                # If there are no previous values and has_sum
+                # was previously false there will be no last_stat
+                # for state or sum
                 new_state = old_state = last_stat.get("state")
                 _sum = last_stat.get("sum") or 0.0
 
