@@ -1,8 +1,10 @@
 """Support for IBM Watson TTS integration."""
 import logging
 
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from ibm_watson import TextToSpeechV1
+from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+    IAMAuthenticator,
+)
+from ibm_watson import TextToSpeechV1  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
