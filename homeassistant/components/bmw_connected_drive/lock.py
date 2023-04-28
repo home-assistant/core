@@ -73,7 +73,7 @@ class BMWLock(BMWBaseEntity, LockEntity):
         except MyBMWAPIError as ex:
             self._attr_is_locked = False
             self.async_write_ha_state()
-            raise HomeAssistantError(str(ex)) from ex
+            raise HomeAssistantError(ex) from ex
 
         self.coordinator.async_update_listeners()
 
@@ -91,7 +91,7 @@ class BMWLock(BMWBaseEntity, LockEntity):
         except MyBMWAPIError as ex:
             self._attr_is_locked = True
             self.async_write_ha_state()
-            raise HomeAssistantError(str(ex)) from ex
+            raise HomeAssistantError(ex) from ex
 
         self.coordinator.async_update_listeners()
 

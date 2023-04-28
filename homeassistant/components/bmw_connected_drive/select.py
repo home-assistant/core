@@ -128,6 +128,6 @@ class BMWSelect(BMWBaseEntity, SelectEntity):
         try:
             await self.entity_description.remote_service(self.vehicle, option)
         except MyBMWAPIError as ex:
-            raise HomeAssistantError(str(ex)) from ex
+            raise HomeAssistantError(ex) from ex
 
         self.coordinator.async_update_listeners()

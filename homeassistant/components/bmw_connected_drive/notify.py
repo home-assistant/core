@@ -94,6 +94,6 @@ class BMWNotificationService(BaseNotificationService):
                 except TypeError as ex:
                     raise ValueError(str(ex)) from ex
                 except MyBMWAPIError as ex:
-                    raise HomeAssistantError(str(ex)) from ex
+                    raise HomeAssistantError(ex) from ex
             else:
                 raise ValueError(f"'data.{ATTR_LOCATION}' is required.")

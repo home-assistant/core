@@ -116,7 +116,7 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
             try:
                 await self.entity_description.remote_function(self.vehicle)
             except MyBMWAPIError as ex:
-                raise HomeAssistantError(str(ex)) from ex
+                raise HomeAssistantError(ex) from ex
         elif self.entity_description.account_function:
             _LOGGER.warning(
                 "The 'Refresh from cloud' button is deprecated. Use the"
@@ -128,6 +128,6 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
             try:
                 await self.entity_description.account_function(self.coordinator)
             except MyBMWAPIError as ex:
-                raise HomeAssistantError(str(ex)) from ex
+                raise HomeAssistantError(ex) from ex
 
         self.coordinator.async_update_listeners()
