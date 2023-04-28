@@ -117,7 +117,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         self._send_key_command("VOLUME_UP")
 
     async def async_volume_down(self) -> None:
-        """Turn volume up for media player."""
+        """Turn volume down for media player."""
         self._send_key_command("VOLUME_DOWN")
 
     async def async_mute_volume(self, mute: bool) -> None:
