@@ -102,11 +102,15 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
     async def _async_restore_state(self) -> None:
         """Restore latest state."""
         if (old_state := await self.async_get_last_state()) is not None:
-            if old_state.state is not None:
-                self._attr_hvac_mode = old_state.state
+            if old_state.state in [mode.value for mode in HVACMode]:
+                self._attr_hvac_mode = HVACMode(old_state.state)
             if old_state.attributes is not None:
-                if old_state.attributes.get(ATTR_HVAC_ACTION) is not None:
-                    self._attr_hvac_action = old_state.attributes[ATTR_HVAC_ACTION]
+                if old_state.attributes.get(ATTR_HVAC_ACTION) in [
+                    action.value for action in HVACAction
+                ]:
+                    self._attr_hvac_action = HVACAction(
+                        old_state.attributes[ATTR_HVAC_ACTION]
+                    )
                 if old_state.attributes.get(ATTR_TEMPERATURE) is not None:
                     self._attr_target_temperature = float(
                         old_state.attributes[ATTR_TEMPERATURE]
