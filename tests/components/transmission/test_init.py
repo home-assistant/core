@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from transmission_rpc.error import TransmissionError
 
-from homeassistant.components import transmission
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.transmission.const import DOMAIN
@@ -115,19 +114,21 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     ],
 )
 async def test_migrate_unique_id(
-    hass: HomeAssistant, domain: str, old_unique_id: str, new_unique_id: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    domain: str,
+    old_unique_id: str,
+    new_unique_id: str,
 ) -> None:
     """Test unique id migration."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA, entry_id="1234")
     entry.add_to_hass(hass)
 
-    ent_reg = er.async_get(hass)
-
-    entity: er.RegistryEntry = ent_reg.async_get_or_create(
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
         suggested_object_id=f"my_{domain}",
         disabled_by=None,
         domain=domain,
-        platform=transmission.DOMAIN,
+        platform=DOMAIN,
         unique_id=old_unique_id,
         config_entry=entry,
     )
@@ -136,7 +137,7 @@ async def test_migrate_unique_id(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    migrated_entity = ent_reg.async_get(entity.entity_id)
+    migrated_entity = entity_registry.async_get(entity.entity_id)
 
     assert migrated_entity
     assert migrated_entity.unique_id == new_unique_id

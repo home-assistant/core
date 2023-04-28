@@ -118,14 +118,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ) -> dict[str, Any] | None:
         """Update unique ID of entity entry."""
         match = re.search(
-            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.*)",
+            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
             entity_entry.unique_id,
         )
 
-        if match and (name := match.group("name")) in MIGRATION_NAME_TO_KEY:
-            return {
-                "new_unique_id": f"{config_entry.entry_id}-{MIGRATION_NAME_TO_KEY[name]}"
-            }
+        if match and (key := MIGRATION_NAME_TO_KEY.get(match.group("name"))):
+            return {"new_unique_id": f"{config_entry.entry_id}-{key}"}
         return None
 
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
