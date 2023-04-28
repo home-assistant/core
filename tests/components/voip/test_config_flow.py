@@ -22,12 +22,16 @@ async def test_form_user(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {},
+            {
+                "sip_port": 5061,
+            },
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {}
+    assert result["data"] == {
+        "sip_port": 5061,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
