@@ -256,7 +256,9 @@ async def test_event_to_db_model() -> None:
     assert native.as_dict() == event.as_dict()
 
     native = Events.from_event(event).to_native()
-    event.data = {}
+    native.data = (
+        event.data
+    )  # data is not set by from_event as its in the event_data table
     native.event_type = event.event_type
     assert native.as_dict() == event.as_dict()
 
