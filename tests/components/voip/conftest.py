@@ -16,6 +16,12 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass) -> None:
+    """Load the homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a config entry."""
