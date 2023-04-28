@@ -93,7 +93,9 @@ CONFIG_SCHEMA = vol.Schema(
 @core.callback
 def _get_agent_manager(hass: HomeAssistant) -> AgentManager:
     """Get the active agent."""
-    return AgentManager(hass)
+    manager = AgentManager(hass)
+    manager.async_setup()
+    return manager
 
 
 @core.callback
@@ -390,7 +392,10 @@ class AgentManager:
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
         self._builtin_agent_init_lock = asyncio.Lock()
-        async_setup_default_agent(hass)
+
+    def async_setup(self) -> None:
+        """Set up the conversation agents."""
+        async_setup_default_agent(self.hass)
 
     async def async_get_agent(
         self, agent_id: str | None = None
