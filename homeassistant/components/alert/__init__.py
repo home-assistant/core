@@ -29,7 +29,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall
+from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -39,6 +39,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 import homeassistant.helpers.service
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
 
@@ -139,10 +140,10 @@ class Alert(collection.CollectionEntity, Entity):
         self._alert_state = config[CONF_STATE]
         self._skip_first = config[CONF_SKIP_FIRST]
         self._data = config.get(CONF_DATA)
-        self._watched_entity_id = config[CONF_ENTITY_ID]
-        self._message_template = config.get(CONF_ALERT_MESSAGE)
-        self._done_message_template = config.get(CONF_DONE_MESSAGE)
-        self._title_template = config.get(CONF_TITLE)
+        self._watched_entity_id: str = config[CONF_ENTITY_ID]
+        self._message_template: Template | None = config.get(CONF_ALERT_MESSAGE)
+        self._done_message_template: Template | None = config.get(CONF_DONE_MESSAGE)
+        self._title_template: Template | None = config.get(CONF_TITLE)
         self._notifiers = config[CONF_NOTIFIERS]
         self._can_ack = config[CONF_CAN_ACK]
         self._delay = [timedelta(minutes=val) for val in config[CONF_REPEAT]]
@@ -192,6 +193,7 @@ class Alert(collection.CollectionEntity, Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from tracking watched entity."""
+        self._async_cancel_alert()
         if self._unsub:
             self._unsub()
 
@@ -219,13 +221,17 @@ class Alert(collection.CollectionEntity, Entity):
 
         self.async_write_ha_state()
 
-    async def end_alerting(self) -> None:
-        """End the alert procedures."""
-        LOGGER.debug("Ending Alert: %s", self._attr_name)
+    @callback
+    def _async_cancel_alert(self) -> None:
+        """Cancel a pending alert."""
         if self._cancel is not None:
             self._cancel()
             self._cancel = None
 
+    async def end_alerting(self) -> None:
+        """End the alert procedures."""
+        LOGGER.debug("Ending Alert: %s", self._attr_name)
+        self._async_cancel_alert()
         self._ack = False
         self._firing = False
         if self._send_done_message:
