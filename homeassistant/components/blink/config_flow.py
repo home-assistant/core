@@ -72,7 +72,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the blink flow."""
         self.auth = None
 

@@ -65,7 +65,7 @@ class GoogleProvider(Provider):
         if language in MAP_LANG_TLD:
             tld = MAP_LANG_TLD[language].tld
             language = MAP_LANG_TLD[language].lang
-        if options is not None and "tld" in options.keys():
+        if options is not None and "tld" in options:
             tld = options["tld"]
         tts = gTTS(text=message, lang=language, tld=tld)
         mp3_data = BytesIO()

@@ -17,25 +17,25 @@ from homeassistant.const import (
     ATTR_ICON,
     STATE_OFF,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
+
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_bluetooth(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the LaMetric Bluetooth control."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("switch.frenck_s_lametric_bluetooth")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
@@ -95,7 +95,6 @@ async def test_bluetooth(
 
 async def test_switch_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test error handling of the LaMetric switches."""
@@ -125,7 +124,6 @@ async def test_switch_error(
 
 async def test_switch_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test connection error handling of the LaMetric switches."""

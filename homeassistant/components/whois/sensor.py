@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional, cast
+from typing import cast
 
 from whois import Domain
 
@@ -14,10 +14,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DOMAIN, UnitOfTime
+from homeassistant.const import CONF_DOMAIN, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -155,7 +155,7 @@ async def async_setup_entry(
 
 
 class WhoisSensorEntity(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[Domain]]], SensorEntity
+    CoordinatorEntity[DataUpdateCoordinator[Domain | None]], SensorEntity
 ):
     """Implementation of a WHOIS sensor."""
 

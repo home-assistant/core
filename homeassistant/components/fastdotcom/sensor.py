@@ -32,7 +32,6 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfDataRate.MEGABITS_PER_SECOND
     _attr_icon = "mdi:speedometer"
     _attr_should_poll = False
-    _attr_native_value = None
 
     def __init__(self, speedtest_data: dict[str, Any]) -> None:
         """Initialize the sensor."""

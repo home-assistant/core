@@ -1,13 +1,12 @@
 """The tests for the Home Assistant SpaceAPI component."""
 from http import HTTPStatus
-
-# pylint: disable=protected-access
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.spaceapi import DOMAIN, SPACEAPI_VERSION, URL_API_SPACEAPI
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
@@ -104,7 +103,7 @@ def mock_client(hass, hass_client):
     return hass.loop.run_until_complete(hass_client())
 
 
-async def test_spaceapi_get(hass, mock_client):
+async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
     """Test response after start-up Home Assistant."""
     resp = await mock_client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.OK
@@ -148,7 +147,7 @@ async def test_spaceapi_get(hass, mock_client):
     assert data["radio_show"][0]["end"] == "2019-09-02T12:00Z"
 
 
-async def test_spaceapi_state_get(hass, mock_client):
+async def test_spaceapi_state_get(hass: HomeAssistant, mock_client) -> None:
     """Test response if the state entity was set."""
     hass.states.async_set("test.test_door", True)
 
@@ -159,7 +158,7 @@ async def test_spaceapi_state_get(hass, mock_client):
     assert data["state"]["open"] == bool(1)
 
 
-async def test_spaceapi_sensors_get(hass, mock_client):
+async def test_spaceapi_sensors_get(hass: HomeAssistant, mock_client) -> None:
     """Test the response for the sensors."""
     resp = await mock_client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.OK

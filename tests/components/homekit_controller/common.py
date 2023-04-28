@@ -28,9 +28,9 @@ from homeassistant.components.homekit_controller.const import (
 )
 from homeassistant.components.homekit_controller.utils import async_get_controller
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -78,8 +78,7 @@ class EntityTestInfo:
 
 @dataclass
 class DeviceTriggerInfo:
-    """
-    Describe a automation trigger we expect to be created.
+    """Describe a automation trigger we expect to be created.
 
     We only use these for a stateless characteristic like a doorbell.
     """

@@ -2,7 +2,7 @@
 from homeassistant.auth.permissions.merge import merge_policies
 
 
-def test_merging_permissions_true_rules_dict():
+def test_merging_permissions_true_rules_dict() -> None:
     """Test merging policy with two entities."""
     policy1 = {
         "something_else": True,
@@ -15,7 +15,7 @@ def test_merging_permissions_true_rules_dict():
     }
 
 
-def test_merging_permissions_multiple_subcategories():
+def test_merging_permissions_multiple_subcategories() -> None:
     """Test merging policy with two entities."""
     policy1 = {"entities": None}
     policy2 = {"entities": {"entity_ids": True}}

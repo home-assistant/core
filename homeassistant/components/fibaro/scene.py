@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pyfibaro.fibaro_scene import SceneModel
+
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -34,7 +36,7 @@ async def async_setup_entry(
 class FibaroScene(FibaroDevice, Scene):
     """Representation of a Fibaro scene entity."""
 
-    def __init__(self, fibaro_device: Any) -> None:
+    def __init__(self, fibaro_device: SceneModel) -> None:
         """Initialize the Fibaro scene."""
         super().__init__(fibaro_device)
 

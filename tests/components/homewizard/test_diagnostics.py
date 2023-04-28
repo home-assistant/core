@@ -1,18 +1,18 @@
 """Tests for diagnostics data."""
-from aiohttp import ClientSession
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-):
+) -> None:
     """Test diagnostics."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
@@ -21,7 +21,7 @@ async def test_diagnostics(
         "data": {
             "device": {
                 "product_name": "P1 Meter",
-                "product_type": "HWE-P1",
+                "product_type": "HWE-SKT",
                 "serial": REDACTED,
                 "api_version": "v1",
                 "firmware_version": "2.11",
@@ -63,8 +63,8 @@ async def test_diagnostics(
                 "any_power_fail_count": 4,
                 "long_power_fail_count": 5,
                 "active_power_average_w": 123.0,
-                "montly_power_peak_w": 1111.0,
-                "montly_power_peak_timestamp": "2023-01-01T08:00:10",
+                "monthly_power_peak_w": 1111.0,
+                "monthly_power_peak_timestamp": "2023-01-01T08:00:10",
                 "total_gas_m3": 1122.333,
                 "gas_timestamp": "2021-03-14T11:22:33",
                 "gas_unique_id": REDACTED,

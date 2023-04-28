@@ -1,14 +1,19 @@
 """Support for LiteJet scenes."""
+import logging
 from typing import Any
 
-from pylitejet import LiteJet
+from pylitejet import LiteJet, LiteJetError
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_NUMBER = "number"
 
@@ -33,33 +38,42 @@ async def async_setup_entry(
 class LiteJetScene(Scene):
     """Representation of a single LiteJet scene."""
 
-    def __init__(self, entry_id, lj: LiteJet, i, name):  # pylint: disable=invalid-name
+    _attr_has_entity_name = True
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, entry_id: str, system: LiteJet, i: int, name: str) -> None:
         """Initialize the scene."""
-        self._entry_id = entry_id
-        self._lj = lj
+        self._lj = system
         self._index = i
-        self._name = name
+        self._attr_unique_id = f"{entry_id}_{i}"
+        self._attr_name = name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry_id}_mcp")},
+            name="LiteJet",
+            manufacturer="Centralite",
+            model="CL24",
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Run when this Entity has been added to HA."""
+        self._lj.on_connected_changed(self._on_connected_changed)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Entity being removed from hass."""
+        self._lj.unsubscribe(self._on_connected_changed)
+
+    def _on_connected_changed(self, connected: bool, reason: str) -> None:
+        self._attr_available = connected
+        self.async_write_ha_state()
 
     @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this scene."""
-        return f"{self._entry_id}_{self._index}"
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        await self._lj.activate_scene(self._index)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Scenes are only enabled by explicit user choice."""
-        return False
+        try:
+            await self._lj.activate_scene(self._index)
+        except LiteJetError as exc:
+            raise HomeAssistantError() from exc

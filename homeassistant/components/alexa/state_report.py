@@ -5,6 +5,7 @@ import asyncio
 from http import HTTPStatus
 import json
 import logging
+from typing import cast
 
 import aiohttp
 import async_timeout
@@ -15,6 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import API_CHANGE, DATE_FORMAT, DOMAIN, Cause
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
@@ -162,9 +164,10 @@ async def async_send_changereport_message(
     if response.status == HTTPStatus.ACCEPTED:
         return
 
-    response_json = json.loads(response_text)
+    response_json = json_loads_object(response_text)
+    response_payload = cast(JsonObjectType, response_json["payload"])
 
-    if response_json["payload"]["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION":
+    if response_payload["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION":
         if invalidate_access_token:
             # Invalidate the access token and try again
             config.async_invalidate_access_token()
@@ -180,8 +183,8 @@ async def async_send_changereport_message(
     _LOGGER.error(
         "Error when sending ChangeReport for %s to Alexa: %s: %s",
         alexa_entity.entity_id,
-        response_json["payload"]["code"],
-        response_json["payload"]["description"],
+        response_payload["code"],
+        response_payload["description"],
     )
 
 
@@ -299,11 +302,12 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     if response.status == HTTPStatus.ACCEPTED:
         return
 
-    response_json = json.loads(response_text)
+    response_json = json_loads_object(response_text)
+    response_payload = cast(JsonObjectType, response_json["payload"])
 
     _LOGGER.error(
         "Error when sending DoorbellPress event for %s to Alexa: %s: %s",
         alexa_entity.entity_id,
-        response_json["payload"]["code"],
-        response_json["payload"]["description"],
+        response_payload["code"],
+        response_payload["description"],
     )

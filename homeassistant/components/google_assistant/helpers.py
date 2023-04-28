@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from asyncio import gather
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
@@ -22,7 +22,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.helpers import area_registry, device_registry, entity_registry, start
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    start,
+)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
@@ -52,15 +57,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[
-    entity_registry.RegistryEntry | None,
-    device_registry.DeviceEntry | None,
-    area_registry.AreaEntry | None,
-]:
+) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
     """Get registry entries."""
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
-    area_reg = area_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
         device_entry = dev_reg.devices.get(entity_entry.device_id)
@@ -85,7 +86,7 @@ def _get_registry_entries(
 class AbstractConfig(ABC):
     """Hold the configuration for Google Assistant."""
 
-    _unsub_report_state = None
+    _unsub_report_state: Callable[[], None] | None = None
 
     def __init__(self, hass):
         """Initialize abstract config."""
@@ -197,7 +198,7 @@ class AbstractConfig(ABC):
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from .report_state import async_enable_report_state
 
         if self._unsub_report_state is None:
@@ -289,7 +290,6 @@ class AbstractConfig(ABC):
             return
 
         for user_agent_id, _ in self._store.agent_user_ids.items():
-
             if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
                 setup_successful = False
                 break
@@ -338,7 +338,7 @@ class AbstractConfig(ABC):
     async def _handle_local_webhook(self, hass, webhook_id, request):
         """Handle an incoming local SDK message."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import smart_home
 
         self._local_last_active = utcnow()

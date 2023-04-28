@@ -5,11 +5,16 @@ from pyfronius import FroniusError
 
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from . import mock_responses, setup_fronius_integration
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_unload_config_entry(hass, aioclient_mock):
+
+async def test_unload_config_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that configuration entry supports unloading."""
     mock_responses(aioclient_mock)
     await setup_fronius_integration(hass)
@@ -27,7 +32,9 @@ async def test_unload_config_entry(hass, aioclient_mock):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_logger_error(hass, aioclient_mock):
+async def test_logger_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup when logger reports an error."""
     # gen24 dataset will raise FroniusError when logger is called
     mock_responses(aioclient_mock, fixture_set="gen24")
@@ -35,7 +42,9 @@ async def test_logger_error(hass, aioclient_mock):
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_inverter_error(hass, aioclient_mock):
+async def test_inverter_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup when inverter_info reports an error."""
     mock_responses(aioclient_mock)
     with patch(

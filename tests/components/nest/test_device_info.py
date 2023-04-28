@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 
 
-def test_device_custom_name():
+def test_device_custom_name() -> None:
     """Test a device name from an Info trait."""
     device = Device.MakeDevice(
         {
@@ -40,7 +40,7 @@ def test_device_custom_name():
     }
 
 
-def test_device_name_room():
+def test_device_name_room() -> None:
     """Test a device name from the room name."""
     device = Device.MakeDevice(
         {
@@ -66,7 +66,7 @@ def test_device_name_room():
     }
 
 
-def test_device_no_name():
+def test_device_no_name() -> None:
     """Test a device that has a name inferred from the type."""
     device = Device.MakeDevice(
         {"name": "some-device-id", "type": "sdm.devices.types.DOORBELL", "traits": {}},
@@ -86,7 +86,7 @@ def test_device_no_name():
     }
 
 
-def test_device_invalid_type():
+def test_device_invalid_type() -> None:
     """Test a device with a type name that is not recognized."""
     device = Device.MakeDevice(
         {
@@ -114,7 +114,7 @@ def test_device_invalid_type():
     }
 
 
-def test_suggested_area():
+def test_suggested_area() -> None:
     """Test the suggested area with different device name and room name."""
     device = Device.MakeDevice(
         {

@@ -115,7 +115,6 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         super()._handle_coordinator_update()
 
     def _update_attrs_from_coordinator(self) -> None:
-
         coordinator_device = self._get_coordinator_device()
 
         self._attr_hvac_mode: HVACMode = (

@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import (
     ACK_ECHO,
@@ -27,7 +27,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockRespon
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_data,initial_response",
+    ("yaml_config", "config_entry_data", "initial_response"),
     [
         ({}, CONFIG_ENTRY_DATA, None),
         (
@@ -65,7 +65,7 @@ async def test_init_success(
 
 
 @pytest.mark.parametrize(
-    "yaml_config,config_entry_data,responses,config_entry_states",
+    ("yaml_config", "config_entry_data", "responses", "config_entry_states"),
     [
         ({}, CONFIG_ENTRY_DATA, [UNAVAILABLE_RESPONSE], [ConfigEntryState.SETUP_RETRY]),
         (
@@ -102,13 +102,14 @@ async def test_communication_failure(
     ] == config_entry_states
 
 
-@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+@pytest.mark.parametrize("platforms", [[Platform.NUMBER, Platform.SENSOR]])
 async def test_rain_delay_service(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
     config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test calling the rain delay service."""
 
@@ -130,6 +131,14 @@ async def test_rain_delay_service(
     )
 
     assert len(aioclient_mock.mock_calls) == 1
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_raindelay"
+    )
+    assert issue
+    assert issue.translation_placeholders == {
+        "alternate_target": "number.rain_bird_controller_rain_delay"
+    }
 
 
 async def test_rain_delay_invalid_config_entry(

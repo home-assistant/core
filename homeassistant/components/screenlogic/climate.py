@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from screenlogicpy.const import DATA as SL_DATA, EQUIPMENT, HEAT_MODE
+from screenlogicpy.const import CODE, DATA as SL_DATA, EQUIPMENT, HEAT_MODE
 
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -18,8 +18,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import ScreenlogicEntity
+from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import ScreenLogicPushEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +41,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     entities = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
-    for body in coordinator.data[SL_DATA.KEY_BODIES]:
+    for body in coordinator.gateway_data[SL_DATA.KEY_BODIES]:
         entities.append(ScreenLogicClimate(coordinator, body))
 
     async_add_entities(entities)
 
 
-class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
+class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
     """Represents a ScreenLogic climate entity."""
 
     _attr_has_entity_name = True
@@ -60,10 +63,10 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
 
     def __init__(self, coordinator, body):
         """Initialize a ScreenLogic climate entity."""
-        super().__init__(coordinator, body)
+        super().__init__(coordinator, body, CODE.STATUS_CHANGED)
         self._configured_heat_modes = []
         # Is solar listed as available equipment?
-        if self.coordinator.data["config"]["equipment_flags"] & EQUIPMENT.FLAG_SOLAR:
+        if self.gateway_data["config"]["equipment_flags"] & EQUIPMENT.FLAG_SOLAR:
             self._configured_heat_modes.extend(
                 [HEAT_MODE.SOLAR, HEAT_MODE.SOLAR_PREFERRED]
             )
@@ -126,7 +129,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         return HEAT_MODE.NAME_FOR_NUM[self.body["heat_mode"]["value"]]
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """All available presets."""
         return [
             HEAT_MODE.NAME_FOR_NUM[mode_num] for mode_num in self._configured_heat_modes
@@ -137,15 +140,14 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
-        if await self.gateway.async_set_heat_temp(
+        if not await self.gateway.async_set_heat_temp(
             int(self._data_key), int(temperature)
         ):
-            await self._async_refresh()
-        else:
             raise HomeAssistantError(
                 f"Failed to set_temperature {temperature} on body"
                 f" {self.body['body_type']['value']}"
             )
+        _LOGGER.debug("Set temperature for body %s to %s", self._data_key, temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""
@@ -154,13 +156,12 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         else:
             mode = HEAT_MODE.NUM_FOR_NAME[self.preset_mode]
 
-        if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
-            await self._async_refresh()
-        else:
+        if not await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
             raise HomeAssistantError(
                 f"Failed to set_hvac_mode {mode} on body"
                 f" {self.body['body_type']['value']}"
             )
+        _LOGGER.debug("Set hvac_mode on body %s to %s", self._data_key, mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
@@ -169,13 +170,12 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         if self.hvac_mode == HVACMode.OFF:
             return
 
-        if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
-            await self._async_refresh()
-        else:
+        if not await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
             raise HomeAssistantError(
                 f"Failed to set_preset_mode {mode} on body"
                 f" {self.body['body_type']['value']}"
             )
+        _LOGGER.debug("Set preset_mode on body %s to %s", self._data_key, mode)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added."""
@@ -206,4 +206,4 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     @property
     def body(self):
         """Shortcut to access body data."""
-        return self.coordinator.data[SL_DATA.KEY_BODIES][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_BODIES][self._data_key]

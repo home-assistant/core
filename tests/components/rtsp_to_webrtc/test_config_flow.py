@@ -111,7 +111,7 @@ async def test_server_failure(hass: HomeAssistant) -> None:
         assert result.get("errors") == {"base": "server_failure"}
 
 
-async def test_hassio_discovery(hass):
+async def test_hassio_discovery(hass: HomeAssistant) -> None:
     """Test supervisor add-on discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -123,6 +123,7 @@ async def test_hassio_discovery(hass):
             },
             name="RTSPtoWebRTC",
             slug="rtsp-to-webrtc",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -162,6 +163,7 @@ async def test_hassio_single_config_entry(hass: HomeAssistant) -> None:
             },
             name="RTSPtoWebRTC",
             slug="rtsp-to-webrtc",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -184,6 +186,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
             },
             name="RTSPtoWebRTC",
             slug="rtsp-to-webrtc",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -203,6 +206,7 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
             },
             name="RTSPtoWebRTC",
             slug="rtsp-to-webrtc",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )

@@ -20,7 +20,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import mock_restore_cache
 
 
-async def test_state(hass) -> None:
+async def test_state(hass: HomeAssistant) -> None:
     """Test integration sensor state."""
     config = {
         "sensor": {
@@ -140,7 +140,7 @@ async def test_restore_state_failed(hass: HomeAssistant) -> None:
     assert "device_class" not in state.attributes
 
 
-async def test_trapezoidal(hass):
+async def test_trapezoidal(hass: HomeAssistant) -> None:
     """Test integration sensor state."""
     config = {
         "sensor": {
@@ -177,7 +177,7 @@ async def test_trapezoidal(hass):
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
-async def test_left(hass):
+async def test_left(hass: HomeAssistant) -> None:
     """Test integration sensor state with left reimann method."""
     config = {
         "sensor": {
@@ -217,7 +217,7 @@ async def test_left(hass):
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
-async def test_right(hass):
+async def test_right(hass: HomeAssistant) -> None:
     """Test integration sensor state with left reimann method."""
     config = {
         "sensor": {
@@ -257,7 +257,7 @@ async def test_right(hass):
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
-async def test_prefix(hass):
+async def test_prefix(hass: HomeAssistant) -> None:
     """Test integration sensor state using a power source."""
     config = {
         "sensor": {
@@ -293,7 +293,7 @@ async def test_prefix(hass):
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
-async def test_suffix(hass):
+async def test_suffix(hass: HomeAssistant) -> None:
     """Test integration sensor state using a network counter source."""
     config = {
         "sensor": {
@@ -332,7 +332,7 @@ async def test_suffix(hass):
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfInformation.KILOBYTES
 
 
-async def test_suffix_2(hass):
+async def test_suffix_2(hass: HomeAssistant) -> None:
     """Test integration sensor state."""
     config = {
         "sensor": {
@@ -368,7 +368,7 @@ async def test_suffix_2(hass):
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "m³"
 
 
-async def test_units(hass):
+async def test_units(hass: HomeAssistant) -> None:
     """Test integration sensor units using a power source."""
     config = {
         "sensor": {
@@ -401,15 +401,22 @@ async def test_units(hass):
 
     # When source state goes to None / Unknown, expect an early exit without
     # changes to the state or unit_of_measurement
-    hass.states.async_set(entity_id, STATE_UNAVAILABLE, None)
+    hass.states.async_set(entity_id, None, None)
     await hass.async_block_till_done()
 
     new_state = hass.states.get("sensor.integration")
     assert state == new_state
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.WATT_HOUR
 
+    # When source state goes to unavailable, expect sensor to also become unavailable
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, None)
+    await hass.async_block_till_done()
 
-async def test_device_class(hass):
+    new_state = hass.states.get("sensor.integration")
+    assert new_state.state == STATE_UNAVAILABLE
+
+
+async def test_device_class(hass: HomeAssistant) -> None:
     """Test integration sensor units using a power source."""
     config = {
         "sensor": {
@@ -458,7 +465,7 @@ async def test_device_class(hass):
     assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
 
 
-async def test_calc_errors(hass):
+async def test_calc_errors(hass: HomeAssistant) -> None:
     """Test integration sensor units using a power source."""
     config = {
         "sensor": {

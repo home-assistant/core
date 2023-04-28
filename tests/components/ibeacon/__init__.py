@@ -1,11 +1,11 @@
 """Tests for the ibeacon integration."""
 from typing import Any
 
-from bleak.backends.device import BLEDevice
-
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-BLUECHARM_BLE_DEVICE = BLEDevice(
+from tests.components.bluetooth import generate_ble_device
+
+BLUECHARM_BLE_DEVICE = generate_ble_device(
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
     name="BlueCharm_177999",
 )
@@ -71,12 +71,12 @@ TESLA_TRANSIENT = BluetoothServiceInfo(
     service_uuids=[],
     source="hci0",
 )
-TESLA_TRANSIENT_BLE_DEVICE = BLEDevice(
+TESLA_TRANSIENT_BLE_DEVICE = generate_ble_device(
     address="CC:CC:CC:CC:CC:CC",
     name="S6da7c9389bd5452cC",
 )
 
-FEASY_BEACON_BLE_DEVICE = BLEDevice(
+FEASY_BEACON_BLE_DEVICE = generate_ble_device(
     address="AA:BB:CC:DD:EE:FF",
     name="FSC-BP108",
 )

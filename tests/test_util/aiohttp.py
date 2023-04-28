@@ -13,7 +13,8 @@ from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util.json import json_loads
 
 RETYPE = type(re.compile(""))
 
@@ -146,9 +147,7 @@ class AiohttpClientMocker:
                     raise response.exc
                 return response
 
-        assert False, "No mock registered for {} {} {}".format(
-            method.upper(), url, params
-        )
+        raise AssertionError(f"No mock registered for {method.upper()} {url} {params}")
 
 
 class AiohttpClientMockResponse:

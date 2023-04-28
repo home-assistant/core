@@ -8,6 +8,9 @@ tests/testing_config/home-assistant.log*
 data/
 .token
 
+# Translations
+homeassistant/components/*/translations
+
 # Hide sublime text stuff
 *.sublime-project
 *.sublime-workspace

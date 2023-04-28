@@ -46,8 +46,7 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
         return record
 
     def handle(self, record: logging.LogRecord) -> Any:
-        """
-        Conditionally emit the specified logging record.
+        """Conditionally emit the specified logging record.
 
         Depending on which filters have been added to the handler, push the new
         records onto the backing Queue.
@@ -64,8 +63,7 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
         return return_value
 
     def close(self) -> None:
-        """
-        Tidy up any resources used by the handler.
+        """Tidy up any resources used by the handler.
 
         This adds shutdown of the QueueListener
         """
@@ -78,8 +76,7 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
 
 @callback
 def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
-    """
-    Migrate the existing log handlers to use the queue.
+    """Migrate the existing log handlers to use the queue.
 
     This allows us to avoid blocking I/O and formatting messages
     in the event loop as log messages are written in another thread.
@@ -123,14 +120,14 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
 def catch_log_exception(
     func: Callable[..., Coroutine[Any, Any, Any]], format_err: Callable[..., Any]
 ) -> Callable[..., Coroutine[Any, Any, None]]:
-    """Overload for Coroutine that returns a Coroutine."""
+    ...
 
 
 @overload
 def catch_log_exception(
     func: Callable[..., Any], format_err: Callable[..., Any]
 ) -> Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]:
-    """Overload for a callback that returns a callback."""
+    ...
 
 
 def catch_log_exception(

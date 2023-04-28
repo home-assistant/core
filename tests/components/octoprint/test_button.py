@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from . import init_integration
 
 
-async def test_pause_job(hass: HomeAssistant):
+async def test_pause_job(hass: HomeAssistant) -> None:
     """Test the pause job button."""
     await init_integration(hass, BUTTON_DOMAIN)
 
@@ -74,7 +74,7 @@ async def test_pause_job(hass: HomeAssistant):
         )
 
 
-async def test_resume_job(hass: HomeAssistant):
+async def test_resume_job(hass: HomeAssistant) -> None:
     """Test the resume job button."""
     await init_integration(hass, BUTTON_DOMAIN)
 
@@ -134,7 +134,7 @@ async def test_resume_job(hass: HomeAssistant):
         )
 
 
-async def test_stop_job(hass: HomeAssistant):
+async def test_stop_job(hass: HomeAssistant) -> None:
     """Test the stop job button."""
     await init_integration(hass, BUTTON_DOMAIN)
 

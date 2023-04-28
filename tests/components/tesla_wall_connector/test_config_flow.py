@@ -78,8 +78,8 @@ async def test_form_other_error(
 
 
 async def test_form_already_configured(
-    mock_wall_connector_setup, mock_wall_connector_version, hass
-):
+    mock_wall_connector_setup, mock_wall_connector_version, hass: HomeAssistant
+) -> None:
     """Test we get already configured."""
 
     entry = MockConfigEntry(
@@ -105,8 +105,8 @@ async def test_form_already_configured(
 
 
 async def test_dhcp_can_finish(
-    mock_wall_connector_setup, mock_wall_connector_version, hass
-):
+    mock_wall_connector_setup, mock_wall_connector_version, hass: HomeAssistant
+) -> None:
     """Test DHCP discovery flow can finish right away."""
 
     result = await hass.config_entries.flow.async_init(
@@ -132,7 +132,9 @@ async def test_dhcp_can_finish(
     assert result["data"] == {CONF_HOST: "1.2.3.4"}
 
 
-async def test_dhcp_already_exists(mock_wall_connector_version, hass):
+async def test_dhcp_already_exists(
+    mock_wall_connector_version, hass: HomeAssistant
+) -> None:
     """Test DHCP discovery flow when device already exists."""
 
     entry = MockConfigEntry(
@@ -155,7 +157,9 @@ async def test_dhcp_already_exists(mock_wall_connector_version, hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_error_from_wall_connector(mock_wall_connector_version, hass):
+async def test_dhcp_error_from_wall_connector(
+    mock_wall_connector_version, hass: HomeAssistant
+) -> None:
     """Test DHCP discovery flow when we cannot communicate with the device."""
 
     with patch(

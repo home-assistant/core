@@ -19,6 +19,7 @@ from homeassistant.components import (
     input_number,
     light,
     media_player,
+    number,
     timer,
     vacuum,
 )
@@ -1285,6 +1286,14 @@ async def async_api_set_range(
         max_value = float(entity.attributes[input_number.ATTR_MAX])
         data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
+    # Input Number Value
+    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
+        range_value = float(range_value)
+        service = number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes[number.ATTR_MIN])
+        max_value = float(entity.attributes[number.ATTR_MAX])
+        data[number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
+
     # Vacuum Fan Speed
     elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
         service = vacuum.SERVICE_SET_FAN_SPEED
@@ -1413,6 +1422,17 @@ async def async_api_adjust_range(
         max_value = float(entity.attributes[input_number.ATTR_MAX])
         current = float(entity.state)
         data[input_number.ATTR_VALUE] = response_value = min(
+            max_value, max(min_value, range_delta + current)
+        )
+
+    # Number Value
+    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
+        range_delta = float(range_delta)
+        service = number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes[number.ATTR_MIN])
+        max_value = float(entity.attributes[number.ATTR_MAX])
+        current = float(entity.state)
+        data[number.ATTR_VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
         )
 

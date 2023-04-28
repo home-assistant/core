@@ -24,7 +24,7 @@ async def test_init_while_offline(hass: HomeAssistant) -> None:
     assert entry.state == config_entries.ConfigEntryState.SETUP_RETRY
 
 
-async def test_load_unload(hass):
+async def test_load_unload(hass: HomeAssistant) -> None:
     """Config entry can be unloaded."""
 
     entry = await create_wall_connector_entry(hass)
