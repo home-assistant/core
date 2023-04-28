@@ -65,6 +65,8 @@ async def async_setup_entry(
     """Set up the sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
     entities = []
+    tracked: set = set()
+    new_tracked = []
 
     _LOGGER.debug(
         "%s - %s - %s temperature sensors",
@@ -102,15 +104,6 @@ async def async_setup_entry(
 
     async_add_entities(entities, True)
 
-
-def add_entities(
-    hass: HomeAssistant,
-    router: FreeboxRouter,
-    async_add_entities: AddEntitiesCallback,
-    tracked: set[str],
-):
-    """Add new sensors from the router."""
-    new_tracked = []
     for nodeid, node in router.home_devices.items():
         if nodeid in tracked:
             continue
