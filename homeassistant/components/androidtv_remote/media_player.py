@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from androidtvremote2 import AndroidTVRemote
+from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -184,3 +185,20 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
             return
 
         raise ValueError(f"Invalid media type: {media_type}")
+
+    async def _send_key_commands(
+        self, key_codes: list[str], delay: float = 0.1
+    ) -> None:
+        """Send a key press sequence to Android TV.
+
+        The delay is necessary because device may ignore
+        some commands if we send the sequence without delay.
+        """
+        try:
+            for key_code in key_codes:
+                self._api.send_key_command(key_code)
+                await asyncio.sleep(delay)
+        except ConnectionClosed as exc:
+            raise HomeAssistantError(
+                "Connection to Android TV device is closed"
+            ) from exc
