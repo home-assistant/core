@@ -105,12 +105,12 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             "0.0.0.0-Transmission Started Torrents",
             "1234-started_torrents",
         ),
-        (SENSOR_DOMAIN, "0.0.0.0-download", "0.0.0.0-download"),
-        (SENSOR_DOMAIN, "abcde", "abcde"),
+        # no change on correct sensor unique id
+        (SENSOR_DOMAIN, "1234-started_torrents", "1234-started_torrents"),
         (SWITCH_DOMAIN, "0.0.0.0-Transmission Switch", "1234-on_off"),
         (SWITCH_DOMAIN, "0.0.0.0-Transmission Turtle Mode", "1234-turtle_mode"),
-        (SWITCH_DOMAIN, "0.0.0.0-on_off", "0.0.0.0-on_off"),
-        (SWITCH_DOMAIN, "abcde", "abcde"),
+        # no change on correct switch unique id
+        (SWITCH_DOMAIN, "1234-turtle_mode", "1234-turtle_mode"),
     ],
 )
 async def test_migrate_unique_id(
