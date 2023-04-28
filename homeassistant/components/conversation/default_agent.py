@@ -114,6 +114,10 @@ class DefaultAgent(AbstractConversationAgent):
             self.hass, DOMAIN, self._async_exposed_entities_updated
         )
 
+        entity_registry = er.async_get(self.hass)
+        for entity_id in entity_registry.entities:
+            async_should_expose(self.hass, DOMAIN, entity_id)
+
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
         language = user_input.language or self.hass.config.language
@@ -459,6 +463,8 @@ class DefaultAgent(AbstractConversationAgent):
             field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         ):
             return
+        if event.data["action"] == "create":
+            async_should_expose(self.hass, DOMAIN, event.data["entity_id"])
         self._slot_lists = None
 
     @core.callback
@@ -472,10 +478,10 @@ class DefaultAgent(AbstractConversationAgent):
             return self._slot_lists
 
         area_ids_with_entities: set[str] = set()
-        all_entities = er.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
         entities = [
             entity
-            for entity in all_entities.entities.values()
+            for entity in entity_registry.entities.values()
             if async_should_expose(self.hass, DOMAIN, entity.entity_id)
         ]
         devices = dr.async_get(self.hass)
