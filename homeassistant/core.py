@@ -925,7 +925,7 @@ class Event:
             self._as_dict = ReadOnlyDict(
                 {
                     "event_type": self.event_type,
-                    "data": dict(self.data),
+                    "data": ReadOnlyDict(self.data),
                     "origin": str(self.origin.value),
                     "time_fired": self.time_fired.isoformat(),
                     "context": self.context.as_dict(),
@@ -1279,7 +1279,7 @@ class State:
                     "attributes": self.attributes,
                     "last_changed": last_changed_isoformat,
                     "last_updated": last_updated_isoformat,
-                    "context": ReadOnlyDict(self.context.as_dict()),
+                    "context": self.context.as_dict(),
                 }
             )
         return self._as_dict
