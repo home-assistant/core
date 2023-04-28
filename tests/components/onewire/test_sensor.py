@@ -1,6 +1,7 @@
 """Tests for 1-Wire sensors."""
 from collections.abc import Generator
 from copy import deepcopy
+import logging
 from unittest.mock import MagicMock, _patch_dict, patch
 
 from pyownet.protocol import OwnetError
@@ -8,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -68,12 +69,12 @@ async def test_tai8570_sensors(
     owproxy: MagicMock,
     device_id: str,
     entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """The DS2602 is often used without TAI8570.
 
     The sensors should be ignored.
     """
-
     mock_devices = deepcopy(MOCK_OWPROXY_DEVICES)
     mock_device = mock_devices[device_id]
     mock_device[ATTR_INJECT_READS].append(OwnetError)
@@ -82,11 +83,12 @@ async def test_tai8570_sensors(
     with _patch_dict(MOCK_OWPROXY_DEVICES, mock_devices):
         setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with caplog.at_level(logging.DEBUG):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    expected_entities = mock_device[Platform.SENSOR]
-    for expected_entity in expected_entities:
-        entity_id = expected_entity[ATTR_ENTITY_ID]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is None
+    assert entity_registry.entities.get("sensor.12_111111111111_temperature") is None
+    assert "unreachable sensor /12.111111111111/TAI8570/temperature" in caplog.text
+
+    assert entity_registry.entities.get("sensor.12_111111111111_pressure") is None
+    assert "unreachable sensor /12.111111111111/TAI8570/pressure" in caplog.text

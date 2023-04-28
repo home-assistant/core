@@ -1,5 +1,6 @@
 """Test Voice Assistant init."""
 from dataclasses import asdict
+from unittest.mock import ANY
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -10,6 +11,19 @@ from homeassistant.core import Context, HomeAssistant
 from .conftest import MockSttProvider, MockSttProviderEntity
 
 from tests.typing import WebSocketGenerator
+
+
+def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
+    """Process events to remove dynamic values."""
+    processed = []
+    for event in events:
+        as_dict = asdict(event)
+        as_dict.pop("timestamp")
+        if as_dict["type"] == assist_pipeline.PipelineEventType.RUN_START:
+            as_dict["data"]["pipeline"] = ANY
+        processed.append(as_dict)
+
+    return processed
 
 
 async def test_pipeline_from_audio_stream_auto(
@@ -45,13 +59,7 @@ async def test_pipeline_from_audio_stream_auto(
         audio_data(),
     )
 
-    processed = []
-    for event in events:
-        as_dict = asdict(event)
-        as_dict.pop("timestamp")
-        processed.append(as_dict)
-
-    assert processed == snapshot
+    assert process_events(events) == snapshot
     assert mock_stt_provider.received == [b"part1", b"part2"]
 
 
@@ -84,9 +92,9 @@ async def test_pipeline_from_audio_stream_legacy(
             "language": "en",
             "name": "test_name",
             "stt_engine": "test",
-            "stt_language": "en-UK",
+            "stt_language": "en-US",
             "tts_engine": "test",
-            "tts_language": "en-AU",
+            "tts_language": "en-US",
             "tts_voice": "Arnold Schwarzenegger",
         }
     )
@@ -111,13 +119,7 @@ async def test_pipeline_from_audio_stream_legacy(
         pipeline_id=pipeline_id,
     )
 
-    processed = []
-    for event in events:
-        as_dict = asdict(event)
-        as_dict.pop("timestamp")
-        processed.append(as_dict)
-
-    assert processed == snapshot
+    assert process_events(events) == snapshot
     assert mock_stt_provider.received == [b"part1", b"part2"]
 
 
@@ -150,9 +152,9 @@ async def test_pipeline_from_audio_stream_entity(
             "language": "en",
             "name": "test_name",
             "stt_engine": mock_stt_provider_entity.entity_id,
-            "stt_language": "en-UK",
+            "stt_language": "en-US",
             "tts_engine": "test",
-            "tts_language": "en-UA",
+            "tts_language": "en-US",
             "tts_voice": "Arnold Schwarzenegger",
         }
     )
@@ -177,13 +179,7 @@ async def test_pipeline_from_audio_stream_entity(
         pipeline_id=pipeline_id,
     )
 
-    processed = []
-    for event in events:
-        as_dict = asdict(event)
-        as_dict.pop("timestamp")
-        processed.append(as_dict)
-
-    assert processed == snapshot
+    assert process_events(events) == snapshot
     assert mock_stt_provider_entity.received == [b"part1", b"part2"]
 
 
