@@ -515,6 +515,10 @@ class MQTT:
         await self._subscribe_debouncer.async_cleanup()
         # reset timeout to initial subscribe cooldown
         self._subscribe_debouncer.set_timeout(INITIAL_SUBSCRIBE_COOLDOWN)
+        # stop the unsubscribe debouncer
+        await self._unsubscribe_debouncer.async_cleanup()
+        # make sure the unsubscribes are processed
+        await self._async_perform_unsubscribes()
 
         # wait for ACKs to be processed
         async with self._pending_operations_condition:
