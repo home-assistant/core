@@ -325,6 +325,13 @@ class Alert(collection.CollectionEntity, Entity):
         self._can_ack = config[CONF_CAN_ACK]
         self._delay = [timedelta(minutes=val) for val in config[CONF_REPEAT]]
 
+        if self._message_template is not None:
+            self._message_template.hass = self.hass
+        if self._done_message_template is not None:
+            self._done_message_template.hass = self.hass
+        if self._title_template is not None:
+            self._title_template.hass = self.hass
+
         if self._unsub:
             self._unsub()
         self._unsub = async_track_state_change_event(

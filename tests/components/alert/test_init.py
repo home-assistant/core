@@ -478,6 +478,55 @@ async def test_reload(
     assert last_event.data[notify.ATTR_MESSAGE] == DONE_MESSAGE
 
 
+async def test_reload_with_templates(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], hass_admin_user: MockUser
+) -> None:
+    """Test reloading the YAML config with templates."""
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME][CONF_ALERT_MESSAGE] = "Alert Message"
+    config[DOMAIN][NAME][CONF_DONE_MESSAGE] = "Done Message"
+    config[DOMAIN][NAME][CONF_TITLE] = "Done Message"
+
+    assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
+    expected_notifications = 0
+
+    # Change strings to templates
+    config[DOMAIN][NAME][CONF_ALERT_MESSAGE] = TEMPLATE
+    config[DOMAIN][NAME][CONF_DONE_MESSAGE] = TEMPLATE
+    config[DOMAIN][NAME][CONF_TITLE] = TEMPLATE
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_notifier) == expected_notifications
+
+    hass.states.async_set(TEST_ENTITY, STATE_ON)
+    expected_notifications += 1
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == expected_notifications
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_MESSAGE] == TEST_ENTITY
+    assert last_event.data[notify.ATTR_TITLE] == TEST_ENTITY
+
+    hass.states.async_set(TEST_ENTITY, STATE_OFF)
+    expected_notifications += 1
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == expected_notifications
+    last_event = mock_notifier[-1]
+    assert last_event.data[notify.ATTR_MESSAGE] == TEST_ENTITY
+    assert last_event.data[notify.ATTR_TITLE] == TEST_ENTITY
+
+
 async def test_delete_and_reload(
     hass: HomeAssistant, mock_notifier: list[ServiceCall], hass_admin_user: MockUser
 ) -> None:
