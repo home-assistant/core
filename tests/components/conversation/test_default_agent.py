@@ -163,7 +163,7 @@ async def test_expose_flag_automatically_set(
         test.entity_id: {"should_expose": False},
     }
 
-    # New entities will automatcially have the expose flag set
+    # New entities will automatically have the expose flag set
     new_light = entity_registry.async_get_or_create("light", "demo", "2345")
     await hass.async_block_till_done()
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
