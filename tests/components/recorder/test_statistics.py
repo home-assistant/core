@@ -92,6 +92,12 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     do_adhoc_statistics(hass, start=zero)
     do_adhoc_statistics(hass, start=four)
     wait_recording_done(hass)
+
+    metadata = get_metadata(hass, statistic_ids={"sensor.test1", "sensor.test2"})
+    assert metadata["sensor.test1"][1]["has_mean"] is True
+    assert metadata["sensor.test1"][1]["has_sum"] is False
+    assert metadata["sensor.test2"][1]["has_mean"] is True
+    assert metadata["sensor.test2"][1]["has_sum"] is False
     expected_1 = {
         "start": process_timestamp(zero).timestamp(),
         "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
@@ -99,8 +105,6 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
         "min": pytest.approx(10.0),
         "max": pytest.approx(20.0),
         "last_reset": None,
-        "state": None,
-        "sum": None,
     }
     expected_2 = {
         "start": process_timestamp(four).timestamp(),
@@ -109,32 +113,44 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
         "min": pytest.approx(20.0),
         "max": pytest.approx(20.0),
         "last_reset": None,
-        "state": None,
-        "sum": None,
     }
     expected_stats1 = [expected_1, expected_2]
     expected_stats2 = [expected_1, expected_2]
 
     # Test statistics_during_period
-    stats = statistics_during_period(hass, zero, period="5minute")
+    stats = statistics_during_period(
+        hass, zero, period="5minute", statistic_ids={"sensor.test1", "sensor.test2"}
+    )
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
     # Test statistics_during_period with a far future start and end date
     future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
-    stats = statistics_during_period(hass, future, end_time=future, period="5minute")
+    stats = statistics_during_period(
+        hass,
+        future,
+        end_time=future,
+        period="5minute",
+        statistic_ids={"sensor.test1", "sensor.test2"},
+    )
     assert stats == {}
 
     # Test statistics_during_period with a far future end date
-    stats = statistics_during_period(hass, zero, end_time=future, period="5minute")
+    stats = statistics_during_period(
+        hass,
+        zero,
+        end_time=future,
+        period="5minute",
+        statistic_ids={"sensor.test1", "sensor.test2"},
+    )
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
     stats = statistics_during_period(
-        hass, zero, statistic_ids=["sensor.test2"], period="5minute"
+        hass, zero, statistic_ids={"sensor.test2"}, period="5minute"
     )
     assert stats == {"sensor.test2": expected_stats2}
 
     stats = statistics_during_period(
-        hass, zero, statistic_ids=["sensor.test3"], period="5minute"
+        hass, zero, statistic_ids={"sensor.test3"}, period="5minute"
     )
     assert stats == {}
 
