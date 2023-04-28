@@ -281,13 +281,13 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 else:
                     return self.async_create_entry(data=combined_input)
 
-        saved_options = self.options.copy()
-        if saved_options[CONF_PROVINCE] is None:
-            saved_options[CONF_PROVINCE] = NONE_SENTINEL
         schema: vol.Schema = await self.hass.async_add_executor_job(
             add_province_to_schema, DATA_SCHEMA_OPT, self.options
         )
-        new_schema = self.add_suggested_values_to_schema(schema, user_input)
+
+        new_schema = self.add_suggested_values_to_schema(
+            schema, user_input or self.options
+        )
 
         return self.async_show_form(
             step_id="init",

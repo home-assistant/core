@@ -401,7 +401,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==47
+axis==48
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -911,7 +911,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230427.0
+home-assistant-frontend==20230428.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.4.26
@@ -1031,7 +1031,7 @@ krakenex==2.1.0
 lacrosse-view==0.0.9
 
 # homeassistant.components.eufy
-lakeside==0.12
+lakeside==0.13
 
 # homeassistant.components.laundrify
 laundrify_aio==1.1.2
@@ -2099,7 +2099,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.8.1
+python-roborock==0.8.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2167,7 +2167,7 @@ pyversasense==0.0.6
 pyvesync==2.1.1
 
 # homeassistant.components.vizio
-pyvizio==0.1.60
+pyvizio==0.1.61
 
 # homeassistant.components.velux
 pyvlx==0.2.20
@@ -2381,7 +2381,7 @@ solax==0.3.0
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonos
-sonos-websocket==0.0.5
+sonos-websocket==0.1.0
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
