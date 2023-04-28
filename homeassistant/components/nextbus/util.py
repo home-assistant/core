@@ -1,6 +1,13 @@
 """Utils for NextBus integration module."""
 from typing import Any
 
+UserConfig = dict[str, Any]
+
+
+def invert_dict(source_dict: dict[Any, Any]) -> dict[Any, Any]:
+    """Invert keys and values in a dict."""
+    return {value: key for key, value in source_dict.items()}
+
 
 def listify(maybe_list: Any) -> list[Any]:
     """Return list version of whatever value is passed in.

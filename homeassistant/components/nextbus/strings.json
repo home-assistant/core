@@ -1,0 +1,44 @@
+{
+  "title": "NextBus predictions",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "agency_name": "Metro agency",
+          "route_name": "Route",
+          "stop_name": "Stop"
+        }
+      },
+      "agency": {
+        "title": "Select metro agency",
+        "data": {
+          "agency_name": "Metro agency"
+        }
+      },
+      "route": {
+        "title": "Select route",
+        "data": {
+          "route_name": "Route"
+        }
+      },
+      "stop": {
+        "title": "Select stop",
+        "data": {
+          "stop_name": "Stop"
+        }
+      },
+      "name": {
+        "title": "Component name",
+        "data": {
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "invalid_tag": "The value selected is not valid"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

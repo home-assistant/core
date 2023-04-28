@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP
+from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP, DOMAIN
 from .util import listify, maybe_first
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +33,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
     }
 )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Initialize nextbus import from config."""
+    _LOGGER.warning(
+        "The NextBus sensor has been migrated to the config flow. We will now attempt "
+        "to migrate automatically. After migration or in the case of an error, delete"
+        "from your configuration.yaml file"
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 def validate_value(value_name, value, value_list):
@@ -67,26 +88,27 @@ def validate_tags(client, agency, route, stop):
     return True
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load values from configuration and initialize the platform."""
-    agency = config[CONF_AGENCY]
-    route = config[CONF_ROUTE]
-    stop = config[CONF_STOP]
-    name = config.get(CONF_NAME)
-
     client = NextBusClient(output_format="json")
 
-    # Ensures that the tags provided are valid, also logs out valid values
-    if not validate_tags(client, agency, route, stop):
-        _LOGGER.error("Invalid config value(s)")
-        return
+    _LOGGER.debug(config.data)
 
-    add_entities([NextBusDepartureSensor(client, agency, route, stop, name)], True)
+    sensor = NextBusDepartureSensor(
+        client,
+        config.data[CONF_AGENCY],
+        config.data[CONF_ROUTE],
+        config.data[CONF_STOP],
+        config.data.get(CONF_NAME),
+    )
+
+    async_add_entities((sensor,))
+
+    await hass.async_add_executor_job(sensor.update)
 
 
 class NextBusDepartureSensor(SensorEntity):

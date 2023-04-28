@@ -3625,7 +3625,6 @@
       "supported_by": "overkiz"
     },
     "nextbus": {
-      "name": "NextBus",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
@@ -6619,6 +6618,7 @@
     "mobile_app",
     "moehlenhoff_alpha2",
     "moon",
+    "nextbus",
     "nmap_tracker",
     "plant",
     "proximity",
