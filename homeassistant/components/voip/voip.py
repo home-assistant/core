@@ -165,8 +165,10 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         """Forward audio to pipeline STT and handle TTS."""
         if self._session_id is None:
             self._session_id = ulid()
-            if self.listening_tone_enabled:
-                await self._play_listening_tone()
+
+        # Play listening tone at the start of each cycle
+        if self.listening_tone_enabled:
+            await self._play_listening_tone()
 
         try:
             # Wait for speech before starting pipeline
@@ -226,9 +228,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 )
 
             if self._pipeline_error:
+                self._pipeline_error = False
                 if self.error_tone_enabled:
                     await self._play_error_tone()
-                self._pipeline_error = False
             else:
                 # Block until TTS is done speaking.
                 #
