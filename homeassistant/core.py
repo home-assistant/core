@@ -217,13 +217,25 @@ class HassJob(Generic[_P, _R_co]):
     we run the job.
     """
 
-    __slots__ = ("job_type", "target", "name")
+    __slots__ = ("job_type", "target", "name", "_cancel_on_shutdown")
 
-    def __init__(self, target: Callable[_P, _R_co], name: str | None = None) -> None:
+    def __init__(
+        self,
+        target: Callable[_P, _R_co],
+        name: str | None = None,
+        *,
+        cancel_on_shutdown: bool | None = None,
+    ) -> None:
         """Create a job object."""
         self.target = target
         self.name = name
         self.job_type = _get_hassjob_callable_job_type(target)
+        self._cancel_on_shutdown = cancel_on_shutdown
+
+    @property
+    def cancel_on_shutdown(self) -> bool | None:
+        """Return if the job should be cancelled on shutdown."""
+        return self._cancel_on_shutdown
 
     def __repr__(self) -> str:
         """Return the job."""
@@ -730,6 +742,7 @@ class HomeAssistant:
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
             task.cancel()
+        self._cancel_cancellable_timers()
 
         self.exit_code = exit_code
 
@@ -814,6 +827,20 @@ class HomeAssistant:
         if self._stopped is not None:
             self._stopped.set()
 
+    def _cancel_cancellable_timers(self) -> None:
+        """Cancel timer handles marked as cancellable."""
+        # pylint: disable-next=protected-access
+        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
+        for handle in handles:
+            if (
+                not handle.cancelled()
+                and (args := handle._args)  # pylint: disable=protected-access
+                # pylint: disable-next=unidiomatic-typecheck
+                and type(job := args[0]) is HassJob
+                and job.cancel_on_shutdown
+            ):
+                handle.cancel()
+
     def _async_log_running_tasks(self, stage: int) -> None:
         """Log all running tasks."""
         for task in self._tasks:
@@ -823,7 +850,7 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    __slots__ = ("user_id", "parent_id", "id", "origin_event")
+    __slots__ = ("user_id", "parent_id", "id", "origin_event", "_as_dict")
 
     def __init__(
         self,
@@ -836,14 +863,23 @@ class Context:
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event | None = None
+        self._as_dict: ReadOnlyDict[str, str | None] | None = None
 
     def __eq__(self, other: Any) -> bool:
         """Compare contexts."""
         return bool(self.__class__ == other.__class__ and self.id == other.id)
 
-    def as_dict(self) -> dict[str, str | None]:
+    def as_dict(self) -> ReadOnlyDict[str, str | None]:
         """Return a dictionary representation of the context."""
-        return {"id": self.id, "parent_id": self.parent_id, "user_id": self.user_id}
+        if not self._as_dict:
+            self._as_dict = ReadOnlyDict(
+                {
+                    "id": self.id,
+                    "parent_id": self.parent_id,
+                    "user_id": self.user_id,
+                }
+            )
+        return self._as_dict
 
 
 class EventOrigin(enum.Enum):
@@ -860,7 +896,7 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = ("event_type", "data", "origin", "time_fired", "context", "_as_dict")
 
     def __init__(
         self,
@@ -878,19 +914,24 @@ class Event:
         self.context: Context = context or Context(
             id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
         )
+        self._as_dict: ReadOnlyDict[str, Any] | None = None
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> ReadOnlyDict[str, Any]:
         """Create a dict representation of this Event.
 
         Async friendly.
         """
-        return {
-            "event_type": self.event_type,
-            "data": dict(self.data),
-            "origin": str(self.origin.value),
-            "time_fired": self.time_fired.isoformat(),
-            "context": self.context.as_dict(),
-        }
+        if not self._as_dict:
+            self._as_dict = ReadOnlyDict(
+                {
+                    "event_type": self.event_type,
+                    "data": ReadOnlyDict(self.data),
+                    "origin": str(self.origin.value),
+                    "time_fired": self.time_fired.isoformat(),
+                    "context": self.context.as_dict(),
+                }
+            )
+        return self._as_dict
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -1162,7 +1203,7 @@ class State:
     object_id: Object id of this state.
     """
 
-    __slots__ = [
+    __slots__ = (
         "entity_id",
         "state",
         "attributes",
@@ -1173,7 +1214,7 @@ class State:
         "object_id",
         "_as_dict",
         "_as_compressed_state",
-    ]
+    )
 
     def __init__(
         self,
@@ -1238,7 +1279,7 @@ class State:
                     "attributes": self.attributes,
                     "last_changed": last_changed_isoformat,
                     "last_updated": last_updated_isoformat,
-                    "context": ReadOnlyDict(self.context.as_dict()),
+                    "context": self.context.as_dict(),
                 }
             )
         return self._as_dict
@@ -1849,7 +1890,10 @@ class ServiceRegistry:
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error executing service: %s", service_call)
 
-        self._hass.async_create_task(catch_exceptions())
+        self._hass.async_create_task(
+            catch_exceptions(),
+            f"service call background {service_call.domain}.{service_call.service}",
+        )
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall

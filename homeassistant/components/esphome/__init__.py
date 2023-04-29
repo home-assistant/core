@@ -22,6 +22,7 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    VoiceAssistantEventType,
 )
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -64,13 +65,14 @@ from .domain_data import DomainData
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
+from .voice_assistant import VoiceAssistantUDPServer
 
 CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2022.12.4"
+STABLE_BLE_VERSION_STR = "2023.4.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
@@ -284,6 +286,49 @@ async def async_setup_entry(  # noqa: C901
             _send_home_assistant_state(entity_id, attribute, hass.states.get(entity_id))
         )
 
+    voice_assistant_udp_server: VoiceAssistantUDPServer | None = None
+
+    def _handle_pipeline_event(
+        event_type: VoiceAssistantEventType, data: dict[str, str] | None
+    ) -> None:
+        cli.send_voice_assistant_event(event_type, data)
+
+    def _handle_pipeline_finished() -> None:
+        nonlocal voice_assistant_udp_server
+
+        entry_data.async_set_assist_pipeline_state(False)
+
+        if voice_assistant_udp_server is not None:
+            voice_assistant_udp_server.close()
+            voice_assistant_udp_server = None
+
+    async def _handle_pipeline_start() -> int | None:
+        """Start a voice assistant pipeline."""
+        nonlocal voice_assistant_udp_server
+
+        if voice_assistant_udp_server is not None:
+            return None
+
+        voice_assistant_udp_server = VoiceAssistantUDPServer(
+            hass, entry_data, _handle_pipeline_event, _handle_pipeline_finished
+        )
+        port = await voice_assistant_udp_server.start_server()
+
+        hass.async_create_background_task(
+            voice_assistant_udp_server.run_pipeline(),
+            "esphome.voice_assistant_udp_server.run_pipeline",
+        )
+        entry_data.async_set_assist_pipeline_state(True)
+
+        return port
+
+    async def _handle_pipeline_stop() -> None:
+        """Stop a voice assistant pipeline."""
+        nonlocal voice_assistant_udp_server
+
+        if voice_assistant_udp_server is not None:
+            voice_assistant_udp_server.stop()
+
     async def on_connect() -> None:
         """Subscribe to states and list entities on successful API login."""
         nonlocal device_id
@@ -328,6 +373,14 @@ async def async_setup_entry(  # noqa: C901
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
 
+            if device_info.voice_assistant_version:
+                entry_data.disconnect_callbacks.append(
+                    await cli.subscribe_voice_assistant(
+                        _handle_pipeline_start,
+                        _handle_pipeline_stop,
+                    )
+                )
+
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
             _LOGGER.warning("Error getting initial data for %s: %s", host, err)
@@ -345,10 +398,13 @@ async def async_setup_entry(  # noqa: C901
             disconnect_cb()
         entry_data.disconnect_callbacks = []
         entry_data.available = False
-        # Clear out the states so that we will always dispatch
+        # Mark state as stale so that we will always dispatch
         # the next state update of that type when the device reconnects
-        for state_keys in entry_data.state.values():
-            state_keys.clear()
+        entry_data.stale_state = {
+            (type(entity_state), key)
+            for state_dict in entry_data.state.values()
+            for key, entity_state in state_dict.items()
+        }
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
             # since it generates a lot of state changed events and database
@@ -848,3 +904,40 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         if not self._static_info.entity_category:
             return None
         return ENTITY_CATEGORIES.from_esphome(self._static_info.entity_category)
+
+
+class EsphomeAssistEntity(Entity):
+    """Define a base entity for Assist Pipeline entities."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(self, entry_data: RuntimeEntryData) -> None:
+        """Initialize the binary sensor."""
+        self._entry_data: RuntimeEntryData = entry_data
+        self._attr_unique_id = (
+            f"{self._device_info.mac_address}-{self.entity_description.key}"
+        )
+
+    @property
+    def _device_info(self) -> EsphomeDeviceInfo:
+        assert self._entry_data.device_info is not None
+        return self._entry_data.device_info
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device registry information for this entity."""
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
+        )
+
+    @callback
+    def _update(self) -> None:
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register update callback."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._entry_data.async_subscribe_assist_pipeline_update(self._update)
+        )

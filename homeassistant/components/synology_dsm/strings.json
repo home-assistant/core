@@ -29,7 +29,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "Synology DSM [%key:common::config_flow::title::reauth%]",
+        "title": "Reauthenticate Synology DSM",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"

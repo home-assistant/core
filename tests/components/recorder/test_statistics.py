@@ -68,7 +68,7 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     instance = recorder.get_instance(hass)
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Should not fail if there is nothing there yet
@@ -329,7 +329,7 @@ def test_rename_entity(hass_recorder: Callable[..., HomeAssistant]) -> None:
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
@@ -418,7 +418,7 @@ def test_rename_entity_collision(
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
@@ -485,7 +485,7 @@ def test_statistics_duplicated(
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(hass, zero, four, list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     wait_recording_done(hass)
@@ -1219,6 +1219,59 @@ def test_monthly_statistics(
                 "last_reset": None,
                 "state": pytest.approx(3.0),
                 "sum": pytest.approx(5.0),
+            },
+        ]
+    }
+
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["not", "the", "same", "test:total_energy_import"],
+        period="month",
+        types={"sum"},
+    )
+    sep_start = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    sep_end = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_start = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_end = dt_util.as_utc(dt_util.parse_datetime("2021-11-01 00:00:00"))
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": sep_start.timestamp(),
+                "end": sep_end.timestamp(),
+                "sum": pytest.approx(3.0),
+            },
+            {
+                "start": oct_start.timestamp(),
+                "end": oct_end.timestamp(),
+                "sum": pytest.approx(5.0),
+            },
+        ]
+    }
+
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["not", "the", "same", "test:total_energy_import"],
+        period="month",
+        types={"sum"},
+        units={"energy": "Wh"},
+    )
+    sep_start = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    sep_end = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_start = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_end = dt_util.as_utc(dt_util.parse_datetime("2021-11-01 00:00:00"))
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": sep_start.timestamp(),
+                "end": sep_end.timestamp(),
+                "sum": pytest.approx(3000.0),
+            },
+            {
+                "start": oct_start.timestamp(),
+                "end": oct_end.timestamp(),
+                "sum": pytest.approx(5000.0),
             },
         ]
     }

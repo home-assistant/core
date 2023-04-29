@@ -386,7 +386,10 @@ omit =
     homeassistant/components/foscam/camera.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
+    homeassistant/components/freebox/camera.py
     homeassistant/components/freebox/device_tracker.py
+    homeassistant/components/freebox/home_base.py
+    homeassistant/components/freebox/router.py
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/common.py
@@ -480,8 +483,6 @@ omit =
     homeassistant/components/homematic/sensor.py
     homeassistant/components/homematic/switch.py
     homeassistant/components/homeworks/*
-    homeassistant/components/honeywell/__init__.py
-    homeassistant/components/honeywell/climate.py
     homeassistant/components/horizon/media_player.py
     homeassistant/components/hp_ilo/sensor.py
     homeassistant/components/huawei_lte/__init__.py
@@ -832,6 +833,7 @@ omit =
     homeassistant/components/onvif/event.py
     homeassistant/components/onvif/parsers.py
     homeassistant/components/onvif/sensor.py
+    homeassistant/components/onvif/util.py
     homeassistant/components/open_meteo/weather.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
@@ -997,6 +999,7 @@ omit =
     homeassistant/components/ridwell/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
+    homeassistant/components/roborock/coordinator.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
@@ -1383,7 +1386,6 @@ omit =
     homeassistant/components/verisure/sensor.py
     homeassistant/components/verisure/switch.py
     homeassistant/components/versasense/*
-    homeassistant/components/vesync/common.py
     homeassistant/components/vesync/fan.py
     homeassistant/components/vesync/light.py
     homeassistant/components/vesync/sensor.py
@@ -1512,7 +1514,7 @@ omit =
     homeassistant/components/zeversolar/entity.py
     homeassistant/components/zeversolar/sensor.py
     homeassistant/components/zha/websocket_api.py
-    homeassistant/components/zha/core/channels/*
+    homeassistant/components/zha/core/cluster_handlers/*
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
