@@ -2378,7 +2378,7 @@ snapcast==2.3.2
 soco==0.29.1
 
 # homeassistant.components.solaredge_local
-solaredge-local==0.2.0
+solaredge-local==0.2.3
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
