@@ -42,6 +42,10 @@ async def async_setup_entry(
             entities.append(
                 ZwaveMultilevelSwitchSelectEntity(config_entry, driver, info)
             )
+        elif info.platform_hint == "config_parameter":
+            entities.append(
+                ZWaveConfigParameterSelectEntity(config_entry, driver, info)
+            )
         else:
             entities.append(ZwaveSelectEntity(config_entry, driver, info))
         async_add_entities(entities)
@@ -89,6 +93,25 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
             if val == option
         )
         await self.info.node.async_set_value(self.info.primary_value, int(key))
+
+
+class ZWaveConfigParameterSelectEntity(ZwaveSelectEntity):
+    """Representation of a Z-Wave config parameter select."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZWaveConfigParameterSelect entity."""
+        super().__init__(config_entry, driver, info)
+
+        property_key_name = self.info.primary_value.property_key_name
+        # Entity class attributes
+        self._attr_name = self.generate_name(
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[property_key_name] if property_key_name else None,
+        )
 
 
 class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
