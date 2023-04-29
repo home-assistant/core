@@ -105,6 +105,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         buffered_chunks_before_speech: int = 100,
         listening_tone_enabled: bool = True,
         processing_tone_enabled: bool = True,
+        error_tone_enabled: bool = True,
         tone_delay: float = 0.2,
         tts_extra_timeout: float = 1.0,
     ) -> None:
@@ -120,6 +121,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self.buffered_chunks_before_speech = buffered_chunks_before_speech
         self.listening_tone_enabled = listening_tone_enabled
         self.processing_tone_enabled = processing_tone_enabled
+        self.error_tone_enabled = error_tone_enabled
         self.tone_delay = tone_delay
         self.tts_extra_timeout = tts_extra_timeout
 
@@ -131,6 +133,8 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self._session_id: str | None = None
         self._tone_bytes: bytes | None = None
         self._processing_bytes: bytes | None = None
+        self._error_bytes: bytes | None = None
+        self._pipeline_error: bool = False
 
     def connection_made(self, transport):
         """Server is ready."""
@@ -161,8 +165,10 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         """Forward audio to pipeline STT and handle TTS."""
         if self._session_id is None:
             self._session_id = ulid()
-            if self.listening_tone_enabled:
-                await self._play_listening_tone()
+
+        # Play listening tone at the start of each cycle
+        if self.listening_tone_enabled:
+            await self._play_listening_tone()
 
         try:
             # Wait for speech before starting pipeline
@@ -221,11 +227,16 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                     tts_audio_output="raw",
                 )
 
-            # Block until TTS is done speaking.
-            #
-            # This is set in _send_tts and has a timeout that's based on the
-            # length of the TTS audio.
-            await self._tts_done.wait()
+            if self._pipeline_error:
+                self._pipeline_error = False
+                if self.error_tone_enabled:
+                    await self._play_error_tone()
+            else:
+                # Block until TTS is done speaking.
+                #
+                # This is set in _send_tts and has a timeout that's based on the
+                # length of the TTS audio.
+                await self._tts_done.wait()
 
             _LOGGER.debug("Pipeline finished")
         except asyncio.TimeoutError:
@@ -307,6 +318,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 self._send_tts(media_id),
                 "voip_pipeline_tts",
             )
+        elif event.type == PipelineEventType.ERROR:
+            # Play error tone instead of wait for TTS
+            self._pipeline_error = True
 
     async def _send_tts(self, media_id: str) -> None:
         """Send TTS audio to caller via RTP."""
@@ -368,6 +382,23 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             partial(
                 self.send_audio,
                 self._processing_bytes,
+                **RTP_AUDIO_SETTINGS,
+            )
+        )
+
+    async def _play_error_tone(self) -> None:
+        """Play a tone to indicate a pipeline error occurred."""
+        if self._error_bytes is None:
+            # Do I/O in executor
+            self._error_bytes = await self.hass.async_add_executor_job(
+                self._load_pcm,
+                "error.pcm",
+            )
+
+        await self.hass.async_add_executor_job(
+            partial(
+                self.send_audio,
+                self._error_bytes,
                 **RTP_AUDIO_SETTINGS,
             )
         )
