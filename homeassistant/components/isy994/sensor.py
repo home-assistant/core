@@ -100,8 +100,8 @@ ISY_CONTROL_TO_STATE_CLASS = {
     control: SensorStateClass.MEASUREMENT for control in ISY_CONTROL_TO_DEVICE_CLASS
 }
 ISY_CONTROL_TO_ENTITY_CATEGORY = {
-    PROP_RAMP_RATE: EntityCategory.CONFIG,
-    PROP_ON_LEVEL: EntityCategory.CONFIG,
+    PROP_RAMP_RATE: EntityCategory.DIAGNOSTIC,
+    PROP_ON_LEVEL: EntityCategory.DIAGNOSTIC,
     PROP_COMMS_ERROR: EntityCategory.DIAGNOSTIC,
 }
 
