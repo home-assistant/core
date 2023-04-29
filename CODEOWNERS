@@ -1144,8 +1144,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck
 /tests/components/spotify/ @frenck
-/homeassistant/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
-/tests/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
+/homeassistant/components/sql/ @gjohansson-ST @dougiteixeira
+/tests/components/sql/ @gjohansson-ST @dougiteixeira
 /homeassistant/components/squeezebox/ @rajlaud
 /tests/components/squeezebox/ @rajlaud
 /homeassistant/components/srp_energy/ @briglx
