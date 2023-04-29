@@ -42,7 +42,7 @@ DEFAULT_EXPOSED_DOMAINS = {
 
 DEFAULT_EXPOSED_BINARY_SENSOR_DEVICE_CLASSES = {
     BinarySensorDeviceClass.DOOR,
-    BinarySensorDeviceClass.GARAGE_DOOR,
+    BinarySensorDeviceClass.GARAGE,
     BinarySensorDeviceClass.LOCK,
     BinarySensorDeviceClass.MOTION,
     BinarySensorDeviceClass.OPENING,

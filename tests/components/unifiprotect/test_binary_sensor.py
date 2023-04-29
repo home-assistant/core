@@ -403,6 +403,4 @@ async def test_binary_sensor_update_mount_type_garage(
 
     state = hass.states.get(entity_id)
     assert state
-    assert (
-        state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GARAGE_DOOR.value
-    )
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GARAGE.value

@@ -2676,7 +2676,7 @@ async def test_openclose_cover_secure(hass: HomeAssistant, device_class) -> None
     "device_class",
     (
         binary_sensor.BinarySensorDeviceClass.DOOR,
-        binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
+        binary_sensor.BinarySensorDeviceClass.GARAGE,
         binary_sensor.BinarySensorDeviceClass.LOCK,
         binary_sensor.BinarySensorDeviceClass.OPENING,
         binary_sensor.BinarySensorDeviceClass.WINDOW,

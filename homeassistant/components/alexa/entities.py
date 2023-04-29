@@ -810,7 +810,7 @@ class BinarySensorCapabilities(AlexaEntity):
         attrs = self.entity.attributes
         if attrs.get(ATTR_DEVICE_CLASS) in (
             binary_sensor.BinarySensorDeviceClass.DOOR,
-            binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
+            binary_sensor.BinarySensorDeviceClass.GARAGE,
             binary_sensor.BinarySensorDeviceClass.OPENING,
             binary_sensor.BinarySensorDeviceClass.WINDOW,
         ):

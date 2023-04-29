@@ -1862,7 +1862,7 @@ class OpenCloseTrait(_Trait):
 
         return domain == binary_sensor.DOMAIN and device_class in (
             binary_sensor.BinarySensorDeviceClass.DOOR,
-            binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
+            binary_sensor.BinarySensorDeviceClass.GARAGE,
             binary_sensor.BinarySensorDeviceClass.LOCK,
             binary_sensor.BinarySensorDeviceClass.OPENING,
             binary_sensor.BinarySensorDeviceClass.WINDOW,

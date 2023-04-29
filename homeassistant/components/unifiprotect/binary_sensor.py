@@ -60,7 +60,7 @@ class ProtectBinaryEventEntityDescription(
 
 
 MOUNT_DEVICE_CLASS_MAP = {
-    MountType.GARAGE: BinarySensorDeviceClass.GARAGE_DOOR,
+    MountType.GARAGE: BinarySensorDeviceClass.GARAGE,
     MountType.WINDOW: BinarySensorDeviceClass.WINDOW,
     MountType.DOOR: BinarySensorDeviceClass.DOOR,
 }

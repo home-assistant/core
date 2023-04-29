@@ -56,7 +56,7 @@ BINARY_SENSOR_DESCRIPTIONS = {
     ),
     BTHomeBinarySensorDeviceClass.GARAGE_DOOR: BinarySensorEntityDescription(
         key=BTHomeBinarySensorDeviceClass.GARAGE_DOOR,
-        device_class=BinarySensorDeviceClass.GARAGE_DOOR,
+        device_class=BinarySensorDeviceClass.GARAGE,
     ),
     BTHomeBinarySensorDeviceClass.GAS: BinarySensorEntityDescription(
         key=BTHomeBinarySensorDeviceClass.GAS,

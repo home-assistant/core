@@ -153,7 +153,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.WINDOW): TYPE_WINDOW,
     (
         binary_sensor.DOMAIN,
-        binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
+        binary_sensor.BinarySensorDeviceClass.GARAGE,
     ): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.AWNING): TYPE_AWNING,
     (cover.DOMAIN, cover.CoverDeviceClass.CURTAIN): TYPE_CURTAIN,

@@ -68,7 +68,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     NotionBinarySensorDescription(
         key=SENSOR_GARAGE_DOOR,
         name="Garage door",
-        device_class=BinarySensorDeviceClass.GARAGE_DOOR,
+        device_class=BinarySensorDeviceClass.GARAGE,
         listener_kind=ListenerKind.GARAGE_DOOR,
         on_state="open",
     ),

@@ -84,7 +84,7 @@ BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
     BinarySensorDeviceClass.DOOR: SI(
         SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
     ),
-    BinarySensorDeviceClass.GARAGE_DOOR: SI(
+    BinarySensorDeviceClass.GARAGE: SI(
         SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
     ),
     BinarySensorDeviceClass.GAS: SI(

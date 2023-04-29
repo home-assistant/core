@@ -156,7 +156,7 @@
         "on": "[%key:common::state::open%]"
       }
     },
-    "garage_door": {
+    "garage": {
       "name": "Garage door",
       "state": {
         "off": "[%key:common::state::closed%]",

@@ -50,7 +50,7 @@ class BinarySensorDeviceClass(StrEnum):
     DOOR = "door"
 
     # On means open, Off means closed
-    GARAGE_DOOR = "garage_door"
+    GARAGE = "garage"
 
     # On means gas detected, Off means no gas (clear)
     GAS = "gas"
@@ -127,7 +127,7 @@ DEVICE_CLASS_CO = BinarySensorDeviceClass.CO.value
 DEVICE_CLASS_COLD = BinarySensorDeviceClass.COLD.value
 DEVICE_CLASS_CONNECTIVITY = BinarySensorDeviceClass.CONNECTIVITY.value
 DEVICE_CLASS_DOOR = BinarySensorDeviceClass.DOOR.value
-DEVICE_CLASS_GARAGE_DOOR = BinarySensorDeviceClass.GARAGE_DOOR.value
+DEVICE_CLASS_GARAGE_DOOR = BinarySensorDeviceClass.GARAGE.value
 DEVICE_CLASS_GAS = BinarySensorDeviceClass.GAS.value
 DEVICE_CLASS_HEAT = BinarySensorDeviceClass.HEAT.value
 DEVICE_CLASS_LIGHT = BinarySensorDeviceClass.LIGHT.value
