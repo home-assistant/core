@@ -37,6 +37,9 @@ class AndroidTVRemoteBaseEntity(Entity):
             model=device_info["model"],
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
         @callback
         def is_available_updated(is_available: bool) -> None:
             self._attr_available = is_available
@@ -47,8 +50,8 @@ class AndroidTVRemoteBaseEntity(Entity):
             self._attr_is_on = is_on
             self.async_write_ha_state()
 
-        api.add_is_available_updated_callback(is_available_updated)
-        api.add_is_on_updated_callback(is_on_updated)
+        self._api.add_is_available_updated_callback(is_available_updated)
+        self._api.add_is_on_updated_callback(is_on_updated)
 
     def _send_key_command(self, key_code: str, direction: str = "SHORT") -> None:
         """Send a key press to Android TV.
