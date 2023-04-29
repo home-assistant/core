@@ -993,7 +993,7 @@ async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
                         **OPEN_CLOSE_COVER_CONFIG,
                         "friendly_name": "Garage Door",
                         "value_template": (
-                            "{{ is_state('binary_sensor.garage_door_sensor', 'off') }}"
+                            "{{ is_state('binary_sensor.garage_sensor', 'off') }}"
                         ),
                     },
                 },
@@ -1004,13 +1004,13 @@ async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
 async def test_state_gets_lowercased(hass: HomeAssistant, start_ha) -> None:
     """Test True/False is lowercased."""
 
-    hass.states.async_set("binary_sensor.garage_door_sensor", "off")
+    hass.states.async_set("binary_sensor.garage_sensor", "off")
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
 
     assert hass.states.get("cover.garage_door").state == STATE_OPEN
-    hass.states.async_set("binary_sensor.garage_door_sensor", "on")
+    hass.states.async_set("binary_sensor.garage_sensor", "on")
     await hass.async_block_till_done()
     assert hass.states.get("cover.garage_door").state == STATE_CLOSED
 

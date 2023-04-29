@@ -254,7 +254,7 @@ async def filtering_entity_id(hass):
             "entities": [
                 "test.entity_1",
                 "test.entity_2",
-                "binary_sensor.garage_door_open",
+                "binary_sensor.garage_open",
                 "test.entity_3",
                 "test.entity_4",
             ],
@@ -269,7 +269,7 @@ async def filtering_entity_id(hass):
     entity_ids = [
         "automation.home_arrival",
         "script.shut_off_house",
-        "binary_sensor.garage_door_open",
+        "binary_sensor.garage_open",
         "binary_sensor.front_door_lock",
         "binary_sensor.kitchen_motion_sensor_occupancy",
         "switch.desk_lamp",

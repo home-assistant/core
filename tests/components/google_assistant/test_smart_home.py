@@ -1057,7 +1057,7 @@ async def test_device_class_switch(
     ("device_class", "google_type"),
     [
         ("door", "action.devices.types.DOOR"),
-        ("garage_door", "action.devices.types.GARAGE"),
+        ("garage", "action.devices.types.GARAGE"),
         ("lock", "action.devices.types.SENSOR"),
         ("opening", "action.devices.types.SENSOR"),
         ("window", "action.devices.types.WINDOW"),
