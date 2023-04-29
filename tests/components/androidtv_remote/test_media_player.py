@@ -184,6 +184,24 @@ async def test_media_player_volume_set(
     mock_api.send_key_command.assert_called_with("VOLUME_DOWN")
     assert mock_api.send_key_command.call_count == 2
 
+    mock_api._on_volume_info_updated({"level": 13, "muted": False, "max": 100})
+
+    # Test that set volume task has been canceled
+    mock_api.send_key_command.reset_mock()
+    await hass.services.async_call(
+        "media_player",
+        "volume_set",
+        {"entity_id": MEDIA_PLAYER_ENTITY, "volume_level": 0.77},
+        blocking=False,
+    )
+    await hass.services.async_call(
+        "media_player",
+        "volume_set",
+        {"entity_id": MEDIA_PLAYER_ENTITY, "volume_level": 0.12},
+        blocking=True,
+    )
+    assert mock_api.send_key_command.call_count == 1
+
 
 async def test_media_player_controls(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
@@ -271,17 +289,29 @@ async def test_media_player_play_media(
         call("5"),
     ]
 
-    assert await hass.services.async_call(
+    # Test that set channel task has been canceled
+    mock_api.send_key_command.reset_mock()
+    await hass.services.async_call(
         "media_player",
         "play_media",
         {
             "entity_id": MEDIA_PLAYER_ENTITY,
             "media_content_type": "channel",
-            "media_content_id": "45",
+            "media_content_id": "7777",
+        },
+        blocking=False,
+    )
+    await hass.services.async_call(
+        "media_player",
+        "play_media",
+        {
+            "entity_id": MEDIA_PLAYER_ENTITY,
+            "media_content_type": "channel",
+            "media_content_id": "11",
         },
         blocking=True,
     )
-    assert mock_api.send_key_command.call_count == 4
+    assert mock_api.send_key_command.call_count == 2
 
     assert await hass.services.async_call(
         "media_player",
