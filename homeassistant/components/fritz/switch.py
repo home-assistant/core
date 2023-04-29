@@ -296,7 +296,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return availability based on data availability."""
-        return super.available and bool(self.data)
+        return super().available and bool(self.data)
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
