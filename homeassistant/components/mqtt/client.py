@@ -662,15 +662,12 @@ class MQTT:
         subscriptions: dict[str, int] = self._pending_subscriptions
         self._pending_subscriptions = {}
 
-        def _process_client_subscriptions() -> tuple[int, int]:
-            """Initiate all subscriptions on the MQTT client and return the results."""
-            result, mid = self._mqttc.subscribe(list(subscriptions.items()))
-            return result, mid
-
         async with self._paho_lock:
+            subscription_list = list(subscriptions.items())
             result, mid = await self.hass.async_add_executor_job(
-                _process_client_subscriptions
+                self._mqttc.subscribe, subscription_list
             )
+
         for topic, qos in subscriptions.items():
             _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
         self._last_subscribe = time.time()
