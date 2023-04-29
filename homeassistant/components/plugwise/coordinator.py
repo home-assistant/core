@@ -30,7 +30,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        update_interval=timedelta(seconds=60),
+        update_interval: timedelta = timedelta(seconds=60),
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
