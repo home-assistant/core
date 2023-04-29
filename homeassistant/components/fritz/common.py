@@ -385,11 +385,12 @@ class FritzBoxTools(
         if not raw_data:
             return {}
 
-        items = xmltodict.parse(raw_data["NewDeflectionList"])["List"]["Item"]
-        if not isinstance(items, list):
-            items = [items]
-
-        return {int(item["DeflectionId"]): item for item in items}
+        xml_data = xmltodict.parse(raw_data["NewDeflectionList"])
+        if xml_data.get("List") and (items := xml_data["List"].get("Item")) is not None:
+            if not isinstance(items, list):
+                items = [items]
+            return {int(item["DeflectionId"]): item for item in items}
+        return {}
 
     async def _async_get_wan_access(self, ip_address: str) -> bool | None:
         """Get WAN access rule for given IP address."""
