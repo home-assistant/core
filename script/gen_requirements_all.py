@@ -177,6 +177,7 @@ websockets>=11.0.1
 # until they are resolved, we need to pin pyasn1 to 0.4.8 and
 # pysnmplib to 5.0.21 to avoid the issue.
 # https://github.com/pyasn1/pyasn1/pull/30#issuecomment-1517564335
+# https://github.com/pysnmp/pysnmp/issues/51
 pyasn1==0.4.8
 pysnmplib==5.0.21
 """
