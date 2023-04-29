@@ -126,7 +126,7 @@ async def test_validate_db_schema_fix_incorrect_collation(
         with session_scope(session=session_maker()) as session:
             session.execute(
                 text(
-                    "ALTER TABLE states CHARACTER SET utf8mb3 COLLATE utf8_general_ci, "
+                    "ALTER TABLE states CHARACTER SET ascii COLLATE ascii_general_ci, "
                     "LOCK=EXCLUSIVE;"
                 )
             )
