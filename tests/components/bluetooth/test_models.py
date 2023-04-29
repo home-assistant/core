@@ -503,7 +503,6 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         },
         rssi=-30,
     )
-    switchbot_proxy_device_no_connection_slot.metadata["delegate"] = 0
     switchbot_proxy_device_no_connection_slot_adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=[],
@@ -518,7 +517,6 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
     )
-    switchbot_proxy_device_has_connection_slot.metadata["delegate"] = 0
     switchbot_proxy_device_has_connection_slot_adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=[],
@@ -532,7 +530,6 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         {},
         rssi=-100,
     )
-    switchbot_device.metadata["delegate"] = 0
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=[],

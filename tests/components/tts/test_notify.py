@@ -104,7 +104,7 @@ async def test_setup_service(
             "name": "tts_test",
             "entity_id": "tts.test",
             "media_player": "media_player.demo",
-            "language": "en",
+            "language": "en_US",
         },
     }
 

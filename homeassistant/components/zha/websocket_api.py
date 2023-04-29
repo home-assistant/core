@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar, cast
 
 import voluptuous as vol
 import zigpy.backups
@@ -19,7 +19,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
 
-from .api import async_get_active_network_settings, async_get_radio_type
+from .api import (
+    async_change_channel,
+    async_get_active_network_settings,
+    async_get_radio_type,
+)
 from .core.const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -93,6 +97,7 @@ ATTR_DURATION = "duration"
 ATTR_GROUP = "group"
 ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_INSTALL_CODE = "install_code"
+ATTR_NEW_CHANNEL = "new_channel"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
 ATTR_QR_CODE = "qr_code"
@@ -1204,6 +1209,23 @@ async def websocket_restore_network_backup(
         connection.send_result(msg[ID])
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/network/change_channel",
+        vol.Required(ATTR_NEW_CHANNEL): vol.Any("auto", vol.Range(11, 26)),
+    }
+)
+@websocket_api.async_response
+async def websocket_change_channel(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Migrate the Zigbee network to a new channel."""
+    new_channel = cast(Literal["auto"] | int, msg[ATTR_NEW_CHANNEL])
+    await async_change_channel(hass, new_channel=new_channel)
+    connection.send_result(msg[ID])
+
+
 @callback
 def async_load_api(hass: HomeAssistant) -> None:
     """Set up the web socket API."""
@@ -1527,6 +1549,7 @@ def async_load_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_list_network_backups)
     websocket_api.async_register_command(hass, websocket_create_network_backup)
     websocket_api.async_register_command(hass, websocket_restore_network_backup)
+    websocket_api.async_register_command(hass, websocket_change_channel)
 
 
 @callback

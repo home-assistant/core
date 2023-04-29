@@ -1193,10 +1193,9 @@ def async_removed_from_device(
         if "config_entries" not in event.data["changes"]:
             return False
         device_registry = dr.async_get(hass)
-        if not (device_entry := device_registry.async_get(device_id)):
-            # The device is already removed, do cleanup when we get "remove" event
-            return False
-        if config_entry_id in device_entry.config_entries:
+        if (
+            device_entry := device_registry.async_get(device_id)
+        ) and config_entry_id in device_entry.config_entries:
             # Not removed from device
             return False
 

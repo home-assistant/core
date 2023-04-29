@@ -2062,6 +2062,19 @@ async def test_no_birth_message(
         await asyncio.sleep(0.2)
         mqtt_client_mock.publish.assert_not_called()
 
+    async def callback(msg: ReceiveMessage) -> None:
+        """Handle birth message."""
+
+    # Assert the subscribe debouncer subscribes after
+    # about SUBSCRIBE_COOLDOWN (0.1) sec
+    # but sooner than INITIAL_SUBSCRIBE_COOLDOWN (1.0)
+
+    mqtt_client_mock.reset_mock()
+    await mqtt.async_subscribe(hass, "homeassistant/some-topic", callback)
+    await hass.async_block_till_done()
+    await asyncio.sleep(0.2)
+    mqtt_client_mock.subscribe.assert_called()
+
 
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
