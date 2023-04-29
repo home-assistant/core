@@ -274,9 +274,15 @@ class SensorFilter(SensorEntity):
         self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
         self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
         self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
-        self._attr_native_unit_of_measurement = new_state.attributes.get(
+
+        if self._attr_native_unit_of_measurement != new_state.attributes.get(
             ATTR_UNIT_OF_MEASUREMENT
-        )
+        ):
+            for filt in self._filters:
+                filt.reset()
+            self._attr_native_unit_of_measurement = new_state.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT
+            )
 
         if update_ha:
             self.async_write_ha_state()
@@ -444,6 +450,10 @@ class Filter:
     def skip_processing(self) -> bool:
         """Return whether the current filter_state should be skipped."""
         return self._skip_processing
+
+    def reset(self) -> None:
+        """Reset filter."""
+        self.states.clear()
 
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement filter."""
