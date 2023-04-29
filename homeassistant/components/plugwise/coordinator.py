@@ -1,9 +1,7 @@
 """DataUpdateCoordinator for Plugwise."""
 from datetime import timedelta
-from typing import NamedTuple, cast
 
-from plugwise import Smile
-from plugwise.constants import DeviceData, GatewayData
+from plugwise import PlugwiseData, Smile
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
@@ -23,25 +21,23 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_USERNAME, DOMAIN, LOGGER
 
 
-class PlugwiseData(NamedTuple):
-    """Plugwise data stored in the DataUpdateCoordinator."""
-
-    gateway: GatewayData
-    devices: dict[str, DeviceData]
-
-
 class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
     """Class to manage fetching Plugwise data from single endpoint."""
 
     _connected: bool = False
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        update_interval=timedelta(seconds=60),
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=60),
+            update_interval=update_interval,
             # Don't refresh immediately, give the device time to process
             # the change in state before we query it.
             request_refresh_debouncer=Debouncer(
@@ -60,12 +56,13 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
+        self.update_interval = update_interval
 
     async def _connect(self) -> None:
         """Connect to the Plugwise Smile."""
         self._connected = await self.api.connect()
         self.api.get_all_devices()
-        self.name = self.api.smile_name
+
         self.update_interval = DEFAULT_SCAN_INTERVAL.get(
             str(self.api.smile_type), timedelta(seconds=60)
         )
@@ -87,7 +84,5 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             raise ConfigEntryError("Device with unsupported firmware") from err
         except ConnectionFailedError as err:
             raise UpdateFailed("Failed to connect to the Plugwise Smile") from err
-        return PlugwiseData(
-            gateway=cast(GatewayData, data[0]),
-            devices=cast(dict[str, DeviceData], data[1]),
-        )
+
+        return data
