@@ -102,7 +102,7 @@ async def async_register_dynalite_frontend(hass: HomeAssistant):
         path = locate_dir()
         build_id = get_build_id()
         hass.http.register_static_path(
-            URL_BASE, path, cache_headers=(build_id == "dev")
+            URL_BASE, path, cache_headers=(build_id != "dev")
         )
 
         await panel_custom.async_register_panel(
