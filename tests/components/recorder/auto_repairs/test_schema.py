@@ -149,6 +149,27 @@ async def test_validate_db_schema_fix_incorrect_collation(
     assert schema_errors == set()
 
 
+async def test_validate_db_schema_precision_correct_collation(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validating DB schema when the schema is correct with the correct collation."""
+    if not recorder_db_url.startswith("mysql://"):
+        # This problem only happens on MySQL
+        return
+    await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    instance = get_instance(hass)
+    schema_errors = await instance.async_add_executor_job(
+        validate_table_schema_has_correct_collation,
+        instance,
+        States,
+    )
+    assert schema_errors == set()
+
+
 async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
