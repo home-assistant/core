@@ -1,7 +1,8 @@
 """The tests for the REST sensor platform."""
 import asyncio
 from http import HTTPStatus
-from unittest.mock import MagicMock, patch
+import ssl
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
@@ -9,9 +10,10 @@ import respx
 
 from homeassistant import config as hass_config
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
+from homeassistant.components.rest import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DOMAIN,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -28,26 +30,29 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.ssl import SSLCipherList
 
 from tests.common import get_fixture_path
 
 
 async def test_setup_missing_config(hass: HomeAssistant) -> None:
     """Test setup with configuration missing required entries."""
-    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "rest"}})
+    assert await async_setup_component(
+        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: {"platform": DOMAIN}}
+    )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 0
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 0
 
 
 async def test_setup_missing_schema(hass: HomeAssistant) -> None:
     """Test setup with resource missing schema."""
     assert await async_setup_component(
         hass,
-        DOMAIN,
-        {"sensor": {"platform": "rest", "resource": "localhost", "method": "GET"}},
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": DOMAIN, "resource": "localhost", "method": "GET"}},
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 0
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 0
 
 
 @respx.mock
@@ -60,18 +65,40 @@ async def test_setup_failed_connect(
     )
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
             }
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 0
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 0
     assert "server offline" in caplog.text
+
+
+@respx.mock
+async def test_setup_fail_on_ssl_erros(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup when connection error occurs."""
+    respx.get("https://localhost").mock(side_effect=ssl.SSLError("ssl error"))
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "https://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 0
+    assert "ssl error" in caplog.text
 
 
 @respx.mock
@@ -80,11 +107,11 @@ async def test_setup_timeout(hass: HomeAssistant) -> None:
     respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
     assert await async_setup_component(
         hass,
-        DOMAIN,
-        {"sensor": {"platform": "rest", "resource": "localhost", "method": "GET"}},
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": DOMAIN, "resource": "localhost", "method": "GET"}},
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 0
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 0
 
 
 @respx.mock
@@ -93,17 +120,80 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
             }
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+
+
+@respx.mock
+async def test_setup_encoding(hass: HomeAssistant) -> None:
+    """Test setup with non-utf8 encoding."""
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        stream=httpx.ByteStream("tack själv".encode(encoding="iso-8859-1")),
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "name": "mysensor",
+                "encoding": "iso-8859-1",
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    assert hass.states.get("sensor.mysensor").state == "tack själv"
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    ("ssl_cipher_list", "ssl_cipher_list_expected"),
+    (
+        ("python_default", SSLCipherList.PYTHON_DEFAULT),
+        ("intermediate", SSLCipherList.INTERMEDIATE),
+        ("modern", SSLCipherList.MODERN),
+    ),
+)
+async def test_setup_ssl_ciphers(
+    hass: HomeAssistant, ssl_cipher_list: str, ssl_cipher_list_expected: SSLCipherList
+) -> None:
+    """Test setup with minimum configuration."""
+    with patch(
+        "homeassistant.components.rest.data.create_async_httpx_client",
+        return_value=MagicMock(request=AsyncMock(return_value=respx.MockResponse())),
+    ) as httpx:
+        assert await async_setup_component(
+            hass,
+            SENSOR_DOMAIN,
+            {
+                SENSOR_DOMAIN: {
+                    "platform": DOMAIN,
+                    "resource": "http://localhost",
+                    "method": "GET",
+                    "ssl_cipher_list": ssl_cipher_list,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+        httpx.assert_called_once_with(
+            hass,
+            verify_ssl=True,
+            default_encoding="UTF-8",
+            ssl_cipher_list=ssl_cipher_list_expected,
+        )
 
 
 @respx.mock
@@ -115,19 +205,19 @@ async def test_manual_update(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            "sensor": {
+            SENSOR_DOMAIN: {
                 "name": "mysensor",
                 "value_template": "{{ value_json.data }}",
-                "platform": "rest",
+                "platform": DOMAIN,
                 "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
                 "method": "GET",
             }
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
     assert hass.states.get("sensor.mysensor").state == "first"
 
     respx.get("http://localhost").respond(
@@ -148,16 +238,16 @@ async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
             }
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
 
 @respx.mock
@@ -166,17 +256,17 @@ async def test_setup_duplicate_resource_template(hass: HomeAssistant) -> None:
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "resource_template": "http://localhost",
             }
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 0
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 0
 
 
 @respx.mock
@@ -187,10 +277,10 @@ async def test_setup_get(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
@@ -210,7 +300,7 @@ async def test_setup_get(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "homeassistant", {})
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     assert hass.states.get("sensor.foo").state == "123"
     await hass.services.async_call(
@@ -237,10 +327,10 @@ async def test_setup_timestamp(
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
@@ -251,7 +341,7 @@ async def test_setup_timestamp(
     await async_setup_component(hass, "homeassistant", {})
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "2021-11-11T11:39:00+00:00"
@@ -296,10 +386,10 @@ async def test_setup_get_templated_headers_params(hass: HomeAssistant) -> None:
     respx.get("http://localhost").respond(status_code=200, json={})
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
@@ -318,6 +408,7 @@ async def test_setup_get_templated_headers_params(hass: HomeAssistant) -> None:
         },
     )
     await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
 
     assert respx.calls.last.request.headers["Accept"] == CONTENT_TYPE_JSON
     assert respx.calls.last.request.headers["User-Agent"] == "Mozilla/5.0"
@@ -332,10 +423,10 @@ async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
@@ -352,7 +443,7 @@ async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
     )
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
 
 @respx.mock
@@ -363,10 +454,10 @@ async def test_setup_post(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "POST",
                 "value_template": "{{ value_json.key }}",
@@ -383,7 +474,7 @@ async def test_setup_post(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
 
 @respx.mock
@@ -396,10 +487,10 @@ async def test_setup_get_xml(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.dog }}",
@@ -411,7 +502,7 @@ async def test_setup_get_xml(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("sensor.foo")
     assert state.state == "123"
@@ -424,10 +515,10 @@ async def test_setup_query_params(hass: HomeAssistant) -> None:
     respx.get("http://localhost", params={"search": "something"}) % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        DOMAIN,
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "params": {"search": "something"},
@@ -435,7 +526,7 @@ async def test_setup_query_params(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
 
 @respx.mock
@@ -448,10 +539,10 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
@@ -464,7 +555,7 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("sensor.foo")
     assert state.state == "123"
@@ -481,10 +572,10 @@ async def test_update_with_no_template(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "json_attributes": ["key"],
@@ -496,7 +587,7 @@ async def test_update_with_no_template(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("sensor.foo")
     assert state.state == '{"key": "some_json_value"}'
@@ -515,10 +606,10 @@ async def test_update_with_json_attrs_no_data(
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
@@ -532,7 +623,7 @@ async def test_update_with_json_attrs_no_data(
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("sensor.foo")
     assert state.state == STATE_UNKNOWN
@@ -552,10 +643,10 @@ async def test_update_with_json_attrs_not_dict(
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
@@ -568,7 +659,7 @@ async def test_update_with_json_attrs_not_dict(
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("sensor.foo")
     assert state.state == ""
@@ -589,10 +680,10 @@ async def test_update_with_json_attrs_bad_JSON(
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
@@ -606,7 +697,7 @@ async def test_update_with_json_attrs_bad_JSON(
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("sensor.foo")
     assert state.state == STATE_UNKNOWN
@@ -632,10 +723,10 @@ async def test_update_with_json_attrs_with_json_attrs_path(hass: HomeAssistant) 
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.toplevel.master_value }}",
@@ -650,7 +741,7 @@ async def test_update_with_json_attrs_with_json_attrs_path(hass: HomeAssistant) 
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
     state = hass.states.get("sensor.foo")
 
     assert state.state == "123"
@@ -671,10 +762,10 @@ async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.toplevel.master_value }}",
@@ -688,7 +779,7 @@ async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
     state = hass.states.get("sensor.foo")
 
     assert state.state == "123"
@@ -709,10 +800,10 @@ async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.response.bss.wlan }}",
@@ -726,7 +817,7 @@ async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
     state = hass.states.get("sensor.foo")
 
     assert state.state == "123"
@@ -750,10 +841,10 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.main.dog }}",
@@ -767,7 +858,7 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
     state = hass.states.get("sensor.foo")
 
     assert state.state == "1"
@@ -788,10 +879,10 @@ async def test_update_with_xml_convert_bad_xml(
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.toplevel.master_value }}",
@@ -804,7 +895,7 @@ async def test_update_with_xml_convert_bad_xml(
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
     state = hass.states.get("sensor.foo")
 
     assert state.state == STATE_UNKNOWN
@@ -825,10 +916,10 @@ async def test_update_with_failed_get(
     )
     assert await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.toplevel.master_value }}",
@@ -841,7 +932,7 @@ async def test_update_with_failed_get(
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
     state = hass.states.get("sensor.foo")
 
     assert state.state == STATE_UNKNOWN
@@ -857,10 +948,10 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        "sensor",
+        SENSOR_DOMAIN,
         {
-            "sensor": {
-                "platform": "rest",
+            SENSOR_DOMAIN: {
+                "platform": DOMAIN,
                 "method": "GET",
                 "name": "mockrest",
                 "resource": "http://localhost",
@@ -871,14 +962,14 @@ async def test_reload(hass: HomeAssistant) -> None:
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     assert hass.states.get("sensor.mockrest")
 
-    yaml_path = get_fixture_path("configuration.yaml", "rest")
+    yaml_path = get_fixture_path("configuration.yaml", DOMAIN)
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "rest",
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -894,9 +985,9 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     """Test entity configuration."""
 
     config = {
-        DOMAIN: {
+        SENSOR_DOMAIN: {
             # REST configuration
-            "platform": "rest",
+            "platform": DOMAIN,
             "method": "GET",
             "resource": "http://localhost",
             # Entity configuration
@@ -911,7 +1002,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     }
 
     respx.get("http://localhost").respond(status_code=HTTPStatus.OK, text="123")
-    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)

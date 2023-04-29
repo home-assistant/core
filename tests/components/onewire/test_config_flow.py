@@ -1,5 +1,4 @@
 """Tests for 1-Wire config flow."""
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from pyownet import protocol
@@ -9,24 +8,15 @@ from homeassistant.components.onewire.const import (
     DOMAIN,
     INPUT_ENTRY_CLEAR_OPTIONS,
     INPUT_ENTRY_DEVICE_SELECTION,
+    MANUFACTURER_MAXIM,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.config_validation import ensure_list
 
-from .const import MOCK_OWPROXY_DEVICES
-
-
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.onewire.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 @pytest.fixture
@@ -34,16 +24,14 @@ async def filled_device_registry(
     hass: HomeAssistant, config_entry: ConfigEntry, device_registry: dr.DeviceRegistry
 ) -> dr.DeviceRegistry:
     """Fill device registry with mock devices."""
-    for device_details in MOCK_OWPROXY_DEVICES.values():
-        if infos := device_details.get("device_info"):
-            for info in ensure_list(infos):
-                device_registry.async_get_or_create(
-                    config_entry_id=config_entry.entry_id,
-                    identifiers=info["identifiers"],
-                    manufacturer=info["manufacturer"],
-                    model=info["model"],
-                    name=info["name"],
-                )
+    for key in ("28.111111111111", "28.222222222222", "28.222222222223"):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, key)},
+            manufacturer=MANUFACTURER_MAXIM,
+            model="DS18B20",
+            name=key,
+        )
     return device_registry
 
 
@@ -84,7 +72,8 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
             CONF_HOST: "1.2.3.4",
             CONF_PORT: 1234,
         }
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -110,8 +99,6 @@ async def test_user_duplicate(
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("filled_device_registry")

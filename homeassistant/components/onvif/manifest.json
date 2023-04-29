@@ -4,8 +4,9 @@
   "codeowners": ["@hunterjm"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
+  "dhcp": [{ "registered_devices": true }],
   "documentation": "https://www.home-assistant.io/integrations/onvif",
   "iot_class": "local_push",
   "loggers": ["onvif", "wsdiscovery", "zeep"],
-  "requirements": ["onvif-zeep-async==1.2.1", "WSDiscovery==2.0.0"]
+  "requirements": ["onvif-zeep-async==1.3.0", "WSDiscovery==2.0.0"]
 }

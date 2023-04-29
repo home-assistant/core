@@ -31,7 +31,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback as hass_callback
+from homeassistant.core import Event, HassJob, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
@@ -198,9 +198,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         function=_async_rediscover_adapters,
     )
 
+    async def _async_shutdown_debouncer(_: Event) -> None:
+        """Shutdown debouncer."""
+        await discovery_debouncer.async_shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
+
     async def _async_call_debouncer(now: datetime.datetime) -> None:
         """Call the debouncer at a later time."""
         await discovery_debouncer.async_call()
+
+    call_debouncer_job = HassJob(_async_call_debouncer, cancel_on_shutdown=True)
 
     def _async_trigger_discovery() -> None:
         # There are so many bluetooth adapter models that
@@ -220,7 +228,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_call_later(
             hass,
             BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS + LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
-            _async_call_debouncer,
+            call_debouncer_job,
         )
 
     cancel = usb.async_register_scan_request_callback(hass, _async_trigger_discovery)

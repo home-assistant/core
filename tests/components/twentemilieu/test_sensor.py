@@ -1,5 +1,4 @@
 """Tests for the Twente Milieu sensors."""
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

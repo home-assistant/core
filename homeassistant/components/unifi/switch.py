@@ -17,6 +17,7 @@ from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
+from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client, ClientBlockRequest
 from aiounifi.models.device import (
     DeviceSetOutletRelayRequest,
@@ -47,7 +48,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 from .entity import (
-    DataT,
     HandlerT,
     SubscriptionT,
     UnifiEntity,
@@ -131,23 +131,25 @@ async def async_poe_port_control_fn(
     """Control poe state."""
     mac, _, index = obj_id.partition("_")
     device = api.devices[mac]
-    state = "auto" if target else "off"
+    port = api.ports[obj_id]
+    on_state = "auto" if port.raw["poe_caps"] != 8 else "passthrough"
+    state = on_state if target else "off"
     await api.request(DeviceSetPoePortModeRequest.create(device, int(index), state))
 
 
 @dataclass
-class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, DataT]):
+class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
     control_fn: Callable[[aiounifi.Controller, str, bool], Coroutine[Any, Any, None]]
-    is_on_fn: Callable[[UniFiController, DataT], bool]
+    is_on_fn: Callable[[UniFiController, ApiItemT], bool]
 
 
 @dataclass
 class UnifiSwitchEntityDescription(
     SwitchEntityDescription,
-    UnifiEntityDescription[HandlerT, DataT],
-    UnifiSwitchEntityDescriptionMixin[HandlerT, DataT],
+    UnifiEntityDescription[HandlerT, ApiItemT],
+    UnifiSwitchEntityDescriptionMixin[HandlerT, ApiItemT],
 ):
     """Class describing UniFi switch entity."""
 
@@ -247,18 +249,19 @@ async def async_setup_entry(
 
     for mac in controller.option_block_clients:
         if mac not in controller.api.clients and mac in controller.api.clients_all:
-            client = controller.api.clients_all[mac]
-            controller.api.clients.process_raw([client.raw])
+            controller.api.clients.process_raw(
+                [dict(controller.api.clients_all[mac].raw)]
+            )
 
     controller.register_platform_add_entities(
         UnifiSwitchEntity, ENTITY_DESCRIPTIONS, async_add_entities
     )
 
 
-class UnifiSwitchEntity(UnifiEntity[HandlerT, DataT], SwitchEntity):
+class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
     """Base representation of a UniFi switch."""
 
-    entity_description: UnifiSwitchEntityDescription[HandlerT, DataT]
+    entity_description: UnifiSwitchEntityDescription[HandlerT, ApiItemT]
     only_event_for_state_change = False
 
     @callback

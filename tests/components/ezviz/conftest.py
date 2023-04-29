@@ -5,6 +5,12 @@ from pyezviz import EzvizClient
 from pyezviz.test_cam_rtsp import TestRTSPAuth
 import pytest
 
+ezviz_login_token_return = {
+    "session_id": "fake_token",
+    "rf_session_id": "fake_rf_token",
+    "api_url": "apiieu.ezvizlife.com",
+}
+
 
 @pytest.fixture(autouse=True)
 def mock_ffmpeg(hass):
@@ -42,7 +48,7 @@ def ezviz_config_flow(hass):
             "1",
         )
 
-        instance.login = MagicMock(return_value=True)
+        instance.login = MagicMock(return_value=ezviz_login_token_return)
         instance.get_detection_sensibility = MagicMock(return_value=True)
 
         yield mock_ezviz
