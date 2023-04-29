@@ -15,7 +15,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(
             CONF_SIP_PORT,
-            description={"suggested_value": SIP_PORT},
+            default=SIP_PORT,
         ): cv.port,
     }
 )
