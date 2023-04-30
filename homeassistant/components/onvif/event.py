@@ -769,6 +769,7 @@ class WebHookManager:
                 return
 
         webhook_id = self._webhook_unique_id
+        self._async_unregister_webhook()
         webhook.async_register(
             self._hass, DOMAIN, webhook_id, webhook_id, self._async_handle_webhook
         )
