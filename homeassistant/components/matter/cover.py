@@ -57,12 +57,6 @@ class MatterCover(MatterEntity, CoverEntity):
     """Representation of a Matter Cover."""
 
     entity_description: CoverEntityDescription
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.SET_POSITION
-    )
 
     @property
     def is_closed(self) -> bool | None:
@@ -181,6 +175,18 @@ class MatterCover(MatterEntity, CoverEntity):
             self.get_matter_attribute_value(clusters.WindowCovering.Attributes.Type)
         )
         self._attr_device_class = TYPE_MAP.get(device_type, CoverDeviceClass.AWNING)
+
+        supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
+        commands = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.AcceptedCommandList
+        )
+        if clusters.WindowCovering.Commands.GoToLiftPercentage.command_id in commands:
+            supported_features |= CoverEntityFeature.SET_POSITION
+        if clusters.WindowCovering.Commands.GoToTiltPercentage.command_id in commands:
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
+        self._attr_supported_features = supported_features
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
