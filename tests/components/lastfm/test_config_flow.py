@@ -3,11 +3,15 @@
 from pylast import WSError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.lastfm.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.lastfm.const import CONF_USERS, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from . import CONF_DATA, patch_fetch_user, patch_setup_entry
+from . import API_KEY, CONF_DATA, patch_fetch_user, patch_setup_entry
+
+from tests.common import MockConfigEntry
 
 
 async def test_flow_user(hass: HomeAssistant) -> None:
@@ -88,3 +92,23 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "LastFM"
     assert result["data"] == {"api_key": "asdasdasdasdasd", "users": ["testaccount1"]}
+
+
+async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
+    """Test import of yaml already exist."""
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: API_KEY, CONF_USERS: ["test"]},
+    ).add_to_hass(hass)
+
+    with patch_fetch_user():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONF_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
