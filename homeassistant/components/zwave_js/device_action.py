@@ -186,8 +186,9 @@ async def async_get_actions(
         # underlying value is not being monitored by HA so we shouldn't allow
         # actions against it.
         if (
-            state := hass.states.get(entry.entity_id)
-        ) and state.state == STATE_UNAVAILABLE:
+            not (state := hass.states.get(entry.entity_id))
+            or state.state == STATE_UNAVAILABLE
+        ):
             continue
         entity_action = {**base_action, CONF_ENTITY_ID: entry.entity_id}
         actions.append({**entity_action, CONF_TYPE: SERVICE_REFRESH_VALUE})
@@ -209,9 +210,7 @@ async def async_get_actions(
             # If the value has the meterType CC specific value, we can add a reset_meter
             # action for it
             if CC_SPECIFIC_METER_TYPE in value.metadata.cc_specific:
-                endpoint_idx = value.endpoint
-                if endpoint_idx is None:
-                    endpoint_idx = 0
+                endpoint_idx = value.endpoint or 0
                 meter_endpoints[endpoint_idx].setdefault(
                     CONF_ENTITY_ID, entry.entity_id
                 )
