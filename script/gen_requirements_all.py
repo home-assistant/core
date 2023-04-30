@@ -21,6 +21,7 @@ else:
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
+    "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
     "azure-servicebus",  # depends on uamqp, which requires OpenSSL 1.1
