@@ -1806,7 +1806,7 @@ pynetgear==0.10.9
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==0.2.0
+pynina==0.3.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.6.0
