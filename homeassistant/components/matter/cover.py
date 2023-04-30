@@ -136,39 +136,45 @@ class MatterCover(MatterEntity, CoverEntity):
                 self._attr_is_opening = False
                 self._attr_is_closing = False
 
-        # current position is inverted in matter (100 is closed, 0 is open)
-        current_cover_position = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
-        )
-        self._attr_current_cover_position = (
-            100 - floor(current_cover_position / 100)
-            if current_cover_position is not None
-            else None
-        )
+        if self._entity_info.endpoint.has_attribute(
+            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
+        ):
+            # current position is inverted in matter (100 is closed, 0 is open)
+            current_cover_position = self.get_matter_attribute_value(
+                clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
+            )
+            self._attr_current_cover_position = (
+                100 - floor(current_cover_position / 100)
+                if current_cover_position is not None
+                else None
+            )
 
-        LOGGER.debug(
-            "Current position for %s - raw: %s - corrected: %s",
-            self.entity_id,
-            current_cover_position,
-            self.current_cover_position,
-        )
+            LOGGER.debug(
+                "Current position for %s - raw: %s - corrected: %s",
+                self.entity_id,
+                current_cover_position,
+                self.current_cover_position,
+            )
 
-        # current tilt position is inverted in matter (100 is closed, 0 is open)
-        current_cover_tilt_position = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
-        )
-        self._attr_current_cover_tilt_position = (
-            100 - floor(current_cover_tilt_position / 100)
-            if current_cover_tilt_position is not None
-            else None
-        )
+        if self._entity_info.endpoint.has_attribute(
+            None, clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
+        ):
+            # current tilt position is inverted in matter (100 is closed, 0 is open)
+            current_cover_tilt_position = self.get_matter_attribute_value(
+                clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
+            )
+            self._attr_current_cover_tilt_position = (
+                100 - floor(current_cover_tilt_position / 100)
+                if current_cover_tilt_position is not None
+                else None
+            )
 
-        LOGGER.debug(
-            "Current tilt position for %s - raw: %s - corrected: %s",
-            self.entity_id,
-            current_cover_tilt_position,
-            self.current_cover_tilt_position,
-        )
+            LOGGER.debug(
+                "Current tilt position for %s - raw: %s - corrected: %s",
+                self.entity_id,
+                current_cover_tilt_position,
+                self.current_cover_tilt_position,
+            )
 
         # map matter type to HA deviceclass
         device_type: clusters.WindowCovering.Enums.Type = (
