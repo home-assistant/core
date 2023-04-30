@@ -1,6 +1,4 @@
 """Support for Hydrawise cloud."""
-from datetime import timedelta
-import logging
 
 from hydrawiser.core import Hydrawiser
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -15,22 +13,15 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
-
-ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
-
-CONF_WATERING_TIME = "watering_minutes"
-
-NOTIFICATION_ID = "hydrawise_notification"
-NOTIFICATION_TITLE = "Hydrawise Setup"
-
-DATA_HYDRAWISE = "hydrawise"
-DOMAIN = "hydrawise"
-DEFAULT_WATERING_TIME = 15
-
-SCAN_INTERVAL = timedelta(seconds=120)
-
-SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"
+from .const import (
+    DATA_HYDRAWISE,
+    DOMAIN,
+    LOGGER,
+    NOTIFICATION_ID,
+    NOTIFICATION_TITLE,
+    SCAN_INTERVAL,
+    SIGNAL_UPDATE_HYDRAWISE,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -55,7 +46,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hydrawise = Hydrawiser(user_token=access_token)
         hass.data[DATA_HYDRAWISE] = HydrawiseHub(hydrawise)
     except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
+        LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
         persistent_notification.create(
             hass,
             f"Error: {ex}<br />You will need to restart hass after fixing.",
@@ -66,7 +57,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def hub_refresh(event_time):
         """Call Hydrawise hub to refresh information."""
-        _LOGGER.debug("Updating Hydrawise Hub component")
+        LOGGER.debug("Updating Hydrawise Hub component")
         hass.data[DATA_HYDRAWISE].data.update_controller_info()
         dispatcher_send(hass, SIGNAL_UPDATE_HYDRAWISE)
 
