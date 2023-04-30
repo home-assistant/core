@@ -60,7 +60,7 @@ class MatterCover(MatterEntity, CoverEntity):
 
     @property
     def is_closed(self) -> bool | None:
-        """Return true if cover is closed, else False."""
+        """Return true if cover is closed, if there is no position report, return None."""
         has_current_position = self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage
         )
@@ -70,13 +70,26 @@ class MatterCover(MatterEntity, CoverEntity):
 
         match has_current_position, has_current_tilt_position:
             case True, False:
-                return self.current_cover_position == 0
-            case False, True:
-                return self.current_cover_tilt_position == 0
-            case True, True:
                 return (
                     self.current_cover_position == 0
-                    and self.current_cover_tilt_position == 0
+                    if self.current_cover_position is not None
+                    else None
+                )
+            case False, True:
+                return (
+                    self.current_cover_tilt_position == 0
+                    if self.current_cover_tilt_position is not None
+                    else None
+                )
+            case True, True:
+                return (
+                    (
+                        self.current_cover_position == 0
+                        and self.current_cover_tilt_position == 0
+                    )
+                    if self.current_cover_position is not None
+                    and self.current_cover_tilt_position is not None
+                    else None
                 )
             case _:
                 return None
@@ -148,7 +161,9 @@ class MatterCover(MatterEntity, CoverEntity):
         current_cover_position = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage
         )
-        self._attr_current_cover_position = 100 - current_cover_position
+        self._attr_current_cover_position = (
+            100 - current_cover_position if current_cover_position is not None else None
+        )
 
         LOGGER.debug(
             "Current position for %s - raw: %s - corrected: %s",
@@ -161,7 +176,11 @@ class MatterCover(MatterEntity, CoverEntity):
         current_cover_tilt_position = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage
         )
-        self._attr_current_cover_tilt_position = 100 - current_cover_tilt_position
+        self._attr_current_cover_tilt_position = (
+            100 - current_cover_tilt_position
+            if current_cover_tilt_position is not None
+            else None
+        )
 
         LOGGER.debug(
             "Current tilt position for %s - raw: %s - corrected: %s",
