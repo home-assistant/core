@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Final
 
 from xknx.dpt import DPTBase
@@ -19,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION: Final = 1
 STORAGE_KEY: Final = f"{DOMAIN}/knx_project.json"
@@ -62,9 +65,9 @@ class KNXProject:
         self.group_addresses = {}
         self.info = None
 
-    async def load_project(self) -> None:
+    async def load_project(self, data: KNXProjectModel | None = None) -> None:
         """Load project data from storage."""
-        if project := await self._store.async_load():
+        if project := data or await self._store.async_load():
             self.devices = project["devices"]
             self.info = project["info"]
 
@@ -72,6 +75,10 @@ class KNXProject:
                 ga_info = self._create_group_address_info(_ga_model)
                 self.group_addresses[ga_info.address] = ga_info
 
+            _LOGGER.debug(
+                "Loaded KNX project data with %s group addresses from storage",
+                len(self.group_addresses),
+            )
             self.loaded = True
 
     def _create_group_address_info(
@@ -104,9 +111,8 @@ class KNXProject:
                 return xknxproj.parse()
 
         project = await self.hass.async_add_executor_job(_parse_project)
-
         await self._store.async_save(project)
-        await self.load_project()
+        await self.load_project(data=project)
 
     async def remove_project_file(self) -> None:
         """Remove project file from storage."""

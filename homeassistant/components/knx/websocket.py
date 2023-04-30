@@ -86,6 +86,7 @@ def ws_info(
     )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/project_file_process",
@@ -116,6 +117,7 @@ async def ws_project_file_process(
     connection.send_result(msg["id"])
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/project_file_remove",
