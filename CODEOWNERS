@@ -1187,8 +1187,8 @@ build.json @home-assistant/supervisor
 /tests/components/switchbee/ @jafar-atili
 /homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
 /tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
-/homeassistant/components/switcher_kis/ @tomerfi @thecode
-/tests/components/switcher_kis/ @tomerfi @thecode
+/homeassistant/components/switcher_kis/ @thecode
+/tests/components/switcher_kis/ @thecode
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
 /homeassistant/components/syncthing/ @zhulik
 /tests/components/syncthing/ @zhulik
