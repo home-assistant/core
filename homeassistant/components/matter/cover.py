@@ -8,6 +8,7 @@ from chip.clusters import Objects as clusters
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityDescription,
@@ -64,9 +65,27 @@ class MatterCover(MatterEntity, CoverEntity):
     )
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return true if cover is closed, else False."""
-        return self.current_cover_position == 0
+        has_current_position = self._entity_info.endpoint.has_attribute(
+            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage
+        )
+        has_current_tilt_position = self._entity_info.endpoint.has_attribute(
+            None, clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage
+        )
+
+        match has_current_position, has_current_tilt_position:
+            case True, False:
+                return self.current_cover_position == 0
+            case False, True:
+                return self.current_cover_tilt_position == 0
+            case True, True:
+                return (
+                    self.current_cover_position == 0
+                    and self.current_cover_tilt_position == 0
+                )
+            case _:
+                return None
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover movement."""
@@ -86,6 +105,14 @@ class MatterCover(MatterEntity, CoverEntity):
         await self.send_device_command(
             # value needs to be inverted and is sent in 100ths
             clusters.WindowCovering.Commands.GoToLiftPercentage((100 - position) * 100)
+        )
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Set the cover tilt to a specific position."""
+        position = kwargs[ATTR_TILT_POSITION]
+        await self.send_device_command(
+            # value needs to be inverted and is sent in 100ths
+            clusters.WindowCovering.Commands.GoToTiltPercentage((100 - position) * 100)
         )
 
     async def send_device_command(self, command: Any) -> None:
@@ -136,6 +163,19 @@ class MatterCover(MatterEntity, CoverEntity):
             self.current_cover_position,
         )
 
+        # current tilt position is inverted in matter (100 is closed, 0 is open)
+        current_cover_tilt_position = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage
+        )
+        self._attr_current_cover_tilt_position = 100 - current_cover_tilt_position
+
+        LOGGER.debug(
+            "Current tilt position for %s - raw: %s - corrected: %s",
+            self.entity_id,
+            current_cover_tilt_position,
+            self.current_cover_tilt_position,
+        )
+
         # map matter type to HA deviceclass
         device_type: clusters.WindowCovering.Enums.Type = (
             self.get_matter_attribute_value(clusters.WindowCovering.Attributes.Type)
@@ -150,8 +190,12 @@ DISCOVERY_SCHEMAS = [
         entity_description=CoverEntityDescription(key="MatterCover"),
         entity_class=MatterCover,
         required_attributes=(
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
             clusters.WindowCovering.Attributes.OperationalStatus,
+            clusters.WindowCovering.Attributes.Type,
+        ),
+        optional_attributes=(
+            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage,
         ),
     )
 ]
