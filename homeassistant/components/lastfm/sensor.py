@@ -3,13 +3,16 @@ from __future__ import annotations
 
 import hashlib
 
-from pylast import LastFMNetwork, Track, User, WSError
+from pylast import LastFMNetwork, Track, WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -18,6 +21,8 @@ from .const import (
     ATTR_PLAY_COUNT,
     ATTR_TOP_PLAYED,
     CONF_USERS,
+    DEFAULT_NAME,
+    DOMAIN,
     LOGGER,
     STATE_NOT_SCROBBLING,
 )
@@ -35,23 +40,30 @@ def format_track(track: Track) -> str:
     return f"{track.artist} - {track.title}"
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Last.fm sensor platform."""
-    lastfm_api = LastFMNetwork(api_key=config[CONF_API_KEY])
-    entities = []
-    for username in config[CONF_USERS]:
-        try:
-            user = lastfm_api.get_user(username)
-            entities.append(LastFmSensor(user, lastfm_api))
-        except WSError as exc:
-            LOGGER.error("Failed to load LastFM user `%s`: %r", username, exc)
-            return
-    add_entities(entities, True)
+    """Set up the Last.fm sensor platform from yaml."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize the entries."""
+    async_add_entities(
+        LastFmSensor(entry.data[CONF_API_KEY], user, entry.entry_id)
+        for user in entry.data[CONF_USERS]
+    )
 
 
 class LastFmSensor(SensorEntity):
@@ -60,11 +72,25 @@ class LastFmSensor(SensorEntity):
     _attr_attribution = "Data provided by Last.fm"
     _attr_icon = "mdi:radio-fm"
 
-    def __init__(self, user: User, lastfm_api: LastFMNetwork) -> None:
+    def __init__(self, api_key: str, username: str, entry_id: str) -> None:
         """Initialize the sensor."""
-        self._attr_unique_id = hashlib.sha256(user.name.encode("utf-8")).hexdigest()
-        self._attr_name = user.name
-        self._user = user
+        try:
+            self._user = LastFMNetwork(api_key=api_key).get_user(username)
+            self._attr_unique_id = hashlib.sha256(
+                self._user.name.encode("utf-8")
+            ).hexdigest()
+            self._attr_name = self._user.name
+        except WSError as exc:
+            self._attr_available = False
+            LOGGER.error("Failed to load LastFM user `%s`: %r", username, exc)
+            return
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.last.fm",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer=DEFAULT_NAME,
+            name=DEFAULT_NAME,
+        )
 
     def update(self) -> None:
         """Update device state."""
