@@ -12,7 +12,7 @@ attrs==22.2.0
 awesomeversion==22.9.0
 bcrypt==4.0.1
 bleak-retry-connector==3.0.2
-bleak==0.20.1
+bleak==0.20.2
 bluetooth-adapters==0.15.3
 bluetooth-auto-recovery==1.0.3
 bluetooth-data-tools==0.4.0
