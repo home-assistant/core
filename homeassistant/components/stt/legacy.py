@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.util import language as language_util
 
 from .const import (
     DATA_PROVIDERS,
@@ -28,6 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
+def async_default_provider(hass: HomeAssistant) -> str | None:
+    """Return the domain of the default provider."""
+    if "cloud" in hass.data[DATA_PROVIDERS]:
+        return "cloud"
+
+    return next(iter(hass.data[DATA_PROVIDERS]), None)
+
+
+@callback
 def async_get_provider(
     hass: HomeAssistant, domain: str | None = None
 ) -> Provider | None:
@@ -35,13 +43,8 @@ def async_get_provider(
     if domain:
         return hass.data[DATA_PROVIDERS].get(domain)
 
-    if not hass.data[DATA_PROVIDERS]:
-        return None
-
-    if "cloud" in hass.data[DATA_PROVIDERS]:
-        return hass.data[DATA_PROVIDERS]["cloud"]
-
-    return next(iter(hass.data[DATA_PROVIDERS].values()))
+    provider = async_default_provider(hass)
+    return hass.data[DATA_PROVIDERS][provider] if provider is not None else None
 
 
 @callback
@@ -159,18 +162,9 @@ class Provider(ABC):
     @callback
     def check_metadata(self, metadata: SpeechMetadata) -> bool:
         """Check if given metadata supported by this provider."""
-        if metadata.language not in self.supported_languages:
-            language_matches = language_util.matches(
-                metadata.language,
-                self.supported_languages,
-            )
-            if language_matches:
-                metadata.language = language_matches[0]
-            else:
-                return False
-
         if (
-            metadata.format not in self.supported_formats
+            metadata.language not in self.supported_languages
+            or metadata.format not in self.supported_formats
             or metadata.codec not in self.supported_codecs
             or metadata.bit_rate not in self.supported_bit_rates
             or metadata.sample_rate not in self.supported_sample_rates

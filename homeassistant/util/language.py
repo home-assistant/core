@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+import math
 import operator
 import re
 
@@ -15,8 +16,12 @@ def preferred_regions(
     language: str,
     country: str | None = None,
     code: str | None = None,
-) -> Iterable[str | None]:
-    """Yield preferred regions for a language based on country/code hints."""
+) -> Iterable[str]:
+    """Yield an ordered list of regions for a language based on country/code hints.
+
+    Regions should be checked for support in the returned order if no other
+    information is available.
+    """
     if country is not None:
         yield country.upper()
 
@@ -27,10 +32,8 @@ def preferred_regions(
     elif language == "zh":
         if code == "Hant":
             yield "HK"
-        elif code == "Hans":
             yield "TW"
         else:
-            # Prefer China if no matching code
             yield "CN"
 
     # fr -> fr-FR
@@ -68,7 +71,7 @@ class Dialect:
             # Regions are upper-cased
             self.region = self.region.upper()
 
-    def score(self, dialect: Dialect, country: str | None = None) -> int:
+    def score(self, dialect: Dialect, country: str | None = None) -> float:
         """Return score for match with another dialect where higher is better.
 
         Score < 0 indicates a failure to match.
@@ -77,27 +80,46 @@ class Dialect:
             # Not a match
             return -1
 
-        if self.region == dialect.region:
-            # Language + region match
+        if (self.region is None) and (dialect.region is None):
+            # Weak match with no region constraint
             return 1
 
-        pref_regions: set[str | None] = set()
-        if (self.region is None) or (dialect.region is None):
-            # Generate a set of preferred regions
-            pref_regions = set(
-                preferred_regions(
-                    self.language,
-                    country=country,
-                    code=self.code,
-                )
+        if (self.region is not None) and (dialect.region is not None):
+            if self.region == dialect.region:
+                # Exact language + region match
+                return math.inf
+
+            # Regions are both set, but don't match
+            return 0
+
+        # Generate ordered list of preferred regions
+        pref_regions = list(
+            preferred_regions(
+                self.language,
+                country=country,
+                code=self.code,
             )
+        )
 
-        # Replace missing regions with preferred
-        regions = pref_regions if self.region is None else {self.region}
-        other_regions = pref_regions if dialect.region is None else {dialect.region}
+        try:
+            # Determine score based on position in the preferred regions list.
+            if self.region is not None:
+                region_idx = pref_regions.index(self.region)
+            elif dialect.region is not None:
+                region_idx = pref_regions.index(dialect.region)
+            else:
+                # Can't happen, but mypy is not smart enough
+                raise ValueError()
 
-        # Better match if there is overlap in regions
-        return 2 if regions.intersection(other_regions) else 0
+            # More preferred regions are at the front.
+            # Add 1 to boost above a weak match where no regions are set.
+            return 1 + (len(pref_regions) - region_idx)
+        except ValueError:
+            # Region was not in preferred list
+            pass
+
+        # Not a preferred region
+        return 0
 
     @staticmethod
     def parse(tag: str) -> Dialect:

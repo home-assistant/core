@@ -69,8 +69,8 @@ from .media_source import generate_media_source_id, media_source_id_to_kwargs
 from .models import Voice
 
 __all__ = [
+    "async_default_engine",
     "async_get_media_source_audio",
-    "async_resolve_engine",
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
     "CONF_LANG",
@@ -101,7 +101,7 @@ _RE_LEGACY_VOICE_FILE = re.compile(
     r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}"
 )
 _RE_VOICE_FILE = re.compile(
-    r"([a-f0-9]{40})_([^_]+)_([^_]+)_(tts\.[a-z_]+)\.[a-z0-9]{3,4}"
+    r"([a-f0-9]{40})_([^_]+)_([^_]+)_(tts\.[a-z0-9_]+)\.[a-z0-9]{3,4}"
 )
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
@@ -114,6 +114,26 @@ class TTSCache(TypedDict):
     filename: str
     voice: bytes
     pending: asyncio.Task | None
+
+
+@callback
+def async_default_engine(hass: HomeAssistant) -> str | None:
+    """Return the domain or entity id of the default engine.
+
+    Returns None if no engines found.
+    """
+    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
+    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+
+    if "cloud" in manager.providers:
+        return "cloud"
+
+    entity = next(iter(component.entities), None)
+
+    if entity is not None:
+        return entity.entity_id
+
+    return next(iter(manager.providers), None)
 
 
 @callback
@@ -130,15 +150,7 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
             return None
         return engine
 
-    if "cloud" in manager.providers:
-        return "cloud"
-
-    entity = next(iter(component.entities), None)
-
-    if entity is not None:
-        return entity.entity_id
-
-    return next(iter(manager.providers), None)
+    return async_default_engine(hass)
 
 
 async def async_support_options(
@@ -471,19 +483,12 @@ class SpeechManager:
         """Validate and process options."""
         # Languages
         language = language or engine_instance.default_language
-
-        if language is None or engine_instance.supported_languages is None:
-            raise HomeAssistantError(f"Not supported language {language}")
-
-        if language not in engine_instance.supported_languages:
-            language_matches = language_util.matches(
-                language, engine_instance.supported_languages
-            )
-            if language_matches:
-                # Choose best match
-                language = language_matches[0]
-            else:
-                raise HomeAssistantError(f"Not supported language {language}")
+        if (
+            language is None
+            or engine_instance.supported_languages is None
+            or language not in engine_instance.supported_languages
+        ):
+            raise HomeAssistantError(f"Language '{language}' not supported")
 
         # Options
         if (default_options := engine_instance.default_options) and options:

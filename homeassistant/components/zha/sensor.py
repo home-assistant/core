@@ -191,6 +191,7 @@ class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
     SENSOR_ATTR = "present_value"
+    _attr_name: str = "Analog input"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_POWER_CONFIGURATION)
