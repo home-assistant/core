@@ -14,10 +14,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class AnovaCoordinator(DataUpdateCoordinator):
+class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
     """Anova custom coordinator."""
-
-    data: APCUpdate
 
     def __init__(
         self,
