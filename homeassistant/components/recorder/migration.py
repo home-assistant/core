@@ -1158,23 +1158,23 @@ def _wipe_old_string_time_columns(
     elif engine.dialect.name == SupportedDialect.MYSQL:
         #
         # Since this is only to save space we limit the number of rows we update
-        # to 10,000,000 per table since we do not want to block the database for too long
+        # to 100,000 per table since we do not want to block the database for too long
         # or run out of innodb_buffer_pool_size on MySQL. The old data will eventually
         # be cleaned up by the recorder purge if we do not do it now.
         #
-        session.execute(text("UPDATE events set time_fired=NULL LIMIT 10000000;"))
+        session.execute(text("UPDATE events set time_fired=NULL LIMIT 100000;"))
         session.commit()
         session.execute(
             text(
                 "UPDATE states set last_updated=NULL, last_changed=NULL "
-                " LIMIT 10000000;"
+                " LIMIT 100000;"
             )
         )
         session.commit()
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
         #
         # Since this is only to save space we limit the number of rows we update
-        # to 250,000 per table since we do not want to block the database for too long
+        # to 100,000 per table since we do not want to block the database for too long
         # or run out ram with postgresql. The old data will eventually
         # be cleaned up by the recorder purge if we do not do it now.
         #
