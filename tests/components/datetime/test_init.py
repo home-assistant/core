@@ -36,9 +36,9 @@ class MockDateTimeEntity(DateTimeEntity):
         self._attr_native_value = value
 
 
-async def test_date(hass: HomeAssistant, enable_custom_integrations: None) -> None:
-    """Test time entity."""
-    hass.config.set_time_zone("utc")
+async def test_datetime(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+    """Test date/time entity."""
+    hass.config.set_time_zone("UTC")
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
 
