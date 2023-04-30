@@ -997,8 +997,8 @@ build.json @home-assistant/supervisor
 /tests/components/ridwell/ @bachya
 /homeassistant/components/risco/ @OnFreund
 /tests/components/risco/ @OnFreund
-/homeassistant/components/rituals_perfume_genie/ @milanmeu
-/tests/components/rituals_perfume_genie/ @milanmeu
+/homeassistant/components/rituals_perfume_genie/ @milanmeu @frenck
+/tests/components/rituals_perfume_genie/ @milanmeu @frenck
 /homeassistant/components/rmvtransport/ @cgtobi
 /tests/components/rmvtransport/ @cgtobi
 /homeassistant/components/roborock/ @humbertogontijo @Lash-L
@@ -1144,8 +1144,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck
 /tests/components/spotify/ @frenck
-/homeassistant/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
-/tests/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
+/homeassistant/components/sql/ @gjohansson-ST @dougiteixeira
+/tests/components/sql/ @gjohansson-ST @dougiteixeira
 /homeassistant/components/squeezebox/ @rajlaud
 /tests/components/squeezebox/ @rajlaud
 /homeassistant/components/srp_energy/ @briglx
@@ -1187,8 +1187,8 @@ build.json @home-assistant/supervisor
 /tests/components/switchbee/ @jafar-atili
 /homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
 /tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
-/homeassistant/components/switcher_kis/ @tomerfi @thecode
-/tests/components/switcher_kis/ @tomerfi @thecode
+/homeassistant/components/switcher_kis/ @thecode
+/tests/components/switcher_kis/ @thecode
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
 /homeassistant/components/syncthing/ @zhulik
 /tests/components/syncthing/ @zhulik
