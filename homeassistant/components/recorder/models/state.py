@@ -19,8 +19,6 @@ import homeassistant.util.dt as dt_util
 from .state_attributes import decode_attributes_from_source
 from .time import process_timestamp
 
-# pylint: disable=invalid-name
-
 _LOGGER = logging.getLogger(__name__)
 
 

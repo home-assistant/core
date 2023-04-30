@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import Event, HomeAssistant, callback
@@ -104,17 +105,39 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Unload a config entry."""
-    # Unhide the wrapped entry if registered
+    """Unload a config entry.
+
+    This will unhide the wrapped entity and restore assistant expose settings.
+    """
     registry = er.async_get(hass)
     try:
-        entity_id = er.async_validate_entity_id(registry, entry.options[CONF_ENTITY_ID])
+        switch_entity_id = er.async_validate_entity_id(
+            registry, entry.options[CONF_ENTITY_ID]
+        )
     except vol.Invalid:
         # The source entity has been removed from the entity registry
         return
 
-    if not (entity_entry := registry.async_get(entity_id)):
+    if not (switch_entity_entry := registry.async_get(switch_entity_id)):
         return
 
-    if entity_entry.hidden_by == er.RegistryEntryHider.INTEGRATION:
-        registry.async_update_entity(entity_id, hidden_by=None)
+    # Unhide the wrapped entity
+    if switch_entity_entry.hidden_by == er.RegistryEntryHider.INTEGRATION:
+        registry.async_update_entity(switch_entity_id, hidden_by=None)
+
+    switch_as_x_entries = er.async_entries_for_config_entry(registry, entry.entry_id)
+    if not switch_as_x_entries:
+        return
+
+    switch_as_x_entry = switch_as_x_entries[0]
+
+    # Restore assistant expose settings
+    expose_settings = exposed_entities.async_get_entity_settings(
+        hass, switch_as_x_entry.entity_id
+    )
+    for assistant, settings in expose_settings.items():
+        if (should_expose := settings.get("should_expose")) is None:
+            continue
+        exposed_entities.async_expose_entity(
+            hass, assistant, switch_entity_id, should_expose
+        )

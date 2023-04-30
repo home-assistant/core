@@ -10,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RitualsDataUpdateCoordinator
 from .const import COORDINATORS, DEVICES, DOMAIN
+from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
