@@ -1,4 +1,5 @@
 """The ONVIF integration."""
+import asyncio
 import logging
 
 from httpx import RequestError
@@ -57,6 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not setup camera {device.device.host}:{device.device.port}: {err}"
         ) from err
+    except asyncio.CancelledError as err:
+        await device.device.close()
+        raise ConfigEntryNotReady(f"Setup was unexpectedly canceled: {err}") from err
 
     if not device.available:
         raise ConfigEntryNotReady()
