@@ -14,16 +14,16 @@ _LOGGER = logging.getLogger(__name__)
 class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Rituals Perfume Genie device data from single endpoint."""
 
-    def __init__(self, hass: HomeAssistant, device: Diffuser) -> None:
+    def __init__(self, hass: HomeAssistant, diffuser: Diffuser) -> None:
         """Initialize global Rituals Perfume Genie data updater."""
-        self._device = device
+        self.diffuser = diffuser
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}-{device.hublot}",
+            name=f"{DOMAIN}-{diffuser.hublot}",
             update_interval=UPDATE_INTERVAL,
         )
 
     async def _async_update_data(self) -> None:
         """Fetch data from Rituals."""
-        await self._device.update_data()
+        await self.diffuser.update_data()
