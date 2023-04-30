@@ -41,6 +41,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.STT,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,

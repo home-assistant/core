@@ -52,6 +52,7 @@ class Platform(StrEnum):
     STT = "stt"
     SWITCH = "switch"
     TEXT = "text"
+    TIME = "time"
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"
