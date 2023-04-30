@@ -447,8 +447,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
     ) -> None:
         """Reset meter(s) on device."""
         node = self.info.node
-        primary_value = self.info.primary_value
-        endpoint = primary_value.endpoint or 0
+        endpoint = self.info.primary_value.endpoint or 0
         options = {}
         if meter_type is not None:
             options[RESET_METER_OPTION_TYPE] = meter_type
@@ -461,7 +460,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
         LOGGER.debug(
             "Meters on node %s endpoint %s reset with the following options: %s",
             node,
-            primary_value.endpoint,
+            endpoint,
             options,
         )
 
