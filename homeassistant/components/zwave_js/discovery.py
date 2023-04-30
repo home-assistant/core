@@ -1145,7 +1145,7 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check metadata_writeable
     if schema.writeable is not None and value.metadata.writeable != schema.writeable:
-      return False
+        return False
     # check available states
     if (
         schema.any_available_states is not None
