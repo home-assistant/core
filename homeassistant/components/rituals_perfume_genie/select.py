@@ -9,8 +9,8 @@ from homeassistant.const import AREA_SQUARE_METERS, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RitualsDataUpdateCoordinator
 from .const import COORDINATORS, DEVICES, DOMAIN
+from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 ROOM_SIZE_SUFFIX = " Room Size"
