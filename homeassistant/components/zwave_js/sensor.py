@@ -469,22 +469,6 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
 class ZWaveListSensor(ZwaveSensor):
     """Representation of a Z-Wave Numeric sensor with multiple states."""
 
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        driver: Driver,
-        info: ZwaveDiscoveryInfo,
-        entity_description: SensorEntityDescription,
-        unit_of_measurement: str | None = None,
-    ) -> None:
-        """Initialize a ZWaveListSensor entity."""
-        super().__init__(
-            config_entry, driver, info, entity_description, unit_of_measurement
-        )
-
-        # Entity class attributes
-        self._attr_name = self.generate_name(include_value_name=True)
-
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
