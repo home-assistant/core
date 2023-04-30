@@ -1,8 +1,6 @@
 """Support for Hydrawise sprinkler binary sensors."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -17,9 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_HYDRAWISE, HydrawiseEntity
-
-_LOGGER = logging.getLogger(__name__)
+from . import HydrawiseEntity
+from .const import DATA_HYDRAWISE, LOGGER
 
 BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     key="status",
@@ -82,7 +79,7 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
-        _LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)
+        LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)
         mydata = self.hass.data[DATA_HYDRAWISE].data
         if self.entity_description.key == "status":
             self._attr_is_on = mydata.status == "All good!"

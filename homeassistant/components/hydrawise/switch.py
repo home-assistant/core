@@ -1,7 +1,6 @@
 """Support for Hydrawise cloud switches."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -18,15 +17,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from . import HydrawiseEntity
+from .const import (
     ALLOWED_WATERING_TIME,
     CONF_WATERING_TIME,
     DATA_HYDRAWISE,
     DEFAULT_WATERING_TIME,
-    HydrawiseEntity,
+    LOGGER,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -108,7 +106,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         """Update device state."""
         relay_data = self.data["relay"] - 1
         mydata = self.hass.data[DATA_HYDRAWISE].data
-        _LOGGER.debug("Updating Hydrawise switch: %s", self.name)
+        LOGGER.debug("Updating Hydrawise switch: %s", self.name)
         if self.entity_description.key == "manual_watering":
             self._attr_is_on = mydata.relays[relay_data]["timestr"] == "Now"
         elif self.entity_description.key == "auto_watering":
