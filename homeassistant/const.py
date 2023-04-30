@@ -31,6 +31,7 @@ class Platform(StrEnum):
     CAMERA = "camera"
     CLIMATE = "climate"
     COVER = "cover"
+    DATE = "date"
     DEVICE_TRACKER = "device_tracker"
     FAN = "fan"
     GEO_LOCATION = "geo_location"
