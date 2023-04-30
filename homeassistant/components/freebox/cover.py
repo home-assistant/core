@@ -100,18 +100,18 @@ class FreeboxBasicShutter(FreeboxHomeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self.set_home_endpoint_value(self._command_up)
-        await self.async_set_value("signal", "state", False)
+        if await self.set_home_endpoint_value(self._command_up):
+            await self.async_set_value("signal", "state", False)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self.set_home_endpoint_value(self._command_down)
-        await self.async_set_value("signal", "state", True)
+        if await self.set_home_endpoint_value(self._command_down):
+            await self.async_set_value("signal", "state", True)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        await self.set_home_endpoint_value(self._command_stop)
-        await self.async_set_value("signal", "state", None)
+        if await self.set_home_endpoint_value(self._command_stop):
+            await self.async_set_value("signal", "state", None)
 
     async def async_update_node(self) -> None:
         """Update state."""
@@ -179,29 +179,29 @@ class FreeboxShutter(FreeboxHomeEntity, CoverEntity):
             if (self._invert_position)
             else kwargs[ATTR_POSITION]
         )
-        await self.set_home_endpoint_value(self._command_set_position, value)
-        self._attr_current_cover_position = kwargs[ATTR_POSITION]
-        self.async_write_ha_state()
+        if await self.set_home_endpoint_value(self._command_set_position, value):
+            self._attr_current_cover_position = kwargs[ATTR_POSITION]
+            self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         value = 0 if (self._invert_position) else 100
-        await self.set_home_endpoint_value(self._command_set_position, value)
-        self._attr_current_cover_position = 100
-        self.async_write_ha_state()
+        if await self.set_home_endpoint_value(self._command_set_position, value):
+            self._attr_current_cover_position = 100
+            self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         value = 100 if (self._invert_position) else 0
-        await self.set_home_endpoint_value(self._command_set_position, value)
-        self._attr_current_cover_position = 0
-        self.async_write_ha_state()
+        if await self.set_home_endpoint_value(self._command_set_position, value):
+            self._attr_current_cover_position = 0
+            self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        await self.set_home_endpoint_value(self._command_stop)
-        self.update_current_position()
-        self.async_write_ha_state()
+        if await self.set_home_endpoint_value(self._command_stop):
+            self.update_current_position()
+            self.async_write_ha_state()
 
     def update_current_position(self):
         """Set the current position."""

@@ -87,13 +87,13 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        await self.set_home_endpoint_value(self._command_motion_detection, True)
-        self._attr_motion_detection_enabled = True
+        if await self.set_home_endpoint_value(self._command_motion_detection, True):
+            self._attr_motion_detection_enabled = True
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        await self.set_home_endpoint_value(self._command_motion_detection, False)
-        self._attr_motion_detection_enabled = False
+        if await self.set_home_endpoint_value(self._command_motion_detection, False):
+            self._attr_motion_detection_enabled = False
 
     async def async_update_signal(self) -> None:
         """Update the camera node."""

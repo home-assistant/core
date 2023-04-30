@@ -1,6 +1,7 @@
 """Represent the Freebox router and its devices and sensors."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
 from datetime import datetime
@@ -13,7 +14,11 @@ from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.home import Home
 from freebox_api.api.wifi import Wifi
-from freebox_api.exceptions import HttpRequestError, NotOpenError
+from freebox_api.exceptions import (
+    HttpRequestError,
+    InsufficientPermissionsError,
+    NotOpenError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -88,7 +93,14 @@ class FreeboxRouter:
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
+        try:
+            fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
+        except HttpRequestError as error:
+            _LOGGER.warning("The Freebox API URL devices error %s", error)
+            return
+        except asyncio.TimeoutError:
+            _LOGGER.warning("The Freebox API Timeout during update device trackers")
+            return
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -117,40 +129,50 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
-        # System sensors
-        syst_datas: dict[str, Any] = await self._api.system.get_config()
+        try:
+            # System sensors
+            syst_datas: dict[str, Any] = await self._api.system.get_config()
 
-        # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
-        # Name and id of sensors may vary under Freebox devices.
-        for sensor in syst_datas["sensors"]:
-            self.sensors_temperature[sensor["name"]] = sensor.get("value")
+            # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
+            # Name and id of sensors may vary under Freebox devices.
+            for sensor in syst_datas["sensors"]:
+                self.sensors_temperature[sensor["name"]] = sensor.get("value")
 
-        # Connection sensors
-        connection_datas: dict[str, Any] = await self._api.connection.get_status()
-        for sensor_key in CONNECTION_SENSORS_KEYS:
-            self.sensors_connection[sensor_key] = connection_datas[sensor_key]
+            # Connection sensors
+            connection_datas: dict[str, Any] = await self._api.connection.get_status()
+            for sensor_key in CONNECTION_SENSORS_KEYS:
+                self.sensors_connection[sensor_key] = connection_datas[sensor_key]
 
-        self._attrs = {
-            "IPv4": connection_datas.get("ipv4"),
-            "IPv6": connection_datas.get("ipv6"),
-            "connection_type": connection_datas["media"],
-            "uptime": datetime.fromtimestamp(
-                round(datetime.now().timestamp()) - syst_datas["uptime_val"]
-            ),
-            "firmware_version": self._sw_v,
-            "serial": syst_datas["serial"],
-        }
+            self._attrs = {
+                "IPv4": connection_datas.get("ipv4"),
+                "IPv6": connection_datas.get("ipv6"),
+                "connection_type": connection_datas["media"],
+                "uptime": datetime.fromtimestamp(
+                    round(datetime.now().timestamp()) - syst_datas["uptime_val"]
+                ),
+                "firmware_version": self._sw_v,
+                "serial": syst_datas["serial"],
+            }
 
-        self.call_list = await self._api.call.get_calls_log()
+            self.call_list = await self._api.call.get_calls_log()
 
-        await self._update_disks_sensors()
-
+            await self._update_disks_sensors()
+        except HttpRequestError as error:
+            _LOGGER.warning("The Freebox API URL sensors error %s", error)
+            return
+        except asyncio.TimeoutError:
+            _LOGGER.warning("The Freebox API Timeout during update sensors")
+            return
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
     async def _update_disks_sensors(self) -> None:
         """Update Freebox disks."""
-        # None at first request
-        fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
+        try:
+            # None at first request
+            fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
+        except BaseException:
+            _LOGGER.warning("The Freebox API exception during update disks sensors")
+            raise
 
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
@@ -162,9 +184,15 @@ class FreeboxRouter:
 
         try:
             home_nodes: list[Any] = await self.home.get_home_nodes() or []
-        except HttpRequestError:
+        except InsufficientPermissionsError:
             self.home_granted = False
             _LOGGER.warning("Home access is not granted")
+            return
+        except HttpRequestError:
+            _LOGGER.warning("The Freebox API HttpRequest Error")
+            return
+        except asyncio.TimeoutError:
+            _LOGGER.warning("The Freebox API Timeout during nodes retrieval")
             return
 
         new_device = False

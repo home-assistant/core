@@ -131,9 +131,11 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
 
     async def async_update_signal(self):
         """Update signal."""
-        self.set_state(await self.get_home_endpoint_value(self._command_state))
-        self.update_node(self._router.home_devices[self._id])
-        self.async_write_ha_state()
+        state = await self.get_home_endpoint_value(self._command_state)
+        if state is not None:
+            self.set_state(state)
+            self.update_node(self._router.home_devices[self._id])
+            self.async_write_ha_state()
 
     def update_node(self, node: dict[str, Any]) -> None:
         """Update the alarm."""

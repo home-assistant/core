@@ -68,22 +68,14 @@ class FreeboxPir(FreeboxHomeEntity, BinarySensorEntity):
         )
 
         self._detection = False
-        self._had_timeout = False
 
     async def async_update_signal(self):
         """Watch states."""
-        try:
-            detection = await self.get_home_endpoint_value(self._command_trigger)
-            self._had_timeout = False
+        detection = await self.get_home_endpoint_value(self._command_trigger)
+        if detection is not None:
             if self._detection == detection:
                 self._detection = not detection
                 self.async_write_ha_state()
-        except TimeoutError as error:
-            if self._had_timeout:
-                _LOGGER.warning("Freebox API Timeout. %s", error)
-                self._had_timeout = False
-            else:
-                self._had_timeout = True
 
     @property
     def is_on(self) -> bool:

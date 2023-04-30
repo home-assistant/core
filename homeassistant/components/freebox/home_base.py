@@ -1,6 +1,7 @@
 """Support for Freebox base features."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -81,9 +82,16 @@ class FreeboxHomeEntity(Entity):
         if command_id is None:
             _LOGGER.error("Unable to SET a value through the API. Command is None")
             return False
-        await self._router.home.set_home_endpoint_value(
-            self._id, command_id, {"value": value}
-        )
+        try:
+            await self._router.home.set_home_endpoint_value(
+                self._id, command_id, {"value": value}
+            )
+        except asyncio.TimeoutError as error:
+            _LOGGER.warning("The Freebox API Timeout during a value set %s", error)
+            return False
+        except TimeoutError:
+            _LOGGER.warning("The Freebox Timeout during a value set")
+            return False
         return True
 
     async def get_home_endpoint_value(self, command_id: Any) -> Any | None:
@@ -93,8 +101,13 @@ class FreeboxHomeEntity(Entity):
             return None
         try:
             node = await self._router.home.get_home_endpoint_value(self._id, command_id)
+        except asyncio.TimeoutError as error:
+            _LOGGER.warning(
+                "The Freebox API Timeout during a value retrieval %s", error
+            )
+            return None
         except TimeoutError:
-            _LOGGER.warning("The Freebox API Timeout during a value retrieval")
+            _LOGGER.warning("The Freebox Timeout during a value retrieval")
             return None
         return node.get("value")
 
