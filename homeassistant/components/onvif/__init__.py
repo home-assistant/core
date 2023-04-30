@@ -59,6 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not setup camera {device.device.host}:{device.device.port}: {err}"
         ) from err
     except asyncio.CancelledError as err:
+        # After https://github.com/agronholm/anyio/issues/374 is resolved
+        # this may be able to be removed
         await device.device.close()
         raise ConfigEntryNotReady(f"Setup was unexpectedly canceled: {err}") from err
 
