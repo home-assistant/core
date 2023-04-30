@@ -44,12 +44,15 @@ def setup_mock_onvif_camera(
     auth_fail=False,
     update_xaddrs_fail=False,
     no_profiles=False,
+    auth_failure=False,
+    wrong_port=False,
 ):
     """Prepare mock onvif.ONVIFCamera."""
     devicemgmt = MagicMock()
 
     device_info = MagicMock()
     device_info.SerialNumber = SERIAL_NUMBER if with_serial else None
+
     devicemgmt.GetDeviceInformation = AsyncMock(return_value=device_info)
 
     interface = MagicMock()
@@ -81,7 +84,15 @@ def setup_mock_onvif_camera(
     else:
         media_service.GetProfiles = AsyncMock(return_value=[profile1, profile2])
 
-    if update_xaddrs_fail:
+    if wrong_port:
+        mock_onvif_camera.update_xaddrs = AsyncMock(side_effect=AttributeError)
+    elif auth_failure:
+        mock_onvif_camera.update_xaddrs = AsyncMock(
+            side_effect=Fault(
+                "not authorized", subcodes=[MagicMock(text="NotAuthorized")]
+            )
+        )
+    elif update_xaddrs_fail:
         mock_onvif_camera.update_xaddrs = AsyncMock(
             side_effect=ONVIFError("camera not ready")
         )
