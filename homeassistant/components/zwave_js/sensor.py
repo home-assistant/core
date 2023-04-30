@@ -397,16 +397,10 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return state of the sensor."""
-        if self.info.primary_value.value is None:
-            return None
-        if (
-            str(self.info.primary_value.value)
-            not in self.info.primary_value.metadata.states
-        ):
-            return str(self.info.primary_value.value)
-        return str(
-            self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
-        )
+        key = str(self.info.primary_value.value)
+        if key not in self.info.primary_value.metadata.states:
+            return self.info.primary_value.value
+        return str(self.info.primary_value.metadata.states[key])
 
     @property
     def native_unit_of_measurement(self) -> str | None:
