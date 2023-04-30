@@ -6,8 +6,8 @@ from pyrituals import Diffuser
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import RitualsDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import RitualsDataUpdateCoordinator
 
 MANUFACTURER = "Rituals Cosmetics"
 MODEL = "The Perfume Genie"

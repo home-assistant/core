@@ -386,7 +386,7 @@ asyncpysupla==0.0.5
 asyncsleepiq==1.3.4
 
 # homeassistant.components.aten_pe
-atenpdu==0.3.2
+# atenpdu==0.3.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
@@ -419,7 +419,7 @@ base36==0.1.1
 batinfo==0.4.2
 
 # homeassistant.components.eddystone_temperature
-# beacontools[scan]==1.2.3
+# beacontools[scan]==2.1.0
 
 # homeassistant.components.scrape
 beautifulsoup4==4.11.1
@@ -440,7 +440,7 @@ bizkaibus==0.1.1
 bleak-retry-connector==3.0.2
 
 # homeassistant.components.bluetooth
-bleak==0.20.1
+bleak==0.20.2
 
 # homeassistant.components.blebox
 blebox_uniapi==2.1.4
@@ -1806,7 +1806,7 @@ pynetgear==0.10.9
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==0.2.0
+pynina==0.3.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.6.0
@@ -2679,7 +2679,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.1.16
 
 # homeassistant.components.august
-yalexs==1.3.2
+yalexs==1.3.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
