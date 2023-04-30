@@ -61,8 +61,11 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
     async_add_entities(
-        LastFmSensor(entry.data[CONF_API_KEY], user, entry.entry_id)
-        for user in entry.data[CONF_USERS]
+        (
+            LastFmSensor(entry.data[CONF_API_KEY], user, entry.entry_id)
+            for user in entry.data[CONF_USERS]
+        ),
+        True,
     )
 
 
@@ -79,7 +82,7 @@ class LastFmSensor(SensorEntity):
             self._attr_unique_id = hashlib.sha256(
                 self._user.name.encode("utf-8")
             ).hexdigest()
-            self._attr_name = self._user.name
+            self._attr_name = f"lastfm_{self._user.name}"
         except WSError as exc:
             self._attr_available = False
             LOGGER.error("Failed to load LastFM user `%s`: %r", username, exc)
