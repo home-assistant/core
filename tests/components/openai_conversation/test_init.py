@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from openai import error
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
@@ -15,6 +16,7 @@ async def test_default_prompt(
     mock_init_component,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the default prompt works."""
     for i in range(3):
@@ -86,40 +88,30 @@ async def test_default_prompt(
         model=3,
         suggested_area="Test Area 2",
     )
-    with patch("openai.Completion.acreate") as mock_create:
+    with patch(
+        "openai.ChatCompletion.acreate",
+        return_value={
+            "choices": [
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": "Hello, how can I help you?",
+                    }
+                }
+            ]
+        },
+    ) as mock_create:
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert (
-        mock_create.mock_calls[0][2]["prompt"]
-        == """This smart home is controlled by Home Assistant.
-
-An overview of the areas and the devices in this smart home:
-
-Test Area:
-- Test Device (Test Model)
-
-Test Area 2:
-- Test Device 2
-- Test Device 3 (Test Model 3A)
-- Test Device 4
-- 1 (3)
-
-Answer the user's questions about the world truthfully.
-
-If the user wants to control a device, reject the request and suggest using the Home Assistant app.
-
-Now finish this conversation:
-
-Smart home: How can I assist?
-User: hello
-Smart home: """
-    )
+    assert mock_create.mock_calls[0][2]["messages"] == snapshot
 
 
 async def test_error_handling(hass: HomeAssistant, mock_init_component) -> None:
     """Test that the default prompt works."""
-    with patch("openai.Completion.acreate", side_effect=error.ServiceUnavailableError):
+    with patch(
+        "openai.ChatCompletion.acreate", side_effect=error.ServiceUnavailableError
+    ):
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -138,10 +130,22 @@ async def test_template_error(
     )
     with patch(
         "openai.Engine.list",
-    ), patch("openai.Completion.acreate"):
+    ), patch("openai.ChatCompletion.acreate"):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
+
+
+async def test_conversation_agent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test OpenAIAgent."""
+    agent = await conversation._get_agent_manager(hass).async_get_agent(
+        mock_config_entry.entry_id
+    )
+    assert agent.supported_languages == "*"

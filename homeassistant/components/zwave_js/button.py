@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZwaveDiscoveryInfo
 from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
 
@@ -30,10 +31,16 @@ async def async_setup_entry(
 
     @callback
     def async_add_button(info: ZwaveDiscoveryInfo) -> None:
-        """Add button entity."""
+        """Add Z-Wave Button."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-        async_add_entities([ZwaveBooleanNodeButton(config_entry, driver, info)])
+        entities: list[ZWaveBaseEntity] = []
+        if info.platform_hint == "notification idle":
+            entities.append(ZWaveNotificationIdleButton(config_entry, driver, info))
+        else:
+            async_add_entities([ZwaveBooleanNodeButton(config_entry, driver, info)])
+
+        async_add_entities(entities)
 
     @callback
     def async_add_ping_button_entity(node: ZwaveNode) -> None:
@@ -123,3 +130,25 @@ class ZWaveNodePingButton(ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         self.hass.async_create_task(self.node.async_ping())
+
+
+class ZWaveNotificationIdleButton(ZWaveBaseEntity, ButtonEntity):
+    """Button to idle Notification CC values."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZWaveNotificationIdleButton entity."""
+        super().__init__(config_entry, driver, info)
+        self._attr_name = self.generate_name(
+            include_value_name=True, name_prefix="Idle"
+        )
+        self._attr_unique_id = f"{self._attr_unique_id}.notification_idle"
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self.info.node.async_manually_idle_notification_value(
+            self.info.primary_value
+        )

@@ -13,6 +13,9 @@
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         }
+      },
+      "confirm": {
+        "description": "Do you want to set up {name}?"
       }
     },
     "error": {
@@ -21,7 +24,11 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "issues": {

@@ -290,7 +290,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.2.0",
+        breaks_in_ha_version="2023.6.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -413,12 +413,6 @@ class EDL21Entity(SensorEntity):
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
-        self._state_attrs = {
-            "status": "status",
-            "valTime": "val_time",
-            "scaler": "scaler",
-            "valueSignature": "value_signature",
-        }
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
         self._attr_unique_id = f"{electricity_id}_{obis}"
@@ -461,15 +455,6 @@ class EDL21Entity(SensorEntity):
     def native_value(self) -> str:
         """Return the value of the last received telegram."""
         return self._telegram.get("value")
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Enumerate supported attributes."""
-        return {
-            self._state_attrs[k]: v
-            for k, v in self._telegram.items()
-            if k in self._state_attrs
-        }
 
     @property
     def native_unit_of_measurement(self) -> str | None:

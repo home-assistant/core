@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from zigpy.backups import NetworkBackup
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.types import Channels
+from zigpy.util import pick_optimal_channel
 
 from .core.const import (
     CONF_RADIO_TYPE,
@@ -18,8 +20,6 @@ from .core.const import (
 from .core.gateway import ZHAGateway
 
 if TYPE_CHECKING:
-    from zigpy.application import ControllerApplication
-
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
@@ -49,19 +49,15 @@ def _get_config_entry(hass: HomeAssistant) -> ConfigEntry:
     return entries[0]
 
 
-def _wrap_network_settings(app: ControllerApplication) -> NetworkBackup:
-    """Wrap the ZHA network settings into a `NetworkBackup`."""
+def async_get_active_network_settings(hass: HomeAssistant) -> NetworkBackup:
+    """Get the network settings for the currently active ZHA network."""
+    zha_gateway: ZHAGateway = _get_gateway(hass)
+    app = zha_gateway.application_controller
+
     return NetworkBackup(
         node_info=app.state.node_info,
         network_info=app.state.network_info,
     )
-
-
-def async_get_active_network_settings(hass: HomeAssistant) -> NetworkBackup:
-    """Get the network settings for the currently active ZHA network."""
-    zha_gateway: ZHAGateway = _get_gateway(hass)
-
-    return _wrap_network_settings(zha_gateway.application_controller)
 
 
 async def async_get_last_network_settings(
@@ -79,12 +75,11 @@ async def async_get_last_network_settings(
 
     try:
         await app._load_db()  # pylint: disable=protected-access
-        settings = _wrap_network_settings(app)
+        settings = max(app.backups, key=lambda b: b.backup_time)
+    except ValueError:
+        settings = None
     finally:
         await app.shutdown()
-
-    if settings.network_info.channel == 0:
-        return None
 
     return settings
 
@@ -118,3 +113,22 @@ def async_get_radio_path(
         config_entry = _get_config_entry(hass)
 
     return config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+
+async def async_change_channel(
+    hass: HomeAssistant, new_channel: int | Literal["auto"]
+) -> None:
+    """Migrate the ZHA network to a new channel."""
+
+    zha_gateway: ZHAGateway = _get_gateway(hass)
+    app = zha_gateway.application_controller
+
+    if new_channel == "auto":
+        channel_energy = await app.energy_scan(
+            channels=Channels.ALL_CHANNELS,
+            duration_exp=4,
+            count=1,
+        )
+        new_channel = pick_optimal_channel(channel_energy)
+
+    await app.move_network_to_channel(new_channel)

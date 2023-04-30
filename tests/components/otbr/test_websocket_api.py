@@ -1,5 +1,5 @@
 """Test OTBR Websocket API."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 import python_otbr_api
@@ -283,14 +283,24 @@ async def test_set_network_channel_conflict(
     dataset_store = await thread.dataset_store.async_get_store(hass)
     dataset_id = list(dataset_store.datasets)[0]
 
-    await websocket_client.send_json_auto_id(
-        {
-            "type": "otbr/set_network",
-            "dataset_id": dataset_id,
-        }
-    )
+    networksettings = Mock()
+    networksettings.network_info.channel = 15
 
-    msg = await websocket_client.receive_json()
+    with patch(
+        "homeassistant.components.otbr.util.zha_api.async_get_radio_path",
+        return_value="socket://core-silabs-multiprotocol:9999",
+    ), patch(
+        "homeassistant.components.otbr.util.zha_api.async_get_network_settings",
+        return_value=networksettings,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/set_network",
+                "dataset_id": dataset_id,
+            }
+        )
+
+        msg = await websocket_client.receive_json()
 
     assert not msg["success"]
     assert msg["error"]["code"] == "channel_conflict"
