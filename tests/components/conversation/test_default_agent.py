@@ -1,8 +1,12 @@
 """Test for the default agent."""
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import conversation
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_get_assistant_settings,
+)
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import (
@@ -121,3 +125,49 @@ async def test_exposed_areas(
     # This should be an intent match failure because the area isn't in the slot list
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+
+
+async def test_conversation_agent(
+    hass: HomeAssistant,
+    init_components,
+) -> None:
+    """Test DefaultAgent."""
+    agent = await conversation._get_agent_manager(hass).async_get_agent(
+        conversation.HOME_ASSISTANT_AGENT
+    )
+    with patch(
+        "homeassistant.components.conversation.default_agent.get_domains_and_languages",
+        return_value={"homeassistant": ["dwarvish", "elvish", "entish"]},
+    ):
+        assert agent.supported_languages == ["dwarvish", "elvish", "entish"]
+
+
+async def test_expose_flag_automatically_set(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test DefaultAgent sets the expose flag on all entities automatically."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    light = entity_registry.async_get_or_create("light", "demo", "1234")
+    test = entity_registry.async_get_or_create("test", "demo", "1234")
+
+    assert async_get_assistant_settings(hass, conversation.DOMAIN) == {}
+
+    assert await async_setup_component(hass, "conversation", {})
+    await hass.async_block_till_done()
+
+    # After setting up conversation, the expose flag should now be set on all entities
+    assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        light.entity_id: {"should_expose": True},
+        test.entity_id: {"should_expose": False},
+    }
+
+    # New entities will automatically have the expose flag set
+    new_light = entity_registry.async_get_or_create("light", "demo", "2345")
+    await hass.async_block_till_done()
+    assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
+        light.entity_id: {"should_expose": True},
+        new_light.entity_id: {"should_expose": True},
+        test.entity_id: {"should_expose": False},
+    }

@@ -1,15 +1,13 @@
 """Support for Rituals Perfume Genie numbers."""
 from __future__ import annotations
 
-from pyrituals import Diffuser
-
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RitualsDataUpdateCoordinator
-from .const import COORDINATORS, DEVICES, DOMAIN
+from .const import DOMAIN
+from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 MIN_PERFUME_AMOUNT = 1
@@ -24,14 +22,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the diffuser numbers."""
-    diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
-    coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
-    entities: list[DiffuserEntity] = []
-    for hublot, diffuser in diffusers.items():
-        coordinator = coordinators[hublot]
-        entities.append(DiffuserPerfumeAmount(diffuser, coordinator))
-
-    async_add_entities(entities)
+    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+    async_add_entities(
+        DiffuserPerfumeAmount(coordinator) for coordinator in coordinators.values()
+    )
 
 
 class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
@@ -41,16 +37,14 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
     _attr_native_max_value = MAX_PERFUME_AMOUNT
     _attr_native_min_value = MIN_PERFUME_AMOUNT
 
-    def __init__(
-        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
-    ) -> None:
+    def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the diffuser perfume amount number."""
-        super().__init__(diffuser, coordinator, PERFUME_AMOUNT_SUFFIX)
+        super().__init__(coordinator, PERFUME_AMOUNT_SUFFIX)
 
     @property
     def native_value(self) -> int:
         """Return the current perfume amount."""
-        return self._diffuser.perfume_amount
+        return self.coordinator.diffuser.perfume_amount
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the perfume amount."""
@@ -59,4 +53,4 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
                 f"Can't set the perfume amount to {value}. Perfume amount must be an"
                 " integer."
             )
-        await self._diffuser.set_perfume_amount(int(value))
+        await self.coordinator.diffuser.set_perfume_amount(int(value))

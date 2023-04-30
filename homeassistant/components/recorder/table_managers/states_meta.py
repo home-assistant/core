@@ -67,7 +67,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
                 cast(
                     Sequence[tuple[int, str]],
                     execute_stmt_lambda_element(
-                        session, find_all_states_metadata_ids()
+                        session, find_all_states_metadata_ids(), orm_rows=False
                     ),
                 )
             )
