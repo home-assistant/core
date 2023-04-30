@@ -6,7 +6,4 @@ DOMAIN = "rituals_perfume_genie"
 
 ACCOUNT_HASH = "account_hash"
 
-COORDINATORS = "coordinators"
-DEVICES = "devices"
-
 UPDATE_INTERVAL = timedelta(minutes=2)

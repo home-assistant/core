@@ -1,4 +1,6 @@
 """The Rituals Perfume Genie integration."""
+import asyncio
+
 import aiohttp
 from pyrituals import Account
 
@@ -8,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN
+from .const import ACCOUNT_HASH, DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 
 PLATFORMS = [
@@ -30,20 +32,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        COORDINATORS: {},
-        DEVICES: {},
+    # Create a coordinator for each diffuser
+    coordinators = {
+        diffuser.hublot: RitualsDataUpdateCoordinator(hass, diffuser)
+        for diffuser in account_devices
     }
 
-    for device in account_devices:
-        hublot = device.hublot
+    # Refresh all coordinators
+    await asyncio.gather(
+        *[
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators.values()
+        ]
+    )
 
-        coordinator = RitualsDataUpdateCoordinator(hass, device)
-        await coordinator.async_config_entry_first_refresh()
-
-        hass.data[DOMAIN][entry.entry_id][DEVICES][hublot] = device
-        hass.data[DOMAIN][entry.entry_id][COORDINATORS][hublot] = coordinator
-
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
