@@ -14,6 +14,7 @@ from roborock.typing import DeviceProp
 
 # All data is based on a U.S. customer with a Roborock S7 MaxV Ultra
 USER_EMAIL = "user@domain.com"
+USER_PASSWORD = "password123"
 
 BASE_URL = "https://usiot.roborock.com"
 

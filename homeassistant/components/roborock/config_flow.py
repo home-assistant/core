@@ -16,7 +16,7 @@ from roborock.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_BASE_URL, CONF_ENTRY_CODE, CONF_USER_DATA, DOMAIN
@@ -38,6 +38,12 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
+        return self.async_show_menu(step_id="user", menu_options=["email", "password"])
+
+    async def async_step_email(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle logging in with email and authentication code."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -64,8 +70,41 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_code()
         return self.async_show_form(
-            step_id="user",
+            step_id="email",
             data_schema=vol.Schema({vol.Required(CONF_USERNAME): str}),
+            errors=errors,
+        )
+
+    async def async_step_password(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle logigng in with username and password."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            username = user_input[CONF_USERNAME]
+            await self.async_set_unique_id(username.lower())
+            self._abort_if_unique_id_configured()
+            self._username = username
+            client = RoborockApiClient(username)
+            try:
+                login_data = await client.pass_login(user_input[CONF_PASSWORD])
+            except RoborockUrlException:
+                errors["base"] = "unknown_url"
+            except RoborockInvalidEmail:
+                errors["base"] = "invalid_email_format"
+            except RoborockException:
+                errors["base"] = "unknown_roborock"
+            except Exception:  # pylint: disable=broad-except
+                errors["base"] = "unknown"
+            else:
+                return self._create_entry(client, username, login_data)
+
+        return self.async_show_form(
+            step_id="password",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+            ),
             errors=errors,
         )
 
