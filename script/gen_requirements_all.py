@@ -21,6 +21,7 @@ else:
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
+    "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
     "azure-servicebus",  # depends on uamqp, which requires OpenSSL 1.1
@@ -180,6 +181,9 @@ websockets>=11.0.1
 # https://github.com/pysnmp/pysnmp/issues/51
 pyasn1==0.4.8
 pysnmplib==5.0.21
+# pysnmp is no longer maintained and does not work with newer
+# python
+pysnmp==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
