@@ -386,7 +386,7 @@ asyncpysupla==0.0.5
 asyncsleepiq==1.3.4
 
 # homeassistant.components.aten_pe
-atenpdu==0.3.2
+# atenpdu==0.3.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
