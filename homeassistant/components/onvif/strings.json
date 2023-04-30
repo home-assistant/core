@@ -9,7 +9,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "onvif_error": "Error setting up ONVIF device: {error}. Check logs for more information.",
+      "onvif_error": "Error setting up ONVIF device: {error}. Check that the port number is correct.",
       "auth_failed": "Could not authenticate: {error}",
       "no_onvif_service": "No ONVIF service found. Check logs for more information.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
