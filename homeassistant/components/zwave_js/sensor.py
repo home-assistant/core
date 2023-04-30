@@ -531,19 +531,6 @@ class ZWaveConfigParameterSensor(ZwaveSensor):
         return None
 
     @property
-    def native_value(self) -> str | None:
-        """Return state of the sensor."""
-        if self.info.primary_value.value is None:
-            return None
-        key = str(self.info.primary_value.value)
-        if (
-            self._primary_value.configuration_value_type == ConfigurationValueType.RANGE
-            or (key not in self.info.primary_value.metadata.states)
-        ):
-            return key
-        return str(self.info.primary_value.metadata.states[key])
-
-    @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
         if (
