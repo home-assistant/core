@@ -123,11 +123,13 @@ class EventManager:
         if not self._listeners:
             self.pullpoint_manager.async_cancel_pull_messages()
 
-    async def async_start(self) -> bool:
+    async def async_start(self, try_pullpoint: bool, try_webhook: bool) -> bool:
         """Start polling events."""
         # Always start pull point first, since it will populate the event list
-        event_via_pull_point = await self.pullpoint_manager.async_start()
-        events_via_webhook = await self.webhook_manager.async_start()
+        event_via_pull_point = (
+            try_pullpoint and await self.pullpoint_manager.async_start()
+        )
+        events_via_webhook = try_webhook and await self.webhook_manager.async_start()
         return events_via_webhook or event_via_pull_point
 
     async def async_stop(self) -> None:
