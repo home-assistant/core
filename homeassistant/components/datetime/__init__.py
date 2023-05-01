@@ -86,7 +86,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             dt_util.utc_from_timestamp,
                             dt_util.as_local,
                         ),
-                        vol.Optional(ATTR_TIME_ZONE): cv.time_zone,
                         **ENTITY_SERVICE_FIELDS,
                     }
                 ),
@@ -118,9 +117,10 @@ async def _async_set_value(
             time_ = entity.native_value.time()
 
     time_zone_str = service_call.data.get(ATTR_TIME_ZONE, hass.config.time_zone)
-    time_zone = dt_util.get_time_zone(time_zone_str)
+    if time_zone := dt_util.get_time_zone(time_zone_str):
+        return await entity.async_set_value(datetime.combine(date_, time_, time_zone))
     return await entity.async_set_value(
-        datetime.combine(date_, time_, time_zone).astimezone(timezone.utc)
+        dt_util.as_local(datetime.combine(date_, time_))
     )
 
 
@@ -172,10 +172,8 @@ class DateTimeEntity(Entity):
                 f"Invalid datetime: {self.entity_id} provides state '{value}', "
                 "which is missing timezone information"
             )
-        if value.tzinfo != timezone.utc:
-            value = value.astimezone(timezone.utc)
 
-        return value.isoformat(timespec="seconds")
+        return value.astimezone(timezone.utc).isoformat(timespec="seconds")
 
     @property
     def native_value(self) -> datetime | None:
