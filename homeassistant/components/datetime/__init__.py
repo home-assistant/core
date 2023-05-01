@@ -47,6 +47,8 @@ def _split_date_time(config):
     ):
         config[ATTR_DATE] = datetime_.date()
         config[ATTR_TIME] = datetime_.time()
+        if datetime_.tzinfo is not None:
+            config[ATTR_TIME_ZONE] = str(datetime_.tzinfo)
     return config
 
 
