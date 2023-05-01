@@ -31,11 +31,13 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     }
 )
 
+
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner | None:
     """Validate the configuration and return a FortiOS scanner."""
     scanner = FortiOSDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
+
 
 class FortiOSDeviceScanner(DeviceScanner):
     """Class which queries a FortiOS unit for connected devices."""
