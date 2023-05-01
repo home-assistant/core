@@ -1,11 +1,5 @@
 """Tests for the Rituals Perfume Genie sensor platform."""
-from homeassistant.components.rituals_perfume_genie.sensor import (
-    BATTERY_SUFFIX,
-    FILL_SUFFIX,
-    PERFUME_SUFFIX,
-    WIFI_SUFFIX,
-    SensorDeviceClass,
-)
+from homeassistant.components.rituals_perfume_genie.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -40,7 +34,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(
 
     entry = entity_registry.async_get("sensor.genie_perfume")
     assert entry
-    assert entry.unique_id == f"{hublot}{PERFUME_SUFFIX}"
+    assert entry.unique_id == f"{hublot}-perfume"
 
     state = hass.states.get("sensor.genie_fill")
     assert state
@@ -49,7 +43,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(
 
     entry = entity_registry.async_get("sensor.genie_fill")
     assert entry
-    assert entry.unique_id == f"{hublot}{FILL_SUFFIX}"
+    assert entry.unique_id == f"{hublot}-fill"
 
     state = hass.states.get("sensor.genie_battery")
     assert state
@@ -59,7 +53,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(
 
     entry = entity_registry.async_get("sensor.genie_battery")
     assert entry
-    assert entry.unique_id == f"{hublot}{BATTERY_SUFFIX}"
+    assert entry.unique_id == f"{hublot}-battery_percentage"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.genie_wifi")
@@ -70,7 +64,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(
 
     entry = entity_registry.async_get("sensor.genie_wifi")
     assert entry
-    assert entry.unique_id == f"{hublot}{WIFI_SUFFIX}"
+    assert entry.unique_id == f"{hublot}-wifi_percentage"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
