@@ -34,7 +34,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
     """Validate the configuration and return a FortiOS scanner."""
     scanner = FortiOSDeviceScanner(config[DOMAIN])
 
-    return scanner if scanner._success_init else None
+    return scanner if scanner.success_init else None
 
 class FortiOSDeviceScanner(DeviceScanner):
     """Class which queries a FortiOS unit for connected devices."""
@@ -45,13 +45,13 @@ class FortiOSDeviceScanner(DeviceScanner):
         self.token = config[CONF_TOKEN]
         self.verify_ssl = config[CONF_VERIFY_SSL]
         self.last_results = {}
-        self._success_init = None
+        self.success_init = None
         self._fgt = self._get_fortios_obj()
 
         if self._fgt is not None:
             # Test the router is accessible.
             data = self._get_fortios_data()
-            self._success_init = data is not None
+            self.success_init = data is not None
         
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -81,7 +81,7 @@ class FortiOSDeviceScanner(DeviceScanner):
         """
         _LOGGER.debug("_update_info()")
 
-        if not self._success_init:
+        if not self.success_init:
             return False
 
         if not (data := self._get_fortios_data()):
