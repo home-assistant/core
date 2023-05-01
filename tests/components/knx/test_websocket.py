@@ -267,13 +267,33 @@ async def test_knx_subscribe_telegrams_command_project(
     assert res["event"]["timestamp"] is not None
 
     # incoming DPT 5 telegram
-    await knx.receive_write("0/1/1", (0x50,))
+    await knx.receive_write("0/1/1", (0x50,), source="1.1.6")
     res = await client.receive_json()
     assert res["event"]["destination_address"] == "0/1/1"
     assert res["event"]["destination_text"] == "percent"
     assert res["event"]["payload"] == "0x50"
     assert res["event"]["value"] == "31 %"
     assert res["event"]["type"] == "GroupValueWrite"
-    assert res["event"]["source_address"] == "1.2.3"
+    assert res["event"]["source_address"] == "1.1.6"
+    assert (
+        res["event"]["source_text"]
+        == "Enertex Bayern GmbH Enertex KNX LED Dimmsequenzer 20A/5x REG"
+    )
+    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["timestamp"] is not None
+
+    # incoming undecodable telegram (wrong payload type)
+    await knx.receive_write("0/1/1", True, source="1.1.6")
+    res = await client.receive_json()
+    assert res["event"]["destination_address"] == "0/1/1"
+    assert res["event"]["destination_text"] == "percent"
+    assert res["event"]["payload"] == "0b000001"
+    assert res["event"]["value"] == "Error decoding value"
+    assert res["event"]["type"] == "GroupValueWrite"
+    assert res["event"]["source_address"] == "1.1.6"
+    assert (
+        res["event"]["source_text"]
+        == "Enertex Bayern GmbH Enertex KNX LED Dimmsequenzer 20A/5x REG"
+    )
     assert res["event"]["direction"] == "group_monitor_incoming"
     assert res["event"]["timestamp"] is not None
