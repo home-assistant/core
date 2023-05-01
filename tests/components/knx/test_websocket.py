@@ -33,9 +33,7 @@ async def test_knx_info_command(
 ):
     """Test knx/info command."""
     await knx.setup_integration({})
-
     client = await hass_ws_client(hass)
-
     await client.send_json({"id": 6, "type": "knx/info"})
 
     res = await client.receive_json()
@@ -44,6 +42,28 @@ async def test_knx_info_command(
     assert res["result"]["connected"]
     assert res["result"]["current_address"] == "0.0.0"
     assert res["result"]["project"] is None
+
+
+async def test_knx_info_command_with_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    load_knxproj,
+):
+    """Test knx/info command with loaded project."""
+    await knx.setup_integration({})
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 6, "type": "knx/info"})
+
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["version"] is not None
+    assert res["result"]["connected"]
+    assert res["result"]["current_address"] == "0.0.0"
+    assert res["result"]["project"] is not None
+    assert res["result"]["project"]["name"] == "Fixture"
+    assert res["result"]["project"]["last_modified"] == "2023-04-30T09:04:04.4043671Z"
+    assert res["result"]["project"]["tool_version"] == "5.7.1428.39779"
 
 
 async def test_knx_project_file_process(
@@ -84,6 +104,37 @@ async def test_knx_project_file_process(
     assert hass.data[DOMAIN].project.loaded
 
 
+async def test_knx_project_file_process_error(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+):
+    """Test knx/project_file_process exception handling."""
+    await knx.setup_integration({})
+    client = await hass_ws_client(hass)
+    assert not hass.data[DOMAIN].project.loaded
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "knx/project_file_process",
+            "file_id": "1234",
+            "password": "",
+        }
+    )
+    with patch(
+        "homeassistant.components.knx.project.process_uploaded_file",
+    ) as file_upload_mock, patch(
+        "xknxproject.XKNXProj.parse", side_effect=ValueError
+    ) as parse_mock:
+        file_upload_mock.return_value.__enter__.return_value = ""
+        res = await client.receive_json()
+        parse_mock.assert_called_once_with()
+
+    assert res["error"], res
+    assert not hass.data[DOMAIN].project.loaded
+
+
 async def test_knx_project_file_remove(
     hass: HomeAssistant,
     knx: KNXTestKit,
@@ -118,10 +169,10 @@ async def test_knx_group_monitor_info_command(
     assert res["result"]["project_loaded"] is False
 
 
-async def test_knx_subscribe_telegrams_command(
+async def test_knx_subscribe_telegrams_command_no_project(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
 ):
-    """Test knx/subscribe_telegrams command."""
+    """Test knx/subscribe_telegrams command without project data."""
     await knx.setup_integration(
         {
             SwitchSchema.PLATFORM: {
@@ -130,11 +181,8 @@ async def test_knx_subscribe_telegrams_command(
             }
         }
     )
-
     client = await hass_ws_client(hass)
-
     await client.send_json({"id": 6, "type": "knx/subscribe_telegrams"})
-
     res = await client.receive_json()
     assert res["success"], res
 
@@ -191,4 +239,41 @@ async def test_knx_subscribe_telegrams_command(
         res["event"]["source_address"] == "0.0.0"
     )  # needs to be the IA currently connected to
     assert res["event"]["direction"] == "group_monitor_outgoing"
+    assert res["event"]["timestamp"] is not None
+
+
+async def test_knx_subscribe_telegrams_command_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    load_knxproj,
+):
+    """Test knx/subscribe_telegrams command with project data."""
+    await knx.setup_integration({})
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 6, "type": "knx/subscribe_telegrams"})
+    res = await client.receive_json()
+    assert res["success"], res
+
+    # incoming DPT 1 telegram
+    await knx.receive_write("0/0/1", True)
+    res = await client.receive_json()
+    assert res["event"]["destination_address"] == "0/0/1"
+    assert res["event"]["destination_text"] == "Binary"
+    assert res["event"]["payload"] == "0b000001"
+    assert res["event"]["type"] == "GroupValueWrite"
+    assert res["event"]["source_address"] == "1.2.3"
+    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["timestamp"] is not None
+
+    # incoming DPT 5 telegram
+    await knx.receive_write("0/1/1", (0x50,))
+    res = await client.receive_json()
+    assert res["event"]["destination_address"] == "0/1/1"
+    assert res["event"]["destination_text"] == "percent"
+    assert res["event"]["payload"] == "0x50"
+    assert res["event"]["value"] == "31 %"
+    assert res["event"]["type"] == "GroupValueWrite"
+    assert res["event"]["source_address"] == "1.2.3"
+    assert res["event"]["direction"] == "group_monitor_incoming"
     assert res["event"]["timestamp"] is not None
