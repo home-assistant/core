@@ -26,7 +26,6 @@ class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
         hubname = coordinator.diffuser.name
 
         self._attr_name = f"{hubname}{entity_suffix}"
-        self._attr_unique_id = f"{hublot}{entity_suffix}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, hublot)},
             manufacturer=MANUFACTURER,

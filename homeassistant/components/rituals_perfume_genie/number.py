@@ -40,6 +40,7 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the diffuser perfume amount number."""
         super().__init__(coordinator, PERFUME_AMOUNT_SUFFIX)
+        self._attr_unique_id = f"{coordinator.diffuser.hublot}-perfume_amount"
 
     @property
     def native_value(self) -> int:
