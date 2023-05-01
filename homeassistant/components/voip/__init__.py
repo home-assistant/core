@@ -44,8 +44,6 @@ class DomainData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up VoIP integration from a config entry."""
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     # Make sure there is a valid user ID for VoIP in the config entry
     if (
         "user" not in entry.data
@@ -71,6 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN] = DomainData(transport, devices)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
