@@ -10,7 +10,7 @@ import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.zha.core.const import ZHA_CHANNEL_READS_PER_REQ
+from homeassistant.components.zha.core.const import ZHA_CLUSTER_HANDLER_READS_PER_REQ
 import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -616,30 +616,30 @@ async def test_electrical_measurement_init(
     await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
     assert int(hass.states.get(entity_id).state) == 100
 
-    channel = zha_device.channels.pools[0].all_channels["1:0x0b04"]
-    assert channel.ac_power_divisor == 1
-    assert channel.ac_power_multiplier == 1
+    cluster_handler = zha_device._endpoints[1].all_cluster_handlers["1:0x0b04"]
+    assert cluster_handler.ac_power_divisor == 1
+    assert cluster_handler.ac_power_multiplier == 1
 
     # update power divisor
     await send_attributes_report(hass, cluster, {0: 1, 1291: 20, 0x0403: 5, 10: 1000})
-    assert channel.ac_power_divisor == 5
-    assert channel.ac_power_multiplier == 1
+    assert cluster_handler.ac_power_divisor == 5
+    assert cluster_handler.ac_power_multiplier == 1
     assert hass.states.get(entity_id).state == "4.0"
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 30, 0x0605: 10, 10: 1000})
-    assert channel.ac_power_divisor == 10
-    assert channel.ac_power_multiplier == 1
+    assert cluster_handler.ac_power_divisor == 10
+    assert cluster_handler.ac_power_multiplier == 1
     assert hass.states.get(entity_id).state == "3.0"
 
     # update power multiplier
     await send_attributes_report(hass, cluster, {0: 1, 1291: 20, 0x0402: 6, 10: 1000})
-    assert channel.ac_power_divisor == 10
-    assert channel.ac_power_multiplier == 6
+    assert cluster_handler.ac_power_divisor == 10
+    assert cluster_handler.ac_power_multiplier == 6
     assert hass.states.get(entity_id).state == "12.0"
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 30, 0x0604: 20, 10: 1000})
-    assert channel.ac_power_divisor == 10
-    assert channel.ac_power_multiplier == 20
+    assert cluster_handler.ac_power_divisor == 10
+    assert cluster_handler.ac_power_multiplier == 20
     assert hass.states.get(entity_id).state == "60.0"
 
 
@@ -972,7 +972,7 @@ async def test_elec_measurement_skip_unsupported_attribute(
     await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
     assert cluster.read_attributes.call_count == math.ceil(
-        len(supported_attributes) / ZHA_CHANNEL_READS_PER_REQ
+        len(supported_attributes) / ZHA_CLUSTER_HANDLER_READS_PER_REQ
     )
     read_attrs = {
         a for call in cluster.read_attributes.call_args_list for a in call[0][0]

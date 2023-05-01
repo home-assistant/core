@@ -3,7 +3,6 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homewizard_energy.features import Features
 from homewizard_energy.models import Data, Device, State, System
 import pytest
 
@@ -44,7 +43,6 @@ def mock_homewizardenergy():
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
     ) as device:
         client = device.return_value
-        client.features = AsyncMock(return_value=Features("HWE-SKT", "3.01"))
         client.device = AsyncMock(
             side_effect=lambda: Device.from_dict(
                 json.loads(load_fixture("homewizard/device.json"))

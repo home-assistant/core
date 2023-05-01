@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
@@ -41,7 +41,7 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device triggers for NEW_NAME devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     triggers = []
 
     # TODO Read this comment and remove it.
@@ -52,7 +52,7 @@ async def async_get_triggers(
     # return zha_device.device_triggers
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 

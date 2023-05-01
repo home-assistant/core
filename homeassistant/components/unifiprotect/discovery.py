@@ -29,13 +29,22 @@ def async_start_discovery(hass: HomeAssistant) -> None:
         return
     domain_data[DISCOVERY] = True
 
-    async def _async_discovery(*_: Any) -> None:
+    async def _async_discovery() -> None:
         async_trigger_discovery(hass, await async_discover_devices())
 
-    # Do not block startup since discovery takes 31s or more
-    hass.async_create_background_task(_async_discovery(), "unifiprotect-discovery")
+    @callback
+    def _async_start_background_discovery(*_: Any) -> None:
+        """Run discovery in the background."""
+        hass.async_create_background_task(_async_discovery(), "unifiprotect-discovery")
 
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    # Do not block startup since discovery takes 31s or more
+    _async_start_background_discovery()
+    async_track_time_interval(
+        hass,
+        _async_start_background_discovery,
+        DISCOVERY_INTERVAL,
+        cancel_on_shutdown=True,
+    )
 
 
 async def async_discover_devices() -> list[UnifiDevice]:

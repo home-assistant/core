@@ -7,7 +7,7 @@ import contextlib
 from datetime import datetime, timedelta
 import logging
 import statistics
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -410,7 +410,7 @@ class StatisticsSensor(SensorEntity):
         return None
 
     @property
-    def state_class(self) -> Literal[SensorStateClass.MEASUREMENT] | None:
+    def state_class(self) -> SensorStateClass | None:
         """Return the state class of this entity."""
         if self._state_characteristic in STATS_NOT_A_NUMBER:
             return None

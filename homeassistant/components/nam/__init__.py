@@ -21,9 +21,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -70,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Remove air_quality entities from registry if they exist
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     for sensor_type in ("sds", ATTR_SDS011, ATTR_SPS30):
         unique_id = f"{coordinator.unique_id}-{sensor_type}"
         if entity_id := ent_reg.async_get_entity_id(
@@ -130,7 +129,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator[NAMSensors]):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
+            connections={(dr.CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
             name="Nettigo Air Monitor",
             sw_version=self.nam.software_version,
             manufacturer=MANUFACTURER,

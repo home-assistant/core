@@ -1,4 +1,4 @@
-"""This component provides Lights for UniFi Protect."""
+"""Component providing Lights for UniFi Protect."""
 from __future__ import annotations
 
 import logging

@@ -3,15 +3,15 @@
     "flow_title": "{name} ({ip_address})",
     "step": {
       "user": {
-        "title": "Connect to the powerwall",
-        "description": "The password is usually the last 5 characters of the serial number for Backup Gateway and can be found in the Tesla app or the last 5 characters of the password found inside the door for Backup Gateway 2.",
+        "title": "Connect to the Powerwall",
+        "description": "The default password is printed inside the Backup Gateway for newer models. For older models, the default password is the last five characters of the serial number for Backup Gateway and can be found in the Tesla app.",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reauth_confim": {
-        "title": "Reauthenticate the powerwall",
+      "reauth_confirm": {
+        "title": "Reauthenticate the Powerwall",
         "description": "[%key:component::powerwall::config::step::user::description%]",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
@@ -24,7 +24,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "wrong_version": "Your powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved.",
+      "wrong_version": "Your Powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },

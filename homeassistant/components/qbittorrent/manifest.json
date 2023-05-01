@@ -2,7 +2,9 @@
   "domain": "qbittorrent",
   "name": "qBittorrent",
   "codeowners": ["@geoffreylagaisse"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/qbittorrent",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["qbittorrent"],
   "requirements": ["python-qbittorrent==0.4.2"]

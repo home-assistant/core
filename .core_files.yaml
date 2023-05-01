@@ -125,6 +125,7 @@ tests: &tests
   - tests/mock/**
   - tests/pylint/**
   - tests/scripts/**
+  - tests/syrupy.py
   - tests/test_util/**
   - tests/testing_config/**
   - tests/util/**
@@ -136,7 +137,6 @@ other: &other
 requirements: &requirements
   - .github/workflows/**
   - homeassistant/package_constraints.txt
-  - script/pip_check
   - requirements*.txt
   - pyproject.toml
 

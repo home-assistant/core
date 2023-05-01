@@ -15,6 +15,7 @@ import zigpy.types
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp, usb, zeroconf
+from homeassistant.components.hassio import AddonState
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.core.const import (
@@ -190,23 +191,30 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass: HomeAssistant) -> Non
     )
     assert result1["step_id"] == "manual_port_config"
 
-    # Confirm port settings
+    # Confirm the radio is deprecated
     result2 = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={}
+    )
+    assert result2["step_id"] == "verify_radio"
+    assert "ZiGate" in result2["description_placeholders"]["name"]
+
+    # Confirm port settings
+    result3 = await hass.config_entries.flow.async_configure(
         result1["flow_id"], user_input={}
     )
 
-    assert result2["type"] == FlowResultType.MENU
-    assert result2["step_id"] == "choose_formation_strategy"
+    assert result3["type"] == FlowResultType.MENU
+    assert result3["step_id"] == "choose_formation_strategy"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "socket://192.168.1.200:1234"
-    assert result3["data"] == {
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "socket://192.168.1.200:1234"
+    assert result4["data"] == {
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
         },
@@ -432,21 +440,26 @@ async def test_zigate_discovery_via_usb(probe_mock, hass: HomeAssistant) -> None
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
+    assert result2["step_id"] == "verify_radio"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.MENU
-    assert result2["step_id"] == "choose_formation_strategy"
+    assert result3["type"] == FlowResultType.MENU
+    assert result3["step_id"] == "choose_formation_strategy"
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "zigate radio"
-    assert result3["data"] == {
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "zigate radio"
+    assert result4["data"] == {
         "device": {
             "path": "/dev/ttyZIGBEE",
         },
@@ -1840,3 +1853,46 @@ async def test_options_flow_migration_reset_old_adapter(
         user_input={},
     )
     assert result4["step_id"] == "choose_serial_port"
+
+
+async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
+    """Test config flow serial port name for Yellow Zigbee radio."""
+    port = com_port(device="/dev/ttyAMA1")
+    port.serial_number = None
+    port.manufacturer = None
+    port.description = None
+
+    with patch(
+        "homeassistant.components.zha.config_flow.yellow_hardware.async_info"
+    ), patch("serial.tools.list_ports.comports", MagicMock(return_value=[port])):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+        )
+
+    assert (
+        result["data_schema"].schema["path"].container[0]
+        == "/dev/ttyAMA1 - Yellow Zigbee module - Nabu Casa"
+    )
+
+
+async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> None:
+    """Test config flow serial port name for multiprotocol add-on."""
+
+    with patch(
+        "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info"
+    ) as async_get_addon_info, patch(
+        "serial.tools.list_ports.comports", MagicMock(return_value=[])
+    ):
+        async_get_addon_info.return_value.state = AddonState.RUNNING
+        async_get_addon_info.return_value.hostname = "core-silabs-multiprotocol"
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+        )
+
+    assert (
+        result["data_schema"].schema["path"].container[0]
+        == "socket://core-silabs-multiprotocol:9999 - Multiprotocol add-on - Nabu Casa"
+    )

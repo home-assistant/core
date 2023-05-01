@@ -3,15 +3,35 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
-from sharkiq import AylaApi, SharkIqAuthError
+from sharkiq import AylaApi, SharkIqAuthError, SharkIqError
 
 from homeassistant import config_entries
 from homeassistant.components.sharkiq.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from .const import CONFIG, TEST_PASSWORD, TEST_USERNAME, UNIQUE_ID
+from .const import (
+    CONFIG,
+    CONFIG_NO_REGION,
+    TEST_PASSWORD,
+    TEST_REGION,
+    TEST_USERNAME,
+    UNIQUE_ID,
+)
 
 from tests.common import MockConfigEntry
+
+
+async def test_setup_success_no_region(hass: HomeAssistant) -> None:
+    """Test reauth flow."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG_NO_REGION
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await async_setup_component(hass=hass, domain=DOMAIN, config=mock_config)
+
+    assert result is True
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -37,7 +57,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "username": TEST_USERNAME,
         "password": TEST_PASSWORD,
+        "region": TEST_REGION,
     }
+
     await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()
 
@@ -47,7 +69,8 @@ async def test_form(hass: HomeAssistant) -> None:
     [
         (SharkIqAuthError, "invalid_auth"),
         (aiohttp.ClientError, "cannot_connect"),
-        (TypeError, "unknown"),
+        (TypeError, "cannot_connect"),
+        (SharkIqError, "unknown"),
     ],
 )
 async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) -> None:
@@ -87,7 +110,8 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     [
         (SharkIqAuthError, "form", "errors", "invalid_auth"),
         (aiohttp.ClientError, "abort", "reason", "cannot_connect"),
-        (TypeError, "abort", "reason", "unknown"),
+        (TypeError, "abort", "reason", "cannot_connect"),
+        (SharkIqError, "abort", "reason", "unknown"),
     ],
 )
 async def test_reauth(

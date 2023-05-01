@@ -2,6 +2,7 @@
 from typing import Any
 from unittest.mock import patch
 
+from hass_nabucasa import Cloud
 import pytest
 
 from homeassistant.components import cloud
@@ -134,9 +135,9 @@ async def test_setup_existing_cloud_user(
 
 async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test cloud on connect triggers."""
-    cl = hass.data["cloud"]
+    cl: Cloud = hass.data["cloud"]
 
-    assert len(cl.iot._on_connect) == 3
+    assert len(cl.iot._on_connect) == 4
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 0
 
@@ -152,10 +153,17 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     await cl.iot._on_connect[-1]()
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 0
+
+    # The on_start callback discovers the binary sensor platform
+    assert "async_setup" in str(cl._on_start[-1])
+    await cl._on_start[-1]()
+    await hass.async_block_till_done()
+
     assert len(hass.states.async_entity_ids("binary_sensor")) == 1
 
     with patch("homeassistant.helpers.discovery.async_load_platform") as mock_load:
-        await cl.iot._on_connect[-1]()
+        await cl._on_start[-1]()
         await hass.async_block_till_done()
 
     assert len(mock_load.mock_calls) == 0
@@ -163,12 +171,22 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     assert len(cloud_states) == 1
     assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
 
+    await cl.iot._on_connect[-1]()
+    await hass.async_block_till_done()
+    assert len(cloud_states) == 2
+    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
+
     assert len(cl.iot._on_disconnect) == 2
     assert "async_setup" in str(cl.iot._on_disconnect[-1])
     await cl.iot._on_disconnect[-1]()
     await hass.async_block_till_done()
 
-    assert len(cloud_states) == 2
+    assert len(cloud_states) == 3
+    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
+
+    await cl.iot._on_disconnect[-1]()
+    await hass.async_block_till_done()
+    assert len(cloud_states) == 4
     assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
 
 
