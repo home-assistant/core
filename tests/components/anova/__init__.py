@@ -3,11 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from anova_wifi import (
-    AnovaPrecisionCooker,
-    AnovaPrecisionCookerBinarySensor,
-    AnovaPrecisionCookerSensor,
-)
+from anova_wifi import AnovaPrecisionCooker, APCUpdate, APCUpdateBinary, APCUpdateSensor
 
 from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -20,26 +16,12 @@ DEVICE_UNIQUE_ID = "abc123def"
 
 CONF_INPUT = {CONF_USERNAME: "sample@gmail.com", CONF_PASSWORD: "sample"}
 
-ONLINE_UPDATE = {
-    "sensors": {
-        AnovaPrecisionCookerSensor.COOK_TIME: 0,
-        AnovaPrecisionCookerSensor.MODE: "Low water",
-        AnovaPrecisionCookerSensor.STATE: "No state",
-        AnovaPrecisionCookerSensor.TARGET_TEMPERATURE: 23.33,
-        AnovaPrecisionCookerSensor.COOK_TIME_REMAINING: 0,
-        AnovaPrecisionCookerSensor.FIRMWARE_VERSION: "2.2.0",
-        AnovaPrecisionCookerSensor.HEATER_TEMPERATURE: 20.87,
-        AnovaPrecisionCookerSensor.TRIAC_TEMPERATURE: 21.79,
-        AnovaPrecisionCookerSensor.WATER_TEMPERATURE: 21.33,
-    },
-    "binary_sensors": {
-        AnovaPrecisionCookerBinarySensor.COOKING: False,
-        AnovaPrecisionCookerBinarySensor.DEVICE_SAFE: True,
-        AnovaPrecisionCookerBinarySensor.WATER_LEAK: False,
-        AnovaPrecisionCookerBinarySensor.WATER_LEVEL_CRITICAL: True,
-        AnovaPrecisionCookerBinarySensor.WATER_TEMP_TOO_HIGH: False,
-    },
-}
+ONLINE_UPDATE = APCUpdate(
+    sensor=APCUpdateSensor(
+        0, "Low water", "No state", 23.33, 0, "2.2.0", 20.87, 21.79, 21.33
+    ),
+    binary_sensor=APCUpdateBinary(False, False, False, True, False, True, False),
+)
 
 
 def create_entry(hass: HomeAssistant, device_id: str = DEVICE_UNIQUE_ID) -> ConfigEntry:
