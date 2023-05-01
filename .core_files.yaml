@@ -20,6 +20,7 @@ base_platforms: &base_platforms
   - homeassistant/components/camera/**
   - homeassistant/components/climate/**
   - homeassistant/components/cover/**
+  - homeassistant/components/datetime/**
   - homeassistant/components/device_tracker/**
   - homeassistant/components/diagnostics/**
   - homeassistant/components/fan/**
