@@ -196,7 +196,7 @@ async def test_knx_subscribe_telegrams_command_no_project(
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
     )
-    await knx.assert_write("1/2/4", True)
+    await knx.assert_write("1/2/4", 1)
 
     # receive events
     res = await client.receive_json()
@@ -209,7 +209,7 @@ async def test_knx_subscribe_telegrams_command_no_project(
 
     res = await client.receive_json()
     assert res["event"]["destination_address"] == "1/3/4"
-    assert res["event"]["payload"] == "0b000001"
+    assert res["event"]["payload"] == "1"
     assert res["event"]["type"] == "GroupValueWrite"
     assert res["event"]["source_address"] == "1.2.3"
     assert res["event"]["direction"] == "group_monitor_incoming"
@@ -217,7 +217,7 @@ async def test_knx_subscribe_telegrams_command_no_project(
 
     res = await client.receive_json()
     assert res["event"]["destination_address"] == "1/3/4"
-    assert res["event"]["payload"] == "0b000000"
+    assert res["event"]["payload"] == "0"
     assert res["event"]["type"] == "GroupValueWrite"
     assert res["event"]["source_address"] == "1.2.3"
     assert res["event"]["direction"] == "group_monitor_incoming"
@@ -233,7 +233,7 @@ async def test_knx_subscribe_telegrams_command_no_project(
 
     res = await client.receive_json()
     assert res["event"]["destination_address"] == "1/2/4"
-    assert res["event"]["payload"] == "0b000001"
+    assert res["event"]["payload"] == "1"
     assert res["event"]["type"] == "GroupValueWrite"
     assert (
         res["event"]["source_address"] == "0.0.0"
@@ -260,7 +260,7 @@ async def test_knx_subscribe_telegrams_command_project(
     res = await client.receive_json()
     assert res["event"]["destination_address"] == "0/0/1"
     assert res["event"]["destination_text"] == "Binary"
-    assert res["event"]["payload"] == "0b000001"
+    assert res["event"]["payload"] == "1"
     assert res["event"]["type"] == "GroupValueWrite"
     assert res["event"]["source_address"] == "1.2.3"
     assert res["event"]["direction"] == "group_monitor_incoming"
@@ -287,7 +287,7 @@ async def test_knx_subscribe_telegrams_command_project(
     res = await client.receive_json()
     assert res["event"]["destination_address"] == "0/1/1"
     assert res["event"]["destination_text"] == "percent"
-    assert res["event"]["payload"] == "0b000001"
+    assert res["event"]["payload"] == "1"
     assert res["event"]["value"] == "Error decoding value"
     assert res["event"]["type"] == "GroupValueWrite"
     assert res["event"]["source_address"] == "1.1.6"

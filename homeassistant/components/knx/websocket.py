@@ -177,7 +177,7 @@ def ws_subscribe_telegram(
             if isinstance(dpt_payload, DPTArray):
                 payload = f"0x{bytes(dpt_payload.value).hex()}"
             else:
-                payload = f"0b{dpt_payload.value:06b}"
+                payload = f"{dpt_payload.value:d}"
         elif isinstance(telegram.payload, GroupValueRead):
             payload = ""
         else:
