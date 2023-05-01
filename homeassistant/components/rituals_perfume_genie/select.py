@@ -43,6 +43,7 @@ class DiffuserRoomSize(DiffuserEntity, SelectEntity):
         self._attr_entity_registry_enabled_default = (
             self.coordinator.diffuser.has_battery
         )
+        self._attr_unique_id = f"{coordinator.diffuser.hublot}-room_size_square_meter"
 
     @property
     def current_option(self) -> str:

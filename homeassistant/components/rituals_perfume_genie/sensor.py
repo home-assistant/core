@@ -48,6 +48,7 @@ class DiffuserPerfumeSensor(DiffuserEntity, SensorEntity):
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the perfume sensor."""
         super().__init__(coordinator, PERFUME_SUFFIX)
+        self._attr_unique_id = f"{coordinator.diffuser.hublot}-perfume"
 
     @property
     def icon(self) -> str:
@@ -68,6 +69,7 @@ class DiffuserFillSensor(DiffuserEntity, SensorEntity):
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the fill sensor."""
         super().__init__(coordinator, FILL_SUFFIX)
+        self._attr_unique_id = f"{coordinator.diffuser.hublot}-fill"
 
     @property
     def icon(self) -> str:
@@ -92,6 +94,7 @@ class DiffuserBatterySensor(DiffuserEntity, SensorEntity):
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the battery sensor."""
         super().__init__(coordinator, BATTERY_SUFFIX)
+        self._attr_unique_id = f"{coordinator.diffuser.hublot}-battery_percentage"
 
     @property
     def native_value(self) -> int:
@@ -108,6 +111,7 @@ class DiffuserWifiSensor(DiffuserEntity, SensorEntity):
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the wifi sensor."""
         super().__init__(coordinator, WIFI_SUFFIX)
+        self._attr_unique_id = f"{coordinator.diffuser.hublot}-wifi_percentage"
 
     @property
     def native_value(self) -> int:
