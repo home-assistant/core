@@ -1,5 +1,4 @@
 """Tests for the Sonos config flow."""
-import asyncio
 import logging
 from unittest.mock import Mock, patch
 
@@ -171,7 +170,7 @@ async def manager_fixture(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
-    # Speed up unit tets
+    # Speed up unit tests
     with patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0):
         manager.hosts.add("10.10.10.2")
         manager.hosts.add("10.10.10.1")
@@ -187,7 +186,6 @@ async def test_async_poll_manual_hosts_1(
     soco_2 = soco_factory.get_mock("10.10.10.2")
 
     await manager.async_poll_manual_hosts()
-    await asyncio.sleep(0.5)
     await hass.async_block_till_done()
 
     assert soco_1.ip_address in manager.hosts_in_error
@@ -210,7 +208,6 @@ async def test_async_poll_manual_hosts_2(
     soco_2 = soco_factory.cache_mock(_MockSocoOsError(), "10.10.10.2")
 
     await manager.async_poll_manual_hosts()
-    await asyncio.sleep(0.5)
     await hass.async_block_till_done()
 
     assert soco_1.ip_address not in manager.hosts_in_error
@@ -233,7 +230,6 @@ async def test_async_poll_manual_hosts_3(
     soco_2 = soco_factory.cache_mock(_MockSocoOsError(), "10.10.10.2")
 
     await manager.async_poll_manual_hosts()
-    await asyncio.sleep(0.5)
     await hass.async_block_till_done()
 
     assert soco_1.ip_address in manager.hosts_in_error
@@ -283,7 +279,6 @@ async def test_async_poll_manual_hosts_5(
 
     # Create the speakers
     await manager.async_poll_manual_hosts()
-    await asyncio.sleep(0.5)
     await hass.async_block_till_done()
     assert manager.data.discovered[soco_1.uid].soco is soco_1
     assert manager.data.discovered[soco_2.uid].soco is soco_2
@@ -318,7 +313,6 @@ async def test_async_poll_manual_hosts_6(
 
     # First setup the speakers
     await manager.async_poll_manual_hosts()
-    await asyncio.sleep(0.5)
     await hass.async_block_till_done()
     assert manager.data.discovered[soco_1.uid].soco is soco_1
     assert manager.data.discovered[soco_2.uid].soco is soco_2
@@ -359,7 +353,6 @@ async def test_async_poll_manual_hosts_7(
     soco_2.set_visible_zones({soco_2, soco_4, soco_5})
 
     await manager.async_poll_manual_hosts()
-    await asyncio.sleep(0.5)
     await hass.async_block_till_done()
 
     assert len(manager.hosts) == 5
@@ -395,7 +388,6 @@ async def test_async_poll_manual_hosts_8(
 
         mock_is_device_invisible.side_effect = device_is_invisible
         await manager.async_poll_manual_hosts()
-        await asyncio.sleep(0.5)
         await hass.async_block_till_done()
 
         assert "10.10.10.1" not in manager.hosts

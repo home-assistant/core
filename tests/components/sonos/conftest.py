@@ -13,13 +13,32 @@ from homeassistant.const import CONF_HOSTS
 from tests.common import MockConfigEntry, load_fixture
 
 
+class SonosMockEventListener:
+    """Mock the event listener."""
+
+    def __init__(self, ip_address: str) -> None:
+        """Initialize the mock event listener."""
+        self.address = [ip_address, "8080"]
+
+
+class SonosMockSubscribe:
+    """Mock the subscription."""
+
+    def __init__(self, ip_address: str) -> None:
+        """Initialize the mock subscriber."""
+        self.event_listener = SonosMockEventListener(ip_address)
+
+    async def unsubscribe(self) -> None:
+        """Unsubsribe."""
+
+
 class SonosMockService:
     """Mock a Sonos Service used in callbacks."""
 
-    def __init__(self, service_type):
+    def __init__(self, service_type, ip_address="192.168.42.2") -> None:
         """Initialize the instance."""
         self.service_type = service_type
-        self.subscribe = AsyncMock()
+        self.subscribe = AsyncMock(return_value=SonosMockSubscribe(ip_address))
 
 
 class SonosMockEvent:
@@ -125,11 +144,11 @@ class SocoMockFactory:
         mock_soco.get_current_track_info.return_value = self.current_track_info
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
         mock_soco.get_speaker_info.return_value = self.speaker_info
-        mock_soco.avTransport = SonosMockService("AVTransport")
-        mock_soco.renderingControl = SonosMockService("RenderingControl")
-        mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology")
-        mock_soco.contentDirectory = SonosMockService("ContentDirectory")
-        mock_soco.deviceProperties = SonosMockService("DeviceProperties")
+        mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
+        mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
+        mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
+        mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
+        mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
         mock_soco.alarmClock = self.alarm_clock
         mock_soco.mute = False
         mock_soco.night_mode = True
