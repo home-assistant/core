@@ -13,7 +13,7 @@ from typing import IO, Any
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
 from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
-from home_assistant_intents import get_intents
+from home_assistant_intents import get_domains_and_languages, get_intents
 import yaml
 
 from homeassistant import core, setup
@@ -73,6 +73,26 @@ def _get_language_variations(language: str) -> Iterable[str]:
         yield lang
 
 
+@core.callback
+def async_setup(hass: core.HomeAssistant) -> None:
+    """Set up entity registry listener for the default agent."""
+    entity_registry = er.async_get(hass)
+    for entity_id in entity_registry.entities:
+        async_should_expose(hass, DOMAIN, entity_id)
+
+    @core.callback
+    def async_handle_entity_registry_changed(event: core.Event) -> None:
+        """Set expose flag on newly created entities."""
+        if event.data["action"] == "create":
+            async_should_expose(hass, DOMAIN, event.data["entity_id"])
+
+    hass.bus.async_listen(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        async_handle_entity_registry_changed,
+        run_immediately=True,
+    )
+
+
 class DefaultAgent(AbstractConversationAgent):
     """Default agent for conversation agent."""
 
@@ -85,6 +105,11 @@ class DefaultAgent(AbstractConversationAgent):
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
         self._slot_lists: dict[str, SlotList] | None = None
+
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return a list of supported languages."""
+        return get_domains_and_languages()["homeassistant"]
 
     async def async_initialize(self, config_intents):
         """Initialize the default agent."""
@@ -467,10 +492,10 @@ class DefaultAgent(AbstractConversationAgent):
             return self._slot_lists
 
         area_ids_with_entities: set[str] = set()
-        all_entities = er.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
         entities = [
             entity
-            for entity in all_entities.entities.values()
+            for entity in entity_registry.entities.values()
             if async_should_expose(self.hass, DOMAIN, entity.entity_id)
         ]
         devices = dr.async_get(self.hass)
