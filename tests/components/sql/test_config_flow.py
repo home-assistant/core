@@ -49,7 +49,6 @@ async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
-        "value_template": None,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -118,7 +117,6 @@ async def test_flow_fails_invalid_query(
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
-        "value_template": None,
     }
 
 
@@ -155,7 +153,6 @@ async def test_flow_fails_invalid_column_name(
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
-        "value_template": None,
     }
 
 
@@ -170,7 +167,6 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             "query": "SELECT 5 as value",
             "column": "value",
             "unit_of_measurement": "MiB",
-            "value_template": None,
         },
     )
     entry.add_to_hass(hass)
@@ -218,7 +214,6 @@ async def test_options_flow_name_previously_removed(
             "query": "SELECT 5 as value",
             "column": "value",
             "unit_of_measurement": "MiB",
-            "value_template": None,
         },
         title="Get Value Title",
     )
@@ -270,7 +265,6 @@ async def test_options_flow_fails_db_url(
             "query": "SELECT 5 as value",
             "column": "value",
             "unit_of_measurement": "MiB",
-            "value_template": None,
         },
     )
     entry.add_to_hass(hass)
@@ -314,7 +308,6 @@ async def test_options_flow_fails_invalid_query(
             "query": "SELECT 5 as value",
             "column": "value",
             "unit_of_measurement": "MiB",
-            "value_template": None,
         },
     )
     entry.add_to_hass(hass)
@@ -369,7 +362,6 @@ async def test_options_flow_fails_invalid_column_name(
             "query": "SELECT 5 as value",
             "column": "value",
             "unit_of_measurement": "MiB",
-            "value_template": None,
         },
     )
     entry.add_to_hass(hass)
@@ -424,7 +416,6 @@ async def test_options_flow_db_url_empty(
             "query": "SELECT 5 as value",
             "column": "value",
             "unit_of_measurement": "MiB",
-            "value_template": None,
         },
     )
     entry.add_to_hass(hass)
@@ -500,8 +491,6 @@ async def test_full_flow_not_recorder_db(
         "db_url": "sqlite://path/to/db.db",
         "query": "SELECT 5 as value",
         "column": "value",
-        "unit_of_measurement": None,
-        "value_template": None,
     }
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
