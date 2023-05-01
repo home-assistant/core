@@ -1,8 +1,8 @@
 """Test template trigger entity."""
 
-from homeassistant.components.template import trigger_entity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
+from homeassistant.helpers.template_entity import ManualTriggerEntity
 
 
 async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:
@@ -18,7 +18,7 @@ async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:
         ),
     }
 
-    entity = trigger_entity.ManualTriggerEntity(hass, config)
+    entity = ManualTriggerEntity(hass, config)
     entity.entity_id = "test.entity"
     hass.states.async_set("test.entity", "on")
     await entity.async_added_to_hass()

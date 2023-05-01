@@ -611,13 +611,13 @@ class ManualTriggerEntity(TriggerBaseEntity):
         """Initialize the entity."""
         TriggerBaseEntity.__init__(self, hass, config)
 
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
-        await TriggerBaseEntity.async_added_to_hass(self)
-
     @callback
     def _process_manual_data(self, value: str | None = None) -> None:
-        """Process new data manually."""
+        """Process new data manually.
+
+        Implementing class should call this in update method to render templates.
+        Ex: self._process_manual_data(payload)
+        """
 
         this = None
         if state := self.hass.states.get(self.entity_id):
