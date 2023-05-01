@@ -43,6 +43,7 @@ class DiffuserBatteryChargingBinarySensor(DiffuserEntity, BinarySensorEntity):
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the battery charging binary sensor."""
         super().__init__(coordinator, CHARGING_SUFFIX)
+        self._attr_unique_id = f"{coordinator.diffuser.hublot}-charging"
 
     @property
     def is_on(self) -> bool:
