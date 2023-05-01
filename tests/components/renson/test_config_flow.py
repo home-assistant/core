@@ -17,7 +17,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.renson.config_flow.ConfigFlow.validate_input",
+        "homeassistant.components.renson.config_flow.renson",
         return_value={"title": "Renson"},
     ), patch(
         "homeassistant.components.renson.async_setup_entry",
@@ -46,7 +46,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.renson.config_flow.ConfigFlow.validate_input",
+        "homeassistant.components.renson.config_flow.renson.RensonVentilation.connect",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -67,7 +67,7 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.renson.config_flow.ConfigFlow.validate_input",
+        "homeassistant.components.renson.config_flow.renson.RensonVentilation.connect",
         side_effect=ValueError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
