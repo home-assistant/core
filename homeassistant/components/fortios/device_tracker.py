@@ -5,7 +5,6 @@ This component is part of the device_tracker platform.
 from __future__ import annotations
 
 import logging
-from typing import Any
 from awesomeversion import AwesomeVersion
 from fortiosapi import FortiOSAPI
 import voluptuous as vol
@@ -66,7 +65,6 @@ class FortiOSDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         _LOGGER.debug("get_device_name(%s)", device)
 
-        """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             _LOGGER.error("No last_results to get device names")
             return None
@@ -100,22 +98,21 @@ class FortiOSDeviceScanner(DeviceScanner):
 
         data = self._fgt.monitor("user/device/query", "", parameters = {'filter':'format=master_mac|hostname|is_online'})
         devices = {}
-        if data:
-            try:
-                for client in data["results"]:
-                    if "is_online" in client and "master_mac" in client:
-                        if client["is_online"]:
-                            hostname = client["master_mac"].replace(":", "_")
+        try:
+            for client in data["results"]:
+                if "is_online" in client and "master_mac" in client:
+                    if client["is_online"]:
+                        hostname = client["master_mac"].replace(":", "_")
 
-                            if "hostname" in client:
-                                hostname = client["hostname"]
+                        if "hostname" in client:
+                            hostname = client["hostname"]
 
-                            devices[client["master_mac"]] = {
-                                "mac": client["master_mac"].upper(),
-                                "name": hostname
-                            }
-            except KeyError as kex:
-                _LOGGER.error("Key not found in clients: %s", kex)
+                        devices[client["master_mac"]] = {
+                            "mac": client["master_mac"].upper(),
+                            "name": hostname
+                        }
+        except KeyError as kex:
+            _LOGGER.error("Key not found in clients: %s", kex)
          
         return devices
 
