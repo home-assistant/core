@@ -234,6 +234,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/cups/ @fabaff
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/date/ @home-assistant/core
+/tests/components/date/ @home-assistant/core
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -997,8 +999,8 @@ build.json @home-assistant/supervisor
 /tests/components/ridwell/ @bachya
 /homeassistant/components/risco/ @OnFreund
 /tests/components/risco/ @OnFreund
-/homeassistant/components/rituals_perfume_genie/ @milanmeu
-/tests/components/rituals_perfume_genie/ @milanmeu
+/homeassistant/components/rituals_perfume_genie/ @milanmeu @frenck
+/tests/components/rituals_perfume_genie/ @milanmeu @frenck
 /homeassistant/components/rmvtransport/ @cgtobi
 /tests/components/rmvtransport/ @cgtobi
 /homeassistant/components/roborock/ @humbertogontijo @Lash-L
@@ -1144,8 +1146,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/splunk/ @Bre77
 /homeassistant/components/spotify/ @frenck
 /tests/components/spotify/ @frenck
-/homeassistant/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
-/tests/components/sql/ @dgomes @gjohansson-ST @dougiteixeira
+/homeassistant/components/sql/ @gjohansson-ST @dougiteixeira
+/tests/components/sql/ @gjohansson-ST @dougiteixeira
 /homeassistant/components/squeezebox/ @rajlaud
 /tests/components/squeezebox/ @rajlaud
 /homeassistant/components/srp_energy/ @briglx
@@ -1187,8 +1189,8 @@ build.json @home-assistant/supervisor
 /tests/components/switchbee/ @jafar-atili
 /homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
 /tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
-/homeassistant/components/switcher_kis/ @tomerfi @thecode
-/tests/components/switcher_kis/ @tomerfi @thecode
+/homeassistant/components/switcher_kis/ @thecode
+/tests/components/switcher_kis/ @thecode
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
 /homeassistant/components/syncthing/ @zhulik
 /tests/components/syncthing/ @zhulik
@@ -1234,6 +1236,8 @@ build.json @home-assistant/supervisor
 /tests/components/tile/ @bachya
 /homeassistant/components/tilt_ble/ @apt-itude
 /tests/components/tilt_ble/ @apt-itude
+/homeassistant/components/time/ @home-assistant/core
+/tests/components/time/ @home-assistant/core
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
 /homeassistant/components/tmb/ @alemuro
