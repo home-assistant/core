@@ -5,6 +5,7 @@ This component is part of the device_tracker platform.
 from __future__ import annotations
 
 import logging
+from typing import Any
 from awesomeversion import AwesomeVersion
 from fortiosapi import FortiOSAPI
 import voluptuous as vol
@@ -30,7 +31,6 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     }
 )
 
-
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner | None:
     """Validate the configuration and return a FortiOS scanner."""
     scanner = FortiOSDeviceScanner(config[DOMAIN])
@@ -47,56 +47,57 @@ class FortiOSDeviceScanner(DeviceScanner):
         self.verify_ssl = config[CONF_VERIFY_SSL]
         self.last_results = {}
         self._success_init = None
-        self._fgt = self.get_fortios_obj()
+        self._fgt = self._get_fortios_obj()
 
         if self._fgt is not None:
             # Test the router is accessible.
-            data = self.get_fortios_data()
+            data = self._get_fortios_data()
             self._success_init = data is not None
         
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
+        _LOGGER.debug("scan_devices()")
+
         self._update_info()
+        _LOGGER.debug("scan_devices returned = %s", str([client["mac"] for client in self.last_results]))
         return [client["mac"] for client in self.last_results]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        _LOGGER.debug("Getting name of device %s", device)
+        _LOGGER.debug("get_device_name(%s)", device)
 
-        device = device.lower()
-
-        if not self._last_results:
-            _LOGGER.error("No json results to get device names")
+        """Return the name of the given device or None if we don't know."""
+        if not self.last_results:
+            _LOGGER.error("No last_results to get device names")
             return None
-
-        for client in self._last_results:
-            """Return the name of the given device or None if we don't know."""
-            if not self.last_results:
-                return None
-            for client in self.last_results:
-                if client["mac"] == device:
-                    return client["name"]
-            return None
+        for client in self.last_results:
+            if client["mac"] == device:
+                _LOGGER.debug("%s = get_device_name(%s)", client["name"], device)
+                return client["name"]
+        return None
 
     def _update_info(self):
         """Ensure the information from the FortiOS device is up to date.
 
         Return boolean if scanning successful.
         """
-        _LOGGER.debug("_update_info")
+        _LOGGER.debug("_update_info()")
 
         if not self._success_init:
             return False
 
-        if not (data := self.get_fortios_data()):
+        if not (data := self._get_fortios_data()):
             return False
 
-        self._last_results = data.values()
+        self.last_results = data.values()
+
+        _LOGGER.debug("_update_info, last_results=%s", self.last_results)
         return True
     
-    def get_fortios_data(self):
+    def _get_fortios_data(self):
         """Retrieve data from FortiOS device and return parsed result."""
-        _LOGGER.debug("get_fortios_data")
+        _LOGGER.debug("_get_fortios_data()")
+
         data = self._fgt.monitor("user/device/query", "", parameters = {'filter':'format=master_mac|hostname|is_online'})
         devices = {}
         if data:
@@ -118,9 +119,9 @@ class FortiOSDeviceScanner(DeviceScanner):
          
         return devices
 
-    def get_fortios_obj(self):
+    def _get_fortios_obj(self):
         """Validate the configuration and return a FortiOSAPI object"""
-        _LOGGER.debug("get_fortios_obj")
+        _LOGGER.debug("_get_fortios_obj()")
 
         fgt = FortiOSAPI()
 
