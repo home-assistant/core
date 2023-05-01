@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, "user": voip_user.id}
         )
 
-    sip_port = entry.data.get(CONF_SIP_PORT, SIP_PORT)
+    sip_port = entry.options.get(CONF_SIP_PORT, SIP_PORT)
     devices = VoIPDevices(hass, entry)
     devices.async_setup()
     transport = await _create_sip_server(
