@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -53,11 +53,6 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FullySensorEntityDescription(
-        key="currentPage",
-        name="Current page",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    FullySensorEntityDescription(
         key="internalStorageFreeSpace",
         name="Internal storage free space",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -95,6 +90,14 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
     ),
 )
 
+URL_SENSORS: tuple[FullySensorEntityDescription, ...] = (
+    FullySensorEntityDescription(
+        key="currentPage",
+        name="Current page",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -108,6 +111,11 @@ async def async_setup_entry(
     async_add_entities(
         FullySensor(coordinator, description)
         for description in SENSORS
+        if description.key in coordinator.data
+    )
+    async_add_entities(
+        FullyUrlSensor(coordinator, description)
+        for description in URL_SENSORS
         if description.key in coordinator.data
     )
 
@@ -129,8 +137,12 @@ class FullySensor(FullyKioskEntity, SensorEntity):
 
         super().__init__(coordinator)
 
-    @property
-    def native_value(self) -> StateType:
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._attr_native_value = self._value()
+        self.async_write_ha_state()
+
+    def _value(self) -> StateType:
         """Return the state of the sensor."""
         if (value := self.coordinator.data.get(self.entity_description.key)) is None:
             return None
@@ -139,3 +151,26 @@ class FullySensor(FullyKioskEntity, SensorEntity):
             return self.entity_description.state_fn(value)
 
         return value  # type: ignore[no-any-return]
+
+
+class FullyUrlSensor(FullySensor):
+    """Representation of a Fully Kiosk Browser URL sensor."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        value = self._value()
+        if value is None:
+            truncated = False
+            self._attr_native_value = None
+        else:
+            value = str(value)
+            truncated = len(value) > 256
+            if truncated:
+                self._attr_native_value = value[0:255]
+            else:
+                self._attr_native_value = value
+        self._attr_extra_state_attributes = {
+            "full_url": value,
+            "truncated": truncated,
+        }
+        self.async_write_ha_state()
