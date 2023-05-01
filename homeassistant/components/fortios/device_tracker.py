@@ -5,6 +5,7 @@ This component is part of the device_tracker platform.
 from __future__ import annotations
 
 import logging
+
 from awesomeversion import AwesomeVersion
 from fortiosapi import FortiOSAPI
 import voluptuous as vol
@@ -58,9 +59,6 @@ class FortiOSDeviceScanner(DeviceScanner):
         _LOGGER.debug("scan_devices()")
 
         self._update_info()
-        _LOGGER.debug(
-            "scan_devices returned = %s", 
-            str([client["mac"] for client in self.last_results]))
         return [client["mac"] for client in self.last_results]
 
     def get_device_name(self, device):
@@ -123,7 +121,7 @@ class FortiOSDeviceScanner(DeviceScanner):
         return devices
 
     def _get_fortios_obj(self):
-        """Validate the configuration and return a FortiOSAPI object"""
+        """Validate the configuration and return a FortiOSAPI object."""
         _LOGGER.debug("_get_fortios_obj()")
 
         fgt = FortiOSAPI()
