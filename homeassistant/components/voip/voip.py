@@ -84,11 +84,20 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
         )
         self.hass = hass
         self.devices = devices
+        self._closed_event = asyncio.Event()
 
     def is_valid_call(self, call_info: CallInfo) -> bool:
         """Filter calls."""
         device = self.devices.async_get_or_create(call_info)
         return device.async_allow_call(self.hass)
+
+    def connection_lost(self, exc):
+        """Signal wait_closed when transport is completely closed."""
+        self.hass.loop.call_soon_threadsafe(self._closed_event.set)
+
+    async def wait_closed(self) -> None:
+        """Wait for connection_lost to be called."""
+        await self._closed_event.wait()
 
 
 class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
