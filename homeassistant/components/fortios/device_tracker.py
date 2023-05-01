@@ -100,7 +100,7 @@ class FortiOSDeviceScanner(DeviceScanner):
             "user/device/query",
             "",
             parameters={"filter": "format=master_mac|hostname|is_online"},
-            )
+        )
         devices = {}
         try:
             for client in data["results"]:
@@ -117,7 +117,7 @@ class FortiOSDeviceScanner(DeviceScanner):
                         }
         except KeyError as kex:
             _LOGGER.error("Key not found in clients: %s", kex)
-         
+
         return devices
 
     def _get_fortios_obj(self):
