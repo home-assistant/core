@@ -102,7 +102,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         EVENT_HOMEASSISTANT_STARTED, _async_start_background_discovery
     )
     async_track_time_interval(
-        hass, _async_start_background_discovery, DISCOVERY_INTERVAL
+        hass,
+        _async_start_background_discovery,
+        DISCOVERY_INTERVAL,
+        cancel_on_shutdown=True,
     )
     return True
 

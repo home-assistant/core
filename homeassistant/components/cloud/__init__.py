@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -50,9 +50,9 @@ from .const import (
     CONF_RELAYER_SERVER,
     CONF_REMOTE_SNI_SERVER,
     CONF_REMOTESTATE_SERVER,
+    CONF_SERVICEHANDLERS_SERVER,
     CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
-    CONF_VOICE_SERVER,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
@@ -68,6 +68,7 @@ SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
 
+STARTUP_REPAIR_DELAY = 1  # 1 hour
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
@@ -118,7 +119,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_REMOTE_SNI_SERVER): str,
                 vol.Optional(CONF_REMOTESTATE_SERVER): str,
                 vol.Optional(CONF_THINGTALK_SERVER): str,
-                vol.Optional(CONF_VOICE_SERVER): str,
+                vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
             }
         )
     },
@@ -240,6 +241,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websession = async_get_clientsession(hass)
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
+    cloud.iot.register_on_connect(client.on_cloud_connected)
 
     async def _shutdown(event):
         """Shutdown event."""
@@ -261,8 +263,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
-    loaded = False
-
     async def async_startup_repairs(_=None) -> None:
         """Create repair issues after startup."""
         if not cloud.is_logged_in:
@@ -271,8 +271,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if subscription_info := await async_subscription_info(cloud):
             async_manage_legacy_subscription_issue(hass, subscription_info)
 
-    async def _on_connect():
-        """Discover RemoteUI binary sensor."""
+    loaded = False
+
+    async def _on_start():
+        """Discover platforms."""
         nonlocal loaded
 
         # Prevent multiple discovery
@@ -280,10 +282,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
-        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.STT, DOMAIN, {}, config)
-        await async_load_platform(hass, Platform.TTS, DOMAIN, {}, config)
+        stt_platform_loaded = asyncio.Event()
+        tts_platform_loaded = asyncio.Event()
+        stt_info = {"platform_loaded": stt_platform_loaded}
+        tts_info = {"platform_loaded": tts_platform_loaded}
 
+        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
+        await async_load_platform(hass, Platform.STT, DOMAIN, stt_info, config)
+        await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
+        await asyncio.gather(stt_platform_loaded.wait(), tts_platform_loaded.wait())
+
+    async def _on_connect():
+        """Handle cloud connect."""
         async_dispatcher_send(
             hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
         )
@@ -298,6 +308,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Update preferences."""
         await prefs.async_update(remote_domain=cloud.remote.instance_domain)
 
+    cloud.register_on_start(_on_start)
     cloud.iot.register_on_connect(_on_connect)
     cloud.iot.register_on_disconnect(_on_disconnect)
     cloud.register_on_initialized(_on_initialized)
@@ -309,8 +320,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_call_later(
         hass=hass,
-        delay=timedelta(hours=1),
-        action=async_startup_repairs,
+        delay=timedelta(hours=STARTUP_REPAIR_DELAY),
+        action=HassJob(
+            async_startup_repairs, "cloud startup repairs", cancel_on_shutdown=True
+        ),
     )
 
     return True

@@ -1,0 +1,38 @@
+{
+  "config": {
+    "flow_title": "Nextcloud",
+    "step": {
+      "user": {
+        "description": "Enter your Nextcloud information.",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Update your login information for {url}.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "connection_error_during_import": "Connection error occured during yaml configuration import",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Nextcloud YAML configuration has been deprecated",
+      "description": "Configuring Nextcloud using YAML has been deprecated.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `nextcloud` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}
