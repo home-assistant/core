@@ -1158,23 +1158,23 @@ def _wipe_old_string_time_columns(
     elif engine.dialect.name == SupportedDialect.MYSQL:
         #
         # Since this is only to save space we limit the number of rows we update
-        # to 10,000,000 per table since we do not want to block the database for too long
+        # to 100,000 per table since we do not want to block the database for too long
         # or run out of innodb_buffer_pool_size on MySQL. The old data will eventually
         # be cleaned up by the recorder purge if we do not do it now.
         #
-        session.execute(text("UPDATE events set time_fired=NULL LIMIT 10000000;"))
+        session.execute(text("UPDATE events set time_fired=NULL LIMIT 100000;"))
         session.commit()
         session.execute(
             text(
                 "UPDATE states set last_updated=NULL, last_changed=NULL "
-                " LIMIT 10000000;"
+                " LIMIT 100000;"
             )
         )
         session.commit()
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
         #
         # Since this is only to save space we limit the number of rows we update
-        # to 250,000 per table since we do not want to block the database for too long
+        # to 100,000 per table since we do not want to block the database for too long
         # or run out ram with postgresql. The old data will eventually
         # be cleaned up by the recorder purge if we do not do it now.
         #
@@ -1182,7 +1182,7 @@ def _wipe_old_string_time_columns(
             text(
                 "UPDATE events set time_fired=NULL "
                 "where event_id in "
-                "(select event_id from events where time_fired_ts is NOT NULL LIMIT 250000);"
+                "(select event_id from events where time_fired_ts is NOT NULL LIMIT 100000);"
             )
         )
         session.commit()
@@ -1190,7 +1190,7 @@ def _wipe_old_string_time_columns(
             text(
                 "UPDATE states set last_updated=NULL, last_changed=NULL "
                 "where state_id in "
-                "(select state_id from states where last_updated_ts is NOT NULL LIMIT 250000);"
+                "(select state_id from states where last_updated_ts is NOT NULL LIMIT 100000);"
             )
         )
         session.commit()
@@ -1236,7 +1236,7 @@ def _migrate_columns_to_timestamp(
                         "UNIX_TIMESTAMP(time_fired)"
                         ") "
                         "where time_fired_ts is NULL "
-                        "LIMIT 250000;"
+                        "LIMIT 100000;"
                     )
                 )
         result = None
@@ -1251,7 +1251,7 @@ def _migrate_columns_to_timestamp(
                         "last_changed_ts="
                         "UNIX_TIMESTAMP(last_changed) "
                         "where last_updated_ts is NULL "
-                        "LIMIT 250000;"
+                        "LIMIT 100000;"
                     )
                 )
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
@@ -1266,7 +1266,7 @@ def _migrate_columns_to_timestamp(
                         "time_fired_ts= "
                         "(case when time_fired is NULL then 0 else EXTRACT(EPOCH FROM time_fired::timestamptz) end) "
                         "WHERE event_id IN ( "
-                        "SELECT event_id FROM events where time_fired_ts is NULL LIMIT 250000 "
+                        "SELECT event_id FROM events where time_fired_ts is NULL LIMIT 100000 "
                         " );"
                     )
                 )
@@ -1279,7 +1279,7 @@ def _migrate_columns_to_timestamp(
                         "(case when last_updated is NULL then 0 else EXTRACT(EPOCH FROM last_updated::timestamptz) end), "
                         "last_changed_ts=EXTRACT(EPOCH FROM last_changed::timestamptz) "
                         "where state_id IN ( "
-                        "SELECT state_id FROM states where last_updated_ts is NULL LIMIT 250000 "
+                        "SELECT state_id FROM states where last_updated_ts is NULL LIMIT 100000 "
                         " );"
                     )
                 )

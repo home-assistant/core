@@ -2314,7 +2314,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 250000;"
+                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"
                         )
                     )
                     .rowcount
@@ -2330,7 +2330,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     .execute(
                         text(
                             f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # nosec
-                            f"where id in (select id from {table} where start is not NULL LIMIT 250000)"
+                            f"where id in (select id from {table} where start is not NULL LIMIT 100000)"
                         )
                     )
                     .rowcount
