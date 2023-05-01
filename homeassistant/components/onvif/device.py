@@ -6,6 +6,7 @@ from contextlib import suppress
 import datetime as dt
 import os
 import time
+from typing import Any
 
 from httpx import RequestError
 import onvif
@@ -55,6 +56,7 @@ class ONVIFDevice:
 
         self.info: DeviceInfo = DeviceInfo()
         self.capabilities: Capabilities = Capabilities()
+        self.onvif_capabilities: dict[str, Any] | None = None
         self.profiles: list[Profile] = []
         self.max_resolution: int = 0
         self.platforms: list[Platform] = []
@@ -98,6 +100,10 @@ class ONVIFDevice:
 
         # Get all device info
         await self.device.update_xaddrs()
+
+        # Get device capabilities
+        self.onvif_capabilities = await self.device.get_capabilities()
+
         await self.async_check_date_and_time()
 
         # Create event manager
@@ -107,14 +113,18 @@ class ONVIFDevice:
         # Fetch basic device info and capabilities
         self.info = await self.async_get_device_info()
         LOGGER.debug("Camera %s info = %s", self.name, self.info)
-        self.capabilities = await self.async_get_capabilities()
-        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
+
+        # Check profiles before capabilities since the camera may be slow to respond
+        # once the event manager is started in async_get_capabilities.
         self.profiles = await self.async_get_profiles()
         LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
 
         # No camera profiles to add
         if not self.profiles:
             raise ONVIFError("No camera profiles found")
+
+        self.capabilities = await self.async_get_capabilities()
+        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
 
         if self.capabilities.ptz:
             self.device.create_ptz_service()
@@ -299,7 +309,14 @@ class ONVIFDevice:
 
         events = False
         with suppress(*GET_CAPABILITIES_EXCEPTIONS, XMLParseError):
-            events = await self.events.async_start()
+            onvif_capabilities = self.onvif_capabilities or {}
+            pull_point_support = onvif_capabilities.get("Events", {}).get(
+                "WSPullPointSupport"
+            )
+            LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
+            events = await self.events.async_start(
+                pull_point_support is not False, True
+            )
 
         return Capabilities(snapshot, events, ptz, imaging)
 
