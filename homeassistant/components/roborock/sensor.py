@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -46,6 +46,7 @@ CONSUMABLE_SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         translation_key="main_brush_time_left",
         value_fn=lambda data: data.consumable.main_brush_time_left,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -54,6 +55,7 @@ CONSUMABLE_SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         translation_key="side_brush_time_left",
         value_fn=lambda data: data.consumable.side_brush_time_left,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -62,6 +64,7 @@ CONSUMABLE_SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         translation_key="filter_time_left",
         value_fn=lambda data: data.consumable.filter_time_left,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -70,6 +73,7 @@ CONSUMABLE_SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         translation_key="sensor_time_left",
         value_fn=lambda data: data.consumable.sensor_time_left,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
