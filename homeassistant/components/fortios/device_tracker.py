@@ -38,7 +38,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner
     return scanner if scanner._success_init else None
 
 class FortiOSDeviceScanner(DeviceScanner):
-    """This class queries a FortiOS unit for connected devices."""
+    """Class which queries a FortiOS unit for connected devices."""
 
     def __init__(self, config):
         """Initialize the scanner."""

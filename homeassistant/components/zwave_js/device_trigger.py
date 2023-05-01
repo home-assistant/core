@@ -22,8 +22,8 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
-    entity_registry,
+    device_registry as dr,
+    entity_registry as er,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -255,14 +255,14 @@ async def async_get_triggers(
         CONF_DOMAIN: DOMAIN,
     }
 
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
 
     if node.client.driver and node.client.driver.controller.own_node == node:
         return triggers
 
     # We can add a node status trigger if the node status sensor is enabled
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device_id, ent_reg, dev_reg
     )

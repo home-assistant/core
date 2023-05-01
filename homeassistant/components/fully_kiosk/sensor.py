@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
@@ -30,7 +30,7 @@ def round_storage(value: int) -> float:
 class FullySensorEntityDescription(SensorEntityDescription):
     """Fully Kiosk Browser sensor description."""
 
-    state_fn: Callable | None = None
+    state_fn: Callable[[int], float] | None = None
 
 
 SENSORS: tuple[FullySensorEntityDescription, ...] = (
@@ -130,7 +130,7 @@ class FullySensor(FullyKioskEntity, SensorEntity):
         super().__init__(coordinator)
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if (value := self.coordinator.data.get(self.entity_description.key)) is None:
             return None
@@ -138,4 +138,4 @@ class FullySensor(FullyKioskEntity, SensorEntity):
         if self.entity_description.state_fn is not None:
             return self.entity_description.state_fn(value)
 
-        return value
+        return value  # type: ignore[no-any-return]

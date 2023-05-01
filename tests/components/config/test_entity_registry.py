@@ -239,23 +239,32 @@ async def test_list_entities_for_display(
                 "di": "device123",
                 "ei": "test_domain.nameless",
                 "en": None,
+                "pl": "test_platform",
             },
             {
                 "ai": "area52",
                 "di": "device123",
                 "ei": "test_domain.renamed",
+                "pl": "test_platform",
+            },
+            {
+                "ei": "test_domain.boring",
+                "pl": "test_platform",
             },
             {
                 "ei": "test_domain.hidden",
                 "hb": True,
+                "pl": "test_platform",
             },
             {
                 "dp": 0,
                 "ei": "sensor.default_precision",
+                "pl": "test_platform",
             },
             {
                 "dp": 0,
                 "ei": "sensor.user_precision",
+                "pl": "test_platform",
             },
         ],
     }
@@ -296,6 +305,7 @@ async def test_list_entities_for_display(
                 "di": "device123",
                 "ei": "test_domain.test",
                 "en": "Hello World",
+                "pl": "test_platform",
             },
         ],
     }
