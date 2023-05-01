@@ -44,6 +44,8 @@ class DomainData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up VoIP integration from a config entry."""
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     # Make sure there is a valid user ID for VoIP in the config entry
     if (
         "user" not in entry.data
@@ -71,6 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def _create_sip_server(
