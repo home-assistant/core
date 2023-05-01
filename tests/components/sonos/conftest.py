@@ -24,12 +24,13 @@ class SonosMockEventListener:
 class SonosMockSubscribe:
     """Mock the subscription."""
 
-    def __init__(self, ip_address: str) -> None:
+    def __init__(self, ip_address: str, *args, **kwargs) -> None:
         """Initialize the mock subscriber."""
         self.event_listener = SonosMockEventListener(ip_address)
+        self.service = Mock()
 
     async def unsubscribe(self) -> None:
-        """Unsubsribe."""
+        """Unsubscribe mock."""
 
 
 class SonosMockService:
