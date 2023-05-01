@@ -304,10 +304,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renson sensor platform."""
 
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator: RensonCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        "coordinator"
-    ]
+    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
+    coordinator: RensonCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ].coordinator
 
     entities: list = []
     for description in SENSORS:
