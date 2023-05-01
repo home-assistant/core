@@ -2,10 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Receive Voice over IP calls to interact with Assist.",
-        "data": {
-          "sip_port": "SIP port"
-        }
+        "description": "Receive Voice over IP calls to interact with Assist."
       }
     },
     "abort": {
@@ -28,6 +25,15 @@
         "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
         "state": {
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sip_port": "SIP port"
         }
       }
     }
