@@ -201,7 +201,7 @@ def soco_factory(
     )
     with patch("homeassistant.components.sonos.SoCo", new=factory.get_mock), patch(
         "socket.gethostbyname", side_effect=patch_gethostbyname
-    ):
+    ), patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0):
         yield factory
 
 

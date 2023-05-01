@@ -170,11 +170,9 @@ async def manager_fixture(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
-    # Speed up unit tests
-    with patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0):
-        manager.hosts.add("10.10.10.2")
-        manager.hosts.add("10.10.10.1")
-        yield manager
+    manager.hosts.add("10.10.10.2")
+    manager.hosts.add("10.10.10.1")
+    return manager
 
 
 async def test_async_poll_manual_hosts_1(
