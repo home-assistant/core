@@ -32,7 +32,7 @@ class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator], Generic[_DeviceTy
         super().__init__(coordinator)
         self._device = device
         self._attr_name = device.name
-        self._attr_unique_id = f"{coordinator.mac_formatted}-{device.id}"
+        self._attr_unique_id = f"{coordinator.unique_id}-{device.id}"
 
 
 class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
@@ -54,7 +54,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
             identifiers={
                 (
                     DOMAIN,
-                    f"{identifier}-{coordinator.mac_formatted}",
+                    f"{identifier}-{coordinator.unique_id}",
                 )
             },
             manufacturer=SWITCHBEE_BRAND,
@@ -62,7 +62,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
             suggested_area=device.zone,
             via_device=(
                 DOMAIN,
-                f"{coordinator.api.name} ({coordinator.api.mac})",
+                f"{coordinator.api.name} ({coordinator.api.unique_id})",
             ),
         )
 
