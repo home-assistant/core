@@ -292,7 +292,7 @@ class ElectricalMeasurement(Sensor):
     cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     stop_on_match_group=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
 )
-class PolledElectricalMeasurement(Sensor):
+class PolledElectricalMeasurement(ElectricalMeasurement):
     """Polled active power measurement."""
 
     _attr_should_poll = True  # BaseZhaEntity defaults to False
