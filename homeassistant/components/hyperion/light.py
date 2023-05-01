@@ -267,13 +267,6 @@ class HyperionLight(LightEntity):
 
         # == Set an effect
         if effect and effect != KEY_EFFECT_SOLID:
-            # This call should not be necessary, but without it there is no priorities-update issued:
-            # https://github.com/hyperion-project/hyperion.ng/issues/992
-            if not await self._client.async_send_clear(
-                **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
-            ):
-                return
-
             if not await self._client.async_send_set_effect(
                 **{
                     const.KEY_PRIORITY: self._get_option(CONF_PRIORITY),

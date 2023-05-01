@@ -387,9 +387,6 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    assert client.async_send_clear.call_args == call(
-        **{const.KEY_PRIORITY: TEST_PRIORITY}
-    )
     assert client.async_send_set_effect.call_args == call(
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
@@ -455,23 +452,6 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
 
     assert not client.async_send_clear.called
     assert not client.async_send_set_effect.called
-
-
-async def test_light_async_turn_on_fail_async_send_clear_effect(
-    hass: HomeAssistant,
-) -> None:
-    """Test async_send_clear failure when turning on an effect."""
-    client = create_mock_client()
-    client.is_on = Mock(return_value=True)
-    client.async_send_clear = AsyncMock(return_value=False)
-    await setup_test_config_entry(hass, hyperion_client=client)
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_EFFECT: "Warm Mood Blobs"},
-        blocking=True,
-    )
-    assert client.method_calls[-1] == call.async_send_clear(priority=180)
 
 
 async def test_light_async_turn_on_fail_async_send_set_effect(
