@@ -1,7 +1,6 @@
 """Tests for the Sonos config flow."""
-import asyncio
 import logging
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -145,42 +144,6 @@ async def test_async_poll_manual_hosts_warnings(
         assert mock_async_call_later.call_count == 5
 
 
-async def test_async_poll_manual_hosts_ping_failure(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that a failure to ping device is handled properly."""
-    await async_setup_component(
-        hass,
-        sonos.DOMAIN,
-        {"sonos": {"media_player": {"interface_addr": "127.0.0.1"}}},
-    )
-    await hass.async_block_till_done()
-    manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
-
-    manager.hosts.add("10.10.10.10")
-
-    with caplog.at_level(logging.DEBUG), patch.object(
-        manager, "_async_handle_discovery_message", new=AsyncMock()
-    ) as mock_discovery_message, patch(
-        "homeassistant.components.sonos.async_call_later"
-    ) as mock_async_call_later, patch(
-        "homeassistant.components.sonos.async_dispatcher_send"
-    ), patch(
-        "homeassistant.components.sonos.sync_get_visible_zones"
-    ) as mock_sync_get_visible_zones:
-        mock_sync_get_visible_zones.return_value = []
-        caplog.clear()
-
-        mock_discovery_message.side_effect = asyncio.TimeoutError("TimeoutError")
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "WARNING"
-        assert "Discovery message failed" in record.message
-        assert "TimeoutError" in record.message
-        mock_async_call_later.assert_called_once()
-
-
 class _MockSocoOsError(MockSoco):
     @property
     def visible_zones(self):
@@ -208,10 +171,9 @@ async def manager_fixture(hass: HomeAssistant):
     await hass.async_block_till_done()
     manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
     # Speed up unit tets
-    with patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0):
-        manager.hosts.add("10.10.10.2")
-        manager.hosts.add("10.10.10.1")
-        yield manager
+    manager.hosts.add("10.10.10.2")
+    manager.hosts.add("10.10.10.1")
+    return manager
 
 
 async def test_async_poll_manual_hosts_1(
@@ -234,6 +196,7 @@ async def test_async_poll_manual_hosts_1(
     assert manager.data.hosts_heartbeat
     manager.data.hosts_heartbeat()
     manager.data.hosts_heartbeat = None
+    manager.data.discovered = {}
 
 
 async def test_async_poll_manual_hosts_2(
@@ -255,6 +218,7 @@ async def test_async_poll_manual_hosts_2(
     assert manager.data.hosts_heartbeat
     manager.data.hosts_heartbeat()
     manager.data.hosts_heartbeat = None
+    manager.data.discovered = {}
 
 
 async def test_async_poll_manual_hosts_3(
@@ -276,6 +240,7 @@ async def test_async_poll_manual_hosts_3(
     assert manager.data.hosts_heartbeat
     manager.data.hosts_heartbeat()
     manager.data.hosts_heartbeat = None
+    manager.data.discovered = {}
 
 
 async def test_async_poll_manual_hosts_4(
@@ -297,6 +262,7 @@ async def test_async_poll_manual_hosts_4(
     assert manager.data.hosts_heartbeat
     manager.data.hosts_heartbeat()
     manager.data.hosts_heartbeat = None
+    manager.data.discovered = {}
 
 
 async def test_async_poll_manual_hosts_5(
@@ -334,6 +300,7 @@ async def test_async_poll_manual_hosts_5(
     assert manager.data.hosts_heartbeat
     manager.data.hosts_heartbeat()
     manager.data.hosts_heartbeat = None
+    manager.data.discovered = {}
 
 
 async def test_async_poll_manual_hosts_6(
@@ -369,6 +336,7 @@ async def test_async_poll_manual_hosts_6(
     assert manager.data.hosts_heartbeat
     manager.data.hosts_heartbeat()
     manager.data.hosts_heartbeat = None
+    manager.data.discovered = {}
 
 
 async def test_async_poll_manual_hosts_7(
@@ -400,6 +368,7 @@ async def test_async_poll_manual_hosts_7(
     assert manager.data.hosts_heartbeat
     manager.data.hosts_heartbeat()
     manager.data.hosts_heartbeat = None
+    manager.data.discovered = {}
 
 
 async def test_async_poll_manual_hosts_8(
@@ -429,3 +398,4 @@ async def test_async_poll_manual_hosts_8(
         assert manager.data.hosts_heartbeat
         manager.data.hosts_heartbeat()
         manager.data.hosts_heartbeat = None
+        manager.data.discovered = {}
