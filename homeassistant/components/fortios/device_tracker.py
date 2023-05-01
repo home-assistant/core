@@ -53,7 +53,7 @@ class FortiOSDeviceScanner(DeviceScanner):
             # Test the router is accessible.
             data = self._get_fortios_data()
             self.success_init = data is not None
-        
+
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         _LOGGER.debug("scan_devices()")
@@ -91,7 +91,7 @@ class FortiOSDeviceScanner(DeviceScanner):
 
         _LOGGER.debug("_update_info, last_results=%s", self.last_results)
         return True
-    
+
     def _get_fortios_data(self):
         """Retrieve data from FortiOS device and return parsed result."""
         _LOGGER.debug("_get_fortios_data()")
@@ -113,7 +113,7 @@ class FortiOSDeviceScanner(DeviceScanner):
 
                         devices[client["master_mac"]] = {
                             "mac": client["master_mac"].upper(),
-                            "name": hostname
+                            "name": hostname,
                         }
         except KeyError as kex:
             _LOGGER.error("Key not found in clients: %s", kex)
