@@ -42,7 +42,7 @@ async def test_config_entry_unload(hass: HomeAssistant) -> None:
 async def test_entity_id_migration(
     hass: HomeAssistant, entity_registry: er.RegistryEntry
 ) -> None:
-    """Test the creation and values of the Rituals Perfume Genie binary sensor."""
+    """Test the migration of unique IDs on config entry setup."""
     config_entry = mock_config_entry(unique_id="binary_sensor_test_diffuser_v1")
 
     # Pre-create old style unique IDs
