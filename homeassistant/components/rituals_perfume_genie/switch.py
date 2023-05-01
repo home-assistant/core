@@ -3,15 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyrituals import Diffuser
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RitualsDataUpdateCoordinator
-from .const import COORDINATORS, DEVICES, DOMAIN
+from .const import DOMAIN
+from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
@@ -21,14 +19,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the diffuser switch."""
-    diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
-    coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
-    entities = []
-    for hublot, diffuser in diffusers.items():
-        coordinator = coordinators[hublot]
-        entities.append(DiffuserSwitch(diffuser, coordinator))
+    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
-    async_add_entities(entities)
+    async_add_entities(
+        DiffuserSwitch(coordinator) for coordinator in coordinators.values()
+    )
 
 
 class DiffuserSwitch(DiffuserEntity, SwitchEntity):
@@ -36,27 +33,25 @@ class DiffuserSwitch(DiffuserEntity, SwitchEntity):
 
     _attr_icon = "mdi:fan"
 
-    def __init__(
-        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
-    ) -> None:
+    def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the diffuser switch."""
-        super().__init__(diffuser, coordinator, "")
-        self._attr_is_on = self._diffuser.is_on
+        super().__init__(coordinator, "")
+        self._attr_is_on = self.coordinator.diffuser.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self._diffuser.turn_on()
+        await self.coordinator.diffuser.turn_on()
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._diffuser.turn_off()
+        await self.coordinator.diffuser.turn_off()
         self._attr_is_on = False
         self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self._diffuser.is_on
+        self._attr_is_on = self.coordinator.diffuser.is_on
         self.async_write_ha_state()

@@ -5,6 +5,7 @@ from datetime import timedelta
 import json
 from unittest.mock import ANY, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.homeassistant_alerts import (
@@ -291,7 +292,7 @@ async def test_alerts_refreshed_on_component_load(
     late_components,
     initial_alerts,
     late_alerts,
-    freezer,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test alerts are refreshed when components are loaded."""
 

@@ -134,6 +134,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
             },
             name="AdGuard Home Addon",
             slug="adguard",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -158,6 +159,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
             },
             name="AdGuard Home Addon",
             slug="adguard",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -186,6 +188,7 @@ async def test_hassio_confirm(
             },
             name="AdGuard Home Addon",
             slug="adguard",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -228,6 +231,7 @@ async def test_hassio_connection_error(
             },
             name="AdGuard Home Addon",
             slug="adguard",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )

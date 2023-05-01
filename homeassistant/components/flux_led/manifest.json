@@ -51,5 +51,5 @@
   "iot_class": "local_push",
   "loggers": ["flux_led"],
   "quality_scale": "platinum",
-  "requirements": ["flux_led==0.28.35"]
+  "requirements": ["flux_led==0.28.37"]
 }

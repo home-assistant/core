@@ -73,6 +73,7 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf: None) 
         discovery.ThreadRouterDiscoveryData(
             addresses=["192.168.0.115"],
             brand="homeassistant",
+            extended_address="aeeb2f594b570bbf",
             extended_pan_id="e60fc7c186212ce5",
             model_name="OpenThreadBorderRouter",
             network_name="OpenThread HC",
@@ -98,6 +99,7 @@ async def test_discover_routers(hass: HomeAssistant, mock_async_zeroconf: None) 
         discovery.ThreadRouterDiscoveryData(
             addresses=["192.168.0.124"],
             brand="google",
+            extended_address="f6a99b425a67abed",
             extended_pan_id="9e75e256f61409a3",
             model_name="Google Nest Hub",
             network_name="NEST-PAN-E1AF",
@@ -175,6 +177,7 @@ async def test_discover_routers_unconfigured(
         discovery.ThreadRouterDiscoveryData(
             addresses=["192.168.0.115"],
             brand="homeassistant",
+            extended_address="aeeb2f594b570bbf",
             extended_pan_id="e60fc7c186212ce5",
             model_name="OpenThreadBorderRouter",
             network_name="OpenThread HC",
@@ -219,6 +222,7 @@ async def test_discover_routers_bad_data(
         discovery.ThreadRouterDiscoveryData(
             addresses=["192.168.0.115"],
             brand=None,
+            extended_address="aeeb2f594b570bbf",
             extended_pan_id="e60fc7c186212ce5",
             model_name="OpenThreadBorderRouter",
             network_name="OpenThread HC",

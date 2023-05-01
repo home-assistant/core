@@ -1,26 +1,12 @@
 repos:
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.254
+    rev: v0.0.262
     hooks:
       - id: ruff
         args:
           - --fix
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
-    hooks:
-      - id: pyupgrade
-        args: [--py310-plus]
-        stages: [manual]
-  - repo: https://github.com/PyCQA/autoflake
-    rev: v2.0.0
-    hooks:
-      - id: autoflake
-        args:
-          - --in-place
-          - --remove-all-unused-imports
-        stages: [manual]
   - repo: https://github.com/psf/black
-    rev: 23.1.0
+    rev: 23.3.0
     hooks:
       - id: black
         args:
@@ -36,20 +22,6 @@ repos:
           - --quiet-level=2
         exclude_types: [csv, json]
         exclude: ^tests/fixtures/|homeassistant/generated/
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - pycodestyle==2.10.0
-          - pyflakes==3.0.1
-          - flake8-docstrings==1.6.0
-          - pydocstyle==6.2.3
-          - flake8-comprehensions==3.10.1
-          - flake8-noqa==1.3.0
-          - mccabe==0.7.0
-        exclude: docs/source/conf.py
-        stages: [manual]
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.4
     hooks:

@@ -62,6 +62,7 @@ DB_TIMEZONE = "+00:00"
 
 TABLE_EVENTS = "events"
 TABLE_STATES = "states"
+TABLE_STATES_META = "states_meta"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
@@ -69,10 +70,13 @@ TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 TABLE_EVENT_DATA = "event_data"
+TABLE_EVENT_TYPES = "event_types"
 
 ALL_TABLES = [
     TABLE_STATES,
+    TABLE_STATES_META,
     TABLE_EVENTS,
+    TABLE_EVENT_TYPES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
@@ -141,9 +145,13 @@ class Events(Base):  # type: ignore
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v23, only added for recorder to startup ok
+    event_type_id = Column(
+        Integer, ForeignKey("event_types.event_type_id"), index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
     event_data_rel = relationship(
         "EventData"
     )  # *** Not originally in v23, only added for recorder to startup ok
+    event_type_rel = relationship("EventTypes")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -204,6 +212,19 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     shared_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
 
 
+# *** Not originally in v23, only added for recorder to startup ok
+# This is not being tested by the v23 statistics migration tests
+class EventTypes(Base):  # type: ignore[misc,valid-type]
+    """Event type history."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_EVENT_TYPES
+    event_type_id = Column(Integer, Identity(), primary_key=True)
+    event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+
+
 class States(Base):  # type: ignore
     """State change history."""
 
@@ -247,6 +268,10 @@ class States(Base):  # type: ignore
     context_parent_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v23, only added for recorder to startup ok
+    metadata_id = Column(
+        Integer, ForeignKey("states_meta.metadata_id"), index=True
+    )  # *** Not originally in v23, only added for recorder to startup ok
+    states_meta_rel = relationship("StatesMeta")
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
 
@@ -305,6 +330,27 @@ class States(Base):  # type: ignore
             # When json.loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
+
+
+# *** Not originally in v23, only added for recorder to startup ok
+# This is not being tested by the v23 statistics migration tests
+class StatesMeta(Base):  # type: ignore[misc,valid-type]
+    """Metadata for states."""
+
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
+    __tablename__ = TABLE_STATES_META
+    metadata_id = Column(Integer, Identity(), primary_key=True)
+    entity_id = Column(String(MAX_LENGTH_STATE_ENTITY_ID))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            "<recorder.StatesMeta("
+            f"id={self.metadata_id}, entity_id='{self.entity_id}'"
+            ")>"
+        )
 
 
 class StatisticResult(TypedDict):
