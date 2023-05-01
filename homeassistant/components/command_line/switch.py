@@ -171,14 +171,15 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         """Update device state."""
         if self._command_state:
             payload = str(await self.hass.async_add_executor_job(self._query_state))
-            self._process_manual_data(payload)
+            value = None
             if self._value_template:
-                payload = self._value_template.async_render_with_possible_json_value(
+                value = self._value_template.async_render_with_possible_json_value(
                     payload, None
                 )
             self._attr_is_on = None
-            if payload:
-                self._attr_is_on = payload.lower() == "true"
+            if payload or value:
+                self._attr_is_on = (value or payload).lower() == "true"
+            self._process_manual_data(payload)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

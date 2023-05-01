@@ -615,10 +615,11 @@ class ManualTriggerEntity(TriggerBaseEntity):
     def _process_manual_data(self, value: str | None = None) -> None:
         """Process new data manually.
 
-        Implementing class should call this in update method to render templates.
+        Implementing class should call this last in update method to render templates.
         Ex: self._process_manual_data(payload)
         """
 
+        self.async_write_ha_state()
         this = None
         if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
