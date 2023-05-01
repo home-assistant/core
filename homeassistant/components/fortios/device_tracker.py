@@ -58,7 +58,9 @@ class FortiOSDeviceScanner(DeviceScanner):
         _LOGGER.debug("scan_devices()")
 
         self._update_info()
-        _LOGGER.debug("scan_devices returned = %s", str([client["mac"] for client in self.last_results]))
+        _LOGGER.debug(
+            "scan_devices returned = %s", 
+            str([client["mac"] for client in self.last_results]))
         return [client["mac"] for client in self.last_results]
 
     def get_device_name(self, device):
@@ -96,7 +98,11 @@ class FortiOSDeviceScanner(DeviceScanner):
         """Retrieve data from FortiOS device and return parsed result."""
         _LOGGER.debug("_get_fortios_data()")
 
-        data = self._fgt.monitor("user/device/query", "", parameters = {'filter':'format=master_mac|hostname|is_online'})
+        data = self._fgt.monitor(
+            "user/device/query",
+            "",
+            parameters={"filter": "format=master_mac|hostname|is_online"},
+            )
         devices = {}
         try:
             for client in data["results"]:
