@@ -540,9 +540,6 @@ async def test_full_flow_not_recorder_db(
     # Need to test same again to mitigate issue with db_url removal
     result = await hass.config_entries.options.async_init(entry.entry_id)
     with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
         "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
     ):
         result = await hass.config_entries.options.async_configure(
@@ -558,6 +555,14 @@ async def test_full_flow_not_recorder_db(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
+        "name": "Get Value",
+        "db_url": "sqlite://path/to/db.db",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "unit_of_measurement": "MB",
+    }
+
+    assert entry.options == {
         "name": "Get Value",
         "db_url": "sqlite://path/to/db.db",
         "query": "SELECT 5 as value",
