@@ -8,7 +8,7 @@
   "documentation": "https://www.home-assistant.io/integrations/knx",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "loggers": ["xknx"],
+  "loggers": ["xknx", "xknxproject"],
   "quality_scale": "platinum",
   "requirements": [
     "xknx==2.9.0",

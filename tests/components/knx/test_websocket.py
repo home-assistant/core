@@ -1,31 +1,14 @@
 """KNX Websocket Tests."""
-import json
 from typing import Any
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.knx import DOMAIN, KNX_ADDRESS, SwitchSchema
-from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from .conftest import KNXTestKit
+from .conftest import FIXTURE_PROJECT_DATA, KNXTestKit
 
-from tests.common import load_fixture
 from tests.typing import WebSocketGenerator
-
-FIXTURE_PROJECT_DATA = json.loads(load_fixture("project.json", DOMAIN))
-
-
-@pytest.fixture(name="load_knxproj")
-def fixture_load_project(hass_storage):
-    """Mock KNX project data."""
-    hass_storage[KNX_PROJECT_STORAGE_KEY] = {
-        "version": 1,
-        "data": FIXTURE_PROJECT_DATA,
-    }
-    return
 
 
 async def test_knx_info_command(
@@ -48,7 +31,7 @@ async def test_knx_info_command_with_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    load_knxproj,
+    load_knxproj: None,
 ):
     """Test knx/info command with loaded project."""
     await knx.setup_integration({})
@@ -139,7 +122,7 @@ async def test_knx_project_file_remove(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    load_knxproj,
+    load_knxproj: None,
 ):
     """Test knx/project_file_remove command."""
     await knx.setup_integration({})
@@ -246,7 +229,7 @@ async def test_knx_subscribe_telegrams_command_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-    load_knxproj,
+    load_knxproj: None,
 ):
     """Test knx/subscribe_telegrams command with project data."""
     await knx.setup_integration({})
