@@ -892,11 +892,17 @@ class TemperatureSettingTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == climate.DOMAIN
+        return domain == climate.DOMAIN or (
+            domain == sensor.DOMAIN
+            and device_class == sensor.SensorDeviceClass.TEMPERATURE
+        )
 
     @property
     def climate_google_modes(self):
         """Return supported Google modes."""
+        if self.state.domain == sensor.DOMAIN:
+            return ["on", "heat"]
+
         modes = []
         attrs = self.state.attributes
 
@@ -934,24 +940,35 @@ class TemperatureSettingTrait(_Trait):
             modes.append("on")
         response["availableThermostatModes"] = modes
 
+        if self.state.domain == sensor.DOMAIN:
+            response["queryOnlyTemperatureSetting"] = True
+
         return response
 
     def query_attributes(self):
         """Return temperature point and modes query attributes."""
         response = {}
-        attrs = self.state.attributes
         unit = self.hass.config.units.temperature_unit
 
-        operation = self.state.state
-        preset = attrs.get(climate.ATTR_PRESET_MODE)
-        supported = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
+        if self.state.domain == climate.DOMAIN:
+            attrs = self.state.attributes
+            operation = self.state.state
+            preset = attrs.get(climate.ATTR_PRESET_MODE)
+            supported = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
+        elif self.state.domain == sensor.DOMAIN:
+            operation = "heat"
+            preset = "heat"
 
         if preset in self.preset_to_google:
             response["thermostatMode"] = self.preset_to_google[preset]
         else:
             response["thermostatMode"] = self.hvac_to_google.get(operation, "none")
 
-        current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
+        current_temp = (
+            attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
+            if self.state.domain == climate.DOMAIN
+            else float(self.state.state)
+        )
         if current_temp is not None:
             response["thermostatTemperatureAmbient"] = round(
                 TemperatureConverter.convert(
@@ -960,51 +977,67 @@ class TemperatureSettingTrait(_Trait):
                 1,
             )
 
-        current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
+        current_humidity = (
+            attrs.get(climate.ATTR_CURRENT_HUMIDITY)
+            if self.state.domain == climate.DOMAIN
+            else None
+        )
         if current_humidity is not None:
             response["thermostatHumidityAmbient"] = current_humidity
 
-        if operation in (climate.HVACMode.AUTO, climate.HVACMode.HEAT_COOL):
-            if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
-                response["thermostatTemperatureSetpointHigh"] = round(
-                    TemperatureConverter.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_HIGH],
-                        unit,
-                        UnitOfTemperature.CELSIUS,
-                    ),
-                    1,
-                )
-                response["thermostatTemperatureSetpointLow"] = round(
-                    TemperatureConverter.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_LOW],
-                        unit,
-                        UnitOfTemperature.CELSIUS,
-                    ),
-                    1,
-                )
+        if self.state.domain == climate.DOMAIN:
+            if operation in (climate.HVACMode.AUTO, climate.HVACMode.HEAT_COOL):
+                if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
+                    response["thermostatTemperatureSetpointHigh"] = round(
+                        TemperatureConverter.convert(
+                            attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                            unit,
+                            UnitOfTemperature.CELSIUS,
+                        ),
+                        1,
+                    )
+                    response["thermostatTemperatureSetpointLow"] = round(
+                        TemperatureConverter.convert(
+                            attrs[climate.ATTR_TARGET_TEMP_LOW],
+                            unit,
+                            UnitOfTemperature.CELSIUS,
+                        ),
+                        1,
+                    )
+                else:
+                    if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
+                        target_temp = round(
+                            TemperatureConverter.convert(
+                                target_temp, unit, UnitOfTemperature.CELSIUS
+                            ),
+                            1,
+                        )
+                        response["thermostatTemperatureSetpointHigh"] = target_temp
+                        response["thermostatTemperatureSetpointLow"] = target_temp
             else:
                 if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
-                    target_temp = round(
+                    response["thermostatTemperatureSetpoint"] = round(
                         TemperatureConverter.convert(
                             target_temp, unit, UnitOfTemperature.CELSIUS
                         ),
                         1,
                     )
-                    response["thermostatTemperatureSetpointHigh"] = target_temp
-                    response["thermostatTemperatureSetpointLow"] = target_temp
-        else:
-            if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
-                response["thermostatTemperatureSetpoint"] = round(
-                    TemperatureConverter.convert(
-                        target_temp, unit, UnitOfTemperature.CELSIUS
-                    ),
-                    1,
-                )
+        elif self.state.domain == sensor.DOMAIN:
+            response["thermostatTemperatureSetpoint"] = round(
+                TemperatureConverter.convert(
+                    current_temp, unit, UnitOfTemperature.CELSIUS
+                ),
+                1,
+            )
 
         return response
 
     async def execute(self, command, data, params, challenge):
         """Execute a temperature point or mode command."""
+        if self.state.domain == sensor.DOMAIN:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED, "Execute is not supported by sensor"
+            )
         # All sent in temperatures are always in Celsius
         unit = self.hass.config.units.temperature_unit
         min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
