@@ -32,7 +32,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # TODO 1. Create API instance
     # TODO 2. Validate the API connection (and authentication)
     # TODO 3. Store an API object for your platforms to access
-    coordinator = S2FlexMeasuresClient()
+    config_data = entry.as_dict()["data"]
+    coordinator = S2FlexMeasuresClient(
+        host=config_data["host"],
+        email=config_data["username"],
+        password=config_data["password"],
+    )
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     def handle_api(call):

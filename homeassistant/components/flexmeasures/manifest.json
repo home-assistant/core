@@ -3,7 +3,7 @@
   "name": "FlexMeasures",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flexmeasures",
-  "requirements": [],
+  "requirements": ["flexmeasures-client"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
