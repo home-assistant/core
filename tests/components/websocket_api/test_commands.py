@@ -7,6 +7,7 @@ from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -37,6 +38,14 @@ STATE_KEY_SHORT_NAMES = {
 STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
 
 
+@pytest.fixture(autouse=False)
+def entities(hass):
+    """Initialize the test switch."""
+    platform = getattr(hass.components, "test.switch")
+    platform.init()
+    return platform.ENTITIES
+
+
 def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
     """Apply a diff set to a dict.
 
@@ -57,6 +66,81 @@ def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
     for key, items in change_dict.get("-", {}).items():
         for item in items:
             del state_dict[STATE_KEY_LONG_NAMES[key]][item]
+
+
+async def _receive_json_matching(
+    websocket_client,
+    buffer: list,
+    pattern: dict,
+):
+    """Wait for a json packet matching a pattern.
+
+    Non-matching received packets are buffered. Will wait indefinitely and
+    buffer infinitely if nothing matches, so only ever call with a timeout.
+    """
+    for buf_msg in buffer:
+        if _dict_matches(buf_msg, pattern):
+            buffer.remove(buf_msg)
+            return buf_msg
+
+    while True:
+        msg = await websocket_client.receive_json()
+        if _dict_matches(msg, pattern):
+            return msg
+        else:
+            buffer.append(msg)
+
+
+def _dict_matches(item: dict, pattern: dict) -> bool:
+    """Test if a given dict contains the defined pattern.
+
+    Checks that each key and value in 'pattern' exists within 'item'.
+    'None' values in pattern are treated as wildcard.
+    Useful for finding matching json messages.
+    """
+    for p_key, p_value in pattern.items():
+        if p_key not in item:
+            return False
+        if p_value is None:
+            continue
+        i_value = item[p_key]
+        if type(i_value) is dict:
+            if type(p_value) is not dict:
+                return False
+            if not _dict_matches(i_value, p_value):
+                return False
+        elif i_value != p_value:
+            return False
+    return True
+
+
+async def test_helper_dict_matches() -> None:
+    """Test that the above dict matching helper works."""
+
+    assert _dict_matches(
+        {"id": 6, "species": {"legs": {"front": 2, "rear": 2}}},
+        {"id": 6, "species": {"legs": {"front": 2, "rear": 2}}},
+    )
+    assert _dict_matches(
+        {"id": 6, "species": {"legs": {"front": 2, "rear": 2}}},
+        {"id": 6, "species": {"legs": {"front": 2, "rear": 2}}},
+    )
+    assert _dict_matches(
+        {"id": 6, "species": {"legs": {"front": 2, "rear": 2}}},
+        {"id": 6, "species": {"legs": {"front": 2, "rear": None}}},
+    )
+    assert not _dict_matches(
+        {"id": 6, "species": {"legs": {"front": 2, "rear": None}}},
+        {"id": 6, "species": {"legs": {"front": 2, "rear": 2}}},
+    )
+    assert not _dict_matches(
+        {"id": 6, "species": "dog"},
+        {"id": 5, "species": "dog"},
+    )
+    assert not _dict_matches(
+        {"id": 6, "species": {"legs": {"front": 2, "rear": 2}}},
+        {"id": 6, "species": {"legs": {"front": 2, "rear": 3}}},
+    )
 
 
 async def test_fire_event(hass: HomeAssistant, websocket_client) -> None:
@@ -1607,6 +1691,128 @@ async def test_subscribe_trigger(hass: HomeAssistant, websocket_client) -> None:
 
     # Check our listener got unsubscribed
     assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+async def test_switch_context(
+    hass: HomeAssistant,
+    entities,
+    hass_admin_user: MockUser,
+    enable_custom_integrations: None,
+) -> None:
+    """Test that switch context works."""
+    assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.ac")
+    assert state is not None
+
+    await hass.services.async_call(
+        "switch",
+        "toggle",
+        {"entity_id": state.entity_id},
+        True,
+        None,  # core.Context(user_id=hass_admin_user.id),
+    )
+
+    state2 = hass.states.get("switch.ac")
+    assert state2 is not None
+    assert state.state != state2.state
+    # assert state2.context.user_id == hass_admin_user.id
+
+
+async def test_call_service_context(
+    hass: HomeAssistant,
+    entities,
+    websocket_client,
+    enable_custom_integrations: None,
+) -> None:
+    """Test that websocket responses contain unique context strings."""
+    buffer = []
+
+    assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
+
+    await hass.async_block_till_done()
+    switch: SwitchEntity
+    for e in entities:
+        if e.entity_id == "switch.ac":
+            switch = e
+            break
+    else:
+        e = None
+    assert e is not None
+
+    state = hass.states.get("switch.ac")
+    assert state is not None
+
+    hass.states.async_set("switch.ac", "on")
+
+    await websocket_client.send_json(
+        {"id": 5, "type": "subscribe_events", "event_type": "state_changed"}
+    )
+    async with timeout(3):
+        msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    hass.states.async_set("switch.ac", "off")
+    async with timeout(3):
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    assert msg["event"]["event_type"] == "state_changed"
+    assert msg["event"]["data"]["entity_id"] == "switch.ac"
+    context_id1 = msg["event"]["context"]["id"]
+
+    hass.states.async_set("switch.ac", "on")
+    async with timeout(3):
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    assert msg["event"]["event_type"] == "state_changed"
+    assert msg["event"]["data"]["entity_id"] == "switch.ac"
+    context_id2 = msg["event"]["context"]["id"]
+    assert context_id1 != context_id2
+
+    await websocket_client.send_json(
+        {
+            "id": 6,
+            "type": "call_service",
+            "domain": "switch",
+            "service": "turn_off",
+            "target": {"entity_id": "switch.ac"},
+        }
+    )
+    async with timeout(3):
+        msg = await _receive_json_matching(websocket_client, buffer, {"id": 6})
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    async with timeout(3):
+        msg = await _receive_json_matching(
+            websocket_client,
+            buffer,
+            {"id": 5, "type": "event", "event": {"data": {"entity_id": "switch.ac"}}},
+        )
+    assert msg["event"]["event_type"] == "state_changed"
+    context_id3 = msg["event"]["context"]["id"]
+    assert context_id2 != context_id3
+
+    # Simulate device triggering state change (e.g. user push physical button)
+    await switch.async_turn_on()
+    await switch.async_update_ha_state()
+    async with timeout(3):
+        msg = await _receive_json_matching(
+            websocket_client,
+            buffer,
+            {"id": 5, "type": "event", "event": {"data": {"entity_id": "switch.ac"}}},
+        )
+    assert msg["event"]["event_type"] == "state_changed"
+    context_id4 = msg["event"]["context"]["id"]
+    assert context_id3 != context_id4
 
 
 async def test_test_condition(hass: HomeAssistant, websocket_client) -> None:
