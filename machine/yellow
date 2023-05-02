@@ -3,8 +3,7 @@ FROM homeassistant/aarch64-homeassistant:$BUILD_VERSION
 
 RUN apk --no-cache add \
         raspberrypi \
-        raspberrypi-libs \
-        usbutils
+        raspberrypi-libs
 
 ##
 # Set symlinks for raspberry pi binaries.

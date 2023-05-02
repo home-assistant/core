@@ -118,7 +118,7 @@ class TransmissionSwitch(SwitchEntity):
         if self.type == "on_off":
             self._data = self._tm_client.api.data
             if self._data:
-                active = self._data.activeTorrentCount > 0
+                active = self._data.active_torrent_count > 0
 
         elif self.type == "turtle_mode":
             active = self._tm_client.api.get_alt_speed_enabled()
