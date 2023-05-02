@@ -1022,7 +1022,7 @@ kegtron-ble==0.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.knx
-knx_frontend==20221026104517
+knx_frontend==2023.5.2.73247
 
 # homeassistant.components.konnected
 konnected==1.2.0
