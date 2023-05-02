@@ -114,17 +114,15 @@ class ONVIFDevice:
         self.info = await self.async_get_device_info()
         LOGGER.debug("Camera %s info = %s", self.name, self.info)
 
-        # Check profiles before capabilities since the camera may be slow to respond
-        # once the event manager is started in async_get_capabilities.
+        self.capabilities = await self.async_get_capabilities()
+        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
+
         self.profiles = await self.async_get_profiles()
         LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
 
         # No camera profiles to add
         if not self.profiles:
             raise ONVIFError("No camera profiles found")
-
-        self.capabilities = await self.async_get_capabilities()
-        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
 
         if self.capabilities.ptz:
             self.device.create_ptz_service()
@@ -135,6 +133,11 @@ class ONVIFDevice:
             for profile in self.profiles
             if profile.video.encoding == "H264"
         )
+
+        # Start events last since some cameras become slow to respond
+        # for a bit after starting events
+        if await self.async_start_events():
+            self.capabilities.events = True
 
     async def async_stop(self, event=None):
         """Shut it all down."""
@@ -307,18 +310,20 @@ class ONVIFDevice:
             self.device.create_imaging_service()
             imaging = True
 
-        events = False
+        return Capabilities(snapshot=snapshot, ptz=ptz, imaging=imaging)
+
+    async def async_start_events(self):
+        """Start the event handler."""
         with suppress(*GET_CAPABILITIES_EXCEPTIONS, XMLParseError):
             onvif_capabilities = self.onvif_capabilities or {}
             pull_point_support = onvif_capabilities.get("Events", {}).get(
                 "WSPullPointSupport"
             )
             LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
-            events = await self.events.async_start(
-                pull_point_support is not False, True
-            )
+            await self.events.async_start(pull_point_support is not False, True)
+            return True
 
-        return Capabilities(snapshot, events, ptz, imaging)
+        return False
 
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
