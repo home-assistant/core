@@ -37,3 +37,18 @@ async def async_setup_entry(
 
 class InvertSwitch(BaseToggleEntity, LightEntity):
     """Represents a Switch as Inversed."""
+    
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the entity is on.
+        Fan logic uses speed percentage or preset mode to determine
+        if it's on or off, however, when using a wrapped switch, we
+        just use the wrapped switch's state.
+        """
+        return self._attr_is_off
+
+    async def async_turn_on(self) -> None:
+        await super().async_turn_off()
+    
+    async def async_turn_off(self) -> None:
+        await super().async_turn_on()
