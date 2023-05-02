@@ -1,8 +1,9 @@
 """Roborock Models."""
 from dataclasses import dataclass
 
+from roborock.code_mappings import ModelSpecification
 from roborock.containers import HomeDataDevice, HomeDataProduct, NetworkInfo
-from roborock.typing import DeviceProp
+from roborock.roborock_typing import DeviceProp
 
 
 @dataclass
@@ -13,3 +14,4 @@ class RoborockHassDeviceInfo:
     network_info: NetworkInfo
     product: HomeDataProduct
     props: DeviceProp
+    model_specification: ModelSpecification

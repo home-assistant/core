@@ -7,7 +7,9 @@ import logging
 
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
+from roborock.code_mappings import ModelSpecification
 from roborock.containers import HomeDataDevice, RoborockDeviceInfo, UserData
+from roborock.exceptions import RoborockException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -32,30 +34,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     home_data = await api_client.get_home_data(user_data)
     _LOGGER.debug("Got home data %s", home_data)
     devices: list[HomeDataDevice] = home_data.devices + home_data.received_devices
+    product_info = {product.id: product for product in home_data.products}
+    models: dict[str, ModelSpecification] = {
+        product.id: product.model_specification for product in product_info.values()
+    }
     # Create a mqtt_client, which is needed to get the networking information of the device for local connection and in the future, get the map.
-    mqtt_client = RoborockMqttClient(
-        user_data, {device.duid: RoborockDeviceInfo(device) for device in devices}
-    )
+    mqtt_clients = [
+        RoborockMqttClient(
+            user_data, RoborockDeviceInfo(device, models[device.product_id])
+        )
+        for device in devices
+    ]
     network_results = await asyncio.gather(
-        *(mqtt_client.get_networking(device.duid) for device in devices)
+        *(mqtt_client.get_networking() for mqtt_client in mqtt_clients)
     )
     network_info = {
         device.duid: result
         for device, result in zip(devices, network_results)
         if result is not None
     }
-    await mqtt_client.async_disconnect()
+    try:
+        await asyncio.gather(
+            *(mqtt_client.async_disconnect() for mqtt_client in mqtt_clients)
+        )
+    except RoborockException as err:
+        _LOGGER.warning("Failed disconnecting from the mqtt server %s", err)
     if not network_info:
         raise ConfigEntryNotReady(
             "Could not get network information about your devices"
         )
 
-    product_info = {product.id: product for product in home_data.products}
     coordinator = RoborockDataUpdateCoordinator(
-        hass,
-        devices,
-        network_info,
-        product_info,
+        hass, devices, network_info, product_info, models
     )
 
     await coordinator.async_config_entry_first_refresh()

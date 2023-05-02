@@ -3,8 +3,10 @@
 from typing import Any
 
 from roborock.containers import Status
-from roborock.typing import RoborockCommand
+from roborock.exceptions import RoborockException
+from roborock.roborock_typing import RoborockCommand
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -31,6 +33,7 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
         self._device_id = device_info.device.duid
         self._device_model = device_info.product.model
         self._fw_version = device_info.device.fv
+        self._model_specification = device_info.model_specification
 
     @property
     def _device_status(self) -> Status:
@@ -59,8 +62,14 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
         self, command: RoborockCommand, params: dict[str, Any] | list[Any] | None = None
     ) -> dict:
         """Send a command to a vacuum cleaner."""
-        response = await self.coordinator.api.send_command(
-            self._device_id, command, params
-        )
+        try:
+            response = await self.coordinator.api_map[self._device_id].send_command(
+                command, params
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                f"Error while calling {command.name} with {params}"
+            ) from err
+
         await self.coordinator.async_request_refresh()
         return response

@@ -34,7 +34,8 @@
           "standard": "Standard",
           "deep": "Deep",
           "deep_plus": "Deep+",
-          "custom": "Custom"
+          "custom": "Custom",
+          "fast": "Fast"
         }
       },
       "mop_intensity": {
