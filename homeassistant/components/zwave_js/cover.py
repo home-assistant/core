@@ -269,7 +269,7 @@ class ZWaveTiltCover(ZWaveCover):
         assert self._current_tilt_value
         await self.info.node.async_set_value(
             self._current_tilt_value,
-            percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
+            self.percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
         )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
