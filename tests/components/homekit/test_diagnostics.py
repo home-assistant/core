@@ -319,12 +319,12 @@ async def test_config_entry_with_trigger_accessory(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test generating diagnostics for a bridge config entry with a trigger accessory."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     hk_driver.publish = MagicMock()
 
     demo_config_entry = MockConfigEntry(domain="domain")
     demo_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
