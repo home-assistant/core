@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/lastfm",
   "iot_class": "cloud_polling",
   "loggers": ["pylast"],
-  "requirements": ["pylast==4.2.1"]
+  "requirements": ["pylast==5.1.0"]
 }

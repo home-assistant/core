@@ -41,6 +41,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    Platform,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -100,6 +101,7 @@ async def async_setup_entry(
 
     # create weather data:
     data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, None)
+    hass.data[DOMAIN][entry.entry_id][Platform.WEATHER] = data
     # create weather device:
     _LOGGER.debug("Initializing buienradar weather: coordinates %s", coordinates)
 

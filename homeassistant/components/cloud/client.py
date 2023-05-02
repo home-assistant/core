@@ -136,8 +136,8 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    async def cloud_started(self) -> None:
-        """When cloud is started."""
+    async def on_cloud_connected(self) -> None:
+        """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_):
@@ -180,6 +180,9 @@ class CloudClient(Interface):
 
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
+
+    async def cloud_started(self) -> None:
+        """When cloud is started."""
 
     async def cloud_stopped(self) -> None:
         """When the cloud is stopped."""
