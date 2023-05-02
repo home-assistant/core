@@ -8,7 +8,6 @@ import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
 import async_timeout
 import voluptuous as vol
-from collections import OrderedDict
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -27,7 +26,7 @@ DOMAIN = "no_ip"
 # We should set a dedicated address for the user agent.
 EMAIL = "hello@home-assistant.io"
 
-INTERVAL = timedelta(minutes=1)
+INTERVAL = timedelta(minutes=5)
 
 DEFAULT_TIMEOUT = 10
 
