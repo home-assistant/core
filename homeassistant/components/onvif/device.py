@@ -100,6 +100,7 @@ class ONVIFDevice:
 
         # Get all device info
         await self.device.update_xaddrs()
+        LOGGER.debug("%s: xaddrs = %s", self.name, self.device.xaddrs)
 
         # Get device capabilities
         self.onvif_capabilities = await self.device.get_capabilities()
@@ -112,10 +113,20 @@ class ONVIFDevice:
 
         # Fetch basic device info and capabilities
         self.info = await self.async_get_device_info()
-        LOGGER.debug("Camera %s info = %s", self.name, self.info)
+        LOGGER.debug("%s: camera info = %s", self.name, self.info)
 
-        # Check profiles before capabilities since the camera may be slow to respond
-        # once the event manager is started in async_get_capabilities.
+        #
+        # We need to check capabilities before profiles, because we need the data
+        # from capabilities to determine profiles correctly.
+        #
+        # We no longer initialize events in capabilities to avoid the problem
+        # where cameras become slow to respond for a bit after starting events, and
+        # instead we start events last and than update capabilities.
+        #
+        LOGGER.debug("%s: fetching initial capabilities", self.name)
+        self.capabilities = await self.async_get_capabilities()
+
+        LOGGER.debug("%s: fetching profiles", self.name)
         self.profiles = await self.async_get_profiles()
         LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
 
@@ -123,10 +134,8 @@ class ONVIFDevice:
         if not self.profiles:
             raise ONVIFError("No camera profiles found")
 
-        self.capabilities = await self.async_get_capabilities()
-        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
-
         if self.capabilities.ptz:
+            LOGGER.debug("%s: creating PTZ service", self.name)
             self.device.create_ptz_service()
 
         # Determine max resolution from profiles
@@ -135,6 +144,12 @@ class ONVIFDevice:
             for profile in self.profiles
             if profile.video.encoding == "H264"
         )
+
+        # Start events last since some cameras become slow to respond
+        # for a bit after starting events
+        LOGGER.debug("%s: starting events", self.name)
+        self.capabilities.events = await self.async_start_events()
+        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
 
     async def async_stop(self, event=None):
         """Shut it all down."""
@@ -307,23 +322,31 @@ class ONVIFDevice:
             self.device.create_imaging_service()
             imaging = True
 
-        events = False
+        return Capabilities(snapshot=snapshot, ptz=ptz, imaging=imaging)
+
+    async def async_start_events(self):
+        """Start the event handler."""
         with suppress(*GET_CAPABILITIES_EXCEPTIONS, XMLParseError):
             onvif_capabilities = self.onvif_capabilities or {}
             pull_point_support = onvif_capabilities.get("Events", {}).get(
                 "WSPullPointSupport"
             )
             LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
-            events = await self.events.async_start(
-                pull_point_support is not False, True
-            )
+            return await self.events.async_start(pull_point_support is not False, True)
 
-        return Capabilities(snapshot, events, ptz, imaging)
+        return False
 
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
-        result = await media_service.GetProfiles()
+        LOGGER.debug("%s: xaddr for media_service: %s", self.name, media_service.xaddr)
+        try:
+            result = await media_service.GetProfiles()
+        except GET_CAPABILITIES_EXCEPTIONS:
+            LOGGER.debug(
+                "%s: Could not get profiles from ONVIF device", self.name, exc_info=True
+            )
+            raise
         profiles: list[Profile] = []
 
         if not isinstance(result, list):
