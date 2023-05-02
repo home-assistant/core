@@ -101,7 +101,6 @@ class ONVIFDevice:
         # Get all device info
         await self.device.update_xaddrs()
         LOGGER.debug("%s: xaddrs = %s", self.name, self.device.xaddrs)
-        LOGGER.debug("%s: services = %s", self.name, self.device.services)
 
         # Get device capabilities
         self.onvif_capabilities = await self.device.get_capabilities()
