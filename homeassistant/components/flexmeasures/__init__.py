@@ -32,13 +32,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # TODO 1. Create API instance
     # TODO 2. Validate the API connection (and authentication)
     # TODO 3. Store an API object for your platforms to access
-    config_data = entry.as_dict()["data"]
+    config_data = dict(entry.data)
+    # Registers update listener to update config entry when options are updated.
+    unsub_options_update_listener = entry.add_update_listener(options_update_listener)
+    # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
+    config_data["unsub_options_update_listener"] = unsub_options_update_listener
     client = S2FlexMeasuresClient(
         host=config_data["host"],
         email=config_data["username"],
         password=config_data["password"],
     )
-    hass.data[DOMAIN][entry.entry_id] = client
+    config_data["coordinator"] = client
+    hass.data[DOMAIN][entry.entry_id] = config_data
 
     async def handle_api(call):
         """Handle the service call to the FlexMeasures REST API."""
@@ -65,6 +70,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def options_update_listener(
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
