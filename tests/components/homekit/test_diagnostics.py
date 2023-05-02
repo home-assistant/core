@@ -324,6 +324,7 @@ async def test_config_entry_with_trigger_accessory(
 
     demo_config_entry = MockConfigEntry(domain="domain")
     demo_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
