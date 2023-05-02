@@ -702,7 +702,7 @@ async def test_import_expose_settings_1(
         original_name="ABC",
     )
     for assistant, should_expose in EXPOSE_SETTINGS.items():
-        exposed_entities.async_expose_entity(
+        await exposed_entities.async_expose_entity(
             hass, assistant, switch_entity_entry.entity_id, should_expose
         )
 
@@ -760,7 +760,7 @@ async def test_import_expose_settings_2(
         original_name="ABC",
     )
     for assistant, should_expose in EXPOSE_SETTINGS.items():
-        exposed_entities.async_expose_entity(
+        await exposed_entities.async_expose_entity(
             hass, assistant, switch_entity_entry.entity_id, should_expose
         )
 
@@ -785,7 +785,7 @@ async def test_import_expose_settings_2(
         suggested_object_id="abc",
     )
     for assistant, should_expose in EXPOSE_SETTINGS.items():
-        exposed_entities.async_expose_entity(
+        await exposed_entities.async_expose_entity(
             hass, assistant, switch_as_x_entity_entry.entity_id, not should_expose
         )
 
@@ -850,7 +850,7 @@ async def test_restore_expose_settings(
         suggested_object_id="abc",
     )
     for assistant, should_expose in EXPOSE_SETTINGS.items():
-        exposed_entities.async_expose_entity(
+        await exposed_entities.async_expose_entity(
             hass, assistant, switch_as_x_entity_entry.entity_id, should_expose
         )
 

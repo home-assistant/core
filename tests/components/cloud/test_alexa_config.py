@@ -18,7 +18,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
@@ -39,10 +38,10 @@ def expose_new(hass, expose_new):
     exposed_entities.async_set_expose_new_entities("cloud.alexa", expose_new)
 
 
-def expose_entity(hass, entity_id, should_expose):
+async def expose_entity(hass, entity_id, should_expose):
     """Expose an entity to Alexa."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_entity("cloud.alexa", entity_id, should_expose)
+    await exposed_entities.async_expose_entity("cloud.alexa", entity_id, should_expose)
 
 
 async def test_alexa_config_expose_entity_prefs(
@@ -96,36 +95,35 @@ async def test_alexa_config_expose_entity_prefs(
         alexa_report_state=False,
     )
     expose_new(hass, True)
-    expose_entity(hass, entity_entry5.entity_id, False)
+    await expose_entity(hass, entity_entry5.entity_id, False)
     conf = alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
     await conf.async_initialize()
 
-    # can't expose an entity which is not in the entity registry
-    with pytest.raises(HomeAssistantError):
-        expose_entity(hass, "light.kitchen", True)
-    assert not conf.should_expose("light.kitchen")
+    # an entity which is not in the entity registry can be exposed
+    await expose_entity(hass, "light.kitchen", True)
+    assert await conf.should_expose("light.kitchen")
     # categorized and hidden entities should not be exposed
-    assert not conf.should_expose(entity_entry1.entity_id)
-    assert not conf.should_expose(entity_entry2.entity_id)
-    assert not conf.should_expose(entity_entry3.entity_id)
-    assert not conf.should_expose(entity_entry4.entity_id)
+    assert not await conf.should_expose(entity_entry1.entity_id)
+    assert not await conf.should_expose(entity_entry2.entity_id)
+    assert not await conf.should_expose(entity_entry3.entity_id)
+    assert not await conf.should_expose(entity_entry4.entity_id)
     # this has been hidden
-    assert not conf.should_expose(entity_entry5.entity_id)
+    assert not await conf.should_expose(entity_entry5.entity_id)
     # exposed by default
-    assert conf.should_expose(entity_entry6.entity_id)
+    assert await conf.should_expose(entity_entry6.entity_id)
 
-    expose_entity(hass, entity_entry5.entity_id, True)
-    assert conf.should_expose(entity_entry5.entity_id)
+    await expose_entity(hass, entity_entry5.entity_id, True)
+    assert await conf.should_expose(entity_entry5.entity_id)
 
-    expose_entity(hass, entity_entry5.entity_id, None)
-    assert not conf.should_expose(entity_entry5.entity_id)
+    await expose_entity(hass, entity_entry5.entity_id, None)
+    assert not await conf.should_expose(entity_entry5.entity_id)
 
     assert "alexa" not in hass.config.components
     await hass.async_block_till_done()
     assert "alexa" in hass.config.components
-    assert not conf.should_expose(entity_entry5.entity_id)
+    assert not await conf.should_expose(entity_entry5.entity_id)
 
 
 async def test_alexa_config_report_state(
@@ -370,7 +368,7 @@ async def test_alexa_update_expose_trigger_sync(
     await conf.async_initialize()
 
     with patch_sync_helper() as (to_update, to_remove):
-        expose_entity(hass, light_entry.entity_id, True)
+        await expose_entity(hass, light_entry.entity_id, True)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, fire_all=True)
         await hass.async_block_till_done()
@@ -380,9 +378,9 @@ async def test_alexa_update_expose_trigger_sync(
     assert to_remove == []
 
     with patch_sync_helper() as (to_update, to_remove):
-        expose_entity(hass, light_entry.entity_id, False)
-        expose_entity(hass, binary_sensor_entry.entity_id, True)
-        expose_entity(hass, sensor_entry.entity_id, True)
+        await expose_entity(hass, light_entry.entity_id, False)
+        await expose_entity(hass, binary_sensor_entry.entity_id, True)
+        await expose_entity(hass, sensor_entry.entity_id, True)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, fire_all=True)
         await hass.async_block_till_done()
@@ -588,7 +586,7 @@ async def test_alexa_config_migrate_expose_entity_prefs(
         alexa_report_state=False,
         alexa_settings_version=1,
     )
-    expose_entity(hass, entity_migrated.entity_id, False)
+    await expose_entity(hass, entity_migrated.entity_id, False)
 
     cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS]["light.unknown"] = {
         PREF_SHOULD_EXPOSE: True
