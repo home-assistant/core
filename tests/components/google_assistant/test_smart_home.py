@@ -452,6 +452,7 @@ async def test_execute(
 ) -> None:
     """Test an execute command."""
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -635,6 +636,7 @@ async def test_execute_times_out(
     orig_execute_limit = sh.EXECUTE_LIMIT
     sh.EXECUTE_LIMIT = 0.02  # Decrease timeout to 20ms
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
     await hass.services.async_call(

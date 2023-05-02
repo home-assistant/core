@@ -87,7 +87,6 @@ async def async_setup(hass: core.HomeAssistant) -> None:
     hass.bus.async_listen(
         er.EVENT_ENTITY_REGISTRY_UPDATED,
         async_handle_entity_registry_changed,
-        run_immediately=True,
     )
 
 
