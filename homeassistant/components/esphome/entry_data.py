@@ -9,6 +9,7 @@ from typing import Any, cast
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
+    AlarmControlPanelInfo,
     APIClient,
     APIVersion,
     BinarySensorInfo,
@@ -45,6 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
+    AlarmControlPanelInfo: Platform.ALARM_CONTROL_PANEL,
     BinarySensorInfo: Platform.BINARY_SENSOR,
     ButtonInfo: Platform.BUTTON,
     CameraInfo: Platform.CAMERA,
