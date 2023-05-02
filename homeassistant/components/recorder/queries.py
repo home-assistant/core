@@ -678,6 +678,22 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
     )
 
 
+def find_legacy_detached_states_and_attributes_to_purge(
+    purge_before: float,
+) -> StatementLambdaElement:
+    """Find states rows with event_id set but not linked event_id in Events."""
+    return lambda_stmt(
+        lambda: select(States.state_id, States.attributes_id)
+        .outerjoin(Events, States.event_id == Events.event_id)
+        .filter(States.event_id.isnot(None))
+        .filter(
+            (States.last_updated_ts < purge_before) | States.last_updated_ts.is_(None)
+        )
+        .filter(Events.event_id.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
 def find_legacy_row() -> StatementLambdaElement:
     """Check if there are still states in the table with an event_id."""
     # https://github.com/sqlalchemy/sqlalchemy/issues/9189
@@ -690,6 +706,7 @@ def find_events_context_ids_to_migrate() -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(
             Events.event_id,
+            Events.time_fired_ts,
             Events.context_id,
             Events.context_user_id,
             Events.context_parent_id,
@@ -730,7 +747,8 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
         lambda: update(States)
         .where(
             States.state_id.in_(
-                select(States.state_id).join(
+                select(States.state_id)
+                .join(
                     states_with_entity_ids := select(
                         States.state_id.label("state_id_with_entity_id")
                     )
@@ -739,6 +757,8 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
                     .subquery(),
                     States.state_id == states_with_entity_ids.c.state_id_with_entity_id,
                 )
+                .alias("states_with_entity_ids")
+                .select()
             )
         )
         .values(entity_id=None)
@@ -785,6 +805,7 @@ def find_states_context_ids_to_migrate() -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(
             States.state_id,
+            States.last_updated_ts,
             States.context_id,
             States.context_user_id,
             States.context_parent_id,

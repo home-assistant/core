@@ -8,6 +8,7 @@ from typing import Any
 
 import aiohttp
 from aiohttp.web import Request
+import async_timeout
 from reolink_aio.api import Host
 from reolink_aio.exceptions import ReolinkError, SubscriptionError
 
@@ -23,6 +24,7 @@ from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
 DEFAULT_TIMEOUT = 60
+FIRST_ONVIF_TIMEOUT = 15
 SUBSCRIPTION_RENEW_THRESHOLD = 300
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,11 +148,13 @@ class ReolinkHost:
             "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
         )
         try:
-            await asyncio.wait_for(self._webhook_reachable.wait(), timeout=15)
+            async with async_timeout.timeout(FIRST_ONVIF_TIMEOUT):
+                await self._webhook_reachable.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug(
-                "Did not receive initial ONVIF state on webhook '%s' after 15 seconds",
+                "Did not receive initial ONVIF state on webhook '%s' after %i seconds",
                 self._webhook_url,
+                FIRST_ONVIF_TIMEOUT,
             )
             ir.async_create_issue(
                 self._hass,
@@ -357,34 +361,77 @@ class ReolinkHost:
 
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
-    ):
-        """Shield the incoming webhook callback from cancellation."""
-        await asyncio.shield(self.handle_webhook_shielded(hass, webhook_id, request))
-
-    async def handle_webhook_shielded(
-        self, hass: HomeAssistant, webhook_id: str, request: Request
-    ):
-        """Handle incoming webhook from Reolink for inbound messages and calls."""
-
+    ) -> None:
+        """Read the incoming webhook from Reolink for inbound messages and schedule processing."""
         _LOGGER.debug("Webhook '%s' called", webhook_id)
+        data: bytes | None = None
+        try:
+            data = await request.read()
+            if not data:
+                _LOGGER.debug(
+                    "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
+                )
+        except ConnectionResetError:
+            _LOGGER.debug(
+                "Webhook '%s' called, but lost connection before reading message "
+                "(ConnectionResetError), issuing poll",
+                webhook_id,
+            )
+            return
+        except aiohttp.ClientResponseError:
+            _LOGGER.debug(
+                "Webhook '%s' called, but could not read the message, issuing poll",
+                webhook_id,
+            )
+            return
+        except asyncio.CancelledError:
+            _LOGGER.debug(
+                "Webhook '%s' called, but lost connection before reading message "
+                "(CancelledError), issuing poll",
+                webhook_id,
+            )
+            raise
+        finally:
+            # We want handle_webhook to return as soon as possible
+            # so we process the data in the background, this also shields from cancellation
+            hass.async_create_background_task(
+                self._process_webhook_data(hass, webhook_id, data),
+                "Process Reolink webhook",
+            )
+
+    async def _process_webhook_data(
+        self, hass: HomeAssistant, webhook_id: str, data: bytes | None
+    ) -> None:
+        """Process the data from the Reolink webhook."""
+        # This task is executed in the background so we need to catch exceptions
+        # and log them
         if not self._webhook_reachable.is_set():
             self._webhook_reachable.set()
+            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
-        if not request.body_exists:
-            _LOGGER.debug("Webhook '%s' triggered without payload", webhook_id)
-            return
+        try:
+            if not data:
+                if not await self._api.get_motion_state_all_ch():
+                    _LOGGER.error(
+                        "Could not poll motion state after losing connection during receiving ONVIF event"
+                    )
+                    return
+                async_dispatcher_send(hass, f"{webhook_id}_all", {})
+                return
 
-        data = await request.text()
-        if not data:
-            _LOGGER.debug(
-                "Webhook '%s' triggered with unknown payload: %s", webhook_id, data
+            message = data.decode("utf-8")
+            channels = await self._api.ONVIF_event_callback(message)
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Error processing ONVIF event for Reolink %s: %s",
+                self._api.nvr_name,
+                ex,
             )
             return
 
-        channels = await self._api.ONVIF_event_callback(data)
-
         if channels is None:
             async_dispatcher_send(hass, f"{webhook_id}_all", {})
-        else:
-            for channel in channels:
-                async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
+            return
+
+        for channel in channels:
+            async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})

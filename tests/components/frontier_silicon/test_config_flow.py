@@ -415,3 +415,82 @@ async def test_ssdp_nondefault_pin(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
+
+
+async def test_reauth_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Test reauth flow."""
+    config_entry.add_to_hass(hass)
+    assert config_entry.data[CONF_PIN] == "1234"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": config_entry.unique_id,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "device_config"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PIN: "4242"},
+    )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_PIN] == "4242"
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (ConnectionError, "cannot_connect"),
+        (InvalidPinException, "invalid_auth"),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_reauth_flow_friendly_name_error(
+    hass: HomeAssistant,
+    exception: Exception,
+    reason: str,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow with failures."""
+    config_entry.add_to_hass(hass)
+    assert config_entry.data[CONF_PIN] == "1234"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": config_entry.unique_id,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "device_config"
+
+    with patch(
+        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
+        side_effect=exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PIN: "4321"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "device_config"
+    assert result2["errors"] == {"base": reason}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PIN: "4242"},
+    )
+    assert result3["type"] == FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_PIN] == "4242"

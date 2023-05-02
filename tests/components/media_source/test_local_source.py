@@ -132,9 +132,13 @@ async def test_upload_view(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     temp_dir,
+    tmpdir,
     hass_admin_user: MockUser,
 ) -> None:
     """Allow uploading media."""
+    # We need a temp dir that's not under tempdir fixture
+    extra_media_dir = tmpdir
+    hass.config.media_dirs["another_path"] = temp_dir
 
     img = (Path(__file__).parent.parent / "image_upload/logo.png").read_bytes()
 
@@ -167,6 +171,8 @@ async def test_upload_view(
         "media-source://media_source/test_dir/..",
         # Domain != media_source
         "media-source://nest/test_dir/.",
+        # Other directory
+        f"media-source://media_source/another_path///{extra_media_dir}/",
         # Completely something else
         "http://bla",
     ):
@@ -178,7 +184,7 @@ async def test_upload_view(
             },
         )
 
-        assert res.status == 400
+        assert res.status == 400, bad_id
         assert not (Path(temp_dir) / "bad-source-id.png").is_file()
 
     # Test invalid POST data

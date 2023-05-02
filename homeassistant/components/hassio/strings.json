@@ -17,6 +17,32 @@
     }
   },
   "issues": {
+    "issue_system_multiple_data_disks": {
+      "title": "Multiple data disks detected",
+      "fix_flow": {
+        "step": {
+          "system_rename_data_disk": {
+            "description": "'{reference}' is a filesystem with the name 'hassos-data' and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the fix option to rename the filesystem to prevent this. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system."
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not rename the filesystem. Check the supervisor logs for more details."
+        }
+      }
+    },
+    "issue_system_reboot_required": {
+      "title": "Reboot required",
+      "fix_flow": {
+        "step": {
+          "system_execute_reboot": {
+            "description": "Settings were changed which require a system reboot to take effect.\n\nThis fix will initiate a system reboot which will make Home Assistant and all the Add-ons inaccessible for a brief period."
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not reboot the system. Check the supervisor logs for more details."
+        }
+      }
+    },
     "unhealthy": {
       "title": "Unhealthy system - {reason}",
       "description": "System is currently unhealthy due to {reason}. Use the link to learn more and how to fix this."
@@ -124,6 +150,22 @@
     "unsupported_systemd_resolved": {
       "title": "Unsupported system - Systemd-Resolved issues",
       "description": "System is unsupported because Systemd Resolved is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "state": { "name": "Running" }
+    },
+    "sensor": {
+      "agent_version": { "name": "OS Agent version" },
+      "apparmor_version": { "name": "Apparmor version" },
+      "cpu_percent": { "name": "CPU percent" },
+      "disk_free": { "name": "Disk free" },
+      "disk_total": { "name": "Disk total" },
+      "disk_used": { "name": "Disk used" },
+      "memory_percent": { "name": "Memory percent" },
+      "version": { "name": "Version" },
+      "version_latest": { "name": "Newest version" }
     }
   }
 }

@@ -18,5 +18,17 @@
         "below_horizon": "Below horizon"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "next_dawn": { "name": "Next dawn" },
+      "next_dusk": { "name": "Next dusk" },
+      "next_midnight": { "name": "Next midnight" },
+      "next_noon": { "name": "Next noon" },
+      "next_rising": { "name": "Next rising" },
+      "next_setting": { "name": "Next setting" },
+      "solar_azimuth": { "name": "Solar azimuth" },
+      "solar_elevation": { "name": "Solar elevation" }
+    }
   }
 }
