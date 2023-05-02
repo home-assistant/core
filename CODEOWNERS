@@ -234,6 +234,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/cups/ @fabaff
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/date/ @home-assistant/core
+/tests/components/date/ @home-assistant/core
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -1234,6 +1236,8 @@ build.json @home-assistant/supervisor
 /tests/components/tile/ @bachya
 /homeassistant/components/tilt_ble/ @apt-itude
 /tests/components/tilt_ble/ @apt-itude
+/homeassistant/components/time/ @home-assistant/core
+/tests/components/time/ @home-assistant/core
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
 /homeassistant/components/tmb/ @alemuro
