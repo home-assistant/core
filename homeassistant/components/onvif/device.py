@@ -100,6 +100,8 @@ class ONVIFDevice:
 
         # Get all device info
         await self.device.update_xaddrs()
+        LOGGER.debug("%s: xaddrs = %s", self.name, self.device.xaddrs)
+        LOGGER.debug("%s: services = %s", self.name, self.device.services)
 
         # Get device capabilities
         self.onvif_capabilities = await self.device.get_capabilities()
@@ -112,7 +114,7 @@ class ONVIFDevice:
 
         # Fetch basic device info and capabilities
         self.info = await self.async_get_device_info()
-        LOGGER.debug("Camera %s info = %s", self.name, self.info)
+        LOGGER.debug("%s: camera info = %s", self.name, self.info)
 
         #
         # We need to check capabilities before profiles, because we need the data
@@ -338,6 +340,7 @@ class ONVIFDevice:
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
+        LOGGER.debug("%s: xaddr for media_service: %s", self.name, media_service.xaddr)
         try:
             result = await media_service.GetProfiles()
         except GET_CAPABILITIES_EXCEPTIONS:
