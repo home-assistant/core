@@ -144,8 +144,7 @@ class ONVIFDevice:
 
         # Start events last since some cameras become slow to respond
         # for a bit after starting events
-        if await self.async_start_events():
-            self.capabilities.events = True
+        self.capabilities.events = await self.async_start_events()
 
     async def async_stop(self, event=None):
         """Shut it all down."""
