@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar, cast
 
 import voluptuous as vol
 import zigpy.backups
@@ -19,7 +19,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
 
-from .api import async_get_active_network_settings, async_get_radio_type
+from .api import (
+    async_change_channel,
+    async_get_active_network_settings,
+    async_get_radio_type,
+)
 from .core.const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -40,10 +44,10 @@ from .core.const import (
     ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE,
     ATTR_WARNING_DEVICE_STROBE_INTENSITY,
     BINDINGS,
-    CHANNEL_IAS_WD,
     CLUSTER_COMMAND_SERVER,
     CLUSTER_COMMANDS_CLIENT,
     CLUSTER_COMMANDS_SERVER,
+    CLUSTER_HANDLER_IAS_WD,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
     CUSTOM_CONFIGURATION,
@@ -61,7 +65,7 @@ from .core.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
     ZHA_ALARM_OPTIONS,
-    ZHA_CHANNEL_MSG,
+    ZHA_CLUSTER_HANDLER_MSG,
     ZHA_CONFIG_SCHEMAS,
 )
 from .core.gateway import EntityReference
@@ -93,6 +97,7 @@ ATTR_DURATION = "duration"
 ATTR_GROUP = "group"
 ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_INSTALL_CODE = "install_code"
+ATTR_NEW_CHANNEL = "new_channel"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
 ATTR_QR_CODE = "qr_code"
@@ -389,7 +394,7 @@ async def websocket_get_groupable_devices(
                             ),
                         }
                         for entity_ref in entity_refs
-                        if list(entity_ref.cluster_channels.values())[
+                        if list(entity_ref.cluster_handlers.values())[
                             0
                         ].cluster.endpoint.endpoint_id
                         == ep_id
@@ -597,7 +602,7 @@ async def websocket_reconfigure_node(
         connection.send_message(websocket_api.event_message(msg["id"], data))
 
     remove_dispatcher_function = async_dispatcher_connect(
-        hass, ZHA_CHANNEL_MSG, forward_messages
+        hass, ZHA_CLUSTER_HANDLER_MSG, forward_messages
     )
 
     @callback
@@ -1204,6 +1209,23 @@ async def websocket_restore_network_backup(
         connection.send_result(msg[ID])
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/network/change_channel",
+        vol.Required(ATTR_NEW_CHANNEL): vol.Any("auto", vol.Range(11, 26)),
+    }
+)
+@websocket_api.async_response
+async def websocket_change_channel(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Migrate the Zigbee network to a new channel."""
+    new_channel = cast(Literal["auto"] | int, msg[ATTR_NEW_CHANNEL])
+    await async_change_channel(hass, new_channel=new_channel)
+    connection.send_result(msg[ID])
+
+
 @callback
 def async_load_api(hass: HomeAssistant) -> None:
     """Set up the web socket API."""
@@ -1406,14 +1428,14 @@ def async_load_api(hass: HomeAssistant) -> None:
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND],
     )
 
-    def _get_ias_wd_channel(zha_device):
-        """Get the IASWD channel for a device."""
-        cluster_channels = {
+    def _get_ias_wd_cluster_handler(zha_device):
+        """Get the IASWD cluster handler for a device."""
+        cluster_handlers = {
             ch.name: ch
-            for pool in zha_device.channels.pools
-            for ch in pool.claimed_channels.values()
+            for endpoint in zha_device.endpoints.values()
+            for ch in endpoint.claimed_cluster_handlers.values()
         }
-        return cluster_channels.get(CHANNEL_IAS_WD)
+        return cluster_handlers.get(CLUSTER_HANDLER_IAS_WD)
 
     async def warning_device_squawk(service: ServiceCall) -> None:
         """Issue the squawk command for an IAS warning device."""
@@ -1423,11 +1445,11 @@ def async_load_api(hass: HomeAssistant) -> None:
         level: int = service.data[ATTR_LEVEL]
 
         if (zha_device := zha_gateway.get_device(ieee)) is not None:
-            if channel := _get_ias_wd_channel(zha_device):
-                await channel.issue_squawk(mode, strobe, level)
+            if cluster_handler := _get_ias_wd_cluster_handler(zha_device):
+                await cluster_handler.issue_squawk(mode, strobe, level)
             else:
                 _LOGGER.error(
-                    "Squawking IASWD: %s: [%s] is missing the required IASWD channel!",
+                    "Squawking IASWD: %s: [%s] is missing the required IASWD cluster handler!",
                     ATTR_IEEE,
                     str(ieee),
                 )
@@ -1466,13 +1488,13 @@ def async_load_api(hass: HomeAssistant) -> None:
         intensity: int = service.data[ATTR_WARNING_DEVICE_STROBE_INTENSITY]
 
         if (zha_device := zha_gateway.get_device(ieee)) is not None:
-            if channel := _get_ias_wd_channel(zha_device):
-                await channel.issue_start_warning(
+            if cluster_handler := _get_ias_wd_cluster_handler(zha_device):
+                await cluster_handler.issue_start_warning(
                     mode, strobe, level, duration, duty_mode, intensity
                 )
             else:
                 _LOGGER.error(
-                    "Warning IASWD: %s: [%s] is missing the required IASWD channel!",
+                    "Warning IASWD: %s: [%s] is missing the required IASWD cluster handler!",
                     ATTR_IEEE,
                     str(ieee),
                 )
@@ -1527,6 +1549,7 @@ def async_load_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_list_network_backups)
     websocket_api.async_register_command(hass, websocket_create_network_backup)
     websocket_api.async_register_command(hass, websocket_restore_network_backup)
+    websocket_api.async_register_command(hass, websocket_change_channel)
 
 
 @callback

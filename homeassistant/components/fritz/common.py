@@ -19,6 +19,7 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH, FritzGuestWLAN
+import xmltodict
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -137,8 +138,15 @@ class HostInfo(TypedDict):
     status: bool
 
 
+class UpdateCoordinatorDataType(TypedDict):
+    """Update coordinator data type."""
+
+    call_deflections: dict[int, dict]
+    entity_states: dict[str, StateType | bool]
+
+
 class FritzBoxTools(
-    update_coordinator.DataUpdateCoordinator[dict[str, bool | StateType]]
+    update_coordinator.DataUpdateCoordinator[UpdateCoordinatorDataType]
 ):
     """FritzBoxTools class."""
 
@@ -173,6 +181,7 @@ class FritzBoxTools(
         self.password = password
         self.port = port
         self.username = username
+        self.has_call_deflections: bool = False
         self._model: str | None = None
         self._current_firmware: str | None = None
         self._latest_firmware: str | None = None
@@ -243,6 +252,8 @@ class FritzBoxTools(
             )
             self.device_is_router = self.fritz_status.has_wan_enabled
 
+        self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
+
     def register_entity_updates(
         self, key: str, update_fn: Callable[[FritzStatus, StateType], Any]
     ) -> Callable[[], None]:
@@ -259,20 +270,30 @@ class FritzBoxTools(
             self._entity_update_functions[key] = update_fn
         return unregister_entity_updates
 
-    async def _async_update_data(self) -> dict[str, bool | StateType]:
+    async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
-        enity_data: dict[str, bool | StateType] = {}
+        entity_data: UpdateCoordinatorDataType = {
+            "call_deflections": {},
+            "entity_states": {},
+        }
         try:
             await self.async_scan_devices()
             for key, update_fn in self._entity_update_functions.items():
                 _LOGGER.debug("update entity %s", key)
-                enity_data[key] = await self.hass.async_add_executor_job(
+                entity_data["entity_states"][
+                    key
+                ] = await self.hass.async_add_executor_job(
                     update_fn, self.fritz_status, self.data.get(key)
                 )
+            if self.has_call_deflections:
+                entity_data[
+                    "call_deflections"
+                ] = await self.async_update_call_deflections()
         except FRITZ_EXCEPTIONS as ex:
             raise update_coordinator.UpdateFailed(ex) from ex
-        _LOGGER.debug("enity_data: %s", enity_data)
-        return enity_data
+
+        _LOGGER.debug("enity_data: %s", entity_data)
+        return entity_data
 
     @property
     def unique_id(self) -> str:
@@ -353,6 +374,23 @@ class FritzBoxTools(
     async def _async_update_device_info(self) -> tuple[bool, str | None, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""
         return await self.hass.async_add_executor_job(self._update_device_info)
+
+    async def async_update_call_deflections(
+        self,
+    ) -> dict[int, dict[str, Any]]:
+        """Call GetDeflections action from X_AVM-DE_OnTel service."""
+        raw_data = await self.hass.async_add_executor_job(
+            partial(self.connection.call_action, "X_AVM-DE_OnTel1", "GetDeflections")
+        )
+        if not raw_data:
+            return {}
+
+        xml_data = xmltodict.parse(raw_data["NewDeflectionList"])
+        if xml_data.get("List") and (items := xml_data["List"].get("Item")) is not None:
+            if not isinstance(items, list):
+                items = [items]
+            return {int(item["DeflectionId"]): item for item in items}
+        return {}
 
     async def _async_get_wan_access(self, ip_address: str) -> bool | None:
         """Get WAN access rule for given IP address."""
@@ -772,18 +810,6 @@ class AvmWrapper(FritzBoxTools):
             "WLANConfiguration", str(index), "GetInfo"
         )
 
-    async def async_get_ontel_num_deflections(self) -> dict[str, Any]:
-        """Call GetNumberOfDeflections action from X_AVM-DE_OnTel service."""
-
-        return await self._async_service_call(
-            "X_AVM-DE_OnTel", "1", "GetNumberOfDeflections"
-        )
-
-    async def async_get_ontel_deflections(self) -> dict[str, Any]:
-        """Call GetDeflections action from X_AVM-DE_OnTel service."""
-
-        return await self._async_service_call("X_AVM-DE_OnTel", "1", "GetDeflections")
-
     async def async_set_wlan_configuration(
         self, index: int, turn_on: bool
     ) -> dict[str, Any]:
@@ -1023,10 +1049,9 @@ class FritzEntityDescription(EntityDescription, FritzRequireKeysMixin):
     """Fritz entity base description."""
 
 
-class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity):
+class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity[AvmWrapper]):
     """Fritz host coordinator entity base class."""
 
-    coordinator: AvmWrapper
     entity_description: FritzEntityDescription
     _attr_has_entity_name = True
 
