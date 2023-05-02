@@ -79,9 +79,7 @@ class FreeboxBasicShutter(FreeboxHomeEntity, CoverEntity):
         self._command_up = self.get_command_id(node["show_endpoints"], "slot", "up")
         self._command_stop = self.get_command_id(node["show_endpoints"], "slot", "stop")
         self._command_down = self.get_command_id(node["show_endpoints"], "slot", "down")
-        self._command_state = self.get_command_id(
-            node["show_endpoints"], "signal", "state"
-        )
+
         self._state = self.convert_state(self.get_value("signal", "state"))
 
     @property
@@ -140,9 +138,7 @@ class FreeboxShutter(FreeboxHomeEntity, CoverEntity):
             node["show_endpoints"], "slot", "position_set"
         )
         self._command_stop = self.get_command_id(node["show_endpoints"], "slot", "stop")
-        self._command_position = self.get_command_id(
-            node["type"]["endpoints"], "slot", "position"
-        )
+
         self._device_class = CoverDeviceClass.SHUTTER
         self._attr_supported_features = (
             CoverEntityFeature.OPEN
