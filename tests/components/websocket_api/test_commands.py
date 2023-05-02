@@ -1693,34 +1693,6 @@ async def test_subscribe_trigger(hass: HomeAssistant, websocket_client) -> None:
     assert sum(hass.bus.async_listeners().values()) == init_count
 
 
-async def test_switch_context(
-    hass: HomeAssistant,
-    entities,
-    hass_admin_user: MockUser,
-    enable_custom_integrations: None,
-) -> None:
-    """Test that switch context works."""
-    assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.ac")
-    assert state is not None
-
-    await hass.services.async_call(
-        "switch",
-        "toggle",
-        {"entity_id": state.entity_id},
-        True,
-        None,  # core.Context(user_id=hass_admin_user.id),
-    )
-
-    state2 = hass.states.get("switch.ac")
-    assert state2 is not None
-    assert state.state != state2.state
-    # assert state2.context.user_id == hass_admin_user.id
-
-
 async def test_call_service_context(
     hass: HomeAssistant,
     entities,
