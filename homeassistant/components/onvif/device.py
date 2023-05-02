@@ -122,17 +122,20 @@ class ONVIFDevice:
         # where cameras become slow to respond for a bit after starting events, and
         # instead we start events last and than update capabilities.
         #
+        LOGGER.debug("%s: fetching initial capabilities", self.name)
         self.capabilities = await self.async_get_capabilities()
 
+        if self.capabilities.ptz:
+            LOGGER.debug("%s: creating PTZ service", self.name)
+            self.device.create_ptz_service()
+
+        LOGGER.debug("%s: fetching profiles", self.name)
         self.profiles = await self.async_get_profiles()
         LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
 
         # No camera profiles to add
         if not self.profiles:
             raise ONVIFError("No camera profiles found")
-
-        if self.capabilities.ptz:
-            self.device.create_ptz_service()
 
         # Determine max resolution from profiles
         self.max_resolution = max(
@@ -143,6 +146,7 @@ class ONVIFDevice:
 
         # Start events last since some cameras become slow to respond
         # for a bit after starting events
+        LOGGER.debug("%s: starting events", self.name)
         self.capabilities.events = await self.async_start_events()
         LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
 
