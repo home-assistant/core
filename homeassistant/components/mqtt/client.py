@@ -740,6 +740,9 @@ class MQTT:
             asyncio.run_coroutine_threadsafe(
                 publish_birth_message(birth_message), self.hass.loop
             )
+        else:
+            # Update subscribe cooldown period to a shorter time
+            self._subscribe_debouncer.set_timeout(SUBSCRIBE_COOLDOWN)
 
     async def _async_resubscribe(self) -> None:
         """Resubscribe on reconnect."""

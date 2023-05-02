@@ -339,7 +339,7 @@ androidtvremote2==0.0.7
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anova
-anova-wifi==0.8.0
+anova-wifi==0.9.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -386,7 +386,7 @@ asyncpysupla==0.0.5
 asyncsleepiq==1.3.4
 
 # homeassistant.components.aten_pe
-atenpdu==0.3.2
+# atenpdu==0.3.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
@@ -419,7 +419,7 @@ base36==0.1.1
 batinfo==0.4.2
 
 # homeassistant.components.eddystone_temperature
-# beacontools[scan]==1.2.3
+# beacontools[scan]==2.1.0
 
 # homeassistant.components.scrape
 beautifulsoup4==4.11.1
@@ -431,7 +431,7 @@ beautifulsoup4==4.11.1
 bellows==0.35.2
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.13.0
+bimmer_connected==0.13.2
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -440,7 +440,7 @@ bizkaibus==0.1.1
 bleak-retry-connector==3.0.2
 
 # homeassistant.components.bluetooth
-bleak==0.20.1
+bleak==0.20.2
 
 # homeassistant.components.blebox
 blebox_uniapi==2.1.4
@@ -665,7 +665,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.33
+env_canada==0.5.34
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -911,7 +911,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230427.0
+home-assistant-frontend==20230501.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.4.26
@@ -980,7 +980,7 @@ influxdb==5.3.1
 inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.3.4
+insteon-frontend-home-assistant==0.3.5
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
@@ -1028,7 +1028,7 @@ konnected==1.2.0
 krakenex==2.1.0
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==0.0.9
+lacrosse-view==1.0.1
 
 # homeassistant.components.eufy
 lakeside==0.13
@@ -1258,7 +1258,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.3.0
+onvif-zeep-async==1.3.1
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1368,7 +1368,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.31.0
+plugwise==0.31.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1617,7 +1617,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.0.9
 
 # homeassistant.components.fibaro
-pyfibaro==0.7.0
+pyfibaro==0.7.1
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -1806,7 +1806,7 @@ pynetgear==0.10.9
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==0.2.0
+pynina==0.3.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.6.0
@@ -2152,7 +2152,7 @@ pytrafikverket==0.2.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.8.2
+pyunifiprotect==4.8.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2372,7 +2372,7 @@ snapcast==2.3.2
 soco==0.29.1
 
 # homeassistant.components.solaredge_local
-solaredge-local==0.2.0
+solaredge-local==0.2.3
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -2384,7 +2384,7 @@ solax==0.3.0
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonos
-sonos-websocket==0.0.5
+sonos-websocket==0.1.0
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
@@ -2400,7 +2400,7 @@ spotipy==2.23.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.11
+sqlalchemy==2.0.12
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2588,7 +2588,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.3.2
 
 # homeassistant.components.voip
-voip-utils==0.0.5
+voip-utils==0.0.6
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
@@ -2682,7 +2682,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.1.16
 
 # homeassistant.components.august
-yalexs==1.3.2
+yalexs==1.3.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
@@ -2706,7 +2706,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.58.2
+zeroconf==0.60.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

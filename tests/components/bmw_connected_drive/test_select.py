@@ -28,7 +28,6 @@ async def test_entity_state_attrs(
     [
         ("select.i3_rex_charging_mode", "IMMEDIATE_CHARGING"),
         ("select.i4_edrive40_ac_charging_limit", "16"),
-        ("select.i4_edrive40_target_soc", "80"),
         ("select.i4_edrive40_charging_mode", "DELAYED_CHARGING"),
     ],
 )
@@ -58,7 +57,6 @@ async def test_update_triggers_success(
     ("entity_id", "value"),
     [
         ("select.i4_edrive40_ac_charging_limit", "17"),
-        ("select.i4_edrive40_target_soc", "81"),
     ],
 )
 async def test_update_triggers_fail(

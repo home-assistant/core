@@ -406,7 +406,10 @@ async def test_fetch_period_api(
 
 
 async def test_fetch_period_api_with_use_include_order(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the fetch period view for history with include order."""
     await async_setup_component(
@@ -417,6 +420,8 @@ async def test_fetch_period_api_with_use_include_order(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=sensor.power"
     )
     assert response.status == HTTPStatus.OK
+
+    assert "The 'use_include_order' option is deprecated" in caplog.text
 
 
 async def test_fetch_period_api_with_minimal_response(
@@ -472,7 +477,10 @@ async def test_fetch_period_api_with_no_timestamp(
 
 
 async def test_fetch_period_api_with_include_order(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -491,6 +499,9 @@ async def test_fetch_period_api_with_include_order(
         params={"filter_entity_id": "non.existing,something.else"},
     )
     assert response.status == HTTPStatus.OK
+
+    assert "The 'use_include_order' option is deprecated" in caplog.text
+    assert "The 'include' option is deprecated" in caplog.text
 
 
 async def test_entity_ids_limit_via_api(
