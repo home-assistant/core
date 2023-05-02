@@ -10,11 +10,18 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "api_key": "Subscription Key"
+                },
+                "description": "Generate and enter a new 'Subscription Key' for your account at 'https://portal.osoenergy.no/'.",
+                "title": "OSO Energy Auth"
+            },
             "user": {
                 "data": {
                     "api_key": "Subscription Key"
                 },
-                "description": "Enter the generated 'Subscription Key' for your account from https://portal.osoenergy.no/",
+                "description": "Enter the generated 'Subscription Key' for your account at 'https://portal.osoenergy.no/'",
                 "title": "OSO Energy Auth"
             }
         }

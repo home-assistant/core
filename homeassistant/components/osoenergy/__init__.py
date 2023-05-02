@@ -1,6 +1,7 @@
 """Support for the OSO Energy devices and services."""
 from functools import wraps
 import logging
+from typing import Any
 
 from aiohttp.web_exceptions import HTTPException
 from apyosoenergyapi import OSOEnergy
@@ -24,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OSO Energy from a config entry."""
-
     subscription_key = entry.data[CONF_API_KEY]
     websession = aiohttp_client.async_get_clientsession(hass)
     osoenergy = OSOEnergy(subscription_key, websession)
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = osoenergy
 
     try:
-        devices = await osoenergy.session.start_session(osoenergy_config)
+        devices: Any = await osoenergy.session.start_session(osoenergy_config)
     except HTTPException as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
         raise ConfigEntryNotReady() from error
@@ -75,11 +75,11 @@ def refresh_system(func):
 class OSOEnergyEntity(Entity):
     """Initiate OSO Energy Base Class."""
 
-    def __init__(self, osoenergy, osoenergy_device):
+    def __init__(self, osoenergy, osoenergy_device) -> None:
         """Initialize the instance."""
         self.osoenergy = osoenergy
         self.device = osoenergy_device
-        self.attributes = {}
+        self.attributes: dict[str, Any] = {}
         self._unique_id = self.device["device_id"]
 
     async def async_added_to_hass(self):

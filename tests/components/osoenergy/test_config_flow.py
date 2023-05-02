@@ -6,6 +6,7 @@ from apyosoenergyapi.helper import osoenergy_exceptions
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.osoenergy.const import DOMAIN, TITLE
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -14,7 +15,7 @@ SCAN_INTERVAL = 120
 UPDATED_SCAN_INTERVAL = 60
 
 
-async def test_import_flow(hass):
+async def test_import_flow(hass: HomeAssistant) -> None:
     """Check import flow."""
 
     with patch(
@@ -38,7 +39,7 @@ async def test_import_flow(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_flow(hass):
+async def test_user_flow(hass: HomeAssistant) -> None:
     """Test the user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -69,7 +70,7 @@ async def test_user_flow(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_reauth_flow(hass):
+async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test the reauth flow."""
 
     mock_config = MockConfigEntry(
@@ -116,7 +117,7 @@ async def test_reauth_flow(hass):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_abort_if_existing_entry(hass):
+async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check flow abort when an entry already exist."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -138,7 +139,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_invalid_subscription_key(hass):
+async def test_user_flow_invalid_subscription_key(hass: HomeAssistant) -> None:
     """Test user flow with invalid username."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -161,7 +162,9 @@ async def test_user_flow_invalid_subscription_key(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_user_flow_exception_on_subscription_key_check(hass):
+async def test_user_flow_exception_on_subscription_key_check(
+    hass: HomeAssistant,
+) -> None:
     """Test user flow with invalid username."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
