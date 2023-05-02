@@ -33,18 +33,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # TODO 2. Validate the API connection (and authentication)
     # TODO 3. Store an API object for your platforms to access
     config_data = entry.as_dict()["data"]
-    coordinator = S2FlexMeasuresClient(
+    client = S2FlexMeasuresClient(
         host=config_data["host"],
         email=config_data["username"],
         password=config_data["password"],
     )
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = client
 
-    def handle_api(call):
+    async def handle_api(call):
         """Handle the service call to the FlexMeasures REST API."""
         name = call.data.get(ATTR_NAME, DEFAULT_NAME)
+        method = call.data.get("method")
+        call_dict = dict(**call.data)
+        call_dict.pop("method")
+        if method is not None and hasattr(client, method):
+            await getattr(client, method)(**call_dict)
 
-        hass.states.set("flexmeasures_api.schedule", name)
+        #hass.states.set("flexmeasures_api.schedule", name)
 
     def handle_s2(call):
         """Handle the service call to the FlexMeasures S2 websockets implementation."""
