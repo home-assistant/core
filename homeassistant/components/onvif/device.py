@@ -120,7 +120,7 @@ class ONVIFDevice:
         #
         # We no longer initialize events in capabilities to avoid the problem
         # where cameras become slow to respond for a bit after starting events, and
-        # instead we start events last and update capabilities after starting events.
+        # instead we start events last and than update capabilities.
         #
         self.capabilities = await self.async_get_capabilities()
         LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
