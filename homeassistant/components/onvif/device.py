@@ -338,7 +338,13 @@ class ONVIFDevice:
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
-        result = await media_service.GetProfiles()
+        try:
+            result = await media_service.GetProfiles()
+        except GET_CAPABILITIES_EXCEPTIONS:
+            LOGGER.debug(
+                "%s: Could not get profiles from ONVIF device", self.name, exc_info=True
+            )
+            raise
         profiles: list[Profile] = []
 
         if not isinstance(result, list):
