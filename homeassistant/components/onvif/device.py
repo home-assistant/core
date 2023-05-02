@@ -114,6 +114,11 @@ class ONVIFDevice:
         self.info = await self.async_get_device_info()
         LOGGER.debug("Camera %s info = %s", self.name, self.info)
 
+        # We need to check capabilities before profiles, because some cameras
+        # because we need the data from capabilities to determine profiles correctly.
+        # We no longer initialize events in capabilities to avoid the problem
+        # where cameras become slow to respond for a bit after starting events, and
+        # instead we start events last and update capabilities after starting events.
         self.capabilities = await self.async_get_capabilities()
         LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
 
@@ -320,8 +325,7 @@ class ONVIFDevice:
                 "WSPullPointSupport"
             )
             LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
-            await self.events.async_start(pull_point_support is not False, True)
-            return True
+            return await self.events.async_start(pull_point_support is not False, True)
 
         return False
 
