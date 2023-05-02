@@ -123,7 +123,6 @@ class ONVIFDevice:
         # instead we start events last and than update capabilities.
         #
         self.capabilities = await self.async_get_capabilities()
-        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
 
         self.profiles = await self.async_get_profiles()
         LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
@@ -145,6 +144,7 @@ class ONVIFDevice:
         # Start events last since some cameras become slow to respond
         # for a bit after starting events
         self.capabilities.events = await self.async_start_events()
+        LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
 
     async def async_stop(self, event=None):
         """Shut it all down."""
