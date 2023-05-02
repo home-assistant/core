@@ -382,6 +382,9 @@ class ExposedEntities(StorageCollection[ExposedEntity, SerializedExposedEntities
 
         self._assistants = assistants
 
+        if data and "items" not in data:
+            return None  # type: ignore[unreachable]
+
         return data
 
     @callback
