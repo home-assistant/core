@@ -11,6 +11,8 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
+from homeassistant.core import HomeAssistant
+
 from tests.common import MockConfigEntry, load_fixture
 
 # Add-on fixtures
@@ -109,7 +111,7 @@ def mock_addon_options(addon_info):
 def set_addon_options_side_effect_fixture(addon_options):
     """Return the set add-on options side effect."""
 
-    async def set_addon_options(hass, slug, options):
+    async def set_addon_options(hass: HomeAssistant, slug, options):
         """Mock set add-on options."""
         addon_options.update(options["options"])
 
@@ -130,7 +132,7 @@ def mock_set_addon_options(set_addon_options_side_effect):
 def install_addon_side_effect_fixture(addon_store_info, addon_info):
     """Return the install add-on side effect."""
 
-    async def install_addon(hass, slug):
+    async def install_addon(hass: HomeAssistant, slug):
         """Mock install add-on."""
         addon_store_info.return_value = {
             "available": True,
@@ -168,7 +170,7 @@ def mock_update_addon():
 def start_addon_side_effect_fixture(addon_store_info, addon_info):
     """Return the start add-on options side effect."""
 
-    async def start_addon(hass, slug):
+    async def start_addon(hass: HomeAssistant, slug):
         """Mock start add-on."""
         addon_store_info.return_value = {
             "available": True,
@@ -441,6 +443,12 @@ def motorized_barrier_cover_state_fixture():
 def iblinds_v2_state_fixture():
     """Load the iBlinds v2 node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
+
+
+@pytest.fixture(name="iblinds_v3_state", scope="session")
+def iblinds_v3_state_fixture():
+    """Load the iBlinds v3 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_iblinds_v3_state.json"))
 
 
 @pytest.fixture(name="qubino_shutter_state", scope="session")
@@ -872,7 +880,7 @@ def nortek_thermostat_removed_event_fixture(client):
 
 
 @pytest.fixture(name="integration")
-async def integration_fixture(hass, client):
+async def integration_fixture(hass: HomeAssistant, client):
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
@@ -933,9 +941,17 @@ def motorized_barrier_cover_fixture(client, gdc_zw062_state):
 
 
 @pytest.fixture(name="iblinds_v2")
-def iblinds_cover_fixture(client, iblinds_v2_state):
+def iblinds_v2_cover_fixture(client, iblinds_v2_state):
     """Mock an iBlinds v2.0 window cover node."""
     node = Node(client, copy.deepcopy(iblinds_v2_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="iblinds_v3")
+def iblinds_v3_cover_fixture(client, iblinds_v3_state):
+    """Mock an iBlinds v3 window cover node."""
+    node = Node(client, copy.deepcopy(iblinds_v3_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
