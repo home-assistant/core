@@ -907,7 +907,7 @@ async def test_serialize_input_boolean(hass: HomeAssistant) -> None:
     """Test serializing an input boolean entity."""
     state = State("input_boolean.bla", "on")
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
-    result = entity.sync_serialize(None, "mock-uuid")
+    result = await entity.sync_serialize(None, "mock-uuid")
     assert result == {
         "id": "input_boolean.bla",
         "attributes": {},

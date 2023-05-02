@@ -257,14 +257,14 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             and entity_supported(self.hass, entity_id)
         )
 
-    def should_expose(self, entity_id):
+    async def should_expose(self, entity_id):
         """If an entity should be exposed."""
         if not self._config[CONF_FILTER].empty_filter:
             if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
                 return False
             return self._config[CONF_FILTER](entity_id)
 
-        return async_should_expose(self.hass, CLOUD_ALEXA, entity_id)
+        return await async_should_expose(self.hass, CLOUD_ALEXA, entity_id)
 
     @callback
     def async_invalidate_access_token(self):
@@ -423,7 +423,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         is_enabled = self.enabled
 
         for entity in alexa_entities.async_get_entities(self.hass, self):
-            if is_enabled and self.should_expose(entity.entity_id):
+            if is_enabled and await self.should_expose(entity.entity_id):
                 to_update.append(entity.entity_id)
             else:
                 to_remove.append(entity.entity_id)
@@ -482,7 +482,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         entity_id = event.data["entity_id"]
 
-        if not self.should_expose(entity_id):
+        if not await self.should_expose(entity_id):
             return
 
         action = event.data["action"]

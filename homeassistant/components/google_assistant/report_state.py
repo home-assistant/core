@@ -115,7 +115,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         checker = await create_checker(hass, DOMAIN, extra_significant_check)
 
         for entity in async_get_entities(hass, google_config):
-            if not entity.should_expose():
+            if not await entity.should_expose():
                 continue
 
             try:
