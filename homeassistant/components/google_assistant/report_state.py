@@ -63,7 +63,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         if not new_state:
             return
 
-        if not google_config.should_expose(new_state):
+        if not await google_config.should_expose(new_state):
             return
 
         entity = GoogleEntity(hass, google_config, new_state)
