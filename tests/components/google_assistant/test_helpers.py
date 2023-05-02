@@ -49,13 +49,13 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass: HomeAssistant) 
     )
     entity = helpers.GoogleEntity(hass, config, hass.states.get("light.ceiling_lights"))
 
-    serialized = entity.sync_serialize(None, "mock-uuid")
+    serialized = await entity.sync_serialize(None, "mock-uuid")
     assert "otherDeviceIds" not in serialized
     assert "customData" not in serialized
 
     config.async_enable_local_sdk()
 
-    serialized = entity.sync_serialize("mock-user-id", "abcdef")
+    serialized = await entity.sync_serialize("mock-user-id", "abcdef")
     assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
     assert serialized["customData"] == {
         "httpPort": 1234,
@@ -68,7 +68,7 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass: HomeAssistant) 
             "homeassistant.components.google_assistant.helpers.get_google_type",
             return_value=device_type,
         ):
-            serialized = entity.sync_serialize(None, "mock-uuid")
+            serialized = await entity.sync_serialize(None, "mock-uuid")
             assert "otherDeviceIds" not in serialized
             assert "customData" not in serialized
 

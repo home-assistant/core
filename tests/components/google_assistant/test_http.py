@@ -257,7 +257,9 @@ async def test_should_expose(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert (
-        config.should_expose(State(DOMAIN + ".mock", "mock", {"view": "not None"}))
+        await config.should_expose(
+            State(DOMAIN + ".mock", "mock", {"view": "not None"})
+        )
         is False
     )
 
@@ -265,7 +267,10 @@ async def test_should_expose(hass: HomeAssistant) -> None:
         # Wait for google_assistant.helpers.async_initialize.sync_google to be called
         await hass.async_block_till_done()
 
-    assert config.should_expose(State(CLOUD_NEVER_EXPOSED_ENTITIES[0], "mock")) is False
+    assert (
+        await config.should_expose(State(CLOUD_NEVER_EXPOSED_ENTITIES[0], "mock"))
+        is False
+    )
 
 
 async def test_missing_service_account(hass: HomeAssistant) -> None:
