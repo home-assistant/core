@@ -23,13 +23,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_DATETIME,
-    ATTR_TIME_ZONE,
-    ATTR_TIMESTAMP,
-    DOMAIN,
-    SERVICE_SET_VALUE,
-)
+from .const import ATTR_DATETIME, ATTR_TIME_ZONE, DOMAIN, SERVICE_SET_VALUE
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -42,13 +36,9 @@ __all__ = ["DOMAIN", "DateTimeEntity", "DateTimeEntityDescription"]
 
 def _split_date_time(config):
     """Split date/time components."""
-    if datetime_ := (
-        config.pop(ATTR_DATETIME, None) or config.get(ATTR_TIMESTAMP, None)
-    ):
-        config[ATTR_DATE] = datetime_.date()
-        config[ATTR_TIME] = datetime_.time()
-        if datetime_.tzinfo is not None:
-            config[ATTR_TIME_ZONE] = str(datetime_.tzinfo)
+    datetime_ = config.pop(ATTR_DATETIME, None)
+    config[ATTR_DATE] = datetime_.date()
+    config[ATTR_TIME] = datetime_.time()
     return config
 
 
@@ -74,26 +64,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     ),
                     cv.has_at_least_one_key(ATTR_DATE, ATTR_TIME),
                 ),
-                vol.Schema(
-                    {
-                        vol.Required(ATTR_DATETIME): cv.datetime,
-                        vol.Optional(ATTR_TIME_ZONE): cv.time_zone,
-                        **ENTITY_SERVICE_FIELDS,
-                    }
-                ),
-                vol.Schema(
-                    {
-                        vol.Required(ATTR_TIMESTAMP): vol.All(
-                            vol.Coerce(float),
-                            dt_util.utc_from_timestamp,
-                            dt_util.as_local,
-                        ),
-                        **ENTITY_SERVICE_FIELDS,
-                    }
+                vol.All(
+                    vol.Schema(
+                        {
+                            vol.Required(ATTR_DATETIME): cv.datetime,
+                            vol.Optional(ATTR_TIME_ZONE): cv.time_zone,
+                            **ENTITY_SERVICE_FIELDS,
+                        }
+                    ),
+                    _split_date_time,
                 ),
             ),
             cv.has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
-            _split_date_time,
         ),
         functools.partial(_async_set_value, hass),
     )

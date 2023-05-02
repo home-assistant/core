@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant.components.datetime import (
     ATTR_DATETIME,
-    ATTR_TIMESTAMP,
     DOMAIN,
     SERVICE_SET_VALUE,
     DateTimeEntity,
@@ -85,18 +84,6 @@ async def test_datetime(hass: HomeAssistant, enable_custom_integrations: None) -
 
     state = hass.states.get("datetime.test")
     assert state.state == "2022-03-03T03:04:05+00:00"
-
-    # Test updating datetime
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_TIMESTAMP: 1646280245, ATTR_ENTITY_ID: "datetime.test"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("datetime.test")
-    assert state.state == "2022-03-03T04:04:05+00:00"
 
     # Test that non UTC timezone gets converted to UTC
     assert (
