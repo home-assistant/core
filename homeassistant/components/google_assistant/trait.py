@@ -967,12 +967,15 @@ class TemperatureSettingTrait(_Trait):
         current_temp = (
             attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
             if self.state.domain == climate.DOMAIN
-            else float(self.state.state)
+            else self.state.state
         )
-        if current_temp is not None:
+        if current_temp is not None and current_temp not in (
+            STATE_UNKNOWN,
+            STATE_UNAVAILABLE,
+        ):
             response["thermostatTemperatureAmbient"] = round(
                 TemperatureConverter.convert(
-                    current_temp, unit, UnitOfTemperature.CELSIUS
+                    float(current_temp), unit, UnitOfTemperature.CELSIUS
                 ),
                 1,
             )
@@ -1022,10 +1025,14 @@ class TemperatureSettingTrait(_Trait):
                         ),
                         1,
                     )
-        elif self.state.domain == sensor.DOMAIN:
+        elif (
+            self.state.domain == sensor.DOMAIN
+            and current_temp is not None
+            and current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
             response["thermostatTemperatureSetpoint"] = round(
                 TemperatureConverter.convert(
-                    current_temp, unit, UnitOfTemperature.CELSIUS
+                    float(current_temp), unit, UnitOfTemperature.CELSIUS
                 ),
                 1,
             )
