@@ -21,7 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -107,6 +107,19 @@ async def async_setup_legacy(hass: HomeAssistant, config: dict) -> bool:
     """Set up Nest components using the legacy nest API."""
     if DOMAIN not in config:
         return True
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "legacy_nest_deprecated",
+        breaks_in_ha_version="2023.8.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="legacy_nest_deprecated",
+        translation_placeholders={
+            "documentation_url": "https://www.home-assistant.io/integrations/nest/",
+        },
+    )
 
     conf = config[DOMAIN]
 

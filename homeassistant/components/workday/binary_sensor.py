@@ -12,10 +12,14 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
@@ -32,6 +36,7 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
+    DOMAIN,
     LOGGER,
 )
 
@@ -76,21 +81,44 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays: list[DateLike] = config[CONF_ADD_HOLIDAYS]
-    remove_holidays: list[str] = config[CONF_REMOVE_HOLIDAYS]
-    country: str = config[CONF_COUNTRY]
-    days_offset: int = config[CONF_OFFSET]
-    excludes: list[str] = config[CONF_EXCLUDES]
-    province: str | None = config.get(CONF_PROVINCE)
-    sensor_name: str = config[CONF_NAME]
-    workdays: list[str] = config[CONF_WORKDAYS]
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.7.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Workday sensor."""
+    add_holidays: list[DateLike] = entry.options[CONF_ADD_HOLIDAYS]
+    remove_holidays: list[str] = entry.options[CONF_REMOVE_HOLIDAYS]
+    country: str = entry.options[CONF_COUNTRY]
+    days_offset: int = int(entry.options[CONF_OFFSET])
+    excludes: list[str] = entry.options[CONF_EXCLUDES]
+    province: str | None = entry.options.get(CONF_PROVINCE)
+    sensor_name: str = entry.options[CONF_NAME]
+    workdays: list[str] = entry.options[CONF_WORKDAYS]
 
     year: int = (dt.now() + timedelta(days=days_offset)).year
     obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
@@ -131,14 +159,25 @@ def setup_platform(
         _holiday_string = holiday_date.strftime("%Y-%m-%d")
         LOGGER.debug("%s %s", _holiday_string, name)
 
-    add_entities(
-        [IsWorkdaySensor(obj_holidays, workdays, excludes, days_offset, sensor_name)],
+    async_add_entities(
+        [
+            IsWorkdaySensor(
+                obj_holidays,
+                workdays,
+                excludes,
+                days_offset,
+                sensor_name,
+                entry.entry_id,
+            )
+        ],
         True,
     )
 
 
 class IsWorkdaySensor(BinarySensorEntity):
     """Implementation of a Workday sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -147,9 +186,9 @@ class IsWorkdaySensor(BinarySensorEntity):
         excludes: list[str],
         days_offset: int,
         name: str,
+        entry_id: str,
     ) -> None:
         """Initialize the Workday sensor."""
-        self._attr_name = name
         self._obj_holidays = obj_holidays
         self._workdays = workdays
         self._excludes = excludes
@@ -159,6 +198,14 @@ class IsWorkdaySensor(BinarySensorEntity):
             CONF_EXCLUDES: excludes,
             CONF_OFFSET: days_offset,
         }
+        self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="python-holidays",
+            model=holidays.__version__,
+            name=name,
+        )
 
     def is_include(self, day: str, now: date) -> bool:
         """Check if given day is in the includes list."""
