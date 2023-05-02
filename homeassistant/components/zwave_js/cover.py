@@ -124,9 +124,9 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         assert target_value is not None
         # If the cover is fully closed or opened or at the target value, or if we don't
-        # know either the previous value or current value, either the cover is neither
-        # opening or closing anymore or we can't make any determination whether the
-        # cover is opening or closing so we set them to None.
+        # know the previous value, current value, or target value, either the cover is
+        # neither opening or closing anymore or we can't make any determination whether
+        # the cover is opening or closing so we set them to None.
         if (
             new_value
             in (
@@ -136,6 +136,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
             )
             or new_value is None
             or self._curr_value is None
+            or target_value.value is None
         ):
             self._attr_is_closing = None
             self._attr_is_opening = None
