@@ -1,4 +1,4 @@
-"""Support for the OSO Energy devices and setrvices."""
+"""Support for the OSO Energy devices and services."""
 from functools import wraps
 import logging
 
