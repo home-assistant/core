@@ -100,6 +100,22 @@
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "last_reset": {
+          "name": "Last reset"
+        },
+        "options": {
+          "name": "Possible states"
+        },
+        "state_class": {
+          "name": "State class",
+          "state": {
+            "measurement": "Measurement",
+            "total": "Total",
+            "total_increasing": "Total increasing"
+          }
+        }
       }
     },
     "date": {
@@ -144,6 +160,9 @@
     "energy_storage": {
       "name": "Stored energy"
     },
+    "enum": {
+      "name": "[%key:component::sensor::title%]"
+    },
     "frequency": {
       "name": "Frequency"
     },
@@ -178,13 +197,13 @@
       "name": "Ozone"
     },
     "pm1": {
-      "name": "Particulate matter 0.1 μm"
+      "name": "PM1"
     },
     "pm10": {
-      "name": "Particulate matter 10 μm"
+      "name": "PM10"
     },
     "pm25": {
-      "name": "Particulate matter 2.5 μm"
+      "name": "PM2.5"
     },
     "power_factor": {
       "name": "Power factor"
@@ -218,6 +237,9 @@
     },
     "temperature": {
       "name": "Temperature"
+    },
+    "timestamp": {
+      "name": "Timestamp"
     },
     "volatile_organic_compounds": {
       "name": "VOCs"

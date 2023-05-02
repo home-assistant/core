@@ -32,7 +32,11 @@
           }
         },
         "oscillating": {
-          "name": "Oscillating"
+          "name": "Oscillating",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
         },
         "percentage": {
           "name": "Speed"

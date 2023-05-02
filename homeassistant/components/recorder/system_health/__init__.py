@@ -58,7 +58,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
     instance = get_instance(hass)
 
-    run_history = instance.run_history
+    recorder_runs_manager = instance.recorder_runs_manager
     database_name = urlparse(instance.db_url).path.lstrip("/")
     db_engine_info = _async_get_db_engine_info(instance)
     db_stats: dict[str, Any] = {}
@@ -68,7 +68,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             _get_db_stats, instance, database_name
         )
         db_runs = {
-            "oldest_recorder_run": run_history.first.start,
-            "current_recorder_run": run_history.current.start,
+            "oldest_recorder_run": recorder_runs_manager.first.start,
+            "current_recorder_run": recorder_runs_manager.current.start,
         }
     return db_runs | db_stats | db_engine_info

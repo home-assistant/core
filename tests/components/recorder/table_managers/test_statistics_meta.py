@@ -26,12 +26,12 @@ async def test_passing_mutually_exclusive_options_to_get_many(
             )
         with pytest.raises(ValueError):
             instance.statistics_meta_manager.get_many(
-                session, statistic_ids=["light.kitchen"], statistic_source="sensor"
+                session, statistic_ids={"light.kitchen"}, statistic_source="sensor"
             )
         assert (
             instance.statistics_meta_manager.get_many(
                 session,
-                statistic_ids=["light.kitchen"],
+                statistic_ids={"light.kitchen"},
             )
             == {}
         )

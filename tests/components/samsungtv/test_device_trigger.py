@@ -1,6 +1,4 @@
 """The tests for Samsung TV device triggers."""
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components import automation
@@ -90,15 +88,11 @@ async def test_if_fires_on_turn_on_request(
         },
     )
 
-    with patch("homeassistant.components.samsungtv.media_player.send_magic_packet"):
-        await hass.services.async_call(
-            "media_player",
-            "turn_on",
-            {"entity_id": ENTITY_ID},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "media_player", "turn_on", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
 
-        await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[0].data["some"] == device.id
     assert calls[0].data["id"] == 0

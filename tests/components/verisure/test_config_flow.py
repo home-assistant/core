@@ -35,9 +35,10 @@ async def test_full_user_flow_single_installation(
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
 
-    mock_verisure_config_flow.installations = [
-        mock_verisure_config_flow.installations[0]
-    ]
+    mock_verisure_config_flow.get_installations.return_value = {
+        k1: {k2: {k3: [v3[0]] for k3, v3 in v2.items()} for k2, v2 in v1.items()}
+        for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
+    }
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -133,9 +134,10 @@ async def test_full_user_flow_single_installation_with_mfa(
     assert result2.get("step_id") == "mfa"
 
     mock_verisure_config_flow.login.side_effect = None
-    mock_verisure_config_flow.installations = [
-        mock_verisure_config_flow.installations[0]
-    ]
+    mock_verisure_config_flow.get_installations.return_value = {
+        k1: {k2: {k3: [v3[0]] for k3, v3 in v2.items()} for k2, v2 in v1.items()}
+        for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
+    }
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -153,9 +155,9 @@ async def test_full_user_flow_single_installation_with_mfa(
         CONF_PASSWORD: "SuperS3cr3t!",
     }
 
-    assert len(mock_verisure_config_flow.login.mock_calls) == 2
-    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 1
-    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 1
+    assert len(mock_verisure_config_flow.login.mock_calls) == 1
+    assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 1
+    assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -215,9 +217,9 @@ async def test_full_user_flow_multiple_installations_with_mfa(
         CONF_PASSWORD: "SuperS3cr3t!",
     }
 
-    assert len(mock_verisure_config_flow.login.mock_calls) == 2
-    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 1
-    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 1
+    assert len(mock_verisure_config_flow.login.mock_calls) == 1
+    assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 1
+    assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -257,7 +259,7 @@ async def test_verisure_errors(
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
         "Multifactor authentication enabled, disable or create MFA cookie"
     )
-    mock_verisure_config_flow.login_mfa.side_effect = side_effect
+    mock_verisure_config_flow.request_mfa.side_effect = side_effect
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -268,7 +270,7 @@ async def test_verisure_errors(
     )
     await hass.async_block_till_done()
 
-    mock_verisure_config_flow.login_mfa.side_effect = None
+    mock_verisure_config_flow.request_mfa.side_effect = None
 
     assert result3.get("type") == FlowResultType.FORM
     assert result3.get("step_id") == "user"
@@ -286,7 +288,7 @@ async def test_verisure_errors(
     assert result4.get("type") == FlowResultType.FORM
     assert result4.get("step_id") == "mfa"
 
-    mock_verisure_config_flow.mfa_validate.side_effect = side_effect
+    mock_verisure_config_flow.validate_mfa.side_effect = side_effect
 
     result5 = await hass.config_entries.flow.async_configure(
         result4["flow_id"],
@@ -298,11 +300,11 @@ async def test_verisure_errors(
     assert result5.get("step_id") == "mfa"
     assert result5.get("errors") == {"base": error}
 
-    mock_verisure_config_flow.installations = [
-        mock_verisure_config_flow.installations[0]
-    ]
-
-    mock_verisure_config_flow.mfa_validate.side_effect = None
+    mock_verisure_config_flow.get_installations.return_value = {
+        k1: {k2: {k3: [v3[0]] for k3, v3 in v2.items()} for k2, v2 in v1.items()}
+        for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
+    }
+    mock_verisure_config_flow.validate_mfa.side_effect = None
     mock_verisure_config_flow.login.side_effect = None
 
     result6 = await hass.config_entries.flow.async_configure(
@@ -321,9 +323,9 @@ async def test_verisure_errors(
         CONF_PASSWORD: "SuperS3cr3t!",
     }
 
-    assert len(mock_verisure_config_flow.login.mock_calls) == 4
-    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 2
-    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 2
+    assert len(mock_verisure_config_flow.login.mock_calls) == 3
+    assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 2
+    assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -441,8 +443,8 @@ async def test_reauth_flow_with_mfa(
     }
 
     assert len(mock_verisure_config_flow.login.mock_calls) == 2
-    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 1
-    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 1
+    assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 1
+    assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -491,7 +493,7 @@ async def test_reauth_flow_errors(
     mock_verisure_config_flow.login.side_effect = VerisureLoginError(
         "Multifactor authentication enabled, disable or create MFA cookie"
     )
-    mock_verisure_config_flow.login_mfa.side_effect = side_effect
+    mock_verisure_config_flow.request_mfa.side_effect = side_effect
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -506,7 +508,7 @@ async def test_reauth_flow_errors(
     assert result3.get("step_id") == "reauth_confirm"
     assert result3.get("errors") == {"base": "unknown_mfa"}
 
-    mock_verisure_config_flow.login_mfa.side_effect = None
+    mock_verisure_config_flow.request_mfa.side_effect = None
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
@@ -520,7 +522,7 @@ async def test_reauth_flow_errors(
     assert result4.get("type") == FlowResultType.FORM
     assert result4.get("step_id") == "reauth_mfa"
 
-    mock_verisure_config_flow.mfa_validate.side_effect = side_effect
+    mock_verisure_config_flow.validate_mfa.side_effect = side_effect
 
     result5 = await hass.config_entries.flow.async_configure(
         result4["flow_id"],
@@ -532,11 +534,12 @@ async def test_reauth_flow_errors(
     assert result5.get("step_id") == "reauth_mfa"
     assert result5.get("errors") == {"base": error}
 
-    mock_verisure_config_flow.mfa_validate.side_effect = None
+    mock_verisure_config_flow.validate_mfa.side_effect = None
     mock_verisure_config_flow.login.side_effect = None
-    mock_verisure_config_flow.installations = [
-        mock_verisure_config_flow.installations[0]
-    ]
+    mock_verisure_config_flow.get_installations.return_value = {
+        k1: {k2: {k3: [v3[0]] for k3, v3 in v2.items()} for k2, v2 in v1.items()}
+        for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
+    }
 
     await hass.config_entries.flow.async_configure(
         result5["flow_id"],
@@ -553,8 +556,8 @@ async def test_reauth_flow_errors(
     }
 
     assert len(mock_verisure_config_flow.login.mock_calls) == 4
-    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 2
-    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 2
+    assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 2
+    assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 1
 
 

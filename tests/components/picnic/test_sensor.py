@@ -9,7 +9,8 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.components.picnic import const
-from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
+from homeassistant.components.picnic.const import CONF_COUNTRY_CODE
+from homeassistant.components.picnic.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
