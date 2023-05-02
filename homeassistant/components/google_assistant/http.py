@@ -111,7 +111,7 @@ class GoogleConfig(AbstractConfig):
         """Return if states should be proactively reported."""
         return self._config.get(CONF_REPORT_STATE)
 
-    def should_expose(self, state) -> bool:
+    async def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
         expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
         exposed_domains = self._config.get(CONF_EXPOSED_DOMAINS)

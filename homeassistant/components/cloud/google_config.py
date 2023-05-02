@@ -222,9 +222,9 @@ class CloudGoogleConfig(AbstractConfig):
             self._handle_device_registry_updated,
         )
 
-    def should_expose(self, state):
+    async def should_expose(self, state):
         """If a state object should be exposed."""
-        return self._should_expose_entity_id(state.entity_id)
+        return await self._should_expose_entity_id(state.entity_id)
 
     def _should_expose_legacy(self, entity_id):
         """If an entity ID should be exposed."""
@@ -258,14 +258,14 @@ class CloudGoogleConfig(AbstractConfig):
             and _supported_legacy(self.hass, entity_id)
         )
 
-    def _should_expose_entity_id(self, entity_id):
+    async def _should_expose_entity_id(self, entity_id):
         """If an entity should be exposed."""
         if not self._config[CONF_FILTER].empty_filter:
             if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
                 return False
             return self._config[CONF_FILTER](entity_id)
 
-        return async_should_expose(self.hass, CLOUD_GOOGLE, entity_id)
+        return await async_should_expose(self.hass, CLOUD_GOOGLE, entity_id)
 
     @property
     def agent_user_id(self):
@@ -358,8 +358,7 @@ class CloudGoogleConfig(AbstractConfig):
         """Handle updated preferences."""
         self.async_schedule_google_sync_all()
 
-    @callback
-    def _handle_entity_registry_updated(self, event: Event) -> None:
+    async def _handle_entity_registry_updated(self, event: Event) -> None:
         """Handle when entity registry updated."""
         if (
             not self.enabled
@@ -376,13 +375,12 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_id = event.data["entity_id"]
 
-        if not self._should_expose_entity_id(entity_id):
+        if not await self._should_expose_entity_id(entity_id):
             return
 
         self.async_schedule_google_sync_all()
 
-    @callback
-    def _handle_device_registry_updated(self, event: Event) -> None:
+    async def _handle_device_registry_updated(self, event: Event) -> None:
         """Handle when device registry updated."""
         if (
             not self.enabled
@@ -396,13 +394,15 @@ class CloudGoogleConfig(AbstractConfig):
             return
 
         # Check if any exposed entity uses the device area
-        if not any(
-            entity_entry.area_id is None
-            and self._should_expose_entity_id(entity_entry.entity_id)
-            for entity_entry in er.async_entries_for_device(
-                er.async_get(self.hass), event.data["device_id"]
-            )
+        used = False
+        for entity_entry in er.async_entries_for_device(
+            er.async_get(self.hass), event.data["device_id"]
         ):
+            if entity_entry.area_id is None and await self._should_expose_entity_id(
+                entity_entry.entity_id
+            ):
+                used = True
+        if not used:
             return
 
         self.async_schedule_google_sync_all()
