@@ -401,12 +401,19 @@ async def test_units(hass: HomeAssistant) -> None:
 
     # When source state goes to None / Unknown, expect an early exit without
     # changes to the state or unit_of_measurement
-    hass.states.async_set(entity_id, STATE_UNAVAILABLE, None)
+    hass.states.async_set(entity_id, None, None)
     await hass.async_block_till_done()
 
     new_state = hass.states.get("sensor.integration")
     assert state == new_state
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.WATT_HOUR
+
+    # When source state goes to unavailable, expect sensor to also become unavailable
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, None)
+    await hass.async_block_till_done()
+
+    new_state = hass.states.get("sensor.integration")
+    assert new_state.state == STATE_UNAVAILABLE
 
 
 async def test_device_class(hass: HomeAssistant) -> None:

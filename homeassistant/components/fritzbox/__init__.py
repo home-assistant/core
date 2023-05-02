@@ -113,8 +113,8 @@ class FritzBoxEntity(CoordinatorEntity[FritzboxDataUpdateCoordinator], ABC):
 
         self.ain = ain
         if entity_description is not None:
+            self._attr_has_entity_name = True
             self.entity_description = entity_description
-            self._attr_name = f"{self.data.name} {entity_description.name}"
             self._attr_unique_id = f"{ain}_{entity_description.key}"
         else:
             self._attr_name = self.data.name
