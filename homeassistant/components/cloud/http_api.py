@@ -1,6 +1,7 @@
 """The HTTP api to control the cloud integration."""
 import asyncio
 from collections.abc import Mapping
+from contextlib import suppress
 import dataclasses
 from functools import wraps
 from http import HTTPStatus
@@ -21,10 +22,12 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
 )
 from homeassistant.components.google_assistant import helpers as google_helpers
+from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
@@ -587,10 +590,16 @@ async def google_assistant_get(
         )
         return
 
+    assistant_options: Mapping[str, Any] = {}
+    with suppress(HomeAssistantError, KeyError):
+        settings = exposed_entities.async_get_entity_settings(hass, entity_id)
+        assistant_options = settings[CLOUD_GOOGLE]
+
     result = {
         "entity_id": entity.entity_id,
         "traits": [trait.name for trait in entity.traits()],
         "might_2fa": entity.might_2fa_traits(),
+        PREF_DISABLE_2FA: assistant_options.get(PREF_DISABLE_2FA),
     }
 
     connection.send_result(msg["id"], result)
@@ -645,27 +654,19 @@ async def google_assistant_update(
     msg: dict[str, Any],
 ) -> None:
     """Update google assistant entity config."""
-    entity_registry = er.async_get(hass)
     entity_id: str = msg["entity_id"]
 
-    if not (registry_entry := entity_registry.async_get(entity_id)):
-        connection.send_error(
-            msg["id"],
-            websocket_api.const.ERR_NOT_ALLOWED,
-            f"can't configure {entity_id}",
-        )
-        return
+    assistant_options: Mapping[str, Any] = {}
+    with suppress(HomeAssistantError, KeyError):
+        settings = exposed_entities.async_get_entity_settings(hass, entity_id)
+        assistant_options = settings[CLOUD_GOOGLE]
 
     disable_2fa = msg[PREF_DISABLE_2FA]
-    assistant_options: Mapping[str, Any]
-    if (
-        assistant_options := registry_entry.options.get(CLOUD_GOOGLE, {})
-    ) and assistant_options.get(PREF_DISABLE_2FA) == disable_2fa:
+    if assistant_options.get(PREF_DISABLE_2FA) == disable_2fa:
         return
 
-    assistant_options = assistant_options | {PREF_DISABLE_2FA: disable_2fa}
-    entity_registry.async_update_entity_options(
-        entity_id, CLOUD_GOOGLE, assistant_options
+    exposed_entities.async_set_assistant_option(
+        hass, CLOUD_GOOGLE, entity_id, PREF_DISABLE_2FA, disable_2fa
     )
     connection.send_result(msg["id"])
 
