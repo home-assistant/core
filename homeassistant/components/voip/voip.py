@@ -363,7 +363,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
             async with async_timeout.timeout(tts_seconds + self.tts_extra_timeout):
                 # Assume TTS audio is 16Khz 16-bit mono
-                await self._async_send_audio(audio_bytes, **RTP_AUDIO_SETTINGS)
+                await self._async_send_audio(audio_bytes)
         except asyncio.TimeoutError as err:
             _LOGGER.warning("TTS timeout")
             raise err
@@ -374,7 +374,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     async def _async_send_audio(self, audio_bytes: bytes, **kwargs):
         """Send audio in executor."""
         await self.hass.async_add_executor_job(
-            partial(self.send_audio, audio_bytes, **kwargs)
+            partial(self.send_audio, audio_bytes, **RTP_AUDIO_SETTINGS, **kwargs)
         )
 
     async def _play_listening_tone(self) -> None:
@@ -389,7 +389,6 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         await self._async_send_audio(
             self._tone_bytes,
             silence_before=self.tone_delay,
-            **RTP_AUDIO_SETTINGS,
         )
 
     async def _play_processing_tone(self) -> None:
@@ -401,10 +400,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 "processing.pcm",
             )
 
-        await self._async_send_audio(
-            self._processing_bytes,
-            **RTP_AUDIO_SETTINGS,
-        )
+        await self._async_send_audio(self._processing_bytes)
 
     async def _play_error_tone(self) -> None:
         """Play a tone to indicate a pipeline error occurred."""
@@ -415,10 +411,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 "error.pcm",
             )
 
-        await self._async_send_audio(
-            self._error_bytes,
-            **RTP_AUDIO_SETTINGS,
-        )
+        await self._async_send_audio(self._error_bytes)
 
     def _load_pcm(self, file_name: str) -> bytes:
         """Load raw audio (16Khz, 16-bit mono)."""
