@@ -1,10 +1,10 @@
-[
-  {
+{
+  "gateway": {
     "smile_name": "Stretch",
     "gateway_id": "0000aaaa0000aaaa0000aaaa0000aa00",
     "notifications": {}
   },
-  {
+  "devices": {
     "0000aaaa0000aaaa0000aaaa0000aa00": {
       "dev_class": "gateway",
       "firmware": "3.1.11",
@@ -147,4 +147,4 @@
       }
     }
   }
-]
+}

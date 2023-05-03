@@ -1,12 +1,12 @@
-[
-  {
+{
+  "gateway": {
     "smile_name": "Adam",
     "gateway_id": "da224107914542988a88561b4452b0f6",
     "heater_id": "056ee145a816487eaa69243c3280f8bf",
     "cooling_present": false,
     "notifications": {}
   },
-  {
+  "devices": {
     "ad4838d7d35c4d6ea796ee12ae5aedf8": {
       "dev_class": "thermostat",
       "location": "f2bf9048bef64cc5b6d5110154e33c81",
@@ -14,12 +14,11 @@
       "name": "Anna",
       "vendor": "Plugwise",
       "thermostat": {
-        "setpoint": 20.0,
         "lower_bound": 1.0,
         "upper_bound": 35.0,
-        "resolution": 0.01
+        "resolution": 0.01,
+        "setpoint": 20.0
       },
-      "available": true,
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "asleep",
       "available_schedules": ["Weekschema", "Badkamer", "Test"],
@@ -27,7 +26,11 @@
       "last_used": "Weekschema",
       "control_state": "heating",
       "mode": "heat",
-      "sensors": { "temperature": 19.1, "setpoint": 20.0 }
+      "sensors": {
+        "temperature": 19.1,
+        "setpoint": 20.0
+      },
+      "available": true
     },
     "1772a4ea304041adb83f357b751341ff": {
       "dev_class": "thermo_sensor",
@@ -56,10 +59,10 @@
       "zigbee_mac_address": "ABCD012345670A04",
       "vendor": "Plugwise",
       "thermostat": {
-        "setpoint": 15.0,
         "lower_bound": 0.0,
         "upper_bound": 99.9,
-        "resolution": 0.01
+        "resolution": 0.01,
+        "setpoint": 15.0
       },
       "available": true,
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
@@ -105,12 +108,6 @@
         "upper_bound": 95.0,
         "resolution": 0.01
       },
-      "domestic_hot_water_setpoint": {
-        "setpoint": 60.0,
-        "lower_bound": 40.0,
-        "upper_bound": 60.0,
-        "resolution": 0.01
-      },
       "available": true,
       "binary_sensors": {
         "dhw_state": false,
@@ -123,6 +120,12 @@
       },
       "switches": {
         "dhw_cm_switch": false
+      },
+      "domestic_hot_water_setpoint": {
+        "setpoint": 60.0,
+        "lower_bound": 40.0,
+        "upper_bound": 60.0,
+        "resolution": 0.01
       }
     },
     "e8ef2a01ed3b4139a53bf749204fe6b4": {
@@ -138,4 +141,4 @@
       }
     }
   }
-]
+}

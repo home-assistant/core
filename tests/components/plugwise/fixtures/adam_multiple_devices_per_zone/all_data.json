@@ -1,5 +1,5 @@
-[
-  {
+{
+  "gateway": {
     "smile_name": "Adam",
     "gateway_id": "fe799307f1624099878210aa0b9f1475",
     "heater_id": "90986d591dcd426cae3ec3e8111ff730",
@@ -10,7 +10,7 @@
       }
     }
   },
-  {
+  "devices": {
     "df4a4a8169904cdb9c03d61a21f42140": {
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
@@ -426,4 +426,4 @@
       }
     }
   }
-]
+}
