@@ -21,6 +21,76 @@ from tests.common import flush_store
 from tests.typing import WebSocketGenerator
 
 
+@pytest.fixture(name="entities")
+def entities_fixture(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    request: pytest.FixtureRequest,
+) -> dict[str, str]:
+    """Set up the test environment."""
+    if request.param == "entities_unique_id":
+        return entities_unique_id(entity_registry)
+    elif request.param == "entities_no_unique_id":
+        return entities_no_unique_id(hass)
+    else:
+        raise RuntimeError("Invalid setup fixture")
+
+
+def entities_unique_id(entity_registry: er.EntityRegistry) -> dict[str, str]:
+    """Create some entities in the entity registry."""
+    entry_blocked = entity_registry.async_get_or_create(
+        "group", "test", "unique", suggested_object_id="all_locks"
+    )
+    assert entry_blocked.entity_id == CLOUD_NEVER_EXPOSED_ENTITIES[0]
+    entry_lock = entity_registry.async_get_or_create("lock", "test", "unique1")
+    entry_binary_sensor = entity_registry.async_get_or_create(
+        "binary_sensor", "test", "unique1"
+    )
+    entry_binary_sensor_door = entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "unique2",
+        original_device_class="door",
+    )
+    entry_sensor = entity_registry.async_get_or_create("sensor", "test", "unique1")
+    entry_sensor_temperature = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "unique2",
+        original_device_class="temperature",
+    )
+    return {
+        "blocked": entry_blocked.entity_id,
+        "lock": entry_lock.entity_id,
+        "binary_sensor": entry_binary_sensor.entity_id,
+        "door_sensor": entry_binary_sensor_door.entity_id,
+        "sensor": entry_sensor.entity_id,
+        "temperature_sensor": entry_sensor_temperature.entity_id,
+    }
+
+
+def entities_no_unique_id(hass: HomeAssistant) -> dict[str, str]:
+    """Create some entities not in the entity registry."""
+    blocked = CLOUD_NEVER_EXPOSED_ENTITIES[0]
+    lock = "lock.test"
+    binary_sensor = "binary_sensor.test"
+    door_sensor = "binary_sensor.door"
+    sensor = "sensor.test"
+    sensor_temperature = "sensor.temperature"
+    hass.states.async_set(binary_sensor, "on", {})
+    hass.states.async_set(door_sensor, "on", {"device_class": "door"})
+    hass.states.async_set(sensor, "on", {})
+    hass.states.async_set(sensor_temperature, "on", {"device_class": "temperature"})
+    return {
+        "blocked": blocked,
+        "lock": lock,
+        "binary_sensor": binary_sensor,
+        "door_sensor": door_sensor,
+        "sensor": sensor,
+        "temperature_sensor": sensor_temperature,
+    }
+
+
 async def test_load_preferences(hass: HomeAssistant) -> None:
     """Make sure that we can load/save data correctly."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -31,12 +101,13 @@ async def test_load_preferences(hass: HomeAssistant) -> None:
     exposed_entities.async_set_expose_new_entities("test1", True)
     exposed_entities.async_set_expose_new_entities("test2", False)
 
-    assert list(exposed_entities._assistants) == ["test1", "test2"]
-
     await exposed_entities.async_expose_entity("test1", "light.kitchen", True)
     await exposed_entities.async_expose_entity("test1", "light.living_room", True)
     await exposed_entities.async_expose_entity("test2", "light.kitchen", True)
     await exposed_entities.async_expose_entity("test2", "light.kitchen", True)
+
+    assert list(exposed_entities._assistants) == ["test1", "test2"]
+    assert list(exposed_entities.data) == ["light.kitchen", "light.living_room"]
 
     await flush_store(exposed_entities.store)
 
@@ -315,12 +386,14 @@ async def test_get_assistant_settings(
         exposed_entities.async_get_entity_settings("light.unknown")
 
 
-@pytest.mark.parametrize("use_registry", [True, False])
+@pytest.mark.parametrize(
+    "entities", ["entities_unique_id", "entities_no_unique_id"], indirect=True
+)
 async def test_should_expose(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
-    use_registry: bool,
+    entities: dict[str, str],
 ) -> None:
     """Test expose entity."""
     ws_client = await hass_ws_client(hass)
@@ -342,96 +415,79 @@ async def test_should_expose(
     assert await async_should_expose(hass, "test.test", "test.test") is False
 
     # Blocked entity is not exposed
-    if use_registry:
-        entry_blocked = entity_registry.async_get_or_create(
-            "group", "test", "unique", suggested_object_id="all_locks"
-        )
-        assert entry_blocked.entity_id == "group.all_locks"
-    assert CLOUD_NEVER_EXPOSED_ENTITIES[0] == "group.all_locks"
-    assert await async_should_expose(hass, "cloud.alexa", "group.all_locks") is False
+    assert await async_should_expose(hass, "cloud.alexa", entities["blocked"]) is False
 
     # Lock is exposed
-    if use_registry:
-        entity_registry.async_get_or_create("lock", "test", "unique1")
-    assert await async_should_expose(hass, "cloud.alexa", "lock.test_unique1") is True
-
-    # Hidden entity is not exposed
-    if use_registry:
-        entity_registry.async_get_or_create(
-            "lock", "test", "unique2", hidden_by=er.RegistryEntryHider.USER
-        )
-        assert (
-            await async_should_expose(hass, "cloud.alexa", "lock.test_unique2") is False
-        )
-
-        # Entity with category is not exposed
-        entity_registry.async_get_or_create(
-            "lock", "test", "unique3", entity_category=EntityCategory.CONFIG
-        )
-        assert (
-            await async_should_expose(hass, "cloud.alexa", "lock.test_unique3") is False
-        )
+    assert await async_should_expose(hass, "cloud.alexa", entities["lock"]) is True
 
     # Binary sensor without device class is not exposed
-    if use_registry:
-        entity_registry.async_get_or_create("binary_sensor", "test", "unique1")
-    else:
-        hass.states.async_set("binary_sensor.test_unique1", "on", {})
     assert (
-        await async_should_expose(hass, "cloud.alexa", "binary_sensor.test_unique1")
+        await async_should_expose(hass, "cloud.alexa", entities["binary_sensor"])
         is False
     )
 
     # Binary sensor with certain device class is exposed
-    if use_registry:
-        entity_registry.async_get_or_create(
-            "binary_sensor",
-            "test",
-            "unique2",
-            original_device_class="door",
-        )
-    else:
-        hass.states.async_set(
-            "binary_sensor.test_unique2", "on", {"device_class": "door"}
-        )
     assert (
-        await async_should_expose(hass, "cloud.alexa", "binary_sensor.test_unique2")
-        is True
+        await async_should_expose(hass, "cloud.alexa", entities["door_sensor"]) is True
     )
 
     # Sensor without device class is not exposed
-    if use_registry:
-        entity_registry.async_get_or_create("sensor", "test", "unique1")
-    else:
-        hass.states.async_set("sensor.test_unique1", "on", {})
-    assert (
-        await async_should_expose(hass, "cloud.alexa", "sensor.test_unique1") is False
-    )
+    assert await async_should_expose(hass, "cloud.alexa", entities["sensor"]) is False
 
     # Sensor with certain device class is exposed
-    if use_registry:
-        entity_registry.async_get_or_create(
-            "sensor",
-            "test",
-            "unique2",
-            original_device_class="temperature",
-        )
-    else:
-        hass.states.async_set(
-            "sensor.test_unique2", "on", {"device_class": "temperature"}
-        )
-    assert await async_should_expose(hass, "cloud.alexa", "sensor.test_unique2") is True
+    assert (
+        await async_should_expose(hass, "cloud.alexa", entities["temperature_sensor"])
+        is True
+    )
+
     # The second time we check, it should load it from storage
-    assert await async_should_expose(hass, "cloud.alexa", "sensor.test_unique2") is True
+    assert (
+        await async_should_expose(hass, "cloud.alexa", entities["temperature_sensor"])
+        is True
+    )
+
     # Check with a different assistant
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities("cloud.no_default_expose", False)
     assert (
         await async_should_expose(
-            hass, "cloud.no_default_expose", "sensor.test_unique2"
+            hass, "cloud.no_default_expose", entities["temperature_sensor"]
         )
         is False
     )
+
+
+async def test_should_expose_hidden_categorized(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test expose entity."""
+    ws_client = await hass_ws_client(hass)
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    # Expose new entities to Alexa
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_new_entities/set",
+            "assistant": "cloud.alexa",
+            "expose_new": True,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+    entity_registry.async_get_or_create(
+        "lock", "test", "unique2", hidden_by=er.RegistryEntryHider.USER
+    )
+    assert await async_should_expose(hass, "cloud.alexa", "lock.test_unique2") is False
+
+    # Entity with category is not exposed
+    entity_registry.async_get_or_create(
+        "lock", "test", "unique3", entity_category=EntityCategory.CONFIG
+    )
+    assert await async_should_expose(hass, "cloud.alexa", "lock.test_unique3") is False
 
 
 async def test_list_exposed_entities(
