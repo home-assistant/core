@@ -91,21 +91,21 @@ async def test_exposed_areas(
     )
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
-    kitchen_light = entity_registry.async_get_or_create(
-        "light", "demo", "1234", original_name="kitchen light"
-    )
+    kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
     entity_registry.async_update_entity(
         kitchen_light.entity_id, device_id=kitchen_device.id
     )
-    hass.states.async_set(kitchen_light.entity_id, "on")
-
-    bedroom_light = entity_registry.async_get_or_create(
-        "light", "demo", "5678", original_name="bedroom light"
+    hass.states.async_set(
+        kitchen_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
     )
+
+    bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
     entity_registry.async_update_entity(
         bedroom_light.entity_id, area_id=area_bedroom.id
     )
-    hass.states.async_set(bedroom_light.entity_id, "on")
+    hass.states.async_set(
+        bedroom_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
+    )
 
     # Hide the bedroom light
     expose_entity(hass, bedroom_light.entity_id, False)
@@ -156,6 +156,8 @@ async def test_expose_flag_automatically_set(
 
     assert await async_setup_component(hass, "conversation", {})
     await hass.async_block_till_done()
+    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+        await hass.async_start()
 
     # After setting up conversation, the expose flag should now be set on all entities
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
@@ -164,10 +166,11 @@ async def test_expose_flag_automatically_set(
     }
 
     # New entities will automatically have the expose flag set
-    new_light = entity_registry.async_get_or_create("light", "demo", "2345")
+    new_light = "light.demo_2345"
+    hass.states.async_set(new_light, "test")
     await hass.async_block_till_done()
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {
         light.entity_id: {"should_expose": True},
-        new_light.entity_id: {"should_expose": True},
+        new_light: {"should_expose": True},
         test.entity_id: {"should_expose": False},
     }

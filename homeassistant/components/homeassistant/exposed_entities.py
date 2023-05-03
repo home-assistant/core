@@ -132,50 +132,52 @@ class ExposedEntities:
         self._listeners.setdefault(assistant, []).append(listener)
 
     @callback
-    def async_expose_entity(
-        self, assistant: str, entity_id: str, should_expose: bool
+    def async_set_assistant_option(
+        self, assistant: str, entity_id: str, key: str, value: Any
     ) -> None:
-        """Expose an entity to an assistant.
+        """Set an option for an assistant.
 
         Notify listeners if expose flag was changed.
         """
         entity_registry = er.async_get(self._hass)
         if not (registry_entry := entity_registry.async_get(entity_id)):
-            return self._async_expose_legacy_entity(assistant, entity_id, should_expose)
+            return self._async_set_legacy_assistant_option(
+                assistant, entity_id, key, value
+            )
 
         assistant_options: Mapping[str, Any]
         if (
             assistant_options := registry_entry.options.get(assistant, {})
-        ) and assistant_options.get("should_expose") == should_expose:
+        ) and assistant_options.get(key) == value:
             return
 
-        assistant_options = assistant_options | {"should_expose": should_expose}
+        assistant_options = assistant_options | {key: value}
         entity_registry.async_update_entity_options(
             entity_id, assistant, assistant_options
         )
         for listener in self._listeners.get(assistant, []):
             listener()
 
-    def _async_expose_legacy_entity(
-        self, assistant: str, entity_id: str, should_expose: bool
+    def _async_set_legacy_assistant_option(
+        self, assistant: str, entity_id: str, key: str, value: Any
     ) -> None:
-        """Expose an entity to an assistant.
+        """Set an option for an assistant.
 
         Notify listeners if expose flag was changed.
         """
         if (
             (exposed_entity := self.entities.get(entity_id))
             and (assistant_options := exposed_entity.assistants.get(assistant, {}))
-            and assistant_options.get("should_expose") == should_expose
+            and assistant_options.get(key) == value
         ):
             return
 
         if exposed_entity:
             new_exposed_entity = self._update_exposed_entity(
-                assistant, entity_id, should_expose
+                assistant, entity_id, key, value
             )
         else:
-            new_exposed_entity = self._new_exposed_entity(assistant, should_expose)
+            new_exposed_entity = self._new_exposed_entity(assistant, key, value)
         self.entities[entity_id] = new_exposed_entity
         self._async_schedule_save()
         for listener in self._listeners.get(assistant, []):
@@ -282,10 +284,12 @@ class ExposedEntities:
 
         if exposed_entity:
             new_exposed_entity = self._update_exposed_entity(
-                assistant, entity_id, should_expose
+                assistant, entity_id, "should_expose", should_expose
             )
         else:
-            new_exposed_entity = self._new_exposed_entity(assistant, should_expose)
+            new_exposed_entity = self._new_exposed_entity(
+                assistant, "should_expose", should_expose
+            )
         self.entities[entity_id] = new_exposed_entity
         self._async_schedule_save()
 
@@ -305,7 +309,11 @@ class ExposedEntities:
         if domain in DEFAULT_EXPOSED_DOMAINS:
             return True
 
-        device_class = get_device_class(self._hass, entity_id)
+        try:
+            device_class = get_device_class(self._hass, entity_id)
+        except HomeAssistantError:
+            # The entity no longer exists
+            return False
         if (
             domain == "binary_sensor"
             and device_class in DEFAULT_EXPOSED_BINARY_SENSOR_DEVICE_CLASSES
@@ -318,22 +326,21 @@ class ExposedEntities:
         return False
 
     def _update_exposed_entity(
-        self,
-        assistant: str,
-        entity_id: str,
-        should_expose: bool,
+        self, assistant: str, entity_id: str, key: str, value: Any
     ) -> ExposedEntity:
         """Update an exposed entity."""
         entity = self.entities[entity_id]
         assistants = dict(entity.assistants)
         old_settings = assistants.get(assistant, {})
-        assistants[assistant] = old_settings | {"should_expose": should_expose}
+        assistants[assistant] = old_settings | {key: value}
         return ExposedEntity(assistants)
 
-    def _new_exposed_entity(self, assistant: str, should_expose: bool) -> ExposedEntity:
+    def _new_exposed_entity(
+        self, assistant: str, key: str, value: Any
+    ) -> ExposedEntity:
         """Create a new exposed entity."""
         return ExposedEntity(
-            assistants={assistant: {"should_expose": should_expose}},
+            assistants={assistant: {key: value}},
         )
 
     async def _async_load_data(self) -> SerializedExposedEntities | None:
@@ -405,12 +412,9 @@ def ws_expose_entity(
         )
         return
 
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     for entity_id in entity_ids:
         for assistant in msg["assistants"]:
-            exposed_entities.async_expose_entity(
-                assistant, entity_id, msg["should_expose"]
-            )
+            async_expose_entity(hass, assistant, entity_id, msg["should_expose"])
     connection.send_result(msg["id"])
 
 
@@ -509,8 +513,9 @@ def async_expose_entity(
     should_expose: bool,
 ) -> None:
     """Get assistant expose settings for an entity."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_entity(assistant, entity_id, should_expose)
+    async_set_assistant_option(
+        hass, assistant, entity_id, "should_expose", should_expose
+    )
 
 
 @callback
@@ -518,3 +523,15 @@ def async_should_expose(hass: HomeAssistant, assistant: str, entity_id: str) -> 
     """Return True if an entity should be exposed to an assistant."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     return exposed_entities.async_should_expose(assistant, entity_id)
+
+
+@callback
+def async_set_assistant_option(
+    hass: HomeAssistant, assistant: str, entity_id: str, option: str, value: Any
+) -> None:
+    """Set an option for an assistant.
+
+    Notify listeners if expose flag was changed.
+    """
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_assistant_option(assistant, entity_id, option, value)
