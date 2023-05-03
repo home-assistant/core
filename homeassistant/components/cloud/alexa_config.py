@@ -211,6 +211,17 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 state.entity_id,
                 self._should_expose_legacy(state.entity_id),
             )
+        for entity_id in self._prefs.alexa_entity_configs:
+            with suppress(HomeAssistantError):
+                entity_settings = async_get_entity_settings(self.hass, entity_id)
+                if CLOUD_ALEXA in entity_settings:
+                    continue
+            async_expose_entity(
+                self.hass,
+                CLOUD_ALEXA,
+                entity_id,
+                self._should_expose_legacy(entity_id),
+            )
 
     async def async_initialize(self):
         """Initialize the Alexa config."""

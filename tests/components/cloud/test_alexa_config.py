@@ -24,7 +24,6 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
@@ -619,8 +618,9 @@ async def test_alexa_config_migrate_expose_entity_prefs(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
-        async_get_entity_settings(hass, "light.unknown")
+    assert async_get_entity_settings(hass, "light.unknown") == {
+        "cloud.alexa": {"should_expose": True}
+    }
     assert async_get_entity_settings(hass, "light.state_only") == {
         "cloud.alexa": {"should_expose": False}
     }
