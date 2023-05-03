@@ -64,7 +64,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
         if new_state.domain not in ENTITY_ADAPTERS:
             return
 
-        if not await smart_home_config.should_expose(changed_entity):
+        if not smart_home_config.should_expose(changed_entity):
             _LOGGER.debug("Not exposing %s because filtered by config", changed_entity)
             return
 
