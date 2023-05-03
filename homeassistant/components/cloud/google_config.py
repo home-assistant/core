@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.components.homeassistant.exposed_entities import (
+    async_get_entity_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -23,6 +24,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, start
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.setup import async_setup_component
@@ -222,9 +224,9 @@ class CloudGoogleConfig(AbstractConfig):
             self._handle_device_registry_updated,
         )
 
-    async def should_expose(self, state):
+    def should_expose(self, state):
         """If a state object should be exposed."""
-        return await self._should_expose_entity_id(state.entity_id)
+        return self._should_expose_entity_id(state.entity_id)
 
     def _should_expose_legacy(self, entity_id):
         """If an entity ID should be exposed."""
@@ -258,14 +260,14 @@ class CloudGoogleConfig(AbstractConfig):
             and _supported_legacy(self.hass, entity_id)
         )
 
-    async def _should_expose_entity_id(self, entity_id):
+    def _should_expose_entity_id(self, entity_id):
         """If an entity should be exposed."""
         if not self._config[CONF_FILTER].empty_filter:
             if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
                 return False
             return self._config[CONF_FILTER](entity_id)
 
-        return await async_should_expose(self.hass, CLOUD_GOOGLE, entity_id)
+        return async_should_expose(self.hass, CLOUD_GOOGLE, entity_id)
 
     @property
     def agent_user_id(self):
@@ -289,14 +291,13 @@ class CloudGoogleConfig(AbstractConfig):
 
     def should_2fa(self, state):
         """If an entity should be checked for 2FA."""
-        entity_registry = er.async_get(self.hass)
-
-        registry_entry = entity_registry.async_get(state.entity_id)
-        if not registry_entry:
+        try:
+            settings = async_get_entity_settings(self.hass, state.entity_id)
+        except HomeAssistantError:
             # Handle the entity has been removed
             return False
 
-        assistant_options = registry_entry.options.get(CLOUD_GOOGLE, {})
+        assistant_options = settings.get(CLOUD_GOOGLE, {})
         return not assistant_options.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
     async def async_report_state(self, message, agent_user_id: str):
@@ -358,7 +359,8 @@ class CloudGoogleConfig(AbstractConfig):
         """Handle updated preferences."""
         self.async_schedule_google_sync_all()
 
-    async def _handle_entity_registry_updated(self, event: Event) -> None:
+    @callback
+    def _handle_entity_registry_updated(self, event: Event) -> None:
         """Handle when entity registry updated."""
         if (
             not self.enabled
@@ -375,11 +377,12 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_id = event.data["entity_id"]
 
-        if not await self._should_expose_entity_id(entity_id):
+        if not self._should_expose_entity_id(entity_id):
             return
 
         self.async_schedule_google_sync_all()
 
+    @callback
     async def _handle_device_registry_updated(self, event: Event) -> None:
         """Handle when device registry updated."""
         if (
@@ -394,15 +397,13 @@ class CloudGoogleConfig(AbstractConfig):
             return
 
         # Check if any exposed entity uses the device area
-        used = False
-        for entity_entry in er.async_entries_for_device(
-            er.async_get(self.hass), event.data["device_id"]
+        if not any(
+            entity_entry.area_id is None
+            and self._should_expose_entity_id(entity_entry.entity_id)
+            for entity_entry in er.async_entries_for_device(
+                er.async_get(self.hass), event.data["device_id"]
+            )
         ):
-            if entity_entry.area_id is None and await self._should_expose_entity_id(
-                entity_entry.entity_id
-            ):
-                used = True
-        if not used:
             return
 
         self.async_schedule_google_sync_all()

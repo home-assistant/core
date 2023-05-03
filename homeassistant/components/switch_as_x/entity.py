@@ -111,7 +111,7 @@ class BaseEntity(Entity):
                 return
             registry.async_update_entity(self.entity_id, name=wrapped_switch.name)
 
-        async def copy_expose_settings() -> None:
+        def copy_expose_settings() -> None:
             """Copy assistant expose settings from the wrapped entity.
 
             Also unexpose the wrapped entity if exposed.
@@ -122,15 +122,15 @@ class BaseEntity(Entity):
             for assistant, settings in expose_settings.items():
                 if (should_expose := settings.get("should_expose")) is None:
                     continue
-                await exposed_entities.async_expose_entity(
+                exposed_entities.async_expose_entity(
                     self.hass, assistant, self.entity_id, should_expose
                 )
-                await exposed_entities.async_expose_entity(
+                exposed_entities.async_expose_entity(
                     self.hass, assistant, self._switch_entity_id, False
                 )
 
         copy_custom_name(wrapped_switch)
-        await copy_expose_settings()
+        copy_expose_settings()
 
 
 class BaseToggleEntity(BaseEntity, ToggleEntity):

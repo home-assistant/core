@@ -8,6 +8,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     ExposedEntity,
     async_expose_entity,
     async_get_assistant_settings,
+    async_get_entity_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -101,21 +102,21 @@ async def test_load_preferences(hass: HomeAssistant) -> None:
     exposed_entities.async_set_expose_new_entities("test1", True)
     exposed_entities.async_set_expose_new_entities("test2", False)
 
-    await exposed_entities.async_expose_entity("test1", "light.kitchen", True)
-    await exposed_entities.async_expose_entity("test1", "light.living_room", True)
-    await exposed_entities.async_expose_entity("test2", "light.kitchen", True)
-    await exposed_entities.async_expose_entity("test2", "light.kitchen", True)
+    async_expose_entity(hass, "test1", "light.kitchen", True)
+    async_expose_entity(hass, "test1", "light.living_room", True)
+    async_expose_entity(hass, "test2", "light.kitchen", True)
+    async_expose_entity(hass, "test2", "light.kitchen", True)
 
     assert list(exposed_entities._assistants) == ["test1", "test2"]
-    assert list(exposed_entities.data) == ["light.kitchen", "light.living_room"]
+    assert list(exposed_entities.entities) == ["light.kitchen", "light.living_room"]
 
-    await flush_store(exposed_entities.store)
+    await flush_store(exposed_entities._store)
 
     exposed_entities2 = ExposedEntities(hass)
-    await exposed_entities2.async_load()
+    await exposed_entities2.async_initialize()
 
     assert exposed_entities._assistants == exposed_entities2._assistants
-    assert exposed_entities.data == exposed_entities2.data
+    assert exposed_entities.entities == exposed_entities2.entities
 
 
 async def test_expose_entity(
@@ -132,7 +133,7 @@ async def test_expose_entity(
     entry2 = entity_registry.async_get_or_create("test", "test", "unique2")
 
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    assert len(exposed_entities.data) == 0
+    assert len(exposed_entities.entities) == 0
 
     # Set options
     await ws_client.send_json_auto_id(
@@ -151,7 +152,7 @@ async def test_expose_entity(
     assert entry1.options == {"cloud.alexa": {"should_expose": True}}
     entry2 = entity_registry.async_get(entry2.entity_id)
     assert entry2.options == {}
-    assert len(exposed_entities.data) == 0
+    assert len(exposed_entities.entities) == 0
 
     # Update options
     await ws_client.send_json_auto_id(
@@ -176,7 +177,7 @@ async def test_expose_entity(
         "cloud.alexa": {"should_expose": False},
         "cloud.google_assistant": {"should_expose": False},
     }
-    assert len(exposed_entities.data) == 0
+    assert len(exposed_entities.entities) == 0
 
 
 async def test_expose_entity_unknown(
@@ -189,7 +190,7 @@ async def test_expose_entity_unknown(
     await hass.async_block_till_done()
 
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    assert len(exposed_entities.data) == 0
+    assert len(exposed_entities.entities) == 0
 
     # Set options
     await ws_client.send_json_auto_id(
@@ -204,8 +205,8 @@ async def test_expose_entity_unknown(
     response = await ws_client.receive_json()
     assert response["success"]
 
-    assert len(exposed_entities.data) == 1
-    assert exposed_entities.data == {
+    assert len(exposed_entities.entities) == 1
+    assert exposed_entities.entities == {
         "test.test": ExposedEntity({"cloud.alexa": {"should_expose": True}})
     }
 
@@ -222,8 +223,8 @@ async def test_expose_entity_unknown(
     response = await ws_client.receive_json()
     assert response["success"]
 
-    assert len(exposed_entities.data) == 2
-    assert exposed_entities.data == {
+    assert len(exposed_entities.entities) == 2
+    assert exposed_entities.entities == {
         "test.test": ExposedEntity(
             {
                 "cloud.alexa": {"should_expose": False},
@@ -292,7 +293,7 @@ async def test_expose_new_entities(
     assert response["result"] == {"expose_new": False}
 
     # Check if exposed - should be False
-    assert await async_should_expose(hass, "cloud.alexa", entry1.entity_id) is False
+    assert async_should_expose(hass, "cloud.alexa", entry1.entity_id) is False
 
     # Expose new entities to Alexa
     await ws_client.send_json_auto_id(
@@ -315,12 +316,10 @@ async def test_expose_new_entities(
     assert response["result"] == {"expose_new": expose_new}
 
     # Check again if exposed - should still be False
-    assert await async_should_expose(hass, "cloud.alexa", entry1.entity_id) is False
+    assert async_should_expose(hass, "cloud.alexa", entry1.entity_id) is False
 
     # Check if exposed - should be True
-    assert (
-        await async_should_expose(hass, "cloud.alexa", entry2.entity_id) == expose_new
-    )
+    assert async_should_expose(hass, "cloud.alexa", entry2.entity_id) == expose_new
 
 
 async def test_listen_updates(
@@ -336,27 +335,24 @@ async def test_listen_updates(
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     async_listen_entity_updates(hass, "cloud.alexa", listener)
 
     entry = entity_registry.async_get_or_create("climate", "test", "unique1")
 
     # Call for another assistant - listener not called
-    await exposed_entities.async_expose_entity(
-        "cloud.google_assistant", entry.entity_id, True
-    )
+    async_expose_entity(hass, "cloud.google_assistant", entry.entity_id, True)
     assert len(calls) == 0
 
     # Call for our assistant - listener called
-    await exposed_entities.async_expose_entity("cloud.alexa", entry.entity_id, True)
+    async_expose_entity(hass, "cloud.alexa", entry.entity_id, True)
     assert len(calls) == 1
 
     # Settings not changed - listener not called
-    await exposed_entities.async_expose_entity("cloud.alexa", entry.entity_id, True)
+    async_expose_entity(hass, "cloud.alexa", entry.entity_id, True)
     assert len(calls) == 1
 
     # Settings changed - listener called
-    await exposed_entities.async_expose_entity("cloud.alexa", entry.entity_id, False)
+    async_expose_entity(hass, "cloud.alexa", entry.entity_id, False)
     assert len(calls) == 2
 
 
@@ -369,21 +365,17 @@ async def test_get_assistant_settings(
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-
     entry = entity_registry.async_get_or_create("climate", "test", "unique1")
 
     assert async_get_assistant_settings(hass, "cloud.alexa") == {}
 
-    await exposed_entities.async_expose_entity("cloud.alexa", entry.entity_id, True)
-    await exposed_entities.async_expose_entity(
-        "cloud.alexa", "light.not_in_registry", True
-    )
+    async_expose_entity(hass, "cloud.alexa", entry.entity_id, True)
+    async_expose_entity(hass, "cloud.alexa", "light.not_in_registry", True)
     assert async_get_assistant_settings(hass, "cloud.alexa") == snapshot
     assert async_get_assistant_settings(hass, "cloud.google_assistant") == snapshot
 
     with pytest.raises(HomeAssistantError):
-        exposed_entities.async_get_entity_settings("light.unknown")
+        async_get_entity_settings(hass, "light.unknown")
 
 
 @pytest.mark.parametrize(
@@ -412,45 +404,38 @@ async def test_should_expose(
     assert response["success"]
 
     # Unknown entity is not exposed
-    assert await async_should_expose(hass, "test.test", "test.test") is False
+    assert async_should_expose(hass, "test.test", "test.test") is False
 
     # Blocked entity is not exposed
-    assert await async_should_expose(hass, "cloud.alexa", entities["blocked"]) is False
+    assert async_should_expose(hass, "cloud.alexa", entities["blocked"]) is False
 
     # Lock is exposed
-    assert await async_should_expose(hass, "cloud.alexa", entities["lock"]) is True
+    assert async_should_expose(hass, "cloud.alexa", entities["lock"]) is True
 
     # Binary sensor without device class is not exposed
-    assert (
-        await async_should_expose(hass, "cloud.alexa", entities["binary_sensor"])
-        is False
-    )
+    assert async_should_expose(hass, "cloud.alexa", entities["binary_sensor"]) is False
 
     # Binary sensor with certain device class is exposed
-    assert (
-        await async_should_expose(hass, "cloud.alexa", entities["door_sensor"]) is True
-    )
+    assert async_should_expose(hass, "cloud.alexa", entities["door_sensor"]) is True
 
     # Sensor without device class is not exposed
-    assert await async_should_expose(hass, "cloud.alexa", entities["sensor"]) is False
+    assert async_should_expose(hass, "cloud.alexa", entities["sensor"]) is False
 
     # Sensor with certain device class is exposed
     assert (
-        await async_should_expose(hass, "cloud.alexa", entities["temperature_sensor"])
-        is True
+        async_should_expose(hass, "cloud.alexa", entities["temperature_sensor"]) is True
     )
 
     # The second time we check, it should load it from storage
     assert (
-        await async_should_expose(hass, "cloud.alexa", entities["temperature_sensor"])
-        is True
+        async_should_expose(hass, "cloud.alexa", entities["temperature_sensor"]) is True
     )
 
     # Check with a different assistant
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities("cloud.no_default_expose", False)
     assert (
-        await async_should_expose(
+        async_should_expose(
             hass, "cloud.no_default_expose", entities["temperature_sensor"]
         )
         is False
@@ -481,13 +466,13 @@ async def test_should_expose_hidden_categorized(
     entity_registry.async_get_or_create(
         "lock", "test", "unique2", hidden_by=er.RegistryEntryHider.USER
     )
-    assert await async_should_expose(hass, "cloud.alexa", "lock.test_unique2") is False
+    assert async_should_expose(hass, "cloud.alexa", "lock.test_unique2") is False
 
     # Entity with category is not exposed
     entity_registry.async_get_or_create(
         "lock", "test", "unique3", entity_category=EntityCategory.CONFIG
     )
-    assert await async_should_expose(hass, "cloud.alexa", "lock.test_unique3") is False
+    assert async_should_expose(hass, "cloud.alexa", "lock.test_unique3") is False
 
 
 async def test_list_exposed_entities(
@@ -555,8 +540,8 @@ async def test_listeners(
     callbacks = []
     exposed_entities.async_listen_entity_updates("test1", lambda: callbacks.append(1))
 
-    await async_expose_entity(hass, "test1", "light.kitchen", True)
+    async_expose_entity(hass, "test1", "light.kitchen", True)
     assert len(callbacks) == 1
 
     entry1 = entity_registry.async_get_or_create("switch", "test", "unique1")
-    await async_expose_entity(hass, "test1", entry1.entity_id, True)
+    async_expose_entity(hass, "test1", entry1.entity_id, True)

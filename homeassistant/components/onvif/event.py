@@ -11,7 +11,7 @@ from httpx import RemoteProtocolError, RequestError, TransportError
 from onvif import ONVIFCamera, ONVIFService
 from onvif.client import NotificationManager
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault, XMLParseError
+from zeep.exceptions import Fault, ValidationError, XMLParseError
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +35,7 @@ from .util import stringify_onvif_error
 UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
 
 SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
-CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError)
+CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError, ValidationError)
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
 RENEW_ERRORS = (ONVIFError, RequestError, XMLParseError, *SUBSCRIPTION_ERRORS)
@@ -657,16 +657,34 @@ class WebHookManager:
 
     async def _async_create_webhook_subscription(self) -> None:
         """Create webhook subscription."""
-        LOGGER.debug("%s: Creating webhook subscription", self._name)
+        LOGGER.debug(
+            "%s: Creating webhook subscription with URL: %s",
+            self._name,
+            self._webhook_url,
+        )
         self._notification_manager = self._device.create_notification_manager(
             {
                 "InitialTerminationTime": SUBSCRIPTION_RELATIVE_TIME,
                 "ConsumerReference": {"Address": self._webhook_url},
             }
         )
-        self._webhook_subscription = await self._notification_manager.setup()
+        try:
+            self._webhook_subscription = await self._notification_manager.setup()
+        except ValidationError as err:
+            # This should only happen if there is a problem with the webhook URL
+            # that is causing it to not be well formed.
+            LOGGER.exception(
+                "%s: validation error while creating webhook subscription: %s",
+                self._name,
+                err,
+            )
+            raise
         await self._notification_manager.start()
-        LOGGER.debug("%s: Webhook subscription created", self._name)
+        LOGGER.debug(
+            "%s: Webhook subscription created with URL: %s",
+            self._name,
+            self._webhook_url,
+        )
 
     async def _async_start_webhook(self) -> bool:
         """Start webhook."""

@@ -18,9 +18,12 @@ from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
+    async_expose_entity,
+    async_get_entity_settings,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -46,12 +49,9 @@ def expose_new(hass, expose_new):
     exposed_entities.async_set_expose_new_entities("cloud.google_assistant", expose_new)
 
 
-async def expose_entity(hass, entity_id, should_expose):
+def expose_entity(hass, entity_id, should_expose):
     """Expose an entity to Google."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    await exposed_entities.async_expose_entity(
-        "cloud.google_assistant", entity_id, should_expose
-    )
+    async_expose_entity(hass, "cloud.google_assistant", entity_id, should_expose)
 
 
 async def test_google_update_report_state(
@@ -150,7 +150,7 @@ async def test_google_update_expose_trigger_sync(
         with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
             ga_helpers, "SYNC_DELAY", 0
         ):
-            await expose_entity(hass, light_entry.entity_id, True)
+            expose_entity(hass, light_entry.entity_id, True)
             await hass.async_block_till_done()
             async_fire_time_changed(hass, utcnow())
             await hass.async_block_till_done()
@@ -160,9 +160,9 @@ async def test_google_update_expose_trigger_sync(
         with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
             ga_helpers, "SYNC_DELAY", 0
         ):
-            await expose_entity(hass, light_entry.entity_id, False)
-            await expose_entity(hass, binary_sensor_entry.entity_id, True)
-            await expose_entity(hass, sensor_entry.entity_id, True)
+            expose_entity(hass, light_entry.entity_id, False)
+            expose_entity(hass, binary_sensor_entry.entity_id, True)
+            expose_entity(hass, sensor_entry.entity_id, True)
             await hass.async_block_till_done()
             async_fire_time_changed(hass, utcnow())
             await hass.async_block_till_done()
@@ -384,7 +384,7 @@ async def test_google_config_expose_entity_prefs(
     )
 
     expose_new(hass, True)
-    await expose_entity(hass, entity_entry5.entity_id, False)
+    expose_entity(hass, entity_entry5.entity_id, False)
 
     state = State("light.kitchen", "on")
     state_config = State(entity_entry1.entity_id, "on")
@@ -395,23 +395,23 @@ async def test_google_config_expose_entity_prefs(
     state_exposed_default = State(entity_entry6.entity_id, "on")
 
     # an entity which is not in the entity registry can be exposed
-    await expose_entity(hass, "light.kitchen", True)
-    assert await mock_conf.should_expose(state)
+    expose_entity(hass, "light.kitchen", True)
+    assert mock_conf.should_expose(state)
     # categorized and hidden entities should not be exposed
-    assert not await mock_conf.should_expose(state_config)
-    assert not await mock_conf.should_expose(state_diagnostic)
-    assert not await mock_conf.should_expose(state_hidden_integration)
-    assert not await mock_conf.should_expose(state_hidden_user)
+    assert not mock_conf.should_expose(state_config)
+    assert not mock_conf.should_expose(state_diagnostic)
+    assert not mock_conf.should_expose(state_hidden_integration)
+    assert not mock_conf.should_expose(state_hidden_user)
     # this has been hidden
-    assert not await mock_conf.should_expose(state_not_exposed)
+    assert not mock_conf.should_expose(state_not_exposed)
     # exposed by default
-    assert await mock_conf.should_expose(state_exposed_default)
+    assert mock_conf.should_expose(state_exposed_default)
 
-    await expose_entity(hass, entity_entry5.entity_id, True)
-    assert await mock_conf.should_expose(state_not_exposed)
+    expose_entity(hass, entity_entry5.entity_id, True)
+    assert mock_conf.should_expose(state_not_exposed)
 
-    await expose_entity(hass, entity_entry5.entity_id, None)
-    assert not await mock_conf.should_expose(state_not_exposed)
+    expose_entity(hass, entity_entry5.entity_id, None)
+    assert not mock_conf.should_expose(state_not_exposed)
 
 
 def test_enabled_requires_valid_sub(
@@ -535,7 +535,7 @@ async def test_google_config_migrate_expose_entity_prefs(
         google_report_state=False,
         google_settings_version=1,
     )
-    await expose_entity(hass, entity_migrated.entity_id, False)
+    expose_entity(hass, entity_migrated.entity_id, False)
 
     cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS]["light.unknown"] = {
         PREF_SHOULD_EXPOSE: True
@@ -555,27 +555,24 @@ async def test_google_config_migrate_expose_entity_prefs(
     )
     await conf.async_initialize()
 
-    entity_exposed = entity_registry.async_get(entity_exposed.entity_id)
-    assert entity_exposed.options == {"cloud.google_assistant": {"should_expose": True}}
-
-    entity_migrated = entity_registry.async_get(entity_migrated.entity_id)
-    assert entity_migrated.options == {
+    with pytest.raises(HomeAssistantError):
+        async_get_entity_settings(hass, "light.unknown")
+    assert async_get_entity_settings(hass, entity_exposed.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
-
-    entity_no_2fa_exposed = entity_registry.async_get(entity_no_2fa_exposed.entity_id)
-    assert entity_no_2fa_exposed.options == {
+    assert async_get_entity_settings(hass, entity_no_2fa_exposed.entity_id) == {
         "cloud.google_assistant": {"disable_2fa": True, "should_expose": True}
     }
-
-    entity_config = entity_registry.async_get(entity_config.entity_id)
-    assert entity_config.options == {"cloud.google_assistant": {"should_expose": False}}
-
-    entity_default = entity_registry.async_get(entity_default.entity_id)
-    assert entity_default.options == {"cloud.google_assistant": {"should_expose": True}}
-
-    entity_blocked = entity_registry.async_get(entity_blocked.entity_id)
-    assert entity_blocked.options == {
+    assert async_get_entity_settings(hass, entity_config.entity_id) == {
+        "cloud.google_assistant": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, entity_default.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_blocked.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
 
@@ -607,8 +604,9 @@ async def test_google_config_migrate_expose_entity_prefs_default_none(
     )
     await conf.async_initialize()
 
-    entity_default = entity_registry.async_get(entity_default.entity_id)
-    assert entity_default.options == {"cloud.google_assistant": {"should_expose": True}}
+    assert async_get_entity_settings(hass, entity_default.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
 
 
 async def test_google_config_migrate_expose_entity_prefs_default(
@@ -683,32 +681,21 @@ async def test_google_config_migrate_expose_entity_prefs_default(
     )
     await conf.async_initialize()
 
-    binary_sensor_supported = entity_registry.async_get(
-        binary_sensor_supported.entity_id
-    )
-    assert binary_sensor_supported.options == {
+    assert async_get_entity_settings(hass, binary_sensor_supported.entity_id) == {
         "cloud.google_assistant": {"should_expose": True}
     }
-
-    binary_sensor_unsupported = entity_registry.async_get(
-        binary_sensor_unsupported.entity_id
-    )
-    assert binary_sensor_unsupported.options == {
+    assert async_get_entity_settings(hass, binary_sensor_unsupported.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
-
-    light = entity_registry.async_get(light.entity_id)
-    assert light.options == {"cloud.google_assistant": {"should_expose": True}}
-
-    sensor_supported = entity_registry.async_get(sensor_supported.entity_id)
-    assert sensor_supported.options == {
+    assert async_get_entity_settings(hass, light.entity_id) == {
         "cloud.google_assistant": {"should_expose": True}
     }
-
-    sensor_unsupported = entity_registry.async_get(sensor_unsupported.entity_id)
-    assert sensor_unsupported.options == {
+    assert async_get_entity_settings(hass, sensor_supported.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, sensor_unsupported.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
-
-    water_heater = entity_registry.async_get(water_heater.entity_id)
-    assert water_heater.options == {"cloud.google_assistant": {"should_expose": False}}
+    assert async_get_entity_settings(hass, water_heater.entity_id) == {
+        "cloud.google_assistant": {"should_expose": False}
+    }
