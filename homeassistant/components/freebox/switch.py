@@ -5,6 +5,7 @@ import asyncio
 import logging
 from typing import Any
 
+import aiohttp.client_exceptions
 from freebox_api.exceptions import HttpRequestError, InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -67,6 +68,11 @@ class FreeboxSwitch(SwitchEntity):
         except asyncio.TimeoutError:
             _LOGGER.warning("The Freebox API Timeout during update switch")
             return
+        except aiohttp.client_exceptions.ClientError as error:
+            _LOGGER.warning(
+                "The Freebox API ClientError during update switch %s", error
+            )
+            return
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -91,4 +97,9 @@ class FreeboxSwitch(SwitchEntity):
             return
         except asyncio.TimeoutError:
             _LOGGER.warning("The Freebox API Timeout during async update switch")
+            return
+        except aiohttp.client_exceptions.ClientError as error:
+            _LOGGER.warning(
+                "The Freebox API ClientError during async update switch %s", error
+            )
             return

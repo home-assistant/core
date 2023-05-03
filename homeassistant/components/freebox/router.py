@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+import aiohttp.client_exceptions
 from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.home import Home
@@ -101,6 +102,11 @@ class FreeboxRouter:
         except asyncio.TimeoutError:
             _LOGGER.warning("The Freebox API Timeout during update device trackers")
             return
+        except aiohttp.client_exceptions.ClientError as error:
+            _LOGGER.warning(
+                "The Freebox API ClientError during update device trackers %s", error
+            )
+            return
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -163,6 +169,11 @@ class FreeboxRouter:
         except asyncio.TimeoutError:
             _LOGGER.warning("The Freebox API Timeout during update sensors")
             return
+        except aiohttp.client_exceptions.ClientError as error:
+            _LOGGER.warning(
+                "The Freebox API ClientError during update sensors %s", error
+            )
+            return
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
     async def _update_disks_sensors(self) -> None:
@@ -193,6 +204,11 @@ class FreeboxRouter:
             return
         except asyncio.TimeoutError:
             _LOGGER.warning("The Freebox API Timeout during nodes retrieval")
+            return
+        except aiohttp.client_exceptions.ClientError as error:
+            _LOGGER.warning(
+                "The Freebox API ClientError during nodes retrieval %s", error
+            )
             return
 
         new_device = False

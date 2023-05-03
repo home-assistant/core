@@ -5,6 +5,8 @@ import asyncio
 import logging
 from typing import Any
 
+import aiohttp.client_exceptions
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -92,6 +94,9 @@ class FreeboxHomeEntity(Entity):
         except TimeoutError:
             _LOGGER.warning("The Freebox Timeout during a value set")
             return False
+        except aiohttp.client_exceptions.ClientError as error:
+            _LOGGER.warning("The Freebox API ClientError during value set %s", error)
+            return False
         return True
 
     async def get_home_endpoint_value(self, command_id: Any) -> Any | None:
@@ -104,6 +109,11 @@ class FreeboxHomeEntity(Entity):
         except asyncio.TimeoutError as error:
             _LOGGER.warning(
                 "The Freebox API Timeout during a value retrieval %s", error
+            )
+            return None
+        except aiohttp.client_exceptions.ClientError as error:
+            _LOGGER.warning(
+                "The Freebox API ClientError during a value retrieval %s", error
             )
             return None
         except TimeoutError:
