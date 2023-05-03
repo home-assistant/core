@@ -29,6 +29,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.event import async_call_later
@@ -104,7 +105,11 @@ def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
     if domain in SUPPORTED_DOMAINS:
         return True
 
-    device_class = get_device_class(hass, entity_id)
+    try:
+        device_class = get_device_class(hass, entity_id)
+    except HomeAssistantError:
+        # Handle the state removed
+        return False
     if (
         domain == "binary_sensor"
         and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES

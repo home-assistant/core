@@ -820,7 +820,7 @@ async def test_get_google_entity(
     assert not response["success"]
     assert response["error"] == {
         "code": "not_found",
-        "message": "light.kitchen unknown or not in the entity registry",
+        "message": "light.kitchen unknown",
     }
 
     # Test getting a blocked entity
@@ -840,9 +840,6 @@ async def test_get_google_entity(
 
     entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
-    )
-    entity_registry.async_get_or_create(
-        "cover", "test", "unique", suggested_object_id="garage"
     )
     hass.states.async_set("light.kitchen", "on")
     hass.states.async_set("cover.garage", "open", {"device_class": "garage"})
@@ -991,10 +988,18 @@ async def test_get_alexa_entity(
         {"type": "cloud/alexa/entities/get", "entity_id": "light.kitchen"}
     )
     response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+    # Test getting an unknown sensor
+    await client.send_json_auto_id(
+        {"type": "cloud/alexa/entities/get", "entity_id": "sensor.temperature"}
+    )
+    response = await client.receive_json()
     assert not response["success"]
     assert response["error"] == {
-        "code": "not_found",
-        "message": "light.kitchen not in the entity registry",
+        "code": "not_supported",
+        "message": "sensor.temperature not supported by Alexa",
     }
 
     # Test getting a blocked entity
