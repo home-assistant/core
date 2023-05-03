@@ -55,7 +55,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
         )
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -66,7 +66,7 @@ async def test_flow_user_invalid_username(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid username."""
     with patch_fetch_user(thrown_error=WSError("network", "status", "User not found")):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -77,7 +77,7 @@ async def test_flow_user_unknown(hass: HomeAssistant) -> None:
     """Test user initialized flow with unknown error."""
     with patch_fetch_user(thrown_error=Exception):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -90,11 +90,50 @@ async def test_flow_user_unknown_lastfm(hass: HomeAssistant) -> None:
         thrown_error=WSError("network", "status", "Something strange")
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "unknown"
+
+
+async def test_flow_friends_invalid_username(hass: HomeAssistant) -> None:
+    """Test user initialized flow with invalid username."""
+    with patch_fetch_user(), patch_setup_entry():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "friends"
+
+    with patch_fetch_user(thrown_error=WSError("network", "status", "User not found")):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_FRIENDS_DATA
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "friends"
+        assert result["errors"]["base"] == "invalid_account"
+
+
+async def test_flow_friends_no_friends(hass: HomeAssistant) -> None:
+    """Test user initialized flow with invalid username."""
+    with patch_fetch_user(has_friends=False), patch_setup_entry():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "friends"
+        assert len(result["data_schema"].schema[CONF_USERS].config["options"]) == 0
 
 
 async def test_import_flow_success(hass: HomeAssistant) -> None:

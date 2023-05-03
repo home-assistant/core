@@ -1,7 +1,7 @@
 """The tests for lastfm."""
 from unittest.mock import patch
 
-from pylast import Track
+from pylast import Track, WSError
 
 from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS
 from homeassistant.const import CONF_API_KEY
@@ -30,10 +30,11 @@ class MockNetwork:
 class MockUser:
     """Mock User object for pylast."""
 
-    def __init__(self, now_playing_result, error):
+    def __init__(self, now_playing_result, error, has_friends):
         """Initialize the mock."""
         self._now_playing_result = now_playing_result
         self._thrown_error = error
+        self._has_friends = has_friends
         self.name = "test"
 
     def get_name(self, capitalized: bool) -> str:
@@ -63,14 +64,20 @@ class MockUser:
 
     def get_friends(self):
         """Get mock friends."""
-        return [MockUser(None, None)]
+        if self._has_friends is False:
+            raise WSError("network", "status", "Page not found")
+        return [MockUser(None, None, True)]
 
 
 def patch_fetch_user(
-    now_playing: Track | None = None, thrown_error: Exception | None = None
+    now_playing: Track | None = None,
+    thrown_error: Exception | None = None,
+    has_friends: bool = True,
 ) -> MockUser:
     """Patch interface."""
-    return patch("pylast.User", return_value=MockUser(now_playing, thrown_error))
+    return patch(
+        "pylast.User", return_value=MockUser(now_playing, thrown_error, has_friends)
+    )
 
 
 def patch_setup_entry() -> bool:
