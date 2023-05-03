@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hashlib
 
-from pylast import LastFMNetwork, Track, WSError
+from pylast import LastFMNetwork, Track, User, WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -21,6 +21,7 @@ from .const import (
     ATTR_LAST_PLAYED,
     ATTR_PLAY_COUNT,
     ATTR_TOP_PLAYED,
+    CONF_MAIN_USER,
     CONF_USERS,
     DEFAULT_NAME,
     DOMAIN,
@@ -53,7 +54,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.7.0",
+        breaks_in_ha_version="2023.8.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -72,9 +73,29 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize the entries."""
+
+    lastfm_api = LastFMNetwork(api_key=entry.data[CONF_API_KEY])
+    if entry.data[CONF_MAIN_USER] is None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "no_main_user",
+            is_fixable=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="no_main_user",
+        )
+    else:
+        async_add_entities(
+            [
+                LastFmSensor(
+                    lastfm_api.get_user(entry.data[CONF_MAIN_USER]), entry.entry_id
+                )
+            ],
+            True,
+        )
     async_add_entities(
         (
-            LastFmSensor(entry.data[CONF_API_KEY], user, entry.entry_id)
+            LastFmSensor(lastfm_api.get_user(user), entry.entry_id)
             for user in entry.data[CONF_USERS]
         ),
         True,
@@ -87,17 +108,16 @@ class LastFmSensor(SensorEntity):
     _attr_attribution = "Data provided by Last.fm"
     _attr_icon = "mdi:radio-fm"
 
-    def __init__(self, api_key: str, username: str, entry_id: str) -> None:
+    def __init__(self, user: User, entry_id: str) -> None:
         """Initialize the sensor."""
+        self._user = user
+        self._attr_unique_id = hashlib.sha256(user.name.encode("utf-8")).hexdigest()
+        self._attr_name = f"lastfm_{user.name}"
         try:
-            self._user = LastFMNetwork(api_key=api_key).get_user(username)
-            self._attr_unique_id = hashlib.sha256(
-                self._user.name.encode("utf-8")
-            ).hexdigest()
-            self._attr_name = f"lastfm_{self._user.name}"
+            user.get_playcount()
         except WSError as exc:
             self._attr_available = False
-            LOGGER.error("Failed to load LastFM user `%s`: %r", username, exc)
+            LOGGER.error("Failed to load LastFM user `%s`: %r", user.name, exc)
             return
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.last.fm",

@@ -1,7 +1,7 @@
 """Test LastFM component setup process."""
 from __future__ import annotations
 
-from homeassistant.components.lastfm.const import CONF_USERS, DOMAIN
+from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
@@ -14,7 +14,11 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
     """Test load and unload entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_KEY: "12345678", CONF_USERS: ["test"]},
+        data={
+            CONF_API_KEY: "12345678",
+            CONF_MAIN_USER: ["test"],
+            CONF_USERS: ["test1"],
+        },
     )
     entry.add_to_hass(hass)
     with patch_fetch_user():

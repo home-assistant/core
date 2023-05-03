@@ -3,13 +3,20 @@ from unittest.mock import patch
 
 from pylast import Track
 
-from homeassistant.components.lastfm.const import CONF_USERS
+from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS
 from homeassistant.const import CONF_API_KEY
 
 API_KEY = "asdasdasdasdasd"
 USERNAME_1 = "testaccount1"
+USERNAME_2 = "testaccount2"
 
-CONF_DATA = {CONF_API_KEY: API_KEY, CONF_USERS: [USERNAME_1]}
+CONF_DATA = {
+    CONF_API_KEY: API_KEY,
+    CONF_MAIN_USER: USERNAME_1,
+    CONF_USERS: [USERNAME_2],
+}
+CONF_USER_DATA = {CONF_API_KEY: API_KEY, CONF_MAIN_USER: USERNAME_1}
+CONF_FRIENDS_DATA = {CONF_USERS: [USERNAME_2]}
 
 
 class MockNetwork:
@@ -23,13 +30,16 @@ class MockNetwork:
 class MockUser:
     """Mock User object for pylast."""
 
-    def __init__(self, now_playing_result):
+    def __init__(self, now_playing_result, error):
         """Initialize the mock."""
         self._now_playing_result = now_playing_result
+        self._thrown_error = error
         self.name = "test"
 
     def get_playcount(self):
         """Get mock play count."""
+        if self._thrown_error:
+            raise self._thrown_error
         return 1
 
     def get_image(self):
@@ -47,10 +57,16 @@ class MockUser:
         """Get mock now playing."""
         return self._now_playing_result
 
+    def get_friends(self):
+        """Get mock friends."""
+        return [MockUser()]
 
-def patch_fetch_user(now_playing: Track | None = None) -> MockUser:
+
+def patch_fetch_user(
+    now_playing: Track | None = None, thrown_error: Exception | None = None
+) -> MockUser:
     """Patch interface."""
-    return patch("pylast.User", return_value=MockUser(now_playing))
+    return patch("pylast.User", return_value=MockUser(now_playing, thrown_error))
 
 
 def patch_setup_entry() -> bool:
