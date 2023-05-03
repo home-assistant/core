@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -99,14 +100,37 @@ class BaseEntity(Entity):
                 {"entity_id": self._switch_entity_id},
             )
 
-        if not self._is_new_entity:
+        if not self._is_new_entity or not (
+            wrapped_switch := registry.async_get(self._switch_entity_id)
+        ):
             return
 
-        wrapped_switch = registry.async_get(self._switch_entity_id)
-        if not wrapped_switch or wrapped_switch.name is None:
-            return
+        def copy_custom_name(wrapped_switch: er.RegistryEntry) -> None:
+            """Copy the name set by user from the wrapped entity."""
+            if wrapped_switch.name is None:
+                return
+            registry.async_update_entity(self.entity_id, name=wrapped_switch.name)
 
-        registry.async_update_entity(self.entity_id, name=wrapped_switch.name)
+        def copy_expose_settings() -> None:
+            """Copy assistant expose settings from the wrapped entity.
+
+            Also unexpose the wrapped entity if exposed.
+            """
+            expose_settings = exposed_entities.async_get_entity_settings(
+                self.hass, self._switch_entity_id
+            )
+            for assistant, settings in expose_settings.items():
+                if (should_expose := settings.get("should_expose")) is None:
+                    continue
+                exposed_entities.async_expose_entity(
+                    self.hass, assistant, self.entity_id, should_expose
+                )
+                exposed_entities.async_expose_entity(
+                    self.hass, assistant, self._switch_entity_id, False
+                )
+
+        copy_custom_name(wrapped_switch)
+        copy_expose_settings()
 
 
 class BaseToggleEntity(BaseEntity, ToggleEntity):

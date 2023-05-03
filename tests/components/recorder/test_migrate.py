@@ -24,37 +24,23 @@ from homeassistant.components import persistent_notification as pn, recorder
 from homeassistant.components.recorder import db_schema, migration
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
-    Events,
-    EventTypes,
     RecorderRuns,
     States,
-    StatesMeta,
-)
-from homeassistant.components.recorder.queries import select_event_type_ids
-from homeassistant.components.recorder.tasks import (
-    EntityIDMigrationTask,
-    EntityIDPostMigrationTask,
-    EventTypeIDMigrationTask,
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 import homeassistant.util.dt as dt_util
 
-from .common import (
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-    create_engine_test,
-)
+from .common import async_wait_recording_done, create_engine_test
 
 from tests.common import async_fire_time_changed
-from tests.typing import RecorderInstanceGenerator
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
 def _get_native_states(hass, entity_id):
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
         metadata_id = instance.states_meta_manager.get(entity_id, session, True)
         states = []
@@ -273,7 +259,9 @@ async def test_events_during_migration_queue_exhausted(
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
-    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG", 1):
+    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
+        recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0
+    ):
         recorder_helper.async_initialize_recorder(hass)
         await async_setup_component(
             hass,
@@ -360,7 +348,7 @@ async def test_schema_migrate(
 
         # Check and report the outcome of the migration; if migration fails
         # the recorder will silently create a new database.
-        with session_scope(hass=hass) as session:
+        with session_scope(hass=hass, read_only=True) as session:
             res = (
                 session.query(db_schema.SchemaChanges)
                 .order_by(db_schema.SchemaChanges.change_id.desc())
@@ -597,338 +585,3 @@ def test_raise_if_exception_missing_empty_cause_str() -> None:
 
     with pytest.raises(ProgrammingError):
         migration.raise_if_exception_missing_str(programming_exc, ["not present"])
-
-
-@pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
-async def test_migrate_event_type_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
-) -> None:
-    """Test we can migrate event_types to the EventTypes table."""
-    instance = await async_setup_recorder_instance(hass)
-    await async_wait_recording_done(hass)
-
-    def _insert_events():
-        with session_scope(hass=hass) as session:
-            session.add_all(
-                (
-                    Events(
-                        event_type="event_type_one",
-                        origin_idx=0,
-                        time_fired_ts=1677721632.452529,
-                    ),
-                    Events(
-                        event_type="event_type_one",
-                        origin_idx=0,
-                        time_fired_ts=1677721632.552529,
-                    ),
-                    Events(
-                        event_type="event_type_two",
-                        origin_idx=0,
-                        time_fired_ts=1677721632.552529,
-                    ),
-                )
-            )
-
-    await instance.async_add_executor_job(_insert_events)
-
-    await async_wait_recording_done(hass)
-    # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EventTypeIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-
-    def _fetch_migrated_events():
-        with session_scope(hass=hass) as session:
-            events = (
-                session.query(Events.event_id, Events.time_fired, EventTypes.event_type)
-                .filter(
-                    Events.event_type_id.in_(
-                        select_event_type_ids(
-                            (
-                                "event_type_one",
-                                "event_type_two",
-                            )
-                        )
-                    )
-                )
-                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-                .all()
-            )
-            assert len(events) == 3
-            result = {}
-            for event in events:
-                result.setdefault(event.event_type, []).append(
-                    {
-                        "event_id": event.event_id,
-                        "time_fired": event.time_fired,
-                        "event_type": event.event_type,
-                    }
-                )
-            return result
-
-    events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
-    assert len(events_by_type["event_type_one"]) == 2
-    assert len(events_by_type["event_type_two"]) == 1
-
-
-@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
-async def test_migrate_entity_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
-) -> None:
-    """Test we can migrate entity_ids to the StatesMeta table."""
-    instance = await async_setup_recorder_instance(hass)
-    await async_wait_recording_done(hass)
-
-    def _insert_states():
-        with session_scope(hass=hass) as session:
-            session.add_all(
-                (
-                    States(
-                        entity_id="sensor.one",
-                        state="one_1",
-                        last_updated_ts=1.452529,
-                    ),
-                    States(
-                        entity_id="sensor.two",
-                        state="two_2",
-                        last_updated_ts=2.252529,
-                    ),
-                    States(
-                        entity_id="sensor.two",
-                        state="two_1",
-                        last_updated_ts=3.152529,
-                    ),
-                )
-            )
-
-    await instance.async_add_executor_job(_insert_states)
-
-    await async_wait_recording_done(hass)
-    # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EntityIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-
-    def _fetch_migrated_states():
-        with session_scope(hass=hass) as session:
-            states = (
-                session.query(
-                    States.state,
-                    States.metadata_id,
-                    States.last_updated_ts,
-                    StatesMeta.entity_id,
-                )
-                .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
-                .all()
-            )
-            assert len(states) == 3
-            result = {}
-            for state in states:
-                result.setdefault(state.entity_id, []).append(
-                    {
-                        "state_id": state.entity_id,
-                        "last_updated_ts": state.last_updated_ts,
-                        "state": state.state,
-                    }
-                )
-            return result
-
-    states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
-    assert len(states_by_entity_id["sensor.two"]) == 2
-    assert len(states_by_entity_id["sensor.one"]) == 1
-
-
-@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
-async def test_post_migrate_entity_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
-) -> None:
-    """Test we can migrate entity_ids to the StatesMeta table."""
-    instance = await async_setup_recorder_instance(hass)
-    await async_wait_recording_done(hass)
-
-    def _insert_events():
-        with session_scope(hass=hass) as session:
-            session.add_all(
-                (
-                    States(
-                        entity_id="sensor.one",
-                        state="one_1",
-                        last_updated_ts=1.452529,
-                    ),
-                    States(
-                        entity_id="sensor.two",
-                        state="two_2",
-                        last_updated_ts=2.252529,
-                    ),
-                    States(
-                        entity_id="sensor.two",
-                        state="two_1",
-                        last_updated_ts=3.152529,
-                    ),
-                )
-            )
-
-    await instance.async_add_executor_job(_insert_events)
-
-    await async_wait_recording_done(hass)
-    # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EntityIDPostMigrationTask())
-    await async_recorder_block_till_done(hass)
-
-    def _fetch_migrated_states():
-        with session_scope(hass=hass) as session:
-            states = session.query(
-                States.state,
-                States.entity_id,
-            ).all()
-            assert len(states) == 3
-            return {state.state: state.entity_id for state in states}
-
-    states_by_state = await instance.async_add_executor_job(_fetch_migrated_states)
-    assert states_by_state["one_1"] is None
-    assert states_by_state["two_2"] is None
-    assert states_by_state["two_1"] is None
-
-
-@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
-async def test_migrate_null_entity_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
-) -> None:
-    """Test we can migrate entity_ids to the StatesMeta table."""
-    instance = await async_setup_recorder_instance(hass)
-    await async_wait_recording_done(hass)
-
-    def _insert_states():
-        with session_scope(hass=hass) as session:
-            session.add(
-                States(
-                    entity_id="sensor.one",
-                    state="one_1",
-                    last_updated_ts=1.452529,
-                ),
-            )
-            session.add_all(
-                States(
-                    entity_id=None,
-                    state="empty",
-                    last_updated_ts=time + 1.452529,
-                )
-                for time in range(1000)
-            )
-            session.add(
-                States(
-                    entity_id="sensor.one",
-                    state="one_1",
-                    last_updated_ts=2.452529,
-                ),
-            )
-
-    await instance.async_add_executor_job(_insert_states)
-
-    await async_wait_recording_done(hass)
-    # This is a threadsafe way to add a task to the recorder
-    instance.queue_task(EntityIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-    await async_recorder_block_till_done(hass)
-
-    def _fetch_migrated_states():
-        with session_scope(hass=hass) as session:
-            states = (
-                session.query(
-                    States.state,
-                    States.metadata_id,
-                    States.last_updated_ts,
-                    StatesMeta.entity_id,
-                )
-                .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
-                .all()
-            )
-            assert len(states) == 1002
-            result = {}
-            for state in states:
-                result.setdefault(state.entity_id, []).append(
-                    {
-                        "state_id": state.entity_id,
-                        "last_updated_ts": state.last_updated_ts,
-                        "state": state.state,
-                    }
-                )
-            return result
-
-    states_by_entity_id = await instance.async_add_executor_job(_fetch_migrated_states)
-    assert len(states_by_entity_id[migration._EMPTY_ENTITY_ID]) == 1000
-    assert len(states_by_entity_id["sensor.one"]) == 2
-
-
-@pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
-async def test_migrate_null_event_type_ids(
-    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
-) -> None:
-    """Test we can migrate event_types to the EventTypes table when the event_type is NULL."""
-    instance = await async_setup_recorder_instance(hass)
-    await async_wait_recording_done(hass)
-
-    def _insert_events():
-        with session_scope(hass=hass) as session:
-            session.add(
-                Events(
-                    event_type="event_type_one",
-                    origin_idx=0,
-                    time_fired_ts=1.452529,
-                ),
-            )
-            session.add_all(
-                Events(
-                    event_type=None,
-                    origin_idx=0,
-                    time_fired_ts=time + 1.452529,
-                )
-                for time in range(1000)
-            )
-            session.add(
-                Events(
-                    event_type="event_type_one",
-                    origin_idx=0,
-                    time_fired_ts=2.452529,
-                ),
-            )
-
-    await instance.async_add_executor_job(_insert_events)
-
-    await async_wait_recording_done(hass)
-    # This is a threadsafe way to add a task to the recorder
-
-    instance.queue_task(EventTypeIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-    await async_recorder_block_till_done(hass)
-
-    def _fetch_migrated_events():
-        with session_scope(hass=hass) as session:
-            events = (
-                session.query(Events.event_id, Events.time_fired, EventTypes.event_type)
-                .filter(
-                    Events.event_type_id.in_(
-                        select_event_type_ids(
-                            (
-                                "event_type_one",
-                                migration._EMPTY_EVENT_TYPE,
-                            )
-                        )
-                    )
-                )
-                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-                .all()
-            )
-            assert len(events) == 1002
-            result = {}
-            for event in events:
-                result.setdefault(event.event_type, []).append(
-                    {
-                        "event_id": event.event_id,
-                        "time_fired": event.time_fired,
-                        "event_type": event.event_type,
-                    }
-                )
-            return result
-
-    events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
-    assert len(events_by_type["event_type_one"]) == 2
-    assert len(events_by_type[migration._EMPTY_EVENT_TYPE]) == 1000

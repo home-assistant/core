@@ -30,7 +30,7 @@ async def test_full_user_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) 
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -60,7 +60,7 @@ async def test_invalid_address(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     mock_twentemilieu.unique_id.side_effect = TwenteMilieuAddressError
     result2 = await hass.config_entries.flow.async_configure(
@@ -72,7 +72,7 @@ async def test_invalid_address(
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": "invalid_address"}
 
     mock_twentemilieu.unique_id.side_effect = None
@@ -106,7 +106,7 @@ async def test_connection_error(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
 
