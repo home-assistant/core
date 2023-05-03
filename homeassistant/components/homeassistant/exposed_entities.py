@@ -358,13 +358,15 @@ class ExposedEntities(StorageCollection[ExposedEntity, SerializedExposedEntities
 
     def _create_item(self, item_id: str, data: dict) -> ExposedEntity:
         """Create an item from validated config."""
-        del data["entity_id"]
-        return ExposedEntity(**data)
+        return ExposedEntity(
+            assistants=data["assistants"],
+        )
 
     def _deserialize_item(self, data: dict) -> ExposedEntity:
         """Create an item from its serialized representation."""
-        del data["entity_id"]
-        return ExposedEntity(**data)
+        return ExposedEntity(
+            assistants=data["assistants"],
+        )
 
     def _serialize_item(self, item_id: str, item: ExposedEntity) -> dict:
         """Return the serialized representation of an item for storing."""
