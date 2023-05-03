@@ -113,7 +113,7 @@ def setup_platform(
 class OpenEVSESensor(SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
-    def __init__(self, charger, description: SensorEntityDescription):
+    def __init__(self, charger, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.charger = charger

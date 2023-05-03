@@ -127,7 +127,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Any, Optional, cast
+from typing import Any, cast
 import uuid
 
 from aiohttp import web
@@ -159,7 +159,7 @@ from . import indieauth, login_flow, mfa_setup_flow
 DOMAIN = "auth"
 
 StoreResultType = Callable[[str, Credentials], str]
-RetrieveResultType = Callable[[str, str], Optional[Credentials]]
+RetrieveResultType = Callable[[str, str], Credentials | None]
 
 
 @bind_hass
@@ -438,7 +438,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     def store_result(client_id: str, result: Credentials) -> str:
         """Store flow result and return a code to retrieve it."""
         if not isinstance(result, Credentials):
-            raise ValueError("result has to be a Credentials instance")
+            raise TypeError("result has to be a Credentials instance")
 
         code = uuid.uuid4().hex
         temp_results[(client_id, code)] = (

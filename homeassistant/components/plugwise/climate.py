@@ -122,7 +122,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         # When control_state is present, prefer this data
         if (control_state := self.device.get("control_state")) == "cooling":
             return HVACAction.COOLING
-        # Support preheating state as heating, until preheating is added as a separate state
+        # Support preheating state as heating,
+        # until preheating is added as a separate state
         if control_state in ["heating", "preheating"]:
             return HVACAction.HEATING
         if control_state == "off":

@@ -295,7 +295,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                     key = f"{key}_"
                 # Prevent column data errors in influxDB.
                 # For each value we try to cast it as float
-                # But if we can not do it we store the value
+                # But if we cannot do it we store the value
                 # as string add "_str" postfix to the field key
                 try:
                     json[INFLUX_CONF_FIELDS][key] = float(value)

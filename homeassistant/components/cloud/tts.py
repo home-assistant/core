@@ -1,16 +1,28 @@
 """Support for the cloud for text to speech service."""
 
+import logging
+
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import MAP_VOICE, VoiceError
+from hass_nabucasa.voice import MAP_VOICE, TTS_VOICES, AudioOutput, VoiceError
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    ATTR_AUDIO_OUTPUT,
+    ATTR_VOICE,
+    CONF_LANG,
+    PLATFORM_SCHEMA,
+    Provider,
+    Voice,
+)
+from homeassistant.core import callback
 
 from .const import DOMAIN
 
-CONF_GENDER = "gender"
+ATTR_GENDER = "gender"
 
-SUPPORT_LANGUAGES = list({key[0] for key in MAP_VOICE})
+SUPPORT_LANGUAGES = list(TTS_VOICES)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_lang(value):
@@ -18,8 +30,8 @@ def validate_lang(value):
     if (lang := value.get(CONF_LANG)) is None:
         return value
 
-    if (gender := value.get(CONF_GENDER)) is None:
-        gender = value[CONF_GENDER] = next(
+    if (gender := value.get(ATTR_GENDER)) is None:
+        gender = value[ATTR_GENDER] = next(
             (chk_gender for chk_lang, chk_gender in MAP_VOICE if chk_lang == lang), None
         )
 
@@ -33,7 +45,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_LANG): str,
-            vol.Optional(CONF_GENDER): str,
+            vol.Optional(ATTR_GENDER): str,
         }
     ),
     validate_lang,
@@ -49,9 +61,12 @@ async def async_get_engine(hass, config, discovery_info=None):
         gender = None
     else:
         language = config[CONF_LANG]
-        gender = config[CONF_GENDER]
+        gender = config[ATTR_GENDER]
 
-    return CloudProvider(cloud, language, gender)
+    cloud_provider = CloudProvider(cloud, language, gender)
+    if discovery_info is not None:
+        discovery_info["platform_loaded"].set()
+    return cloud_provider
 
 
 class CloudProvider(Provider):
@@ -87,21 +102,36 @@ class CloudProvider(Provider):
     @property
     def supported_options(self):
         """Return list of supported options like voice, emotion."""
-        return [CONF_GENDER]
+        return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
+
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
+        """Return a list of supported voices for a language."""
+        if not (voices := TTS_VOICES.get(language)):
+            return None
+        return [Voice(voice, voice) for voice in voices]
 
     @property
     def default_options(self):
         """Return a dict include default options."""
-        return {CONF_GENDER: self._gender}
+        return {
+            ATTR_GENDER: self._gender,
+            ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
+        }
 
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from NabuCasa Cloud."""
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
-                message, language, gender=options[CONF_GENDER]
+                text=message,
+                language=language,
+                gender=options.get(ATTR_GENDER),
+                voice=options.get(ATTR_VOICE),
+                output=options[ATTR_AUDIO_OUTPUT],
             )
-        except VoiceError:
+        except VoiceError as err:
+            _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return ("mp3", data)
+        return (str(options[ATTR_AUDIO_OUTPUT]), data)

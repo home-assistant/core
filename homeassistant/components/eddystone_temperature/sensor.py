@@ -1,5 +1,4 @@
-"""
-Read temperature information from Eddystone beacons.
+"""Read temperature information from Eddystone beacons.
 
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.

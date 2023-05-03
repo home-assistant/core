@@ -25,7 +25,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,errors",
+    ("side_effect", "errors"),
     (
         (
             InvalidClientID(client_id="test_id"),

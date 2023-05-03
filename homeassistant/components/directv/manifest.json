@@ -1,17 +1,17 @@
 {
   "domain": "directv",
   "name": "DirecTV",
-  "documentation": "https://www.home-assistant.io/integrations/directv",
-  "requirements": ["directv==0.4.0"],
   "codeowners": [],
-  "quality_scale": "gold",
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/directv",
+  "iot_class": "local_polling",
+  "loggers": ["directv"],
+  "quality_scale": "silver",
+  "requirements": ["directv==0.4.0"],
   "ssdp": [
     {
       "manufacturer": "DIRECTV",
       "deviceType": "urn:schemas-upnp-org:device:MediaServer:1"
     }
-  ],
-  "iot_class": "local_polling",
-  "loggers": ["directv"]
+  ]
 }

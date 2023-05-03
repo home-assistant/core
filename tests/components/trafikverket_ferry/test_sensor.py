@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import patch
 
-from pytest import MonkeyPatch
+import pytest
 from pytrafikverket.trafikverket_ferry import FerryStop
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +17,7 @@ from tests.common import async_fire_time_changed
 async def test_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_ferries: list[FerryStop],
 ) -> None:
     """Test the Trafikverket Ferry sensor."""

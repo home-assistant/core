@@ -1,16 +1,15 @@
 """Support for SleepIQ foundation preset selection."""
 from __future__ import annotations
 
-from asyncsleepiq import BED_PRESETS, Side, SleepIQBed, SleepIQPreset
+from asyncsleepiq import Side, SleepIQBed, SleepIQPreset
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .coordinator import SleepIQData
+from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity
 
 
@@ -28,13 +27,14 @@ async def async_setup_entry(
     )
 
 
-class SleepIQSelectEntity(SleepIQBedEntity, SelectEntity):
+class SleepIQSelectEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], SelectEntity):
     """Representation of a SleepIQ select entity."""
 
-    _attr_options = list(BED_PRESETS)
-
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bed: SleepIQBed, preset: SleepIQPreset
+        self,
+        coordinator: SleepIQDataUpdateCoordinator,
+        bed: SleepIQBed,
+        preset: SleepIQPreset,
     ) -> None:
         """Initialize the select entity."""
         self.preset = preset
@@ -43,7 +43,8 @@ class SleepIQSelectEntity(SleepIQBedEntity, SelectEntity):
         self._attr_unique_id = f"{bed.id}_preset"
         if preset.side != Side.NONE:
             self._attr_name += f" {preset.side_full}"
-            self._attr_unique_id += f"_{preset.side}"
+            self._attr_unique_id += f"_{preset.side.value}"
+        self._attr_options = preset.options
 
         super().__init__(coordinator, bed)
         self._async_update_attrs()

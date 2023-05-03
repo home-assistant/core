@@ -1,9 +1,9 @@
 {
   "domain": "zhong_hong",
   "name": "ZhongHong",
-  "documentation": "https://www.home-assistant.io/integrations/zhong_hong",
-  "requirements": ["zhong_hong_hvac==1.0.9"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/zhong_hong",
   "iot_class": "local_push",
-  "loggers": ["zhong_hong_hvac"]
+  "loggers": ["zhong_hong_hvac"],
+  "requirements": ["zhong_hong_hvac==1.0.9"]
 }

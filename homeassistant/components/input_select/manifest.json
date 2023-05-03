@@ -1,8 +1,8 @@
 {
   "domain": "input_select",
-  "integration_type": "helper",
   "name": "Input Select",
-  "documentation": "https://www.home-assistant.io/integrations/input_select",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/input_select",
+  "integration_type": "helper",
   "quality_scale": "internal"
 }

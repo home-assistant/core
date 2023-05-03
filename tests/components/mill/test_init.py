@@ -1,15 +1,15 @@
 """Tests for Mill init."""
-
 from unittest.mock import patch
 
 from homeassistant.components import mill
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
 
 
-async def test_setup_with_cloud_config(hass):
+async def test_setup_with_cloud_config(hass: HomeAssistant) -> None:
     """Test setup of cloud config."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -28,7 +28,7 @@ async def test_setup_with_cloud_config(hass):
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_setup_with_cloud_config_fails(hass):
+async def test_setup_with_cloud_config_fails(hass: HomeAssistant) -> None:
     """Test setup of cloud config."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -44,7 +44,7 @@ async def test_setup_with_cloud_config_fails(hass):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_with_old_cloud_config(hass):
+async def test_setup_with_old_cloud_config(hass: HomeAssistant) -> None:
     """Test setup of old cloud config."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -62,7 +62,7 @@ async def test_setup_with_old_cloud_config(hass):
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_setup_with_local_config(hass):
+async def test_setup_with_local_config(hass: HomeAssistant) -> None:
     """Test setup of local config."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,
@@ -96,7 +96,7 @@ async def test_setup_with_local_config(hass):
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test removing mill client."""
     entry = MockConfigEntry(
         domain=mill.DOMAIN,

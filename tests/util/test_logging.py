@@ -7,12 +7,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.core import callback, is_callback
+from homeassistant.core import HomeAssistant, callback, is_callback
 import homeassistant.util.logging as logging_util
 
 
-def test_sensitive_data_filter():
+def test_sensitive_data_filter() -> None:
     """Test the logging sensitive data filter."""
     log_filter = logging_util.HideSensitiveDataFilter("mock_sensitive")
 
@@ -25,7 +24,7 @@ def test_sensitive_data_filter():
     assert sensitive_record.msg == "******* log"
 
 
-async def test_logging_with_queue_handler():
+async def test_logging_with_queue_handler() -> None:
     """Test logging with HomeAssistantQueueHandler."""
 
     simple_queue = queue.SimpleQueue()  # type: ignore
@@ -63,24 +62,25 @@ async def test_logging_with_queue_handler():
     assert simple_queue.empty()
 
 
-async def test_migrate_log_handler(hass):
+async def test_migrate_log_handler(hass: HomeAssistant) -> None:
     """Test migrating log handlers."""
-
-    original_handlers = logging.root.handlers
 
     logging_util.async_activate_log_queue_handler(hass)
 
     assert len(logging.root.handlers) == 1
     assert isinstance(logging.root.handlers[0], logging_util.HomeAssistantQueueHandler)
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-    await hass.async_block_till_done()
-
-    assert logging.root.handlers == original_handlers
+    # Test that the close hook shuts down the queue handler's thread
+    listener_thread = logging.root.handlers[0].listener._thread
+    assert listener_thread.is_alive()
+    logging.root.handlers[0].close()
+    assert not listener_thread.is_alive()
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_async_create_catching_coro(hass, caplog):
+async def test_async_create_catching_coro(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test exception logging of wrapped coroutine."""
 
     async def job():
@@ -92,7 +92,7 @@ async def test_async_create_catching_coro(hass, caplog):
     assert "in test_async_create_catching_coro" in caplog.text
 
 
-def test_catch_log_exception():
+def test_catch_log_exception() -> None:
     """Test it is still a callback after wrapping including partial."""
 
     async def async_meth():

@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.emonitor.const import DOMAIN
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -18,7 +19,7 @@ def _mock_emonitor():
     )
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -50,7 +51,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_unknown_error(hass):
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +72,7 @@ async def test_form_unknown_error(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -92,7 +93,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-async def test_dhcp_can_confirm(hass):
+async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
     """Test DHCP discovery flow can confirm right away."""
 
     with patch(
@@ -135,7 +136,7 @@ async def test_dhcp_can_confirm(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_fails_to_connect(hass):
+async def test_dhcp_fails_to_connect(hass: HomeAssistant) -> None:
     """Test DHCP discovery flow that fails to connect."""
 
     with patch(
@@ -157,7 +158,7 @@ async def test_dhcp_fails_to_connect(hass):
     assert result["step_id"] == "user"
 
 
-async def test_dhcp_already_exists(hass):
+async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
     """Test DHCP discovery flow that fails to connect."""
 
     entry = MockConfigEntry(
@@ -186,7 +187,7 @@ async def test_dhcp_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_user_unique_id_already_exists(hass):
+async def test_user_unique_id_already_exists(hass: HomeAssistant) -> None:
     """Test creating an entry where the unique_id already exists."""
 
     entry = MockConfigEntry(

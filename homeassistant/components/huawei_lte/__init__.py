@@ -44,7 +44,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery,
-    entity_registry,
+    entity_registry as er,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -55,7 +55,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
-    ATTR_UNIQUE_ID,
+    ATTR_CONFIG_ENTRY_ID,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
@@ -359,15 +359,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Transitional from < 2021.8: update None config entry and entity unique ids
         if router_info and (serial_number := router_info.get("SerialNumber")):
             hass.config_entries.async_update_entry(entry, unique_id=serial_number)
-            ent_reg = entity_registry.async_get(hass)
-            for entity_entry in entity_registry.async_entries_for_config_entry(
+            ent_reg = er.async_get(hass)
+            for entity_entry in er.async_entries_for_config_entry(
                 ent_reg, entry.entry_id
             ):
                 if not entity_entry.unique_id.startswith("None-"):
                     continue
-                new_unique_id = (
-                    f"{serial_number}-{entity_entry.unique_id.split('-', 1)[1]}"
-                )
+                new_unique_id = entity_entry.unique_id.removeprefix("None-")
+                new_unique_id = f"{serial_number}-{new_unique_id}"
                 ent_reg.async_update_entity(
                     entity_entry.entity_id, new_unique_id=new_unique_id
                 )
@@ -387,7 +386,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return False
 
     # Store reference to router
-    hass.data[DOMAIN].routers[entry.unique_id] = router
+    hass.data[DOMAIN].routers[entry.entry_id] = router
 
     # Clear all subscriptions, enabled entities will push back theirs
     router.subscriptions.clear()
@@ -449,7 +448,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         Platform.NOTIFY,
         DOMAIN,
         {
-            ATTR_UNIQUE_ID: entry.unique_id,
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             CONF_NAME: entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
             CONF_RECIPIENT: entry.options.get(CONF_RECIPIENT),
         },
@@ -457,8 +456,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     def _update_router(*_: Any) -> None:
-        """
-        Update router data.
+        """Update router data.
 
         Separate passthrough function because lambdas don't work with track_time_interval.
         """
@@ -484,7 +482,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     # Forget about the router and invoke its cleanup
-    router = hass.data[DOMAIN].routers.pop(config_entry.unique_id)
+    router = hass.data[DOMAIN].routers.pop(config_entry.entry_id)
     await hass.async_add_executor_job(router.cleanup)
 
     return True
@@ -497,8 +495,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
 
     def service_handler(service: ServiceCall) -> None:
-        """
-        Apply a service.
+        """Apply a service.
 
         We key this using the router URL instead of its unique id / serial number,
         because the latter is not available anywhere in the UI.

@@ -13,7 +13,7 @@ from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
-from .base_scanner import BaseHaScanner
+from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import DATA_MANAGER
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher
@@ -91,6 +91,14 @@ def async_ble_device_from_address(
     if DATA_MANAGER not in hass.data:
         return None
     return _get_manager(hass).async_ble_device_from_address(address, connectable)
+
+
+@hass_callback
+def async_scanner_devices_by_address(
+    hass: HomeAssistant, address: str, connectable: bool = True
+) -> list[BluetoothScannerDevice]:
+    """Return all discovered BluetoothScannerDevice for an address."""
+    return _get_manager(hass).async_scanner_devices_by_address(address, connectable)
 
 
 @hass_callback

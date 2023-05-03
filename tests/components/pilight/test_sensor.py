@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components import pilight
 import homeassistant.components.sensor as sensor
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, mock_component
@@ -24,7 +25,7 @@ def fire_pilight_message(hass, protocol, data):
     hass.bus.async_fire(pilight.EVENT, message)
 
 
-async def test_sensor_value_from_code(hass):
+async def test_sensor_value_from_code(hass: HomeAssistant) -> None:
     """Test the setting of value via pilight."""
     with assert_setup_component(1):
         assert await async_setup_component(
@@ -55,7 +56,7 @@ async def test_sensor_value_from_code(hass):
         assert state.state == "42"
 
 
-async def test_disregard_wrong_payload(hass):
+async def test_disregard_wrong_payload(hass: HomeAssistant) -> None:
     """Test omitting setting of value with wrong payload."""
     with assert_setup_component(1):
         assert await async_setup_component(
@@ -99,7 +100,9 @@ async def test_disregard_wrong_payload(hass):
         assert state.state == "data"
 
 
-async def test_variable_missing(hass, caplog):
+async def test_variable_missing(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Check if error message when variable missing."""
     caplog.set_level(logging.ERROR)
     with assert_setup_component(1):

@@ -1,5 +1,5 @@
 """Tests for the LaMetric sensor platform."""
-from unittest.mock import AsyncMock, MagicMock
+import pytest
 
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
@@ -9,24 +9,22 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
-from tests.common import MockConfigEntry
+pytestmark = pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "init_integration"
+)
 
 
 async def test_wifi_signal(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
-    init_integration: MockConfigEntry,
-    mock_lametric: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the LaMetric Wi-Fi sensor."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("sensor.frenck_s_lametric_wi_fi_signal")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None

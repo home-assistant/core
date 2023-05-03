@@ -1,9 +1,9 @@
 {
   "domain": "reddit",
   "name": "Reddit",
-  "documentation": "https://www.home-assistant.io/integrations/reddit",
-  "requirements": ["praw==7.5.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/reddit",
   "iot_class": "cloud_polling",
-  "loggers": ["praw", "prawcore"]
+  "loggers": ["praw", "prawcore"],
+  "requirements": ["praw==7.5.0"]
 }

@@ -1,4 +1,4 @@
-"""This platform provides binary sensors for key RainMachine data."""
+"""Binary sensors for key RainMachine data."""
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
@@ -7,8 +7,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity

@@ -16,6 +16,7 @@ from homeassistant.components.sia.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -144,21 +145,23 @@ async def setup_sia(hass, config_entry: MockConfigEntry):
     await hass.async_block_till_done()
 
 
-async def test_form_start_user(hass, flow_at_user_step):
+async def test_form_start_user(hass: HomeAssistant, flow_at_user_step) -> None:
     """Start the form and check if you get the right id and schema for the user step."""
     assert flow_at_user_step["step_id"] == "user"
     assert flow_at_user_step["errors"] is None
     assert flow_at_user_step["data_schema"] == HUB_SCHEMA
 
 
-async def test_form_start_account(hass, flow_at_add_account_step):
+async def test_form_start_account(
+    hass: HomeAssistant, flow_at_add_account_step
+) -> None:
     """Start the form and check if you get the right id and schema for the additional account step."""
     assert flow_at_add_account_step["step_id"] == "add_account"
     assert flow_at_add_account_step["errors"] is None
     assert flow_at_add_account_step["data_schema"] == ACCOUNT_SCHEMA
 
 
-async def test_create(hass, entry_with_basic_config):
+async def test_create(hass: HomeAssistant, entry_with_basic_config) -> None:
     """Test we create a entry through the form."""
     assert (
         entry_with_basic_config["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -171,7 +174,9 @@ async def test_create(hass, entry_with_basic_config):
     assert entry_with_basic_config["options"] == BASE_OUT["options"]
 
 
-async def test_create_additional_account(hass, entry_with_additional_account_config):
+async def test_create_additional_account(
+    hass: HomeAssistant, entry_with_additional_account_config
+) -> None:
     """Test we create a config with two accounts."""
     assert (
         entry_with_additional_account_config["type"]
@@ -186,7 +191,7 @@ async def test_create_additional_account(hass, entry_with_additional_account_con
     assert entry_with_additional_account_config["options"] == ADDITIONAL_OUT["options"]
 
 
-async def test_abort_form(hass):
+async def test_abort_form(hass: HomeAssistant) -> None:
     """Test aborting a config that already exists."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -215,7 +220,7 @@ def mock_sia():
 
 
 @pytest.mark.parametrize(
-    "field, value, error",
+    ("field", "value", "error"),
     [
         ("encryption_key", "AAAAAAAAAAAAAZZZ", "invalid_key_format"),
         ("encryption_key", "AAAAAAAAAAAAA", "invalid_key_length"),
@@ -226,12 +231,12 @@ def mock_sia():
     ],
 )
 async def test_validation_errors_user(
-    hass,
+    hass: HomeAssistant,
     flow_at_user_step,
     field,
     value,
     error,
-):
+) -> None:
     """Test we handle the different invalid inputs, in the user flow."""
     config = BASIC_CONFIG.copy()
     flow_id = flow_at_user_step["flow_id"]
@@ -242,7 +247,7 @@ async def test_validation_errors_user(
 
 
 @pytest.mark.parametrize(
-    "field, value, error",
+    ("field", "value", "error"),
     [
         ("encryption_key", "AAAAAAAAAAAAAZZZ", "invalid_key_format"),
         ("encryption_key", "AAAAAAAAAAAAA", "invalid_key_length"),
@@ -253,12 +258,12 @@ async def test_validation_errors_user(
     ],
 )
 async def test_validation_errors_account(
-    hass,
+    hass: HomeAssistant,
     flow_at_user_step,
     field,
     value,
     error,
-):
+) -> None:
     """Test we handle the different invalid inputs, in the add_account flow."""
     flow_at_add_account_step = await hass.config_entries.flow.async_configure(
         flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
@@ -271,7 +276,7 @@ async def test_validation_errors_account(
     assert result_err["errors"] == {"base": error}
 
 
-async def test_unknown_user(hass, flow_at_user_step):
+async def test_unknown_user(hass: HomeAssistant, flow_at_user_step) -> None:
     """Test unknown exceptions."""
     flow_id = flow_at_user_step["flow_id"]
     with patch(
@@ -286,7 +291,7 @@ async def test_unknown_user(hass, flow_at_user_step):
         assert result_err["data_schema"] == HUB_SCHEMA
 
 
-async def test_unknown_account(hass, flow_at_user_step):
+async def test_unknown_account(hass: HomeAssistant, flow_at_user_step) -> None:
     """Test unknown exceptions."""
     flow_at_add_account_step = await hass.config_entries.flow.async_configure(
         flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
@@ -304,7 +309,7 @@ async def test_unknown_account(hass, flow_at_user_step):
         assert result_err["data_schema"] == ACCOUNT_SCHEMA
 
 
-async def test_options_basic(hass):
+async def test_options_basic(hass: HomeAssistant) -> None:
     """Test options flow for single account."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -323,13 +328,14 @@ async def test_options_basic(hass):
     updated = await hass.config_entries.options.async_configure(
         result["flow_id"], BASIC_OPTIONS
     )
+    await hass.async_block_till_done()
     assert updated["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert updated["data"] == {
         CONF_ACCOUNTS: {BASIC_CONFIG[CONF_ACCOUNT]: BASIC_OPTIONS}
     }
 
 
-async def test_options_additional(hass):
+async def test_options_additional(hass: HomeAssistant) -> None:
     """Test options flow for single account."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

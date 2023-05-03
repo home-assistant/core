@@ -147,7 +147,9 @@ class MelCloudDevice:
         return self.device.daily_energy_consumed
 
 
-async def mel_devices_setup(hass, token) -> dict[str, list[MelCloudDevice]]:
+async def mel_devices_setup(
+    hass: HomeAssistant, token: str
+) -> dict[str, list[MelCloudDevice]]:
     """Query connected devices from MELCloud."""
     session = async_get_clientsession(hass)
     try:

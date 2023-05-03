@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-TEMPER_SENSORS = []
+TEMPER_SENSORS: list[TemperSensor] = []
 
 
 def get_temper_devices():
@@ -63,8 +63,7 @@ def setup_platform(
 
 
 def reset_devices():
-    """
-    Re-scan for underlying Temper sensors and assign them to our devices.
+    """Re-scan for underlying Temper sensors and assign them to our devices.
 
     This assumes the same sensor devices are present in the same order.
     """

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -15,16 +14,24 @@ from homeassistant.components.rtsp_to_webrtc import CONF_STUN_SERVER, DOMAIN
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .conftest import SERVER_URL, STREAM_SOURCE, ComponentSetup
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 # The webrtc component does not inspect the details of the offer and answer,
 # and is only a pass through.
 OFFER_SDP = "v=0\r\no=carol 28908764872 28908764872 IN IP4 100.3.6.6\r\n..."
 ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 host.example.com\r\n..."
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 async def test_setup_success(
@@ -83,7 +90,7 @@ async def test_setup_communication_failure(
 async def test_offer_for_stream_source(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
     mock_camera: Any,
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
@@ -124,7 +131,7 @@ async def test_offer_for_stream_source(
 async def test_offer_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
     mock_camera: Any,
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
@@ -161,7 +168,7 @@ async def test_no_stun_server(
     hass: HomeAssistant,
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
-    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test successful setup and unload."""
     await setup_integration()
@@ -188,7 +195,7 @@ async def test_stun_server(
     rtsp_to_webrtc_client: Any,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
-    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test successful setup and unload."""
     await setup_integration()

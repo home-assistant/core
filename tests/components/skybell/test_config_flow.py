@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from aioskybell import exceptions
-from pytest import fixture
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.skybell.const import DOMAIN
@@ -16,7 +16,7 @@ from . import CONF_CONFIG_FLOW, PASSWORD, USER_ID
 from tests.common import MockConfigEntry
 
 
-@fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def setup_entry() -> None:
     """Make sure component doesn't initialize."""
     with patch(
