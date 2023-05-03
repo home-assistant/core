@@ -52,7 +52,11 @@ def make_protocol(
         or (pipeline.tts_engine is None)
     ):
         # Play pre-recorded message instead of failing
-        return PreRecordMessageProtocol(hass, "problem.pcm")
+        return PreRecordMessageProtocol(
+            hass,
+            "problem.pcm",
+            opus_payload_type=call_info.opus_payload_type,
+        )
 
     # Pipeline is properly configured
     return PipelineRtpDatagramProtocol(
@@ -60,6 +64,7 @@ def make_protocol(
         hass.config.language,
         voip_device,
         Context(user_id=devices.config_entry.data["user"]),
+        opus_payload_type=call_info.opus_payload_type,
     )
 
 
@@ -79,7 +84,9 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
                 hass, devices, call_info
             ),
             invalid_protocol_factory=lambda call_info: PreRecordMessageProtocol(
-                hass, "not_configured.pcm"
+                hass,
+                "not_configured.pcm",
+                opus_payload_type=call_info.opus_payload_type,
             ),
         )
         self.hass = hass
@@ -109,6 +116,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         language: str,
         voip_device: VoIPDevice,
         context: Context,
+        opus_payload_type: int,
         pipeline_timeout: float = 30.0,
         audio_timeout: float = 2.0,
         buffered_chunks_before_speech: int = 100,
@@ -119,7 +127,12 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         tts_extra_timeout: float = 1.0,
     ) -> None:
         """Set up pipeline RTP server."""
-        super().__init__(rate=RATE, width=WIDTH, channels=CHANNELS)
+        super().__init__(
+            rate=RATE,
+            width=WIDTH,
+            channels=CHANNELS,
+            opus_payload_type=opus_payload_type,
+        )
 
         self.hass = hass
         self.language = language
@@ -424,11 +437,17 @@ class PreRecordMessageProtocol(RtpDatagramProtocol):
         self,
         hass: HomeAssistant,
         file_name: str,
+        opus_payload_type: int,
         message_delay: float = 1.0,
         loop_delay: float = 2.0,
     ) -> None:
         """Set up RTP server."""
-        super().__init__(rate=RATE, width=WIDTH, channels=CHANNELS)
+        super().__init__(
+            rate=RATE,
+            width=WIDTH,
+            channels=CHANNELS,
+            opus_payload_type=opus_payload_type,
+        )
         self.hass = hass
         self.file_name = file_name
         self.message_delay = message_delay
