@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_NAME,
@@ -56,9 +57,25 @@ def setup_platform(
     for idx, dev in enumerate(temper_devices):
         if idx != 0:
             name = f"{prefix}_{idx!s}"
-        TEMPER_SENSORS.append(TemperatureSensor(dev, name, scaling))
+        temperature_description = SensorEntityDescription(
+            key=f"temper_{dev.type.name}_temperature",
+            name=f"{name} temperature",
+            icon="mdi:thermometer",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            suggested_display_precision=1,
+        )
+        TEMPER_SENSORS.append(TemperatureSensor(dev, temperature_description, scaling))
         if dev.lookup_humidity_offset(0) is not None:
-            TEMPER_SENSORS.append(HumiditySensor(dev, name))
+            humidity_description = SensorEntityDescription(
+                key=f"temper_{dev.type.name}_humidity",
+                name=f"{name} humidity",
+                icon="mdi:water-percent",
+                device_class=SensorDeviceClass.HUMIDITY,
+                native_unit_of_measurement=PERCENTAGE,
+                suggested_display_precision=1,
+            )
+            TEMPER_SENSORS.append(HumiditySensor(dev, humidity_description))
     add_entities(TEMPER_SENSORS)
 
 
@@ -75,17 +92,14 @@ def reset_devices():
 class TemperatureSensor(SensorEntity):
     """Representation of a Temper temperature sensor."""
 
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-
-    def __init__(self, temper_device, name, scaling):
+    def __init__(self, temper_device, description, scaling):
         """Initialize the sensor."""
         self.scale = scaling["scale"]
         self.offset = scaling["offset"]
         self.set_temper_device(temper_device)
 
-        self._attr_name = name
-        self._attr_unique_id = f"temper_{temper_device.type.name}_temperature"
+        self._attr_unique_id = description.key
+        self.entity_description = description
 
     def set_temper_device(self, temper_device):
         """Assign the underlying device for this sensor."""
@@ -97,8 +111,7 @@ class TemperatureSensor(SensorEntity):
     def update(self) -> None:
         """Retrieve latest state."""
         try:
-            sensor_value = self.temper_device.get_temperature("celsius")
-            self._attr_native_value = round(sensor_value, 1)
+            self._attr_native_value = self.temper_device.get_temperature("celsius")
         except OSError:
             _LOGGER.error(
                 "Failed to get temperature. The device address may"
@@ -109,25 +122,16 @@ class TemperatureSensor(SensorEntity):
 class HumiditySensor(SensorEntity):
     """Representation of a Temper humidity sensor."""
 
-    _attr_device_class = SensorDeviceClass.HUMIDITY
-    _attr_native_unit_of_measurement = PERCENTAGE
-
-    def __init__(self, temper_device, name):
+    def __init__(self, temper_device, description):
         """Initialize the sensor."""
-        self.set_temper_device(temper_device)
-
-        self._attr_name = f"{name} humidity"
-        self._attr_unique_id = f"temper_{temper_device.type.name}_humidity"
-
-    def set_temper_device(self, temper_device):
-        """Assign the underlying device for this sensor."""
+        self._attr_unique_id = description.key
+        self.entity_description = description
         self.temper_device = temper_device
 
     def update(self) -> None:
         """Retrieve latest state."""
         try:
-            sensor_value = self.temper_device.get_humidity()[0]['humidity_pc']
-            self._attr_native_value = round(sensor_value, 1)
+            self._attr_native_value = self.temper_device.get_humidity()[0]['humidity_pc']
         except:
             _LOGGER.warning(
                 "A humidity sensor was detected, but no humidity was returned."
