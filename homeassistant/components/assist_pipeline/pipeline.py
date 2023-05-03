@@ -336,10 +336,8 @@ class PipelineRun:
     tts_audio_output: str | None = None
 
     id: str = field(default_factory=ulid_util.ulid)
-    stt_provider: stt.SpeechToTextEntity | stt.Provider | None = field(
-        init=False, default=None
-    )
-    tts_engine: str | None = field(init=False, default=None)
+    stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
+    tts_engine: str = field(init=False)
     tts_options: dict | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -422,9 +420,6 @@ class PipelineRun:
         stream: AsyncIterable[bytes],
     ) -> str:
         """Run speech to text portion of pipeline. Returns the spoken text."""
-        # This method is not called if stt_provider is None
-        assert self.stt_provider is not None
-
         if isinstance(self.stt_provider, stt.Provider):
             engine = self.stt_provider.name
         else:
