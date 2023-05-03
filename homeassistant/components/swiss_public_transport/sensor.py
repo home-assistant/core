@@ -35,7 +35,6 @@ CONF_START = "from"
 
 DEFAULT_NAME = "Next Departure"
 
-ICON = "mdi:bus"
 
 SCAN_INTERVAL = timedelta(seconds=90)
 
@@ -79,6 +78,7 @@ class SwissPublicTransportSensor(SensorEntity):
     """Implementation of an Swiss public transport sensor."""
 
     _attr_attribution = "Data provided by transport.opendata.ch"
+    _attr_icon = "mdi:bus"
 
     def __init__(self, opendata, start, destination, name):
         """Initialize the sensor."""
@@ -124,11 +124,6 @@ class SwissPublicTransportSensor(SensorEntity):
             ATTR_REMAINING_TIME: f"{self._remaining_time}",
             ATTR_DELAY: self._opendata.connections[0]["delay"],
         }
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     async def async_update(self) -> None:
         """Get the latest data from opendata.ch and update the states."""

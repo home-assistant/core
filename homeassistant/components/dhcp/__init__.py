@@ -77,7 +77,7 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class DhcpServiceInfo(BaseServiceInfo):
     """Prepared info from dhcp entries."""
 
