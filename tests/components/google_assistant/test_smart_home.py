@@ -451,8 +451,8 @@ async def test_execute(
     hass: HomeAssistant, report_state, on, brightness, value
 ) -> None:
     """Test an execute command."""
-    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
