@@ -12,10 +12,9 @@ from homeassistant.config_entries import (
     ConfigFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -190,15 +189,6 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 else:
                     valid_users.append(username)
             if not errors:
-                await self.hass.config_entries.async_unload(self.entry.entry_id)
-                for username in self.data[CONF_USERS]:
-                    if username not in user_input[CONF_USERS] and (
-                        entity_id := er.async_get(self.hass).async_get_entity_id(
-                            Platform.SENSOR, DOMAIN, f"sensor.lastfm_{username}"
-                        )
-                    ):
-                        er.async_get(self.hass).async_remove(entity_id)
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_create_entry(
                     title="LastFM",
                     data={
