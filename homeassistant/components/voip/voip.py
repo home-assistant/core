@@ -363,15 +363,19 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
             async with async_timeout.timeout(tts_seconds + self.tts_extra_timeout):
                 # Assume TTS audio is 16Khz 16-bit mono
-                await self.hass.async_add_executor_job(
-                    partial(self.send_audio, audio_bytes, **RTP_AUDIO_SETTINGS)
-                )
+                await self._async_send_audio(audio_bytes, **RTP_AUDIO_SETTINGS)
         except asyncio.TimeoutError as err:
             _LOGGER.warning("TTS timeout")
             raise err
         finally:
             # Signal pipeline to restart
             self._tts_done.set()
+
+    async def _async_send_audio(self, audio_bytes: bytes, **kwargs):
+        """Send audio in executor."""
+        await self.hass.async_add_executor_job(
+            partial(self.send_audio, audio_bytes, **kwargs)
+        )
 
     async def _play_listening_tone(self) -> None:
         """Play a tone to indicate that Home Assistant is listening."""
@@ -382,13 +386,10 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 "tone.pcm",
             )
 
-        await self.hass.async_add_executor_job(
-            partial(
-                self.send_audio,
-                self._tone_bytes,
-                silence_before=self.tone_delay,
-                **RTP_AUDIO_SETTINGS,
-            )
+        await self._async_send_audio(
+            self._tone_bytes,
+            silence_before=self.tone_delay,
+            **RTP_AUDIO_SETTINGS,
         )
 
     async def _play_processing_tone(self) -> None:
@@ -400,12 +401,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 "processing.pcm",
             )
 
-        await self.hass.async_add_executor_job(
-            partial(
-                self.send_audio,
-                self._processing_bytes,
-                **RTP_AUDIO_SETTINGS,
-            )
+        await self._async_send_audio(
+            self._processing_bytes,
+            **RTP_AUDIO_SETTINGS,
         )
 
     async def _play_error_tone(self) -> None:
@@ -417,12 +415,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 "error.pcm",
             )
 
-        await self.hass.async_add_executor_job(
-            partial(
-                self.send_audio,
-                self._error_bytes,
-                **RTP_AUDIO_SETTINGS,
-            )
+        await self._async_send_audio(
+            self._error_bytes,
+            **RTP_AUDIO_SETTINGS,
         )
 
     def _load_pcm(self, file_name: str) -> bytes:
