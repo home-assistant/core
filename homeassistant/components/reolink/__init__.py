@@ -99,18 +99,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             try:
                 return await host.api.check_new_firmware()
             except ReolinkError as err:
-                if not starting:
-                    raise UpdateFailed(
-                        f"Error checking Reolink firmware update from {host.api.nvr_name}, "
-                        "if the camera is blocked from accessing the internet, "
-                        "disable the update entity"
-                    ) from err
+                if starting:
+                    _LOGGER.debug(
+                        "Error checking Reolink firmware update at startup "
+                        "from %s, possibly internet access is blocked",
+                        host.api.nvr_name,
+                    )
+                    return False
 
-                _LOGGER.debug(
-                    "Error checking Reolink firmware update at startup "
-                    "from %s, possibly internet access is blocked",
-                    host.api.nvr_name,
-                )
+                raise UpdateFailed(
+                    f"Error checking Reolink firmware update from {host.api.nvr_name}, "
+                    "if the camera is blocked from accessing the internet, "
+                    "disable the update entity"
+                ) from err
 
     device_coordinator = DataUpdateCoordinator(
         hass,
