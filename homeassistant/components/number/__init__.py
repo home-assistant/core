@@ -133,6 +133,7 @@ class NumberEntityDescription(EntityDescription):
     native_step: float | None = None
     step: None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
+    mode: NumberMode | None = None
 
     def __post_init__(self) -> None:
         """Post initialisation processing."""
@@ -193,7 +194,7 @@ class NumberEntity(Entity):
     _attr_device_class: NumberDeviceClass | None
     _attr_max_value: None
     _attr_min_value: None
-    _attr_mode: NumberMode = NumberMode.AUTO
+    _attr_mode: NumberMode
     _attr_state: None = None
     _attr_step: None
     _attr_unit_of_measurement: None  # Subclasses of NumberEntity should not set this
@@ -357,7 +358,14 @@ class NumberEntity(Entity):
     @property
     def mode(self) -> NumberMode:
         """Return the mode of the entity."""
-        return self._attr_mode
+        if hasattr(self, "_attr_mode"):
+            return self._attr_mode
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.mode is not None
+        ):
+            return self.entity_description.mode
+        return NumberMode.AUTO
 
     @property
     @final
