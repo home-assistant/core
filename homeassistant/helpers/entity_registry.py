@@ -307,26 +307,6 @@ class RegistryEntry:
 
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
-    def async_friendly_name(self, hass: HomeAssistant) -> str | None:
-        """Return the friendly name.
-
-        If self.name is not None, this returns self.name
-        If has_entity_name is False, self.original_name
-        If has_entity_name is True, this returns device.name + self.original_name
-        """
-        if not self.has_entity_name or self.name is not None:
-            return self.name or self.original_name
-
-        device_registry = dr.async_get(hass)
-        if not (device_id := self.device_id) or not (
-            device_entry := device_registry.async_get(device_id)
-        ):
-            return self.original_name
-
-        if not (original_name := self.original_name):
-            return device_entry.name_by_user or device_entry.name
-        return f"{device_entry.name_by_user or device_entry.name} {original_name}"
-
 
 class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
