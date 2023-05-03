@@ -25,10 +25,6 @@
     "deprecated_yaml": {
       "title": "The LastFM YAML configuration is being removed",
       "description": "Configuring LastFM using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the LastFM YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    },
-    "no_main_user": {
-      "title": "The LastFM integration doesn't have main user selected",
-      "description": "Since your LastFM config was imported from YAML, you did not select a main user."
     }
   }
 }

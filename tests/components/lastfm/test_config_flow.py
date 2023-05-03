@@ -103,24 +103,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={CONF_API_KEY: API_KEY, CONF_USERS: [USERNAME_1]},
-        )
-        await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "LastFM"
-    assert result["data"] == {
-        "api_key": "asdasdasdasdasd",
-        "main_user": "testaccount1",
-        "users": [],
-    }
-
-
-async def test_import_flow_success_with_no_main_user(hass: HomeAssistant) -> None:
-    """Test import with more users configured."""
-    with patch_fetch_user():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
             data={CONF_API_KEY: API_KEY, CONF_USERS: [USERNAME_1, USERNAME_2]},
         )
         await hass.async_block_till_done()
@@ -128,7 +110,6 @@ async def test_import_flow_success_with_no_main_user(hass: HomeAssistant) -> Non
     assert result["title"] == "LastFM"
     assert result["data"] == {
         "api_key": "asdasdasdasdasd",
-        "main_user": None,
         "users": ["testaccount1", "testaccount2"],
     }
 

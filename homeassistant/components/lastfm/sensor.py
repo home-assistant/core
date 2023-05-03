@@ -21,7 +21,6 @@ from .const import (
     ATTR_LAST_PLAYED,
     ATTR_PLAY_COUNT,
     ATTR_TOP_PLAYED,
-    CONF_MAIN_USER,
     CONF_USERS,
     DEFAULT_NAME,
     DOMAIN,
@@ -75,24 +74,6 @@ async def async_setup_entry(
     """Initialize the entries."""
 
     lastfm_api = LastFMNetwork(api_key=entry.data[CONF_API_KEY])
-    if entry.data[CONF_MAIN_USER] is None:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "no_main_user",
-            is_fixable=True,
-            severity=IssueSeverity.WARNING,
-            translation_key="no_main_user",
-        )
-    else:
-        async_add_entities(
-            [
-                LastFmSensor(
-                    lastfm_api.get_user(entry.data[CONF_MAIN_USER]), entry.entry_id
-                )
-            ],
-            True,
-        )
     async_add_entities(
         (
             LastFmSensor(lastfm_api.get_user(user), entry.entry_id)

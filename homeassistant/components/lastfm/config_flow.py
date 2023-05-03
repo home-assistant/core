@@ -32,9 +32,7 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize config flow."""
-        self.api_key = ""
-        self.main_username = ""
-        self.main_user = None
+        self.data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -42,12 +40,11 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize user input."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.api_key = user_input[CONF_API_KEY]
-            self.main_username = user_input[CONF_MAIN_USER]
-            main_user: User = self._get_lastfm_user(self.main_username)
+            self.data[CONF_API_KEY] = user_input[CONF_API_KEY]
+            self.data[CONF_MAIN_USER] = user_input[CONF_MAIN_USER]
+            main_user = self._get_lastfm_user(self.data[CONF_MAIN_USER])
             lastfm_errors = self._validate_lastfm_user(main_user)
             if not lastfm_errors:
-                self.main_user = main_user
                 return await self.async_step_friends()
             errors = lastfm_errors
         return self.async_show_form(
@@ -78,15 +75,16 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title="LastFM",
                     data={
-                        CONF_API_KEY: self.api_key,
-                        CONF_MAIN_USER: self.main_username,
-                        CONF_USERS: users,
+                        CONF_API_KEY: self.data[CONF_API_KEY],
+                        CONF_MAIN_USER: self.data[CONF_MAIN_USER],
+                        CONF_USERS: [self.data[CONF_MAIN_USER], *users],
                     },
                 )
         try:
+            main_user = self._get_lastfm_user(self.data[CONF_MAIN_USER])
             friends: Sequence[SelectOptionDict] = [
                 {"value": str(friend.name), "label": str(friend.get_name(True))}
-                for friend in self.main_user.get_friends()
+                for friend in main_user.get_friends()
             ]
         except WSError:
             friends = []
@@ -105,7 +103,7 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     def _get_lastfm_user(self, username: str) -> User:
-        return LastFMNetwork(api_key=self.api_key).get_user(username)
+        return LastFMNetwork(api_key=self.data[CONF_API_KEY]).get_user(username)
 
     def _validate_lastfm_user(self, user: User) -> dict[str, str] | None:
         errors = {}
@@ -133,16 +131,10 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
                 return self.async_abort(reason="already_configured")
-        main_user = None
-        users = import_config[CONF_USERS]
-        if len(import_config[CONF_USERS]) == 1:
-            main_user = import_config[CONF_USERS][0]
-            users = []
         return self.async_create_entry(
             title="LastFM",
             data={
                 CONF_API_KEY: import_config[CONF_API_KEY],
-                CONF_MAIN_USER: main_user,
-                CONF_USERS: users,
+                CONF_USERS: import_config[CONF_USERS],
             },
         )
