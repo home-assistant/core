@@ -200,22 +200,26 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_USERS: [USERNAME_1, USERNAME_2]},
+            user_input={CONF_USERS: [USERNAME_1]},
         )
         await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] == CONF_DATA
+    assert result["data"] == {
+        CONF_API_KEY: API_KEY,
+        CONF_MAIN_USER: USERNAME_1,
+        CONF_USERS: [USERNAME_1],
+    }
 
 
-async def test_options_flow_remove_user(hass: HomeAssistant) -> None:
-    """Test updating options will correctly remove an entity."""
+async def test_options_flow_incorrect_username(hass: HomeAssistant) -> None:
+    """Test updating options doesn't work with incorrect username."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_API_KEY: API_KEY,
             CONF_MAIN_USER: USERNAME_1,
-            CONF_USERS: [USERNAME_1, USERNAME_2],
+            CONF_USERS: [USERNAME_1],
         },
     )
     entry.add_to_hass(hass)
@@ -227,18 +231,16 @@ async def test_options_flow_remove_user(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
+    with patch_fetch_user(thrown_error=WSError("network", "status", "User not found")):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_USERS: [USERNAME_1]},
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_API_KEY: API_KEY,
-        CONF_MAIN_USER: USERNAME_1,
-        CONF_USERS: [USERNAME_1],
-    }
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"]["base"] == "invalid_account"
 
 
 async def test_options_flow_from_import(hass: HomeAssistant) -> None:
