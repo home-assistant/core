@@ -108,7 +108,7 @@ async def test_exposed_areas(
     hass.states.async_set(bedroom_light.entity_id, "on")
 
     # Hide the bedroom light
-    await expose_entity(hass, bedroom_light.entity_id, False)
+    expose_entity(hass, bedroom_light.entity_id, False)
 
     result = await conversation.async_converse(
         hass, "turn on lights in the kitchen", None, Context(), None
