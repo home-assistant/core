@@ -21,7 +21,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -395,10 +394,9 @@ async def test_google_config_expose_entity_prefs(
     state_not_exposed = State(entity_entry5.entity_id, "on")
     state_exposed_default = State(entity_entry6.entity_id, "on")
 
-    # can't expose an entity which is not in the entity registry
-    with pytest.raises(HomeAssistantError):
-        expose_entity(hass, "light.kitchen", True)
-    assert not mock_conf.should_expose(state)
+    # an entity which is not in the entity registry can be exposed
+    expose_entity(hass, "light.kitchen", True)
+    assert mock_conf.should_expose(state)
     # categorized and hidden entities should not be exposed
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
@@ -611,3 +609,106 @@ async def test_google_config_migrate_expose_entity_prefs_default_none(
 
     entity_default = entity_registry.async_get(entity_default.entity_id)
     assert entity_default.options == {"cloud.google_assistant": {"should_expose": True}}
+
+
+async def test_google_config_migrate_expose_entity_prefs_default(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating Google entity config."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    binary_sensor_supported = entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "binary_sensor_supported",
+        original_device_class="door",
+        suggested_object_id="supported",
+    )
+
+    binary_sensor_unsupported = entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "binary_sensor_unsupported",
+        original_device_class="battery",
+        suggested_object_id="unsupported",
+    )
+
+    light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "unique",
+        suggested_object_id="light",
+    )
+
+    sensor_supported = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "sensor_supported",
+        original_device_class="temperature",
+        suggested_object_id="supported",
+    )
+
+    sensor_unsupported = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "sensor_unsupported",
+        original_device_class="battery",
+        suggested_object_id="unsupported",
+    )
+
+    water_heater = entity_registry.async_get_or_create(
+        "water_heater",
+        "test",
+        "unique",
+        suggested_object_id="water_heater",
+    )
+
+    await cloud_prefs.async_update(
+        google_enabled=True,
+        google_report_state=False,
+        google_settings_version=1,
+    )
+
+    cloud_prefs._prefs[PREF_GOOGLE_DEFAULT_EXPOSE] = [
+        "binary_sensor",
+        "light",
+        "sensor",
+        "water_heater",
+    ]
+    conf = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
+    )
+    await conf.async_initialize()
+
+    binary_sensor_supported = entity_registry.async_get(
+        binary_sensor_supported.entity_id
+    )
+    assert binary_sensor_supported.options == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+
+    binary_sensor_unsupported = entity_registry.async_get(
+        binary_sensor_unsupported.entity_id
+    )
+    assert binary_sensor_unsupported.options == {
+        "cloud.google_assistant": {"should_expose": False}
+    }
+
+    light = entity_registry.async_get(light.entity_id)
+    assert light.options == {"cloud.google_assistant": {"should_expose": True}}
+
+    sensor_supported = entity_registry.async_get(sensor_supported.entity_id)
+    assert sensor_supported.options == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+
+    sensor_unsupported = entity_registry.async_get(sensor_unsupported.entity_id)
+    assert sensor_unsupported.options == {
+        "cloud.google_assistant": {"should_expose": False}
+    }
+
+    water_heater = entity_registry.async_get(water_heater.entity_id)
+    assert water_heater.options == {"cloud.google_assistant": {"should_expose": False}}

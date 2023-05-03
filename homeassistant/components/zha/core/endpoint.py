@@ -118,6 +118,11 @@ class Endpoint:
             cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
                 cluster_id, ClusterHandler
             )
+
+            # Allow cluster handler to filter out bad matches
+            if not cluster_handler_class.matches(cluster, self):
+                cluster_handler_class = ClusterHandler
+
             _LOGGER.info(
                 "Creating cluster handler for cluster id: %s class: %s",
                 cluster_id,
@@ -200,11 +205,13 @@ class Endpoint:
 
     def send_event(self, signal: dict[str, Any]) -> None:
         """Broadcast an event from this endpoint."""
-        signal["endpoint"] = {
-            "id": self.id,
-            "unique_id": self.unique_id,
-        }
-        self.device.zha_send_event(signal)
+        self.device.zha_send_event(
+            {
+                const.ATTR_UNIQUE_ID: self.unique_id,
+                const.ATTR_ENDPOINT_ID: self.id,
+                **signal,
+            }
+        )
 
     def claim_cluster_handlers(self, cluster_handlers: list[ClusterHandler]) -> None:
         """Claim cluster handlers."""

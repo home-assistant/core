@@ -14,7 +14,6 @@ from homeassistant.components.number import (
 from homeassistant.components.rituals_perfume_genie.number import (
     MAX_PERFUME_AMOUNT,
     MIN_PERFUME_AMOUNT,
-    PERFUME_AMOUNT_SUFFIX,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant
@@ -46,7 +45,7 @@ async def test_number_entity(
 
     entry = entity_registry.async_get("number.genie_perfume_amount")
     assert entry
-    assert entry.unique_id == f"{diffuser.hublot}{PERFUME_AMOUNT_SUFFIX}"
+    assert entry.unique_id == f"{diffuser.hublot}-perfume_amount"
 
 
 async def test_set_number_value(hass: HomeAssistant) -> None:

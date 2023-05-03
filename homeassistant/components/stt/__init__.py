@@ -41,12 +41,14 @@ from .legacy import (
     Provider,
     SpeechMetadata,
     SpeechResult,
+    async_default_provider,
     async_get_provider,
     async_setup_legacy,
 )
 
 __all__ = [
     "async_get_provider",
+    "async_get_speech_to_text_engine",
     "async_get_speech_to_text_entity",
     "AudioBitRates",
     "AudioChannels",
@@ -65,6 +67,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
+def async_default_engine(hass: HomeAssistant) -> str | None:
+    """Return the domain or entity id of the default engine."""
+    return async_default_provider(hass) or next(
+        iter(hass.states.async_entity_ids(DOMAIN)), None
+    )
+
+
+@callback
 def async_get_speech_to_text_entity(
     hass: HomeAssistant, entity_id: str
 ) -> SpeechToTextEntity | None:
@@ -72,6 +82,34 @@ def async_get_speech_to_text_entity(
     component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
 
     return component.get_entity(entity_id)
+
+
+@callback
+def async_get_speech_to_text_engine(
+    hass: HomeAssistant, engine_id: str
+) -> SpeechToTextEntity | Provider | None:
+    """Return stt entity or legacy provider."""
+    if entity := async_get_speech_to_text_entity(hass, engine_id):
+        return entity
+    return async_get_provider(hass, engine_id)
+
+
+@callback
+def async_get_speech_to_text_languages(hass: HomeAssistant) -> set[str]:
+    """Return a set with the union of languages supported by stt engines."""
+    languages = set()
+
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
+    legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
+    for entity in component.entities:
+        for language_tag in entity.supported_languages:
+            languages.add(language_tag)
+
+    for engine in legacy_providers.values():
+        for language_tag in engine.supported_languages:
+            languages.add(language_tag)
+
+    return languages
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -109,16 +147,6 @@ class SpeechToTextEntity(RestoreEntity):
 
     _attr_should_poll = False
     __last_processed: str | None = None
-
-    @property
-    @final
-    def name(self) -> str:
-        """Return the name of the provider entity."""
-        # Only one entity is allowed per platform for now.
-        if self.platform is None:
-            raise RuntimeError("Entity is not added to hass yet.")
-
-        return self.platform.platform_name
 
     @property
     @final
@@ -193,18 +221,9 @@ class SpeechToTextEntity(RestoreEntity):
     @callback
     def check_metadata(self, metadata: SpeechMetadata) -> bool:
         """Check if given metadata supported by this provider."""
-        if metadata.language not in self.supported_languages:
-            language_matches = language_util.matches(
-                metadata.language,
-                self.supported_languages,
-            )
-            if language_matches:
-                metadata.language = language_matches[0]
-            else:
-                return False
-
         if (
-            metadata.format not in self.supported_formats
+            metadata.language not in self.supported_languages
+            or metadata.format not in self.supported_formats
             or metadata.codec not in self.supported_codecs
             or metadata.bit_rate not in self.supported_bit_rates
             or metadata.sample_rate not in self.supported_sample_rates
@@ -231,11 +250,7 @@ class SpeechToTextView(HomeAssistantView):
         hass: HomeAssistant = request.app["hass"]
         provider_entity: SpeechToTextEntity | None = None
         if (
-            not (
-                provider_entity := async_get_speech_to_text_entity(
-                    hass, f"{DOMAIN}.{provider}"
-                )
-            )
+            not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
         ):
             raise HTTPNotFound()
@@ -274,11 +289,7 @@ class SpeechToTextView(HomeAssistantView):
         """Return provider specific audio information."""
         hass: HomeAssistant = request.app["hass"]
         if (
-            not (
-                provider_entity := async_get_speech_to_text_entity(
-                    hass, f"{DOMAIN}.{provider}"
-                )
-            )
+            not (provider_entity := async_get_speech_to_text_entity(hass, provider))
             and provider not in self.providers
         ):
             raise HTTPNotFound()
@@ -395,6 +406,7 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
     {
         "type": "stt/engine/list",
         vol.Optional("language"): str,
+        vol.Optional("country"): str,
     }
 )
 @callback
@@ -405,23 +417,30 @@ def websocket_list_engines(
     component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
     legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
 
+    country = msg.get("country")
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
 
     for entity in component.entities:
-        provider_info = {"engine_id": entity.entity_id}
+        provider_info = {
+            "engine_id": entity.entity_id,
+            "supported_languages": entity.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, entity.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, entity.supported_languages, country
             )
         providers.append(provider_info)
 
     for engine_id, provider in legacy_providers.items():
-        provider_info = {"engine_id": engine_id}
+        provider_info = {
+            "engine_id": engine_id,
+            "supported_languages": provider.supported_languages,
+        }
         if language:
-            provider_info["language_supported"] = bool(
-                language_util.matches(language, provider.supported_languages)
+            provider_info["supported_languages"] = language_util.matches(
+                language, provider.supported_languages, country
             )
         providers.append(provider_info)
 

@@ -1,23 +1,28 @@
 """Support for the cloud for text to speech service."""
 
+import logging
+
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import MAP_VOICE, TTS_VOICES, AudioOutput, VoiceError
 import voluptuous as vol
 
 from homeassistant.components.tts import (
     ATTR_AUDIO_OUTPUT,
+    ATTR_VOICE,
     CONF_LANG,
     PLATFORM_SCHEMA,
     Provider,
+    Voice,
 )
 from homeassistant.core import callback
 
 from .const import DOMAIN
 
 ATTR_GENDER = "gender"
-ATTR_VOICE = "voice"
 
 SUPPORT_LANGUAGES = list(TTS_VOICES)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_lang(value):
@@ -58,7 +63,10 @@ async def async_get_engine(hass, config, discovery_info=None):
         language = config[CONF_LANG]
         gender = config[ATTR_GENDER]
 
-    return CloudProvider(cloud, language, gender)
+    cloud_provider = CloudProvider(cloud, language, gender)
+    if discovery_info is not None:
+        discovery_info["platform_loaded"].set()
+    return cloud_provider
 
 
 class CloudProvider(Provider):
@@ -97,9 +105,11 @@ class CloudProvider(Provider):
         return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
-        return TTS_VOICES.get(language)
+        if not (voices := TTS_VOICES.get(language)):
+            return None
+        return [Voice(voice, voice) for voice in voices]
 
     @property
     def default_options(self):
@@ -120,7 +130,8 @@ class CloudProvider(Provider):
                 voice=options.get(ATTR_VOICE),
                 output=options[ATTR_AUDIO_OUTPUT],
             )
-        except VoiceError:
+        except VoiceError as err:
+            _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
         return (str(options[ATTR_AUDIO_OUTPUT]), data)

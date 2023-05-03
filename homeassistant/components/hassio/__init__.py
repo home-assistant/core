@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import os
 from typing import Any, NamedTuple
@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     DOMAIN as HASS_DOMAIN,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     callback,
@@ -84,9 +85,12 @@ from .handler import (  # noqa: F401
     async_get_addon_discovery_info,
     async_get_addon_info,
     async_get_addon_store_info,
+    async_get_yellow_settings,
     async_install_addon,
+    async_reboot_host,
     async_restart_addon,
     async_set_addon_options,
+    async_set_yellow_settings,
     async_start_addon,
     async_stop_addon,
     async_uninstall_addon,
@@ -492,7 +496,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             DOMAIN, service, async_service_handler, schema=settings.schema
         )
 
-    async def update_info_data(now):
+    async def update_info_data(_: datetime | None = None) -> None:
         """Update last available supervisor information."""
 
         try:
@@ -516,11 +520,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
 
         async_track_point_in_utc_time(
-            hass, update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
+            hass,
+            HassJob(update_info_data, cancel_on_shutdown=True),
+            utcnow() + HASSIO_UPDATE_INTERVAL,
         )
 
     # Fetch data
-    await update_info_data(None)
+    await update_info_data()
 
     async def async_handle_core_service(call: ServiceCall) -> None:
         """Service handler for handling core services."""

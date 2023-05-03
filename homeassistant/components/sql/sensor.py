@@ -42,18 +42,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COLUMN_NAME, CONF_QUERY, DB_URL_RE, DOMAIN
+from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .models import SQLData
-from .util import resolve_db_url
+from .util import redact_credentials, resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
 
 _SQL_LAMBDA_CACHE: LRUCache = LRUCache(1000)
-
-
-def redact_credentials(data: str) -> str:
-    """Redact credentials from string data."""
-    return DB_URL_RE.sub("//****:****@", data)
 
 
 async def async_setup_platform(

@@ -44,6 +44,7 @@ from .const import (
     CONF_CACHE_DIR,
     CONF_FIELDS,
     CONF_TIME_MEMORY,
+    DATA_TTS_MANAGER,
     DEFAULT_CACHE,
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
@@ -51,6 +52,7 @@ from .const import (
     TtsAudioType,
 )
 from .media_source import generate_media_source_id
+from .models import Voice
 
 if TYPE_CHECKING:
     from . import SpeechManager
@@ -111,7 +113,7 @@ async def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy text to speech providers."""
-    tts: SpeechManager = hass.data[DOMAIN]
+    tts: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
     # Load service descriptions from tts/services.yaml
     services_yaml = Path(__file__).parent / "services.yaml"
@@ -228,7 +230,7 @@ class Provider:
         return None
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
         return None
 
