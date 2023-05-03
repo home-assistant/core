@@ -1120,7 +1120,7 @@ async def test_temperature_control_and_setting_traits(hass: HomeAssistant) -> No
     )
     assert trt.sync_attributes() == {
         "thermostatTemperatureUnit": "C",
-        "availableThermostatModes": ["on", "heat"],
+        "availableThermostatModes": ["heat"],
         "queryOnlyTemperatureSetting": True,
     }
     assert trt.query_attributes() == {
@@ -3000,7 +3000,7 @@ async def test_temperature_control_and_setting_sensor_data(
 
     assert trt.sync_attributes() == {
         "thermostatTemperatureUnit": "C",
-        "availableThermostatModes": ["on", "heat"],
+        "availableThermostatModes": ["heat"],
         "queryOnlyTemperatureSetting": True,
     }
 
