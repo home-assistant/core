@@ -165,6 +165,7 @@ def _setup_sensors(
     sensor_ids: list,
     coordinator_name: str,
 ) -> list:
+    """Create list of sensors configuration for each registered charger."""
     entities: list[ChargerSensor] = []
 
     for sensor_id in sensor_ids:
