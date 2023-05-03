@@ -762,7 +762,17 @@ async def test_list_google_entities(
         await client.send_json_auto_id({"type": "cloud/google_assistant/entities"})
         response = await client.receive_json()
     assert response["success"]
-    assert len(response["result"]) == 0
+    assert len(response["result"]) == 2
+    assert response["result"][0] == {
+        "entity_id": "light.kitchen",
+        "might_2fa": False,
+        "traits": ["action.devices.traits.OnOff"],
+    }
+    assert response["result"][1] == {
+        "entity_id": "cover.garage",
+        "might_2fa": True,
+        "traits": ["action.devices.traits.OpenClose"],
+    }
 
     # Add the entities to the entity registry
     entity_registry.async_get_or_create(
@@ -939,7 +949,12 @@ async def test_list_alexa_entities(
         await client.send_json_auto_id({"id": 5, "type": "cloud/alexa/entities"})
         response = await client.receive_json()
     assert response["success"]
-    assert len(response["result"]) == 0
+    assert len(response["result"]) == 1
+    assert response["result"][0] == {
+        "entity_id": "light.kitchen",
+        "display_categories": ["LIGHT"],
+        "interfaces": ["Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"],
+    }
 
     # Add the entity to the entity registry
     entity_registry.async_get_or_create(
