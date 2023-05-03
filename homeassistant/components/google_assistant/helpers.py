@@ -175,7 +175,7 @@ class AbstractConfig(ABC):
         """Get agent user ID from context."""
 
     @abstractmethod
-    async def should_expose(self, state) -> bool:
+    def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
 
     def should_2fa(self, state):
@@ -535,14 +535,16 @@ class GoogleEntity:
         ]
         return self._traits
 
-    async def should_expose(self):
+    @callback
+    def should_expose(self):
         """If entity should be exposed."""
-        return await self.config.should_expose(self.state)
+        return self.config.should_expose(self.state)
 
-    async def should_expose_local(self) -> bool:
+    @callback
+    def should_expose_local(self) -> bool:
         """Return if the entity should be exposed locally."""
         return (
-            await self.should_expose()
+            self.should_expose()
             and get_google_type(
                 self.state.domain, self.state.attributes.get(ATTR_DEVICE_CLASS)
             )
@@ -585,7 +587,7 @@ class GoogleEntity:
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
         )
 
-    async def sync_serialize(self, agent_user_id, instance_uuid):
+    def sync_serialize(self, agent_user_id, instance_uuid):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
@@ -621,7 +623,7 @@ class GoogleEntity:
                 device["name"]["nicknames"].extend(entity_entry.aliases)
 
         # Add local SDK info if enabled
-        if self.config.is_local_sdk_active and await self.should_expose_local():
+        if self.config.is_local_sdk_active and self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),

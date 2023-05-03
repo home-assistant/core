@@ -138,6 +138,6 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     for assistant, settings in expose_settings.items():
         if (should_expose := settings.get("should_expose")) is None:
             continue
-        await exposed_entities.async_expose_entity(
+        exposed_entities.async_expose_entity(
             hass, assistant, switch_entity_id, should_expose
         )

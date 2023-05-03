@@ -343,7 +343,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
     )
 
     exposed_entities = ExposedEntities(hass)
-    await exposed_entities.async_load()
+    await exposed_entities.async_initialize()
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
 
     return True

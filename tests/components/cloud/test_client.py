@@ -265,13 +265,13 @@ async def test_google_config_expose_entity(
     state = State(entity_entry.entity_id, "on")
     gconf = await cloud_client.get_google_config()
 
-    assert await gconf.should_expose(state)
+    assert gconf.should_expose(state)
 
-    await exposed_entities.async_expose_entity(
+    exposed_entities.async_expose_entity(
         "cloud.google_assistant", entity_entry.entity_id, False
     )
 
-    assert not await gconf.should_expose(state)
+    assert not gconf.should_expose(state)
 
 
 async def test_google_config_should_2fa(
