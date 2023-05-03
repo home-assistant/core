@@ -17,7 +17,7 @@ async def test_update_not_playing(hass: HomeAssistant) -> None:
     with patch_fetch_user(None):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    entity_id = "sensor.lastfm_test"
+    entity_id = "sensor.lastfm_testaccount1"
 
     state = hass.states.get(entity_id)
 
@@ -31,7 +31,7 @@ async def test_update_playing(hass: HomeAssistant) -> None:
     with patch_fetch_user(Track("artist", "title", MockNetwork("test"))):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    entity_id = "sensor.lastfm_test"
+    entity_id = "sensor.lastfm_testaccount1"
 
     state = hass.states.get(entity_id)
 

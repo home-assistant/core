@@ -7,7 +7,11 @@ from typing import Any
 from pylast import LastFMNetwork, User, WSError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -23,7 +27,7 @@ from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN, LOGGER
 
 PLACEHOLDERS = {"api_account_url": "https://www.last.fm/api/account/create"}
 
-INITIAL_CONFIG_SCHEMA: vol.Schema = vol.Schema(
+CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
         vol.Required(CONF_MAIN_USER): str,
@@ -31,50 +35,46 @@ INITIAL_CONFIG_SCHEMA: vol.Schema = vol.Schema(
 )
 
 
-class LastFmFlowHandler:
-    """Base handler for LastFM flows."""
+def get_lastfm_user(self, api_key: str, username: str) -> User:
+    """Get lastFM User."""
+    return LastFMNetwork(api_key=api_key).get_user(username)
 
-    def __init__(self, data: dict[str, Any]) -> None:
-        """Initialize LastFM flow."""
-        self.data = data
 
-    def _get_lastfm_user(self, username: str) -> User:
-        return LastFMNetwork(api_key=self.data[CONF_API_KEY]).get_user(username)
-
-    def _validate_lastfm_user(self, user: User) -> dict[str, str] | None:
-        errors = {}
-        try:
-            user.get_playcount()
-        except WSError as error:
-            LOGGER.error(error)
-            if error.details == "User not found":
-                errors["base"] = "invalid_account"
-            elif (
-                error.details
-                == "Invalid API key - You must be granted a valid key by last.fm"
-            ):
-                errors["base"] = "invalid_auth"
-            else:
-                errors["base"] = "unknown"
-        except Exception:  # pylint:disable=broad-except
+def validate_lastfm_user(self, user: User) -> dict[str, str] | None:
+    """Return error if the user is not correct. None if it is correct."""
+    errors = {}
+    try:
+        user.get_playcount()
+    except WSError as error:
+        LOGGER.error(error)
+        if error.details == "User not found":
+            errors["base"] = "invalid_account"
+        elif (
+            error.details
+            == "Invalid API key - You must be granted a valid key by last.fm"
+        ):
+            errors["base"] = "invalid_auth"
+        else:
             errors["base"] = "unknown"
-        if not errors:
-            return None
-        return errors
+    except Exception:  # pylint:disable=broad-except
+        errors["base"] = "unknown"
+    if not errors:
+        return None
+    return errors
 
 
-class LastFmConfigFlowHandler(ConfigFlow, LastFmFlowHandler, domain=DOMAIN):
+class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        super().__init__({})
+        self.data: dict[str, Any] = {}
 
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> LastFmOptionsFlowHandler:
         """Get the options flow for this handler."""
         return LastFmOptionsFlowHandler(config_entry)
 
@@ -86,8 +86,10 @@ class LastFmConfigFlowHandler(ConfigFlow, LastFmFlowHandler, domain=DOMAIN):
         if user_input is not None:
             self.data[CONF_API_KEY] = user_input[CONF_API_KEY]
             self.data[CONF_MAIN_USER] = user_input[CONF_MAIN_USER]
-            main_user = self._get_lastfm_user(self.data[CONF_MAIN_USER])
-            lastfm_errors = self._validate_lastfm_user(main_user)
+            main_user = get_lastfm_user(
+                self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
+            )
+            lastfm_errors = validate_lastfm_user(main_user)
             if not lastfm_errors:
                 return await self.async_step_friends()
             errors = lastfm_errors
@@ -95,9 +97,7 @@ class LastFmConfigFlowHandler(ConfigFlow, LastFmFlowHandler, domain=DOMAIN):
             step_id="user",
             errors=errors,
             description_placeholders=PLACEHOLDERS,
-            data_schema=self.add_suggested_values_to_schema(
-                INITIAL_CONFIG_SCHEMA, user_input
-            ),
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
         )
 
     async def async_step_friends(
@@ -107,9 +107,9 @@ class LastFmConfigFlowHandler(ConfigFlow, LastFmFlowHandler, domain=DOMAIN):
         errors = {}
         valid_users = []
         if user_input is not None:
-            for user in user_input[CONF_USERS]:
-                lastfm_user = self._get_lastfm_user(user)
-                lastfm_errors = self._validate_lastfm_user(lastfm_user)
+            for username in user_input[CONF_USERS]:
+                lastfm_user = get_lastfm_user(self.data[CONF_API_KEY], username)
+                lastfm_errors = validate_lastfm_user(lastfm_user)
                 if lastfm_errors:
                     errors = lastfm_errors
                 else:
@@ -127,7 +127,9 @@ class LastFmConfigFlowHandler(ConfigFlow, LastFmFlowHandler, domain=DOMAIN):
                     },
                 )
         try:
-            main_user = self._get_lastfm_user(self.data[CONF_MAIN_USER])
+            main_user = get_lastfm_user(
+                self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
+            )
             friends: Sequence[SelectOptionDict] = [
                 {"value": str(friend.name), "label": str(friend.get_name(True))}
                 for friend in main_user.get_friends()
@@ -163,12 +165,13 @@ class LastFmConfigFlowHandler(ConfigFlow, LastFmFlowHandler, domain=DOMAIN):
         )
 
 
-class LastFmOptionsFlowHandler(OptionsFlow, LastFmFlowHandler):
+class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """LastFm Options flow handler."""
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize LastFM Options flow."""
-        super().__init__(dict(entry.data))
+        super().__init__(entry)
+        self.data: dict[str, Any] = entry.data
         self.entry = entry
 
     async def async_step_init(
@@ -179,9 +182,9 @@ class LastFmOptionsFlowHandler(OptionsFlow, LastFmFlowHandler):
         errors = {}
         if user_input is not None:
             valid_users = []
-            for user in user_input[CONF_USERS]:
-                lastfm_user = self._get_lastfm_user(user)
-                lastfm_errors = self._validate_lastfm_user(lastfm_user)
+            for username in user_input[CONF_USERS]:
+                lastfm_user = get_lastfm_user(self.data[CONF_API_KEY], username)
+                lastfm_errors = validate_lastfm_user(lastfm_user)
                 if lastfm_errors:
                     errors = lastfm_errors
                 else:
@@ -205,7 +208,9 @@ class LastFmOptionsFlowHandler(OptionsFlow, LastFmFlowHandler):
                 )
         if self.data[CONF_MAIN_USER]:
             try:
-                main_user = self._get_lastfm_user(self.data[CONF_MAIN_USER])
+                main_user = get_lastfm_user(
+                    self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
+                )
                 friends: Sequence[SelectOptionDict] = [
                     {"value": str(friend.name), "label": str(friend.get_name(True))}
                     for friend in main_user.get_friends()
@@ -217,13 +222,16 @@ class LastFmOptionsFlowHandler(OptionsFlow, LastFmFlowHandler):
         return self.async_show_form(
             step_id="init",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERS, default=valid_users): SelectSelector(
-                        SelectSelectorConfig(
-                            options=friends, custom_value=True, multiple=True
-                        )
-                    ),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_USERS): SelectSelector(
+                            SelectSelectorConfig(
+                                options=friends, custom_value=True, multiple=True
+                            )
+                        ),
+                    }
+                ),
+                {CONF_USERS: valid_users},
             ),
         )

@@ -30,12 +30,12 @@ class MockNetwork:
 class MockUser:
     """Mock User object for pylast."""
 
-    def __init__(self, now_playing_result, error, has_friends):
+    def __init__(self, now_playing_result, error, has_friends, username):
         """Initialize the mock."""
         self._now_playing_result = now_playing_result
         self._thrown_error = error
         self._has_friends = has_friends
-        self.name = "test"
+        self.name = username
 
     def get_name(self, capitalized: bool) -> str:
         """Get name of the user."""
@@ -66,17 +66,19 @@ class MockUser:
         """Get mock friends."""
         if self._has_friends is False:
             raise WSError("network", "status", "Page not found")
-        return [MockUser(None, None, True)]
+        return [MockUser(None, None, True, USERNAME_2)]
 
 
 def patch_fetch_user(
     now_playing: Track | None = None,
     thrown_error: Exception | None = None,
     has_friends: bool = True,
+    username: str = USERNAME_1,
 ) -> MockUser:
     """Patch interface."""
     return patch(
-        "pylast.User", return_value=MockUser(now_playing, thrown_error, has_friends)
+        "pylast.User",
+        return_value=MockUser(now_playing, thrown_error, has_friends, username),
     )
 
 

@@ -5,7 +5,7 @@ from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS, DO
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from . import patch_fetch_user
+from . import USERNAME_1, USERNAME_2, patch_fetch_user
 
 from tests.common import MockConfigEntry
 
@@ -16,8 +16,8 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={
             CONF_API_KEY: "12345678",
-            CONF_MAIN_USER: ["test"],
-            CONF_USERS: ["test1"],
+            CONF_MAIN_USER: [USERNAME_1],
+            CONF_USERS: [USERNAME_1, USERNAME_2],
         },
     )
     entry.add_to_hass(hass)
@@ -25,11 +25,11 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.lastfm_test")
+    state = hass.states.get("sensor.lastfm_testaccount1")
     assert state
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.lastfm_test")
+    state = hass.states.get("sensor.lastfm_testaccount1")
     assert not state
