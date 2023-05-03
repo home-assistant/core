@@ -35,12 +35,12 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 )
 
 
-def get_lastfm_user(self, api_key: str, username: str) -> User:
+def get_lastfm_user(api_key: str, username: str) -> User:
     """Get lastFM User."""
     return LastFMNetwork(api_key=api_key).get_user(username)
 
 
-def validate_lastfm_user(self, user: User) -> dict[str, str] | None:
+def validate_lastfm_user(user: User) -> dict[str, str] | None:
     """Return error if the user is not correct. None if it is correct."""
     errors = {}
     try:
@@ -113,7 +113,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 if lastfm_errors:
                     errors = lastfm_errors
                 else:
-                    valid_users.append(user)
+                    valid_users.append(username)
             if not errors:
                 return self.async_create_entry(
                     title="LastFM",
@@ -171,7 +171,7 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize LastFM Options flow."""
         super().__init__(entry)
-        self.data: dict[str, Any] = entry.data
+        self.data: dict[str, Any] = dict(entry.data)
         self.entry = entry
 
     async def async_step_init(
@@ -188,7 +188,7 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 if lastfm_errors:
                     errors = lastfm_errors
                 else:
-                    valid_users.append(user)
+                    valid_users.append(username)
             if not errors:
                 await self.hass.config_entries.async_unload(self.entry.entry_id)
                 for username in self.data[CONF_USERS]:
