@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from twitchAPI.helper import first
 from twitchAPI.twitch import (
     AuthScope,
     AuthType,
@@ -113,14 +114,20 @@ class TwitchSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update device state."""
+        if self.unique_id is None:
+            return
         followers = (await self._client.get_users_follows(to_id=self.unique_id)).total
-        channel = await self._client.get_users(user_ids=[self.unique_id]).__anext__()
+        channel = await first(self._client.get_users(user_ids=[self.unique_id]))
+        if not channel:
+            return
         self._attr_extra_state_attributes = {
             ATTR_FOLLOWING: followers,
             ATTR_VIEWS: channel.view_count,
         }
         if self._enable_user_auth:
-            user = await self._client.get_users().__anext__()
+            user = await first(self._client.get_users())
+            if not user:
+                return
             try:
                 sub = await self._client.check_user_subscription(
                     user_id=user.id, broadcaster_id=self.unique_id
@@ -133,9 +140,7 @@ class TwitchSensor(SensorEntity):
                 _LOGGER.debug("User is not subscribed")
                 self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = False
             except TwitchAPIException as exc:
-                _LOGGER.error(
-                    "Error response on check_user_subscription: %s", exc
-                )
+                _LOGGER.error("Error response on check_user_subscription: %s", exc)
                 return
 
             follows = (
@@ -148,7 +153,9 @@ class TwitchSensor(SensorEntity):
                 self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = follows[
                     0
                 ].followed_at
-        async for stream in self._client.get_streams(user_id=[self.unique_id], first=1):
+        if stream := (
+            await first(self._client.get_streams(user_id=[self.unique_id], first=1))
+        ):
             self._attr_native_value = STATE_STREAMING
             self._attr_extra_state_attributes[ATTR_GAME] = stream.game_name
             self._attr_extra_state_attributes[ATTR_TITLE] = stream.title
