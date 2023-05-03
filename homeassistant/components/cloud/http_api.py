@@ -28,7 +28,6 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
 
@@ -569,15 +568,14 @@ async def google_assistant_get(
     """Get data for a single google assistant entity."""
     cloud = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
-    entity_registry = er.async_get(hass)
     entity_id: str = msg["entity_id"]
     state = hass.states.get(entity_id)
 
-    if not entity_registry.async_is_registered(entity_id) or not state:
+    if not state:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
-            f"{entity_id} unknown or not in the entity registry",
+            f"{entity_id} unknown",
         )
         return
 
@@ -684,16 +682,7 @@ async def alexa_get(
     msg: dict[str, Any],
 ) -> None:
     """Get data for a single alexa entity."""
-    entity_registry = er.async_get(hass)
     entity_id: str = msg["entity_id"]
-
-    if not entity_registry.async_is_registered(entity_id):
-        connection.send_error(
-            msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
-            f"{entity_id} not in the entity registry",
-        )
-        return
 
     if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
         hass, entity_id
