@@ -843,6 +843,7 @@ async def test_get_google_entity(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        "disable_2fa": None,
         "entity_id": "light.kitchen",
         "might_2fa": False,
         "traits": ["action.devices.traits.OnOff"],
@@ -854,6 +855,30 @@ async def test_get_google_entity(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
+        "disable_2fa": None,
+        "entity_id": "cover.garage",
+        "might_2fa": True,
+        "traits": ["action.devices.traits.OpenClose"],
+    }
+
+    # Set the disable 2fa flag
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/google_assistant/entities/update",
+            "entity_id": "cover.garage",
+            "disable_2fa": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "cloud/google_assistant/entities/get", "entity_id": "cover.garage"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "disable_2fa": True,
         "entity_id": "cover.garage",
         "might_2fa": True,
         "traits": ["action.devices.traits.OpenClose"],

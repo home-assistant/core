@@ -590,10 +590,16 @@ async def google_assistant_get(
         )
         return
 
+    assistant_options: Mapping[str, Any] = {}
+    with suppress(HomeAssistantError, KeyError):
+        settings = exposed_entities.async_get_entity_settings(hass, entity_id)
+        assistant_options = settings[CLOUD_GOOGLE]
+
     result = {
         "entity_id": entity.entity_id,
         "traits": [trait.name for trait in entity.traits()],
         "might_2fa": entity.might_2fa_traits(),
+        PREF_DISABLE_2FA: assistant_options.get(PREF_DISABLE_2FA),
     }
 
     connection.send_result(msg["id"], result)
