@@ -96,8 +96,8 @@ def async_setup(hass: core.HomeAssistant) -> None:
     @core.callback
     def async_hass_started(hass: core.HomeAssistant) -> None:
         """Set expose flag on all entities."""
-        for entity_id in hass.states.async_all():
-            async_should_expose(hass, DOMAIN, entity_id.state)
+        for state in hass.states.async_all():
+            async_should_expose(hass, DOMAIN, state.entity_id)
         async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
 
     start.async_at_started(hass, async_hass_started)
