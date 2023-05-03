@@ -1373,6 +1373,7 @@ def test_compile_hourly_sum_statistics_negative_state(
     mocksensor._attr_should_poll = False
     platform.ENTITIES["custom_sensor"] = mocksensor
 
+    setup_component(hass, "homeassistant", {})
     setup_component(
         hass, "sensor", {"sensor": [{"platform": "demo"}, {"platform": "test"}]}
     )
