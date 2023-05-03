@@ -14,6 +14,7 @@ from homeassistant.components.alexa import errors as alexa_errors
 from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.google_assistant.helpers import GoogleEntity
+from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -867,9 +868,6 @@ async def test_update_google_entity(
     mock_cloud_login,
 ) -> None:
     """Test that we can update config of a Google entity."""
-    entry = entity_registry.async_get_or_create(
-        "light", "test", "unique", suggested_object_id="kitchen"
-    )
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {
@@ -885,16 +883,16 @@ async def test_update_google_entity(
         {
             "type": "homeassistant/expose_entity",
             "assistants": ["cloud.google_assistant"],
-            "entity_ids": [entry.entity_id],
+            "entity_ids": ["light.kitchen"],
             "should_expose": False,
         }
     )
     response = await client.receive_json()
     assert response["success"]
 
-    assert entity_registry.async_get(entry.entity_id).options[
-        "cloud.google_assistant"
-    ] == {"disable_2fa": False, "should_expose": False}
+    exposed_entities.async_get_entity_settings(hass, "light.kitchen") == {
+        "cloud.google_assistant": {"disable_2fa": False, "should_expose": False}
+    }
 
 
 async def test_list_alexa_entities(

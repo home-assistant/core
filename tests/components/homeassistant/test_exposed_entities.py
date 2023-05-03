@@ -8,6 +8,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     ExposedEntity,
     async_expose_entity,
     async_get_assistant_settings,
+    async_get_entity_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -101,10 +102,10 @@ async def test_load_preferences(hass: HomeAssistant) -> None:
     exposed_entities.async_set_expose_new_entities("test1", True)
     exposed_entities.async_set_expose_new_entities("test2", False)
 
-    exposed_entities.async_expose_entity("test1", "light.kitchen", True)
-    exposed_entities.async_expose_entity("test1", "light.living_room", True)
-    exposed_entities.async_expose_entity("test2", "light.kitchen", True)
-    exposed_entities.async_expose_entity("test2", "light.kitchen", True)
+    async_expose_entity(hass, "test1", "light.kitchen", True)
+    async_expose_entity(hass, "test1", "light.living_room", True)
+    async_expose_entity(hass, "test2", "light.kitchen", True)
+    async_expose_entity(hass, "test2", "light.kitchen", True)
 
     assert list(exposed_entities._assistants) == ["test1", "test2"]
     assert list(exposed_entities.entities) == ["light.kitchen", "light.living_room"]
@@ -334,27 +335,24 @@ async def test_listen_updates(
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
     async_listen_entity_updates(hass, "cloud.alexa", listener)
 
     entry = entity_registry.async_get_or_create("climate", "test", "unique1")
 
     # Call for another assistant - listener not called
-    exposed_entities.async_expose_entity(
-        "cloud.google_assistant", entry.entity_id, True
-    )
+    async_expose_entity(hass, "cloud.google_assistant", entry.entity_id, True)
     assert len(calls) == 0
 
     # Call for our assistant - listener called
-    exposed_entities.async_expose_entity("cloud.alexa", entry.entity_id, True)
+    async_expose_entity(hass, "cloud.alexa", entry.entity_id, True)
     assert len(calls) == 1
 
     # Settings not changed - listener not called
-    exposed_entities.async_expose_entity("cloud.alexa", entry.entity_id, True)
+    async_expose_entity(hass, "cloud.alexa", entry.entity_id, True)
     assert len(calls) == 1
 
     # Settings changed - listener called
-    exposed_entities.async_expose_entity("cloud.alexa", entry.entity_id, False)
+    async_expose_entity(hass, "cloud.alexa", entry.entity_id, False)
     assert len(calls) == 2
 
 
@@ -367,19 +365,17 @@ async def test_get_assistant_settings(
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-
     entry = entity_registry.async_get_or_create("climate", "test", "unique1")
 
     assert async_get_assistant_settings(hass, "cloud.alexa") == {}
 
-    exposed_entities.async_expose_entity("cloud.alexa", entry.entity_id, True)
-    exposed_entities.async_expose_entity("cloud.alexa", "light.not_in_registry", True)
+    async_expose_entity(hass, "cloud.alexa", entry.entity_id, True)
+    async_expose_entity(hass, "cloud.alexa", "light.not_in_registry", True)
     assert async_get_assistant_settings(hass, "cloud.alexa") == snapshot
     assert async_get_assistant_settings(hass, "cloud.google_assistant") == snapshot
 
     with pytest.raises(HomeAssistantError):
-        exposed_entities.async_get_entity_settings("light.unknown")
+        async_get_entity_settings(hass, "light.unknown")
 
 
 @pytest.mark.parametrize(

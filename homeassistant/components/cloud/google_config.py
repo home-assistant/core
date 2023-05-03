@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.components.homeassistant.exposed_entities import (
+    async_get_entity_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -23,6 +24,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, start
 from homeassistant.helpers.entity import get_device_class
 from homeassistant.setup import async_setup_component
@@ -289,14 +291,13 @@ class CloudGoogleConfig(AbstractConfig):
 
     def should_2fa(self, state):
         """If an entity should be checked for 2FA."""
-        entity_registry = er.async_get(self.hass)
-
-        registry_entry = entity_registry.async_get(state.entity_id)
-        if not registry_entry:
+        try:
+            settings = async_get_entity_settings(self.hass, state.entity_id)
+        except HomeAssistantError:
             # Handle the entity has been removed
             return False
 
-        assistant_options = registry_entry.options.get(CLOUD_GOOGLE, {})
+        assistant_options = settings.get(CLOUD_GOOGLE, {})
         return not assistant_options.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
     async def async_report_state(self, message, agent_user_id: str):

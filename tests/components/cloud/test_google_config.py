@@ -18,6 +18,7 @@ from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
+    async_expose_entity,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -48,10 +49,7 @@ def expose_new(hass, expose_new):
 
 def expose_entity(hass, entity_id, should_expose):
     """Expose an entity to Google."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_entity(
-        "cloud.google_assistant", entity_id, should_expose
-    )
+    async_expose_entity(hass, "cloud.google_assistant", entity_id, should_expose)
 
 
 async def test_google_update_report_state(
