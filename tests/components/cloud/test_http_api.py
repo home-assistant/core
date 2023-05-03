@@ -890,7 +890,7 @@ async def test_update_google_entity(
     response = await client.receive_json()
     assert response["success"]
 
-    exposed_entities.async_get_entity_settings(hass, "light.kitchen") == {
+    assert exposed_entities.async_get_entity_settings(hass, "light.kitchen") == {
         "cloud.google_assistant": {"disable_2fa": False, "should_expose": False}
     }
 
