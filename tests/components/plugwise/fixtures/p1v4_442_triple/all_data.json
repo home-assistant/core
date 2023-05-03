@@ -1,10 +1,10 @@
-[
-  {
+{
+  "gateway": {
     "smile_name": "Smile P1",
     "gateway_id": "03e65b16e4b247a29ae0d75a78cb492e",
     "notifications": {}
   },
-  {
+  "devices": {
     "03e65b16e4b247a29ae0d75a78cb492e": {
       "dev_class": "gateway",
       "firmware": "4.4.2",
@@ -54,4 +54,4 @@
       }
     }
   }
-]
+}
