@@ -1,5 +1,6 @@
 """Google config for Cloud."""
 import asyncio
+from contextlib import suppress
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -11,8 +12,10 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.components.homeassistant.exposed_entities import (
+    async_expose_entity,
     async_get_entity_settings,
     async_listen_entity_updates,
+    async_set_assistant_option,
     async_should_expose,
 )
 from homeassistant.components.sensor import SensorDeviceClass
@@ -173,34 +176,67 @@ class CloudGoogleConfig(AbstractConfig):
             # Don't migrate if there's a YAML config
             return
 
-        entity_registry = er.async_get(self.hass)
-
-        for entity_id, entry in entity_registry.entities.items():
-            if CLOUD_GOOGLE in entry.options:
-                continue
-            options = {"should_expose": self._should_expose_legacy(entity_id)}
-            if _2fa_disabled := (self._2fa_disabled_legacy(entity_id) is not None):
-                options[PREF_DISABLE_2FA] = _2fa_disabled
-            entity_registry.async_update_entity_options(
-                entity_id, CLOUD_GOOGLE, options
+        for state in self.hass.states.async_all():
+            entity_id = state.entity_id
+            with suppress(HomeAssistantError):
+                entity_settings = async_get_entity_settings(self.hass, entity_id)
+                if CLOUD_GOOGLE in entity_settings:
+                    continue
+            async_expose_entity(
+                self.hass,
+                CLOUD_GOOGLE,
+                entity_id,
+                self._should_expose_legacy(entity_id),
             )
+            if _2fa_disabled := (self._2fa_disabled_legacy(entity_id) is not None):
+                async_set_assistant_option(
+                    self.hass,
+                    CLOUD_GOOGLE,
+                    entity_id,
+                    PREF_DISABLE_2FA,
+                    _2fa_disabled,
+                )
+        for entity_id in self._prefs.google_entity_configs:
+            with suppress(HomeAssistantError):
+                entity_settings = async_get_entity_settings(self.hass, entity_id)
+                if CLOUD_GOOGLE in entity_settings:
+                    continue
+            async_expose_entity(
+                self.hass,
+                CLOUD_GOOGLE,
+                entity_id,
+                self._should_expose_legacy(entity_id),
+            )
+            if _2fa_disabled := (self._2fa_disabled_legacy(entity_id) is not None):
+                async_set_assistant_option(
+                    self.hass,
+                    CLOUD_GOOGLE,
+                    entity_id,
+                    PREF_DISABLE_2FA,
+                    _2fa_disabled,
+                )
 
     async def async_initialize(self):
         """Perform async initialization of config."""
         await super().async_initialize()
 
-        if self._prefs.google_settings_version != GOOGLE_SETTINGS_VERSION:
-            if self._prefs.google_settings_version < 2:
-                self._migrate_google_entity_settings_v1()
-            await self._prefs.async_update(
-                google_settings_version=GOOGLE_SETTINGS_VERSION
+        async def on_hass_started(hass: HomeAssistant) -> None:
+            if self._prefs.google_settings_version != GOOGLE_SETTINGS_VERSION:
+                if self._prefs.google_settings_version < 2:
+                    self._migrate_google_entity_settings_v1()
+                await self._prefs.async_update(
+                    google_settings_version=GOOGLE_SETTINGS_VERSION
+                )
+            async_listen_entity_updates(
+                self.hass, CLOUD_GOOGLE, self._async_exposed_entities_updated
             )
 
-        async def hass_started(hass):
+        async def on_hass_start(hass: HomeAssistant) -> None:
             if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
                 await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
-        start.async_at_start(self.hass, hass_started)
+        start.async_at_start(self.hass, on_hass_start)
+        start.async_at_started(self.hass, on_hass_started)
 
         # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
@@ -212,9 +248,6 @@ class CloudGoogleConfig(AbstractConfig):
             await self.async_disconnect_agent_user(agent_user_id)
 
         self._prefs.async_listen_updates(self._async_prefs_updated)
-        async_listen_entity_updates(
-            self.hass, CLOUD_GOOGLE, self._async_exposed_entities_updated
-        )
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._handle_entity_registry_updated,
