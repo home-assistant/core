@@ -18,10 +18,10 @@ from homeassistant.components.google_assistant import helpers as ga_helpers
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
+    async_expose_entity,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -49,10 +49,7 @@ def expose_new(hass, expose_new):
 
 def expose_entity(hass, entity_id, should_expose):
     """Expose an entity to Google."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_entity(
-        "cloud.google_assistant", entity_id, should_expose
-    )
+    async_expose_entity(hass, "cloud.google_assistant", entity_id, should_expose)
 
 
 async def test_google_update_report_state(
@@ -395,10 +392,9 @@ async def test_google_config_expose_entity_prefs(
     state_not_exposed = State(entity_entry5.entity_id, "on")
     state_exposed_default = State(entity_entry6.entity_id, "on")
 
-    # can't expose an entity which is not in the entity registry
-    with pytest.raises(HomeAssistantError):
-        expose_entity(hass, "light.kitchen", True)
-    assert not mock_conf.should_expose(state)
+    # an entity which is not in the entity registry can be exposed
+    expose_entity(hass, "light.kitchen", True)
+    assert mock_conf.should_expose(state)
     # categorized and hidden entities should not be exposed
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)

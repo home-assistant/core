@@ -15,10 +15,10 @@ from homeassistant.components.cloud.prefs import CloudPreferences
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
+    async_expose_entity,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
@@ -41,8 +41,7 @@ def expose_new(hass, expose_new):
 
 def expose_entity(hass, entity_id, should_expose):
     """Expose an entity to Alexa."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_entity("cloud.alexa", entity_id, should_expose)
+    async_expose_entity(hass, "cloud.alexa", entity_id, should_expose)
 
 
 async def test_alexa_config_expose_entity_prefs(
@@ -102,10 +101,9 @@ async def test_alexa_config_expose_entity_prefs(
     )
     await conf.async_initialize()
 
-    # can't expose an entity which is not in the entity registry
-    with pytest.raises(HomeAssistantError):
-        expose_entity(hass, "light.kitchen", True)
-    assert not conf.should_expose("light.kitchen")
+    # an entity which is not in the entity registry can be exposed
+    expose_entity(hass, "light.kitchen", True)
+    assert conf.should_expose("light.kitchen")
     # categorized and hidden entities should not be exposed
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)

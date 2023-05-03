@@ -257,6 +257,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             and entity_supported(self.hass, entity_id)
         )
 
+    @callback
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
         if not self._config[CONF_FILTER].empty_filter:
