@@ -84,7 +84,8 @@ class AbstractConfig(ABC):
             unsub_func()
         self._unsub_proactive_report = None
 
-    async def should_expose(self, entity_id):
+    @callback
+    def should_expose(self, entity_id):
         """If an entity should be exposed."""
         return False
 

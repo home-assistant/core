@@ -680,7 +680,7 @@ async def test_http_processing_intent_entity_exposed(
     }
 
     # Unexpose the entity
-    await expose_entity(hass, "light.kitchen", False)
+    expose_entity(hass, "light.kitchen", False)
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -730,7 +730,7 @@ async def test_http_processing_intent_entity_exposed(
     }
 
     # Now expose the entity
-    await expose_entity(hass, "light.kitchen", True)
+    expose_entity(hass, "light.kitchen", True)
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -845,7 +845,7 @@ async def test_http_processing_intent_conversion_not_expose_new(
     }
 
     # Expose the entity
-    await expose_entity(hass, "light.kitchen", True)
+    expose_entity(hass, "light.kitchen", True)
     await hass.async_block_till_done()
 
     resp = await client.post(

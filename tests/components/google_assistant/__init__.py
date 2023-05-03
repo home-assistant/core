@@ -58,7 +58,7 @@ class MockConfig(helpers.AbstractConfig):
         """Get agent user ID making request."""
         return context.user_id
 
-    async def should_expose(self, state):
+    def should_expose(self, state):
         """Expose it all."""
         return self._should_expose is None or self._should_expose(state)
 

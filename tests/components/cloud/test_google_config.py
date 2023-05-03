@@ -46,10 +46,10 @@ def expose_new(hass, expose_new):
     exposed_entities.async_set_expose_new_entities("cloud.google_assistant", expose_new)
 
 
-async def expose_entity(hass, entity_id, should_expose):
+def expose_entity(hass, entity_id, should_expose):
     """Expose an entity to Google."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    await exposed_entities.async_expose_entity(
+    exposed_entities.async_expose_entity(
         "cloud.google_assistant", entity_id, should_expose
     )
 
@@ -150,7 +150,7 @@ async def test_google_update_expose_trigger_sync(
         with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
             ga_helpers, "SYNC_DELAY", 0
         ):
-            await expose_entity(hass, light_entry.entity_id, True)
+            expose_entity(hass, light_entry.entity_id, True)
             await hass.async_block_till_done()
             async_fire_time_changed(hass, utcnow())
             await hass.async_block_till_done()
@@ -160,9 +160,9 @@ async def test_google_update_expose_trigger_sync(
         with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
             ga_helpers, "SYNC_DELAY", 0
         ):
-            await expose_entity(hass, light_entry.entity_id, False)
-            await expose_entity(hass, binary_sensor_entry.entity_id, True)
-            await expose_entity(hass, sensor_entry.entity_id, True)
+            expose_entity(hass, light_entry.entity_id, False)
+            expose_entity(hass, binary_sensor_entry.entity_id, True)
+            expose_entity(hass, sensor_entry.entity_id, True)
             await hass.async_block_till_done()
             async_fire_time_changed(hass, utcnow())
             await hass.async_block_till_done()
@@ -384,7 +384,7 @@ async def test_google_config_expose_entity_prefs(
     )
 
     expose_new(hass, True)
-    await expose_entity(hass, entity_entry5.entity_id, False)
+    expose_entity(hass, entity_entry5.entity_id, False)
 
     state = State("light.kitchen", "on")
     state_config = State(entity_entry1.entity_id, "on")
@@ -395,23 +395,23 @@ async def test_google_config_expose_entity_prefs(
     state_exposed_default = State(entity_entry6.entity_id, "on")
 
     # an entity which is not in the entity registry can be exposed
-    await expose_entity(hass, "light.kitchen", True)
-    assert await mock_conf.should_expose(state)
+    expose_entity(hass, "light.kitchen", True)
+    assert mock_conf.should_expose(state)
     # categorized and hidden entities should not be exposed
-    assert not await mock_conf.should_expose(state_config)
-    assert not await mock_conf.should_expose(state_diagnostic)
-    assert not await mock_conf.should_expose(state_hidden_integration)
-    assert not await mock_conf.should_expose(state_hidden_user)
+    assert not mock_conf.should_expose(state_config)
+    assert not mock_conf.should_expose(state_diagnostic)
+    assert not mock_conf.should_expose(state_hidden_integration)
+    assert not mock_conf.should_expose(state_hidden_user)
     # this has been hidden
-    assert not await mock_conf.should_expose(state_not_exposed)
+    assert not mock_conf.should_expose(state_not_exposed)
     # exposed by default
-    assert await mock_conf.should_expose(state_exposed_default)
+    assert mock_conf.should_expose(state_exposed_default)
 
-    await expose_entity(hass, entity_entry5.entity_id, True)
-    assert await mock_conf.should_expose(state_not_exposed)
+    expose_entity(hass, entity_entry5.entity_id, True)
+    assert mock_conf.should_expose(state_not_exposed)
 
-    await expose_entity(hass, entity_entry5.entity_id, None)
-    assert not await mock_conf.should_expose(state_not_exposed)
+    expose_entity(hass, entity_entry5.entity_id, None)
+    assert not mock_conf.should_expose(state_not_exposed)
 
 
 def test_enabled_requires_valid_sub(
@@ -535,7 +535,7 @@ async def test_google_config_migrate_expose_entity_prefs(
         google_report_state=False,
         google_settings_version=1,
     )
-    await expose_entity(hass, entity_migrated.entity_id, False)
+    expose_entity(hass, entity_migrated.entity_id, False)
 
     cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS]["light.unknown"] = {
         PREF_SHOULD_EXPOSE: True

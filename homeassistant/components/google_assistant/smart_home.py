@@ -87,11 +87,11 @@ async def async_devices_sync_response(hass, config, agent_user_id):
     devices = []
 
     for entity in entities:
-        if not await entity.should_expose():
+        if not entity.should_expose():
             continue
 
         try:
-            devices.append(await entity.sync_serialize(agent_user_id, instance_uuid))
+            devices.append(entity.sync_serialize(agent_user_id, instance_uuid))
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error serializing %s", entity.entity_id)
 
@@ -318,7 +318,7 @@ async def async_devices_reachable(
         "devices": [
             entity.reachable_device_serialize()
             for entity in async_get_entities(hass, data.config)
-            if entity.entity_id in google_ids and await entity.should_expose_local()
+            if entity.entity_id in google_ids and entity.should_expose_local()
         ]
     }
 
