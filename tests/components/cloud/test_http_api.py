@@ -1060,8 +1060,8 @@ async def test_update_alexa_entity(
     response = await client.receive_json()
 
     assert response["success"]
-    assert entity_registry.async_get(entry.entity_id).options["cloud.alexa"] == {
-        "should_expose": False
+    assert exposed_entities.async_get_entity_settings(hass, entry.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
     }
 
 
