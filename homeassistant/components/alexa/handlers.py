@@ -103,7 +103,7 @@ async def async_api_discovery(
     discovery_endpoints = [
         alexa_entity.serialize_discovery()
         for alexa_entity in async_get_entities(hass, config)
-        if await config.should_expose(alexa_entity.entity_id)
+        if config.should_expose(alexa_entity.entity_id)
     ]
 
     return directive.response(
