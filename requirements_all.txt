@@ -1527,7 +1527,7 @@ pyblackbird==0.6
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.3.2
+pybravia==0.3.3
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.14
