@@ -1,10 +1,12 @@
 """The tests for the demo stt component."""
 from http import HTTPStatus
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import stt
 from homeassistant.components.demo import DOMAIN as DEMO_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -24,7 +26,11 @@ async def setup_config_entry(hass: HomeAssistant) -> None:
     """Set up demo component from config entry."""
     config_entry = MockConfigEntry(domain=DEMO_DOMAIN)
     config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.STT],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
 
@@ -103,7 +109,7 @@ async def test_config_entry_demo_speech(
     client = await hass_client()
 
     response = await client.post(
-        "/api/stt/demo",
+        "/api/stt/stt.demo_stt",
         headers={
             "X-Speech-Content": (
                 "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=2;"

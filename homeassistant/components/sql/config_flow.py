@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import CONF_DB_URL
+from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -159,12 +159,8 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class SQLOptionsFlowHandler(config_entries.OptionsFlow):
+class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle SQL options."""
-
-    def __init__(self, entry: config_entries.ConfigEntry) -> None:
-        """Initialize SQL options flow."""
-        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -177,7 +173,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             db_url = user_input.get(CONF_DB_URL)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
-            name = self.entry.options.get(CONF_NAME, self.entry.title)
+            name = self.options.get(CONF_NAME, self.config_entry.title)
 
             try:
                 validate_sql_select(query)
@@ -193,21 +189,26 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             except ValueError:
                 errors["query"] = "query_invalid"
             else:
-                new_user_input = user_input
-                if new_user_input.get(CONF_DB_URL) and db_url == db_url_for_validation:
-                    new_user_input.pop(CONF_DB_URL)
+                recorder_db = get_instance(self.hass).db_url
+                _LOGGER.debug(
+                    "db_url: %s, resolved db_url: %s, recorder: %s",
+                    db_url,
+                    db_url_for_validation,
+                    recorder_db,
+                )
+                if db_url and db_url_for_validation == recorder_db:
+                    user_input.pop(CONF_DB_URL)
                 return self.async_create_entry(
-                    title="",
                     data={
                         CONF_NAME: name,
-                        **new_user_input,
+                        **user_input,
                     },
                 )
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, user_input or self.entry.options
+                OPTIONS_SCHEMA, user_input or self.options
             ),
             errors=errors,
             description_placeholders=description_placeholders,
