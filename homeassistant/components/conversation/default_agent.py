@@ -201,6 +201,7 @@ class DefaultAgent(AbstractConversationAgent):
                 user_input.text,
                 user_input.context,
                 language,
+                assistant=DOMAIN,
             )
         except intent.IntentHandleError:
             _LOGGER.exception("Intent handling error")
