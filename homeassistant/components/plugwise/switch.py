@@ -1,7 +1,11 @@
 """Plugwise Switch component for HomeAssistant."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
+
+from plugwise import DeviceData
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -18,29 +22,46 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
-SWITCHES: tuple[SwitchEntityDescription, ...] = (
-    SwitchEntityDescription(
+
+@dataclass
+class PlugwiseSwitchBaseMixin:
+    """Mixin for required Plugwise switch base description keys."""
+
+    value_fn: Callable[[DeviceData], bool]
+
+
+@dataclass
+class PlugwiseSwitchEntityDescription(SwitchEntityDescription, PlugwiseSwitchBaseMixin):
+    """Describes Plugwise switch entity."""
+
+
+SWITCHES: tuple[PlugwiseSwitchEntityDescription, ...] = (
+    PlugwiseSwitchEntityDescription(
         key="dhw_cm_switch",
         translation_key="dhw_cm_switch",
         icon="mdi:water-plus",
         entity_category=EntityCategory.CONFIG,
+        value_fn=lambda data: data["switches"]["dhw_cm_switch"],
     ),
-    SwitchEntityDescription(
+    PlugwiseSwitchEntityDescription(
         key="lock",
         translation_key="lock",
         icon="mdi:lock",
         entity_category=EntityCategory.CONFIG,
+        value_fn=lambda data: data["switches"]["lock"],
     ),
-    SwitchEntityDescription(
+    PlugwiseSwitchEntityDescription(
         key="relay",
         translation_key="relay",
         device_class=SwitchDeviceClass.SWITCH,
+        value_fn=lambda data: data["switches"]["relay"],
     ),
-    SwitchEntityDescription(
+    PlugwiseSwitchEntityDescription(
         key="cooling_ena_switch",
         name="Cooling",
         icon="mdi:snowflake-thermometer",
         entity_category=EntityCategory.CONFIG,
+        value_fn=lambda data: data["switches"]["cooling_ena_switch"],
     ),
 )
 
@@ -64,11 +85,13 @@ async def async_setup_entry(
 class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
     """Representation of a Plugwise plug."""
 
+    entity_description: PlugwiseSwitchEntityDescription
+
     def __init__(
         self,
         coordinator: PlugwiseDataUpdateCoordinator,
         device_id: str,
-        description: SwitchEntityDescription,
+        description: PlugwiseSwitchEntityDescription,
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
@@ -78,7 +101,7 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.device["switches"][self.entity_description.key]  # type: ignore [literal-required]
+        return self.entity_description.value_fn(self.device)
 
     @plugwise_command
     async def async_turn_on(self, **kwargs: Any) -> None:
