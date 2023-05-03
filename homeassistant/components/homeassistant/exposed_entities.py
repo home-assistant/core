@@ -305,7 +305,11 @@ class ExposedEntities:
         if domain in DEFAULT_EXPOSED_DOMAINS:
             return True
 
-        device_class = get_device_class(self._hass, entity_id)
+        try:
+            device_class = get_device_class(self._hass, entity_id)
+        except HomeAssistantError:
+            # The entity no longer exists
+            return False
         if (
             domain == "binary_sensor"
             and device_class in DEFAULT_EXPOSED_BINARY_SENSOR_DEVICE_CLASSES
