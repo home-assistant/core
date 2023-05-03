@@ -16,9 +16,11 @@ from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
     async_expose_entity,
+    async_get_entity_settings,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
@@ -602,20 +604,23 @@ async def test_alexa_config_migrate_expose_entity_prefs(
     )
     await conf.async_initialize()
 
-    entity_exposed = entity_registry.async_get(entity_exposed.entity_id)
-    assert entity_exposed.options == {"cloud.alexa": {"should_expose": True}}
-
-    entity_migrated = entity_registry.async_get(entity_migrated.entity_id)
-    assert entity_migrated.options == {"cloud.alexa": {"should_expose": False}}
-
-    entity_config = entity_registry.async_get(entity_config.entity_id)
-    assert entity_config.options == {"cloud.alexa": {"should_expose": False}}
-
-    entity_default = entity_registry.async_get(entity_default.entity_id)
-    assert entity_default.options == {"cloud.alexa": {"should_expose": True}}
-
-    entity_blocked = entity_registry.async_get(entity_blocked.entity_id)
-    assert entity_blocked.options == {"cloud.alexa": {"should_expose": False}}
+    with pytest.raises(HomeAssistantError):
+        async_get_entity_settings(hass, "light.unknown")
+    assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, entity_config.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, entity_default.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_blocked.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
 
 
 async def test_alexa_config_migrate_expose_entity_prefs_default_none(
@@ -646,8 +651,9 @@ async def test_alexa_config_migrate_expose_entity_prefs_default_none(
     )
     await conf.async_initialize()
 
-    entity_default = entity_registry.async_get(entity_default.entity_id)
-    assert entity_default.options == {"cloud.alexa": {"should_expose": True}}
+    assert async_get_entity_settings(hass, entity_default.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
 
 
 async def test_alexa_config_migrate_expose_entity_prefs_default(
@@ -723,26 +729,21 @@ async def test_alexa_config_migrate_expose_entity_prefs_default(
     )
     await conf.async_initialize()
 
-    binary_sensor_supported = entity_registry.async_get(
-        binary_sensor_supported.entity_id
-    )
-    assert binary_sensor_supported.options == {"cloud.alexa": {"should_expose": True}}
-
-    binary_sensor_unsupported = entity_registry.async_get(
-        binary_sensor_unsupported.entity_id
-    )
-    assert binary_sensor_unsupported.options == {
+    assert async_get_entity_settings(hass, binary_sensor_supported.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, binary_sensor_unsupported.entity_id) == {
         "cloud.alexa": {"should_expose": False}
     }
-
-    light = entity_registry.async_get(light.entity_id)
-    assert light.options == {"cloud.alexa": {"should_expose": True}}
-
-    sensor_supported = entity_registry.async_get(sensor_supported.entity_id)
-    assert sensor_supported.options == {"cloud.alexa": {"should_expose": True}}
-
-    sensor_unsupported = entity_registry.async_get(sensor_unsupported.entity_id)
-    assert sensor_unsupported.options == {"cloud.alexa": {"should_expose": False}}
-
-    water_heater = entity_registry.async_get(water_heater.entity_id)
-    assert water_heater.options == {"cloud.alexa": {"should_expose": False}}
+    assert async_get_entity_settings(hass, light.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, sensor_supported.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, sensor_unsupported.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, water_heater.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
