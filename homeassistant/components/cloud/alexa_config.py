@@ -22,7 +22,9 @@ from homeassistant.components.alexa import (
 )
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homeassistant.exposed_entities import (
+    async_expose_entity,
     async_get_assistant_settings,
+    async_get_entity_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -198,35 +200,52 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             # Don't migrate if there's a YAML config
             return
 
-        entity_registry = er.async_get(self.hass)
-
-        for entity_id, entry in entity_registry.entities.items():
-            if CLOUD_ALEXA in entry.options:
-                continue
-            options = {"should_expose": self._should_expose_legacy(entity_id)}
-            entity_registry.async_update_entity_options(entity_id, CLOUD_ALEXA, options)
+        for state in self.hass.states.async_all():
+            with suppress(HomeAssistantError):
+                entity_settings = async_get_entity_settings(self.hass, state.entity_id)
+                if CLOUD_ALEXA in entity_settings:
+                    continue
+            async_expose_entity(
+                self.hass,
+                CLOUD_ALEXA,
+                state.entity_id,
+                self._should_expose_legacy(state.entity_id),
+            )
+        for entity_id in self._prefs.alexa_entity_configs:
+            with suppress(HomeAssistantError):
+                entity_settings = async_get_entity_settings(self.hass, entity_id)
+                if CLOUD_ALEXA in entity_settings:
+                    continue
+            async_expose_entity(
+                self.hass,
+                CLOUD_ALEXA,
+                entity_id,
+                self._should_expose_legacy(entity_id),
+            )
 
     async def async_initialize(self):
         """Initialize the Alexa config."""
         await super().async_initialize()
 
-        if self._prefs.alexa_settings_version != ALEXA_SETTINGS_VERSION:
-            if self._prefs.alexa_settings_version < 2:
-                self._migrate_alexa_entity_settings_v1()
-            await self._prefs.async_update(
-                alexa_settings_version=ALEXA_SETTINGS_VERSION
+        async def on_hass_started(hass):
+            if self._prefs.alexa_settings_version != ALEXA_SETTINGS_VERSION:
+                if self._prefs.alexa_settings_version < 2:
+                    self._migrate_alexa_entity_settings_v1()
+                await self._prefs.async_update(
+                    alexa_settings_version=ALEXA_SETTINGS_VERSION
+                )
+            async_listen_entity_updates(
+                self.hass, CLOUD_ALEXA, self._async_exposed_entities_updated
             )
 
-        async def hass_started(hass):
+        async def on_hass_start(hass):
             if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
                 await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
-        start.async_at_start(self.hass, hass_started)
+        start.async_at_start(self.hass, on_hass_start)
+        start.async_at_started(self.hass, on_hass_started)
 
         self._prefs.async_listen_updates(self._async_prefs_updated)
-        async_listen_entity_updates(
-            self.hass, CLOUD_ALEXA, self._async_exposed_entities_updated
-        )
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._handle_entity_registry_updated,
