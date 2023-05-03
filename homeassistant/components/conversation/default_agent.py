@@ -89,7 +89,7 @@ def async_setup(hass: core.HomeAssistant) -> None:
         new_state: core.State | None,
     ):
         """Set expose flag on new entities."""
-        if old_state is not None:
+        if old_state is not None or new_state is None:
             return
         async_should_expose(hass, DOMAIN, changed_entity)
 
