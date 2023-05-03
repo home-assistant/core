@@ -609,14 +609,11 @@ async def google_assistant_list(
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
-    entity_registry = er.async_get(hass)
     entities = google_helpers.async_get_entities(hass, gconf)
 
     result = []
 
     for entity in entities:
-        if not entity_registry.async_is_registered(entity.entity_id):
-            continue
         result.append(
             {
                 "entity_id": entity.entity_id,
@@ -723,14 +720,11 @@ async def alexa_list(
     """List all alexa entities."""
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
-    entity_registry = er.async_get(hass)
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
     result = []
 
     for entity in entities:
-        if not entity_registry.async_is_registered(entity.entity_id):
-            continue
         result.append(
             {
                 "entity_id": entity.entity_id,
