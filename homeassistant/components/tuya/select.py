@@ -211,6 +211,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="fingerbot_mode",
         ),
     ),
+   
     # Robot Vacuum
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (

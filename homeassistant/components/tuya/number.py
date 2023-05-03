@@ -260,6 +260,26 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # EV charger
+    "zndb": (
+        NumberEntityDescription(
+            key=DPCode.SETA,
+            name="Charging current",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.SETT,
+            name="Charging time",
+            icon="mdi:timer",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.SETTA,
+            name="Charge delay",
+            icon="mdi:timer",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Fingerbot
     "szjqr": (
         NumberEntityDescription(
