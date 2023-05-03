@@ -77,6 +77,7 @@ def _setup_entities(
     async_add_entities: Callable,
     coordinator_name: str,
 ) -> None:
+    """Create a forecast sensor configuration."""
     async_add_entities(
         [
             ForecastSensor(

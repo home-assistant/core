@@ -13,6 +13,7 @@ from tests.common import MockConfigEntry
 
 
 async def _initialize_and_assert_flow(hass: HomeAssistant) -> FlowResult:
+    """Initialize the config flow and do basic checks."""
     result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -23,6 +24,7 @@ async def _initialize_and_assert_flow(hass: HomeAssistant) -> FlowResult:
 
 
 async def _initialize_and_assert_options(hass: HomeAssistant, data: dict) -> FlowResult:
+    """Initialize the config flow with options and do basic checks."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, unique_id="awattar", data=data, entry_id="test"
     )
