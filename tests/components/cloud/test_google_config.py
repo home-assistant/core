@@ -27,7 +27,6 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -546,7 +545,8 @@ async def test_google_config_migrate_expose_entity_prefs(
     expose_entity(hass, entity_migrated.entity_id, False)
 
     cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS]["light.unknown"] = {
-        PREF_SHOULD_EXPOSE: True
+        PREF_SHOULD_EXPOSE: True,
+        PREF_DISABLE_2FA: True,
     }
     cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS]["light.state_only"] = {
         PREF_SHOULD_EXPOSE: False
@@ -570,8 +570,9 @@ async def test_google_config_migrate_expose_entity_prefs(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
-        async_get_entity_settings(hass, "light.unknown")
+    assert async_get_entity_settings(hass, "light.unknown") == {
+        "cloud.google_assistant": {"disable_2fa": True, "should_expose": True}
+    }
     assert async_get_entity_settings(hass, "light.state_only") == {
         "cloud.google_assistant": {"should_expose": False}
     }

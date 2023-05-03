@@ -196,6 +196,25 @@ class CloudGoogleConfig(AbstractConfig):
                     PREF_DISABLE_2FA,
                     _2fa_disabled,
                 )
+        for entity_id in self._prefs.google_entity_configs:
+            with suppress(HomeAssistantError):
+                entity_settings = async_get_entity_settings(self.hass, entity_id)
+                if CLOUD_GOOGLE in entity_settings:
+                    continue
+            async_expose_entity(
+                self.hass,
+                CLOUD_GOOGLE,
+                entity_id,
+                self._should_expose_legacy(entity_id),
+            )
+            if _2fa_disabled := (self._2fa_disabled_legacy(entity_id) is not None):
+                async_set_assistant_option(
+                    self.hass,
+                    CLOUD_GOOGLE,
+                    entity_id,
+                    PREF_DISABLE_2FA,
+                    _2fa_disabled,
+                )
 
     async def async_initialize(self):
         """Perform async initialization of config."""
