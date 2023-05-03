@@ -60,7 +60,7 @@ class AlexaConfig(AbstractConfig):
         """Return an identifier for the user that represents this config."""
         return ""
 
-    def should_expose(self, entity_id):
+    async def should_expose(self, entity_id):
         """If an entity should be exposed."""
         if not self._config[CONF_FILTER].empty_filter:
             return self._config[CONF_FILTER](entity_id)

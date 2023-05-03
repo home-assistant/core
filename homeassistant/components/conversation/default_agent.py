@@ -73,23 +73,20 @@ def _get_language_variations(language: str) -> Iterable[str]:
         yield lang
 
 
-@core.callback
-def async_setup(hass: core.HomeAssistant) -> None:
+async def async_setup(hass: core.HomeAssistant) -> None:
     """Set up entity registry listener for the default agent."""
     entity_registry = er.async_get(hass)
     for entity_id in entity_registry.entities:
-        async_should_expose(hass, DOMAIN, entity_id)
+        await async_should_expose(hass, DOMAIN, entity_id)
 
-    @core.callback
-    def async_handle_entity_registry_changed(event: core.Event) -> None:
+    async def async_handle_entity_registry_changed(event: core.Event) -> None:
         """Set expose flag on newly created entities."""
         if event.data["action"] == "create":
-            async_should_expose(hass, DOMAIN, event.data["entity_id"])
+            await async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
     hass.bus.async_listen(
         er.EVENT_ENTITY_REGISTRY_UPDATED,
         async_handle_entity_registry_changed,
-        run_immediately=True,
     )
 
 
@@ -157,7 +154,7 @@ class DefaultAgent(AbstractConversationAgent):
                 conversation_id,
             )
 
-        slot_lists = self._make_slot_lists()
+        slot_lists = await self._make_slot_lists()
 
         result = await self.hass.async_add_executor_job(
             self._recognize,
@@ -486,7 +483,7 @@ class DefaultAgent(AbstractConversationAgent):
         """Handle updated preferences."""
         self._slot_lists = None
 
-    def _make_slot_lists(self) -> dict[str, SlotList]:
+    async def _make_slot_lists(self) -> dict[str, SlotList]:
         """Create slot lists with areas and entity names/aliases."""
         if self._slot_lists is not None:
             return self._slot_lists
@@ -496,7 +493,7 @@ class DefaultAgent(AbstractConversationAgent):
         entities = [
             entity
             for entity in entity_registry.entities.values()
-            if async_should_expose(self.hass, DOMAIN, entity.entity_id)
+            if await async_should_expose(self.hass, DOMAIN, entity.entity_id)
         ]
         devices = dr.async_get(self.hass)
 

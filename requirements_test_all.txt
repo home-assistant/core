@@ -700,7 +700,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230501.0
+home-assistant-frontend==20230502.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.4.26
@@ -1130,7 +1130,7 @@ pyblackbird==0.6
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.3.2
+pybravia==0.3.3
 
 # homeassistant.components.cloudflare
 pycfdns==2.0.1
@@ -1870,7 +1870,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.3.2
 
 # homeassistant.components.voip
-voip-utils==0.0.6
+voip-utils==0.0.7
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.2
