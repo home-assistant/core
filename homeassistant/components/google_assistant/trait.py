@@ -901,7 +901,7 @@ class TemperatureSettingTrait(_Trait):
     def climate_google_modes(self):
         """Return supported Google modes."""
         if self.state.domain == sensor.DOMAIN:
-            return ["on", "heat"]
+            return ["none"]
 
         modes = []
         attrs = self.state.attributes
@@ -956,8 +956,8 @@ class TemperatureSettingTrait(_Trait):
             preset = attrs.get(climate.ATTR_PRESET_MODE)
             supported = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
         elif self.state.domain == sensor.DOMAIN:
-            operation = "heat"
-            preset = "heat"
+            operation = "none"
+            preset = "none"
 
         if preset in self.preset_to_google:
             response["thermostatMode"] = self.preset_to_google[preset]

@@ -1091,7 +1091,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) ->
     assert calls[0].data == {ATTR_ENTITY_ID: "climate.bla", ATTR_TEMPERATURE: 19}
 
 
-async def test_temperature_sensor(hass: HomeAssistant) -> None:
+async def test_temperature_control_and_setting_traits(hass: HomeAssistant) -> None:
     """Test TemperatureControl and TemperatureSetting traits support for sensor domain."""
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
