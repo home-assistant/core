@@ -154,6 +154,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     assert result["title"] == "LastFM"
     assert result["data"] == {
         "api_key": "asdasdasdasdasd",
+        "main_user": None,
         "users": ["testaccount1", "testaccount2"],
     }
 
@@ -205,3 +206,78 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_DATA
+
+
+async def test_options_flow_remove_user(hass: HomeAssistant) -> None:
+    """Test updating options will correctly remove an entity."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: API_KEY,
+            CONF_MAIN_USER: USERNAME_1,
+            CONF_USERS: [USERNAME_1, USERNAME_2],
+        },
+    )
+    entry.add_to_hass(hass)
+    with patch_fetch_user():
+        await hass.config_entries.async_setup(entry.entry_id)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERS: [USERNAME_1]},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_API_KEY: API_KEY,
+        CONF_MAIN_USER: USERNAME_1,
+        CONF_USERS: [USERNAME_1],
+    }
+
+
+async def test_options_flow_from_import(hass: HomeAssistant) -> None:
+    """Test updating options gained from import."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: API_KEY,
+            CONF_MAIN_USER: None,
+            CONF_USERS: [USERNAME_1],
+        },
+    )
+    entry.add_to_hass(hass)
+    with patch_fetch_user():
+        await hass.config_entries.async_setup(entry.entry_id)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert len(result["data_schema"].schema[CONF_USERS].config["options"]) == 0
+
+
+async def test_options_flow_without_friends(hass: HomeAssistant) -> None:
+    """Test updating options for someone without friends."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: API_KEY,
+            CONF_MAIN_USER: USERNAME_1,
+            CONF_USERS: [USERNAME_1],
+        },
+    )
+    entry.add_to_hass(hass)
+    with patch_fetch_user(has_friends=False):
+        await hass.config_entries.async_setup(entry.entry_id)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert len(result["data_schema"].schema[CONF_USERS].config["options"]) == 0

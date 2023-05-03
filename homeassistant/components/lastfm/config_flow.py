@@ -157,6 +157,7 @@ class LastFmConfigFlowHandler(ConfigFlow, LastFmFlowHandler, domain=DOMAIN):
             title="LastFM",
             data={
                 CONF_API_KEY: import_config[CONF_API_KEY],
+                CONF_MAIN_USER: None,
                 CONF_USERS: import_config[CONF_USERS],
             },
         )
