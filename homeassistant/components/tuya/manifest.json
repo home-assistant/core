@@ -37,6 +37,9 @@
     },
     {
       "macaddress": "D81F12*"
+    },
+    {
+      "macaddress": "FC671F*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tuya",

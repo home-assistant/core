@@ -210,6 +210,17 @@
           "good": "Good",
           "severe": "Severe"
         }
+      },
+      "charger_state": {
+        "state": {
+          "no_connect": "Not connected to vehicle",
+          "connect": "Connected to vehicle",
+          "charging": "Charging vehicle",
+          "wait_rfid": "Waiting for RFID",
+          "finish": "Charge is finished",
+          "wait_charging": "Waiting for charge to start",
+          "error": "Error"
+        }
       }
     }
   }

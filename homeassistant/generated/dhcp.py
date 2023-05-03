@@ -791,6 +791,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "D81F12*",
     },
     {
+        "domain": "tuya",
+        "macaddress": "FC671F*",
+    },
+    {
         "domain": "twinkly",
         "hostname": "twinkly_*",
     },

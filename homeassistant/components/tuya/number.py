@@ -9,7 +9,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfElectricCurrent, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -257,6 +257,29 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
             name="Sensitivity",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # EV charger
+    "zndb": (
+        NumberEntityDescription(
+            key=DPCode.SETA,
+            name="Charging current",
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.SETT,
+            name="Charging time",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            icon="mdi:timer",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.SETTA,
+            name="Charge delay",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            icon="mdi:timer",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

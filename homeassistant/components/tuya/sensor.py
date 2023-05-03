@@ -18,6 +18,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfTime,
 )
@@ -655,6 +656,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "zd": BATTERY_SENSORS,
     # Smart Electricity Meter
     # https://developer.tuya.com/en/docs/iot/smart-meter?id=Kaiuz4gv6ack7
+    # EV charger use the same category
     "zndb": (
         TuyaSensorEntityDescription(
             key=DPCode.FORWARD_ENERGY_TOTAL,
@@ -733,6 +735,55 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.VO,
+            name="Voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            subkey="voltage",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CTIME,
+            name="Total charging time",
+            icon="mdi:history",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CO,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.KW,
+            name="Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            subkey="power",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CPOWER,  # Even if the device calls it power, this is the energy (kwh) consumed
+            name="Energy consumed",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.A,
+            name="Current",
+            device_class=SensorDeviceClass.CURRENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            subkey="electriccurrent",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CP,
+            name="Charger state",
+            translation_key="charger_state",
         ),
     ),
     # Circuit Breaker
