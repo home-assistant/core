@@ -36,6 +36,10 @@ class MockUser:
         self._thrown_error = error
         self.name = "test"
 
+    def get_name(self, capitalized: bool) -> str:
+        """Get name of the user."""
+        return self.name
+
     def get_playcount(self):
         """Get mock play count."""
         if self._thrown_error:
@@ -59,7 +63,7 @@ class MockUser:
 
     def get_friends(self):
         """Get mock friends."""
-        return [MockUser()]
+        return [MockUser(None, None)]
 
 
 def patch_fetch_user(
