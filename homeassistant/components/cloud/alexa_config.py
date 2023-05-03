@@ -108,7 +108,7 @@ def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
     try:
         device_class = get_device_class(hass, entity_id)
     except HomeAssistantError:
-        # Handle the state removed
+        # The entity no longer exists
         return False
     if (
         domain == "binary_sensor"
