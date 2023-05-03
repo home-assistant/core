@@ -1,9 +1,0 @@
-{
-    "config": {
-        "step": {
-            "auth": {
-                "description": "Pra\u0161ome sekti \u0161ia [nuoroda]({authorization_url}) ir **leisti** prieig\u0105 prie savo \"Ambiclimate\" paskyros, tada gr\u012f\u017ekite ir paspauskite **Pateikti** toliau.\n(\u012esitikinkite, kad nurodytas gr\u012f\u017etamojo ry\u0161io URL yra {cb_url})"
-            }
-        }
-    }
-}

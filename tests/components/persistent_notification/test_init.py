@@ -3,9 +3,11 @@ import pytest
 
 import homeassistant.components.persistent_notification as pn
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -14,7 +16,7 @@ async def setup_integration(hass):
     assert await async_setup_component(hass, pn.DOMAIN, {})
 
 
-async def test_create(hass):
+async def test_create(hass: HomeAssistant) -> None:
     """Test creating notification without title or notification id."""
     notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
@@ -38,7 +40,7 @@ async def test_create(hass):
     assert notification["created_at"] is not None
 
 
-async def test_create_notification_id(hass):
+async def test_create_notification_id(hass: HomeAssistant) -> None:
     """Ensure overwrites existing notification with same id."""
     notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
@@ -68,7 +70,7 @@ async def test_create_notification_id(hass):
     assert notification["message"] == "test 2"
 
 
-async def test_dismiss_notification(hass):
+async def test_dismiss_notification(hass: HomeAssistant) -> None:
     """Ensure removal of specific notification."""
     notifications = hass.data[pn.DOMAIN]
     assert len(hass.states.async_entity_ids(pn.DOMAIN)) == 0
@@ -84,7 +86,7 @@ async def test_dismiss_notification(hass):
     assert len(notifications) == 0
 
 
-async def test_mark_read(hass):
+async def test_mark_read(hass: HomeAssistant) -> None:
     """Ensure notification is marked as Read."""
     events = async_capture_events(hass, pn.EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
     notifications = hass.data[pn.DOMAIN]
@@ -122,7 +124,9 @@ async def test_mark_read(hass):
     assert len(events) == 3
 
 
-async def test_ws_get_notifications(hass, hass_ws_client):
+async def test_ws_get_notifications(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test websocket endpoint for retrieving persistent notifications."""
     await async_setup_component(hass, pn.DOMAIN, {})
 

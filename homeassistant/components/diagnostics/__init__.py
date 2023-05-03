@@ -16,14 +16,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
-from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.json import (
+    ExtendedJSONEncoder,
+    find_paths_unserializable_data,
+)
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_custom_components, async_get_integration
-from homeassistant.util.json import (
-    find_paths_unserializable_data,
-    format_unserializable_data,
-)
+from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
 from .util import async_redact_data

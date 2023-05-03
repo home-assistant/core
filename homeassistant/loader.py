@@ -1,5 +1,4 @@
-"""
-The methods for loading Home Assistant integrations.
+"""The methods for loading Home Assistant integrations.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
@@ -9,19 +8,21 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
+from dataclasses import dataclass
 import functools as ft
 import importlib
 import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, TypeVar, cast
 
 from awesomeversion import (
     AwesomeVersion,
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+import voluptuous as vol
 
 from . import generated
 from .generated.application_credentials import APPLICATION_CREDENTIALS
@@ -31,11 +32,14 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
-from .helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
+from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from .config_entries import ConfigEntry
     from .core import HomeAssistant
+    from .helpers import device_registry as dr
+    from .helpers.typing import ConfigType
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
@@ -119,9 +123,16 @@ class USBMatcher(USBMatcherRequired, USBMatcherOptional):
     """Matcher for the bluetooth integration."""
 
 
+@dataclass(slots=True)
+class HomeKitDiscoveredIntegration:
+    """HomeKit model."""
+
+    domain: str
+    always_discover: bool
+
+
 class Manifest(TypedDict, total=False):
-    """
-    Integration manifest.
+    """Integration manifest.
 
     Note that none of the attributes are marked Optional here. However, some of
     them may be optional in manifest.json in the sense that they can be omitted
@@ -253,6 +264,52 @@ async def async_get_config_flows(
     return flows
 
 
+class ComponentProtocol(Protocol):
+    """Define the format of an integration."""
+
+    CONFIG_SCHEMA: vol.Schema
+    DOMAIN: str
+
+    async def async_setup_entry(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up a config entry."""
+
+    async def async_unload_entry(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Unload a config entry."""
+
+    async def async_migrate_entry(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Migrate an old config entry."""
+
+    async def async_remove_entry(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Remove a config entry."""
+
+    async def async_remove_config_entry_device(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        device_entry: dr.DeviceEntry,
+    ) -> bool:
+        """Remove a config entry device."""
+
+    async def async_reset_platform(
+        self, hass: HomeAssistant, integration_name: str
+    ) -> None:
+        """Release resources."""
+
+    async def async_setup(self, hass: HomeAssistant, config: ConfigType) -> bool:
+        """Set up integration."""
+
+    def setup(self, hass: HomeAssistant, config: ConfigType) -> bool:
+        """Set up integration."""
+
+
 async def async_get_integration_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, Any]:
@@ -261,7 +318,7 @@ async def async_get_integration_descriptions(
     config_flow_path = pathlib.Path(base) / "integrations.json"
 
     flow = await hass.async_add_executor_job(config_flow_path.read_text)
-    core_flows: dict[str, Any] = json_loads(flow)
+    core_flows = cast(dict[str, Any], json_loads(flow))
     custom_integrations = await async_get_custom_components(hass)
     custom_flows: dict[str, Any] = {
         "integration": {},
@@ -412,10 +469,30 @@ async def async_get_usb(hass: HomeAssistant) -> list[USBMatcher]:
     return usb
 
 
-async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
-    """Return cached list of homekit models."""
+def homekit_always_discover(iot_class: str | None) -> bool:
+    """Return if we should always offer HomeKit control for a device."""
+    #
+    # Since we prefer local control, if the integration that is being
+    # discovered is cloud AND the HomeKit device is UNPAIRED we still
+    # want to discovery it.
+    #
+    # Additionally if the integration is polling, HKC offers a local
+    # push experience for the user to control the device so we want
+    # to offer that as well.
+    #
+    return not iot_class or (iot_class.startswith("cloud") or "polling" in iot_class)
 
-    homekit: dict[str, str] = HOMEKIT.copy()
+
+async def async_get_homekit(
+    hass: HomeAssistant,
+) -> dict[str, HomeKitDiscoveredIntegration]:
+    """Return cached list of homekit models."""
+    homekit: dict[str, HomeKitDiscoveredIntegration] = {
+        model: HomeKitDiscoveredIntegration(
+            cast(str, details["domain"]), cast(bool, details["always_discover"])
+        )
+        for model, details in HOMEKIT.items()
+    }
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -426,7 +503,10 @@ async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
         ):
             continue
         for model in integration.homekit["models"]:
-            homekit[model] = integration.domain
+            homekit[model] = HomeKitDiscoveredIntegration(
+                integration.domain,
+                homekit_always_discover(integration.iot_class),
+            )
 
     return homekit
 
@@ -476,7 +556,7 @@ class Integration:
                 continue
 
             try:
-                manifest = json_loads(manifest_path.read_text())
+                manifest = cast(Manifest, json_loads(manifest_path.read_text()))
             except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err
@@ -720,14 +800,18 @@ class Integration:
 
         return self._all_dependencies_resolved
 
-    def get_component(self) -> ModuleType:
+    def get_component(self) -> ComponentProtocol:
         """Return the component."""
-        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
+        cache: dict[str, ComponentProtocol] = self.hass.data.setdefault(
+            DATA_COMPONENTS, {}
+        )
         if self.domain in cache:
             return cache[self.domain]
 
         try:
-            cache[self.domain] = importlib.import_module(self.pkg_path)
+            cache[self.domain] = cast(
+                ComponentProtocol, importlib.import_module(self.pkg_path)
+            )
         except ImportError:
             raise
         except Exception as err:
@@ -892,7 +976,7 @@ class CircularDependency(LoaderError):
 
 def _load_file(
     hass: HomeAssistant, comp_or_platform: str, base_paths: list[str]
-) -> ModuleType | None:
+) -> ComponentProtocol | None:
     """Try to load specified file.
 
     Looks in config dir first, then built-in components.
@@ -927,7 +1011,7 @@ def _load_file(
 
             cache[comp_or_platform] = module
 
-            return module
+            return cast(ComponentProtocol, module)
 
         except ImportError as err:
             # This error happens if for example custom_components/switch
@@ -951,7 +1035,7 @@ def _load_file(
 class ModuleWrapper:
     """Class to wrap a Python module and auto fill in hass argument."""
 
-    def __init__(self, hass: HomeAssistant, module: ModuleType) -> None:
+    def __init__(self, hass: HomeAssistant, module: ComponentProtocol) -> None:
         """Initialize the module wrapper."""
         self._hass = hass
         self._module = module
@@ -980,7 +1064,7 @@ class Components:
         integration = self._hass.data.get(DATA_INTEGRATIONS, {}).get(comp_name)
 
         if isinstance(integration, Integration):
-            component: ModuleType | None = integration.get_component()
+            component: ComponentProtocol | None = integration.get_component()
         else:
             # Fallback to importing old-school
             component = _load_file(self._hass, comp_name, _lookup_path(self._hass))

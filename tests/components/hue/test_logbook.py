@@ -1,5 +1,4 @@
 """The tests for hue logbook."""
-
 from homeassistant.components.hue.const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 from homeassistant.components.hue.v1.hue_event import CONF_LAST_UPDATED
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +9,8 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
-from homeassistant.helpers import device_registry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_platform
@@ -35,7 +35,9 @@ SAMPLE_V2_EVENT = {
 }
 
 
-async def test_humanify_hue_events(hass, mock_bridge_v2):
+async def test_humanify_hue_events(
+    hass: HomeAssistant, mock_bridge_v2, device_registry: dr.DeviceRegistry
+) -> None:
     """Test hue events when the devices are present in the registry."""
     await setup_platform(hass, mock_bridge_v2, "sensor")
     hass.config.components.add("recorder")
@@ -43,11 +45,10 @@ async def test_humanify_hue_events(hass, mock_bridge_v2):
     await hass.async_block_till_done()
     entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    dev_reg = device_registry.async_get(hass)
-    v1_device = dev_reg.async_get_or_create(
+    v1_device = device_registry.async_get_or_create(
         identifiers={(DOMAIN, "v1")}, name="Remote 1", config_entry_id=entry.entry_id
     )
-    v2_device = dev_reg.async_get_or_create(
+    v2_device = device_registry.async_get_or_create(
         identifiers={(DOMAIN, "v2")}, name="Remote 2", config_entry_id=entry.entry_id
     )
 
@@ -74,7 +75,9 @@ async def test_humanify_hue_events(hass, mock_bridge_v2):
     assert v2_event["message"] == "first button pressed initially"
 
 
-async def test_humanify_hue_events_devices_removed(hass, mock_bridge_v2):
+async def test_humanify_hue_events_devices_removed(
+    hass: HomeAssistant, mock_bridge_v2
+) -> None:
     """Test hue events when the devices have been removed from the registry."""
     await setup_platform(hass, mock_bridge_v2, "sensor")
     hass.config.components.add("recorder")

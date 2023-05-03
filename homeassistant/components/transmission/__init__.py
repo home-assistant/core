@@ -311,7 +311,9 @@ class TransmissionClient:
 class TransmissionData:
     """Get the latest data and update the states."""
 
-    def __init__(self, hass, config, api: transmission_rpc.Client):
+    def __init__(
+        self, hass: HomeAssistant, config: ConfigEntry, api: transmission_rpc.Client
+    ) -> None:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config = config

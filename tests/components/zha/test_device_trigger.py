@@ -9,7 +9,9 @@ import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.zha.core.const import ATTR_ENDPOINT_ID
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -82,7 +84,7 @@ async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
     return zigpy_device, zha_device
 
 
-async def test_triggers(hass, mock_devices):
+async def test_triggers(hass: HomeAssistant, mock_devices) -> None:
     """Test ZHA device triggers."""
 
     zigpy_device, zha_device = mock_devices
@@ -157,7 +159,7 @@ async def test_triggers(hass, mock_devices):
     assert _same_lists(triggers, expected_triggers)
 
 
-async def test_no_triggers(hass, mock_devices):
+async def test_no_triggers(hass: HomeAssistant, mock_devices) -> None:
     """Test ZHA device with no triggers."""
 
     _, zha_device = mock_devices
@@ -181,7 +183,7 @@ async def test_no_triggers(hass, mock_devices):
     ]
 
 
-async def test_if_fires_on_event(hass, mock_devices, calls):
+async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> None:
     """Test for remote triggers firing."""
 
     zigpy_device, zha_device = mock_devices
@@ -189,7 +191,7 @@ async def test_if_fires_on_event(hass, mock_devices, calls):
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
         (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
-        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE},
+        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE, ATTR_ENDPOINT_ID: 1},
         (LONG_PRESS, LONG_PRESS): {COMMAND: COMMAND_HOLD},
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
     }
@@ -222,8 +224,8 @@ async def test_if_fires_on_event(hass, mock_devices, calls):
 
     await hass.async_block_till_done()
 
-    channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
-    channel.zha_send_event(COMMAND_SINGLE, [])
+    cluster_handler = zha_device.endpoints[1].client_cluster_handlers["1:0x0006"]
+    cluster_handler.zha_send_event(COMMAND_SINGLE, [])
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -231,8 +233,8 @@ async def test_if_fires_on_event(hass, mock_devices, calls):
 
 
 async def test_device_offline_fires(
-    hass, zigpy_device_mock, zha_device_restored, calls
-):
+    hass: HomeAssistant, zigpy_device_mock, zha_device_restored, calls
+) -> None:
     """Test for device offline triggers firing."""
 
     zigpy_device = zigpy_device_mock(
@@ -296,7 +298,9 @@ async def test_device_offline_fires(
     assert calls[0].data["message"] == "service called"
 
 
-async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
+async def test_exception_no_triggers(
+    hass: HomeAssistant, mock_devices, calls, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test for exception when validating device triggers."""
 
     _, zha_device = mock_devices
@@ -333,7 +337,9 @@ async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
     )
 
 
-async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
+async def test_exception_bad_trigger(
+    hass: HomeAssistant, mock_devices, calls, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test for exception when validating device triggers."""
 
     zigpy_device, zha_device = mock_devices

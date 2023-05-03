@@ -230,8 +230,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
     @property
     def current_cover_position(self) -> int | None:
-        """
-        Return current position of cover.
+        """Return current position of cover.
 
         None is unknown, 0 is open, 100 is closed.
         """
@@ -343,8 +342,7 @@ class MotionTiltDevice(MotionPositionDevice):
 
     @property
     def current_cover_tilt_position(self) -> int | None:
-        """
-        Return current angle of cover.
+        """Return current angle of cover.
 
         None is unknown, 0 is closed/minimum tilt, 100 is fully open/maximum tilt.
         """
@@ -440,8 +438,7 @@ class MotionTDBUDevice(MotionPositionDevice):
 
     @property
     def current_cover_position(self) -> int | None:
-        """
-        Return current position of cover.
+        """Return current position of cover.
 
         None is unknown, 0 is open, 100 is closed.
         """

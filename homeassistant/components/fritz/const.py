@@ -5,8 +5,11 @@ from typing import Literal
 from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzActionFailedError,
+    FritzAuthorizationError,
+    FritzConnectionException,
     FritzInternalError,
     FritzLookUpError,
+    FritzSecurityError,
     FritzServiceError,
 )
 
@@ -66,9 +69,12 @@ UPTIME_DEVIATION = 5
 FRITZ_EXCEPTIONS = (
     FritzActionError,
     FritzActionFailedError,
+    FritzConnectionException,
     FritzInternalError,
     FritzServiceError,
     FritzLookUpError,
 )
+
+FRITZ_AUTH_EXCEPTIONS = (FritzAuthorizationError, FritzSecurityError)
 
 WIFI_STANDARD = {1: "2.4Ghz", 2: "5Ghz", 3: "5Ghz", 4: "Guest"}

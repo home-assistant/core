@@ -14,8 +14,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -53,7 +53,6 @@ SENSOR_TYPES: dict[str, DevoloBinarySensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:router-network",
-        name="Connected to router",
         value_func=_is_connected_to_router,
     ),
 }

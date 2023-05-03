@@ -1,7 +1,6 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
@@ -16,8 +15,6 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    UnitOfLength,
-    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -30,13 +27,26 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_conversion import (
-    DistanceConverter,
-    PressureConverter,
-    SpeedConverter,
-    TemperatureConverter,
-)
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from .const import (
+    ATTR_WEATHER_HUMIDITY,
+    ATTR_WEATHER_OZONE,
+    ATTR_WEATHER_PRECIPITATION_UNIT,
+    ATTR_WEATHER_PRESSURE,
+    ATTR_WEATHER_PRESSURE_UNIT,
+    ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_TEMPERATURE_UNIT,
+    ATTR_WEATHER_VISIBILITY,
+    ATTR_WEATHER_VISIBILITY_UNIT,
+    ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_SPEED,
+    ATTR_WEATHER_WIND_SPEED_UNIT,
+    DOMAIN,
+    UNIT_CONVERSIONS,
+    VALID_UNITS,
+)
+from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,68 +81,12 @@ ATTR_FORECAST_TIME: Final = "datetime"
 ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
 ATTR_FORECAST_NATIVE_WIND_SPEED: Final = "native_wind_speed"
 ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
-ATTR_WEATHER_HUMIDITY = "humidity"
-ATTR_WEATHER_OZONE = "ozone"
-ATTR_WEATHER_PRESSURE = "pressure"
-ATTR_WEATHER_PRESSURE_UNIT = "pressure_unit"
-ATTR_WEATHER_TEMPERATURE = "temperature"
-ATTR_WEATHER_TEMPERATURE_UNIT = "temperature_unit"
-ATTR_WEATHER_VISIBILITY = "visibility"
-ATTR_WEATHER_VISIBILITY_UNIT = "visibility_unit"
-ATTR_WEATHER_WIND_BEARING = "wind_bearing"
-ATTR_WEATHER_WIND_SPEED = "wind_speed"
-ATTR_WEATHER_WIND_SPEED_UNIT = "wind_speed_unit"
-ATTR_WEATHER_PRECIPITATION_UNIT = "precipitation_unit"
-
-DOMAIN = "weather"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
-
-VALID_UNITS_PRESSURE: set[str] = {
-    UnitOfPressure.HPA,
-    UnitOfPressure.MBAR,
-    UnitOfPressure.INHG,
-    UnitOfPressure.MMHG,
-}
-VALID_UNITS_TEMPERATURE: set[str] = {
-    UnitOfTemperature.CELSIUS,
-    UnitOfTemperature.FAHRENHEIT,
-}
-VALID_UNITS_PRECIPITATION: set[str] = {
-    UnitOfPrecipitationDepth.MILLIMETERS,
-    UnitOfPrecipitationDepth.INCHES,
-}
-VALID_UNITS_VISIBILITY: set[str] = {
-    UnitOfLength.KILOMETERS,
-    UnitOfLength.MILES,
-}
-VALID_UNITS_WIND_SPEED: set[str] = {
-    UnitOfSpeed.FEET_PER_SECOND,
-    UnitOfSpeed.KILOMETERS_PER_HOUR,
-    UnitOfSpeed.KNOTS,
-    UnitOfSpeed.METERS_PER_SECOND,
-    UnitOfSpeed.MILES_PER_HOUR,
-}
-
-UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    ATTR_WEATHER_PRESSURE_UNIT: PressureConverter.convert,
-    ATTR_WEATHER_TEMPERATURE_UNIT: TemperatureConverter.convert,
-    ATTR_WEATHER_VISIBILITY_UNIT: DistanceConverter.convert,
-    ATTR_WEATHER_PRECIPITATION_UNIT: DistanceConverter.convert,
-    ATTR_WEATHER_WIND_SPEED_UNIT: SpeedConverter.convert,
-}
-
-VALID_UNITS: dict[str, set[str]] = {
-    ATTR_WEATHER_PRESSURE_UNIT: VALID_UNITS_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT: VALID_UNITS_TEMPERATURE,
-    ATTR_WEATHER_VISIBILITY_UNIT: VALID_UNITS_VISIBILITY,
-    ATTR_WEATHER_PRECIPITATION_UNIT: VALID_UNITS_PRECIPITATION,
-    ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
-}
 
 # mypy: disallow-any-generics
 
@@ -182,6 +136,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
+    async_setup_ws_api(hass)
     await component.async_setup(config)
     return True
 

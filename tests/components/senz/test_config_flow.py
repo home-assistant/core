@@ -13,15 +13,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
+
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     await async_setup_component(hass, DOMAIN, {})

@@ -5,6 +5,7 @@ import pytest
 
 import homeassistant.components.mfi.switch as mfi
 import homeassistant.components.switch as switch_component
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 PLATFORM = mfi
@@ -23,7 +24,7 @@ GOOD_CONFIG = {
 }
 
 
-async def test_setup_adds_proper_devices(hass):
+async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
     """Test if setup adds devices."""
     with mock.patch(
         "homeassistant.components.mfi.switch.MFiClient"
@@ -60,19 +61,19 @@ def switch_fixture(port):
     return mfi.MfiSwitch(port)
 
 
-async def test_name(port, switch):
+async def test_name(port, switch) -> None:
     """Test the name."""
     assert port.label == switch.name
 
 
-async def test_update(port, switch):
+async def test_update(port, switch) -> None:
     """Test update."""
     switch.update()
     assert port.refresh.call_count == 1
     assert port.refresh.call_args == mock.call()
 
 
-async def test_update_with_target_state(port, switch):
+async def test_update_with_target_state(port, switch) -> None:
     """Test update with target state."""
 
     switch._target_state = True
@@ -87,7 +88,7 @@ async def test_update_with_target_state(port, switch):
     assert port.data["output"] == "untouched"
 
 
-async def test_turn_on(port, switch):
+async def test_turn_on(port, switch) -> None:
     """Test turn_on."""
     switch.turn_on()
     assert port.control.call_count == 1
@@ -96,7 +97,7 @@ async def test_turn_on(port, switch):
     assert switch._target_state
 
 
-async def test_turn_off(port, switch):
+async def test_turn_off(port, switch) -> None:
     """Test turn_off."""
     switch.turn_off()
     assert port.control.call_count == 1

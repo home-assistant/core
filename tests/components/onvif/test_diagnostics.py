@@ -1,4 +1,5 @@
 """Test ONVIF diagnostics."""
+from homeassistant.core import HomeAssistant
 
 from . import (
     FIRMWARE_VERSION,
@@ -10,9 +11,12 @@ from . import (
 )
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_diagnostics(hass, hass_client):
+async def test_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test generating diagnostics for a config entry."""
 
     entry, _, _ = await setup_onvif_integration(hass)
@@ -51,7 +55,7 @@ async def test_diagnostics(hass, hass_client):
             "capabilities": {
                 "snapshot": False,
                 "events": False,
-                "ptz": False,
+                "ptz": True,
                 "imaging": True,
             },
             "profiles": [
@@ -59,10 +63,23 @@ async def test_diagnostics(hass, hass_client):
                     "index": 0,
                     "token": "dummy",
                     "name": "profile1",
-                    "video": None,
+                    "video": {
+                        "encoding": "any",
+                        "resolution": {"width": 640, "height": 480},
+                    },
                     "ptz": None,
                     "video_source_token": None,
                 }
             ],
+        },
+        "events": {
+            "pullpoint_manager_state": {
+                "__type": "<enum " "'PullPointManagerState'>",
+                "repr": "<PullPointManagerState.PAUSED: " "2>",
+            },
+            "webhook_manager_state": {
+                "__type": "<enum 'WebHookManagerState'>",
+                "repr": "<WebHookManagerState.STARTED: " "1>",
+            },
         },
     }

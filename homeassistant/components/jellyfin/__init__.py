@@ -20,10 +20,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data[CONF_CLIENT_DEVICE_ID] = entry.entry_id
         hass.config_entries.async_update_entry(entry, data=entry_data)
 
-    client = create_client(
-        device_id=entry.data[CONF_CLIENT_DEVICE_ID],
-        device_name=hass.config.location_name,
-    )
+    device_id = entry.data[CONF_CLIENT_DEVICE_ID]
+    device_name = ascii(hass.config.location_name)
+
+    client = create_client(device_id=device_id, device_name=device_name)
 
     try:
         user_id, connect_result = await validate_input(hass, dict(entry.data), client)
@@ -36,7 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     server_info: dict[str, Any] = connect_result["Servers"][0]
 
     coordinators: dict[str, JellyfinDataUpdateCoordinator[Any]] = {
-        "sessions": SessionsDataUpdateCoordinator(hass, client, server_info, user_id),
+        "sessions": SessionsDataUpdateCoordinator(
+            hass, client, server_info, entry.data[CONF_CLIENT_DEVICE_ID], user_id
+        ),
     }
 
     for coordinator in coordinators.values():

@@ -6,6 +6,7 @@ import pytest
 
 import homeassistant.components.nextbus.sensor as nextbus
 import homeassistant.components.sensor as sensor
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -87,17 +88,23 @@ def mock_nextbus_lists(mock_nextbus):
     }
 
 
-async def test_valid_config(hass, mock_nextbus, mock_nextbus_lists):
+async def test_valid_config(
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists
+) -> None:
     """Test that sensor is set up properly with valid config."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
 
 
-async def test_invalid_config(hass, mock_nextbus, mock_nextbus_lists):
+async def test_invalid_config(
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists
+) -> None:
     """Checks that component is not setup when missing information."""
     await assert_setup_sensor(hass, CONFIG_INVALID_MISSING, count=0)
 
 
-async def test_validate_tags(hass, mock_nextbus, mock_nextbus_lists):
+async def test_validate_tags(
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists
+) -> None:
     """Test that additional validation against the API is successful."""
     # with self.subTest('Valid everything'):
     assert nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, VALID_ROUTE, VALID_STOP)
@@ -114,8 +121,8 @@ async def test_validate_tags(hass, mock_nextbus, mock_nextbus_lists):
 
 
 async def test_verify_valid_state(
-    hass, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
-):
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+) -> None:
     """Verify all attributes are set from a valid response."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
     mock_nextbus_predictions.assert_called_once_with(
@@ -133,8 +140,8 @@ async def test_verify_valid_state(
 
 
 async def test_message_dict(
-    hass, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
-):
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+) -> None:
     """Verify that a single dict message is rendered correctly."""
     mock_nextbus_predictions.return_value = {
         "predictions": {
@@ -161,8 +168,8 @@ async def test_message_dict(
 
 
 async def test_message_list(
-    hass, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
-):
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+) -> None:
     """Verify that a list of messages are rendered correctly."""
     mock_nextbus_predictions.return_value = {
         "predictions": {
@@ -189,8 +196,8 @@ async def test_message_list(
 
 
 async def test_direction_list(
-    hass, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
-):
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+) -> None:
     """Verify that a list of messages are rendered correctly."""
     mock_nextbus_predictions.return_value = {
         "predictions": {
@@ -228,8 +235,8 @@ async def test_direction_list(
 
 
 async def test_custom_name(
-    hass, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
-):
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+) -> None:
     """Verify that a custom name can be set via config."""
     config = deepcopy(CONFIG_BASIC)
     config["sensor"]["name"] = "Custom Name"
@@ -240,8 +247,8 @@ async def test_custom_name(
 
 
 async def test_no_predictions(
-    hass, mock_nextbus, mock_nextbus_predictions, mock_nextbus_lists
-):
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_predictions, mock_nextbus_lists
+) -> None:
     """Verify there are no exceptions when no predictions are returned."""
     mock_nextbus_predictions.return_value = {}
 
@@ -253,8 +260,8 @@ async def test_no_predictions(
 
 
 async def test_verify_no_upcoming(
-    hass, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
-):
+    hass: HomeAssistant, mock_nextbus, mock_nextbus_lists, mock_nextbus_predictions
+) -> None:
     """Verify attributes are set despite no upcoming times."""
     mock_nextbus_predictions.return_value = {
         "predictions": {

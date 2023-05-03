@@ -51,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Config Flow Handler."""
         self._host: str = ""
         self._serial: str = ""
@@ -119,7 +119,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-
             control_schema = vol.Schema(
                 {
                     vol.Required(

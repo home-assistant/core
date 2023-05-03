@@ -1,4 +1,4 @@
-"""Support for functionality to interact with Android TV / Fire TV devices."""
+"""Support for functionality to interact with Android / Fire TV devices."""
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -87,7 +87,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Android TV entity."""
+    """Set up the Android Debug Bridge entity."""
     aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
     device_class = aftv.DEVICE_CLASS
     device_type = (
@@ -140,12 +140,13 @@ async def async_setup_entry(
     )
 
 
+_FuncType = Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]
+_ReturnFuncType = Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]]
+
+
 def adb_decorator(
     override_available: bool = False,
-) -> Callable[
-    [Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]],
-    Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]],
-]:
+) -> Callable[[_FuncType[_ADBDeviceT, _P, _R]], _ReturnFuncType[_ADBDeviceT, _P, _R]]:
     """Wrap ADB methods and catch exceptions.
 
     Allows for overriding the available status of the ADB connection via the
@@ -153,8 +154,8 @@ def adb_decorator(
     """
 
     def _adb_decorator(
-        func: Callable[Concatenate[_ADBDeviceT, _P], Awaitable[_R]]
-    ) -> Callable[Concatenate[_ADBDeviceT, _P], Coroutine[Any, Any, _R | None]]:
+        func: _FuncType[_ADBDeviceT, _P, _R]
+    ) -> _ReturnFuncType[_ADBDeviceT, _P, _R]:
         """Wrap the provided ADB method and catch exceptions."""
 
         @functools.wraps(func)
@@ -200,7 +201,7 @@ def adb_decorator(
 
 
 class ADBDevice(MediaPlayerEntity):
-    """Representation of an Android TV or Fire TV device."""
+    """Representation of an Android or Fire TV device."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
 
@@ -213,7 +214,7 @@ class ADBDevice(MediaPlayerEntity):
         entry_id,
         entry_data,
     ):
-        """Initialize the Android TV / Fire TV device."""
+        """Initialize the Android / Fire TV device."""
         self.aftv = aftv
         self._attr_name = name
         self._attr_unique_id = unique_id
@@ -383,7 +384,7 @@ class ADBDevice(MediaPlayerEntity):
 
     @adb_decorator()
     async def adb_command(self, command):
-        """Send an ADB command to an Android TV / Fire TV device."""
+        """Send an ADB command to an Android / Fire TV device."""
         if key := KEYS.get(command):
             await self.aftv.adb_shell(f"input keyevent {key}")
             return
@@ -421,13 +422,13 @@ class ADBDevice(MediaPlayerEntity):
             persistent_notification.async_create(
                 self.hass,
                 msg,
-                title="Android TV",
+                title="Android Debug Bridge",
             )
             _LOGGER.info("%s", msg)
 
     @adb_decorator()
     async def service_download(self, device_path, local_path):
-        """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
+        """Download a file from your Android / Fire TV device to your Home Assistant instance."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return
@@ -436,7 +437,7 @@ class ADBDevice(MediaPlayerEntity):
 
     @adb_decorator()
     async def service_upload(self, device_path, local_path):
-        """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
+        """Upload a file from your Home Assistant instance to an Android / Fire TV device."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return
@@ -445,7 +446,7 @@ class ADBDevice(MediaPlayerEntity):
 
 
 class AndroidTVDevice(ADBDevice):
-    """Representation of an Android TV device."""
+    """Representation of an Android device."""
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE

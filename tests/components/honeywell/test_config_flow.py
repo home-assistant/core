@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-import AIOSomecomfort
+import aiosomecomfort
 import pytest
 
 from homeassistant import data_entry_flow
@@ -39,7 +39,7 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
 
 async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on connection fail."""
-    client.login.side_effect = AIOSomecomfort.device.ConnectionError
+    client.login.side_effect = aiosomecomfort.device.ConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
     )
@@ -48,7 +48,7 @@ async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
 
 async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
-    client.login.side_effect = AIOSomecomfort.device.AuthError
+    client.login.side_effect = aiosomecomfort.device.AuthError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
@@ -134,7 +134,6 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={
@@ -194,7 +193,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    client.login.side_effect = AIOSomecomfort.device.AuthError
+    client.login.side_effect = aiosomecomfort.device.AuthError
     with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
@@ -212,8 +211,8 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
 @pytest.mark.parametrize(
     "error",
     [
-        AIOSomecomfort.device.ConnectionError,
-        AIOSomecomfort.device.ConnectionTimeout,
+        aiosomecomfort.device.ConnectionError,
+        aiosomecomfort.device.ConnectionTimeout,
         asyncio.TimeoutError,
     ],
 )

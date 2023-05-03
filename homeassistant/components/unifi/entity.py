@@ -13,12 +13,8 @@ from aiounifi.interfaces.api_handlers import (
     ItemEvent,
     UnsubscribeType,
 )
-from aiounifi.interfaces.outlets import Outlets
-from aiounifi.interfaces.ports import Ports
-from aiounifi.models.api import APIItem
+from aiounifi.models.api import ApiItemT
 from aiounifi.models.event import Event, EventKey
-from aiounifi.models.outlet import Outlet
-from aiounifi.models.port import Port
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
@@ -31,8 +27,7 @@ from .const import ATTR_MANUFACTURER
 if TYPE_CHECKING:
     from .controller import UniFiController
 
-DataT = TypeVar("DataT", bound=APIItem | Outlet | Port)
-HandlerT = TypeVar("HandlerT", bound=APIHandler | Outlets | Ports)
+HandlerT = TypeVar("HandlerT", bound=APIHandler)
 SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
@@ -64,7 +59,7 @@ def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
 
 
 @dataclass
-class UnifiDescription(Generic[HandlerT, DataT]):
+class UnifiDescription(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
     allowed_fn: Callable[[UniFiController, str], bool]
@@ -73,21 +68,21 @@ class UnifiDescription(Generic[HandlerT, DataT]):
     device_info_fn: Callable[[aiounifi.Controller, str], DeviceInfo | None]
     event_is_on: tuple[EventKey, ...] | None
     event_to_subscribe: tuple[EventKey, ...] | None
-    name_fn: Callable[[DataT], str | None]
-    object_fn: Callable[[aiounifi.Controller, str], DataT]
+    name_fn: Callable[[ApiItemT], str | None]
+    object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
     supported_fn: Callable[[UniFiController, str], bool | None]
     unique_id_fn: Callable[[UniFiController, str], str]
 
 
 @dataclass
-class UnifiEntityDescription(EntityDescription, UnifiDescription[HandlerT, DataT]):
+class UnifiEntityDescription(EntityDescription, UnifiDescription[HandlerT, ApiItemT]):
     """UniFi Entity Description."""
 
 
-class UnifiEntity(Entity, Generic[HandlerT, DataT]):
+class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
     """Representation of a UniFi entity."""
 
-    entity_description: UnifiEntityDescription[HandlerT, DataT]
+    entity_description: UnifiEntityDescription[HandlerT, ApiItemT]
     _attr_should_poll = False
 
     _attr_unique_id: str
@@ -96,12 +91,14 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
         self,
         obj_id: str,
         controller: UniFiController,
-        description: UnifiEntityDescription[HandlerT, DataT],
+        description: UnifiEntityDescription[HandlerT, ApiItemT],
     ) -> None:
         """Set up UniFi switch entity."""
         self._obj_id = obj_id
         self.controller = controller
         self.entity_description = description
+
+        controller.known_objects.add((description.key, obj_id))
 
         self._removed = False
 
@@ -117,6 +114,13 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
         """Register callbacks."""
         description = self.entity_description
         handler = description.api_handler_fn(self.controller.api)
+
+        @callback
+        def unregister_object() -> None:
+            """Remove object ID from known_objects when unloaded."""
+            self.controller.known_objects.discard((description.key, self._obj_id))
+
+        self.async_on_remove(unregister_object)
 
         # New data from handler
         self.async_on_remove(

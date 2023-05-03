@@ -1,11 +1,11 @@
 """Test Met Éireann weather entity."""
-
 from homeassistant.components.met_eireann.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_weather(hass, mock_weather):
+async def test_weather(hass: HomeAssistant, mock_weather) -> None:
     """Test weather entity."""
     # Create a mock configuration for testing
     mock_data = MockConfigEntry(

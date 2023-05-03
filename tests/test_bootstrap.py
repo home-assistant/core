@@ -1,19 +1,25 @@
 """Test the bootstrapping."""
-
 import asyncio
+from collections.abc import Generator, Iterable
 import glob
 import os
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, core, runner
+from homeassistant import bootstrap, runner
 import homeassistant.config as config_util
+from homeassistant.config_entries import HANDLERS, ConfigEntry
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import Integration
 
 from .common import (
+    MockConfigEntry,
     MockModule,
     MockPlatform,
     get_test_config_dir,
@@ -26,17 +32,17 @@ VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
 
 @pytest.fixture(autouse=True)
-def apply_mock_storage(hass_storage):
+def apply_mock_storage(hass_storage: dict[str, Any]) -> None:
     """Apply the storage mock."""
 
 
 @pytest.fixture(autouse=True)
-async def apply_stop_hass(stop_hass):
+async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
 @pytest.fixture(autouse=True)
-def mock_http_start_stop():
+def mock_http_start_stop() -> Generator[None, None, None]:
     """Mock HTTP start and stop."""
     with patch(
         "homeassistant.components.http.start_http_server_and_save_config"
@@ -45,7 +51,7 @@ def mock_http_start_stop():
 
 
 @patch("homeassistant.bootstrap.async_enable_logging", Mock())
-async def test_home_assistant_core_config_validation(hass):
+async def test_home_assistant_core_config_validation(hass: HomeAssistant) -> None:
     """Test if we pass in wrong information for HA conf."""
     # Extensive HA conf validation testing is done
     result = await bootstrap.async_from_config_dict(
@@ -54,7 +60,9 @@ async def test_home_assistant_core_config_validation(hass):
     assert result is None
 
 
-async def test_async_enable_logging(hass, caplog):
+async def test_async_enable_logging(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test to ensure logging is migrated to the queue handlers."""
     with patch("logging.getLogger"), patch(
         "homeassistant.bootstrap.async_activate_log_queue_handler"
@@ -79,7 +87,7 @@ async def test_async_enable_logging(hass, caplog):
     assert "Error rolling over log file" in caplog.text
 
 
-async def test_load_hassio(hass):
+async def test_load_hassio(hass: HomeAssistant) -> None:
     """Test that we load Hass.io component."""
     with patch.dict(os.environ, {}, clear=True):
         assert bootstrap._get_domains(hass, {}) == set()
@@ -89,14 +97,16 @@ async def test_load_hassio(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_empty_setup(hass):
+async def test_empty_setup(hass: HomeAssistant) -> None:
     """Test an empty set up loads the core."""
     await bootstrap.async_from_config_dict({}, hass)
     for domain in bootstrap.CORE_INTEGRATIONS:
         assert domain in hass.config.components, domain
 
 
-async def test_core_failure_loads_safe_mode(hass, caplog):
+async def test_core_failure_loads_safe_mode(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test failing core setup aborts further setup."""
     with patch(
         "homeassistant.components.homeassistant.async_setup",
@@ -110,7 +120,7 @@ async def test_core_failure_loads_safe_mode(hass, caplog):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setting_up_config(hass):
+async def test_setting_up_config(hass: HomeAssistant) -> None:
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
         hass, {"group hello": {}, "homeassistant": {}}
@@ -120,7 +130,7 @@ async def test_setting_up_config(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setup_after_deps_all_present(hass):
+async def test_setup_after_deps_all_present(hass: HomeAssistant) -> None:
     """Test after_dependencies when all present."""
     order = []
 
@@ -165,7 +175,7 @@ async def test_setup_after_deps_all_present(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setup_after_deps_in_stage_1_ignored(hass):
+async def test_setup_after_deps_in_stage_1_ignored(hass: HomeAssistant) -> None:
     """Test after_dependencies are ignored in stage 1."""
     # This test relies on this
     assert "cloud" in bootstrap.STAGE_1_INTEGRATIONS
@@ -212,7 +222,7 @@ async def test_setup_after_deps_in_stage_1_ignored(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setup_frontend_before_recorder(hass):
+async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
     """Test frontend is setup before recorder."""
     order = []
 
@@ -288,7 +298,7 @@ async def test_setup_frontend_before_recorder(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setup_after_deps_via_platform(hass):
+async def test_setup_after_deps_via_platform(hass: HomeAssistant) -> None:
     """Test after_dependencies set up via platform."""
     order = []
     after_dep_event = asyncio.Event()
@@ -320,7 +330,7 @@ async def test_setup_after_deps_via_platform(hass):
     )
     mock_entity_platform(hass, "light.platform_int", MockPlatform())
 
-    @core.callback
+    @callback
     def continue_loading(_):
         """When light component loaded, continue other loading."""
         after_dep_event.set()
@@ -338,7 +348,7 @@ async def test_setup_after_deps_via_platform(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setup_after_deps_not_trigger_load(hass):
+async def test_setup_after_deps_not_trigger_load(hass: HomeAssistant) -> None:
     """Test after_dependencies does not trigger loading it."""
     order = []
 
@@ -377,7 +387,7 @@ async def test_setup_after_deps_not_trigger_load(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setup_after_deps_not_present(hass):
+async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
     """Test after_dependencies when referenced integration doesn't exist."""
     order = []
 
@@ -411,8 +421,8 @@ async def test_setup_after_deps_not_present(hass):
 
 
 @pytest.fixture
-def mock_is_virtual_env():
-    """Mock enable logging."""
+def mock_is_virtual_env() -> Generator[Mock, None, None]:
+    """Mock is_virtual_env."""
     with patch(
         "homeassistant.bootstrap.is_virtual_env", return_value=False
     ) as is_virtual_env:
@@ -420,14 +430,14 @@ def mock_is_virtual_env():
 
 
 @pytest.fixture
-def mock_enable_logging():
+def mock_enable_logging() -> Generator[Mock, None, None]:
     """Mock enable logging."""
     with patch("homeassistant.bootstrap.async_enable_logging") as enable_logging:
         yield enable_logging
 
 
 @pytest.fixture
-def mock_mount_local_lib_path():
+def mock_mount_local_lib_path() -> Generator[AsyncMock, None, None]:
     """Mock enable logging."""
     with patch(
         "homeassistant.bootstrap.async_mount_local_lib_path"
@@ -436,7 +446,7 @@ def mock_mount_local_lib_path():
 
 
 @pytest.fixture
-def mock_process_ha_config_upgrade():
+def mock_process_ha_config_upgrade() -> Generator[Mock, None, None]:
     """Mock enable logging."""
     with patch(
         "homeassistant.config.process_ha_config_upgrade"
@@ -445,7 +455,7 @@ def mock_process_ha_config_upgrade():
 
 
 @pytest.fixture
-def mock_ensure_config_exists():
+def mock_ensure_config_exists() -> Generator[AsyncMock, None, None]:
     """Mock enable logging."""
     with patch(
         "homeassistant.config.async_ensure_config_exists", return_value=True
@@ -453,25 +463,24 @@ def mock_ensure_config_exists():
         yield ensure_config_exists
 
 
+@pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
 async def test_setup_hass(
-    mock_enable_logging,
-    mock_is_virtual_env,
-    mock_mount_local_lib_path,
-    mock_ensure_config_exists,
-    mock_process_ha_config_upgrade,
-    caplog,
-    event_loop,
-):
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    caplog: pytest.LogCaptureFixture,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
     """Test it works."""
     verbose = Mock()
     log_rotate_days = Mock()
     log_file = Mock()
     log_no_color = Mock()
 
-    with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={"browser": {}, "frontend": {}},
-    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000):
+    with patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000):
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),
@@ -501,18 +510,20 @@ async def test_setup_hass(
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
 
-    assert hass == core.async_get_hass()
+    assert hass == async_get_hass()
 
 
+@pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
 async def test_setup_hass_takes_longer_than_log_slow_startup(
-    mock_enable_logging,
-    mock_is_virtual_env,
-    mock_mount_local_lib_path,
-    mock_ensure_config_exists,
-    mock_process_ha_config_upgrade,
-    caplog,
-    event_loop,
-):
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    caplog: pytest.LogCaptureFixture,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
     """Test it works."""
     verbose = Mock()
     log_rotate_days = Mock()
@@ -523,10 +534,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         await asyncio.sleep(0.6)
         return True
 
-    with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={"browser": {}, "frontend": {}},
-    ), patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch.object(
+    with patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.3), patch.object(
         bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05
     ), patch(
         "homeassistant.components.frontend.async_setup",
@@ -548,13 +556,13 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
 
 
 async def test_setup_hass_invalid_yaml(
-    mock_enable_logging,
-    mock_is_virtual_env,
-    mock_mount_local_lib_path,
-    mock_ensure_config_exists,
-    mock_process_ha_config_upgrade,
-    event_loop,
-):
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
     """Test it works."""
     with patch(
         "homeassistant.config.async_hass_config_yaml", side_effect=HomeAssistantError
@@ -576,13 +584,13 @@ async def test_setup_hass_invalid_yaml(
 
 
 async def test_setup_hass_config_dir_nonexistent(
-    mock_enable_logging,
-    mock_is_virtual_env,
-    mock_mount_local_lib_path,
-    mock_ensure_config_exists,
-    mock_process_ha_config_upgrade,
-    event_loop,
-):
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
     """Test it works."""
     mock_ensure_config_exists.return_value = False
 
@@ -603,13 +611,13 @@ async def test_setup_hass_config_dir_nonexistent(
 
 
 async def test_setup_hass_safe_mode(
-    mock_enable_logging,
-    mock_is_virtual_env,
-    mock_mount_local_lib_path,
-    mock_ensure_config_exists,
-    mock_process_ha_config_upgrade,
-    event_loop,
-):
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
     """Test it works."""
     with patch("homeassistant.components.browser.setup") as browser_setup, patch(
         "homeassistant.config_entries.ConfigEntries.async_domains",
@@ -635,70 +643,71 @@ async def test_setup_hass_safe_mode(
     assert len(browser_setup.mock_calls) == 0
 
 
+@pytest.mark.parametrize("hass_config", [{"homeassistant": {"non-existing": 1}}])
 async def test_setup_hass_invalid_core_config(
-    mock_enable_logging,
-    mock_is_virtual_env,
-    mock_mount_local_lib_path,
-    mock_ensure_config_exists,
-    mock_process_ha_config_upgrade,
-    event_loop,
-):
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
     """Test it works."""
-    with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={"homeassistant": {"non-existing": 1}},
-    ):
-        hass = await bootstrap.async_setup_hass(
-            runner.RuntimeConfig(
-                config_dir=get_test_config_dir(),
-                verbose=False,
-                log_rotate_days=10,
-                log_file="",
-                log_no_color=False,
-                skip_pip=True,
-                safe_mode=False,
-            ),
-        )
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            verbose=False,
+            log_rotate_days=10,
+            log_file="",
+            log_no_color=False,
+            skip_pip=True,
+            safe_mode=False,
+        ),
+    )
 
     assert "safe_mode" in hass.config.components
 
 
-async def test_setup_safe_mode_if_no_frontend(
-    mock_enable_logging,
-    mock_is_virtual_env,
-    mock_mount_local_lib_path,
-    mock_ensure_config_exists,
-    mock_process_ha_config_upgrade,
-    event_loop,
-):
-    """Test we setup safe mode if frontend didn't load."""
-    verbose = Mock()
-    log_rotate_days = Mock()
-    log_file = Mock()
-    log_no_color = Mock()
-
-    with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
             "homeassistant": {
                 "internal_url": "http://192.168.1.100:8123",
                 "external_url": "https://abcdef.ui.nabu.casa",
             },
             "map": {},
             "person": {"invalid": True},
-        },
-    ):
-        hass = await bootstrap.async_setup_hass(
-            runner.RuntimeConfig(
-                config_dir=get_test_config_dir(),
-                verbose=verbose,
-                log_rotate_days=log_rotate_days,
-                log_file=log_file,
-                log_no_color=log_no_color,
-                skip_pip=True,
-                safe_mode=False,
-            ),
-        )
+        }
+    ],
+)
+async def test_setup_safe_mode_if_no_frontend(
+    mock_hass_config: None,
+    mock_enable_logging: Mock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
+    """Test we setup safe mode if frontend didn't load."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            verbose=verbose,
+            log_rotate_days=log_rotate_days,
+            log_file=log_file,
+            log_no_color=log_no_color,
+            skip_pip=True,
+            safe_mode=False,
+        ),
+    )
 
     assert "safe_mode" in hass.config.components
     assert hass.config.config_dir == get_test_config_dir()
@@ -708,7 +717,9 @@ async def test_setup_safe_mode_if_no_frontend(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(hass):
+async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
+    hass: HomeAssistant,
+) -> None:
     """Test empty integrations list is only sent at the end of bootstrap."""
     order = []
 
@@ -743,7 +754,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(hass
 
     integrations = []
 
-    @core.callback
+    @callback
     def _bootstrap_integrations(data):
         integrations.append(data)
 
@@ -766,17 +777,17 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(hass
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
+async def test_warning_logged_on_wrap_up_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we log a warning on bootstrap timeout."""
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            await asyncio.sleep(0.1)
-
             async def _background_task():
                 await asyncio.sleep(0.2)
 
-            await hass.async_create_task(_background_task())
+            hass.async_create_task(_background_task())
             return True
 
         return async_setup
@@ -795,3 +806,156 @@ async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
         await hass.async_block_till_done()
 
     assert "Setup timed out for bootstrap - moving forward" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_is_cancellation_safe(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test cancellation during async_setup_component does not cancel bootstrap."""
+    with patch.object(
+        bootstrap, "async_setup_component", side_effect=asyncio.CancelledError
+    ):
+        await bootstrap._async_set_up_integrations(hass, {"cancel_integration": {}})
+        await hass.async_block_till_done()
+
+    assert "Error setting up integration cancel_integration" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_empty_integrations(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setting up an empty integrations does not raise."""
+    await bootstrap.async_setup_multi_components(hass, set(), {})
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("integration", ["mqtt_eventstream", "mqtt_statestream"])
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_dependencies(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    integration: str,
+) -> None:
+    """Test dependencies are set up correctly,."""
+
+    # Prepare MQTT config entry
+    @HANDLERS.register("mqtt")
+    class MockConfigFlow:
+        """Mock the MQTT config flow."""
+
+        VERSION = 1
+
+    entry = MockConfigEntry(domain="mqtt", data={"broker": "test-broker"})
+    entry.add_to_hass(hass)
+
+    calls: list[str] = []
+    assertions: list[bool] = []
+
+    async def async_mqtt_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Assert the mqtt config entry was set up."""
+        calls.append("mqtt")
+        # assert the integration is not yet set up
+        assertions.append(hass.data["setup_done"][integration].is_set() is False)
+        assertions.append(
+            all(
+                dependency in hass.config.components
+                for dependency in integrations[integration]["dependencies"]
+            )
+        )
+        assertions.append(integration not in hass.config.components)
+        return True
+
+    async def async_integration_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        """Assert the mqtt config entry was set up."""
+        calls.append(integration)
+        # assert mqtt was already set up
+        assertions.append(
+            "mqtt" not in hass.data["setup_done"]
+            or hass.data["setup_done"]["mqtt"].is_set()
+        )
+        assertions.append("mqtt" in hass.config.components)
+        return True
+
+    mqtt_integration = mock_integration(
+        hass,
+        MockModule(
+            "mqtt",
+            async_setup_entry=async_mqtt_setup_entry,
+            dependencies=["file_upload", "http"],
+        ),
+    )
+
+    # We patch the _import platform method to avoid loading the platform module
+    # to avoid depending on non core components in the tests.
+    mqtt_integration._import_platform = Mock()
+
+    integrations = {
+        "mqtt": {
+            "dependencies": {"file_upload", "http"},
+            "integration": mqtt_integration,
+        },
+        "mqtt_eventstream": {
+            "dependencies": {"mqtt"},
+            "integration": mock_integration(
+                hass,
+                MockModule(
+                    "mqtt_eventstream",
+                    async_setup=async_integration_setup,
+                    dependencies=["mqtt"],
+                ),
+            ),
+        },
+        "mqtt_statestream": {
+            "dependencies": {"mqtt"},
+            "integration": mock_integration(
+                hass,
+                MockModule(
+                    "mqtt_statestream",
+                    async_setup=async_integration_setup,
+                    dependencies=["mqtt"],
+                ),
+            ),
+        },
+        "file_upload": {
+            "dependencies": {"http"},
+            "integration": mock_integration(
+                hass,
+                MockModule(
+                    "file_upload",
+                    dependencies=["http"],
+                ),
+            ),
+        },
+        "http": {
+            "dependencies": set(),
+            "integration": mock_integration(
+                hass,
+                MockModule("http", dependencies=[]),
+            ),
+        },
+    }
+
+    async def mock_async_get_integrations(
+        hass: HomeAssistant, domains: Iterable[str]
+    ) -> dict[str, Integration | Exception]:
+        """Mock integrations."""
+        return {domain: integrations[domain]["integration"] for domain in domains}
+
+    with patch(
+        "homeassistant.setup.loader.async_get_integrations",
+        side_effect=mock_async_get_integrations,
+    ), patch("homeassistant.config.async_process_component_config", return_value={}):
+        bootstrap.async_set_domains_to_be_loaded(hass, {integration})
+        await bootstrap.async_setup_multi_components(hass, {integration}, {})
+        await hass.async_block_till_done()
+
+    for assertion in assertions:
+        assert assertion
+
+    assert calls == ["mqtt", integration]
+
+    assert (
+        f"Dependency {integration} will wait for dependencies ['mqtt']" in caplog.text
+    )

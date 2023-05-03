@@ -1,6 +1,6 @@
 """Make sure that Nanoleaf NL55 works with BLE."""
-
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -14,7 +14,7 @@ from ..common import (
 LIGHT_ON = ("lightbulb", "on")
 
 
-async def test_nanoleaf_nl55_setup(hass):
+async def test_nanoleaf_nl55_setup(hass: HomeAssistant) -> None:
     """Test that a Nanoleaf NL55 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "nanoleaf_strip_nl55.json")
     await setup_test_accessories(hass, accessories)

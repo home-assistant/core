@@ -15,8 +15,7 @@ from .const import DATA_CONFIG_ENTRY, DOMAIN, LIVE_TV_APP_ID, WEBOSTV_EXCEPTIONS
 def async_get_device_entry_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> DeviceEntry:
-    """
-    Get Device Entry from Device Registry by device ID.
+    """Get Device Entry from Device Registry by device ID.
 
     Raises ValueError if device ID is invalid.
     """
@@ -29,8 +28,7 @@ def async_get_device_entry_by_device_id(
 
 @callback
 def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str:
-    """
-    Get device ID from an entity ID.
+    """Get device ID from an entity ID.
 
     Raises ValueError if entity or device ID is invalid.
     """
@@ -51,8 +49,7 @@ def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> s
 def async_get_client_by_device_entry(
     hass: HomeAssistant, device: DeviceEntry
 ) -> WebOsClient:
-    """
-    Get WebOsClient from Device Registry by device entry.
+    """Get WebOsClient from Device Registry by device entry.
 
     Raises ValueError if client is not found.
     """

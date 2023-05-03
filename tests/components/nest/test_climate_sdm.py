@@ -1,5 +1,4 @@
-"""
-Test for Nest climate platform for the Smart Device Management API.
+"""Test for Nest climate platform for the Smart Device Management API.
 
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
@@ -114,7 +113,7 @@ async def test_climate_devices(
 
 async def test_thermostat_off(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is not running."""
     create_device.create(
         {
@@ -153,7 +152,7 @@ async def test_thermostat_off(
 
 async def test_thermostat_heat(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is heating."""
     create_device.create(
         {
@@ -195,7 +194,7 @@ async def test_thermostat_heat(
 
 async def test_thermostat_cool(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is cooling."""
     create_device.create(
         {
@@ -237,7 +236,7 @@ async def test_thermostat_cool(
 
 async def test_thermostat_heatcool(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is cooling in heatcool mode."""
     create_device.create(
         {
@@ -1490,7 +1489,7 @@ async def test_thermostat_hvac_mode_failure(
 
 async def test_thermostat_available(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is available."""
     create_device.create(
         {
@@ -1520,7 +1519,7 @@ async def test_thermostat_available(
 
 async def test_thermostat_unavailable(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is unavailable."""
     create_device.create(
         {

@@ -1,18 +1,18 @@
 """Tests for the Backup integration."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
-from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.core import HomeAssistant
 
 from .common import TEST_BACKUP, setup_backup_integration
 
+from tests.typing import WebSocketGenerator
+
 
 async def test_info(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting backup info."""
     await setup_backup_integration(hass)
@@ -24,7 +24,6 @@ async def test_info(
         "homeassistant.components.backup.websocket.BackupManager.get_backups",
         return_value={TEST_BACKUP.slug: TEST_BACKUP},
     ):
-
         await client.send_json({"id": 1, "type": "backup/info"})
         msg = await client.receive_json()
 
@@ -35,7 +34,7 @@ async def test_info(
 
 async def test_remove(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removing a backup file."""
@@ -56,7 +55,7 @@ async def test_remove(
 
 async def test_generate(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test removing a backup file."""
     await setup_backup_integration(hass)

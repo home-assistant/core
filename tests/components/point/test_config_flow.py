@@ -7,6 +7,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 
 
 def init_config_flow(hass, side_effect=None):
@@ -42,7 +43,7 @@ def mock_pypoint(is_authorized):
         yield PointSession
 
 
-async def test_abort_if_no_implementation_registered(hass):
+async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> None:
     """Test we abort if no implementation is registered."""
     flow = config_flow.PointFlowHandler()
     flow.hass = hass
@@ -52,7 +53,7 @@ async def test_abort_if_no_implementation_registered(hass):
     assert result["reason"] == "no_flows"
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Point is already setup."""
     flow = init_config_flow(hass)
 
@@ -67,7 +68,7 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "already_setup"
 
 
-async def test_full_flow_implementation(hass, mock_pypoint):
+async def test_full_flow_implementation(hass: HomeAssistant, mock_pypoint) -> None:
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(hass, "test-other", None, None)
     flow = init_config_flow(hass)
@@ -93,7 +94,7 @@ async def test_full_flow_implementation(hass, mock_pypoint):
     assert result["data"]["token"] == {"access_token": "boo"}
 
 
-async def test_step_import(hass, mock_pypoint):
+async def test_step_import(hass: HomeAssistant, mock_pypoint) -> None:
     """Test that we trigger import when configuring with client."""
     flow = init_config_flow(hass)
 
@@ -103,7 +104,9 @@ async def test_step_import(hass, mock_pypoint):
 
 
 @pytest.mark.parametrize("is_authorized", [False])
-async def test_wrong_code_flow_implementation(hass, mock_pypoint):
+async def test_wrong_code_flow_implementation(
+    hass: HomeAssistant, mock_pypoint
+) -> None:
     """Test wrong code."""
     flow = init_config_flow(hass)
 
@@ -112,7 +115,7 @@ async def test_wrong_code_flow_implementation(hass, mock_pypoint):
     assert result["reason"] == "auth_error"
 
 
-async def test_not_pick_implementation_if_only_one(hass):
+async def test_not_pick_implementation_if_only_one(hass: HomeAssistant) -> None:
     """Test we allow picking implementation if we have one flow_imp."""
     flow = init_config_flow(hass)
 
@@ -121,7 +124,7 @@ async def test_not_pick_implementation_if_only_one(hass):
     assert result["step_id"] == "auth"
 
 
-async def test_abort_if_timeout_generating_auth_url(hass):
+async def test_abort_if_timeout_generating_auth_url(hass: HomeAssistant) -> None:
     """Test we abort if generating authorize url fails."""
     flow = init_config_flow(hass, side_effect=asyncio.TimeoutError)
 
@@ -130,7 +133,7 @@ async def test_abort_if_timeout_generating_auth_url(hass):
     assert result["reason"] == "authorize_url_timeout"
 
 
-async def test_abort_if_exception_generating_auth_url(hass):
+async def test_abort_if_exception_generating_auth_url(hass: HomeAssistant) -> None:
     """Test we abort if generating authorize url blows up."""
     flow = init_config_flow(hass, side_effect=ValueError)
 
@@ -139,7 +142,7 @@ async def test_abort_if_exception_generating_auth_url(hass):
     assert result["reason"] == "unknown_authorize_url_generation"
 
 
-async def test_abort_no_code(hass):
+async def test_abort_no_code(hass: HomeAssistant) -> None:
     """Test if no code is given to step_code."""
     flow = init_config_flow(hass)
 

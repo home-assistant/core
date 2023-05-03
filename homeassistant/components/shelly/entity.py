@@ -84,7 +84,8 @@ def async_setup_block_attribute_entities(
             if getattr(block, sensor_id, None) in (-1, None):
                 continue
 
-            # Filter and remove entities that according to settings should not create an entity
+            # Filter and remove entities that according to settings
+            # should not create an entity
             if description.removal_condition and description.removal_condition(
                 coordinator.device.settings, block
             ):
@@ -192,7 +193,8 @@ def async_setup_rpc_attribute_entities(
             ] and not description.supported(coordinator.device.status[key]):
                 continue
 
-            # Filter and remove entities that according to settings/status should not create an entity
+            # Filter and remove entities that according to settings/status
+            # should not create an entity
             if description.removal_condition and description.removal_condition(
                 coordinator.device.config, coordinator.device.status, key
             ):

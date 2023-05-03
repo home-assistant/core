@@ -1,7 +1,7 @@
 """Support for a State MQTT vacuum."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -25,8 +25,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.json import json_loads_object
 
 from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
@@ -155,9 +156,9 @@ PLATFORM_SCHEMA_STATE_MODERN = (
 )
 
 # Configuring MQTT Vacuums under the vacuum platform key was deprecated in
-# HA Core 2022.6
+# HA Core 2022.6;
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA_STATE = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_STATE_MODERN.schema),
     warn_for_legacy_schema(VACUUM_DOMAIN),
 )
 
@@ -240,12 +241,12 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle state MQTT message."""
-            payload: dict[str, Any] = json_loads(msg.payload)
+            payload = json_loads_object(msg.payload)
             if STATE in payload and (
-                payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
+                (state := payload[STATE]) in POSSIBLE_STATES or state is None
             ):
                 self._attr_state = (
-                    POSSIBLE_STATES[payload[STATE]] if payload[STATE] else None
+                    POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
                 )
                 del payload[STATE]
             self._update_state_attributes(payload)

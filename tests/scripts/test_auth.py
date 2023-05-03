@@ -1,9 +1,11 @@
 """Test the auth script to manage local users."""
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.auth.providers import homeassistant as hass_auth
+from homeassistant.core import HomeAssistant
 from homeassistant.scripts import auth as script_auth
 
 from tests.common import register_auth_provider
@@ -19,7 +21,7 @@ def provider(hass):
     return provider
 
 
-async def test_list_user(hass, provider, capsys):
+async def test_list_user(hass: HomeAssistant, provider, capsys) -> None:
     """Test we can list users."""
     data = provider.data
     data.add_auth("test-user", "test-pass")
@@ -34,7 +36,9 @@ async def test_list_user(hass, provider, capsys):
     )
 
 
-async def test_add_user(hass, provider, capsys, hass_storage):
+async def test_add_user(
+    hass: HomeAssistant, provider, capsys, hass_storage: dict[str, Any]
+) -> None:
     """Test we can add a user."""
     data = provider.data
     await script_auth.add_user(
@@ -50,7 +54,7 @@ async def test_add_user(hass, provider, capsys, hass_storage):
     data.validate_login("paulus", "test-pass")
 
 
-async def test_validate_login(hass, provider, capsys):
+async def test_validate_login(hass: HomeAssistant, provider, capsys) -> None:
     """Test we can validate a user login."""
     data = provider.data
     data.add_auth("test-user", "test-pass")
@@ -74,7 +78,9 @@ async def test_validate_login(hass, provider, capsys):
     assert captured.out == "Auth invalid\n"
 
 
-async def test_change_password(hass, provider, capsys, hass_storage):
+async def test_change_password(
+    hass: HomeAssistant, provider, capsys, hass_storage: dict[str, Any]
+) -> None:
     """Test we can change a password."""
     data = provider.data
     data.add_auth("test-user", "test-pass")
@@ -91,7 +97,9 @@ async def test_change_password(hass, provider, capsys, hass_storage):
         data.validate_login("test-user", "test-pass")
 
 
-async def test_change_password_invalid_user(hass, provider, capsys, hass_storage):
+async def test_change_password_invalid_user(
+    hass: HomeAssistant, provider, capsys, hass_storage: dict[str, Any]
+) -> None:
     """Test changing password of non-existing user."""
     data = provider.data
     data.add_auth("test-user", "test-pass")
@@ -108,7 +116,7 @@ async def test_change_password_invalid_user(hass, provider, capsys, hass_storage
         data.validate_login("invalid-user", "new-pass")
 
 
-def test_parsing_args(event_loop):
+def test_parsing_args(event_loop) -> None:
     """Test we parse args correctly."""
     called = False
 

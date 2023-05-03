@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
+import pytest
 
 from homeassistant.components.hyperion import (
     get_hyperion_device_id,
@@ -864,7 +865,9 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert client.async_client_disconnect.call_count == 2
 
 
-async def test_version_log_warning(caplog, hass: HomeAssistant) -> None:
+async def test_version_log_warning(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test warning on old version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.7")
@@ -873,7 +876,9 @@ async def test_version_log_warning(caplog, hass: HomeAssistant) -> None:
     assert "Please consider upgrading" in caplog.text
 
 
-async def test_version_no_log_warning(caplog, hass: HomeAssistant) -> None:
+async def test_version_no_log_warning(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test no warning on acceptable version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.9")
@@ -1373,7 +1378,9 @@ async def test_lights_can_be_enabled(hass: HomeAssistant) -> None:
     assert entity_state
 
 
-async def test_deprecated_effect_names(caplog, hass: HomeAssistant) -> None:
+async def test_deprecated_effect_names(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test deprecated effects function and issue a warning."""
     client = create_mock_client()
     client.async_send_clear = AsyncMock(return_value=True)

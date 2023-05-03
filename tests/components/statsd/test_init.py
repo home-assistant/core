@@ -8,6 +8,7 @@ import voluptuous as vol
 import homeassistant.components.statsd as statsd
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -18,7 +19,7 @@ def mock_client():
         yield mock_client.return_value
 
 
-def test_invalid_config():
+def test_invalid_config() -> None:
     """Test configuration with defaults."""
     config = {"statsd": {"host1": "host1"}}
 
@@ -28,7 +29,7 @@ def test_invalid_config():
         statsd.CONFIG_SCHEMA(config)
 
 
-async def test_statsd_setup_full(hass):
+async def test_statsd_setup_full(hass: HomeAssistant) -> None:
     """Test setup with all data."""
     config = {"statsd": {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}}
     hass.bus.listen = MagicMock()
@@ -42,7 +43,7 @@ async def test_statsd_setup_full(hass):
     assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
-async def test_statsd_setup_defaults(hass):
+async def test_statsd_setup_defaults(hass: HomeAssistant) -> None:
     """Test setup with defaults."""
     config = {"statsd": {"host": "host"}}
 
@@ -58,7 +59,7 @@ async def test_statsd_setup_defaults(hass):
     assert hass.bus.listen.called
 
 
-async def test_event_listener_defaults(hass, mock_client):
+async def test_event_listener_defaults(hass: HomeAssistant, mock_client) -> None:
     """Test event listener."""
     config = {"statsd": {"host": "host", "value_mapping": {"custom": 3}}}
 
@@ -93,7 +94,7 @@ async def test_event_listener_defaults(hass, mock_client):
         assert mock_client.incr.called
 
 
-async def test_event_listener_attr_details(hass, mock_client):
+async def test_event_listener_attr_details(hass: HomeAssistant, mock_client) -> None:
     """Test event listener."""
     config = {"statsd": {"host": "host", "log_attributes": True}}
 

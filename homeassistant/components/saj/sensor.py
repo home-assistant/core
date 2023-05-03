@@ -1,8 +1,10 @@
 """SAJ solar inverter interface."""
 from __future__ import annotations
 
-from datetime import date
+from collections.abc import Callable, Coroutine
+from datetime import date, datetime
 import logging
+from typing import Any
 
 import pysaj
 import voluptuous as vol
@@ -108,9 +110,9 @@ async def async_setup_platform(
 
     async_add_entities(hass_sensors)
 
-    async def async_saj():
+    async def async_saj() -> bool:
         """Update all the SAJ sensors."""
-        values = await saj.read(sensor_def)
+        success = await saj.read(sensor_def)
 
         for sensor in hass_sensors:
             state_unknown = False
@@ -121,17 +123,17 @@ async def async_setup_platform(
             # and if so: set state to None.
             # Sensors with live values like "temperature" or "current_power"
             # will also be reset to None.
-            if not values and (
+            if not success and (
                 (sensor.per_day_basis and date.today() > sensor.date_updated)
                 or (not sensor.per_day_basis and not sensor.per_total_basis)
             ):
                 state_unknown = True
             sensor.async_update_values(unknown_state=state_unknown)
 
-        return values
+        return success
 
     @callback
-    def start_update_interval(event):
+    def start_update_interval(hass: HomeAssistant) -> None:
         """Start the update interval scheduling."""
         nonlocal remove_interval_update
         remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
@@ -146,12 +148,14 @@ async def async_setup_platform(
 
 
 @callback
-def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
+def async_track_time_interval_backoff(
+    hass: HomeAssistant, action: Callable[[], Coroutine[Any, Any, bool]]
+) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively and increases the interval when failed."""
     remove = None
     interval = MIN_INTERVAL
 
-    async def interval_listener(now=None):
+    async def interval_listener(now: datetime | None = None) -> None:
         """Handle elapsed interval with backoff."""
         nonlocal interval, remove
         try:
@@ -164,7 +168,7 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
 
     hass.async_create_task(interval_listener())
 
-    def remove_listener():
+    def remove_listener() -> None:
         """Remove interval listener."""
         if remove:
             remove()  # pylint: disable=not-callable

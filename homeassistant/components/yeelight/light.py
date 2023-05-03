@@ -238,7 +238,7 @@ def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
 def _async_cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
 
-    async def _async_wrap(self: "YeelightGenericLight", *args, **kwargs):
+    async def _async_wrap(self: YeelightGenericLight, *args, **kwargs):
         for attempts in range(2):
             try:
                 _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
@@ -859,8 +859,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     @_async_cmd
     async def async_set_scene(self, scene_class, *args):
-        """
-        Set the light directly to the specified state.
+        """Set the light directly to the specified state.
 
         If the light is off, it will first be turned on.
         """

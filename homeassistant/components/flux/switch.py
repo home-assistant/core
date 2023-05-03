@@ -1,5 +1,4 @@
-"""
-Flux for Home-Assistant.
+"""Flux for Home-Assistant.
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """

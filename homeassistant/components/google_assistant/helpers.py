@@ -22,7 +22,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.helpers import area_registry, device_registry, entity_registry, start
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    start,
+)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.storage import Store
@@ -52,15 +57,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[
-    entity_registry.RegistryEntry | None,
-    device_registry.DeviceEntry | None,
-    area_registry.AreaEntry | None,
-]:
+) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
     """Get registry entries."""
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
-    area_reg = area_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
         device_entry = dev_reg.devices.get(entity_entry.device_id)
@@ -174,7 +175,7 @@ class AbstractConfig(ABC):
         """Get agent user ID from context."""
 
     @abstractmethod
-    def should_expose(self, state) -> bool:
+    async def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
 
     def should_2fa(self, state):
@@ -289,7 +290,6 @@ class AbstractConfig(ABC):
             return
 
         for user_agent_id, _ in self._store.agent_user_ids.items():
-
             if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
                 setup_successful = False
                 break
@@ -535,16 +535,14 @@ class GoogleEntity:
         ]
         return self._traits
 
-    @callback
-    def should_expose(self):
+    async def should_expose(self):
         """If entity should be exposed."""
-        return self.config.should_expose(self.state)
+        return await self.config.should_expose(self.state)
 
-    @callback
-    def should_expose_local(self) -> bool:
+    async def should_expose_local(self) -> bool:
         """Return if the entity should be exposed locally."""
         return (
-            self.should_expose()
+            await self.should_expose()
             and get_google_type(
                 self.state.domain, self.state.attributes.get(ATTR_DEVICE_CLASS)
             )
@@ -587,7 +585,7 @@ class GoogleEntity:
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
         )
 
-    def sync_serialize(self, agent_user_id, instance_uuid):
+    async def sync_serialize(self, agent_user_id, instance_uuid):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
@@ -623,7 +621,7 @@ class GoogleEntity:
                 device["name"]["nicknames"].extend(entity_entry.aliases)
 
         # Add local SDK info if enabled
-        if self.config.is_local_sdk_active and self.should_expose_local():
+        if self.config.is_local_sdk_active and await self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),

@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from plexapi.exceptions import BadRequest, NotFound
 import pytest
+import requests_mock
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
@@ -14,9 +15,15 @@ from homeassistant.components.media_player import (
 from homeassistant.components.plex.const import DOMAIN
 from homeassistant.components.plex.errors import MediaNotFound
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 
 
-async def test_media_lookups(hass, mock_plex_server, requests_mock, playqueue_created):
+async def test_media_lookups(
+    hass: HomeAssistant,
+    mock_plex_server,
+    requests_mock: requests_mock.Mocker,
+    playqueue_created,
+) -> None:
     """Test media lookups to Plex server."""
     # Plex Key searches
     media_player_id = hass.states.async_entity_ids("media_player")[0]

@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "replaced": {
-            "description": "A integra\u00e7\u00e3o do Mi Flora parou de funcionar no Home Assistant 2022.7 e foi substitu\u00edda pela integra\u00e7\u00e3o do Xiaomi BLE na vers\u00e3o 2022.8. \n\n N\u00e3o h\u00e1 caminho de migra\u00e7\u00e3o poss\u00edvel, portanto, voc\u00ea deve adicionar seu dispositivo Mi Flora usando a nova integra\u00e7\u00e3o manualmente. \n\n Sua configura\u00e7\u00e3o existente do Mi Flora YAML n\u00e3o \u00e9 mais usada pelo Home Assistant. Remova a configura\u00e7\u00e3o YAML do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
-            "title": "A integra\u00e7\u00e3o do Mi Flora foi substitu\u00edda"
-        }
-    }
-}

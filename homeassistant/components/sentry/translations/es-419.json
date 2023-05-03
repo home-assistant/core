@@ -1,8 +1,0 @@
-{
-    "config": {
-        "error": {
-            "bad_dsn": "DSN inv\u00e1lido",
-            "unknown": "Error inesperado"
-        }
-    }
-}

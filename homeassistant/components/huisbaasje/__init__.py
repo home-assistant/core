@@ -122,8 +122,7 @@ def _get_cumulative_value(
     source_type: str,
     period_type: str,
 ):
-    """
-    Get the cumulative energy consumption for a certain period.
+    """Get the cumulative energy consumption for a certain period.
 
     :param current_measurements: The result from the Huisbaasje client
     :param source_type: The source of energy (electricity or gas)

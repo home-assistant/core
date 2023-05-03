@@ -1,25 +1,47 @@
 {
   "domain": "tuya",
   "name": "Tuya",
-  "documentation": "https://www.home-assistant.io/integrations/tuya",
-  "requirements": ["tuya-iot-py-sdk==0.6.6"],
-  "dependencies": ["ffmpeg"],
   "codeowners": ["@Tuya", "@zlinoliver", "@frenck"],
   "config_flow": true,
-  "iot_class": "cloud_push",
+  "dependencies": ["ffmpeg"],
   "dhcp": [
-    { "macaddress": "105A17*" },
-    { "macaddress": "10D561*" },
-    { "macaddress": "1869D8*" },
-    { "macaddress": "381F8D*" },
-    { "macaddress": "508A06*" },
-    { "macaddress": "68572D*" },
-    { "macaddress": "708976*" },
-    { "macaddress": "7CF666*" },
-    { "macaddress": "84E342*" },
-    { "macaddress": "D4A651*" },
-    { "macaddress": "D81F12*" }
+    {
+      "macaddress": "105A17*"
+    },
+    {
+      "macaddress": "10D561*"
+    },
+    {
+      "macaddress": "1869D8*"
+    },
+    {
+      "macaddress": "381F8D*"
+    },
+    {
+      "macaddress": "508A06*"
+    },
+    {
+      "macaddress": "68572D*"
+    },
+    {
+      "macaddress": "708976*"
+    },
+    {
+      "macaddress": "7CF666*"
+    },
+    {
+      "macaddress": "84E342*"
+    },
+    {
+      "macaddress": "D4A651*"
+    },
+    {
+      "macaddress": "D81F12*"
+    }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/tuya",
   "integration_type": "hub",
-  "loggers": ["tuya_iot"]
+  "iot_class": "cloud_push",
+  "loggers": ["tuya_iot"],
+  "requirements": ["tuya-iot-py-sdk==0.6.6"]
 }

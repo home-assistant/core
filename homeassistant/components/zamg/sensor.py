@@ -1,4 +1,4 @@
-"""Sensor for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
+"""Sensor for the zamg integration."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -214,7 +214,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             return self.coordinator.data[self.station_id][
                 self.entity_description.para_name
             ]["data"]
-        except (KeyError):
+        except KeyError:
             return None
 
     @property

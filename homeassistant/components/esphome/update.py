@@ -13,7 +13,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -33,34 +33,36 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome update based on a config entry."""
-    dashboard = async_get_dashboard(hass)
-
-    if dashboard is None:
+    if (dashboard := async_get_dashboard(hass)) is None:
         return
-
     entry_data = DomainData.get(hass).get_entry_data(entry)
-    unsub = None
+    unsubs: list[CALLBACK_TYPE] = []
 
-    async def setup_update_entity() -> None:
+    @callback
+    def _async_setup_update_entity() -> None:
         """Set up the update entity."""
-        nonlocal unsub
-
+        nonlocal unsubs
+        assert dashboard is not None
         # Keep listening until device is available
-        if not entry_data.available:
+        if not entry_data.available or not dashboard.last_update_success:
             return
 
-        if unsub is not None:
-            unsub()  # type: ignore[unreachable]
+        for unsub in unsubs:
+            unsub()
+        unsubs.clear()
 
-        assert dashboard is not None
         async_add_entities([ESPHomeUpdateEntity(entry_data, dashboard)])
 
-    if entry_data.available:
-        await setup_update_entity()
+    if entry_data.available and dashboard.last_update_success:
+        _async_setup_update_entity()
         return
 
-    signal = f"esphome_{entry_data.entry_id}_on_device_update"
-    unsub = async_dispatcher_connect(hass, signal, setup_update_entity)
+    unsubs = [
+        async_dispatcher_connect(
+            hass, entry_data.signal_device_updated, _async_setup_update_entity
+        ),
+        dashboard.async_add_listener(_async_setup_update_entity),
+    ]
 
 
 class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
@@ -84,7 +86,14 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
                 (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)
             }
         )
-        if coordinator.supports_update:
+
+        # If the device has deep sleep, we can't assume we can install updates
+        # as the ESP will not be connectable (by design).
+        if (
+            coordinator.last_update_success
+            and coordinator.supports_update
+            and not self._device_info.has_deep_sleep
+        ):
             self._attr_supported_features = UpdateEntityFeature.INSTALL
 
     @property
@@ -95,8 +104,16 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
 
     @property
     def available(self) -> bool:
-        """Return if update is available."""
-        return super().available and self._device_info.name in self.coordinator.data
+        """Return if update is available.
+
+        During deep sleep the ESP will not be connectable (by design)
+        and thus, even when unavailable, we'll show it as available.
+        """
+        return (
+            super().available
+            and (self._entry_data.available or self._device_info.has_deep_sleep)
+            and self._device_info.name in self.coordinator.data
+        )
 
     @property
     def installed_version(self) -> str | None:
@@ -130,6 +147,19 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
                 self.hass,
                 self._entry_data.signal_static_info_updated,
                 _static_info_updated,
+            )
+        )
+
+        @callback
+        def _on_device_update() -> None:
+            """Handle update of device state, like availability."""
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._entry_data.signal_device_updated,
+                _on_device_update,
             )
         )
 

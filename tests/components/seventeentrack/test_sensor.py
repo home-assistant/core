@@ -12,6 +12,7 @@ from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_DELIVERED,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
@@ -148,28 +149,28 @@ async def _goto_future(hass, future=None):
         await hass.async_block_till_done()
 
 
-async def test_full_valid_config(hass):
+async def test_full_valid_config(hass: HomeAssistant) -> None:
     """Ensure everything starts correctly."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG_FULL)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == len(ProfileMock.summary_data.keys())
 
 
-async def test_valid_config(hass):
+async def test_valid_config(hass: HomeAssistant) -> None:
     """Ensure everything starts correctly."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == len(ProfileMock.summary_data.keys())
 
 
-async def test_invalid_config(hass):
+async def test_invalid_config(hass: HomeAssistant) -> None:
     """Ensure nothing is created when config is wrong."""
     assert await async_setup_component(hass, "sensor", INVALID_CONFIG)
 
     assert not hass.states.async_entity_ids("sensor")
 
 
-async def test_add_package(hass):
+async def test_add_package(hass: HomeAssistant) -> None:
     """Ensure package is added correctly when user add a new package."""
     package = Package(
         tracking_number="456",
@@ -205,7 +206,7 @@ async def test_add_package(hass):
     assert len(hass.states.async_entity_ids()) == 2
 
 
-async def test_remove_package(hass):
+async def test_remove_package(hass: HomeAssistant) -> None:
     """Ensure entity is not there anymore if package is not there."""
     package1 = Package(
         tracking_number="456",
@@ -245,7 +246,7 @@ async def test_remove_package(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
 
-async def test_friendly_name_changed(hass):
+async def test_friendly_name_changed(hass: HomeAssistant) -> None:
     """Test friendly name change."""
     package = Package(
         tracking_number="456",
@@ -286,7 +287,7 @@ async def test_friendly_name_changed(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
 
-async def test_delivered_not_shown(hass):
+async def test_delivered_not_shown(hass: HomeAssistant) -> None:
     """Ensure delivered packages are not shown."""
     package = Package(
         tracking_number="456",
@@ -311,7 +312,7 @@ async def test_delivered_not_shown(hass):
         persistent_notification_mock.create.assert_called()
 
 
-async def test_delivered_shown(hass):
+async def test_delivered_shown(hass: HomeAssistant) -> None:
     """Ensure delivered packages are show when user choose to show them."""
     package = Package(
         tracking_number="456",
@@ -336,7 +337,7 @@ async def test_delivered_shown(hass):
         persistent_notification_mock.create.assert_not_called()
 
 
-async def test_becomes_delivered_not_shown_notification(hass):
+async def test_becomes_delivered_not_shown_notification(hass: HomeAssistant) -> None:
     """Ensure notification is triggered when package becomes delivered."""
     package = Package(
         tracking_number="456",
@@ -377,7 +378,7 @@ async def test_becomes_delivered_not_shown_notification(hass):
         assert not hass.states.async_entity_ids()
 
 
-async def test_summary_correctly_updated(hass):
+async def test_summary_correctly_updated(hass: HomeAssistant) -> None:
     """Ensure summary entities are not duplicated."""
     package = Package(
         tracking_number="456",
@@ -426,7 +427,7 @@ async def test_summary_correctly_updated(hass):
     )
 
 
-async def test_utc_timestamp(hass):
+async def test_utc_timestamp(hass: HomeAssistant) -> None:
     """Ensure package timestamp is converted correctly from HA-defined time zone to UTC."""
     package = Package(
         tracking_number="456",

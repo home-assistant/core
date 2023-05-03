@@ -14,7 +14,9 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     Platform,
+    UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -33,7 +35,7 @@ def setup_sensor_platform_only():
         yield
 
 
-async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api):
+async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) -> None:
     """Test sensors while no job active."""
     assert await async_setup_component(hass, "prusalink", {})
 
@@ -49,7 +51,7 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api):
         "printing",
     ]
 
-    state = hass.states.get("sensor.mock_title_heatbed")
+    state = hass.states.get("sensor.mock_title_heatbed_temperature")
     assert state is not None
     assert state.state == "41.9"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
@@ -62,6 +64,36 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api):
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.mock_title_heatbed_target_temperature")
+    assert state is not None
+    assert state.state == "60.5"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.mock_title_nozzle_target_temperature")
+    assert state is not None
+    assert state.state == "210.1"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.mock_title_z_height")
+    assert state is not None
+    assert state.state == "1.8"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.mock_title_print_speed")
+    assert state is not None
+    assert state.state == "100"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+
+    state = hass.states.get("sensor.mock_title_material")
+    assert state is not None
+    assert state.state == "PLA"
 
     state = hass.states.get("sensor.mock_title_progress")
     assert state is not None
@@ -89,7 +121,7 @@ async def test_sensors_active_job(
     mock_api,
     mock_printer_api,
     mock_job_api_printing,
-):
+) -> None:
     """Test sensors while active job."""
     with patch(
         "homeassistant.components.prusalink.sensor.utcnow",
