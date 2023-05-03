@@ -1,13 +1,17 @@
 """Config flow for LastFm."""
+from __future__ import annotations
+
 from collections.abc import Sequence
 from typing import Any
 
 from pylast import LastFMNetwork, User, WSError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_API_KEY
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -27,12 +31,52 @@ INITIAL_CONFIG_SCHEMA: vol.Schema = vol.Schema(
 )
 
 
-class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
+class LastFmFlowHandler:
+    """Base handler for LastFM flows."""
+
+    def __init__(self, data: dict[str, Any]) -> None:
+        """Initialize LastFM flow."""
+        self.data = data
+
+    def _get_lastfm_user(self, username: str) -> User:
+        return LastFMNetwork(api_key=self.data[CONF_API_KEY]).get_user(username)
+
+    def _validate_lastfm_user(self, user: User) -> dict[str, str] | None:
+        errors = {}
+        try:
+            user.get_playcount()
+        except WSError as error:
+            LOGGER.error(error)
+            if error.details == "User not found":
+                errors["base"] = "invalid_account"
+            elif (
+                error.details
+                == "Invalid API key - You must be granted a valid key by last.fm"
+            ):
+                errors["base"] = "invalid_auth"
+            else:
+                errors["base"] = "unknown"
+        except Exception:  # pylint:disable=broad-except
+            errors["base"] = "unknown"
+        if not errors:
+            return None
+        return errors
+
+
+class LastFmConfigFlowHandler(ConfigFlow, LastFmFlowHandler, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
-        self.data: dict[str, Any] = {}
+        super().__init__({})
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return LastFmOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -63,8 +107,7 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         valid_users = []
         if user_input is not None:
-            users = user_input[CONF_USERS]
-            for user in users:
+            for user in user_input[CONF_USERS]:
                 lastfm_user = self._get_lastfm_user(user)
                 lastfm_errors = self._validate_lastfm_user(lastfm_user)
                 if lastfm_errors:
@@ -77,7 +120,10 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_API_KEY: self.data[CONF_API_KEY],
                         CONF_MAIN_USER: self.data[CONF_MAIN_USER],
-                        CONF_USERS: [self.data[CONF_MAIN_USER], *users],
+                        CONF_USERS: [
+                            self.data[CONF_MAIN_USER],
+                            *user_input[CONF_USERS],
+                        ],
                     },
                 )
         try:
@@ -102,30 +148,6 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    def _get_lastfm_user(self, username: str) -> User:
-        return LastFMNetwork(api_key=self.data[CONF_API_KEY]).get_user(username)
-
-    def _validate_lastfm_user(self, user: User) -> dict[str, str] | None:
-        errors = {}
-        try:
-            user.get_playcount()
-        except WSError as error:
-            LOGGER.error(error)
-            if error.details == "User not found":
-                errors["base"] = "invalid_account"
-            elif (
-                error.details
-                == "Invalid API key - You must be granted a valid key by last.fm"
-            ):
-                errors["base"] = "invalid_auth"
-            else:
-                errors["base"] = "unknown"
-        except Exception:  # pylint:disable=broad-except
-            errors["base"] = "unknown"
-        if not errors:
-            return None
-        return errors
-
     async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Import config from yaml."""
         for entry in self._async_current_entries():
@@ -137,4 +159,70 @@ class LastFmFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_API_KEY: import_config[CONF_API_KEY],
                 CONF_USERS: import_config[CONF_USERS],
             },
+        )
+
+
+class LastFmOptionsFlowHandler(OptionsFlow, LastFmFlowHandler):
+    """LastFm Options flow handler."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize LastFM Options flow."""
+        super().__init__(dict(entry.data))
+        self.entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Initialize form."""
+        valid_users = self.data[CONF_USERS]
+        errors = {}
+        if user_input is not None:
+            valid_users = []
+            for user in user_input[CONF_USERS]:
+                lastfm_user = self._get_lastfm_user(user)
+                lastfm_errors = self._validate_lastfm_user(lastfm_user)
+                if lastfm_errors:
+                    errors = lastfm_errors
+                else:
+                    valid_users.append(user)
+            if not errors:
+                await self.hass.config_entries.async_unload(self.entry.entry_id)
+                for username in self.data[CONF_USERS]:
+                    if username not in user_input[CONF_USERS] and (
+                        entity_id := er.async_get(self.hass).async_get_entity_id(
+                            Platform.SENSOR, DOMAIN, f"sensor.lastfm_{username}"
+                        )
+                    ):
+                        er.async_get(self.hass).async_remove(entity_id)
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_create_entry(
+                    title="LastFM",
+                    data={
+                        **self.data,
+                        CONF_USERS: user_input[CONF_USERS],
+                    },
+                )
+        if self.data[CONF_MAIN_USER]:
+            try:
+                main_user = self._get_lastfm_user(self.data[CONF_MAIN_USER])
+                friends: Sequence[SelectOptionDict] = [
+                    {"value": str(friend.name), "label": str(friend.get_name(True))}
+                    for friend in main_user.get_friends()
+                ]
+            except WSError:
+                friends = []
+        else:
+            friends = []
+        return self.async_show_form(
+            step_id="init",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERS, default=valid_users): SelectSelector(
+                        SelectSelectorConfig(
+                            options=friends, custom_value=True, multiple=True
+                        )
+                    ),
+                }
+            ),
         )

@@ -3,7 +3,12 @@
 from pylast import WSError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.lastfm.const import CONF_USERS, DEFAULT_NAME, DOMAIN
+from homeassistant.components.lastfm.const import (
+    CONF_MAIN_USER,
+    CONF_USERS,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -171,3 +176,32 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test updating options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: API_KEY,
+            CONF_MAIN_USER: USERNAME_1,
+            CONF_USERS: [USERNAME_1],
+        },
+    )
+    entry.add_to_hass(hass)
+    with patch_fetch_user():
+        await hass.config_entries.async_setup(entry.entry_id)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERS: [USERNAME_1, USERNAME_2]},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == CONF_DATA

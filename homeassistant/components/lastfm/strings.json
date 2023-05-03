@@ -21,6 +21,21 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Fill in other users you want to add.",
+        "data": {
+          "users": "Last.fm usernames"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_account": "Invalid username",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "title": "The LastFM YAML configuration is being removed",
