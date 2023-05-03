@@ -2450,17 +2450,12 @@ async def test_exclude_filters(hass: HomeAssistant) -> None:
     hass.states.async_set("cover.deny", "off", {"friendly_name": "Blocked cover"})
 
     alexa_config = MockConfig(hass)
-    filter = entityfilter.generate_filter(
+    alexa_config.should_expose = entityfilter.generate_filter(
         include_domains=[],
         include_entities=[],
         exclude_domains=["script"],
         exclude_entities=["cover.deny"],
     )
-
-    async def mock_should_expose(entity_id):
-        return filter(entity_id)
-
-    alexa_config.should_expose = mock_should_expose
 
     msg = await smart_home.async_handle_message(hass, alexa_config, request)
     await hass.async_block_till_done()
@@ -2486,17 +2481,12 @@ async def test_include_filters(hass: HomeAssistant) -> None:
     hass.states.async_set("group.allow", "off", {"friendly_name": "Allowed group"})
 
     alexa_config = MockConfig(hass)
-    filter = entityfilter.generate_filter(
+    alexa_config.should_expose = entityfilter.generate_filter(
         include_domains=["automation", "group"],
         include_entities=["script.deny"],
         exclude_domains=[],
         exclude_entities=[],
     )
-
-    async def mock_should_expose(entity_id):
-        return filter(entity_id)
-
-    alexa_config.should_expose = mock_should_expose
 
     msg = await smart_home.async_handle_message(hass, alexa_config, request)
     await hass.async_block_till_done()
@@ -2516,17 +2506,12 @@ async def test_never_exposed_entities(hass: HomeAssistant) -> None:
     hass.states.async_set("group.allow", "off", {"friendly_name": "Allowed group"})
 
     alexa_config = MockConfig(hass)
-    filter = entityfilter.generate_filter(
+    alexa_config.should_expose = entityfilter.generate_filter(
         include_domains=["group"],
         include_entities=[],
         exclude_domains=[],
         exclude_entities=[],
     )
-
-    async def mock_should_expose(entity_id):
-        return filter(entity_id)
-
-    alexa_config.should_expose = mock_should_expose
 
     msg = await smart_home.async_handle_message(hass, alexa_config, request)
     await hass.async_block_till_done()

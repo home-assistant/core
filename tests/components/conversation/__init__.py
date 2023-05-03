@@ -51,9 +51,7 @@ def expose_new(hass, expose_new):
     exposed_entities.async_set_expose_new_entities(conversation.DOMAIN, expose_new)
 
 
-async def expose_entity(hass, entity_id, should_expose):
+def expose_entity(hass, entity_id, should_expose):
     """Expose an entity to the default agent."""
     exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    await exposed_entities.async_expose_entity(
-        conversation.DOMAIN, entity_id, should_expose
-    )
+    exposed_entities.async_expose_entity(conversation.DOMAIN, entity_id, should_expose)
