@@ -33,12 +33,10 @@ async def async_set_dashboard_info(
     url = f"http://{host}:{port}"
 
     # Do nothing if we already have this data.
-    if (
-        (cur_dashboard := hass.data.get(KEY_DASHBOARD))
-        and cur_dashboard.addon_slug == addon_slug
-        and cur_dashboard.url == url
-    ):
-        return
+    if cur_dashboard := async_get_dashboard(hass):
+        if cur_dashboard.addon_slug == addon_slug and cur_dashboard.url == url:
+            return
+        await cur_dashboard.async_shutdown()
 
     dashboard = ESPHomeDashboard(hass, addon_slug, url, async_get_clientsession(hass))
     try:
