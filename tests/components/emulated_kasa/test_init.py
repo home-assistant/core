@@ -29,6 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import async_remove_entity
+
 ENTITY_SWITCH = "switch.ac"
 ENTITY_SWITCH_NAME = "A/C"
 ENTITY_SWITCH_POWER = 400.0
@@ -350,6 +352,12 @@ async def test_sensor(hass: HomeAssistant) -> None:
     power = nested_value(plug, "emeter", "get_realtime", "power")
     assert math.isclose(power, 0)
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.total_energy_kwh")
+    await async_remove_entity(hass, "sensor.total_energy_mwh")
+    await async_remove_entity(hass, "sensor.total_gas_m3")
+    await async_remove_entity(hass, "sensor.total_gas_ft3")
+
 
 async def test_sensor_state(hass: HomeAssistant) -> None:
     """Test a configuration using a sensor in a template."""
@@ -396,6 +404,12 @@ async def test_sensor_state(hass: HomeAssistant) -> None:
     assert nested_value(plug, "system", "get_sysinfo", "alias") == ENTITY_SENSOR_NAME
     power = nested_value(plug, "emeter", "get_realtime", "power")
     assert math.isclose(power, 0)
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.total_energy_kwh")
+    await async_remove_entity(hass, "sensor.total_energy_mwh")
+    await async_remove_entity(hass, "sensor.total_gas_m3")
+    await async_remove_entity(hass, "sensor.total_gas_ft3")
 
 
 async def test_multiple_devices(hass: HomeAssistant) -> None:
@@ -472,3 +486,9 @@ async def test_multiple_devices(hass: HomeAssistant) -> None:
 
     # No more devices
     assert next(plug_it, None) is None
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.total_energy_kwh")
+    await async_remove_entity(hass, "sensor.total_energy_mwh")
+    await async_remove_entity(hass, "sensor.total_gas_m3")
+    await async_remove_entity(hass, "sensor.total_gas_ft3")
