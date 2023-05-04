@@ -15,7 +15,6 @@ from homeassistant.util import slugify
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
-from .models import RoborockHassDeviceInfo
 
 
 @dataclass
@@ -67,19 +66,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roborock select platform."""
 
-    coordinator: RoborockDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
     async_add_entities(
         RoborockSelectEntity(
             f"{description.key}_{slugify(device_id)}",
-            device_info,
             coordinator,
             description,
         )
-        for device_id, device_info in coordinator.devices_info.items()
+        for device_id, coordinator in coordinators.items()
         for description in SELECT_DESCRIPTIONS
-        if description.options_lambda(device_info.model_specification) is not None
+        if description.options_lambda(coordinator.device_info.model_specification)
+        is not None
     )
 
 
@@ -91,16 +90,15 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
     def __init__(
         self,
         unique_id: str,
-        device_info: RoborockHassDeviceInfo,
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: RoborockSelectDescription,
     ) -> None:
         """Create a select entity."""
         self.entity_description = entity_description
         self._attr_options = self.entity_description.options_lambda(
-            device_info.model_specification
+            coordinator.device_info.model_specification
         )
-        super().__init__(unique_id, device_info, coordinator)
+        super().__init__(unique_id, coordinator)
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""

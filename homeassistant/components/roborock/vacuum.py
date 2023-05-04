@@ -22,7 +22,6 @@ from homeassistant.util import slugify
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
-from .models import RoborockHassDeviceInfo
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: STATE_IDLE,  # "Starting"
@@ -57,12 +56,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock sensor."""
-    coordinator: RoborockDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
     async_add_entities(
-        RoborockVacuum(slugify(device_id), device_info, coordinator)
-        for device_id, device_info in coordinator.devices_info.items()
+        RoborockVacuum(slugify(device_id), coordinator)
+        for device_id, coordinator in coordinators.items()
     )
 
 
@@ -87,12 +86,11 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     def __init__(
         self,
         unique_id: str,
-        device: RoborockHassDeviceInfo,
         coordinator: RoborockDataUpdateCoordinator,
     ) -> None:
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
-        RoborockCoordinatedEntity.__init__(self, unique_id, device, coordinator)
+        RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
         self._attr_fan_speed_list = self._model_specification.fan_power_code.values()
 
     @property
@@ -146,7 +144,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_start_pause(self):
+    async def async_start_pause(self) -> None:
         """Start, pause or resume the cleaning task."""
         if self.state == STATE_CLEANING:
             await self.async_pause()

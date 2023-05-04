@@ -12,7 +12,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RoborockDataUpdateCoordinator
 from .const import DOMAIN
-from .models import RoborockHassDeviceInfo
 
 
 class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]):
@@ -23,28 +22,25 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
     def __init__(
         self,
         unique_id: str,
-        device_info: RoborockHassDeviceInfo,
         coordinator: RoborockDataUpdateCoordinator,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         super().__init__(coordinator)
         self._attr_unique_id = unique_id
-        self._device_name = device_info.device.name
-        self._device_id = device_info.device.duid
-        self._device_model = device_info.product.model
-        self._fw_version = device_info.device.fv
-        self._model_specification = device_info.model_specification
+        self._device_name = coordinator.device_info.device.name
+        self._device_id = coordinator.device_info.device.duid
+        self._device_model = coordinator.device_info.product.model
+        self._fw_version = coordinator.device_info.device.fv
+        self._model_specification = coordinator.device_info.model_specification
 
     @property
     def _device_status(self) -> Status:
         """Return the status of the device."""
         data = self.coordinator.data
         if data:
-            device_data = data.get(self._device_id)
-            if device_data:
-                status = device_data.status
-                if status:
-                    return status
+            status = data.status
+            if status:
+                return status
         return Status({})
 
     @property
@@ -63,9 +59,7 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
     ) -> dict:
         """Send a command to a vacuum cleaner."""
         try:
-            response = await self.coordinator.api_map[self._device_id].send_command(
-                command, params
-            )
+            response = await self.coordinator.api.send_command(command, params)
         except RoborockException as err:
             raise HomeAssistantError(
                 f"Error while calling {command.name} with {params}"

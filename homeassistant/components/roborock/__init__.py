@@ -9,7 +9,6 @@ from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
 from roborock.code_mappings import ModelSpecification
 from roborock.containers import HomeDataDevice, RoborockDeviceInfo, UserData
-from roborock.exceptions import RoborockException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -33,7 +32,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Getting home data")
     home_data = await api_client.get_home_data(user_data)
     _LOGGER.debug("Got home data %s", home_data)
-    devices: list[HomeDataDevice] = home_data.devices + home_data.received_devices
+    device_map: dict[str, HomeDataDevice] = {
+        device.duid: device for device in home_data.devices + home_data.received_devices
+    }
     product_info = {product.id: product for product in home_data.products}
     models: dict[str, ModelSpecification] = {
         product.id: product.model_specification for product in product_info.values()
@@ -43,34 +44,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         RoborockMqttClient(
             user_data, RoborockDeviceInfo(device, models[device.product_id])
         )
-        for device in devices
+        for device in device_map.values()
     ]
     network_results = await asyncio.gather(
         *(mqtt_client.get_networking() for mqtt_client in mqtt_clients)
     )
     network_info = {
         device.duid: result
-        for device, result in zip(devices, network_results)
+        for device, result in zip(device_map.values(), network_results)
         if result is not None
     }
-    try:
-        await asyncio.gather(
-            *(mqtt_client.async_disconnect() for mqtt_client in mqtt_clients)
-        )
-    except RoborockException as err:
-        _LOGGER.warning("Failed disconnecting from the mqtt server %s", err)
+    await asyncio.gather(
+        *(mqtt_client.async_disconnect() for mqtt_client in mqtt_clients),
+        return_exceptions=True,
+    )
     if not network_info:
         raise ConfigEntryNotReady(
             "Could not get network information about your devices"
         )
+    coordinator_map: dict[str, RoborockDataUpdateCoordinator] = {}
+    for device_id, device in device_map.items():
+        coordinator_map[device_id] = RoborockDataUpdateCoordinator(
+            hass,
+            device,
+            network_info[device_id],
+            product_info[device.product_id],
+            models[device.product_id],
+        )
+        await coordinator_map[device_id].async_config_entry_first_refresh()
 
-    coordinator = RoborockDataUpdateCoordinator(
-        hass, devices, network_info, product_info, models
-    )
-
-    await coordinator.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator_map
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -81,7 +84,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await hass.data[DOMAIN][entry.entry_id].release()
+        for coord in hass.data[DOMAIN][entry.entry_id].values():
+            await coord.release()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

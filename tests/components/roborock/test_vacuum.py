@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from roborock.typing import RoborockCommand
+from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
     SERVICE_CLEAN_SPOT,
@@ -50,7 +50,7 @@ async def test_registry_entries(
         (
             SERVICE_SET_FAN_SPEED,
             RoborockCommand.SET_CUSTOM_MODE,
-            {"fan_speed": "silent"},
+            {"fan_speed": "quiet"},
             [101],
         ),
         (
@@ -86,6 +86,5 @@ async def test_commands(
             blocking=True,
         )
         assert mock_send_command.call_count == 1
-        assert mock_send_command.call_args[0][0] == DEVICE_ID
-        assert mock_send_command.call_args[0][1] == command
-        assert mock_send_command.call_args[0][2] == called_params
+        assert mock_send_command.call_args[0][0] == command
+        assert mock_send_command.call_args[0][1] == called_params

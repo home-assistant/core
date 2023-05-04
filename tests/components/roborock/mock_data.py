@@ -1,6 +1,7 @@
 """Mock data for Roborock tests."""
 from __future__ import annotations
 
+from roborock.code_mappings import model_specifications
 from roborock.containers import (
     CleanRecord,
     CleanSummary,
@@ -10,7 +11,7 @@ from roborock.containers import (
     Status,
     UserData,
 )
-from roborock.typing import DeviceProp
+from roborock.roborock_typing import DeviceProp
 
 # All data is based on a U.S. customer with a Roborock S7 MaxV Ultra
 USER_EMAIL = "user@domain.com"
@@ -366,5 +367,5 @@ STATUS = Status.from_dict(
         "unsave_map_flag": 0,
     }
 )
-
+STATUS.update_status(model_specifications.get("roborock.vacuum.a27"))
 PROP = DeviceProp(STATUS, DND_TIMER, CLEAN_SUMMARY, CONSUMABLE, CLEAN_RECORD)
