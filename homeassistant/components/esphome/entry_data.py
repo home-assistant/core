@@ -252,7 +252,7 @@ class RuntimeEntryData:
             )
         ):
             _LOGGER.debug(
-                "%s: ignoring duplicate update with and key %s: %s",
+                "%s: ignoring duplicate update with key %s: %s",
                 self.name,
                 key,
                 state,
