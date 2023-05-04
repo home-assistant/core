@@ -40,7 +40,7 @@ async def async_get_config_entry_diagnostics(
             "scanner": await scanner.async_diagnostics(),
         }
 
-    if (dashboard := async_get_dashboard(hass)) and dashboard.addon_slug:
+    if (dashboard := async_get_dashboard(hass)) and dashboard.initialized:
         diag["dashboard"] = dashboard.addon_slug
 
     return async_redact_data(diag, REDACT_KEYS)
