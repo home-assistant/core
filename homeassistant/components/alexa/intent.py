@@ -180,12 +180,17 @@ async def async_handle_intent(hass, message):
     return alexa_response.as_dict()
 
 
-def resolve_slot_synonyms(key, request):
+def resolve_slot_data(key, request) -> dict:
     """Check slot request for synonym resolutions."""
-    # Default to the spoken slot value if more than one or none are found. For
+    # Default to the spoken slot value if more than one or none are found. Always
+    # passes the id and name of the nearest possible slot resolution. For
     # reference to the request object structure, see the Alexa docs:
     # https://tinyurl.com/ybvm7jhs
-    resolved_value = request["value"]
+    resolved_data = {}
+    resolved_data["value"] = request["value"]
+    resolved_data["value_nearest"] = request["value"]
+    resolved_data["id"] = ""
+    resolved_data["id_nearest"] = ""
 
     if (
         "resolutions" in request
@@ -200,20 +205,31 @@ def resolve_slot_synonyms(key, request):
             if entry["status"]["code"] != SYN_RESOLUTION_MATCH:
                 continue
 
-            possible_values.extend([item["value"]["name"] for item in entry["values"]])
+            possible_values.extend([item["value"] for item in entry["values"]])
+
+        # Always set nearest name and id if available, otherwise the spoken slot
+        # value and an empty string as id is used
+        if len(possible_values) >= 1:
+            resolved_data["value_nearest"] = possible_values[0]["name"]
+            # Set ID if available
+            if "id" in possible_values[0]:
+                resolved_data["id_nearest"] = possible_values[0]["id"]
 
         # If there is only one match use the resolved value, otherwise the
-        # resolution cannot be determined, so use the spoken slot value
+        # resolution cannot be determined, so use the spoken slot value and empty string as id
         if len(possible_values) == 1:
-            resolved_value = possible_values[0]
+            resolved_data["value"] = possible_values[0]["name"]
+            # Set ID if available
+            if "id" in possible_values[0]:
+                resolved_data["id"] = possible_values[0]["id"]
         else:
             _LOGGER.debug(
                 "Found multiple synonym resolutions for slot value: {%s: %s}",
                 key,
-                resolved_value,
+                resolved_data["value"],
             )
 
-    return resolved_value
+    return resolved_data
 
 
 class AlexaResponse:
@@ -237,8 +253,12 @@ class AlexaResponse:
                     continue
 
                 _key = key.replace(".", "_")
+                _slot_data = resolve_slot_data(key, value)
 
-                self.variables[_key] = resolve_slot_synonyms(key, value)
+                self.variables[_key] = _slot_data["value"]
+                self.variables[_key + "_ID"] = _slot_data["id"]
+                self.variables[_key + "_NEAREST"] = _slot_data["value_nearest"]
+                self.variables[_key + "_NEAREST_ID"] = _slot_data["id_nearest"]
 
     def add_card(self, card_type, title, content):
         """Add a card to the response."""
