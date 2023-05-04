@@ -170,9 +170,7 @@ class LIFXLight(LIFXEntity, LightEntity):
 
     async def update_during_transition(self, when: int) -> None:
         """Update state at the start and end of a transition."""
-        if self.postponed_update:
-            self.postponed_update()
-            self.postponed_update = None
+        self._cancel_postponed_update()
 
         # Transition has started
         self.async_write_ha_state()
@@ -326,6 +324,17 @@ class LIFXLight(LIFXEntity, LightEntity):
             self.manager.async_register_entity(self.entity_id, self.entry.entry_id)
         )
         return await super().async_added_to_hass()
+
+    def _cancel_postponed_update(self) -> None:
+        """Cancel postponed update, if applicable."""
+        if self.postponed_update:
+            self.postponed_update()
+            self.postponed_update = None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        self._cancel_postponed_update()
+        return await super().async_will_remove_from_hass()
 
 
 class LIFXWhite(LIFXLight):

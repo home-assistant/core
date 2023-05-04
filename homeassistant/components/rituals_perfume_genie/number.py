@@ -13,8 +13,6 @@ from .entity import DiffuserEntity
 MIN_PERFUME_AMOUNT = 1
 MAX_PERFUME_AMOUNT = 3
 
-PERFUME_AMOUNT_SUFFIX = " Perfume Amount"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -39,8 +37,9 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
 
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the diffuser perfume amount number."""
-        super().__init__(coordinator, PERFUME_AMOUNT_SUFFIX)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.diffuser.hublot}-perfume_amount"
+        self._attr_name = f"{coordinator.diffuser.name} Perfume Amount"
 
     @property
     def native_value(self) -> int:
