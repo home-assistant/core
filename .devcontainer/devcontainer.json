@@ -1,5 +1,5 @@
 {
-  "name": "Home Assistant Core",
+  "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
   "containerUser": "vscode",
