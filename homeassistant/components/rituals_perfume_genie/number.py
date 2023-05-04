@@ -1,7 +1,13 @@
 """Support for Rituals Perfume Genie numbers."""
 from __future__ import annotations
 
-from homeassistant.components.number import NumberEntity
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import Any
+
+from pyrituals import Diffuser
+
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -10,8 +16,33 @@ from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
-MIN_PERFUME_AMOUNT = 1
-MAX_PERFUME_AMOUNT = 3
+
+@dataclass
+class RitualsNumberEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Diffuser], int]
+    set_value_fn: Callable[[Diffuser, int], Awaitable[Any]]
+
+
+@dataclass
+class RitualsNumberEntityDescription(
+    NumberEntityDescription, RitualsNumberEntityDescriptionMixin
+):
+    """Class describing Rituals number entities."""
+
+
+ENTITY_DESCRIPTIONS = (
+    RitualsNumberEntityDescription(
+        key="perfume_amount",
+        name="Perfume Amount",
+        icon="mdi:gauge",
+        native_min_value=1,
+        native_max_value=3,
+        value_fn=lambda diffuser: diffuser.perfume_amount,
+        set_value_fn=lambda diffuser, value: diffuser.set_perfume_amount(value),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -24,33 +55,37 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     async_add_entities(
-        DiffuserPerfumeAmount(coordinator) for coordinator in coordinators.values()
+        RitualsNumberEntity(coordinator, description)
+        for coordinator in coordinators.values()
+        for description in ENTITY_DESCRIPTIONS
     )
 
 
-class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
-    """Representation of a diffuser perfume amount number."""
+class RitualsNumberEntity(DiffuserEntity, NumberEntity):
+    """Representation of a diffuser number entity."""
 
-    _attr_icon = "mdi:gauge"
-    _attr_native_max_value = MAX_PERFUME_AMOUNT
-    _attr_native_min_value = MIN_PERFUME_AMOUNT
+    entity_description: RitualsNumberEntityDescription
 
-    def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: RitualsDataUpdateCoordinator,
+        description: RitualsNumberEntityDescription,
+    ) -> None:
         """Initialize the diffuser perfume amount number."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.diffuser.hublot}-perfume_amount"
-        self._attr_name = f"{coordinator.diffuser.name} Perfume Amount"
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.diffuser.hublot}-{description.key}"
+        self._attr_name = f"{coordinator.diffuser.name} {description.name}"
 
     @property
     def native_value(self) -> int:
-        """Return the current perfume amount."""
-        return self.coordinator.diffuser.perfume_amount
+        """Return the number value."""
+        return self.entity_description.value_fn(self.coordinator.diffuser)
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set the perfume amount."""
+        """Change to new number value."""
         if not value.is_integer():
-            raise ValueError(
-                f"Can't set the perfume amount to {value}. Perfume amount must be an"
-                " integer."
-            )
-        await self.coordinator.diffuser.set_perfume_amount(int(value))
+            raise ValueError(f"Can't set value to {value}. Value must be an integer.")
+        await self.entity_description.set_value_fn(
+            self.coordinator.diffuser, int(value)
+        )
