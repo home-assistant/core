@@ -22,7 +22,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN, LOGGER
+from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN
 
 PLACEHOLDERS = {"api_account_url": "https://www.last.fm/api/account/create"}
 
@@ -39,7 +39,7 @@ def get_lastfm_user(api_key: str, username: str) -> User:
     return LastFMNetwork(api_key=api_key).get_user(username)
 
 
-def validate_lastfm_user(user: User) -> dict[str, str] | None:
+def validate_lastfm_user(user: User) -> dict[str, str]:
     """Return error if the user is not correct. None if it is correct."""
     errors = {}
     try:
@@ -122,7 +122,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             main_user = get_lastfm_user(
                 self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
-            friends: list[dict[str,str]] = [
+            friends: Sequence[SelectOptionDict] = [
                 {"value": str(friend.name), "label": str(friend.get_name(True))}
                 for friend in main_user.get_friends()
             ]
@@ -165,12 +165,12 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Initialize form."""
-        valid_users = self.data[CONF_USERS]
+        valid_users = self.entry.data[CONF_USERS]
         errors = {}
         if user_input is not None:
             valid_users = []
             for username in user_input[CONF_USERS]:
-                lastfm_user = get_lastfm_user(self.data[CONF_API_KEY], username)
+                lastfm_user = get_lastfm_user(self.entry.data[CONF_API_KEY], username)
                 lastfm_errors = validate_lastfm_user(lastfm_user)
                 if lastfm_errors:
                     errors = lastfm_errors
@@ -180,14 +180,14 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 return self.async_create_entry(
                     title="LastFM",
                     data={
-                        **self.data,
+                        **self.entry.data,
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
         if self.data[CONF_MAIN_USER]:
             try:
                 main_user = get_lastfm_user(
-                    self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
+                    self.entry.data[CONF_API_KEY], self.entry.data[CONF_MAIN_USER]
                 )
                 friends: Sequence[SelectOptionDict] = [
                     {"value": str(friend.name), "label": str(friend.get_name(True))}
