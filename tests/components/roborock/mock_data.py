@@ -8,6 +8,7 @@ from roborock.containers import (
     Consumable,
     DNDTimer,
     HomeData,
+    NetworkInfo,
     Status,
     UserData,
 )
@@ -369,3 +370,7 @@ STATUS = Status.from_dict(
 )
 STATUS.update_status(model_specifications.get("roborock.vacuum.a27"))
 PROP = DeviceProp(STATUS, DND_TIMER, CLEAN_SUMMARY, CONSUMABLE, CLEAN_RECORD)
+
+NETWORK_INFO = NetworkInfo(
+    ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc", bssid="bssid", rssi=90
+)
