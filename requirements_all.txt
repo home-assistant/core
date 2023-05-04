@@ -223,7 +223,7 @@ aionanoleaf==0.2.1
 aionotify==0.2.0
 
 # homeassistant.components.notion
-aionotion==2023.04.2
+aionotion==2023.05.0
 
 # homeassistant.components.oncue
 aiooncue==0.3.4
@@ -567,7 +567,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.85.0
+dbus-fast==1.86.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -2703,7 +2703,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.61.0
+zeroconf==0.62.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
