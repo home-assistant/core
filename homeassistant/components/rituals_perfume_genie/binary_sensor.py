@@ -26,6 +26,7 @@ class RitualsentityDescriptionMixin:
     """Mixin values for Rituals entities."""
 
     is_on_fn: Callable[[Diffuser], bool]
+    has_fn: Callable[[Diffuser], bool]
 
 
 @dataclass
@@ -33,8 +34,6 @@ class RitualsBinarySensorEntityDescription(
     BinarySensorEntityDescription, RitualsentityDescriptionMixin
 ):
     """Class describing Rituals binary sensor entities."""
-
-    has_fn: Callable[[Diffuser], bool] = lambda _: True
 
 
 ENTITY_DESCRIPTIONS = (
