@@ -123,7 +123,7 @@ class TwitchSensor(SensorEntity):
             ATTR_VIEWS: channel.view_count,
         }
         if self._enable_user_auth:
-            if not user := (await first(self._client.get_users())):
+            if not (user := await first(self._client.get_users())):
                 return
             try:
                 sub = await self._client.check_user_subscription(
