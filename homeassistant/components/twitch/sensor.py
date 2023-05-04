@@ -117,14 +117,14 @@ class TwitchSensor(SensorEntity):
         if self.unique_id is None:
             return
         followers = (await self._client.get_users_follows(to_id=self.unique_id)).total
-        if not channel := await first(self._client.get_users(user_ids=[self.unique_id])):
+        if not channel := (await first(self._client.get_users(user_ids=[self.unique_id]))):
             return
         self._attr_extra_state_attributes = {
             ATTR_FOLLOWING: followers,
             ATTR_VIEWS: channel.view_count,
         }
         if self._enable_user_auth:
-            if not user := await first(self._client.get_users()):
+            if not user := (await first(self._client.get_users())):
                 return
             try:
                 sub = await self._client.check_user_subscription(
