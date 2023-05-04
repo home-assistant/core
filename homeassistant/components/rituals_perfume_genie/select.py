@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
 
 from pyrituals import Diffuser
 
@@ -23,7 +22,7 @@ class RitualsEntityDescriptionMixin:
     """Mixin for required keys."""
 
     current_fn: Callable[[Diffuser], str]
-    select_fn: Callable[[Diffuser, str], Awaitable[Any]]
+    select_fn: Callable[[Diffuser, str], Awaitable[None]]
 
 
 @dataclass
