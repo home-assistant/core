@@ -127,13 +127,13 @@ class NumberEntityDescription(EntityDescription):
     device_class: NumberDeviceClass | None = None
     max_value: None = None
     min_value: None = None
+    mode: NumberMode | None = None
     native_max_value: float | None = None
     native_min_value: float | None = None
     native_unit_of_measurement: str | None = None
     native_step: float | None = None
     step: None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
-    mode: NumberMode | None = None
 
     def __post_init__(self) -> None:
         """Post initialisation processing."""
