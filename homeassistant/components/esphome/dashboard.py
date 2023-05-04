@@ -10,7 +10,8 @@ from awesomeversion import AwesomeVersion
 from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -47,6 +48,11 @@ async def async_set_dashboard_info(
         return
 
     hass.data[KEY_DASHBOARD] = dashboard
+
+    async def on_hass_stop(_: Event) -> None:
+        await dashboard.async_shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
     reloads = [
         hass.config_entries.async_reload(entry.entry_id)
