@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from pycsspeechtts import pycsspeechtts
 import pytest
-from requests import HTTPError
 
 from homeassistant.components import media_source, tts
 from homeassistant.components.media_player import (
@@ -14,7 +13,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.microsoft.tts import SUPPORTED_LANGUAGES
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -231,7 +230,6 @@ async def test_service_say_error(hass: HomeAssistant, mock_tts, calls) -> None:
     )
 
     assert len(calls) == 1
-    # Note: the integration currently catches HTTPException instead of HTTPError.
-    with pytest.raises(HTTPError):
+    with pytest.raises(HomeAssistantError):
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(mock_tts.mock_calls) == 2
