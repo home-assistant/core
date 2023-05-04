@@ -216,7 +216,9 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
 
 async def test_remove_entry(hass: HomeAssistant, client) -> None:
     """Test removing an entry via the API."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
+    )
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == HTTPStatus.OK
@@ -227,7 +229,9 @@ async def test_remove_entry(hass: HomeAssistant, client) -> None:
 
 async def test_reload_entry(hass: HomeAssistant, client) -> None:
     """Test reloading an entry via the API."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
+    )
     entry.add_to_hass(hass)
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
@@ -972,7 +976,9 @@ async def test_update_prefrences(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
+    )
     entry.add_to_hass(hass)
 
     assert entry.pref_disable_new_entities is False
@@ -1069,7 +1075,9 @@ async def test_disable_entry(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
+    )
     entry.add_to_hass(hass)
     assert entry.disabled_by is None
 
