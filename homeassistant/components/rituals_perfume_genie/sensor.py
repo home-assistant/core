@@ -11,11 +11,6 @@ from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
-BATTERY_SUFFIX = " Battery"
-PERFUME_SUFFIX = " Perfume"
-FILL_SUFFIX = " Fill"
-WIFI_SUFFIX = " Wifi"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -47,8 +42,9 @@ class DiffuserPerfumeSensor(DiffuserEntity, SensorEntity):
 
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the perfume sensor."""
-        super().__init__(coordinator, PERFUME_SUFFIX)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.diffuser.hublot}-perfume"
+        self._attr_name = f"{coordinator.diffuser.name} Perfume"
 
     @property
     def icon(self) -> str:
@@ -68,8 +64,9 @@ class DiffuserFillSensor(DiffuserEntity, SensorEntity):
 
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the fill sensor."""
-        super().__init__(coordinator, FILL_SUFFIX)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.diffuser.hublot}-fill"
+        self._attr_name = f"{coordinator.diffuser.name} Fill"
 
     @property
     def icon(self) -> str:
@@ -93,8 +90,9 @@ class DiffuserBatterySensor(DiffuserEntity, SensorEntity):
 
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the battery sensor."""
-        super().__init__(coordinator, BATTERY_SUFFIX)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.diffuser.hublot}-battery_percentage"
+        self._attr_name = f"{coordinator.diffuser.name} Battery"
 
     @property
     def native_value(self) -> int:
@@ -110,8 +108,9 @@ class DiffuserWifiSensor(DiffuserEntity, SensorEntity):
 
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the wifi sensor."""
-        super().__init__(coordinator, WIFI_SUFFIX)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.diffuser.hublot}-wifi_percentage"
+        self._attr_name = f"{coordinator.diffuser.name} Wifi"
 
     @property
     def native_value(self) -> int:
