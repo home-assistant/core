@@ -1,9 +1,14 @@
 """Support for a ScreenLogic Binary Sensor."""
-from screenlogicpy.const import CODE, DATA as SL_DATA, DEVICE_TYPE, EQUIPMENT, ON_OFF
+from dataclasses import dataclass
+import logging
+
+from screenlogicpy.const.common import DEVICE_TYPE, ON_OFF
+from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -12,16 +17,61 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
-from .entity import ScreenlogicEntity, ScreenLogicPushEntity
+from .data import EntityParameter, TemplateData, process_entity
+from .entity import (
+    ScreenlogicEntity,
+    ScreenLogicEntityDescription,
+    ScreenLogicPushEntity,
+    ScreenLogicPushEntityDescription,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+SUPPORTED_DATA: TemplateData = {
+    DEVICE.CONTROLLER: {
+        GROUP.SENSOR: {
+            VALUE.ACTIVE_ALERT: {},
+            VALUE.CLEANER_DELAY: {},
+            VALUE.FREEZE_MODE: {},
+            VALUE.POOL_DELAY: {},
+            VALUE.SPA_DELAY: {},
+        },
+    },
+    DEVICE.PUMP: {
+        "*": {
+            VALUE.STATE: {},
+        },
+    },
+    DEVICE.INTELLICHEM: {
+        GROUP.ALARM: {
+            VALUE.FLOW_ALARM: {},
+            VALUE.ORP_HIGH_ALARM: {},
+            VALUE.ORP_LOW_ALARM: {},
+            VALUE.ORP_SUPPLY_ALARM: {},
+            VALUE.PH_HIGH_ALARM: {},
+            VALUE.PH_LOW_ALARM: {},
+            VALUE.PH_SUPPLY_ALARM: {},
+            VALUE.PROBE_FAULT_ALARM: {},
+        },
+        GROUP.ALERT: {
+            VALUE.ORP_LIMIT: {},
+            VALUE.PH_LIMIT: {},
+            VALUE.PH_LOCKOUT: {},
+        },
+        GROUP.WATER_BALANCE: {
+            VALUE.CORROSIVE: {},
+            VALUE.SCALING: {},
+        },
+    },
+    DEVICE.SCG: {
+        GROUP.SENSOR: {
+            VALUE.STATE: {},
+        },
+    },
+}
+
 
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {DEVICE_TYPE.ALARM: BinarySensorDeviceClass.PROBLEM}
-
-SUPPORTED_CONFIG_BINARY_SENSORS = (
-    "freeze_mode",
-    "pool_delay",
-    "spa_delay",
-    "cleaner_delay",
-)
 
 
 async def async_setup_entry(
@@ -30,132 +80,76 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    entities: list[ScreenLogicBinarySensorEntity] = []
+    entities: list[ScreenLogicBinarySensor] = []
     coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    gateway_data = coordinator.gateway_data
-    config = gateway_data[SL_DATA.KEY_CONFIG]
+    gateway = coordinator.gateway
 
-    # Generic binary sensor
-    entities.append(
-        ScreenLogicStatusBinarySensor(coordinator, "chem_alarm", CODE.STATUS_CHANGED)
-    )
+    for (
+        data_path,
+        enabled,
+        entity_data,
+        entity_key,
+        sub_code,
+        value_params,
+    ) in process_entity(gateway, SUPPORTED_DATA):
+        base_kwargs = {
+            "data_path": data_path,
+            "key": entity_key,
+            "device_class": SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
+                entity_data.get(ATTR.DEVICE_TYPE)
+            ),
+            "entity_category": value_params.get(
+                EntityParameter.ENTITY_CATEGORY, EntityCategory.DIAGNOSTIC
+            ),
+            "entity_registry_enabled_default": enabled,
+            "name": entity_data.get(ATTR.NAME),
+        }
 
-    entities.extend(
-        [
-            ScreenlogicConfigBinarySensor(coordinator, cfg_sensor, CODE.STATUS_CHANGED)
-            for cfg_sensor in config
-            if cfg_sensor in SUPPORTED_CONFIG_BINARY_SENSORS
-        ]
-    )
-
-    if config["equipment_flags"] & EQUIPMENT.FLAG_INTELLICHEM:
-        chemistry = gateway_data[SL_DATA.KEY_CHEMISTRY]
-        # IntelliChem alarm sensors
-        entities.extend(
-            [
-                ScreenlogicChemistryAlarmBinarySensor(
-                    coordinator, chem_alarm, CODE.CHEMISTRY_CHANGED
-                )
-                for chem_alarm in chemistry[SL_DATA.KEY_ALERTS]
-                if not chem_alarm.startswith("_")
-            ]
+        entities.append(
+            ScreenLogicPushBinarySensor(
+                coordinator,
+                ScreenLogicPushBinarySensorDescription(
+                    subscription_code=sub_code, **base_kwargs
+                ),
+            )
+            if sub_code
+            else ScreenLogicBinarySensor(
+                coordinator, ScreenLogicBinarySensorDescription(**base_kwargs)
+            )
         )
-
-        # Intellichem notification sensors
-        entities.extend(
-            [
-                ScreenlogicChemistryNotificationBinarySensor(
-                    coordinator, chem_notif, CODE.CHEMISTRY_CHANGED
-                )
-                for chem_notif in chemistry[SL_DATA.KEY_NOTIFICATIONS]
-                if not chem_notif.startswith("_")
-            ]
-        )
-
-    if config["equipment_flags"] & EQUIPMENT.FLAG_CHLORINATOR:
-        # SCG binary sensor
-        entities.append(ScreenlogicSCGBinarySensor(coordinator, "scg_status"))
 
     async_add_entities(entities)
 
 
-class ScreenLogicBinarySensorEntity(ScreenlogicEntity, BinarySensorEntity):
+@dataclass
+class ScreenLogicBinarySensorDescription(
+    BinarySensorEntityDescription, ScreenLogicEntityDescription
+):
+    """A class that describes ScreenLogic binary sensor eneites."""
+
+
+class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
     """Base class for all ScreenLogic binary sensor entities."""
 
+    entity_description: ScreenLogicBinarySensorDescription
     _attr_has_entity_name = True
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def name(self) -> str | None:
-        """Return the sensor name."""
-        return self.sensor["name"]
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the device class."""
-        device_type = self.sensor.get("device_type")
-        return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
 
     @property
     def is_on(self) -> bool:
         """Determine if the sensor is on."""
-        return self.sensor["value"] == ON_OFF.ON
-
-    @property
-    def sensor(self) -> dict:
-        """Shortcut to access the sensor data."""
-        return self.gateway_data[SL_DATA.KEY_SENSORS][self._data_key]
+        return self.entity_data[ATTR.VALUE] == ON_OFF.ON
 
 
-class ScreenLogicStatusBinarySensor(
-    ScreenLogicBinarySensorEntity, ScreenLogicPushEntity
+@dataclass
+class ScreenLogicPushBinarySensorDescription(
+    ScreenLogicBinarySensorDescription, ScreenLogicPushEntityDescription
 ):
+    """Describes a ScreenLogicPushBinarySensor."""
+
+
+class ScreenLogicPushBinarySensor(ScreenLogicPushEntity, ScreenLogicBinarySensor):
     """Representation of a basic ScreenLogic sensor entity."""
 
-
-class ScreenlogicChemistryAlarmBinarySensor(
-    ScreenLogicBinarySensorEntity, ScreenLogicPushEntity
-):
-    """Representation of a ScreenLogic IntelliChem alarm binary sensor entity."""
-
-    @property
-    def sensor(self) -> dict:
-        """Shortcut to access the sensor data."""
-        return self.gateway_data[SL_DATA.KEY_CHEMISTRY][SL_DATA.KEY_ALERTS][
-            self._data_key
-        ]
-
-
-class ScreenlogicChemistryNotificationBinarySensor(
-    ScreenLogicBinarySensorEntity, ScreenLogicPushEntity
-):
-    """Representation of a ScreenLogic IntelliChem notification binary sensor entity."""
-
-    @property
-    def sensor(self) -> dict:
-        """Shortcut to access the sensor data."""
-        return self.gateway_data[SL_DATA.KEY_CHEMISTRY][SL_DATA.KEY_NOTIFICATIONS][
-            self._data_key
-        ]
-
-
-class ScreenlogicSCGBinarySensor(ScreenLogicBinarySensorEntity):
-    """Representation of a ScreenLogic SCG binary sensor entity."""
-
-    @property
-    def sensor(self) -> dict:
-        """Shortcut to access the sensor data."""
-        return self.gateway_data[SL_DATA.KEY_SCG][self._data_key]
-
-
-class ScreenlogicConfigBinarySensor(
-    ScreenLogicBinarySensorEntity, ScreenLogicPushEntity
-):
-    """Representation of a ScreenLogic config data binary sensor entity."""
-
-    @property
-    def sensor(self) -> dict:
-        """Shortcut to access the sensor data."""
-        return self.gateway_data[SL_DATA.KEY_CONFIG][self._data_key]
+    entity_description: ScreenLogicPushBinarySensorDescription
