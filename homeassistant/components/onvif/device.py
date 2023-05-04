@@ -12,7 +12,7 @@ from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault, XMLParseError
+from zeep.exceptions import Fault, TransportError, XMLParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -203,76 +203,85 @@ class ONVIFDevice:
         """Warns if device and system date not synced."""
         LOGGER.debug("%s: Setting up the ONVIF device management service", self.name)
         device_mgmt = self.device.create_devicemgmt_service()
+        system_date = dt_util.utcnow()
 
         LOGGER.debug("%s: Retrieving current device date/time", self.name)
         try:
-            system_date = dt_util.utcnow()
             device_time = await device_mgmt.GetSystemDateAndTime()
-            if not device_time:
-                LOGGER.debug(
-                    """Couldn't get device '%s' date/time.
-                    GetSystemDateAndTime() return null/empty""",
-                    self.name,
-                )
-                return
-
-            LOGGER.debug("%s: Device time: %s", self.name, device_time)
-
-            tzone = dt_util.DEFAULT_TIME_ZONE
-            cdate = device_time.LocalDateTime
-            if device_time.UTCDateTime:
-                tzone = dt_util.UTC
-                cdate = device_time.UTCDateTime
-            elif device_time.TimeZone:
-                tzone = dt_util.get_time_zone(device_time.TimeZone.TZ) or tzone
-
-            if cdate is None:
-                LOGGER.warning(
-                    "%s: Could not retrieve date/time on this camera", self.name
-                )
-            else:
-                cam_date = dt.datetime(
-                    cdate.Date.Year,
-                    cdate.Date.Month,
-                    cdate.Date.Day,
-                    cdate.Time.Hour,
-                    cdate.Time.Minute,
-                    cdate.Time.Second,
-                    0,
-                    tzone,
-                )
-
-                cam_date_utc = cam_date.astimezone(dt_util.UTC)
-
-                LOGGER.debug(
-                    "%s: Device date/time: %s | System date/time: %s",
-                    self.name,
-                    cam_date_utc,
-                    system_date,
-                )
-
-                dt_diff = cam_date - system_date
-                self._dt_diff_seconds = dt_diff.total_seconds()
-
-                # It could be off either direction, so we need to check the absolute value
-                if abs(self._dt_diff_seconds) > 5:
-                    LOGGER.warning(
-                        (
-                            "The date/time on %s (UTC) is '%s', "
-                            "which is different from the system '%s', "
-                            "this could lead to authentication issues"
-                        ),
-                        self.name,
-                        cam_date_utc,
-                        system_date,
-                    )
-                    if device_time.DateTimeType == "Manual":
-                        # Set Date and Time ourselves if Date and Time is set manually in the camera.
-                        await self.async_manually_set_date_and_time()
         except RequestError as err:
             LOGGER.warning(
                 "Couldn't get device '%s' date/time. Error: %s", self.name, err
             )
+            return
+
+        if not device_time:
+            LOGGER.debug(
+                """Couldn't get device '%s' date/time.
+                GetSystemDateAndTime() return null/empty""",
+                self.name,
+            )
+            return
+
+        LOGGER.debug("%s: Device time: %s", self.name, device_time)
+
+        tzone = dt_util.DEFAULT_TIME_ZONE
+        cdate = device_time.LocalDateTime
+        if device_time.UTCDateTime:
+            tzone = dt_util.UTC
+            cdate = device_time.UTCDateTime
+        elif device_time.TimeZone:
+            tzone = dt_util.get_time_zone(device_time.TimeZone.TZ) or tzone
+
+        if cdate is None:
+            LOGGER.warning("%s: Could not retrieve date/time on this camera", self.name)
+            return
+
+        cam_date = dt.datetime(
+            cdate.Date.Year,
+            cdate.Date.Month,
+            cdate.Date.Day,
+            cdate.Time.Hour,
+            cdate.Time.Minute,
+            cdate.Time.Second,
+            0,
+            tzone,
+        )
+
+        cam_date_utc = cam_date.astimezone(dt_util.UTC)
+
+        LOGGER.debug(
+            "%s: Device date/time: %s | System date/time: %s",
+            self.name,
+            cam_date_utc,
+            system_date,
+        )
+
+        dt_diff = cam_date - system_date
+        self._dt_diff_seconds = dt_diff.total_seconds()
+
+        # It could be off either direction, so we need to check the absolute value
+        if abs(self._dt_diff_seconds) < 5:
+            return
+
+        LOGGER.warning(
+            (
+                "The date/time on %s (UTC) is '%s', "
+                "which is different from the system '%s', "
+                "this could lead to authentication issues"
+            ),
+            self.name,
+            cam_date_utc,
+            system_date,
+        )
+
+        if device_time.DateTimeType != "Manual":
+            return
+
+        # Set Date and Time ourselves if Date and Time is set manually in the camera.
+        try:
+            await self.async_manually_set_date_and_time()
+        except (RequestError, TransportError):
+            LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
 
     async def async_get_device_info(self) -> DeviceInfo:
         """Obtain information about this device."""
@@ -328,7 +337,7 @@ class ONVIFDevice:
         """Start the event handler."""
         with suppress(*GET_CAPABILITIES_EXCEPTIONS, XMLParseError):
             onvif_capabilities = self.onvif_capabilities or {}
-            pull_point_support = onvif_capabilities.get("Events", {}).get(
+            pull_point_support = (onvif_capabilities.get("Events") or {}).get(
                 "WSPullPointSupport"
             )
             LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
