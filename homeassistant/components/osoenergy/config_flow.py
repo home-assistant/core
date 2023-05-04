@@ -65,13 +65,13 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def test_credentials(self, subscription_key: str):
+    async def test_credentials(self, subscription_key: str) -> bool:
         """Return true if credentials is valid."""
         try:
             websession = aiohttp_client.async_get_clientsession(self.hass)
             client = OSOEnergy(subscription_key, websession)
             res = await client.get_devices()
-            return res
+            return bool(res)
         except Exception as inst:  # pylint: disable=broad-except
             _LOGGER.exception(inst)
         return False
@@ -84,7 +84,3 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input=None) -> FlowResult:
         """Import user."""
         return await self.async_step_user(user_input)
-
-
-class UnknownOSOEnergyError(Exception):
-    """Catch unknown OSO Energy error."""

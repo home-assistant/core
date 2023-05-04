@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import OSOEnergyEntity, refresh_system
+from . import OSOEnergyEntity
 from .const import (
     ATTR_FULL_UTILIZATION,
     ATTR_PROFILE_HOURS,
@@ -210,32 +210,26 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
 
         return attr
 
-    @refresh_system
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on hotwater."""
         await self.osoenergy.hotwater.turn_on(self.device, True)
 
-    @refresh_system
     async def async_turn_off(self, **kwargs) -> None:
         """Turn on hotwater."""
         await self.osoenergy.hotwater.turn_off(self.device, True)
 
-    @refresh_system
     async def async_oso_turn_on(self, full_utilization) -> None:
         """Handle the service call."""
         await self.osoenergy.hotwater.turn_on(self.device, full_utilization)
 
-    @refresh_system
     async def async_oso_turn_off(self, full_utilization) -> None:
         """Handle the service call."""
         await self.osoenergy.hotwater.turn_off(self.device, full_utilization)
 
-    @refresh_system
     async def async_set_v40_min(self, v40_min) -> None:
         """Handle the service call."""
         await self.osoenergy.hotwater.set_v40_min(self.device, v40_min)
 
-    @refresh_system
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = int(kwargs.get("temperature", self.target_temperature))
@@ -243,7 +237,6 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
 
         await self.osoenergy.hotwater.set_profile(self.device, profile)
 
-    @refresh_system
     async def async_set_profile(
         self,
         hour_00,

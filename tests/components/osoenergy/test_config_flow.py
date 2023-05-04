@@ -76,10 +76,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TITLE,
-        data={
-            CONF_API_KEY: SUBSCRIPTION_KEY,
-            CONF_SCAN_INTERVAL: SCAN_INTERVAL,
-        },
+        data={CONF_API_KEY: SUBSCRIPTION_KEY},
     )
     mock_config.add_to_hass(hass)
 
