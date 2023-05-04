@@ -109,7 +109,8 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(
                     title="LastFM",
-                    data={
+                    data={},
+                    options={
                         CONF_API_KEY: self.data[CONF_API_KEY],
                         CONF_MAIN_USER: self.data[CONF_MAIN_USER],
                         CONF_USERS: [
