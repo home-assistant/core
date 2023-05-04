@@ -108,16 +108,15 @@ class TwitchSensor(SensorEntity):
     def __init__(self, channel: TwitchUser, client: Twitch) -> None:
         """Initialize the sensor."""
         self._client = client
+        self._channel = channel
         self._enable_user_auth = client.has_required_auth(AuthType.USER, OAUTH_SCOPES)
         self._attr_name = channel.display_name
         self._attr_unique_id = channel.id
 
     async def async_update(self) -> None:
         """Update device state."""
-        if self.unique_id is None:
-            return
-        followers = (await self._client.get_users_follows(to_id=self.unique_id)).total
-        if not channel := (await first(self._client.get_users(user_ids=[self.unique_id]))):
+        followers = (await self._client.get_users_follows(to_id=self._channel.id)).total
+        if not channel := (await first(self._client.get_users(user_ids=[self._channel.id]))):
             return
         self._attr_extra_state_attributes = {
             ATTR_FOLLOWING: followers,
@@ -128,7 +127,7 @@ class TwitchSensor(SensorEntity):
                 return
             try:
                 sub = await self._client.check_user_subscription(
-                    user_id=user.id, broadcaster_id=self.unique_id
+                    user_id=user.id, broadcaster_id=self._channel.id
                 )
                 self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = True
                 self._attr_extra_state_attributes[
@@ -143,7 +142,7 @@ class TwitchSensor(SensorEntity):
 
             follows = (
                 await self._client.get_users_follows(
-                    from_id=user.id, to_id=self.unique_id
+                    from_id=user.id, to_id=self._channel.id
                 )
             ).data
             self._attr_extra_state_attributes[ATTR_FOLLOW] = len(follows) > 0
@@ -152,7 +151,7 @@ class TwitchSensor(SensorEntity):
                     0
                 ].followed_at
         if stream := (
-            await first(self._client.get_streams(user_id=[self.unique_id], first=1))
+            await first(self._client.get_streams(user_id=[self._channel.id], first=1))
         ):
             self._attr_native_value = STATE_STREAMING
             self._attr_extra_state_attributes[ATTR_GAME] = stream.game_name
