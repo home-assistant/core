@@ -12,7 +12,7 @@ from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault, XMLParseError
+from zeep.exceptions import Fault, TransportError, XMLParseError, XMLSyntaxError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -277,7 +277,20 @@ class ONVIFDevice:
     async def async_get_device_info(self) -> DeviceInfo:
         """Obtain information about this device."""
         device_mgmt = self.device.create_devicemgmt_service()
-        device_info = await device_mgmt.GetDeviceInformation()
+        manufacturer = None
+        model = None
+        firmware_version = None
+        serial_number = None
+        try:
+            device_info = await device_mgmt.GetDeviceInformation()
+        except (XMLParseError, XMLSyntaxError, TransportError) as ex:
+            # Some cameras have invalid UTF-8 in their device information
+            LOGGER.warning("%s: Failed to fetch device information: %s", self.name, ex)
+        else:
+            manufacturer = device_info.Manufacturer
+            model = device_info.Model
+            firmware_version = device_info.FirmwareVersion
+            serial_number = device_info.SerialNumber
 
         # Grab the last MAC address for backwards compatibility
         mac = None
@@ -297,10 +310,10 @@ class ONVIFDevice:
             )
 
         return DeviceInfo(
-            device_info.Manufacturer,
-            device_info.Model,
-            device_info.FirmwareVersion,
-            device_info.SerialNumber,
+            manufacturer,
+            model,
+            firmware_version,
+            serial_number,
             mac,
         )
 
