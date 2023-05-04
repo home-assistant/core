@@ -275,7 +275,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await device.update_xaddrs()
-            device_mgmt = device.create_devicemgmt_service()
+            device_mgmt = await device.create_devicemgmt_service()
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
                 try:
@@ -314,8 +314,17 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                 )
             # Verify there is an H264 profile
-            media_service = device.create_media_service()
+            media_service = await device.create_media_service()
             profiles = await media_service.GetProfiles()
+        except AttributeError:  # Likely an empty document or 404 from the wrong port
+            LOGGER.debug(
+                "%s: No ONVIF service found at %s:%s",
+                self.onvif_config[CONF_NAME],
+                self.onvif_config[CONF_HOST],
+                self.onvif_config[CONF_PORT],
+                exc_info=True,
+            )
+            return {CONF_PORT: "no_onvif_service"}, {}
         except Fault as err:
             stringified_error = stringify_onvif_error(err)
             description_placeholders = {"error": stringified_error}

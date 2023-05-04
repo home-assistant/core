@@ -26,6 +26,7 @@ from tests.components.recorder.common import async_wait_recording_done
 async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test light registered attributes to be excluded."""
     now = dt_util.utcnow()
+    assert await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {"platform": "demo"}}
     )

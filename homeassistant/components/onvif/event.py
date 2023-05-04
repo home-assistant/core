@@ -11,7 +11,7 @@ from httpx import RemoteProtocolError, RequestError, TransportError
 from onvif import ONVIFCamera, ONVIFService
 from onvif.client import NotificationManager
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault, XMLParseError
+from zeep.exceptions import Fault, ValidationError, XMLParseError
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +35,7 @@ from .util import stringify_onvif_error
 UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
 
 SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
-CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError)
+CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError, ValidationError)
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
 RENEW_ERRORS = (ONVIFError, RequestError, XMLParseError, *SUBSCRIPTION_ERRORS)
@@ -123,11 +123,13 @@ class EventManager:
         if not self._listeners:
             self.pullpoint_manager.async_cancel_pull_messages()
 
-    async def async_start(self) -> bool:
+    async def async_start(self, try_pullpoint: bool, try_webhook: bool) -> bool:
         """Start polling events."""
         # Always start pull point first, since it will populate the event list
-        event_via_pull_point = await self.pullpoint_manager.async_start()
-        events_via_webhook = await self.webhook_manager.async_start()
+        event_via_pull_point = (
+            try_pullpoint and await self.pullpoint_manager.async_start()
+        )
+        events_via_webhook = try_webhook and await self.webhook_manager.async_start()
         return events_via_webhook or event_via_pull_point
 
     async def async_stop(self) -> None:
@@ -390,12 +392,12 @@ class PullPointManager:
             return False
 
         # Create subscription manager
-        self._pullpoint_subscription = self._device.create_subscription_service(
+        self._pullpoint_subscription = await self._device.create_subscription_service(
             "PullPointSubscription"
         )
 
         # Create the service that will be used to pull messages from the device.
-        self._pullpoint_service = self._device.create_pullpoint_service()
+        self._pullpoint_service = await self._device.create_pullpoint_service()
 
         # Initialize events
         with suppress(*SET_SYNCHRONIZATION_POINT_ERRORS):
@@ -655,16 +657,34 @@ class WebHookManager:
 
     async def _async_create_webhook_subscription(self) -> None:
         """Create webhook subscription."""
-        LOGGER.debug("%s: Creating webhook subscription", self._name)
+        LOGGER.debug(
+            "%s: Creating webhook subscription with URL: %s",
+            self._name,
+            self._webhook_url,
+        )
         self._notification_manager = self._device.create_notification_manager(
             {
                 "InitialTerminationTime": SUBSCRIPTION_RELATIVE_TIME,
                 "ConsumerReference": {"Address": self._webhook_url},
             }
         )
-        self._webhook_subscription = await self._notification_manager.setup()
+        try:
+            self._webhook_subscription = await self._notification_manager.setup()
+        except ValidationError as err:
+            # This should only happen if there is a problem with the webhook URL
+            # that is causing it to not be well formed.
+            LOGGER.exception(
+                "%s: validation error while creating webhook subscription: %s",
+                self._name,
+                err,
+            )
+            raise
         await self._notification_manager.start()
-        LOGGER.debug("%s: Webhook subscription created", self._name)
+        LOGGER.debug(
+            "%s: Webhook subscription created with URL: %s",
+            self._name,
+            self._webhook_url,
+        )
 
     async def _async_start_webhook(self) -> bool:
         """Start webhook."""
@@ -769,6 +789,7 @@ class WebHookManager:
                 return
 
         webhook_id = self._webhook_unique_id
+        self._async_unregister_webhook()
         webhook.async_register(
             self._hass, DOMAIN, webhook_id, webhook_id, self._async_handle_webhook
         )

@@ -25,6 +25,7 @@ from tests.components.recorder.common import async_wait_recording_done
 async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test media_player registered attributes to be excluded."""
     now = dt_util.utcnow()
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(
         hass, media_player.DOMAIN, {media_player.DOMAIN: {"platform": "demo"}}
     )

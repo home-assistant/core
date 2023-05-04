@@ -4,6 +4,7 @@ import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import async_timeout
+import pytest
 
 from homeassistant.components import assist_pipeline, voip
 from homeassistant.components.voip.devices import VoIPDevice
@@ -88,8 +89,10 @@ async def test_pipeline(
             hass.config.language,
             voip_device,
             Context(),
+            opus_payload_type=123,
             listening_tone_enabled=False,
             processing_tone_enabled=False,
+            error_tone_enabled=False,
         )
         rtp_protocol.transport = Mock()
 
@@ -137,9 +140,11 @@ async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) ->
             hass.config.language,
             voip_device,
             Context(),
+            opus_payload_type=123,
             pipeline_timeout=0.001,
             listening_tone_enabled=False,
             processing_tone_enabled=False,
+            error_tone_enabled=False,
         )
         transport = Mock(spec=["close"])
         rtp_protocol.connection_made(transport)
@@ -176,9 +181,11 @@ async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) 
             hass.config.language,
             voip_device,
             Context(),
+            opus_payload_type=123,
             audio_timeout=0.001,
             listening_tone_enabled=False,
             processing_tone_enabled=False,
+            error_tone_enabled=False,
         )
         transport = Mock(spec=["close"])
         rtp_protocol.connection_made(transport)
@@ -234,9 +241,23 @@ async def test_tts_timeout(
             )
         )
 
-    def send_audio(*args, **kwargs):
+    tone_bytes = bytes([1, 2, 3, 4])
+
+    def send_audio(audio_bytes, **kwargs):
+        if audio_bytes == tone_bytes:
+            # Not TTS
+            return
+
         # Block here to force a timeout in _send_tts
-        time.sleep(1)
+        time.sleep(2)
+
+    async def async_send_audio(audio_bytes, **kwargs):
+        if audio_bytes == tone_bytes:
+            # Not TTS
+            return
+
+        # Block here to force a timeout in _send_tts
+        await asyncio.sleep(2)
 
     async def async_get_media_source_audio(
         hass: HomeAssistant,
@@ -260,17 +281,28 @@ async def test_tts_timeout(
             hass.config.language,
             voip_device,
             Context(),
-            listening_tone_enabled=False,
-            processing_tone_enabled=False,
+            opus_payload_type=123,
+            tts_extra_timeout=0.001,
+            listening_tone_enabled=True,
+            processing_tone_enabled=True,
+            error_tone_enabled=True,
         )
+        rtp_protocol._tone_bytes = tone_bytes
+        rtp_protocol._processing_bytes = tone_bytes
+        rtp_protocol._error_bytes = tone_bytes
         rtp_protocol.transport = Mock()
-        rtp_protocol.send_audio = Mock(side_effect=send_audio)
+        rtp_protocol.send_audio = Mock()
+
+        original_send_tts = rtp_protocol._send_tts
 
         async def send_tts(*args, **kwargs):
             # Call original then end test successfully
-            rtp_protocol._send_tts(*args, **kwargs)
+            with pytest.raises(asyncio.TimeoutError):
+                await original_send_tts(*args, **kwargs)
+
             done.set()
 
+        rtp_protocol._async_send_audio = AsyncMock(side_effect=async_send_audio)
         rtp_protocol._send_tts = AsyncMock(side_effect=send_tts)
 
         # silence
