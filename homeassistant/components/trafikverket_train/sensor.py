@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.trafikverket_train import StationInfo, TrainStop
@@ -119,6 +119,8 @@ class TrainSensor(SensorEntity):
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
+        if TYPE_CHECKING:
+            assert from_station.name and to_station.name
         self._attr_unique_id = create_unique_id(
             from_station.name, to_station.name, departuretime, weekday
         )
@@ -153,6 +155,8 @@ class TrainSensor(SensorEntity):
         self._attr_available = True
 
         # The original datetime doesn't provide a timezone so therefore attaching it here.
+        if TYPE_CHECKING:
+            assert _state.advertised_time_at_location
         self._attr_native_value = dt.as_utc(_state.advertised_time_at_location)
         if _state.time_at_location:
             self._attr_native_value = dt.as_utc(_state.time_at_location)
