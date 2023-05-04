@@ -24,7 +24,6 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
     async_get_assistant_settings,
-    async_get_entity_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
@@ -201,10 +200,6 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             return
 
         for state in self.hass.states.async_all():
-            with suppress(HomeAssistantError):
-                entity_settings = async_get_entity_settings(self.hass, state.entity_id)
-                if CLOUD_ALEXA in entity_settings:
-                    continue
             async_expose_entity(
                 self.hass,
                 CLOUD_ALEXA,
@@ -212,10 +207,6 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
                 self._should_expose_legacy(state.entity_id),
             )
         for entity_id in self._prefs.alexa_entity_configs:
-            with suppress(HomeAssistantError):
-                entity_settings = async_get_entity_settings(self.hass, entity_id)
-                if CLOUD_ALEXA in entity_settings:
-                    continue
             async_expose_entity(
                 self.hass,
                 CLOUD_ALEXA,
