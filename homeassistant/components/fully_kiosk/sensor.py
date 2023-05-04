@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,11 +27,25 @@ def round_storage(value: int) -> float:
     return round(value * 0.000001, 1)
 
 
+def truncate_url(value: StateType) -> tuple[StateType, dict[str, Any]]:
+    """Truncate URL if longer than 256."""
+    url = str(value)
+    truncated = len(url) > 256
+    extra_state_attributes = {
+        "full_url": url,
+        "truncated": truncated,
+    }
+    if truncated:
+        return (url[0:255], extra_state_attributes)
+    return (url, extra_state_attributes)
+
+
 @dataclass
 class FullySensorEntityDescription(SensorEntityDescription):
     """Fully Kiosk Browser sensor description."""
 
-    state_fn: Callable[[int], float] | None = None
+    round_state_value: bool = False
+    state_fn: Callable[[StateType], tuple[StateType, dict[str, Any]]] | None = None
 
 
 SENSORS: tuple[FullySensorEntityDescription, ...] = (
@@ -41,6 +56,12 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    FullySensorEntityDescription(
+        key="currentPage",
+        name="Current page",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_fn=truncate_url,
     ),
     FullySensorEntityDescription(
         key="screenOrientation",
@@ -59,7 +80,7 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=round_storage,
+        round_state_value=True,
     ),
     FullySensorEntityDescription(
         key="internalStorageTotalSpace",
@@ -68,7 +89,7 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=round_storage,
+        round_state_value=True,
     ),
     FullySensorEntityDescription(
         key="ramFreeMemory",
@@ -77,7 +98,7 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=round_storage,
+        round_state_value=True,
     ),
     FullySensorEntityDescription(
         key="ramTotalMemory",
@@ -86,15 +107,7 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=round_storage,
-    ),
-)
-
-URL_SENSORS: tuple[FullySensorEntityDescription, ...] = (
-    FullySensorEntityDescription(
-        key="currentPage",
-        name="Current page",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        round_state_value=True,
     ),
 )
 
@@ -111,11 +124,6 @@ async def async_setup_entry(
     async_add_entities(
         FullySensor(coordinator, description)
         for description in SENSORS
-        if description.key in coordinator.data
-    )
-    async_add_entities(
-        FullyUrlSensor(coordinator, description)
-        for description in URL_SENSORS
         if description.key in coordinator.data
     )
 
@@ -139,38 +147,17 @@ class FullySensor(FullyKioskEntity, SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._attr_native_value = self._value()
-        self.async_write_ha_state()
+        extra_state_attributes: dict[str, Any] = {}
+        value = self.coordinator.data.get(self.entity_description.key)
 
-    def _value(self) -> StateType:
-        """Return the state of the sensor."""
-        if (value := self.coordinator.data.get(self.entity_description.key)) is None:
-            return None
+        if value is not None:
+            if self.entity_description.state_fn is not None:
+                value, extra_state_attributes = self.entity_description.state_fn(value)
 
-        if self.entity_description.state_fn is not None:
-            return self.entity_description.state_fn(value)
+            if self.entity_description.round_state_value:
+                value = round_storage(value)
 
-        return value  # type: ignore[no-any-return]
+        self._attr_native_value = value
+        self._attr_extra_state_attributes = extra_state_attributes
 
-
-class FullyUrlSensor(FullySensor):
-    """Representation of a Fully Kiosk Browser URL sensor."""
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        value = self._value()
-        if value is None:
-            truncated = False
-            self._attr_native_value = None
-        else:
-            value = str(value)
-            truncated = len(value) > 256
-            if truncated:
-                self._attr_native_value = value[0:255]
-            else:
-                self._attr_native_value = value
-        self._attr_extra_state_attributes = {
-            "full_url": value,
-            "truncated": truncated,
-        }
         self.async_write_ha_state()
