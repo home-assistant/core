@@ -61,27 +61,6 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         self._volume_set_task: asyncio.Task | None = None
         self._channel_set_task: asyncio.Task | None = None
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-
-        self._update_current_app(self._api.current_app)
-        self._update_volume_info(self._api.volume_info)
-
-        @callback
-        def current_app_updated(current_app: str) -> None:
-            self._update_current_app(current_app)
-            self.async_write_ha_state()
-
-        @callback
-        def volume_info_updated(volume_info: dict[str, str | bool]) -> None:
-            self._update_volume_info(volume_info)
-            if not self._volume_set_task or self._volume_set_task.done():
-                self.async_write_ha_state()
-
-        self._api.add_current_app_updated_callback(current_app_updated)
-        self._api.add_volume_info_updated_callback(volume_info_updated)
-
     def _update_current_app(self, current_app: str) -> None:
         """Update current app info."""
         self._attr_app_id = current_app
@@ -99,6 +78,36 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
             self._attr_volume_level = None
             self._attr_is_volume_muted = None
             self._attr_supported_features &= ~MediaPlayerEntityFeature.VOLUME_SET
+
+    @callback
+    def _current_app_updated(self, current_app: str) -> None:
+        """Update the state when the current app changes."""
+        self._update_current_app(current_app)
+        self.async_write_ha_state()
+
+    @callback
+    def _volume_info_updated(self, volume_info: dict[str, str | bool]) -> None:
+        """Update the state when the volume info changes."""
+        self._update_volume_info(volume_info)
+        if not self._volume_set_task or self._volume_set_task.done():
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+
+        self._update_current_app(self._api.current_app)
+        self._update_volume_info(self._api.volume_info)
+
+        self._api.add_current_app_updated_callback(self._current_app_updated)
+        self._api.add_volume_info_updated_callback(self._volume_info_updated)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove callbacks."""
+        await super().async_will_remove_from_hass()
+
+        self._api.remove_current_app_updated_callback(self._current_app_updated)
+        self._api.remove_volume_info_updated_callback(self._volume_info_updated)
 
     @property
     def state(self) -> MediaPlayerState:

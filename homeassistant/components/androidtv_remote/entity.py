@@ -37,21 +37,27 @@ class AndroidTVRemoteBaseEntity(Entity):
             model=device_info["model"],
         )
 
+    @callback
+    def _is_available_updated(self, is_available: bool) -> None:
+        """Update the state when the device is ready to receive commands or is unavailable."""
+        self._attr_available = is_available
+        self.async_write_ha_state()
+
+    @callback
+    def _is_on_updated(self, is_on: bool) -> None:
+        """Update the state when device turns on or off."""
+        self._attr_is_on = is_on
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        self._api.add_is_available_updated_callback(self._is_available_updated)
+        self._api.add_is_on_updated_callback(self._is_on_updated)
 
-        @callback
-        def is_available_updated(is_available: bool) -> None:
-            self._attr_available = is_available
-            self.async_write_ha_state()
-
-        @callback
-        def is_on_updated(is_on: bool) -> None:
-            self._attr_is_on = is_on
-            self.async_write_ha_state()
-
-        self._api.add_is_available_updated_callback(is_available_updated)
-        self._api.add_is_on_updated_callback(is_on_updated)
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove callbacks."""
+        self._api.remove_is_available_updated_callback(self._is_available_updated)
+        self._api.remove_is_on_updated_callback(self._is_on_updated)
 
     def _send_key_command(self, key_code: str, direction: str = "SHORT") -> None:
         """Send a key press to Android TV.

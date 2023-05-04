@@ -43,18 +43,24 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
 
     _attr_supported_features = RemoteEntityFeature.ACTIVITY
 
+    @callback
+    def _current_app_updated(self, current_app: str) -> None:
+        """Update the state when the current app changes."""
+        self._attr_current_activity = current_app
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
         self._attr_current_activity = self._api.current_app
+        self._api.add_current_app_updated_callback(self._current_app_updated)
 
-        @callback
-        def current_app_updated(current_app: str) -> None:
-            self._attr_current_activity = current_app
-            self.async_write_ha_state()
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove callbacks."""
+        await super().async_will_remove_from_hass()
 
-        self._api.add_current_app_updated_callback(current_app_updated)
+        self._api.remove_current_app_updated_callback(self._current_app_updated)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Android TV on."""
