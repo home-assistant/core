@@ -369,7 +369,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         dashboard = async_get_dashboard(self.hass)
 
-        if not dashboard.url:
+        if not dashboard.initialized:
             return False
 
         await dashboard.async_request_refresh()
