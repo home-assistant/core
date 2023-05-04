@@ -60,6 +60,8 @@ PULLPOINT_POLL_TIME = dt.timedelta(seconds=60)
 PULLPOINT_MESSAGE_LIMIT = 100
 PULLPOINT_COOLDOWN_TIME = 0.75
 
+SUBSCRIPTION_ATTEMPTS = 3
+
 
 class EventManager:
     """ONVIF Event Manager."""
@@ -369,7 +371,7 @@ class PullPointManager:
             finally:
                 self.async_schedule_pullpoint_renew(next_attempt)
 
-    @retry_connection_error()
+    @retry_connection_error(SUBSCRIPTION_ATTEMPTS)
     async def _async_create_pullpoint_subscription(self) -> bool:
         """Create pullpoint subscription."""
 
@@ -435,7 +437,7 @@ class PullPointManager:
             )
         self._pullpoint_subscription = None
 
-    @retry_connection_error()
+    @retry_connection_error(SUBSCRIPTION_ATTEMPTS)
     async def _async_call_pullpoint_subscription_renew(self) -> None:
         """Call PullPoint subscription Renew."""
         await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
@@ -635,7 +637,7 @@ class WebHookManager:
             self._renew_or_restart_job,
         )
 
-    @retry_connection_error()
+    @retry_connection_error(SUBSCRIPTION_ATTEMPTS)
     async def _async_create_webhook_subscription(self) -> None:
         """Create webhook subscription."""
         LOGGER.debug(
@@ -688,7 +690,7 @@ class WebHookManager:
         await self._async_unsubscribe_webhook()
         return await self._async_start_webhook()
 
-    @retry_connection_error()
+    @retry_connection_error(SUBSCRIPTION_ATTEMPTS)
     async def _async_call_webhook_subscription_renew(self) -> None:
         """Call PullPoint subscription Renew."""
         assert self._webhook_subscription is not None
