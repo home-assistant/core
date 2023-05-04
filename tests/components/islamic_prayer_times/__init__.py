@@ -15,13 +15,13 @@ PRAYER_TIMES = {
 }
 
 PRAYER_TIMES_TIMESTAMPS = {
-    "Fajr": datetime(2020, 1, 1, 6, 10, 0),
-    "Sunrise": datetime(2020, 1, 1, 7, 25, 0),
-    "Dhuhr": datetime(2020, 1, 1, 12, 30, 0),
-    "Asr": datetime(2020, 1, 1, 15, 32, 0),
-    "Maghrib": datetime(2020, 1, 1, 17, 35, 0),
-    "Isha": datetime(2020, 1, 1, 18, 53, 0),
-    "Midnight": datetime(2020, 1, 1, 00, 45, 0),
+    "Fajr": datetime(2020, 1, 1, 6, 10, 0, tzinfo=dt_util.UTC),
+    "Sunrise": datetime(2020, 1, 1, 7, 25, 0, tzinfo=dt_util.UTC),
+    "Dhuhr": datetime(2020, 1, 1, 12, 30, 0, tzinfo=dt_util.UTC),
+    "Asr": datetime(2020, 1, 1, 15, 32, 0, tzinfo=dt_util.UTC),
+    "Maghrib": datetime(2020, 1, 1, 17, 35, 0, tzinfo=dt_util.UTC),
+    "Isha": datetime(2020, 1, 1, 18, 53, 0, tzinfo=dt_util.UTC),
+    "Midnight": datetime(2020, 1, 1, 00, 45, 0, tzinfo=dt_util.UTC),
 }
 
 NEW_PRAYER_TIMES = {
@@ -35,13 +35,13 @@ NEW_PRAYER_TIMES = {
 }
 
 NEW_PRAYER_TIMES_TIMESTAMPS = {
-    "Fajr": datetime(2020, 1, 1, 6, 00, 0),
-    "Sunrise": datetime(2020, 1, 1, 7, 25, 0),
-    "Dhuhr": datetime(2020, 1, 1, 12, 30, 0),
-    "Asr": datetime(2020, 1, 1, 15, 32, 0),
-    "Maghrib": datetime(2020, 1, 1, 17, 45, 0),
-    "Isha": datetime(2020, 1, 1, 18, 53, 0),
-    "Midnight": datetime(2020, 1, 1, 00, 43, 0),
+    "Fajr": datetime(2020, 1, 1, 6, 00, 0, tzinfo=dt_util.UTC),
+    "Sunrise": datetime(2020, 1, 1, 7, 25, 0, tzinfo=dt_util.UTC),
+    "Dhuhr": datetime(2020, 1, 1, 12, 30, 0, tzinfo=dt_util.UTC),
+    "Asr": datetime(2020, 1, 1, 15, 32, 0, tzinfo=dt_util.UTC),
+    "Maghrib": datetime(2020, 1, 1, 17, 45, 0, tzinfo=dt_util.UTC),
+    "Isha": datetime(2020, 1, 1, 18, 53, 0, tzinfo=dt_util.UTC),
+    "Midnight": datetime(2020, 1, 1, 00, 43, 0, tzinfo=dt_util.UTC),
 }
 
 NOW = datetime(2020, 1, 1, 00, 00, 0, tzinfo=dt_util.UTC)

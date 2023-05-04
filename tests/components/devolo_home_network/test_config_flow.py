@@ -62,10 +62,10 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]):
 
 
 @pytest.mark.parametrize(
-    "exception_type, expected_error",
-    [[DeviceNotFound, "cannot_connect"], [Exception, "unknown"]],
+    ("exception_type", "expected_error"),
+    [[DeviceNotFound(IP), "cannot_connect"], [Exception, "unknown"]],
 )
-async def test_form_error(hass: HomeAssistant, exception_type, expected_error):
+async def test_form_error(hass: HomeAssistant, exception_type, expected_error) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -86,7 +86,7 @@ async def test_form_error(hass: HomeAssistant, exception_type, expected_error):
     assert result2["errors"] == {CONF_BASE: expected_error}
 
 
-async def test_zeroconf(hass: HomeAssistant):
+async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test that the zeroconf form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -126,7 +126,7 @@ async def test_zeroconf(hass: HomeAssistant):
     }
 
 
-async def test_abort_zeroconf_wrong_device(hass: HomeAssistant):
+async def test_abort_zeroconf_wrong_device(hass: HomeAssistant) -> None:
     """Test we abort zeroconf for wrong devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -138,7 +138,7 @@ async def test_abort_zeroconf_wrong_device(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("info")
-async def test_abort_if_configued(hass: HomeAssistant):
+async def test_abort_if_configued(hass: HomeAssistant) -> None:
     """Test we abort config flow if already configured."""
     serial_number = DISCOVERY_INFO.properties["SN"]
     entry = MockConfigEntry(
@@ -173,7 +173,7 @@ async def test_abort_if_configued(hass: HomeAssistant):
 
 @pytest.mark.usefixtures("mock_device")
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_form_reauth(hass: HomeAssistant):
+async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test that the reauth confirmation form is served."""
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -212,7 +212,7 @@ async def test_form_reauth(hass: HomeAssistant):
 
 @pytest.mark.usefixtures("mock_device")
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_validate_input(hass: HomeAssistant):
+async def test_validate_input(hass: HomeAssistant) -> None:
     """Test input validation."""
     with patch(
         "homeassistant.components.devolo_home_network.config_flow.Device",

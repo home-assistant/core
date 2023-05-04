@@ -55,7 +55,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DdWrtDeviceScanner |
 
 
 class DdWrtDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running DD-WRT firmware."""
+    """Class which queries a wireless router running DD-WRT firmware."""
 
     def __init__(self, config):
         """Initialize the DD-WRT scanner."""

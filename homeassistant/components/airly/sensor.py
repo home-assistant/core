@@ -68,9 +68,9 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
         icon="mdi:air-filter",
-        name=ATTR_API_CAQI,
-        native_precision=0,
+        translation_key="caqi",
         native_unit_of_measurement="CAQI",
+        suggested_display_precision=0,
         attrs=lambda data: {
             ATTR_LEVEL: data[ATTR_API_CAQI_LEVEL],
             ATTR_ADVICE: data[ATTR_API_ADVICE],
@@ -80,18 +80,18 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_PM1,
         device_class=SensorDeviceClass.PM1,
-        name=ATTR_API_PM1,
-        native_precision=0,
+        translation_key="pm1",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM25,
         device_class=SensorDeviceClass.PM25,
-        name="PM2.5",
-        native_precision=0,
+        translation_key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         attrs=lambda data: {
             ATTR_LIMIT: data[f"{ATTR_API_PM25}_{SUFFIX_LIMIT}"],
             ATTR_PERCENT: round(data[f"{ATTR_API_PM25}_{SUFFIX_PERCENT}"]),
@@ -100,10 +100,10 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_PM10,
         device_class=SensorDeviceClass.PM10,
-        name=ATTR_API_PM10,
-        native_precision=0,
+        translation_key="pm10",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         attrs=lambda data: {
             ATTR_LIMIT: data[f"{ATTR_API_PM10}_{SUFFIX_LIMIT}"],
             ATTR_PERCENT: round(data[f"{ATTR_API_PM10}_{SUFFIX_PERCENT}"]),
@@ -112,33 +112,33 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
-        name=ATTR_API_HUMIDITY.capitalize(),
-        native_precision=1,
+        translation_key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
-        name=ATTR_API_PRESSURE.capitalize(),
-        native_precision=0,
+        translation_key="pressure",
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
-        name=ATTR_API_TEMPERATURE.capitalize(),
-        native_precision=1,
+        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_CO,
-        name=ATTR_API_CO,
-        native_precision=0,
+        translation_key="co",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         attrs=lambda data: {
             ATTR_LIMIT: data[f"{ATTR_API_CO}_{SUFFIX_LIMIT}"],
             ATTR_PERCENT: round(data[f"{ATTR_API_CO}_{SUFFIX_PERCENT}"]),
@@ -147,10 +147,10 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_NO2,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
-        name=ATTR_API_NO2,
-        native_precision=0,
+        translation_key="no2",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         attrs=lambda data: {
             ATTR_LIMIT: data[f"{ATTR_API_NO2}_{SUFFIX_LIMIT}"],
             ATTR_PERCENT: round(data[f"{ATTR_API_NO2}_{SUFFIX_PERCENT}"]),
@@ -159,10 +159,10 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_SO2,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
-        name=ATTR_API_SO2,
-        native_precision=0,
+        translation_key="so2",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         attrs=lambda data: {
             ATTR_LIMIT: data[f"{ATTR_API_SO2}_{SUFFIX_LIMIT}"],
             ATTR_PERCENT: round(data[f"{ATTR_API_SO2}_{SUFFIX_PERCENT}"]),
@@ -171,10 +171,10 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_O3,
         device_class=SensorDeviceClass.OZONE,
-        name=ATTR_API_O3,
-        native_precision=0,
+        translation_key="o3",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         attrs=lambda data: {
             ATTR_LIMIT: data[f"{ATTR_API_O3}_{SUFFIX_LIMIT}"],
             ATTR_PERCENT: round(data[f"{ATTR_API_O3}_{SUFFIX_PERCENT}"]),

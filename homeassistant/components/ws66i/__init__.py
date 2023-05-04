@@ -41,7 +41,6 @@ def _find_zones(hass: HomeAssistant, ws66i: WS66i) -> list[int]:
     # Zones 21,31 - 26,36 are the daisy-chained amps
     zone_list = []
     for amp_num in range(1, 4):
-
         if amp_num > 1:
             # Don't add entities that aren't present
             status = ws66i.zone_status(amp_num * 10 + 1)

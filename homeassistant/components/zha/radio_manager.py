@@ -12,7 +12,7 @@ from typing import Any
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_BACKUP_ENABLED
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
@@ -38,6 +38,12 @@ AUTOPROBE_RADIOS = (
     RadioType.znp,
     RadioType.deconz,
     RadioType.zigate,
+)
+
+RECOMMENDED_RADIOS = (
+    RadioType.ezsp,
+    RadioType.znp,
+    RadioType.deconz,
 )
 
 CONNECT_DELAY_S = 1.0
@@ -127,6 +133,7 @@ class ZhaRadioManager:
 
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
+        app_config[CONF_NWK_BACKUP_ENABLED] = False
         app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
@@ -207,6 +214,7 @@ class ZhaRadioManager:
 
             # The list of backups will always exist
             self.backups = app.backups.backups.copy()
+            self.backups.sort(reverse=True, key=lambda b: b.backup_time)
 
         return backup
 

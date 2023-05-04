@@ -75,14 +75,3 @@ charge_set_schedules:
       required: true
       selector:
         object:
-
-charge_start:
-  description: Start charge on vehicle.
-  fields:
-    vehicle:
-      name: Vehicle
-      description: The vehicle to send the command to.
-      required: true
-      selector:
-        device:
-          integration: renault

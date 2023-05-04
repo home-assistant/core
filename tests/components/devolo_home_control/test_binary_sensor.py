@@ -9,10 +9,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 from .mocks import (
@@ -24,7 +24,9 @@ from .mocks import (
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_binary_sensor(hass: HomeAssistant):
+async def test_binary_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test setup and state change of a binary sensor device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockBinarySensor()
@@ -44,9 +46,8 @@ async def test_binary_sensor(hass: HomeAssistant):
     state = hass.states.get(f"{DOMAIN}.test_overload")
     assert state is not None
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Overload"
-    er = entity_registry.async_get(hass)
     assert (
-        er.async_get(f"{DOMAIN}.test_overload").entity_category
+        entity_registry.async_get(f"{DOMAIN}.test_overload").entity_category
         == EntityCategory.DIAGNOSTIC
     )
 
@@ -63,7 +64,7 @@ async def test_binary_sensor(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_remote_control(hass: HomeAssistant):
+async def test_remote_control(hass: HomeAssistant) -> None:
     """Test setup and state change of a remote control device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockRemoteControl()
@@ -98,7 +99,7 @@ async def test_remote_control(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_disabled(hass: HomeAssistant):
+async def test_disabled(hass: HomeAssistant) -> None:
     """Test setup of a disabled device."""
     entry = configure_integration(hass)
     with patch(
@@ -112,7 +113,7 @@ async def test_disabled(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockBinarySensor()

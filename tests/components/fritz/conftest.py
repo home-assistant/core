@@ -57,7 +57,6 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
             service = service + "1"
 
         if kwargs:
-
             if (index := kwargs.get("NewIndex")) is None:
                 index = next(iter(kwargs.values()))
 

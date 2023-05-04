@@ -1,0 +1,146 @@
+[
+  {
+    "Timestamp": "2023-01-19T05:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T06:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T07:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T08:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T09:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T10:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T11:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T12:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T13:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T14:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T15:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T16:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T17:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T18:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T19:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T20:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T21:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T22:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-19T23:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-20T00:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-20T01:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-20T02:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-20T03:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  },
+  {
+    "Timestamp": "2023-01-20T04:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.7252982,
+    "TariffReturn": 0.7252982
+  }
+]

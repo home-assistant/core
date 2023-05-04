@@ -108,13 +108,13 @@ class AirConEntity(ClimateEntity):
 
     def __init__(
         self,
-        hass,
-        said,
-        name,
+        hass: HomeAssistant,
+        said: str,
+        name: str | None,
         backend_selector: BackendSelector,
         auth: Auth,
         session: ClientSession,
-    ):
+    ) -> None:
         """Initialize the entity."""
         self._aircon = Aircon(backend_selector, auth, said, session)
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)

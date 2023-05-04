@@ -21,9 +21,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Coolmaster from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
-    coolmaster = CoolMasterNet(
-        host, port, swing_support=entry.data.get(CONF_SWING_SUPPORT, False)
-    )
+    if not entry.data.get(CONF_SWING_SUPPORT):
+        coolmaster = CoolMasterNet(
+            host,
+            port,
+        )
+    else:
+        # Swing support adds an additional request per unit. The requests are
+        # done in parallel, which can cause delays on the server. Therefore,
+        # we increase the request timeout to 5 seconds instead of 1.
+        coolmaster = CoolMasterNet(
+            host,
+            port,
+            read_timeout=5,
+            swing_support=True,
+        )
     try:
         info = await coolmaster.info()
         if not info:

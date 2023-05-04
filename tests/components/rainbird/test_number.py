@@ -29,7 +29,7 @@ def platforms() -> list[str]:
 
 
 @pytest.mark.parametrize(
-    "rain_delay_response,expected_state",
+    ("rain_delay_response", "expected_state"),
     [(RAIN_DELAY, "16"), (RAIN_DELAY_OFF, "0")],
 )
 async def test_number_values(

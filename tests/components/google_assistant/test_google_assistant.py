@@ -18,13 +18,14 @@ from homeassistant.components import (
     media_player,
     switch,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, UnitOfTemperature
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from . import DEMO_DEVICES
-
-from tests.common import mock_registry
 
 API_PASSWORD = "test1234"
 
@@ -125,11 +126,10 @@ def hass_fixture(event_loop, hass):
     return hass
 
 
-async def test_sync_request(hass_fixture, assistant_client, auth_header):
+async def test_sync_request(
+    hass_fixture, assistant_client, auth_header, entity_registry: er.EntityRegistry
+) -> None:
     """Test a sync request."""
-
-    entity_registry = mock_registry(hass_fixture)
-
     entity_entry1 = entity_registry.async_get_or_create(
         "switch",
         "test",
@@ -192,7 +192,7 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
         assert dev["type"] == demo["type"]
 
 
-async def test_query_request(hass_fixture, assistant_client, auth_header):
+async def test_query_request(hass_fixture, assistant_client, auth_header) -> None:
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -233,7 +233,9 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
     assert devices["media_player.lounge_room"]["on"] is True
 
 
-async def test_query_climate_request(hass_fixture, assistant_client, auth_header):
+async def test_query_climate_request(
+    hass_fixture, assistant_client, auth_header
+) -> None:
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -285,7 +287,9 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
     }
 
 
-async def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
+async def test_query_climate_request_f(
+    hass_fixture, assistant_client, auth_header
+) -> None:
     """Test a query request."""
     # Mock demo devices as fahrenheit to see if we convert to celsius
     hass_fixture.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
@@ -345,7 +349,9 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
     hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
-async def test_query_humidifier_request(hass_fixture, assistant_client, auth_header):
+async def test_query_humidifier_request(
+    hass_fixture, assistant_client, auth_header
+) -> None:
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -391,7 +397,7 @@ async def test_query_humidifier_request(hass_fixture, assistant_client, auth_hea
     }
 
 
-async def test_execute_request(hass_fixture, assistant_client, auth_header):
+async def test_execute_request(hass_fixture, assistant_client, auth_header) -> None:
     """Test an execute request."""
     reqid = "5711642932632160985"
     data = {

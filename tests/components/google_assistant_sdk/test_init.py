@@ -7,6 +7,7 @@ from unittest.mock import call, patch
 import aiohttp
 import pytest
 
+from homeassistant.components import conversation
 from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -17,6 +18,7 @@ from .conftest import ComponentSetup, ExpectedCredentials
 
 from tests.common import async_fire_time_changed, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def fetch_api_url(hass_client, url):
@@ -84,7 +86,7 @@ async def test_expired_token_refresh_success(
 
 
 @pytest.mark.parametrize(
-    "expires_at,status,expected_state",
+    ("expires_at", "status", "expected_state"),
     [
         (
             time.time() - 3600,
@@ -121,7 +123,7 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.parametrize(
-    "configured_language_code,expected_language_code",
+    ("configured_language_code", "expected_language_code"),
     [("", "en-US"), ("en-US", "en-US"), ("es-ES", "es-ES")],
     ids=["default", "english", "spanish"],
 )
@@ -186,7 +188,7 @@ async def test_send_text_commands(
 
 
 @pytest.mark.parametrize(
-    "status,requires_reauth",
+    ("status", "requires_reauth"),
     [
         (
             http.HTTPStatus.UNAUTHORIZED,
@@ -207,6 +209,7 @@ async def test_send_text_command_expired_token_refresh_failure(
     requires_reauth: ConfigEntryState,
 ) -> None:
     """Test failure refreshing token in send_text_command."""
+    await async_setup_component(hass, "homeassistant", {})
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -232,7 +235,9 @@ async def test_send_text_command_expired_token_refresh_failure(
 
 
 async def test_send_text_command_media_player(
-    hass: HomeAssistant, setup_integration: ComponentSetup, hass_client
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test send_text_command with media_player."""
     await setup_integration()
@@ -330,6 +335,9 @@ async def test_conversation_agent(
         entry, options={"enable_conversation_agent": True}
     )
     await hass.async_block_till_done()
+
+    agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    assert agent.supported_languages == ["en-US"]
 
     text1 = "tell me a joke"
     text2 = "tell me another one"

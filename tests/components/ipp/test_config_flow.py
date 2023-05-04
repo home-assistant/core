@@ -328,7 +328,7 @@ async def test_zeroconf_no_unique_id(
 
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant, aioclient_mock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the full manual user flow from start to finish."""
     mock_connection(aioclient_mock)

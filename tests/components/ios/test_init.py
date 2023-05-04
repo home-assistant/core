@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import ios
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_component, mock_coro
@@ -12,7 +13,7 @@ from tests.common import mock_component, mock_coro
 @pytest.fixture(autouse=True)
 def mock_load_json():
     """Mock load_json."""
-    with patch("homeassistant.components.ios.load_json", return_value={}):
+    with patch("homeassistant.components.ios.load_json_object", return_value={}):
         yield
 
 
@@ -23,7 +24,7 @@ def mock_dependencies(hass):
     mock_component(hass, "device_tracker")
 
 
-async def test_creating_entry_sets_up_sensor(hass):
+async def test_creating_entry_sets_up_sensor(hass: HomeAssistant) -> None:
     """Test setting up iOS loads the sensor component."""
     with patch(
         "homeassistant.components.ios.sensor.async_setup_entry",
@@ -35,7 +36,7 @@ async def test_creating_entry_sets_up_sensor(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_configuring_ios_creates_entry(hass):
+async def test_configuring_ios_creates_entry(hass: HomeAssistant) -> None:
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.ios.async_setup_entry", return_value=mock_coro(True)
@@ -46,7 +47,7 @@ async def test_configuring_ios_creates_entry(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_not_configuring_ios_not_creates_entry(hass):
+async def test_not_configuring_ios_not_creates_entry(hass: HomeAssistant) -> None:
     """Test that no config will not create an entry."""
     with patch(
         "homeassistant.components.ios.async_setup_entry", return_value=mock_coro(True)

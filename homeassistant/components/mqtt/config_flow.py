@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import queue
-from ssl import PROTOCOL_TLS, SSLContext, SSLError
+from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import Any
 
@@ -12,9 +12,9 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
@@ -25,10 +25,10 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
     FileSelector,
@@ -44,9 +44,9 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .client import MqttClientSetup
-from .config_integration import CONFIG_SCHEMA_ENTRY
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -154,7 +154,7 @@ CERT_UPLOAD_SELECTOR = FileSelector(
 KEY_UPLOAD_SELECTOR = FileSelector(FileSelectorConfig(accept=".key,application/pkcs8"))
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -164,7 +164,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> MQTTOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MQTTOptionsFlowHandler(config_entry)
@@ -186,7 +186,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
-            self.hass,
+            self,
             fields,
             None,
             user_input,
@@ -255,10 +255,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
+class MQTTOptionsFlowHandler(OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize MQTT options flow."""
         self.config_entry = config_entry
         self.broker_config: dict[str, str | int] = {}
@@ -276,7 +276,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
-            self.hass,
+            self,
             fields,
             self.config_entry.data,
             user_input,
@@ -368,7 +368,6 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 updated_config = {}
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
-                CONFIG_SCHEMA_ENTRY(updated_config)
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=updated_config,
@@ -449,7 +448,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 
 
 async def async_get_broker_settings(
-    hass: HomeAssistant,
+    flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
     user_input: dict[str, Any] | None,
@@ -462,6 +461,7 @@ async def async_get_broker_settings(
     or when the advanced_broker_options checkbox was selected.
     Returns True when settings are collected successfully.
     """
+    hass = flow.hass
     advanced_broker_options: bool = False
     user_input_basic: dict[str, Any] = {}
     current_config: dict[str, Any] = (
@@ -587,7 +587,7 @@ async def async_get_broker_settings(
         current_user = user_input_basic.get(CONF_USERNAME)
         current_pass = user_input_basic.get(CONF_PASSWORD)
     else:
-        # Get default settings from entry or yaml (if any)
+        # Get default settings from entry (if any)
         current_broker = current_config.get(CONF_BROKER)
         current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
         current_user = current_config.get(CONF_USERNAME)
@@ -640,9 +640,12 @@ async def async_get_broker_settings(
             description={"suggested_value": current_pass},
         )
     ] = PASSWORD_SELECTOR
-    # show advanced options checkbox if requested
+    # show advanced options checkbox if requested and
+    # advanced options are enabled
     # or when the defaults of advanced options are overridden
     if not advanced_broker_options:
+        if not flow.show_advanced_options:
+            return False
         fields[
             vol.Optional(
                 ADVANCED_OPTIONS,
@@ -788,7 +791,7 @@ def check_certicate_chain() -> str | None:
         except (TypeError, ValueError):
             return "bad_client_key"
     # Check the certificate chain
-    context = SSLContext(PROTOCOL_TLS)
+    context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:
         try:
             context.load_cert_chain(client_certificate, private_key)

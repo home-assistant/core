@@ -20,8 +20,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MESSAGE, DOMAIN, QSW_COORD_DATA
@@ -142,7 +142,10 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
         super().__init__(coordinator, entry, type_id)
 
         self._attr_name = f"{self.product} {description.name}"
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}{description.sep_key}{description.subkey}"
+        self._attr_unique_id = (
+            f"{entry.unique_id}_{description.key}"
+            f"{description.sep_key}{description.subkey}"
+        )
         self.entity_description = description
         self._async_update_attrs()
 

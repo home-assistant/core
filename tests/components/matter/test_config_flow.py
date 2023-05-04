@@ -109,7 +109,7 @@ async def test_manual_create_entry(
 
 
 @pytest.mark.parametrize(
-    "error, side_effect",
+    ("error", "side_effect"),
     [
         ("cannot_connect", CannotConnect(Exception("Boom"))),
         ("invalid_server_version", InvalidServerVersion("Invalid version")),
@@ -193,6 +193,7 @@ async def test_supervisor_discovery(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -212,7 +213,7 @@ async def test_supervisor_discovery(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, error",
+    ("discovery_info", "error"),
     [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
 )
 async def test_supervisor_discovery_addon_info_failed(
@@ -232,6 +233,7 @@ async def test_supervisor_discovery_addon_info_failed(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -262,6 +264,7 @@ async def test_clean_supervisor_discovery_on_user_create(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -324,6 +327,7 @@ async def test_abort_supervisor_discovery_with_existing_entry(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -353,6 +357,7 @@ async def test_abort_supervisor_discovery_with_existing_flow(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -379,6 +384,7 @@ async def test_abort_supervisor_discovery_for_other_addon(
             },
             name="Other Matter Server",
             slug="other_addon",
+            uuid="1234",
         ),
     )
 
@@ -404,6 +410,7 @@ async def test_supervisor_discovery_addon_not_running(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -452,6 +459,7 @@ async def test_supervisor_discovery_addon_not_installed(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -566,8 +574,13 @@ async def test_addon_running(
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, discovery_info_error, client_connect_error, addon_info_error, "
-        "abort_reason, discovery_info_called, client_connect_called"
+        "discovery_info",
+        "discovery_info_error",
+        "client_connect_error",
+        "addon_info_error",
+        "abort_reason",
+        "discovery_info_called",
+        "client_connect_called",
     ),
     [
         (
@@ -724,8 +737,11 @@ async def test_addon_installed(
 
 @pytest.mark.parametrize(
     (
-        "discovery_info, start_addon_error, client_connect_error, "
-        "discovery_info_called, client_connect_called"
+        "discovery_info",
+        "start_addon_error",
+        "client_connect_error",
+        "discovery_info_called",
+        "client_connect_called",
     ),
     [
         (

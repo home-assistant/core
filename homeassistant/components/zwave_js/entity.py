@@ -173,8 +173,7 @@ class ZWaveBaseEntity(Entity):
 
     @callback
     def _node_status_alive_or_dead(self, event_data: dict) -> None:
-        """
-        Call when node status changes to alive or dead.
+        """Call when node status changes to alive or dead.
 
         Should not be overridden by subclasses.
         """

@@ -21,8 +21,10 @@ else:
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
+    "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
+    "azure-servicebus",  # depends on uamqp, which requires OpenSSL 1.1
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
@@ -83,6 +85,9 @@ libcst==0.3.23
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
 
+# This is a old unmaintained library and is replaced with faust-cchardet
+cchardet==1000000000.0.0
+
 # To remove reliance on typing
 btlewrap>=0.0.10
 
@@ -102,7 +107,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.6.2
 h11==0.14.0
-httpcore==0.16.3
+httpcore==0.17.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -141,18 +146,44 @@ pubnub!=6.4.0
 iso4217!=1.10.20220401
 
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
-pandas==1.4.3
-
-# uamqp 1.6.1, has 1 failing test during built on armv7/armhf
-uamqp==1.6.0
+# Limit this to Python 3.10, to be able to install Python 3.11 wheels for now
+pandas==1.4.3;python_version<'3.11'
 
 # Matplotlib 3.6.2 has issues building wheels on armhf/armv7
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
 
-# pyOpenSSL 23.0.0 or later required to avoid import errors when
-# cryptography 39.0.0 is installed with botocore
-pyOpenSSL>=23.0.0
+# pyOpenSSL 23.1.0 or later required to avoid import errors when
+# cryptography 40.0.1 is installed with botocore
+pyOpenSSL>=23.1.0
+
+# uamqp newer versions we currently can't build for armv7/armhf
+# Limit this to Python 3.10, to not block Python 3.11 dev for now
+uamqp==1.6.0;python_version<'3.11'
+
+# protobuf must be in package constraints for the wheel
+# builder to build binary wheels
+protobuf==4.22.3
+
+# faust-cchardet: Ensure we have a version we can build wheels
+# 2.1.18 is the first version that works with our wheel builder
+faust-cchardet>=2.1.18
+
+# websockets 11.0 is missing files in the source distribution
+# which break wheel builds so we need at least 11.0.1
+# https://github.com/aaugustin/websockets/issues/1329
+websockets>=11.0.1
+
+# pyasn1 0.5.0 has breaking changes which cause pysnmplib to fail
+# until they are resolved, we need to pin pyasn1 to 0.4.8 and
+# pysnmplib to 5.0.21 to avoid the issue.
+# https://github.com/pyasn1/pyasn1/pull/30#issuecomment-1517564335
+# https://github.com/pysnmp/pysnmp/issues/51
+pyasn1==0.4.8
+pysnmplib==5.0.21
+# pysnmp is no longer maintained and does not work with newer
+# python
+pysnmp==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

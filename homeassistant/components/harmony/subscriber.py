@@ -4,14 +4,14 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import logging
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 _LOGGER = logging.getLogger(__name__)
 
-NoParamCallback = Optional[Callable[[], Any]]
-ActivityCallback = Optional[Callable[[tuple], Any]]
+NoParamCallback = Callable[[], Any] | None
+ActivityCallback = Callable[[tuple], Any] | None
 
 
 class HarmonyCallback(NamedTuple):

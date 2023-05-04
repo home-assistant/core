@@ -1,10 +1,10 @@
 """Test sensor of AccuWeather integration."""
 from datetime import timedelta
-import json
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolumetricFlux,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -33,17 +34,21 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import (
+    async_fire_time_changed,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
-async def test_sensor_without_forecast(hass):
+async def test_sensor_without_forecast(hass: HomeAssistant) -> None:
     """Test states of the sensor without forecast."""
     await init_integration(hass)
     registry = er.async_get(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "3200"
+    assert state.state == "3200.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.METERS
@@ -53,6 +58,7 @@ async def test_sensor_without_forecast(hass):
     entry = registry.async_get("sensor.home_cloud_ceiling")
     assert entry
     assert entry.unique_id == "0123456-ceiling"
+    assert entry.options["sensor"] == {"suggested_display_precision": 0}
 
     state = hass.states.get("sensor.home_precipitation")
     assert state
@@ -79,8 +85,9 @@ async def test_sensor_without_forecast(hass):
     assert state.state == "falling"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert state.attributes.get(ATTR_STATE_CLASS) is None
+    assert state.attributes.get(ATTR_OPTIONS) == ["falling", "rising", "steady"]
 
     entry = registry.async_get("sensor.home_pressure_tendency")
     assert entry
@@ -112,7 +119,7 @@ async def test_sensor_without_forecast(hass):
     assert entry.unique_id == "0123456-uvindex"
 
 
-async def test_sensor_with_forecast(hass):
+async def test_sensor_with_forecast(hass: HomeAssistant) -> None:
     """Test states of the sensor with forecast."""
     await init_integration(hass, forecast=True)
     registry = er.async_get(hass)
@@ -182,15 +189,34 @@ async def test_sensor_with_forecast(hass):
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-sunny"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UV_INDEX
-    assert state.attributes.get("level") == "Moderate"
+    assert state.attributes.get("level") == "moderate"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
     entry = registry.async_get("sensor.home_uv_index_0d")
     assert entry
     assert entry.unique_id == "0123456-uvindex-0"
 
+    state = hass.states.get("sensor.home_air_quality_0d")
+    assert state
+    assert state.state == "good"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "good",
+        "hazardous",
+        "high",
+        "low",
+        "moderate",
+        "unhealthy",
+    ]
 
-async def test_sensor_disabled(hass):
+    entry = registry.async_get("sensor.home_air_quality_0d")
+    assert entry
+    assert entry.unique_id == "0123456-airquality-0"
+
+
+async def test_sensor_disabled(hass: HomeAssistant) -> None:
     """Test sensor disabled by default."""
     await init_integration(hass)
     registry = er.async_get(hass)
@@ -210,7 +236,7 @@ async def test_sensor_disabled(hass):
     assert updated_entry.disabled is False
 
 
-async def test_sensor_enabled_without_forecast(hass):
+async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
     """Test enabling an advanced sensor."""
     registry = er.async_get(hass)
 
@@ -296,13 +322,6 @@ async def test_sensor_enabled_without_forecast(hass):
         DOMAIN,
         "0123456-mold-0",
         suggested_object_id="home_mold_pollen_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-ozone-0",
-        suggested_object_id="home_ozone_0d",
         disabled_by=None,
     )
     registry.async_get_or_create(
@@ -499,7 +518,7 @@ async def test_sensor_enabled_without_forecast(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:grass"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
@@ -515,24 +534,12 @@ async def test_sensor_enabled_without_forecast(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get("sensor.home_mold_pollen_0d")
     assert entry
     assert entry.unique_id == "0123456-mold-0"
-
-    state = hass.states.get("sensor.home_ozone_0d")
-    assert state
-    assert state.state == "32"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get("level") == "Good"
-    assert state.attributes.get(ATTR_ICON) == "mdi:vector-triangle"
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_ozone_0d")
-    assert entry
-    assert entry.unique_id == "0123456-ozone-0"
 
     state = hass.states.get("sensor.home_ragweed_pollen_0d")
     assert state
@@ -542,7 +549,7 @@ async def test_sensor_enabled_without_forecast(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:sprout"
 
     entry = registry.async_get("sensor.home_ragweed_pollen_0d")
@@ -580,7 +587,7 @@ async def test_sensor_enabled_without_forecast(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:tree-outline"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
@@ -656,14 +663,14 @@ async def test_sensor_enabled_without_forecast(hass):
     assert entry.unique_id == "0123456-windgustnight-0"
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service is offline."""
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "3200"
+    assert state.state == "3200.0"
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
@@ -680,8 +687,8 @@ async def test_availability(hass):
     future = utcnow() + timedelta(minutes=120)
     with patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
-        return_value=json.loads(
-            load_fixture("accuweather/current_conditions_data.json")
+        return_value=load_json_object_fixture(
+            "accuweather/current_conditions_data.json"
         ),
     ), patch(
         "homeassistant.components.accuweather.AccuWeather.requests_remaining",
@@ -694,17 +701,17 @@ async def test_availability(hass):
         state = hass.states.get("sensor.home_cloud_ceiling")
         assert state
         assert state.state != STATE_UNAVAILABLE
-        assert state.state == "3200"
+        assert state.state == "3200.0"
 
 
-async def test_manual_update_entity(hass):
+async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, forecast=True)
 
     await async_setup_component(hass, "homeassistant", {})
 
-    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
-    forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
+    current = load_json_object_fixture("accuweather/current_conditions_data.json")
+    forecast = load_json_array_fixture("accuweather/forecast_data.json")
 
     with patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
@@ -727,32 +734,42 @@ async def test_manual_update_entity(hass):
         assert mock_forecast.call_count == 1
 
 
-async def test_sensor_imperial_units(hass):
+async def test_sensor_imperial_units(hass: HomeAssistant) -> None:
     """Test states of the sensor without forecast."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "10500"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
+    assert state.state == "10498.687664042"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.FEET
 
+    state = hass.states.get("sensor.home_wind")
+    assert state
+    assert state.state == "9.0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfSpeed.MILES_PER_HOUR
 
-async def test_state_update(hass):
+    state = hass.states.get("sensor.home_realfeel_temperature")
+    assert state
+    assert state.state == "77.2"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT
+    )
+
+
+async def test_state_update(hass: HomeAssistant) -> None:
     """Ensure the sensor state changes after updating the data."""
     await init_integration(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "3200"
+    assert state.state == "3200.0"
 
     future = utcnow() + timedelta(minutes=60)
 
-    current_condition = json.loads(
-        load_fixture("accuweather/current_conditions_data.json")
+    current_condition = load_json_object_fixture(
+        "accuweather/current_conditions_data.json"
     )
     current_condition["Ceiling"]["Metric"]["Value"] = 3300
 

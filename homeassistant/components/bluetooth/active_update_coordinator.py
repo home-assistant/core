@@ -26,8 +26,7 @@ _T = TypeVar("_T")
 class ActiveBluetoothDataUpdateCoordinator(
     PassiveBluetoothDataUpdateCoordinator, Generic[_T]
 ):
-    """
-    A coordinator that receives passive data from advertisements but can also poll.
+    """A coordinator that receives passive data from advertisements but can also poll.
 
     Unlike the passive processor coordinator, this coordinator does call a parser
     method to parse the data from the advertisement.
@@ -107,6 +106,8 @@ class ActiveBluetoothDataUpdateCoordinator(
 
     def needs_poll(self, service_info: BluetoothServiceInfoBleak) -> bool:
         """Return true if time to try and poll."""
+        if self.hass.is_stopping:
+            return False
         poll_age: float | None = None
         if self._last_poll:
             poll_age = monotonic_time_coarse() - self._last_poll
@@ -142,7 +143,7 @@ class ActiveBluetoothDataUpdateCoordinator(
             self._last_poll = monotonic_time_coarse()
 
         if not self.last_poll_successful:
-            self.logger.debug("%s: Polling recovered")
+            self.logger.debug("%s: Polling recovered", self.address)
             self.last_poll_successful = True
 
         self._async_handle_bluetooth_poll()
@@ -168,3 +169,9 @@ class ActiveBluetoothDataUpdateCoordinator(
         # possible after a device comes online or back in range, if a poll is due
         if self.needs_poll(service_info):
             self.hass.async_create_task(self._debounced_poll.async_call())
+
+    @callback
+    def _async_stop(self) -> None:
+        """Cancel debouncer and stop the callbacks."""
+        self._debounced_poll.async_cancel()
+        super()._async_stop()

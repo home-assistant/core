@@ -6,6 +6,7 @@ from jaraco.abode.exceptions import (
     AuthenticationException as AbodeAuthenticationException,
 )
 from jaraco.abode.helpers.errors import MFA_CODE_REQUIRED
+import pytest
 from requests.exceptions import ConnectTimeout
 
 from homeassistant import data_entry_flow
@@ -16,6 +17,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
@@ -99,7 +102,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     with patch("homeassistant.components.abode.config_flow.Abode"):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )

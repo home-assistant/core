@@ -5,12 +5,13 @@ from screenlogicpy.const import BODY_TYPE, DATA as SL_DATA, EQUIPMENT, SCG
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ScreenlogicEntity
+from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import ScreenlogicEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,13 +29,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    equipment_flags = coordinator.data[SL_DATA.KEY_CONFIG]["equipment_flags"]
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+    equipment_flags = coordinator.gateway_data[SL_DATA.KEY_CONFIG]["equipment_flags"]
     if equipment_flags & EQUIPMENT.FLAG_CHLORINATOR:
         async_add_entities(
             [
                 ScreenLogicNumber(coordinator, scg_level)
-                for scg_level in coordinator.data[SL_DATA.KEY_SCG]
+                for scg_level in coordinator.gateway_data[SL_DATA.KEY_SCG]
                 if scg_level in SUPPORTED_SCG_NUMBERS
             ]
         )
@@ -65,7 +68,7 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
         # both existing level values and override the one that changed.
         levels = {}
         for level in SUPPORTED_SCG_NUMBERS:
-            levels[level] = self.coordinator.data[SL_DATA.KEY_SCG][level]["value"]
+            levels[level] = self.gateway_data[SL_DATA.KEY_SCG][level]["value"]
         levels[self._data_key] = int(value)
 
         if await self.coordinator.gateway.async_set_scg_config(
@@ -88,4 +91,4 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
     @property
     def sensor(self) -> dict:
         """Shortcut to access the level sensor data."""
-        return self.coordinator.data[SL_DATA.KEY_SCG][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_SCG][self._data_key]
