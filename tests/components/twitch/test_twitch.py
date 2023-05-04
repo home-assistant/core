@@ -6,7 +6,14 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import TwitchMock
+from . import (
+    TwitchAPIExceptionMock,
+    TwitchInvalidTokenMock,
+    TwitchInvalidUserMock,
+    TwitchMissingScopeMock,
+    TwitchMock,
+    TwitchUnauthorizedMock,
+)
 
 ENTITY_ID = "sensor.channel123"
 CONFIG = {
@@ -123,6 +130,76 @@ async def test_oauth_with_follow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     sensor_state = hass.states.get(ENTITY_ID)
-    assert sensor_state.attributes["subscribed"] is False
     assert sensor_state.attributes["following"] is True
     assert sensor_state.attributes["following_since"] == "2020-01-20T21:22:42"
+
+
+async def test_auth_with_invalid_credentials(hass: HomeAssistant) -> None:
+    """Test auth with invalid credentials."""
+
+    with patch(
+        "homeassistant.components.twitch.sensor.Twitch",
+        return_value=TwitchUnauthorizedMock(),
+    ):
+        assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
+        await hass.async_block_till_done()
+
+    sensor_state = hass.states.get(ENTITY_ID)
+    assert sensor_state is None
+
+
+async def test_auth_with_missing_scope(hass: HomeAssistant) -> None:
+    """Test auth with invalid credentials."""
+
+    with patch(
+        "homeassistant.components.twitch.sensor.Twitch",
+        return_value=TwitchMissingScopeMock(),
+    ):
+        assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
+        await hass.async_block_till_done()
+
+    sensor_state = hass.states.get(ENTITY_ID)
+    assert sensor_state is None
+
+
+async def test_auth_with_invalid_token(hass: HomeAssistant) -> None:
+    """Test auth with invalid credentials."""
+
+    with patch(
+        "homeassistant.components.twitch.sensor.Twitch",
+        return_value=TwitchInvalidTokenMock(),
+    ):
+        assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
+        await hass.async_block_till_done()
+
+    sensor_state = hass.states.get(ENTITY_ID)
+    assert sensor_state is None
+
+
+async def test_auth_with_invalid_user(hass: HomeAssistant) -> None:
+    """Test auth with invalid user."""
+
+    with patch(
+        "homeassistant.components.twitch.sensor.Twitch",
+        return_value=TwitchInvalidUserMock(),
+    ):
+        assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
+        await hass.async_block_till_done()
+
+    sensor_state = hass.states.get(ENTITY_ID)
+    assert "subscribed" not in sensor_state.attributes
+
+
+async def test_auth_with_api_exception(hass: HomeAssistant) -> None:
+    """Test auth with invalid user."""
+
+    with patch(
+        "homeassistant.components.twitch.sensor.Twitch",
+        return_value=TwitchAPIExceptionMock(),
+    ):
+        assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
+        await hass.async_block_till_done()
+
+    sensor_state = hass.states.get(ENTITY_ID)
+    assert sensor_state.attributes["subscribed"] is False
+    assert "subscription_is_gifted" not in sensor_state.attributes

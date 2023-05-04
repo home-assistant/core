@@ -5,7 +5,13 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from twitchAPI.object import TwitchUser
-from twitchAPI.twitch import TwitchResourceNotFound
+from twitchAPI.twitch import (
+    InvalidTokenException,
+    MissingScopeException,
+    TwitchAPIException,
+    TwitchAuthorizationException,
+    TwitchResourceNotFound,
+)
 from twitchAPI.types import AuthScope, AuthType
 
 USER_OBJECT: TwitchUser = TwitchUser(
@@ -129,3 +135,56 @@ class TwitchMock:
             streams = [STREAMS]
         for stream in streams:
             yield stream
+
+
+class TwitchUnauthorizedMock(TwitchMock):
+    """Twitch mock to test if the client is unauthorized."""
+
+    def __await__(self):
+        """Add async capabilities to the mock."""
+        raise TwitchAuthorizationException()
+
+
+class TwitchMissingScopeMock(TwitchMock):
+    """Twitch mock to test missing scopes."""
+
+    async def set_user_authentication(
+        self, token: str, scope: list[AuthScope], validate: bool = True
+    ) -> None:
+        """Set user authentication."""
+        raise MissingScopeException()
+
+
+class TwitchInvalidTokenMock(TwitchMock):
+    """Twitch mock to test invalid token."""
+
+    async def set_user_authentication(
+        self, token: str, scope: list[AuthScope], validate: bool = True
+    ) -> None:
+        """Set user authentication."""
+        raise InvalidTokenException()
+
+
+class TwitchInvalidUserMock(TwitchMock):
+    """Twitch mock to test invalid user."""
+
+    async def get_users(
+        self, user_ids: Optional[list[str]] = None, logins: Optional[list[str]] = None
+    ) -> AsyncGenerator[TwitchUser, None]:
+        """Get list of mock users."""
+        if user_ids is not None or logins is not None:
+            async for user in super().get_users(user_ids, logins):
+                yield user
+        else:
+            for user in []:
+                yield user
+
+
+class TwitchAPIExceptionMock(TwitchMock):
+    """Twitch mock to test when twitch api throws unknown exception."""
+
+    async def check_user_subscription(
+        self, broadcaster_id: str, user_id: str
+    ) -> UserSubscriptionMock:
+        """Check if the user is subscribed."""
+        raise TwitchAPIException()
