@@ -33,8 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome update based on a config entry."""
-    if (dashboard := async_get_dashboard(hass)) is None:
-        return
+    dashboard = async_get_dashboard(hass)
     entry_data = DomainData.get(hass).get_entry_data(entry)
     unsubs: list[CALLBACK_TYPE] = []
 

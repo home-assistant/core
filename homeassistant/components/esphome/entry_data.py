@@ -37,8 +37,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
-from .dashboard import async_get_dashboard
-
 _SENTINEL = object()
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
@@ -197,10 +195,7 @@ class RuntimeEntryData:
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
-        needed_platforms = set()
-
-        if async_get_dashboard(hass):
-            needed_platforms.add(Platform.UPDATE)
+        needed_platforms = {Platform.UPDATE}
 
         if self.device_info is not None and self.device_info.voice_assistant_version:
             needed_platforms.add(Platform.BINARY_SENSOR)

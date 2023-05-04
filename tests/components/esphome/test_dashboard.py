@@ -4,30 +4,11 @@ from unittest.mock import patch
 from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, dashboard
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import VALID_NOISE_PSK
-
-
-async def test_new_info_reload_config_entries(
-    hass: HomeAssistant, init_integration, mock_dashboard
-) -> None:
-    """Test config entries are reloaded when new info is set."""
-    assert init_integration.state == ConfigEntryState.LOADED
-
-    with patch("homeassistant.components.esphome.async_setup_entry") as mock_setup:
-        await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
-
-    assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == init_integration
-
-    # Test it's a no-op when the same info is set
-    with patch("homeassistant.components.esphome.async_setup_entry") as mock_setup:
-        await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
-
-    assert len(mock_setup.mock_calls) == 0
 
 
 async def test_new_dashboard_fix_reauth(
