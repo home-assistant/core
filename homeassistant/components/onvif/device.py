@@ -293,7 +293,8 @@ class ONVIFDevice:
         try:
             device_info = await device_mgmt.GetDeviceInformation()
         except (XMLParseError, XMLSyntaxError, TransportError) as ex:
-            # Some cameras have invalid UTF-8 in their device information
+            # Some cameras have invalid UTF-8 in their device information (TransportError)
+            # and others have completely invalid XML (XMLParseError, XMLSyntaxError)
             LOGGER.warning("%s: Failed to fetch device information: %s", self.name, ex)
         else:
             manufacturer = device_info.Manufacturer
