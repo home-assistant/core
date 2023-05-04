@@ -24,6 +24,7 @@ from homeassistant.util.dt import utcnow
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
+    async_remove_entity,
     get_fixture_path,
 )
 
@@ -134,6 +135,12 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
     assert hass.states.get("binary_sensor.binary_sensor1").state == "on"
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.sensor1")
+    await async_remove_entity(hass, "sensor.sensor2")
+    await async_remove_entity(hass, "binary_sensor.binary_sensor1")
+    await async_remove_entity(hass, "binary_sensor.binary_sensor2")
+
 
 @respx.mock
 async def test_setup_with_ssl_error(
@@ -232,6 +239,12 @@ async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
     assert hass.states.get("binary_sensor.binary_sensor1").state == "on"
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.sensor1")
+    await async_remove_entity(hass, "sensor.sensor2")
+    await async_remove_entity(hass, "binary_sensor.binary_sensor1")
+    await async_remove_entity(hass, "binary_sensor.binary_sensor2")
+
 
 @respx.mock
 async def test_reload(hass: HomeAssistant) -> None:
@@ -280,6 +293,10 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.mockreset") is None
     assert hass.states.get("sensor.rollout")
     assert hass.states.get("sensor.fallover")
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.rollout")
+    await async_remove_entity(hass, "sensor.fallover")
 
 
 @respx.mock
@@ -372,6 +389,9 @@ async def test_reload_fails_to_read_configuration(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 1
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.mockrest")
+
 
 @respx.mock
 async def test_multiple_rest_endpoints(hass: HomeAssistant) -> None:
@@ -446,6 +466,12 @@ async def test_multiple_rest_endpoints(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.json_date_time").state == "07:11:08 PM"
     assert hass.states.get("sensor.json_time").state == "07:11:39 PM"
     assert hass.states.get("binary_sensor.binary_sensor").state == "on"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.json_date")
+    await async_remove_entity(hass, "sensor.json_date_time")
+    await async_remove_entity(hass, "sensor.json_time")
+    await async_remove_entity(hass, "binary_sensor.binary_sensor")
 
 
 async def test_empty_config(hass: HomeAssistant) -> None:
