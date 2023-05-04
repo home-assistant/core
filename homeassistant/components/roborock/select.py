@@ -2,7 +2,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.code_mappings import ModelSpecification, RoborockMopIntensityCode
+from roborock.code_mappings import ModelSpecification
 from roborock.containers import Status
 from roborock.roborock_typing import RoborockCommand
 
@@ -38,7 +38,6 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
     RoborockSelectDescription(
         key="water_box_mode",
         translation_key="mop_intensity",
-        options=RoborockMopIntensityCode.values(),
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
         value_fn=lambda data: data.water_box_mode_enum.name,
         options_lambda=lambda data: data.mop_intensity_code.values(),
