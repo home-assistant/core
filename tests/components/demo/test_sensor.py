@@ -12,7 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import async_remove_entity, mock_restore_cache_with_extra_data
 
 
 @pytest.fixture(autouse=True)
@@ -45,6 +45,12 @@ async def test_energy_sensor(
     state = hass.states.get(entity_id)
     assert state.state == str(delta)
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.total_energy_kwh")
+    await async_remove_entity(hass, "sensor.total_energy_mwh")
+    await async_remove_entity(hass, "sensor.total_gas_m3")
+    await async_remove_entity(hass, "sensor.total_gas_ft3")
+
 
 @pytest.mark.parametrize(("entity_id", "delta"), (("sensor.total_energy_kwh", 0.5),))
 async def test_restore_state(
@@ -75,3 +81,9 @@ async def test_restore_state(
 
     state = hass.states.get(entity_id)
     assert state.state == str(2**20 + delta)
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.total_energy_kwh")
+    await async_remove_entity(hass, "sensor.total_energy_mwh")
+    await async_remove_entity(hass, "sensor.total_gas_m3")
+    await async_remove_entity(hass, "sensor.total_gas_ft3")
