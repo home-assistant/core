@@ -22,8 +22,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     ALLOWED_WATERING_TIME,
     CONF_WATERING_TIME,
-    DATA_HYDRAWISE,
     DEFAULT_WATERING_TIME,
+    DOMAIN,
     LOGGER,
 )
 from .coordinator import HydrawiseDataUpdateCoordinator
@@ -63,7 +63,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DATA_HYDRAWISE]
+    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
     hydrawise: Hydrawiser = coordinator.api
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     default_watering_timer = config[CONF_WATERING_TIME]

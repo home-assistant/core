@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
-from .const import DATA_HYDRAWISE, LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
 
@@ -56,7 +56,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DATA_HYDRAWISE]
+    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
     hydrawise: Hydrawiser = coordinator.api
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
