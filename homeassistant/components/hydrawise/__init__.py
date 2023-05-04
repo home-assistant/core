@@ -17,14 +17,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import (
-    DATA_HYDRAWISE,
-    DOMAIN,
-    LOGGER,
-    NOTIFICATION_ID,
-    NOTIFICATION_TITLE,
-    SCAN_INTERVAL,
-)
+from .const import DOMAIN, LOGGER, NOTIFICATION_ID, NOTIFICATION_TITLE, SCAN_INTERVAL
 from .coordinator import HydrawiseDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
@@ -48,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         hydrawise = await hass.async_add_executor_job(Hydrawiser, access_token)
-        hass.data[DATA_HYDRAWISE] = HydrawiseDataUpdateCoordinator(
+        hass.data[DOMAIN] = HydrawiseDataUpdateCoordinator(
             hass, hydrawise, scan_interval
         )
     except (ConnectTimeout, HTTPError) as ex:
