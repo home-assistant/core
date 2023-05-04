@@ -45,7 +45,6 @@ def validate_lastfm_user(user: User) -> dict[str, str] | None:
     try:
         user.get_playcount()
     except WSError as error:
-        LOGGER.error(error)
         if error.details == "User not found":
             errors["base"] = "invalid_account"
         elif (
@@ -57,17 +56,13 @@ def validate_lastfm_user(user: User) -> dict[str, str] | None:
             errors["base"] = "unknown"
     except Exception:  # pylint:disable=broad-except
         errors["base"] = "unknown"
-    if not errors:
-        return None
     return errors
 
 
 class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self.data: dict[str, Any] = {}
+    data: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -83,15 +78,13 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize user input."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.data[CONF_API_KEY] = user_input[CONF_API_KEY]
-            self.data[CONF_MAIN_USER] = user_input[CONF_MAIN_USER]
+            self.data = user_input.copy()
             main_user = get_lastfm_user(
                 self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
-            lastfm_errors = validate_lastfm_user(main_user)
-            if not lastfm_errors:
+            errors = validate_lastfm_user(main_user)
+            if not errors:
                 return await self.async_step_friends()
-            errors = lastfm_errors
         return self.async_show_form(
             step_id="user",
             errors=errors,
@@ -129,7 +122,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             main_user = get_lastfm_user(
                 self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
-            friends: Sequence[SelectOptionDict] = [
+            friends: list[dict[str,str]] = [
                 {"value": str(friend.name), "label": str(friend.get_name(True))}
                 for friend in main_user.get_friends()
             ]
@@ -167,11 +160,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """LastFm Options flow handler."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize LastFM Options flow."""
-        super().__init__(entry)
-        self.data: dict[str, Any] = dict(entry.data)
-        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
