@@ -1,6 +1,5 @@
 """Google config for Cloud."""
 import asyncio
-from contextlib import suppress
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -178,10 +177,6 @@ class CloudGoogleConfig(AbstractConfig):
 
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
-            with suppress(HomeAssistantError):
-                entity_settings = async_get_entity_settings(self.hass, entity_id)
-                if CLOUD_GOOGLE in entity_settings:
-                    continue
             async_expose_entity(
                 self.hass,
                 CLOUD_GOOGLE,
@@ -197,10 +192,6 @@ class CloudGoogleConfig(AbstractConfig):
                     _2fa_disabled,
                 )
         for entity_id in self._prefs.google_entity_configs:
-            with suppress(HomeAssistantError):
-                entity_settings = async_get_entity_settings(self.hass, entity_id)
-                if CLOUD_GOOGLE in entity_settings:
-                    continue
             async_expose_entity(
                 self.hass,
                 CLOUD_GOOGLE,

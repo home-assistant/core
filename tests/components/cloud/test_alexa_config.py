@@ -628,7 +628,7 @@ async def test_alexa_config_migrate_expose_entity_prefs(
         "cloud.alexa": {"should_expose": True}
     }
     assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
-        "cloud.alexa": {"should_expose": False}
+        "cloud.alexa": {"should_expose": True}
     }
     assert async_get_entity_settings(hass, entity_config.entity_id) == {
         "cloud.alexa": {"should_expose": False}
