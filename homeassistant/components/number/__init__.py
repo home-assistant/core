@@ -130,8 +130,8 @@ class NumberEntityDescription(EntityDescription):
     mode: NumberMode | None = None
     native_max_value: float | None = None
     native_min_value: float | None = None
-    native_unit_of_measurement: str | None = None
     native_step: float | None = None
+    native_unit_of_measurement: str | None = None
     step: None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
@@ -202,8 +202,8 @@ class NumberEntity(Entity):
     _attr_native_max_value: float
     _attr_native_min_value: float
     _attr_native_step: float
-    _attr_native_value: float | None = None
     _attr_native_unit_of_measurement: str | None
+    _attr_native_value: float | None = None
     _deprecated_number_entity_reported = False
     _number_option_unit_of_measurement: str | None = None
 
