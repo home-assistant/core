@@ -346,7 +346,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_OFFSET: DEFAULT_OFFSET,
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
-            CONF_REMOVE_HOLIDAYS: ["Weihnachtstag"],
+            CONF_REMOVE_HOLIDAYS: ["Christmas"],
             CONF_PROVINCE: "none",
         },
     )
@@ -361,7 +361,7 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
         "days_offset": 0,
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12"],
-        "remove_holidays": ["Weihnachtstag"],
+        "remove_holidays": ["Christmas"],
         "province": None,
     }
 
@@ -420,7 +420,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
             "days_offset": 0,
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": ["2022-12-12"],
-            "remove_holidays": ["Weihnachtstag"],
+            "remove_holidays": ["Christmas"],
             "province": "BW",
         },
     )
@@ -433,7 +433,7 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
         "days_offset": 0,
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12"],
-        "remove_holidays": ["Weihnachtstag"],
+        "remove_holidays": ["Christmas"],
         "province": "BW",
     }
 
