@@ -47,7 +47,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
-        assert result["data"] == CONF_DATA
+        assert result["options"] == CONF_DATA
 
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
@@ -80,7 +80,7 @@ async def test_flow_user_invalid_username(hass: HomeAssistant) -> None:
 
 async def test_flow_user_unknown(hass: HomeAssistant) -> None:
     """Test user initialized flow with unknown error."""
-    with patch_fetch_user(thrown_error=Exception):
+    with patch_fetch_user(thrown_error=Exception()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
         )
