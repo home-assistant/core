@@ -18,7 +18,7 @@ from . import (
     make_nyc_test_params,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, async_remove_entity
 
 MELACHA_PARAMS = [
     make_nyc_test_params(
@@ -235,6 +235,11 @@ async def test_issur_melacha_sensor(
                 == result["new_state"]
             )
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "binary_sensor.test_issur_melacha_in_effect")
+    await async_remove_entity(hass, "binary_sensor.test_erev_shabbat_hag")
+    await async_remove_entity(hass, "binary_sensor.test_motzei_shabbat_hag")
+
 
 @pytest.mark.parametrize(
     (
@@ -304,6 +309,11 @@ async def test_issur_melacha_sensor_update(
             hass.states.get("binary_sensor.test_issur_melacha_in_effect").state
             == result[1]
         )
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "binary_sensor.test_issur_melacha_in_effect")
+    await async_remove_entity(hass, "binary_sensor.test_erev_shabbat_hag")
+    await async_remove_entity(hass, "binary_sensor.test_motzei_shabbat_hag")
 
 
 async def test_no_discovery_info(

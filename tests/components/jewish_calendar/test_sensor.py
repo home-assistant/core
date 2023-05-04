@@ -17,7 +17,7 @@ from . import (
     make_nyc_test_params,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, async_remove_entity
 
 
 async def test_jewish_calendar_min_config(hass: HomeAssistant) -> None:
@@ -28,6 +28,13 @@ async def test_jewish_calendar_min_config(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert hass.states.get("sensor.jewish_calendar_date") is not None
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(
+        hass, "binary_sensor.jewish_calendar_issur_melacha_in_effect"
+    )
+    await async_remove_entity(hass, "binary_sensor.jewish_calendar_erev_shabbat_hag")
+    await async_remove_entity(hass, "binary_sensor.jewish_calendar_motzei_shabbat_hag")
+
 
 async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
     """Test jewish calendar sensor with language set to hebrew."""
@@ -36,6 +43,13 @@ async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.jewish_calendar_date") is not None
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(
+        hass, "binary_sensor.jewish_calendar_issur_melacha_in_effect"
+    )
+    await async_remove_entity(hass, "binary_sensor.jewish_calendar_erev_shabbat_hag")
+    await async_remove_entity(hass, "binary_sensor.jewish_calendar_motzei_shabbat_hag")
 
 
 TEST_PARAMS = [
@@ -201,6 +215,11 @@ async def test_jewish_calendar_sensor(
         assert sensor_object.attributes.get("id") == "rosh_hashana_i"
         assert sensor_object.attributes.get("type") == "YOM_TOV"
         assert sensor_object.attributes.get("type_id") == 1
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "binary_sensor.test_issur_melacha_in_effect")
+    await async_remove_entity(hass, "binary_sensor.test_erev_shabbat_hag")
+    await async_remove_entity(hass, "binary_sensor.test_motzei_shabbat_hag")
 
 
 SHABBAT_PARAMS = [
@@ -572,6 +591,11 @@ async def test_shabbat_times_sensor(
         )
         assert entity.unique_id == target_uid
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "binary_sensor.test_issur_melacha_in_effect")
+    await async_remove_entity(hass, "binary_sensor.test_erev_shabbat_hag")
+    await async_remove_entity(hass, "binary_sensor.test_motzei_shabbat_hag")
+
 
 OMER_PARAMS = [
     (dt(2019, 4, 21, 0), "1"),
@@ -608,6 +632,11 @@ async def test_omer_sensor(hass: HomeAssistant, test_time, result) -> None:
 
     assert hass.states.get("sensor.test_day_of_the_omer").state == result
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "binary_sensor.test_issur_melacha_in_effect")
+    await async_remove_entity(hass, "binary_sensor.test_erev_shabbat_hag")
+    await async_remove_entity(hass, "binary_sensor.test_motzei_shabbat_hag")
+
 
 DAFYOMI_PARAMS = [
     (dt(2014, 4, 28, 0), "Beitzah 29"),
@@ -641,6 +670,11 @@ async def test_dafyomi_sensor(hass: HomeAssistant, test_time, result) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test_daf_yomi").state == result
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "binary_sensor.test_issur_melacha_in_effect")
+    await async_remove_entity(hass, "binary_sensor.test_erev_shabbat_hag")
+    await async_remove_entity(hass, "binary_sensor.test_motzei_shabbat_hag")
 
 
 async def test_no_discovery_info(
