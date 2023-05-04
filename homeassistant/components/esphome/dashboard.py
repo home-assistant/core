@@ -77,8 +77,9 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
 
     async def async_update_source(self, addon_slug: str, host: str, port: int) -> None:
         """Update the source."""
-        if self.addon_slug != addon_slug or self.url != self.api.url:
-            self.url = f"http://{host}:{port}"
+        url = f"http://{host}:{port}"
+        if self.addon_slug != addon_slug or self.url != url:
+            self.url = url
             self.addon_slug = addon_slug
             self.update_interval = UPDATE_INTERVAL
             self.api = ESPHomeDashboardAPI(self.url, self.api.session)
