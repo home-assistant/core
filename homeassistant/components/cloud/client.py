@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
-from datetime import datetime
 from http import HTTPStatus
 import logging
 from pathlib import Path
@@ -138,7 +136,7 @@ class CloudClient(Interface):
         """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
-        async def enable_alexa(_: datetime | None = None) -> None:
+        async def enable_alexa(_):
             """Enable Alexa."""
             aconf = await self.get_alexa_config()
             try:
@@ -158,7 +156,7 @@ class CloudClient(Interface):
 
         enable_alexa_job = HassJob(enable_alexa, cancel_on_shutdown=True)
 
-        async def enable_google() -> None:
+        async def enable_google(_):
             """Enable Google."""
             gconf = await self.get_google_config()
 
@@ -170,7 +168,7 @@ class CloudClient(Interface):
             if is_new_user:
                 await gconf.async_sync_entities(gconf.agent_user_id)
 
-        tasks: list[Callable[[], Coroutine[Any, Any, None]]] = []
+        tasks = []
 
         if self._prefs.alexa_enabled and self._prefs.alexa_report_state:
             tasks.append(enable_alexa)
@@ -179,7 +177,7 @@ class CloudClient(Interface):
             tasks.append(enable_google)
 
         if tasks:
-            await asyncio.gather(*(task() for task in tasks))
+            await asyncio.gather(*(task(None) for task in tasks))
 
     async def cloud_started(self) -> None:
         """When cloud is started."""
