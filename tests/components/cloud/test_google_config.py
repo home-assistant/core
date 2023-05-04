@@ -19,8 +19,13 @@ from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
     async_expose_entity,
+    async_get_entity_settings,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EntityCategory
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    EntityCategory,
+)
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -143,6 +148,8 @@ async def test_google_update_expose_trigger_sync(
             Mock(claims={"cognito:username": "abcdefghjkl"}),
         )
         await config.async_initialize()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
         await config.async_connect_agent_user("mock-user-id")
 
         with patch.object(config, "async_sync_entities") as mock_sync, patch.object(
@@ -482,8 +489,10 @@ async def test_google_config_migrate_expose_entity_prefs(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config."""
+    hass.state = CoreState.starting
 
     assert await async_setup_component(hass, "homeassistant", {})
+    hass.states.async_set("light.state_only", "on")
     entity_exposed = entity_registry.async_get_or_create(
         "light",
         "test",
@@ -536,7 +545,11 @@ async def test_google_config_migrate_expose_entity_prefs(
     expose_entity(hass, entity_migrated.entity_id, False)
 
     cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS]["light.unknown"] = {
-        PREF_SHOULD_EXPOSE: True
+        PREF_SHOULD_EXPOSE: True,
+        PREF_DISABLE_2FA: True,
+    }
+    cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS]["light.state_only"] = {
+        PREF_SHOULD_EXPOSE: False
     }
     cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS][entity_exposed.entity_id] = {
         PREF_SHOULD_EXPOSE: True
@@ -552,28 +565,33 @@ async def test_google_config_migrate_expose_entity_prefs(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
     )
     await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
-    entity_exposed = entity_registry.async_get(entity_exposed.entity_id)
-    assert entity_exposed.options == {"cloud.google_assistant": {"should_expose": True}}
-
-    entity_migrated = entity_registry.async_get(entity_migrated.entity_id)
-    assert entity_migrated.options == {
-        "cloud.google_assistant": {"should_expose": False}
-    }
-
-    entity_no_2fa_exposed = entity_registry.async_get(entity_no_2fa_exposed.entity_id)
-    assert entity_no_2fa_exposed.options == {
+    assert async_get_entity_settings(hass, "light.unknown") == {
         "cloud.google_assistant": {"disable_2fa": True, "should_expose": True}
     }
-
-    entity_config = entity_registry.async_get(entity_config.entity_id)
-    assert entity_config.options == {"cloud.google_assistant": {"should_expose": False}}
-
-    entity_default = entity_registry.async_get(entity_default.entity_id)
-    assert entity_default.options == {"cloud.google_assistant": {"should_expose": True}}
-
-    entity_blocked = entity_registry.async_get(entity_blocked.entity_id)
-    assert entity_blocked.options == {
+    assert async_get_entity_settings(hass, "light.state_only") == {
+        "cloud.google_assistant": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, entity_exposed.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_no_2fa_exposed.entity_id) == {
+        "cloud.google_assistant": {"disable_2fa": True, "should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_config.entity_id) == {
+        "cloud.google_assistant": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, entity_default.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_blocked.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
 
@@ -584,6 +602,7 @@ async def test_google_config_migrate_expose_entity_prefs_default_none(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config."""
+    hass.state = CoreState.starting
 
     assert await async_setup_component(hass, "homeassistant", {})
     entity_default = entity_registry.async_get_or_create(
@@ -604,9 +623,14 @@ async def test_google_config_migrate_expose_entity_prefs_default_none(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
     )
     await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
-    entity_default = entity_registry.async_get(entity_default.entity_id)
-    assert entity_default.options == {"cloud.google_assistant": {"should_expose": True}}
+    assert async_get_entity_settings(hass, entity_default.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
 
 
 async def test_google_config_migrate_expose_entity_prefs_default(
@@ -615,6 +639,7 @@ async def test_google_config_migrate_expose_entity_prefs_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config."""
+    hass.state = CoreState.starting
 
     assert await async_setup_component(hass, "homeassistant", {})
 
@@ -680,33 +705,26 @@ async def test_google_config_migrate_expose_entity_prefs_default(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
     )
     await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
-    binary_sensor_supported = entity_registry.async_get(
-        binary_sensor_supported.entity_id
-    )
-    assert binary_sensor_supported.options == {
+    assert async_get_entity_settings(hass, binary_sensor_supported.entity_id) == {
         "cloud.google_assistant": {"should_expose": True}
     }
-
-    binary_sensor_unsupported = entity_registry.async_get(
-        binary_sensor_unsupported.entity_id
-    )
-    assert binary_sensor_unsupported.options == {
+    assert async_get_entity_settings(hass, binary_sensor_unsupported.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
-
-    light = entity_registry.async_get(light.entity_id)
-    assert light.options == {"cloud.google_assistant": {"should_expose": True}}
-
-    sensor_supported = entity_registry.async_get(sensor_supported.entity_id)
-    assert sensor_supported.options == {
+    assert async_get_entity_settings(hass, light.entity_id) == {
         "cloud.google_assistant": {"should_expose": True}
     }
-
-    sensor_unsupported = entity_registry.async_get(sensor_unsupported.entity_id)
-    assert sensor_unsupported.options == {
+    assert async_get_entity_settings(hass, sensor_supported.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, sensor_unsupported.entity_id) == {
         "cloud.google_assistant": {"should_expose": False}
     }
-
-    water_heater = entity_registry.async_get(water_heater.entity_id)
-    assert water_heater.options == {"cloud.google_assistant": {"should_expose": False}}
+    assert async_get_entity_settings(hass, water_heater.entity_id) == {
+        "cloud.google_assistant": {"should_expose": False}
+    }
