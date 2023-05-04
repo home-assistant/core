@@ -37,5 +37,39 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "total_gas_consumption": {
+        "name": "Total gas consumption"
+      },
+      "total_power": {
+        "name": "Total power"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      },
+      "total_production": {
+        "name": "Total production"
+      },
+      "phase_1_voltage": {
+        "name": "Phase 1 voltage"
+      },
+      "phase_2_voltage": {
+        "name": "Phase 2 voltage"
+      },
+      "phase_3_voltage": {
+        "name": "Phase 3 voltage"
+      },
+      "phase_1_power": {
+        "name": "Phase 1 power"
+      },
+      "phase_2_power": {
+        "name": "Phase 2 power"
+      },
+      "phase_3_power": {
+        "name": "Phase 3 power"
+      }
+    }
   }
 }

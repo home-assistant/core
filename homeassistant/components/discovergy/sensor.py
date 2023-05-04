@@ -62,7 +62,7 @@ class DiscovergySensorEntityDescription(DiscovergyMixin, SensorEntityDescription
 GAS_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     DiscovergySensorEntityDescription(
         key="volume",
-        name="Total consumption",
+        translation_key="total_gas_consumption",
         suggested_display_precision=4,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
@@ -74,7 +74,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     # power sensors
     DiscovergySensorEntityDescription(
         key="power",
-        name="Total power",
+        translation_key="total_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=3,
         device_class=SensorDeviceClass.POWER,
@@ -82,7 +82,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     ),
     DiscovergySensorEntityDescription(
         key="power1",
-        name="Phase 1 power",
+        translation_key="phase_1_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=3,
         device_class=SensorDeviceClass.POWER,
@@ -92,7 +92,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     ),
     DiscovergySensorEntityDescription(
         key="power2",
-        name="Phase 2 power",
+        translation_key="phase_2_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=3,
         device_class=SensorDeviceClass.POWER,
@@ -102,7 +102,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     ),
     DiscovergySensorEntityDescription(
         key="power3",
-        name="Phase 3 power",
+        translation_key="phase_3_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=3,
         device_class=SensorDeviceClass.POWER,
@@ -113,7 +113,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     # voltage sensors
     DiscovergySensorEntityDescription(
         key="phase1Voltage",
-        name="Phase 1 voltage",
+        translation_key="phase_1_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -122,7 +122,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     ),
     DiscovergySensorEntityDescription(
         key="phase2Voltage",
-        name="Phase 2 voltage",
+        translation_key="phase_2_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -131,7 +131,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     ),
     DiscovergySensorEntityDescription(
         key="phase3Voltage",
-        name="Phase 3 voltage",
+        translation_key="phase_3_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -141,7 +141,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     # energy sensors
     DiscovergySensorEntityDescription(
         key="energy",
-        name="Total consumption",
+        translation_key="total_consumption",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=4,
         device_class=SensorDeviceClass.ENERGY,
@@ -150,7 +150,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
     ),
     DiscovergySensorEntityDescription(
         key="energyOut",
-        name="Total production",
+        translation_key="total_production",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=4,
         device_class=SensorDeviceClass.ENERGY,
@@ -258,7 +258,6 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
         self.data_key = data_key
 
         self.entity_description = description
-        self._attr_name = f"{description.name}"
         self._attr_unique_id = f"{meter.full_serial_number}-{description.key}"
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, meter.get_meter_id())},
