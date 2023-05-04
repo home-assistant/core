@@ -6,6 +6,10 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from pytrafikverket import TrafikverketTrain
+from pytrafikverket.exceptions import (
+    MultipleTrainAnnouncementFound,
+    NoTrainAnnouncementFound,
+)
 from pytrafikverket.trafikverket_train import StationInfo, TrainStop
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -136,6 +140,7 @@ class TrainSensor(SensorEntity):
             )
         try:
             if self._time:
+                _LOGGER.debug("%s, %s, %s", self._from_station, self._to_station, when)
                 _state = await self._train_api.async_get_train_stop(
                     self._from_station, self._to_station, when
                 )
@@ -143,7 +148,7 @@ class TrainSensor(SensorEntity):
                 _state = await self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when
                 )
-        except ValueError as error:
+        except (NoTrainAnnouncementFound, MultipleTrainAnnouncementFound) as error:
             _LOGGER.error("Departure %s encountered a problem: %s", when, error)
 
         if not _state:
@@ -169,7 +174,7 @@ class TrainSensor(SensorEntity):
         """Return extra state attributes."""
 
         attributes: dict[str, Any] = {
-            ATTR_DEPARTURE_STATE: state.get_state().name,
+            ATTR_DEPARTURE_STATE: state.get_state().value,
             ATTR_CANCELED: state.canceled,
             ATTR_DELAY_TIME: None,
             ATTR_PLANNED_TIME: None,
