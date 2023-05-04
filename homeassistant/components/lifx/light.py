@@ -327,6 +327,13 @@ class LIFXLight(LIFXEntity, LightEntity):
         )
         return await super().async_added_to_hass()
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self.postponed_update:
+            self.postponed_update()
+            self.postponed_update = None
+        return await super().async_will_remove_from_hass()
+
 
 class LIFXWhite(LIFXLight):
     """Representation of a white-only LIFX light."""
