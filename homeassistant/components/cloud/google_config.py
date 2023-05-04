@@ -1,6 +1,7 @@
 """Google config for Cloud."""
 import asyncio
 from http import HTTPStatus
+from itertools import chain
 import logging
 from typing import Any
 
@@ -175,23 +176,12 @@ class CloudGoogleConfig(AbstractConfig):
             # Don't migrate if there's a YAML config
             return
 
-        for state in self.hass.states.async_all():
-            entity_id = state.entity_id
-            async_expose_entity(
-                self.hass,
-                CLOUD_GOOGLE,
-                entity_id,
-                self._should_expose_legacy(entity_id),
+        for entity_id in set(
+            chain(
+                (state.entity_id for state in self.hass.states.async_all()),
+                (entity_id for entity_id in self._prefs.google_entity_configs),
             )
-            if _2fa_disabled := (self._2fa_disabled_legacy(entity_id) is not None):
-                async_set_assistant_option(
-                    self.hass,
-                    CLOUD_GOOGLE,
-                    entity_id,
-                    PREF_DISABLE_2FA,
-                    _2fa_disabled,
-                )
-        for entity_id in self._prefs.google_entity_configs:
+        ):
             async_expose_entity(
                 self.hass,
                 CLOUD_GOOGLE,
