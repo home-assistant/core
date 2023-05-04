@@ -223,7 +223,7 @@ aionanoleaf==0.2.1
 aionotify==0.2.0
 
 # homeassistant.components.notion
-aionotion==2023.04.2
+aionotion==2023.05.0
 
 # homeassistant.components.oncue
 aiooncue==0.3.4
