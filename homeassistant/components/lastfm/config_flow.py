@@ -160,17 +160,16 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """LastFm Options flow handler."""
 
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Initialize form."""
-        valid_users = self.entry.data[CONF_USERS]
+        valid_users = self._config_entry.data[CONF_USERS]
         errors = {}
         if user_input is not None:
             valid_users = []
             for username in user_input[CONF_USERS]:
-                lastfm_user = get_lastfm_user(self.entry.data[CONF_API_KEY], username)
+                lastfm_user = get_lastfm_user(self._config_entry.data[CONF_API_KEY], username)
                 lastfm_errors = validate_lastfm_user(lastfm_user)
                 if lastfm_errors:
                     errors = lastfm_errors
@@ -184,10 +183,10 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
-        if self.data[CONF_MAIN_USER]:
+        if self._config_entry.data[CONF_MAIN_USER]:
             try:
                 main_user = get_lastfm_user(
-                    self.entry.data[CONF_API_KEY], self.entry.data[CONF_MAIN_USER]
+                    self._config_entry.data[CONF_API_KEY], self._config_entry.data[CONF_MAIN_USER]
                 )
                 friends: Sequence[SelectOptionDict] = [
                     {"value": str(friend.name), "label": str(friend.get_name(True))}
