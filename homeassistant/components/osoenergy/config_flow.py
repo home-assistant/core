@@ -57,7 +57,7 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.show_config_form()
 
     async def show_config_form(self):  # pylint: disable=unused-argument
-        """Show the configuration form to edit location data."""
+        """Show the configuration form to edit API key."""
         data_schema = {vol.Required(CONF_API_KEY): str}
         return self.async_show_form(
             step_id="user",
