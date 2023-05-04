@@ -14,8 +14,6 @@ from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
-CHARGING_SUFFIX = " Battery Charging"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -42,8 +40,9 @@ class DiffuserBatteryChargingBinarySensor(DiffuserEntity, BinarySensorEntity):
 
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the battery charging binary sensor."""
-        super().__init__(coordinator, CHARGING_SUFFIX)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.diffuser.hublot}-charging"
+        self._attr_name = f"{coordinator.diffuser.name} Battery Charging"
 
     @property
     def is_on(self) -> bool:
