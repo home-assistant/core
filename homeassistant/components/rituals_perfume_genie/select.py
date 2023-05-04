@@ -76,12 +76,10 @@ class RitualsSelectEntity(DiffuserEntity, SelectEntity):
         description: RitualsSelectEntityDescription,
     ) -> None:
         """Initialize the diffuser room size select entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
+        super().__init__(coordinator, description)
         self._attr_entity_registry_enabled_default = (
             self.coordinator.diffuser.has_battery
         )
-        self._attr_unique_id = f"{coordinator.diffuser.hublot}-{description.key}"
         self._attr_name = f"{coordinator.diffuser.name} {description.name}"
 
     @property
