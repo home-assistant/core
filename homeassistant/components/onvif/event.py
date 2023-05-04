@@ -9,7 +9,7 @@ import datetime as dt
 from aiohttp.web import Request
 from httpx import RemoteProtocolError, RequestError, TransportError
 from onvif import ONVIFCamera, ONVIFService
-from onvif.client import NotificationManager
+from onvif.client import NotificationManager, retry_connection_error
 from onvif.exceptions import ONVIFError
 from zeep.exceptions import Fault, ValidationError, XMLParseError
 
@@ -327,20 +327,7 @@ class PullPointManager:
     async def _async_start_pullpoint(self) -> bool:
         """Start pullpoint subscription."""
         try:
-            try:
-                started = await self._async_create_pullpoint_subscription()
-            except RequestError:
-                #
-                # We should only need to retry on RemoteProtocolError but some cameras
-                # are flaky and sometimes do not respond to the Renew request so we
-                # retry on RequestError as well.
-                #
-                # For RemoteProtocolError:
-                # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
-                # to close the connection at any time, we treat this as a normal and try again
-                # once since we do not want to declare the camera as not supporting PullPoint
-                # if it just happened to close the connection at the wrong time.
-                started = await self._async_create_pullpoint_subscription()
+            started = await self._async_create_pullpoint_subscription()
         except CREATE_ERRORS as err:
             LOGGER.debug(
                 "%s: Device does not support PullPoint service or has too many subscriptions: %s",
@@ -382,6 +369,7 @@ class PullPointManager:
             finally:
                 self.async_schedule_pullpoint_renew(next_attempt)
 
+    @retry_connection_error()
     async def _async_create_pullpoint_subscription(self) -> bool:
         """Create pullpoint subscription."""
 
@@ -447,6 +435,11 @@ class PullPointManager:
             )
         self._pullpoint_subscription = None
 
+    @retry_connection_error()
+    async def _async_call_pullpoint_subscription_renew(self) -> None:
+        """Call PullPoint subscription Renew."""
+        await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+
     async def _async_renew_pullpoint(self) -> bool:
         """Renew the PullPoint subscription."""
         if (
@@ -458,20 +451,7 @@ class PullPointManager:
             # The first time we renew, we may get a Fault error so we
             # suppress it. The subscription will be restarted in
             # async_restart later.
-            try:
-                await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
-            except RequestError:
-                #
-                # We should only need to retry on RemoteProtocolError but some cameras
-                # are flaky and sometimes do not respond to the Renew request so we
-                # retry on RequestError as well.
-                #
-                # For RemoteProtocolError:
-                # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
-                # to close the connection at any time, we treat this as a normal and try again
-                # once since we do not want to mark events as stale
-                # if it just happened to close the connection at the wrong time.
-                await self._pullpoint_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            await self._async_call_pullpoint_subscription_renew()
             LOGGER.debug("%s: Renewed PullPoint subscription", self._name)
             return True
         except RENEW_ERRORS as err:
@@ -655,6 +635,7 @@ class WebHookManager:
             self._renew_or_restart_job,
         )
 
+    @retry_connection_error()
     async def _async_create_webhook_subscription(self) -> None:
         """Create webhook subscription."""
         LOGGER.debug(
@@ -689,20 +670,7 @@ class WebHookManager:
     async def _async_start_webhook(self) -> bool:
         """Start webhook."""
         try:
-            try:
-                await self._async_create_webhook_subscription()
-            except RequestError:
-                #
-                # We should only need to retry on RemoteProtocolError but some cameras
-                # are flaky and sometimes do not respond to the Renew request so we
-                # retry on RequestError as well.
-                #
-                # For RemoteProtocolError:
-                # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
-                # to close the connection at any time, we treat this as a normal and try again
-                # once since we do not want to declare the camera as not supporting webhooks
-                # if it just happened to close the connection at the wrong time.
-                await self._async_create_webhook_subscription()
+            await self._async_create_webhook_subscription()
         except CREATE_ERRORS as err:
             self._event_manager.async_webhook_failed()
             LOGGER.debug(
@@ -720,6 +688,12 @@ class WebHookManager:
         await self._async_unsubscribe_webhook()
         return await self._async_start_webhook()
 
+    @retry_connection_error()
+    async def _async_call_webhook_subscription_renew(self) -> None:
+        """Call PullPoint subscription Renew."""
+        assert self._webhook_subscription is not None
+        await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+
     async def _async_renew_webhook(self) -> bool:
         """Renew webhook subscription."""
         if (
@@ -728,20 +702,7 @@ class WebHookManager:
         ):
             return False
         try:
-            try:
-                await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
-            except RequestError:
-                #
-                # We should only need to retry on RemoteProtocolError but some cameras
-                # are flaky and sometimes do not respond to the Renew request so we
-                # retry on RequestError as well.
-                #
-                # For RemoteProtocolError:
-                # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
-                # to close the connection at any time, we treat this as a normal and try again
-                # once since we do not want to mark events as stale
-                # if it just happened to close the connection at the wrong time.
-                await self._webhook_subscription.Renew(SUBSCRIPTION_RELATIVE_TIME)
+            await self._async_call_webhook_subscription_renew()
             LOGGER.debug("%s: Renewed Webhook subscription", self._name)
             return True
         except RENEW_ERRORS as err:
