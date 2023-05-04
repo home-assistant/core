@@ -1,7 +1,6 @@
 """The Screenlogic integration."""
 from datetime import timedelta
 import logging
-import re
 from typing import Any
 
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
@@ -97,46 +96,51 @@ async def _async_migrate_entries(
 ) -> None:
     """Migrate to new entity names."""
     entity_registry = er.async_get(hass)
-    re_uid = re.compile(
-        r"(?P<mac>(?:\w{2}:){5}\w{2})_(?P<key>\w+?)(?:_(?P<index>\d))?$"
-    )
 
     for entry in er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     ):
-        if (uid_match := re_uid.match(entry.unique_id)) is None:
+        try:
+            source_mac, source_key = entry.unique_id.split("_", 1)
+        except ValueError:
             _LOGGER.debug("Unable to parse unique_id '%s'", entry.unique_id)
             continue
-        old_key = uid_match.group("key")
+
+        source_index = None
+        if (
+            len(key_parts := source_key.rsplit("_", 1)) == 2
+            and key_parts[1].isdecimal()
+        ):
+            source_key, source_index = key_parts
 
         _LOGGER.debug(
             "Checking migration status for '%s' against key '%s'",
             entry.unique_id,
-            old_key,
+            source_key,
         )
 
-        if old_key in ENTITY_MIGRATIONS:
+        if source_key in ENTITY_MIGRATIONS:
             _LOGGER.debug(
                 "Evaluating migration of '%s' from migration key '%s'",
                 entry.entity_id,
-                old_key,
+                source_key,
             )
-            migrations = ENTITY_MIGRATIONS[old_key]
+            migrations = ENTITY_MIGRATIONS[source_key]
             updates: dict[str, Any] = {}
             new_key = migrations["new_key"]
             if new_key in SHARED_VALUES:
-                mac = uid_match.group("mac")
-                index = uid_match.group("index")
                 if (device := migrations.get("device")) is None:
                     _LOGGER.debug(
                         "Shared key '%s' is missing required migration data 'device'",
                         new_key,
                     )
                     continue
-                assert device != "pump" or (device == "pump" and index)
-                new_unique_id = f"{mac}_{generate_unique_id(device, index, new_key)}"
+                assert device != "pump" or (device == "pump" and source_index)
+                new_unique_id = (
+                    f"{source_mac}_{generate_unique_id(device, source_index, new_key)}"
+                )
             else:
-                new_unique_id = entry.unique_id.replace(old_key, new_key)
+                new_unique_id = entry.unique_id.replace(source_key, new_key)
 
             if new_unique_id and new_unique_id != entry.unique_id:
                 if existing_entity_id := entity_registry.async_get_entity_id(
