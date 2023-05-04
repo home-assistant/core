@@ -392,12 +392,12 @@ class PullPointManager:
             return False
 
         # Create subscription manager
-        self._pullpoint_subscription = self._device.create_subscription_service(
+        self._pullpoint_subscription = await self._device.create_subscription_service(
             "PullPointSubscription"
         )
 
         # Create the service that will be used to pull messages from the device.
-        self._pullpoint_service = self._device.create_pullpoint_service()
+        self._pullpoint_service = await self._device.create_pullpoint_service()
 
         # Initialize events
         with suppress(*SET_SYNCHRONIZATION_POINT_ERRORS):
