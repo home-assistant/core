@@ -169,7 +169,9 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             valid_users = []
             for username in user_input[CONF_USERS]:
-                lastfm_user = get_lastfm_user(self._config_entry.data[CONF_API_KEY], username)
+                lastfm_user = get_lastfm_user(
+                    self._config_entry.data[CONF_API_KEY], username
+                )
                 lastfm_errors = validate_lastfm_user(lastfm_user)
                 if lastfm_errors:
                     errors = lastfm_errors
@@ -179,14 +181,15 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 return self.async_create_entry(
                     title="LastFM",
                     data={
-                        **self.entry.data,
+                        **self._config_entry.data,
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
         if self._config_entry.data[CONF_MAIN_USER]:
             try:
                 main_user = get_lastfm_user(
-                    self._config_entry.data[CONF_API_KEY], self._config_entry.data[CONF_MAIN_USER]
+                    self._config_entry.data[CONF_API_KEY],
+                    self._config_entry.data[CONF_MAIN_USER],
                 )
                 friends: Sequence[SelectOptionDict] = [
                     {"value": str(friend.name), "label": str(friend.get_name(True))}
