@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
+from datetime import datetime
 from http import HTTPStatus
 import logging
 from pathlib import Path
@@ -16,7 +18,7 @@ from homeassistant.components.alexa import (
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.aiohttp import MockRequest, serialize_response
@@ -136,7 +138,7 @@ class CloudClient(Interface):
         """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
-        async def enable_alexa(_):
+        async def enable_alexa(_: datetime | None = None) -> None:
             """Enable Alexa."""
             aconf = await self.get_alexa_config()
             try:
@@ -150,11 +152,13 @@ class CloudClient(Interface):
                         ),
                         err,
                     )
-                async_call_later(self._hass, 30, enable_alexa)
+                async_call_later(self._hass, 30, enable_alexa_job)
             except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
                 pass
 
-        async def enable_google(_):
+        enable_alexa_job = HassJob(enable_alexa, cancel_on_shutdown=True)
+
+        async def enable_google() -> None:
             """Enable Google."""
             gconf = await self.get_google_config()
 
@@ -166,7 +170,7 @@ class CloudClient(Interface):
             if is_new_user:
                 await gconf.async_sync_entities(gconf.agent_user_id)
 
-        tasks = []
+        tasks: list[Callable[[], Coroutine[Any, Any, None]]] = []
 
         if self._prefs.alexa_enabled and self._prefs.alexa_report_state:
             tasks.append(enable_alexa)
@@ -175,7 +179,7 @@ class CloudClient(Interface):
             tasks.append(enable_google)
 
         if tasks:
-            await asyncio.gather(*(task(None) for task in tasks))
+            await asyncio.gather(*(task() for task in tasks))
 
     async def cloud_started(self) -> None:
         """When cloud is started."""
