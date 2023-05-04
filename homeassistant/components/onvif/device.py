@@ -136,7 +136,7 @@ class ONVIFDevice:
 
         if self.capabilities.ptz:
             LOGGER.debug("%s: creating PTZ service", self.name)
-            self.device.create_ptz_service()
+            await self.device.create_ptz_service()
 
         # Determine max resolution from profiles
         self.max_resolution = max(
@@ -159,7 +159,7 @@ class ONVIFDevice:
 
     async def async_manually_set_date_and_time(self) -> None:
         """Set Date and Time Manually using SetSystemDateAndTime command."""
-        device_mgmt = self.device.create_devicemgmt_service()
+        device_mgmt = await self.device.create_devicemgmt_service()
 
         # Retrieve DateTime object from camera to use as template for Set operation
         device_time = await device_mgmt.GetSystemDateAndTime()
@@ -202,7 +202,7 @@ class ONVIFDevice:
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
         LOGGER.debug("%s: Setting up the ONVIF device management service", self.name)
-        device_mgmt = self.device.create_devicemgmt_service()
+        device_mgmt = await self.device.create_devicemgmt_service()
         system_date = dt_util.utcnow()
 
         LOGGER.debug("%s: Retrieving current device date/time", self.name)
@@ -285,7 +285,7 @@ class ONVIFDevice:
 
     async def async_get_device_info(self) -> DeviceInfo:
         """Obtain information about this device."""
-        device_mgmt = self.device.create_devicemgmt_service()
+        device_mgmt = await self.device.create_devicemgmt_service()
         manufacturer = None
         model = None
         firmware_version = None
@@ -331,7 +331,7 @@ class ONVIFDevice:
         """Obtain information about the available services on the device."""
         snapshot = False
         with suppress(*GET_CAPABILITIES_EXCEPTIONS):
-            media_service = self.device.create_media_service()
+            media_service = await self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
 
@@ -342,7 +342,7 @@ class ONVIFDevice:
 
         imaging = False
         with suppress(*GET_CAPABILITIES_EXCEPTIONS):
-            self.device.create_imaging_service()
+            await self.device.create_imaging_service()
             imaging = True
 
         return Capabilities(snapshot=snapshot, ptz=ptz, imaging=imaging)
@@ -361,7 +361,7 @@ class ONVIFDevice:
 
     async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
-        media_service = self.device.create_media_service()
+        media_service = await self.device.create_media_service()
         LOGGER.debug("%s: xaddr for media_service: %s", self.name, media_service.xaddr)
         try:
             result = await media_service.GetProfiles()
@@ -408,7 +408,7 @@ class ONVIFDevice:
                 )
 
                 try:
-                    ptz_service = self.device.create_ptz_service()
+                    ptz_service = await self.device.create_ptz_service()
                     presets = await ptz_service.GetPresets(profile.token)
                     profile.ptz.presets = [preset.token for preset in presets if preset]
                 except GET_CAPABILITIES_EXCEPTIONS:
@@ -427,7 +427,7 @@ class ONVIFDevice:
 
     async def async_get_stream_uri(self, profile: Profile) -> str:
         """Get the stream URI for a specified profile."""
-        media_service = self.device.create_media_service()
+        media_service = await self.device.create_media_service()
         req = media_service.create_type("GetStreamUri")
         req.ProfileToken = profile.token
         req.StreamSetup = {
@@ -454,7 +454,7 @@ class ONVIFDevice:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
 
-        ptz_service = self.device.create_ptz_service()
+        ptz_service = await self.device.create_ptz_service()
 
         pan_val = distance * PAN_FACTOR.get(pan, 0)
         tilt_val = distance * TILT_FACTOR.get(tilt, 0)
@@ -576,7 +576,7 @@ class ONVIFDevice:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
 
-        ptz_service = self.device.create_ptz_service()
+        ptz_service = await self.device.create_ptz_service()
 
         LOGGER.debug(
             "Running Aux Command | Cmd = %s",
@@ -607,7 +607,7 @@ class ONVIFDevice:
             )
             return
 
-        imaging_service = self.device.create_imaging_service()
+        imaging_service = await self.device.create_imaging_service()
 
         LOGGER.debug("Setting Imaging Setting | Settings = %s", settings)
         try:
