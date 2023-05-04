@@ -149,11 +149,14 @@ class TransmissionStatusSensor(TransmissionSensor):
 class TransmissionTorrentsSensor(TransmissionSensor):
     """Representation of a Transmission torrents sensor."""
 
-    MODES = {
-        "started_torrents": ("downloading"),
-        "completed_torrents": ("seeding"),
-        "paused_torrents": ("stopped"),
-        "active_torrents": ("seeding", "downloading"),
+    MODES: dict[str, list[str] | None] = {
+        "started_torrents": ["downloading"],
+        "completed_torrents": ["seeding"],
+        "paused_torrents": ["stopped"],
+        "active_torrents": [
+            "seeding",
+            "downloading",
+        ],
         "total_torrents": None,
     }
 
