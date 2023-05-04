@@ -16,7 +16,7 @@ from homeassistant.components.alexa import (
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.aiohttp import MockRequest, serialize_response
@@ -150,9 +150,11 @@ class CloudClient(Interface):
                         ),
                         err,
                     )
-                async_call_later(self._hass, 30, enable_alexa)
+                async_call_later(self._hass, 30, enable_alexa_job)
             except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
                 pass
+
+        enable_alexa_job = HassJob(enable_alexa, cancel_on_shutdown=True)
 
         async def enable_google(_):
             """Enable Google."""
