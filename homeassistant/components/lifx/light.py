@@ -382,7 +382,7 @@ class LIFXMultiZone(LIFXColor):
         """Send a color change to the bulb."""
         bulb = self.bulb
         color_zones = bulb.color_zones
-        num_zones = len(color_zones)
+        num_zones = self.coordinator.get_number_of_zones()
 
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:
