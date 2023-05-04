@@ -106,7 +106,7 @@ async def test_user_custom_url(hass: HomeAssistant, ezviz_config_flow) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_async_step_reauth(hass, ezviz_config_flow):
+async def test_async_step_reauth(hass: HomeAssistant, ezviz_config_flow) -> None:
     """Test the reauth step."""
 
     result = await hass.config_entries.flow.async_init(
@@ -149,7 +149,9 @@ async def test_async_step_reauth(hass, ezviz_config_flow):
     assert result["reason"] == "reauth_successful"
 
 
-async def test_step_discovery_abort_if_cloud_account_missing(hass):
+async def test_step_discovery_abort_if_cloud_account_missing(
+    hass: HomeAssistant,
+) -> None:
     """Test discovery and confirm step, abort if cloud account was removed."""
 
     result = await hass.config_entries.flow.async_init(
@@ -172,7 +174,7 @@ async def test_step_discovery_abort_if_cloud_account_missing(hass):
     assert result["reason"] == "ezviz_cloud_account_missing"
 
 
-async def test_step_reauth_abort_if_cloud_account_missing(hass):
+async def test_step_reauth_abort_if_cloud_account_missing(hass: HomeAssistant) -> None:
     """Test reauth and confirm step, abort if cloud account was removed."""
 
     result = await hass.config_entries.flow.async_init(
@@ -183,8 +185,8 @@ async def test_step_reauth_abort_if_cloud_account_missing(hass):
 
 
 async def test_async_step_integration_discovery(
-    hass, ezviz_config_flow, ezviz_test_rtsp_config_flow
-):
+    hass: HomeAssistant, ezviz_config_flow, ezviz_test_rtsp_config_flow
+) -> None:
     """Test discovery and confirm step."""
     with patch("homeassistant.components.ezviz.PLATFORMS_BY_TYPE", []):
         await init_integration(hass)
@@ -530,7 +532,9 @@ async def test_user_custom_url_exception(
     assert result["reason"] == "unknown"
 
 
-async def test_async_step_reauth_exception(hass, ezviz_config_flow):
+async def test_async_step_reauth_exception(
+    hass: HomeAssistant, ezviz_config_flow
+) -> None:
     """Test the reauth step exceptions."""
 
     result = await hass.config_entries.flow.async_init(

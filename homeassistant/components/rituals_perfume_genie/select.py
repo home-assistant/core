@@ -11,8 +11,6 @@ from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
-ROOM_SIZE_SUFFIX = " Room Size"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -39,11 +37,12 @@ class DiffuserRoomSize(DiffuserEntity, SelectEntity):
 
     def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the diffuser room size select entity."""
-        super().__init__(coordinator, ROOM_SIZE_SUFFIX)
+        super().__init__(coordinator)
         self._attr_entity_registry_enabled_default = (
             self.coordinator.diffuser.has_battery
         )
         self._attr_unique_id = f"{coordinator.diffuser.hublot}-room_size_square_meter"
+        self._attr_name = f"{coordinator.diffuser.name} Room Size"
 
     @property
     def current_option(self) -> str:

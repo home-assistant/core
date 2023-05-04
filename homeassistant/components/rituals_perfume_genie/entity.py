@@ -18,19 +18,14 @@ class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: RitualsDataUpdateCoordinator,
-        entity_suffix: str,
     ) -> None:
         """Init from config, hookup diffuser and coordinator."""
         super().__init__(coordinator)
-        hublot = coordinator.diffuser.hublot
-        hubname = coordinator.diffuser.name
-
-        self._attr_name = f"{hubname}{entity_suffix}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, hublot)},
+            identifiers={(DOMAIN, coordinator.diffuser.hublot)},
             manufacturer=MANUFACTURER,
             model=MODEL if coordinator.diffuser.has_battery else MODEL2,
-            name=hubname,
+            name=coordinator.diffuser.name,
             sw_version=coordinator.diffuser.version,
         )
 
