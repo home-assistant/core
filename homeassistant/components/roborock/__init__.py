@@ -71,8 +71,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             product_info[device.product_id],
             models[device.product_id],
         )
-        await coordinator_map[device_id].async_config_entry_first_refresh()
-
+    # If one device update fails - we don't want
+    await asyncio.gather(
+        *(
+            device.async_config_entry_first_refresh()
+            for device in coordinator_map.values()
+        ),
+        return_exceptions=True,
+    )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator_map
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
