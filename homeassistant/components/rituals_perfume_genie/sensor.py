@@ -43,7 +43,6 @@ ENTITY_DESCRIPTIONS = (
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda diffuser: diffuser.battery_percentage,
         has_fn=lambda diffuser: diffuser.has_battery,
     ),
@@ -51,14 +50,12 @@ ENTITY_DESCRIPTIONS = (
         key="fill",
         name="Fill",
         icon="mdi:beaker",
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda diffuser: diffuser.fill,
     ),
     RitualsSensorEntityDescription(
         key="perfume",
         name="Perfume",
         icon="mdi:tag",
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda diffuser: diffuser.perfume,
     ),
     RitualsSensorEntityDescription(
@@ -66,7 +63,6 @@ ENTITY_DESCRIPTIONS = (
         name="Wifi",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda diffuser: diffuser.wifi_percentage,
     ),
 )
@@ -94,6 +90,7 @@ class RitualsSensorEntity(DiffuserEntity, SensorEntity):
     """Representation of a diffuser sensor."""
 
     entity_description: RitualsSensorEntityDescription
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
