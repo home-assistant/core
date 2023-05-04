@@ -580,7 +580,7 @@ async def test_google_config_migrate_expose_entity_prefs(
         "cloud.google_assistant": {"should_expose": True}
     }
     assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
-        "cloud.google_assistant": {"should_expose": False}
+        "cloud.google_assistant": {"should_expose": True}
     }
     assert async_get_entity_settings(hass, entity_no_2fa_exposed.entity_id) == {
         "cloud.google_assistant": {"disable_2fa": True, "should_expose": True}

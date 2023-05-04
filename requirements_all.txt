@@ -223,7 +223,7 @@ aionanoleaf==0.2.1
 aionotify==0.2.0
 
 # homeassistant.components.notion
-aionotion==2023.04.2
+aionotion==2023.05.0
 
 # homeassistant.components.oncue
 aiooncue==0.3.4
@@ -465,7 +465,7 @@ bluemaestro-ble==0.2.3
 bluetooth-adapters==0.15.3
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.1.1
+bluetooth-auto-recovery==1.1.2
 
 # homeassistant.components.bluetooth
 # homeassistant.components.esphome
@@ -911,7 +911,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230503.1
+home-assistant-frontend==20230503.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.4.26
