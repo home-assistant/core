@@ -58,8 +58,3 @@ def generate_unique_id(
             else f"{device}_{data_key}"
         )
     return data_key
-
-
-def generate_entity_id(domain: str, device_name: str, entity_name: str) -> str:
-    """Generate new entity_id for a screenlogic entity from specified parameters."""
-    return f"{domain}.{device_name}_{entity_name}"
