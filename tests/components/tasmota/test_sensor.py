@@ -810,7 +810,7 @@ async def test_nested_sensor_attributes(
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("friendly_name") == "Tasmota TX23 Dir Avg"
     assert state.attributes.get("icon") is None
-    assert state.attributes.get("unit_of_measurement") == " "
+    assert state.attributes.get("unit_of_measurement") is None
 
 
 async def test_indexed_sensor_attributes(
