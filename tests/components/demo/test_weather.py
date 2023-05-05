@@ -15,11 +15,12 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 
-async def test_attributes(hass):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test weather attributes."""
     assert await async_setup_component(
         hass, weather.DOMAIN, {"weather": {"platform": "demo"}}

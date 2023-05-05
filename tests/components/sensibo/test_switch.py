@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
-from pytest import MonkeyPatch
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +26,7 @@ from tests.common import async_fire_time_changed
 async def test_switch_timer(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo switch."""
@@ -107,7 +106,7 @@ async def test_switch_timer(
 async def test_switch_pure_boost(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo switch."""
@@ -183,7 +182,7 @@ async def test_switch_pure_boost(
 async def test_switch_command_failure(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo switch fails commands."""
@@ -196,16 +195,17 @@ async def test_switch_command_failure(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
+    ), pytest.raises(
+        HomeAssistantError
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
-                {
-                    ATTR_ENTITY_ID: state1.entity_id,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+            },
+            blocking=True,
+        )
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
@@ -213,22 +213,23 @@ async def test_switch_command_failure(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
         return_value={"status": "failure"},
+    ), pytest.raises(
+        HomeAssistantError
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                SWITCH_DOMAIN,
-                SERVICE_TURN_OFF,
-                {
-                    ATTR_ENTITY_ID: state1.entity_id,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+            },
+            blocking=True,
+        )
 
 
 async def test_switch_climate_react(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo switch for climate react."""
@@ -303,7 +304,7 @@ async def test_switch_climate_react(
 async def test_switch_climate_react_no_data(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo switch for climate react."""

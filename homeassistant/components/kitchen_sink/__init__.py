@@ -25,9 +25,7 @@ import homeassistant.util.dt as dt_util
 DOMAIN = "kitchen_sink"
 
 
-COMPONENTS_WITH_DEMO_PLATFORM = [
-    Platform.SENSOR,
-]
+COMPONENTS_WITH_DEMO_PLATFORM = [Platform.SENSOR, Platform.LOCK]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

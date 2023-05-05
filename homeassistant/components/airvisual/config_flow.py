@@ -171,6 +171,13 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
+    async def async_step_import(self, import_data: dict[str, str]) -> FlowResult:
+        """Handle import of config entry version 1 data."""
+        import_source = import_data.pop("import_source")
+        if import_source == "geography_by_coords":
+            return await self.async_step_geography_by_coords(import_data)
+        return await self.async_step_geography_by_name(import_data)
+
     async def async_step_geography_by_coords(
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:

@@ -42,8 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
-        """
-        Define a callback to migrate appropriate Tile entities to new unique IDs.
+        """Define a callback to migrate appropriate Tile entities to new unique IDs.
 
         Old: tile_{uuid}
         New: {username}_{uuid}

@@ -30,5 +30,18 @@
         }
       }
     }
+  },
+  "selector": {
+    "type": {
+      "options": {
+        "min": "Minimum",
+        "max": "Maximum",
+        "mean": "Arithmetic mean",
+        "median": "Median",
+        "last": "Most recently updated",
+        "range": "Statistical range",
+        "sum": "Sum"
+      }
+    }
   }
 }

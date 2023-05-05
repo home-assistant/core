@@ -1,11 +1,9 @@
 """Matter to Home Assistant adapter."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
-from chip.clusters import Objects as all_clusters
-from matter_server.common.models.events import EventType
-from matter_server.common.models.node_device import AbstractMatterNodeDevice
+from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -13,12 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
-from .device_platform import DEVICE_PLATFORM
+from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
+from .discovery import async_discover_entities
+from .helpers import get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
-    from matter_server.common.models.node import MatterNode
+    from matter_server.client.models.node import MatterEndpoint, MatterNode
 
 
 class MatterAdapter:
@@ -47,12 +46,8 @@ class MatterAdapter:
         for node in await self.matter_client.get_nodes():
             self._setup_node(node)
 
-        def node_added_callback(event: EventType, node: MatterNode | None) -> None:
+        def node_added_callback(event: EventType, node: MatterNode) -> None:
             """Handle node added event."""
-            if node is None:
-                # We can clean this up when we've improved the typing in the library.
-                # https://github.com/home-assistant-libs/python-matter-server/pull/153
-                raise RuntimeError("Node added event without node")
             self._setup_node(node)
 
         self.config_entry.async_on_unload(
@@ -63,86 +58,62 @@ class MatterAdapter:
         """Set up an node."""
         LOGGER.debug("Setting up entities for node %s", node.node_id)
 
-        bridge_unique_id: str | None = None
-
-        if node.aggregator_device_type_instance is not None and (
-            node_info := node.root_device_type_instance.get_cluster(all_clusters.Basic)
-        ):
-            self._create_device_registry(
-                node_info, node_info.nodeLabel or "Hub device", None
-            )
-            bridge_unique_id = node_info.uniqueID
-
-        for node_device in node.node_devices:
-            self._setup_node_device(node_device, bridge_unique_id)
+        for endpoint in node.endpoints.values():
+            # Node endpoints are translated into HA devices
+            self._setup_endpoint(endpoint)
 
     def _create_device_registry(
         self,
-        info: all_clusters.Basic | all_clusters.BridgedDeviceBasic,
-        name: str,
-        bridge_unique_id: str | None,
+        endpoint: MatterEndpoint,
     ) -> None:
-        """Create a device registry entry."""
+        """Create a device registry entry for a MatterNode."""
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+
+        basic_info = endpoint.device_info
+        name = basic_info.nodeLabel or basic_info.productLabel or basic_info.productName
+
+        # handle bridged devices
+        bridge_device_id = None
+        if endpoint.is_bridged_device:
+            bridge_device_id = get_device_id(
+                server_info,
+                endpoint.node.endpoints[0],
+            )
+            bridge_device_id = f"{ID_TYPE_DEVICE_ID}_{bridge_device_id}"
+
+        node_device_id = get_device_id(
+            server_info,
+            endpoint,
+        )
+        identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        # if available, we also add the serialnumber as identifier
+        if basic_info.serialNumber and "test" not in basic_info.serialNumber.lower():
+            # prefix identifier with 'serial_' to be able to filter it
+            identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
+
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, info.uniqueID)},
-            hw_version=info.hardwareVersionString,
-            sw_version=info.softwareVersionString,
-            manufacturer=info.vendorName,
-            model=info.productName,
-            via_device=(DOMAIN, bridge_unique_id) if bridge_unique_id else None,
+            identifiers=identifiers,
+            hw_version=basic_info.hardwareVersionString,
+            sw_version=basic_info.softwareVersionString,
+            manufacturer=basic_info.vendorName,
+            model=basic_info.productName,
+            via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
 
-    def _setup_node_device(
-        self, node_device: AbstractMatterNodeDevice, bridge_unique_id: str | None
-    ) -> None:
-        """Set up a node device."""
-        node = node_device.node()
-        basic_info = node_device.device_info()
-        device_type_instances = node_device.device_type_instances()
-
-        name = basic_info.nodeLabel
-        if not name and device_type_instances:
-            name = f"{device_type_instances[0].device_type.__doc__[:-1]} {node.node_id}"
-
-        self._create_device_registry(basic_info, name, bridge_unique_id)
-
-        for instance in device_type_instances:
-            created = False
-
-            for platform, devices in DEVICE_PLATFORM.items():
-                entity_descriptions = devices.get(instance.device_type)
-
-                if entity_descriptions is None:
-                    continue
-
-                if not isinstance(entity_descriptions, list):
-                    entity_descriptions = [entity_descriptions]
-
-                entities = []
-                for entity_description in entity_descriptions:
-                    LOGGER.debug(
-                        "Creating %s entity for %s (%s)",
-                        platform,
-                        instance.device_type.__name__,
-                        hex(instance.device_type.device_type),
-                    )
-                    entities.append(
-                        entity_description.entity_cls(
-                            self.matter_client,
-                            node_device,
-                            instance,
-                            entity_description,
-                        )
-                    )
-
-                self.platform_handlers[platform](entities)
-                created = True
-
-            if not created:
-                LOGGER.warning(
-                    "Found unsupported device %s (%s)",
-                    type(instance).__name__,
-                    hex(instance.device_type.device_type),
-                )
+    def _setup_endpoint(self, endpoint: MatterEndpoint) -> None:
+        """Set up a MatterEndpoint as HA Device."""
+        # pre-create device registry entry
+        self._create_device_registry(endpoint)
+        # run platform discovery from device type instances
+        for entity_info in async_discover_entities(endpoint):
+            LOGGER.debug(
+                "Creating %s entity for %s",
+                entity_info.platform,
+                entity_info.primary_attribute,
+            )
+            new_entity = entity_info.entity_class(
+                self.matter_client, endpoint, entity_info
+            )
+            self.platform_handlers[entity_info.platform]([new_entity])

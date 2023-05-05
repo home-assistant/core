@@ -14,6 +14,7 @@ from homeassistant.components.zha.core.helpers import (
     convert_to_zcl_values,
 )
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .common import async_enable_traffic
@@ -67,7 +68,7 @@ async def device_light(hass, zigpy_device_mock, zha_device_joined):
     return color_cluster, zha_device
 
 
-async def test_zcl_schema_conversions(hass, device_light):
+async def test_zcl_schema_conversions(hass: HomeAssistant, device_light) -> None:
     """Test ZHA ZCL schema conversion helpers."""
     color_cluster, zha_device = device_light
     await async_enable_traffic(hass, [zha_device])

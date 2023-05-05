@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -37,7 +36,7 @@ class FluxPairedRemotes(FluxEntity, SensorEntity):
     """Representation of a Magic Home paired remotes sensor."""
 
     _attr_icon = "mdi:remote"
-    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self) -> int:

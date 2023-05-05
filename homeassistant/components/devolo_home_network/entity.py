@@ -1,7 +1,7 @@
 """Generic platform."""
 from __future__ import annotations
 
-from typing import TypeVar, Union
+from typing import TypeVar
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import (
@@ -22,13 +22,13 @@ from .const import DOMAIN
 
 _DataT = TypeVar(
     "_DataT",
-    bound=Union[
-        LogicalNetwork,
-        list[ConnectedStationInfo],
-        list[NeighborAPInfo],
-        WifiGuestAccessGet,
-        bool,
-    ],
+    bound=(
+        LogicalNetwork
+        | list[ConnectedStationInfo]
+        | list[NeighborAPInfo]
+        | WifiGuestAccessGet
+        | bool
+    ),
 )
 
 
@@ -57,4 +57,5 @@ class DevoloEntity(CoordinatorEntity[DataUpdateCoordinator[_DataT]]):
             name=entry.title,
             sw_version=device.firmware_version,
         )
+        self._attr_translation_key = self.entity_description.key
         self._attr_unique_id = f"{device.serial_number}_{self.entity_description.key}"

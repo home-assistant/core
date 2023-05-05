@@ -1,4 +1,5 @@
 """Define test fixtures for AirVisual."""
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -25,11 +26,19 @@ from tests.common import MockConfigEntry, load_fixture
 TEST_API_KEY = "abcde12345"
 TEST_LATITUDE = 51.528308
 TEST_LONGITUDE = -0.3817765
+TEST_LATITUDE2 = 37.514626
+TEST_LONGITUDE2 = 127.057414
 
 COORDS_CONFIG = {
     CONF_API_KEY: TEST_API_KEY,
     CONF_LATITUDE: TEST_LATITUDE,
     CONF_LONGITUDE: TEST_LONGITUDE,
+}
+
+COORDS_CONFIG2 = {
+    CONF_API_KEY: TEST_API_KEY,
+    CONF_LATITUDE: TEST_LATITUDE2,
+    CONF_LONGITUDE: TEST_LONGITUDE2,
 }
 
 TEST_CITY = "Beijing"
@@ -133,4 +142,12 @@ async def setup_config_entry_fixture(hass, config_entry, mock_pyairvisual):
     """Define a fixture to set up airvisual."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    yield
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.airvisual.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry

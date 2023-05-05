@@ -22,11 +22,12 @@ from homeassistant.components.screenlogic.const import (
     MIN_SCAN_INTERVAL,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_flow_discovery(hass):
+async def test_flow_discovery(hass: HomeAssistant) -> None:
     """Test the flow works with basic discovery."""
 
     with patch(
@@ -67,7 +68,7 @@ async def test_flow_discovery(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_flow_discover_none(hass):
+async def test_flow_discover_none(hass: HomeAssistant) -> None:
     """Test when nothing is discovered."""
 
     with patch(
@@ -83,7 +84,7 @@ async def test_flow_discover_none(hass):
     assert result["step_id"] == "gateway_entry"
 
 
-async def test_flow_discover_error(hass):
+async def test_flow_discover_error(hass: HomeAssistant) -> None:
     """Test when discovery errors."""
 
     with patch(
@@ -123,7 +124,7 @@ async def test_flow_discover_error(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp(hass):
+async def test_dhcp(hass: HomeAssistant) -> None:
     """Test DHCP discovery flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -164,7 +165,7 @@ async def test_dhcp(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_manual_entry(hass):
+async def test_form_manual_entry(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     with patch(
@@ -219,7 +220,7 @@ async def test_form_manual_entry(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     with patch(
         "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
@@ -245,7 +246,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -270,7 +271,7 @@ async def test_option_flow(hass):
     assert result["data"] == {CONF_SCAN_INTERVAL: 15}
 
 
-async def test_option_flow_defaults(hass):
+async def test_option_flow_defaults(hass: HomeAssistant) -> None:
     """Test config flow options."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -296,7 +297,7 @@ async def test_option_flow_defaults(hass):
     }
 
 
-async def test_option_flow_input_floor(hass):
+async def test_option_flow_input_floor(hass: HomeAssistant) -> None:
     """Test config flow options."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)

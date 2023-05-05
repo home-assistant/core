@@ -20,9 +20,19 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_expose_entity,
+    async_get_assistant_settings,
+    async_listen_entity_updates,
+    async_should_expose,
+)
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -30,19 +40,87 @@ from homeassistant.util.dt import utcnow
 from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
-    PREF_ALEXA_DEFAULT_EXPOSE,
-    PREF_ALEXA_ENTITY_CONFIGS,
+    DOMAIN as CLOUD_DOMAIN,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_SHOULD_EXPOSE,
 )
-from .prefs import CloudPreferences
+from .prefs import ALEXA_SETTINGS_VERSION, CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
+
+CLOUD_ALEXA = f"{CLOUD_DOMAIN}.{ALEXA_DOMAIN}"
 
 # Time to wait when entity preferences have changed before syncing it to
 # the cloud.
 SYNC_DELAY = 1
+
+
+SUPPORTED_DOMAINS = {
+    "alarm_control_panel",
+    "alert",
+    "automation",
+    "button",
+    "camera",
+    "climate",
+    "cover",
+    "fan",
+    "group",
+    "humidifier",
+    "image_processing",
+    "input_boolean",
+    "input_button",
+    "input_number",
+    "light",
+    "lock",
+    "media_player",
+    "number",
+    "scene",
+    "script",
+    "switch",
+    "timer",
+    "vacuum",
+}
+
+SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES = {
+    BinarySensorDeviceClass.DOOR,
+    BinarySensorDeviceClass.GARAGE_DOOR,
+    BinarySensorDeviceClass.MOTION,
+    BinarySensorDeviceClass.OPENING,
+    BinarySensorDeviceClass.PRESENCE,
+    BinarySensorDeviceClass.WINDOW,
+}
+
+SUPPORTED_SENSOR_DEVICE_CLASSES = {
+    SensorDeviceClass.TEMPERATURE,
+}
+
+
+def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
+    """Return if the entity is supported.
+
+    This is called when migrating from legacy config format to avoid exposing
+    all binary sensors and sensors.
+    """
+    domain = split_entity_id(entity_id)[0]
+    if domain in SUPPORTED_DOMAINS:
+        return True
+
+    try:
+        device_class = get_device_class(hass, entity_id)
+    except HomeAssistantError:
+        # The entity no longer exists
+        return False
+    if (
+        domain == "binary_sensor"
+        and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
+    ):
+        return True
+
+    if domain == "sensor" and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
+        return True
+
+    return False
 
 
 class CloudAlexaConfig(alexa_config.AbstractConfig):
@@ -64,7 +142,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         self._cloud = cloud
         self._token = None
         self._token_valid = None
-        self._cur_entity_prefs = prefs.alexa_entity_configs
+        self._cur_entity_prefs = async_get_assistant_settings(hass, CLOUD_ALEXA)
         self._alexa_sync_unsub: Callable[[], None] | None = None
         self._endpoint = None
 
@@ -115,15 +193,54 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         """Return an identifier for the user that represents this config."""
         return self._cloud_user
 
+    def _migrate_alexa_entity_settings_v1(self):
+        """Migrate alexa entity settings to entity registry options."""
+        if not self._config[CONF_FILTER].empty_filter:
+            # Don't migrate if there's a YAML config
+            return
+
+        for entity_id in {
+            *self.hass.states.async_entity_ids(),
+            *self._prefs.alexa_entity_configs,
+        }:
+            async_expose_entity(
+                self.hass,
+                CLOUD_ALEXA,
+                entity_id,
+                self._should_expose_legacy(entity_id),
+            )
+
     async def async_initialize(self):
         """Initialize the Alexa config."""
         await super().async_initialize()
 
-        async def hass_started(hass):
+        async def on_hass_started(hass):
+            if self._prefs.alexa_settings_version != ALEXA_SETTINGS_VERSION:
+                if self._prefs.alexa_settings_version < 2 or (
+                    # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
+                    self._prefs.alexa_settings_version < 3
+                    and not any(
+                        settings.get("should_expose", False)
+                        for settings in async_get_assistant_settings(
+                            hass, CLOUD_ALEXA
+                        ).values()
+                    )
+                ):
+                    self._migrate_alexa_entity_settings_v1()
+
+                await self._prefs.async_update(
+                    alexa_settings_version=ALEXA_SETTINGS_VERSION
+                )
+            async_listen_entity_updates(
+                self.hass, CLOUD_ALEXA, self._async_exposed_entities_updated
+            )
+
+        async def on_hass_start(hass):
             if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
                 await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
-        start.async_at_start(self.hass, hass_started)
+        start.async_at_start(self.hass, on_hass_start)
+        start.async_at_started(self.hass, on_hass_started)
 
         self._prefs.async_listen_updates(self._async_prefs_updated)
         self.hass.bus.async_listen(
@@ -131,13 +248,10 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             self._handle_entity_registry_updated,
         )
 
-    def should_expose(self, entity_id):
+    def _should_expose_legacy(self, entity_id):
         """If an entity should be exposed."""
         if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
-
-        if not self._config[CONF_FILTER].empty_filter:
-            return self._config[CONF_FILTER](entity_id)
 
         entity_configs = self._prefs.alexa_entity_configs
         entity_config = entity_configs.get(entity_id, {})
@@ -156,9 +270,23 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         # Backwards compat
         if (default_expose := self._prefs.alexa_default_expose) is None:
-            return not auxiliary_entity
+            return not auxiliary_entity and entity_supported(self.hass, entity_id)
 
-        return not auxiliary_entity and split_entity_id(entity_id)[0] in default_expose
+        return (
+            not auxiliary_entity
+            and split_entity_id(entity_id)[0] in default_expose
+            and entity_supported(self.hass, entity_id)
+        )
+
+    @callback
+    def should_expose(self, entity_id):
+        """If an entity should be exposed."""
+        if not self._config[CONF_FILTER].empty_filter:
+            if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+                return False
+            return self._config[CONF_FILTER](entity_id)
+
+        return async_should_expose(self.hass, CLOUD_ALEXA, entity_id)
 
     @callback
     def async_invalidate_access_token(self):
@@ -233,32 +361,30 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         if not any(
             key in updated_prefs
             for key in (
-                PREF_ALEXA_DEFAULT_EXPOSE,
-                PREF_ALEXA_ENTITY_CONFIGS,
                 PREF_ALEXA_REPORT_STATE,
                 PREF_ENABLE_ALEXA,
             )
         ):
             return
 
-        # If we update just entity preferences, delay updating
-        # as we might update more
-        if updated_prefs == {PREF_ALEXA_ENTITY_CONFIGS}:
-            if self._alexa_sync_unsub:
-                self._alexa_sync_unsub()
-
-            self._alexa_sync_unsub = async_call_later(
-                self.hass, SYNC_DELAY, self._sync_prefs
-            )
-            return
-
         await self.async_sync_entities()
+
+    @callback
+    def _async_exposed_entities_updated(self) -> None:
+        """Handle updated preferences."""
+        # Delay updating as we might update more
+        if self._alexa_sync_unsub:
+            self._alexa_sync_unsub()
+
+        self._alexa_sync_unsub = async_call_later(
+            self.hass, SYNC_DELAY, self._sync_prefs
+        )
 
     async def _sync_prefs(self, _now):
         """Sync the updated preferences to Alexa."""
         self._alexa_sync_unsub = None
         old_prefs = self._cur_entity_prefs
-        new_prefs = self._prefs.alexa_entity_configs
+        new_prefs = async_get_assistant_settings(self.hass, CLOUD_ALEXA)
 
         seen = set()
         to_update = []
@@ -341,14 +467,20 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         if to_update:
             tasks.append(
-                alexa_state_report.async_send_add_or_update_message(
-                    self.hass, self, to_update
+                asyncio.create_task(
+                    alexa_state_report.async_send_add_or_update_message(
+                        self.hass, self, to_update
+                    )
                 )
             )
 
         if to_remove:
             tasks.append(
-                alexa_state_report.async_send_delete_message(self.hass, self, to_remove)
+                asyncio.create_task(
+                    alexa_state_report.async_send_delete_message(
+                        self.hass, self, to_remove
+                    )
+                )
             )
 
         try:

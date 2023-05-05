@@ -1,6 +1,6 @@
 """Test ZHA sensor."""
 import math
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import zigpy.profiles.zha
@@ -10,7 +10,7 @@ import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.zha.core.const import ZHA_CHANNEL_READS_PER_REQ
+from homeassistant.components.zha.core.const import ZHA_CLUSTER_HANDLER_READS_PER_REQ
 import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -32,6 +32,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolume,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
@@ -139,16 +140,16 @@ async def async_test_metering(hass, cluster, entity_id):
 
     await send_attributes_report(hass, cluster, {1024: 12346, "status": 64 + 8})
     assert_state(hass, entity_id, "12346.0", None)
-    assert (
-        hass.states.get(entity_id).attributes["status"]
-        == "SERVICE_DISCONNECT|POWER_FAILURE"
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|POWER_FAILURE",
+        "POWER_FAILURE|SERVICE_DISCONNECT",
     )
 
     await send_attributes_report(
         hass, cluster, {"status": 32, "metering_device_type": 1}
     )
     # currently only statuses for electric meters are supported
-    assert hass.states.get(entity_id).attributes["status"] == "<bitmap8.32: 32>"
+    assert hass.states.get(entity_id).attributes["status"] in ("<bitmap8.32: 32>", "32")
 
 
 async def async_test_smart_energy_summation(hass, cluster, entity_id):
@@ -271,7 +272,14 @@ async def async_test_device_temperature(hass, cluster, entity_id):
 
 
 @pytest.mark.parametrize(
-    "cluster_id, entity_suffix, test_func, report_count, read_plug, unsupported_attrs",
+    (
+        "cluster_id",
+        "entity_suffix",
+        "test_func",
+        "report_count",
+        "read_plug",
+        "unsupported_attrs",
+    ),
     (
         (
             measurement.RelativeHumidity.cluster_id,
@@ -402,7 +410,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
     ),
 )
 async def test_sensor(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined_restored,
     cluster_id,
@@ -411,7 +419,7 @@ async def test_sensor(
     report_count,
     read_plug,
     unsupported_attrs,
-):
+) -> None:
     """Test ZHA sensor platform."""
 
     zigpy_device = zigpy_device_mock(
@@ -513,7 +521,7 @@ def core_rs(hass_storage):
 
 
 @pytest.mark.parametrize(
-    "uom, raw_temp, expected, restore",
+    ("uom", "raw_temp", "expected", "restore"),
     [
         (UnitOfTemperature.CELSIUS, 2900, 29, False),
         (UnitOfTemperature.CELSIUS, 2900, 29, True),
@@ -530,7 +538,7 @@ async def test_temp_uom(
     core_rs,
     zigpy_device_mock,
     zha_device_restored,
-):
+) -> None:
     """Test ZHA temperature sensor unit of measurement."""
 
     entity_id = "sensor.fake1026_fakemodel1026_004f3202_temperature"
@@ -578,11 +586,15 @@ async def test_temp_uom(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == uom
 
 
+@patch(
+    "zigpy.zcl.ClusterPersistingListener",
+    MagicMock(),
+)
 async def test_electrical_measurement_init(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined,
-):
+) -> None:
     """Test proper initialization of the electrical measurement cluster."""
 
     cluster_id = homeautomation.ElectricalMeasurement.cluster_id
@@ -597,7 +609,9 @@ async def test_electrical_measurement_init(
     )
     cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
     zha_device = await zha_device_joined(zigpy_device)
-    entity_id = await find_entity_id(Platform.SENSOR, zha_device, hass)
+    entity_id = await find_entity_id(
+        Platform.SENSOR, zha_device, hass, qualifier="active_power"
+    )
 
     # allow traffic to flow through the gateway and devices
     await async_enable_traffic(hass, [zha_device])
@@ -608,35 +622,35 @@ async def test_electrical_measurement_init(
     await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
     assert int(hass.states.get(entity_id).state) == 100
 
-    channel = zha_device.channels.pools[0].all_channels["1:0x0b04"]
-    assert channel.ac_power_divisor == 1
-    assert channel.ac_power_multiplier == 1
+    cluster_handler = zha_device._endpoints[1].all_cluster_handlers["1:0x0b04"]
+    assert cluster_handler.ac_power_divisor == 1
+    assert cluster_handler.ac_power_multiplier == 1
 
     # update power divisor
     await send_attributes_report(hass, cluster, {0: 1, 1291: 20, 0x0403: 5, 10: 1000})
-    assert channel.ac_power_divisor == 5
-    assert channel.ac_power_multiplier == 1
+    assert cluster_handler.ac_power_divisor == 5
+    assert cluster_handler.ac_power_multiplier == 1
     assert hass.states.get(entity_id).state == "4.0"
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 30, 0x0605: 10, 10: 1000})
-    assert channel.ac_power_divisor == 10
-    assert channel.ac_power_multiplier == 1
+    assert cluster_handler.ac_power_divisor == 10
+    assert cluster_handler.ac_power_multiplier == 1
     assert hass.states.get(entity_id).state == "3.0"
 
     # update power multiplier
     await send_attributes_report(hass, cluster, {0: 1, 1291: 20, 0x0402: 6, 10: 1000})
-    assert channel.ac_power_divisor == 10
-    assert channel.ac_power_multiplier == 6
+    assert cluster_handler.ac_power_divisor == 10
+    assert cluster_handler.ac_power_multiplier == 6
     assert hass.states.get(entity_id).state == "12.0"
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 30, 0x0604: 20, 10: 1000})
-    assert channel.ac_power_divisor == 10
-    assert channel.ac_power_multiplier == 20
+    assert cluster_handler.ac_power_divisor == 10
+    assert cluster_handler.ac_power_multiplier == 20
     assert hass.states.get(entity_id).state == "60.0"
 
 
 @pytest.mark.parametrize(
-    "cluster_id, unsupported_attributes, entity_ids, missing_entity_ids",
+    ("cluster_id", "unsupported_attributes", "entity_ids", "missing_entity_ids"),
     (
         (
             homeautomation.ElectricalMeasurement.cluster_id,
@@ -709,14 +723,14 @@ async def test_electrical_measurement_init(
     ),
 )
 async def test_unsupported_attributes_sensor(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined_restored,
     cluster_id,
     unsupported_attributes,
     entity_ids,
     missing_entity_ids,
-):
+) -> None:
     """Test ZHA sensor platform."""
 
     entity_ids = {ENTITY_ID_PREFIX.format(e) for e in entity_ids}
@@ -747,7 +761,7 @@ async def test_unsupported_attributes_sensor(
 
 
 @pytest.mark.parametrize(
-    "raw_uom, raw_value, expected_state, expected_uom",
+    ("raw_uom", "raw_value", "expected_state", "expected_uom"),
     (
         (
             1,
@@ -824,14 +838,14 @@ async def test_unsupported_attributes_sensor(
     ),
 )
 async def test_se_summation_uom(
-    hass,
+    hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined,
     raw_uom,
     raw_value,
     expected_state,
     expected_uom,
-):
+) -> None:
     """Test ZHA smart energy summation."""
 
     entity_id = ENTITY_ID_PREFIX.format("summation_delivered")
@@ -868,24 +882,27 @@ async def test_se_summation_uom(
 
 
 @pytest.mark.parametrize(
-    "raw_measurement_type, expected_type",
+    ("raw_measurement_type", "expected_type"),
     (
         (1, "ACTIVE_MEASUREMENT"),
         (8, "PHASE_A_MEASUREMENT"),
         (9, "ACTIVE_MEASUREMENT, PHASE_A_MEASUREMENT"),
         (
             15,
-            "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT, PHASE_A_MEASUREMENT",
+            (
+                "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT,"
+                " PHASE_A_MEASUREMENT"
+            ),
         ),
     ),
 )
 async def test_elec_measurement_sensor_type(
-    hass,
+    hass: HomeAssistant,
     elec_measurement_zigpy_dev,
     raw_measurement_type,
     expected_type,
     zha_device_joined,
-):
+) -> None:
     """Test ZHA electrical measurement sensor type."""
 
     entity_id = ENTITY_ID_PREFIX.format("active_power")
@@ -931,10 +948,10 @@ async def test_elec_measurement_sensor_type(
     ),
 )
 async def test_elec_measurement_skip_unsupported_attribute(
-    hass,
+    hass: HomeAssistant,
     elec_measurement_zha_dev,
     supported_attributes,
-):
+) -> None:
     """Test ZHA electrical measurement skipping update of unsupported attributes."""
 
     entity_id = ENTITY_ID_PREFIX.format("active_power")
@@ -961,7 +978,7 @@ async def test_elec_measurement_skip_unsupported_attribute(
     await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
     assert cluster.read_attributes.call_count == math.ceil(
-        len(supported_attributes) / ZHA_CHANNEL_READS_PER_REQ
+        len(supported_attributes) / ZHA_CLUSTER_HANDLER_READS_PER_REQ
     )
     read_attrs = {
         a for call in cluster.read_attributes.call_args_list for a in call[0][0]

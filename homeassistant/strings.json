@@ -1,8 +1,14 @@
 {
   "common": {
+    "generic": {
+      "model": "Model",
+      "ui_managed": "Managed via UI"
+    },
     "state": {
       "off": "Off",
       "on": "On",
+      "yes": "Yes",
+      "no": "No",
       "open": "Open",
       "closed": "Closed",
       "connected": "Connected",

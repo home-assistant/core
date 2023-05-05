@@ -36,9 +36,9 @@ def _can_use_icmp_lib_with_privilege() -> None | bool:
                 " socket"
             )
             return None
-        else:
-            _LOGGER.debug("Using icmplib in privileged=False mode")
-            return False
-    else:
-        _LOGGER.debug("Using icmplib in privileged=True mode")
-        return True
+
+        _LOGGER.debug("Using icmplib in privileged=False mode")
+        return False
+
+    _LOGGER.debug("Using icmplib in privileged=True mode")
+    return True

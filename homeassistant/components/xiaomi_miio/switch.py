@@ -24,10 +24,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (

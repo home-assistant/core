@@ -4,9 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import functools
-from typing import Any, TypeVar, overload
-
-from typing_extensions import ParamSpec
+from typing import Any, ParamSpec, TypeVar, overload
 
 _R = TypeVar("_R", int, float, datetime)
 _P = ParamSpec("_P")

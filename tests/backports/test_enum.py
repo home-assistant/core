@@ -7,7 +7,7 @@ import pytest
 from homeassistant.backports.enum import StrEnum
 
 
-def test_strenum():
+def test_strenum() -> None:
     """Test StrEnum."""
 
     class TestEnum(StrEnum):

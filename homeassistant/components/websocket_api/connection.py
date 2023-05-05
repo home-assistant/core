@@ -6,6 +6,7 @@ from collections.abc import Callable, Hashable
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
@@ -14,6 +15,7 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from . import const, messages
+from .util import describe_request
 
 if TYPE_CHECKING:
     from .http import WebSocketAdapter
@@ -22,6 +24,9 @@ if TYPE_CHECKING:
 current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
+
+MessageHandler = Callable[[HomeAssistant, "ActiveConnection", dict[str, Any]], None]
+BinaryHandler = Callable[[HomeAssistant, "ActiveConnection", bytes], None]
 
 
 class ActiveConnection:
@@ -44,11 +49,54 @@ class ActiveConnection:
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
         self.supported_features: dict[str, float] = {}
+        self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
+            const.DOMAIN
+        ]
+        self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
+
+    def get_description(self, request: web.Request | None) -> str:
+        """Return a description of the connection."""
+        description = self.user.name or ""
+        if request:
+            description += " " + describe_request(request)
+        return description
 
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
         return Context(user_id=self.user.id)
+
+    @callback
+    def async_register_binary_handler(
+        self, handler: BinaryHandler
+    ) -> tuple[int, Callable[[], None]]:
+        """Register a temporary binary handler for this connection.
+
+        Returns a binary handler_id (1 byte) and a callback to unregister the handler.
+        """
+        if len(self.binary_handlers) < 255:
+            index = len(self.binary_handlers)
+            self.binary_handlers.append(None)
+        else:
+            # Once the list is full, we search for a None entry to reuse.
+            index = None
+            for idx, existing in enumerate(self.binary_handlers):
+                if existing is None:
+                    index = idx
+                    break
+
+        if index is None:
+            raise RuntimeError("Too many binary handlers registered")
+
+        self.binary_handlers[index] = handler
+
+        @callback
+        def unsub() -> None:
+            """Unregister the handler."""
+            assert index is not None
+            self.binary_handlers[index] = None
+
+        return index + 1, unsub
 
     @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
@@ -56,19 +104,49 @@ class ActiveConnection:
         self.send_message(messages.result_message(msg_id, result))
 
     @callback
+    def send_event(self, msg_id: int, event: Any | None = None) -> None:
+        """Send a event message."""
+        self.send_message(messages.event_message(msg_id, event))
+
+    @callback
     def send_error(self, msg_id: int, code: str, message: str) -> None:
         """Send a error message."""
         self.send_message(messages.error_message(msg_id, code, message))
 
     @callback
-    def async_handle(self, msg: dict[str, Any]) -> None:
-        """Handle a single incoming message."""
-        handlers = self.hass.data[const.DOMAIN]
+    def async_handle_binary(self, handler_id: int, payload: bytes) -> None:
+        """Handle a single incoming binary message."""
+        index = handler_id - 1
+        if (
+            index < 0
+            or index >= len(self.binary_handlers)
+            or (handler := self.binary_handlers[index]) is None
+        ):
+            self.logger.error(
+                "Received binary message for non-existing handler %s", handler_id
+            )
+            return
 
         try:
-            msg = messages.MINIMAL_MESSAGE_SCHEMA(msg)
-            cur_id = msg["id"]
-        except vol.Invalid:
+            handler(self.hass, self, payload)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception("Error handling binary message")
+            self.binary_handlers[index] = None
+
+    @callback
+    def async_handle(self, msg: dict[str, Any]) -> None:
+        """Handle a single incoming message."""
+        if (
+            # Not using isinstance as we don't care about children
+            # as these are always coming from JSON
+            type(msg) is not dict  # pylint: disable=unidiomatic-typecheck
+            or (
+                not (cur_id := msg.get("id"))
+                or type(cur_id) is not int  # pylint: disable=unidiomatic-typecheck
+                or not (type_ := msg.get("type"))
+                or type(type_) is not str  # pylint: disable=unidiomatic-typecheck
+            )
+        ):
             self.logger.error("Received invalid command", msg)
             self.send_message(
                 messages.error_message(
@@ -87,8 +165,8 @@ class ActiveConnection:
             )
             return
 
-        if msg["type"] not in handlers:
-            self.logger.info("Received unknown command: {}".format(msg["type"]))
+        if not (handler_schema := self.handlers.get(type_)):
+            self.logger.info(f"Received unknown command: {type_}")
             self.send_message(
                 messages.error_message(
                     cur_id, const.ERR_UNKNOWN_COMMAND, "Unknown command."
@@ -96,7 +174,7 @@ class ActiveConnection:
             )
             return
 
-        handler, schema = handlers[msg["type"]]
+        handler, schema = handler_schema
 
         try:
             handler(self.hass, self, schema(msg))
@@ -142,9 +220,6 @@ class ActiveConnection:
 
         if code:
             err_message += f" ({code})"
-        if request := current_request.get():
-            err_message += f" from {request.remote}"
-            if user_agent := request.headers.get("user-agent"):
-                err_message += f" ({user_agent})"
+        err_message += " " + self.get_description(current_request.get())
 
         log_handler("Error handling message: %s", err_message)

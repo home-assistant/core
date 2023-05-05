@@ -22,8 +22,8 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
-from homeassistant.helpers.frame import report
 
 from .unit_conversion import (
     DistanceConverter,
@@ -120,35 +120,6 @@ class UnitSystem:
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
         self._conversions = conversions
-
-    @property
-    def name(self) -> str:
-        """Return the name of the unit system."""
-        report(
-            (
-                "accesses the `name` property of the unit system. "
-                "This is deprecated and will stop working in Home Assistant 2023.1. "
-                "Please adjust to use instance check instead."
-            ),
-            error_if_core=False,
-        )
-        if self is IMPERIAL_SYSTEM:
-            # kept for compatibility reasons, with associated warning above
-            return _CONF_UNIT_SYSTEM_IMPERIAL
-        return self._name
-
-    @property
-    def is_metric(self) -> bool:
-        """Determine if this is the metric unit system."""
-        report(
-            (
-                "accesses the `is_metric` property of the unit system. "
-                "This is deprecated and will stop working in Home Assistant 2023.1. "
-                "Please adjust to use instance check instead."
-            ),
-            error_if_core=False,
-        )
-        return self is METRIC_SYSTEM
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
@@ -270,22 +241,48 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.MILES): UnitOfLength.KILOMETERS,
         ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
         # Convert non-metric volumes of gas meters
+        ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric precipitation
         ("precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
+        # Convert non-metric precipitation intensity
+        (
+            "precipitation_intensity",
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
+        ): UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        (
+            "precipitation_intensity",
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        ): UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         # Convert non-metric pressure
         ("pressure", UnitOfPressure.PSI): UnitOfPressure.KPA,
         ("pressure", UnitOfPressure.INHG): UnitOfPressure.HPA,
         # Convert non-metric speeds except knots to km/h
         ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
         ("speed", UnitOfSpeed.MILES_PER_HOUR): UnitOfSpeed.KILOMETERS_PER_HOUR,
+        (
+            "speed",
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
+        ): UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        (
+            "speed",
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        ): UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         # Convert non-metric volumes
+        ("volume", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("volume", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("volume", UnitOfVolume.FLUID_OUNCES): UnitOfVolume.MILLILITERS,
         ("volume", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
         # Convert non-metric volumes of water meters
+        ("water", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
+        # Convert wind speeds except knots to km/h
+        **{
+            ("wind_speed", unit): UnitOfSpeed.KILOMETERS_PER_HOUR
+            for unit in UnitOfSpeed
+            if unit not in (UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.KNOTS)
+        },
     },
     length=UnitOfLength.KILOMETERS,
     mass=UnitOfMass.GRAMS,
@@ -313,7 +310,17 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         # Convert non-USCS volumes of gas meters
         ("gas", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         # Convert non-USCS precipitation
+        ("precipitation", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("precipitation", UnitOfLength.MILLIMETERS): UnitOfLength.INCHES,
+        # Convert non-USCS precipitation intensity
+        (
+            "precipitation_intensity",
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        ): UnitOfVolumetricFlux.INCHES_PER_DAY,
+        (
+            "precipitation_intensity",
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        ): UnitOfVolumetricFlux.INCHES_PER_HOUR,
         # Convert non-USCS pressure
         ("pressure", UnitOfPressure.MBAR): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.CBAR): UnitOfPressure.PSI,
@@ -322,9 +329,17 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.HPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
-        # Convert non-USCS speeds except knots to mph
+        # Convert non-USCS speeds, except knots, to mph
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
         ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,
+        (
+            "speed",
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        ): UnitOfVolumetricFlux.INCHES_PER_DAY,
+        (
+            "speed",
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        ): UnitOfVolumetricFlux.INCHES_PER_HOUR,
         # Convert non-USCS volumes
         ("volume", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         ("volume", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
@@ -332,6 +347,12 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         # Convert non-USCS volumes of water meters
         ("water", UnitOfVolume.CUBIC_METERS): UnitOfVolume.CUBIC_FEET,
         ("water", UnitOfVolume.LITERS): UnitOfVolume.GALLONS,
+        # Convert wind speeds except knots to mph
+        **{
+            ("wind_speed", unit): UnitOfSpeed.MILES_PER_HOUR
+            for unit in UnitOfSpeed
+            if unit not in (UnitOfSpeed.KNOTS, UnitOfSpeed.MILES_PER_HOUR)
+        },
     },
     length=UnitOfLength.MILES,
     mass=UnitOfMass.POUNDS,

@@ -315,7 +315,6 @@ class MoldIndicator(SensorEntity):
     def _calc_moldindicator(self):
         """Calculate the humidity at the (cold) calibration point."""
         if None in (self._dewpoint, self._calib_factor) or self._calib_factor == 0:
-
             _LOGGER.debug(
                 "Invalid inputs - dewpoint: %s, calibration-factor: %s",
                 self._dewpoint,

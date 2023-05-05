@@ -45,17 +45,14 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
-  "options": {
-    "step": {
-      "user": {
-        "title": "Options for Sony Bravia TV",
-        "data": {
-          "ignored_sources": "List of ignored sources"
-        }
+  "entity": {
+    "button": {
+      "restart": {
+        "name": "[%key:component::button::entity_component::restart::name%]"
+      },
+      "terminate_apps": {
+        "name": "Terminate apps"
       }
-    },
-    "abort": {
-      "failed_update": "An error occurred while updating the list of sources.\n\n Ensure that your TV is turned on before trying to set it up."
     }
   }
 }

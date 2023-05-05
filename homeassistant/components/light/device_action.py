@@ -77,10 +77,7 @@ async def async_call_action_from_config(
         data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
 
     if config[CONF_TYPE] == TYPE_FLASH:
-        if ATTR_FLASH in config:
-            data[ATTR_FLASH] = config[ATTR_FLASH]
-        else:
-            data[ATTR_FLASH] = FLASH_SHORT
+        data[ATTR_FLASH] = config.get(ATTR_FLASH, FLASH_SHORT)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=context

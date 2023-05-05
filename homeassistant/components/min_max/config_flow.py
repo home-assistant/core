@@ -19,13 +19,13 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
 _STATISTIC_MEASURES = [
-    selector.SelectOptionDict(value="min", label="Minimum"),
-    selector.SelectOptionDict(value="max", label="Maximum"),
-    selector.SelectOptionDict(value="mean", label="Arithmetic mean"),
-    selector.SelectOptionDict(value="median", label="Median"),
-    selector.SelectOptionDict(value="last", label="Most recently updated"),
-    selector.SelectOptionDict(value="range", label="Statistical range"),
-    selector.SelectOptionDict(value="sum", label="Sum"),
+    "min",
+    "max",
+    "mean",
+    "median",
+    "last",
+    "range",
+    "sum",
 ]
 
 
@@ -38,7 +38,9 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_TYPE): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
+            selector.SelectSelectorConfig(
+                options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
+            ),
         ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(

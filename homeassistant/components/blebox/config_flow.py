@@ -84,7 +84,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         hass = self.hass
-        ipaddress = host_port(discovery_info.__dict__)
+        ipaddress = (discovery_info.host, discovery_info.port)
         self.device_config["host"] = discovery_info.host
         self.device_config["port"] = discovery_info.port
 

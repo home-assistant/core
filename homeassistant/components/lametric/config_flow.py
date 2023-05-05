@@ -255,7 +255,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 model=Model(
                     cycles=2,
                     frames=[Simple(text="Connected to Home Assistant!", icon=7956)],
-                    sound=Sound(id=NotificationSound.WIN),
+                    sound=Sound(sound=NotificationSound.WIN),
                 ),
             )
         )

@@ -5,22 +5,28 @@ from datetime import datetime, timezone
 from homeassistant.components.subaru.const import (
     API_GEN_1,
     API_GEN_2,
+    API_GEN_3,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_REMOTE_SERVICE,
     VEHICLE_HAS_REMOTE_START,
     VEHICLE_HAS_SAFETY_SERVICE,
+    VEHICLE_MODEL_NAME,
+    VEHICLE_MODEL_YEAR,
     VEHICLE_NAME,
+    VEHICLE_STATUS,
     VEHICLE_VIN,
 )
 
 TEST_VIN_1_G1 = "JF2ABCDE6L0000001"
 TEST_VIN_2_EV = "JF2ABCDE6L0000002"
-TEST_VIN_3_G2 = "JF2ABCDE6L0000003"
+TEST_VIN_3_G3 = "JF2ABCDE6L0000003"
 
 VEHICLE_DATA = {
     TEST_VIN_1_G1: {
         VEHICLE_VIN: TEST_VIN_1_G1,
+        VEHICLE_MODEL_YEAR: "2017",
+        VEHICLE_MODEL_NAME: "Outback",
         VEHICLE_NAME: "test_vehicle_1",
         VEHICLE_HAS_EV: False,
         VEHICLE_API_GEN: API_GEN_1,
@@ -30,6 +36,8 @@ VEHICLE_DATA = {
     },
     TEST_VIN_2_EV: {
         VEHICLE_VIN: TEST_VIN_2_EV,
+        VEHICLE_MODEL_YEAR: "2019",
+        VEHICLE_MODEL_NAME: "Crosstrek",
         VEHICLE_NAME: "test_vehicle_2",
         VEHICLE_HAS_EV: True,
         VEHICLE_API_GEN: API_GEN_2,
@@ -37,11 +45,13 @@ VEHICLE_DATA = {
         VEHICLE_HAS_REMOTE_SERVICE: True,
         VEHICLE_HAS_SAFETY_SERVICE: True,
     },
-    TEST_VIN_3_G2: {
-        VEHICLE_VIN: TEST_VIN_3_G2,
+    TEST_VIN_3_G3: {
+        VEHICLE_VIN: TEST_VIN_3_G3,
+        VEHICLE_MODEL_YEAR: "2022",
+        VEHICLE_MODEL_NAME: "Ascent",
         VEHICLE_NAME: "test_vehicle_3",
         VEHICLE_HAS_EV: False,
-        VEHICLE_API_GEN: API_GEN_2,
+        VEHICLE_API_GEN: API_GEN_3,
         VEHICLE_HAS_REMOTE_START: True,
         VEHICLE_HAS_REMOTE_SERVICE: True,
         VEHICLE_HAS_SAFETY_SERVICE: True,
@@ -51,7 +61,7 @@ VEHICLE_DATA = {
 MOCK_DATETIME = datetime.fromtimestamp(1595560000, timezone.utc)
 
 VEHICLE_STATUS_EV = {
-    "status": {
+    VEHICLE_STATUS: {
         "AVG_FUEL_CONSUMPTION": 2.3,
         "DISTANCE_TO_EMPTY_FUEL": 707,
         "DOOR_BOOT_LOCK_STATUS": "UNKNOWN",
@@ -120,8 +130,8 @@ VEHICLE_STATUS_EV = {
 }
 
 
-VEHICLE_STATUS_G2 = {
-    "status": {
+VEHICLE_STATUS_G3 = {
+    VEHICLE_STATUS: {
         "AVG_FUEL_CONSUMPTION": 2.3,
         "DISTANCE_TO_EMPTY_FUEL": 707,
         "DOOR_BOOT_LOCK_STATUS": "UNKNOWN",
@@ -136,6 +146,7 @@ VEHICLE_STATUS_G2 = {
         "DOOR_REAR_LEFT_POSITION": "CLOSED",
         "DOOR_REAR_RIGHT_LOCK_STATUS": "UNKNOWN",
         "DOOR_REAR_RIGHT_POSITION": "CLOSED",
+        "REMAINING_FUEL_PERCENT": 77,
         "ODOMETER": 1234,
         "POSITION_HEADING_DEGREE": 150,
         "POSITION_SPEED_KMPH": "0",

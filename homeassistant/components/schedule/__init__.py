@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import itertools
-import logging
 from typing import Any, Literal
 
 import voluptuous as vol
@@ -21,9 +20,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.collection import (
     CollectionEntity,
+    DictStorageCollection,
+    DictStorageCollectionWebsocket,
     IDManager,
-    StorageCollection,
-    StorageCollectionWebsocket,
+    SerializedStorageCollection,
     YamlCollection,
     sync_entity_lifecycle,
 )
@@ -173,7 +173,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             version=STORAGE_VERSION,
             minor_version=STORAGE_VERSION_MINOR,
         ),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     sync_entity_lifecycle(hass, DOMAIN, DOMAIN, component, storage_collection, Schedule)
@@ -183,7 +182,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    StorageCollectionWebsocket(
+    DictStorageCollectionWebsocket(
         storage_collection,
         DOMAIN,
         DOMAIN,
@@ -210,7 +209,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class ScheduleStorageCollection(StorageCollection):
+class ScheduleStorageCollection(DictStorageCollection):
     """Schedules stored in storage."""
 
     SCHEMA = vol.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
@@ -226,12 +225,12 @@ class ScheduleStorageCollection(StorageCollection):
         name: str = info[CONF_NAME]
         return name
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         self.SCHEMA(update_data)
-        return data | update_data
+        return item | update_data
 
-    async def _async_load_data(self) -> dict | None:
+    async def _async_load_data(self) -> SerializedStorageCollection | None:
         """Load the data."""
         if data := await super()._async_load_data():
             data["items"] = [STORAGE_SCHEMA(item) for item in data["items"]]
@@ -332,7 +331,7 @@ class Schedule(CollectionEntity):
                         possible_next_event := (
                             datetime.combine(now.date(), timestamp, tzinfo=now.tzinfo)
                             + timedelta(days=day)
-                            if not timestamp == time.max
+                            if timestamp != time.max
                             # Special case for midnight of the following day.
                             else datetime.combine(now.date(), time(), tzinfo=now.tzinfo)
                             + timedelta(days=day + 1)

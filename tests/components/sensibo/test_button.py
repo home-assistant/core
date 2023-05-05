@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import SensiboData
-from pytest import MonkeyPatch, raises
+import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +21,7 @@ from tests.common import async_fire_time_changed
 async def test_button(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -84,7 +84,7 @@ async def test_button(
 async def test_button_failure(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo button fails."""
@@ -97,13 +97,14 @@ async def test_button_failure(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_reset_filter",
         return_value={"status": "failure"},
+    ), pytest.raises(
+        HomeAssistantError
     ):
-        with raises(HomeAssistantError):
-            await hass.services.async_call(
-                BUTTON_DOMAIN,
-                SERVICE_PRESS,
-                {
-                    ATTR_ENTITY_ID: state_button.entity_id,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: state_button.entity_id,
+            },
+            blocking=True,
+        )

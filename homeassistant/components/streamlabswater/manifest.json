@@ -1,9 +1,9 @@
 {
   "domain": "streamlabswater",
   "name": "StreamLabs",
-  "documentation": "https://www.home-assistant.io/integrations/streamlabswater",
-  "requirements": ["streamlabswater==1.0.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/streamlabswater",
   "iot_class": "cloud_polling",
-  "loggers": ["streamlabswater"]
+  "loggers": ["streamlabswater"],
+  "requirements": ["streamlabswater==1.0.1"]
 }
