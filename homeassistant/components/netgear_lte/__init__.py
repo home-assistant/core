@@ -285,6 +285,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "name": f"{Platform.NOTIFY}.{entry.title.lower().replace(' ', '_')}"
             },
         )
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass,
+                Platform.NOTIFY,
+                DOMAIN,
+                {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: DOMAIN},
+                hass.data[DATA_HASS_CONFIG],
+            )
+        )
     for lte_config in lte_configs:
         if lte_config[CONF_HOST] == entry.data[CONF_HOST]:
             for notify_conf in lte_config[CONF_NOTIFY]:
