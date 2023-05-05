@@ -63,7 +63,7 @@ SUBSCRIPTION_RENEW_INTERVAL_ON_ERROR = 60.0
 
 PULLPOINT_POLL_TIME = dt.timedelta(seconds=60)
 PULLPOINT_MESSAGE_LIMIT = 100
-PULLPOINT_COOLDOWN_TIME = 0.75
+PULLPOINT_COOLDOWN_TIME = 1.00
 
 
 class EventManager:
@@ -152,6 +152,7 @@ class EventManager:
     # pylint: disable=protected-access
     async def async_parse_messages(self, messages) -> None:
         """Parse notification message."""
+        LOGGER.debug("%s: Parsing messages: %s", self.name, messages)
         unique_id = self.unique_id
         assert unique_id is not None
         for msg in messages:
