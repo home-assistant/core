@@ -50,20 +50,28 @@ RENEW_ERRORS = (ONVIFError, RequestError, XMLParseError, *SUBSCRIPTION_ERRORS)
 # the subscriptions expire or the camera is rebooted.
 #
 SUBSCRIPTION_TIME = dt.timedelta(minutes=10)
-SUBSCRIPTION_RELATIVE_TIME = (
-    "PT600S"  # use relative time since the time on the camera is not reliable
-)
-SUBSCRIPTION_ATTEMPTS = 3
-SUBSCRIPTION_RENEW_INTERVAL = (
-    480  # 8 minutes between renewals to make sure we never hit the 10 minute limit
-)
-# SUBSCRIPTION_RENEW_INTERVAL Must be less than the overall timeout of 90 * (SUBSCRIPTION_ATTEMPTS) 3 = 270 seconds
 
-SUBSCRIPTION_RENEW_INTERVAL_ON_ERROR = 60.0
+# SUBSCRIPTION_RELATIVE_TIME uses a relative time since the time on the camera
+# is not reliable. We use 600 seconds (10 minutes) since some cameras cannot
+# parse time in the format "PT10M" (10 minutes).
+SUBSCRIPTION_RELATIVE_TIME = "PT600S"
+
+# SUBSCRIPTION_RENEW_INTERVAL Must be less than the
+# overall timeout of 90 * (SUBSCRIPTION_ATTEMPTS) 2 = 180 seconds
+#
+# We use 8 minutes between renewals to make sure we never hit the
+# 10 minute limit even if the first renewal attempt fails
+SUBSCRIPTION_RENEW_INTERVAL = 8 * 60
+
+# The number of attempts to make when creating or renewing a subscription
+SUBSCRIPTION_ATTEMPTS = 2
+
+# The time to wait before trying to restart the subscription if it fails
+SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR = 60
 
 PULLPOINT_POLL_TIME = dt.timedelta(seconds=60)
 PULLPOINT_MESSAGE_LIMIT = 100
-PULLPOINT_COOLDOWN_TIME = 1.00
+PULLPOINT_COOLDOWN_TIME = 0.75
 
 
 class EventManager:
@@ -365,13 +373,11 @@ class PullPointManager:
             # scheduled when the current one is done if needed.
             return
         async with self._renew_lock:
-            next_attempt = SUBSCRIPTION_RENEW_INTERVAL_ON_ERROR
+            next_attempt = SUBSCRIPTION_RENEW_INTERVAL
             try:
-                if (
-                    await self._async_renew_pullpoint()
-                    or await self._async_restart_pullpoint()
-                ):
-                    next_attempt = SUBSCRIPTION_RENEW_INTERVAL
+                if not await self._async_renew_pullpoint():
+                    next_attempt = SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR
+                    await self._async_restart_pullpoint()
             finally:
                 self.async_schedule_pullpoint_renew(next_attempt)
 
@@ -742,13 +748,11 @@ class WebHookManager:
             # scheduled when the current one is done if needed.
             return
         async with self._renew_lock:
-            next_attempt = SUBSCRIPTION_RENEW_INTERVAL_ON_ERROR
+            next_attempt = SUBSCRIPTION_RENEW_INTERVAL
             try:
-                if (
-                    await self._async_renew_webhook()
-                    or await self._async_restart_webhook()
-                ):
-                    next_attempt = SUBSCRIPTION_RENEW_INTERVAL
+                if not await self._async_renew_webhook():
+                    next_attempt = SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR
+                    await self._async_restart_webhook()
             finally:
                 self._async_schedule_webhook_renew(next_attempt)
 
