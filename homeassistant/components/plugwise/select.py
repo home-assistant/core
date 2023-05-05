@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any
 
 from plugwise import DeviceData, Smile
 
@@ -17,8 +17,6 @@ from .const import DOMAIN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
-T = TypeVar("T", bound=DeviceData)
-
 
 @dataclass
 class PlugwiseSelectDescriptionMixin:
@@ -27,8 +25,8 @@ class PlugwiseSelectDescriptionMixin:
     command: Callable[[Smile, str, str], Awaitable[Any]]
     current_option_key: str
     options_key: str
-    value_fn: Callable[[T], str]
-    values_fn: Callable[[T], list[str]]
+    value_fn: Callable[[DeviceData], str]
+    values_fn: Callable[[DeviceData], list[str]]
 
 
 @dataclass
