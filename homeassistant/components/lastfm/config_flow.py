@@ -124,8 +124,8 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             main_user = get_lastfm_user(
                 self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
-            friends: Sequence[SelectOptionDict] = [
-                {"value": str(friend.name), "label": str(friend.get_name(True))}
+            friends = [
+                SelectOptionDict(value=friend.name, label=friend.get_name(True))
                 for friend in main_user.get_friends()
             ]
         except WSError:
@@ -196,8 +196,8 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     self._config_entry.data[CONF_API_KEY],
                     self._config_entry.data[CONF_MAIN_USER],
                 )
-                friends: Sequence[SelectOptionDict] = [
-                    {"value": str(friend.name), "label": str(friend.get_name(True))}
+                friends = [
+                    SelectOptionDict(value=friend.name, label=friend.get_name(True))
                     for friend in main_user.get_friends()
                 ]
             except WSError:
