@@ -57,7 +57,7 @@ async def test_entry_diagnostics(hass: HomeAssistant, hass_client: ClientSession
                 {
                     "gateway": {
                         "local_connection": gateway_2.gateway.local_connection,
-                        "firmware_version": gateway_1.gateway.firmware_version,
+                        "firmware_version": gateway_2.gateway.firmware_version,
                     },
                     "devices": [],
                 },
