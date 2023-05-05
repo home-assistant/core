@@ -153,7 +153,8 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
         return self.async_create_entry(
             title="LastFM",
-            data={
+            data={},
+            options={
                 CONF_API_KEY: import_config[CONF_API_KEY],
                 CONF_MAIN_USER: None,
                 CONF_USERS: import_config[CONF_USERS],
