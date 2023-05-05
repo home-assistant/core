@@ -542,11 +542,13 @@ async def test_alexa_handle_logout(
     assert len(mock_enable.return_value.mock_calls) == 1
 
 
+@pytest.mark.parametrize("alexa_settings_version", [1, 2])
 async def test_alexa_config_migrate_expose_entity_prefs(
     hass: HomeAssistant,
     cloud_prefs: CloudPreferences,
     cloud_stub,
     entity_registry: er.EntityRegistry,
+    alexa_settings_version: int,
 ) -> None:
     """Test migrating Alexa entity config."""
     hass.state = CoreState.starting
@@ -558,13 +560,6 @@ async def test_alexa_config_migrate_expose_entity_prefs(
         "test",
         "light_exposed",
         suggested_object_id="exposed",
-    )
-
-    entity_migrated = entity_registry.async_get_or_create(
-        "light",
-        "test",
-        "light_migrated",
-        suggested_object_id="migrated",
     )
 
     entity_config = entity_registry.async_get_or_create(
@@ -593,9 +588,8 @@ async def test_alexa_config_migrate_expose_entity_prefs(
     await cloud_prefs.async_update(
         alexa_enabled=True,
         alexa_report_state=False,
-        alexa_settings_version=1,
+        alexa_settings_version=alexa_settings_version,
     )
-    expose_entity(hass, entity_migrated.entity_id, False)
 
     cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS]["light.unknown"] = {
         PREF_SHOULD_EXPOSE: True
@@ -604,9 +598,6 @@ async def test_alexa_config_migrate_expose_entity_prefs(
         PREF_SHOULD_EXPOSE: False
     }
     cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS][entity_exposed.entity_id] = {
-        PREF_SHOULD_EXPOSE: True
-    }
-    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS][entity_migrated.entity_id] = {
         PREF_SHOULD_EXPOSE: True
     }
     conf = alexa_config.CloudAlexaConfig(
@@ -625,9 +616,6 @@ async def test_alexa_config_migrate_expose_entity_prefs(
         "cloud.alexa": {"should_expose": False}
     }
     assert async_get_entity_settings(hass, entity_exposed.entity_id) == {
-        "cloud.alexa": {"should_expose": True}
-    }
-    assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
         "cloud.alexa": {"should_expose": True}
     }
     assert async_get_entity_settings(hass, entity_config.entity_id) == {
