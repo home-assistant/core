@@ -17,13 +17,17 @@ from .pipeline import (
     PipelineInput,
     PipelineRun,
     PipelineStage,
+    async_create_default_pipeline,
     async_get_pipeline,
+    async_get_pipelines,
     async_setup_pipeline_store,
 )
 from .websocket_api import async_register_websocket_api
 
 __all__ = (
     "DOMAIN",
+    "async_create_default_pipeline",
+    "async_get_pipelines",
     "async_setup",
     "async_pipeline_from_audio_stream",
     "Pipeline",

@@ -18,7 +18,12 @@ def stringify_onvif_error(error: Exception) -> str:
     if isinstance(error, Fault):
         message = error.message
         if error.detail:
-            message += ": " + error.detail
+            # Detail may be a bytes object, so we need to convert it to string
+            if isinstance(error.detail, bytes):
+                detail = error.detail.decode("utf-8", "replace")
+            else:
+                detail = str(error.detail)
+            message += ": " + detail
         if error.code:
             message += f" (code:{error.code})"
         if error.subcodes:

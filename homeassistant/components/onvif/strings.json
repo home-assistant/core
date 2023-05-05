@@ -11,6 +11,7 @@
     "error": {
       "onvif_error": "Error setting up ONVIF device: {error}. Check logs for more information.",
       "auth_failed": "Could not authenticate: {error}",
+      "no_onvif_service": "No ONVIF service found. Check that the port number is correct.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {

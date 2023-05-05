@@ -97,7 +97,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             immediate=False,
             function=self._async_reload_entry,
         )
-        entry.async_on_unload(self._debounced_reload.async_cancel)
+        entry.async_on_unload(self._debounced_reload.async_shutdown)
 
     @property
     def model(self) -> str:

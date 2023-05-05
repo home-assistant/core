@@ -1,6 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
 
@@ -11,7 +11,9 @@ from homeassistant.components.assist_pipeline.pipeline import (
     Pipeline,
     PipelineData,
     PipelineStorageCollection,
+    async_create_default_pipeline,
     async_get_pipeline,
+    async_get_pipelines,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
@@ -21,6 +23,12 @@ from . import MANY_LANGUAGES
 from .conftest import MockSttPlatform, MockSttProvider, MockTTSPlatform, MockTTSProvider
 
 from tests.common import MockModule, flush_store, mock_integration, mock_platform
+
+
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass) -> None:
+    """Load the homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
@@ -143,6 +151,31 @@ async def test_loading_datasets_from_storage(
     assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"
 
 
+async def test_create_default_pipeline(
+    hass: HomeAssistant, init_supporting_components
+) -> None:
+    """Test async_create_default_pipeline."""
+    assert await async_setup_component(hass, "assist_pipeline", {})
+
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
+    assert len(store.data) == 1
+
+    assert await async_create_default_pipeline(hass, "bla", "bla") is None
+    assert await async_create_default_pipeline(hass, "test", "test") == Pipeline(
+        conversation_engine="homeassistant",
+        conversation_language="en",
+        id=ANY,
+        language="en",
+        name="Home Assistant",
+        stt_engine="test",
+        stt_language="en-US",
+        tts_engine="test",
+        tts_language="en-US",
+        tts_voice="james_earl_jones",
+    )
+
+
 async def test_get_pipeline(hass: HomeAssistant) -> None:
     """Test async_get_pipeline."""
     assert await async_setup_component(hass, "assist_pipeline", {})
@@ -157,6 +190,31 @@ async def test_get_pipeline(hass: HomeAssistant) -> None:
 
     # Test getting a specific pipeline
     assert pipeline is async_get_pipeline(hass, pipeline.id)
+
+
+async def test_get_pipelines(hass: HomeAssistant) -> None:
+    """Test async_get_pipelines."""
+    assert await async_setup_component(hass, "assist_pipeline", {})
+
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    store = pipeline_data.pipeline_store
+    assert len(store.data) == 1
+
+    pipelines = async_get_pipelines(hass)
+    assert list(pipelines) == [
+        Pipeline(
+            conversation_engine="homeassistant",
+            conversation_language="en",
+            id=ANY,
+            language="en",
+            name="Home Assistant",
+            stt_engine=None,
+            stt_language=None,
+            tts_engine=None,
+            tts_language=None,
+            tts_voice=None,
+        )
+    ]
 
 
 @pytest.mark.parametrize(

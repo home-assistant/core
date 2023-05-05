@@ -30,7 +30,6 @@ from .entity import (
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     """Class to describe a BLOCK sensor."""
 
-    mode: NumberMode = NumberMode("slider")
     rest_path: str = ""
     rest_arg: str = ""
 
@@ -46,7 +45,7 @@ NUMBERS: Final = {
         native_min_value=0,
         native_max_value=100,
         native_step=1,
-        mode=NumberMode("slider"),
+        mode=NumberMode.SLIDER,
         rest_path="thermostat/0",
         rest_arg="pos",
     ),

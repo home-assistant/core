@@ -19,6 +19,7 @@ from tests.components.recorder.common import async_wait_recording_done
 async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test fan registered attributes to be excluded."""
     now = dt_util.utcnow()
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, fan.DOMAIN, {fan.DOMAIN: {"platform": "demo"}})
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
