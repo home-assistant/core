@@ -3,7 +3,6 @@ import logging
 from typing import Generic, TypeVar, cast
 
 from switchbee import SWITCHBEE_BRAND
-from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo
@@ -71,30 +70,8 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
         """Return True if entity is available."""
         return self._is_online and super().available
 
-    async def async_refresh_state(self) -> None:
-        """Refresh the device state in the Central Unit.
-
-        This function addresses issue of a device that came online back but still report
-        unavailable state (-1).
-        Such device (offline device) will keep reporting unavailable state (-1)
-        until it has been actuated by the user (state changed to on/off).
-
-        With this code we keep trying setting dummy state for the device
-        in order for it to start reporting its real state back (assuming it came back online)
-
-        """
-
-        try:
-            await self.coordinator.api.set_state(self._device.id, "dummy")
-        except SwitchBeeDeviceOfflineError:
-            return
-        except SwitchBeeError:
-            return
-
     def _check_if_became_offline(self) -> None:
         """Check if the device was online (now offline), log message and mark it as Unavailable."""
-        # This specific call will refresh the state of the device in the CU
-        self.hass.async_create_task(self.async_refresh_state())
 
         if self._is_online:
             _LOGGER.warning(
