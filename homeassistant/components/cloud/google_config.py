@@ -12,6 +12,7 @@ from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
+    async_get_assistant_settings,
     async_get_entity_settings,
     async_listen_entity_updates,
     async_set_assistant_option,
@@ -200,8 +201,18 @@ class CloudGoogleConfig(AbstractConfig):
 
         async def on_hass_started(hass: HomeAssistant) -> None:
             if self._prefs.google_settings_version != GOOGLE_SETTINGS_VERSION:
-                if self._prefs.google_settings_version < 2:
+                if self._prefs.google_settings_version < 2 or (
+                    # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
+                    self._prefs.google_settings_version < 3
+                    and not any(
+                        settings.get("should_expose", False)
+                        for settings in async_get_assistant_settings(
+                            hass, CLOUD_GOOGLE
+                        ).values()
+                    )
+                ):
                     self._migrate_google_entity_settings_v1()
+
                 await self._prefs.async_update(
                     google_settings_version=GOOGLE_SETTINGS_VERSION
                 )
