@@ -258,6 +258,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "anova": {
+      "name": "Anova",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "anthemav": {
       "name": "Anthem A/V Receivers",
       "integration_type": "hub",
@@ -299,7 +305,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_push",
-          "name": "HomeKit"
+          "name": "HomeKit Bridge"
         },
         "ibeacon": {
           "integration_type": "hub",
@@ -3389,6 +3395,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "monessen": {
+      "name": "Monessen",
+      "integration_type": "virtual",
+      "supported_by": "intellifire"
+    },
     "monoprice": {
       "name": "Monoprice 6-Zone Amplifier",
       "integration_type": "hub",
@@ -3611,7 +3622,7 @@
       "name": "NextBus",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "cloud_polling"
     },
     "nextcloud": {
       "name": "Nextcloud",
@@ -4419,6 +4430,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "rapt_ble": {
+      "name": "RAPT Bluetooth",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "raspberry_pi": {
       "name": "Raspberry Pi",
       "integrations": {
@@ -4579,8 +4596,9 @@
     },
     "roborock": {
       "name": "Roborock",
-      "integration_type": "virtual",
-      "supported_by": "xiaomi_miio"
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "rocketchat": {
       "name": "Rocket.Chat",
@@ -6041,7 +6059,7 @@
     },
     "vizio": {
       "name": "VIZIO SmartCast",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6213,7 +6231,7 @@
     "workday": {
       "name": "Workday",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "worldclock": {
@@ -6245,6 +6263,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "wyoming": {
+      "name": "Wyoming Protocol",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "x10": {
       "name": "Heyu X10",

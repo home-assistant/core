@@ -2,17 +2,24 @@
 
 from __future__ import annotations
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from voip_utils import CallInfo
 
-from homeassistant.components.voip import DOMAIN, VoIPDevices
+from homeassistant.components.voip import DOMAIN
+from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass) -> None:
+    """Load the homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
@@ -26,7 +33,10 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 async def setup_voip(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up VoIP integration."""
-    with patch("homeassistant.components.voip._create_sip_server", return_value=Mock()):
+    with patch(
+        "homeassistant.components.voip._create_sip_server",
+        return_value=(Mock(), AsyncMock()),
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         assert config_entry.state == ConfigEntryState.LOADED
         yield
@@ -62,3 +72,14 @@ def call_info() -> CallInfo:
             "content-length": "480",
         },
     )
+
+
+@pytest.fixture
+async def voip_device(
+    hass: HomeAssistant, voip_devices: VoIPDevices, call_info: CallInfo
+) -> VoIPDevice:
+    """Get a VoIP device fixture."""
+    device = voip_devices.async_get_or_create(call_info)
+    # to make sure all platforms are set up
+    await hass.async_block_till_done()
+    return device

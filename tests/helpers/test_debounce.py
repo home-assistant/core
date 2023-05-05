@@ -182,7 +182,7 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._job.target == debouncer.function
 
 
-async def test_shutdown(hass: HomeAssistant) -> None:
+async def test_shutdown(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test shutdown."""
     calls = []
     future = asyncio.Future()
@@ -202,11 +202,15 @@ async def test_shutdown(hass: HomeAssistant) -> None:
     # Ensure shutdown during a run doesn't create a cooldown timer
     hass.async_create_task(debouncer.async_call())
     await asyncio.sleep(0.01)
-    debouncer.async_shutdown()
+    await debouncer.async_shutdown()
     future.set_result(True)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert debouncer._timer_task is None
 
-    with pytest.raises(RuntimeError, match="Debouncer has been shutdown"):
-        await debouncer.async_call()
+    assert "Debouncer call ignored as shutdown has been requested." not in caplog.text
+    await debouncer.async_call()
+    assert "Debouncer call ignored as shutdown has been requested." in caplog.text
+
+    assert len(calls) == 1
+    assert debouncer._timer_task is None

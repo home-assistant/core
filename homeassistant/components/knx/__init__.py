@@ -12,7 +12,7 @@ from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.exceptions import ConversionError, XKNXException
+from xknx.exceptions import ConversionError, CouldNotParseTelegram, XKNXException
 from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
 from xknx.telegram import AddressFilter, Telegram
 from xknx.telegram.address import (
@@ -513,31 +513,29 @@ class KNXModule:
             )
         ):
             data = telegram.payload.value.value
-
-            if isinstance(data, tuple):
-                if transcoder := (
-                    self._group_address_transcoder.get(telegram.destination_address)
-                    or next(
+            if transcoder := (
+                self._group_address_transcoder.get(telegram.destination_address)
+                or next(
+                    (
+                        _transcoder
+                        for _filter, _transcoder in self._address_filter_transcoder.items()
+                        if _filter.match(telegram.destination_address)
+                    ),
+                    None,
+                )
+            ):
+                try:
+                    value = transcoder.from_knx(telegram.payload.value)
+                except (ConversionError, CouldNotParseTelegram) as err:
+                    _LOGGER.warning(
                         (
-                            _transcoder
-                            for _filter, _transcoder in self._address_filter_transcoder.items()
-                            if _filter.match(telegram.destination_address)
+                            "Error in `knx_event` at decoding type '%s' from"
+                            " telegram %s\n%s"
                         ),
-                        None,
+                        transcoder.__name__,
+                        telegram,
+                        err,
                     )
-                ):
-                    try:
-                        value = transcoder.from_knx(data)
-                    except ConversionError as err:
-                        _LOGGER.warning(
-                            (
-                                "Error in `knx_event` at decoding type '%s' from"
-                                " telegram %s\n%s"
-                            ),
-                            transcoder.__name__,
-                            telegram,
-                            err,
-                        )
 
         self.hass.bus.async_fire(
             "knx_event",
@@ -656,7 +654,7 @@ class KNXModule:
             transcoder = DPTBase.parse_transcoder(attr_type)
             if transcoder is None:
                 raise ValueError(f"Invalid type for knx.send service: {attr_type}")
-            payload = DPTArray(transcoder.to_knx(attr_payload))
+            payload = transcoder.to_knx(attr_payload)
         elif isinstance(attr_payload, int):
             payload = DPTBinary(attr_payload)
         else:
