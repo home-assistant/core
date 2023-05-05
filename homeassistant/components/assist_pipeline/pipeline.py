@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import AsyncIterable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -23,6 +23,7 @@ from homeassistant.helpers.collection import (
     StorageCollection,
     StorageCollectionWebsocket,
 )
+from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util import (
     dt as dt_util,
@@ -331,12 +332,12 @@ class PipelineRun:
     event_callback: PipelineEventCallback
     language: str = None  # type: ignore[assignment]
     runner_data: Any | None = None
-    stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
     intent_agent: str | None = None
-    tts_engine: str | None = None
     tts_audio_output: str | None = None
 
     id: str = field(default_factory=ulid_util.ulid)
+    stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False)
+    tts_engine: str = field(init=False)
     tts_options: dict | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -369,7 +370,7 @@ class PipelineRun:
     def start(self) -> None:
         """Emit run start event."""
         data = {
-            "pipeline": self.pipeline.name,
+            "pipeline": self.pipeline.id,
             "language": self.language,
         }
         if self.runner_data is not None:
@@ -387,8 +388,6 @@ class PipelineRun:
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
         """Prepare speech to text."""
-        stt_provider: stt.SpeechToTextEntity | stt.Provider | None = None
-
         # pipeline.stt_engine can't be None or this function is not called
         stt_provider = stt.async_get_speech_to_text_engine(
             self.hass,
@@ -421,9 +420,6 @@ class PipelineRun:
         stream: AsyncIterable[bytes],
     ) -> str:
         """Run speech to text portion of pipeline. Returns the spoken text."""
-        if self.stt_provider is None:
-            raise RuntimeError("Speech to text was not prepared")
-
         if isinstance(self.stt_provider, stt.Provider):
             engine = self.stt_provider.name
         else:
@@ -546,7 +542,8 @@ class PipelineRun:
 
     async def prepare_text_to_speech(self) -> None:
         """Prepare text to speech."""
-        engine = self.pipeline.tts_engine
+        # pipeline.tts_engine can't be None or this function is not called
+        engine = cast(str, self.pipeline.tts_engine)
 
         tts_options = {}
         if self.pipeline.tts_voice is not None:
@@ -556,34 +553,31 @@ class PipelineRun:
             tts_options[tts.ATTR_AUDIO_OUTPUT] = self.tts_audio_output
 
         try:
-            # pipeline.tts_engine can't be None or this function is not called
-            if not await tts.async_support_options(
+            options_supported = await tts.async_support_options(
                 self.hass,
-                engine,  # type: ignore[arg-type]
+                engine,
                 self.pipeline.tts_language,
                 tts_options,
-            ):
-                raise TextToSpeechError(
-                    code="tts-not-supported",
-                    message=(
-                        f"Text to speech engine {engine} "
-                        f"does not support language {self.pipeline.tts_language} or options {tts_options}"
-                    ),
-                )
+            )
         except HomeAssistantError as err:
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=f"Text to speech engine '{engine}' not found",
             ) from err
+        if not options_supported:
+            raise TextToSpeechError(
+                code="tts-not-supported",
+                message=(
+                    f"Text to speech engine {engine} "
+                    f"does not support language {self.pipeline.tts_language} or options {tts_options}"
+                ),
+            )
 
         self.tts_engine = engine
         self.tts_options = tts_options
 
     async def text_to_speech(self, tts_input: str) -> str:
         """Run text to speech portion of pipeline. Returns URL of TTS audio."""
-        if self.tts_engine is None:
-            raise RuntimeError("Text to speech was not prepared")
-
         self.process_event(
             PipelineEvent(
                 PipelineEventType.TTS_START,
@@ -956,7 +950,8 @@ class PipelineRunDebug:
     )
 
 
-async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
+@singleton(DOMAIN)
+async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
     """Set up the pipeline storage collection."""
     pipeline_store = PipelineStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY)
@@ -969,4 +964,4 @@ async def async_setup_pipeline_store(hass: HomeAssistant) -> None:
         PIPELINE_FIELDS,
         PIPELINE_FIELDS,
     ).async_setup(hass)
-    hass.data[DOMAIN] = PipelineData({}, pipeline_store)
+    return PipelineData({}, pipeline_store)

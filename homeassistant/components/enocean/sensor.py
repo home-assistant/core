@@ -117,16 +117,16 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an EnOcean sensor device."""
-    dev_id = config[CONF_ID]
-    dev_name = config[CONF_NAME]
-    sensor_type = config[CONF_DEVICE_CLASS]
+    dev_id: list[int] = config[CONF_ID]
+    dev_name: str = config[CONF_NAME]
+    sensor_type: str = config[CONF_DEVICE_CLASS]
 
     entities: list[EnOceanSensor] = []
     if sensor_type == SENSOR_TYPE_TEMPERATURE:
-        temp_min = config[CONF_MIN_TEMP]
-        temp_max = config[CONF_MAX_TEMP]
-        range_from = config[CONF_RANGE_FROM]
-        range_to = config[CONF_RANGE_TO]
+        temp_min: int = config[CONF_MIN_TEMP]
+        temp_max: int = config[CONF_MAX_TEMP]
+        range_from: int = config[CONF_RANGE_FROM]
+        range_to: int = config[CONF_RANGE_TO]
         entities = [
             EnOceanTemperatureSensor(
                 dev_id,
@@ -155,7 +155,10 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
     def __init__(
-        self, dev_id, dev_name, description: EnOceanSensorEntityDescription
+        self,
+        dev_id: list[int],
+        dev_name: str,
+        description: EnOceanSensorEntityDescription,
     ) -> None:
         """Initialize the EnOcean sensor device."""
         super().__init__(dev_id, dev_name)
@@ -217,14 +220,14 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
     def __init__(
         self,
-        dev_id,
-        dev_name,
+        dev_id: list[int],
+        dev_name: str,
         description: EnOceanSensorEntityDescription,
         *,
-        scale_min,
-        scale_max,
-        range_from,
-        range_to,
+        scale_min: int,
+        scale_max: int,
+        range_from: int,
+        range_to: int,
     ) -> None:
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(dev_id, dev_name, description)

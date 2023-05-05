@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import logging
 from pathlib import Path
@@ -11,19 +10,13 @@ from typing import Any
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
-from homeassistant.components import (
-    assist_pipeline,
-    conversation,
-    google_assistant,
-    persistent_notification,
-    webhook,
-)
+from homeassistant.components import google_assistant, persistent_notification, webhook
 from homeassistant.components.alexa import (
     errors as alexa_errors,
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.aiohttp import MockRequest, serialize_response
@@ -43,7 +36,6 @@ class CloudClient(Interface):
         websession: aiohttp.ClientSession,
         alexa_user_config: dict[str, Any],
         google_user_config: dict[str, Any],
-        on_started_cb: Callable[[], Coroutine[Any, Any, None]],
     ) -> None:
         """Initialize client interface to Cloud."""
         self._hass = hass
@@ -56,10 +48,6 @@ class CloudClient(Interface):
         self._alexa_config_init_lock = asyncio.Lock()
         self._google_config_init_lock = asyncio.Lock()
         self._relayer_region: str | None = None
-        self._on_started_cb = on_started_cb
-        self.cloud_pipeline = self._cloud_assist_pipeline()
-        self.stt_platform_loaded = asyncio.Event()
-        self.tts_platform_loaded = asyncio.Event()
 
     @property
     def base_path(self) -> Path:
@@ -88,7 +76,7 @@ class CloudClient(Interface):
         return self._hass.http.runner
 
     @property
-    def cloudhooks(self) -> dict[str, dict[str, str]]:
+    def cloudhooks(self) -> dict[str, dict[str, str | bool]]:
         """Return list of cloudhooks."""
         return self._prefs.cloudhooks
 
@@ -108,8 +96,6 @@ class CloudClient(Interface):
             async with self._alexa_config_init_lock:
                 if self._alexa_config is not None:
                     return self._alexa_config
-
-                assert self.cloud is not None
 
                 cloud_user = await self._prefs.get_cloud_user()
 
@@ -132,8 +118,6 @@ class CloudClient(Interface):
                 if self._google_config is not None:
                     return self._google_config
 
-                assert self.cloud is not None
-
                 cloud_user = await self._prefs.get_cloud_user()
 
                 google_conf = google_config.CloudGoogleConfig(
@@ -147,22 +131,6 @@ class CloudClient(Interface):
                 self._google_config = google_conf
 
         return self._google_config
-
-    def _cloud_assist_pipeline(self) -> str | None:
-        """Return the ID of a cloud-enabled assist pipeline or None."""
-        for pipeline in assist_pipeline.async_get_pipelines(self._hass):
-            if (
-                pipeline.conversation_engine == conversation.HOME_ASSISTANT_AGENT
-                and pipeline.stt_engine == DOMAIN
-                and pipeline.tts_engine == DOMAIN
-            ):
-                return pipeline.id
-        return None
-
-    async def create_cloud_assist_pipeline(self) -> None:
-        """Create a cloud-enabled assist pipeline."""
-        await assist_pipeline.async_create_default_pipeline(self._hass, DOMAIN, DOMAIN)
-        self.cloud_pipeline = self._cloud_assist_pipeline()
 
     async def on_cloud_connected(self) -> None:
         """When cloud is connected."""
@@ -182,9 +150,11 @@ class CloudClient(Interface):
                         ),
                         err,
                     )
-                async_call_later(self._hass, 30, enable_alexa)
+                async_call_later(self._hass, 30, enable_alexa_job)
             except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
                 pass
+
+        enable_alexa_job = HassJob(enable_alexa, cancel_on_shutdown=True)
 
         async def enable_google(_):
             """Enable Google."""
@@ -211,11 +181,6 @@ class CloudClient(Interface):
 
     async def cloud_started(self) -> None:
         """When cloud is started."""
-        await self._on_started_cb()
-        await asyncio.gather(
-            self.stt_platform_loaded.wait(),
-            self.tts_platform_loaded.wait(),
-        )
 
     async def cloud_stopped(self) -> None:
         """When the cloud is stopped."""
@@ -303,6 +268,8 @@ class CloudClient(Interface):
         if payload and (region := payload.get("region")):
             self._relayer_region = region
 
-    async def async_cloudhooks_update(self, data: dict[str, dict[str, str]]) -> None:
+    async def async_cloudhooks_update(
+        self, data: dict[str, dict[str, str | bool]]
+    ) -> None:
         """Update local list of cloudhooks."""
         await self._prefs.async_update(cloudhooks=data)

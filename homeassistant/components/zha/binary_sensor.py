@@ -22,6 +22,7 @@ from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_ACCELEROMETER,
     CLUSTER_HANDLER_BINARY_INPUT,
+    CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_ZONE,
@@ -128,6 +129,11 @@ class Occupancy(BinarySensor):
     SENSOR_ATTR = "occupancy"
     _attr_name: str = "Occupancy"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY)
+class HueOccupancy(Occupancy):
+    """ZHA Hue occupancy."""
 
 
 @STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ON_OFF)

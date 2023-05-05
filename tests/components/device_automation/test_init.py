@@ -17,6 +17,8 @@ from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import IntegrationNotFound
+from homeassistant.requirements import RequirementsNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -1554,3 +1556,25 @@ async def test_automation_with_device_component_not_loaded(
     )
 
     module.async_validate_trigger_config.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        IntegrationNotFound("test"),
+        RequirementsNotFound("test", []),
+        ImportError("test"),
+    ],
+)
+async def test_async_get_device_automations_platform_reraises_exceptions(
+    hass: HomeAssistant, exc: Exception
+) -> None:
+    """Test InvalidDeviceAutomationConfig is raised when async_get_integration_with_requirements fails."""
+    await async_setup_component(hass, "device_automation", {})
+    with patch(
+        "homeassistant.components.device_automation.async_get_integration_with_requirements",
+        side_effect=exc,
+    ), pytest.raises(InvalidDeviceAutomationConfig):
+        await device_automation.async_get_device_automation_platform(
+            hass, "test", device_automation.DeviceAutomationType.TRIGGER
+        )
