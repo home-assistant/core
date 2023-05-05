@@ -38,7 +38,9 @@ DEFAULT_ALTITUDE = 0
 
 EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
 EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
-SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
+SCAN_INTERVAL = timedelta(
+    minutes=4
+)  # OpenSky free user has 400 credits. 400/24 = ~16 requests per hour
 
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [
@@ -153,7 +155,8 @@ class OpenSkySensor(SensorEntity):
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
-        states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
+        res = self._session.get(OPENSKY_API_URL)
+        states = res.json().get(ATTR_STATES)
         for state in states:
             flight = dict(zip(OPENSKY_API_FIELDS, state))
             callsign = flight[ATTR_CALLSIGN].strip()
