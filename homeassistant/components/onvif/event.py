@@ -54,7 +54,9 @@ SUBSCRIPTION_RELATIVE_TIME = (
     "PT10M"  # use relative time since the time on the camera is not reliable
 )
 SUBSCRIPTION_ATTEMPTS = 3
-SUBSCRIPTION_RENEW_INTERVAL = SUBSCRIPTION_TIME.total_seconds() / 2
+SUBSCRIPTION_RENEW_INTERVAL = (
+    480  # 8 minutes between renewals to make sure we never hit the 10 minute limit
+)
 # SUBSCRIPTION_RENEW_INTERVAL Must be less than the overall timeout of 90 * (SUBSCRIPTION_ATTEMPTS) 3 = 270 seconds
 
 SUBSCRIPTION_RENEW_INTERVAL_ON_ERROR = 60.0
