@@ -507,7 +507,7 @@ class PullPointManager:
                 stringify_onvif_error(err),
             )
             return True
-        except (XMLParseError, *SUBSCRIPTION_ERRORS) as err:
+        except Fault as err:
             # Device may not support subscriptions so log at debug level
             # when we get an XMLParseError
             LOGGER.debug(
@@ -518,6 +518,16 @@ class PullPointManager:
             # Treat errors as if the camera restarted. Assume that the pullpoint
             # subscription is no longer valid.
             return False
+        except (XMLParseError, RequestError, TimeoutError, TransportError) as err:
+            LOGGER.debug(
+                "%s: PullPoint subscription encountered an unexpected and will be retried "
+                "(this is normal for some cameras): %s",
+                self._name,
+                stringify_onvif_error(err),
+            )
+            # Avoid renewing the subscription too often since it causes problems
+            # for some cameras, mainly the Tapo ones.
+            return True
 
         if self.state != PullPointManagerState.STARTED:
             # If the webhook became started working during the long poll,
