@@ -1518,6 +1518,28 @@ def _generate_select_columns_for_types_stmt(
     return lambda_stmt(lambda: columns, track_on=track_on)
 
 
+def _extract_metadata_and_discard_impossible_columns(
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+) -> list[int]:
+    """Extract metadata ids from metadata and discard impossible columns."""
+    metadata_ids = []
+    has_mean = False
+    has_sum = False
+    for metadata_id, stats_metadata in metadata.values():
+        metadata_ids.append(metadata_id)
+        has_mean |= stats_metadata["has_mean"]
+        has_sum |= stats_metadata["has_sum"]
+    if not has_mean:
+        types.discard("mean")
+        types.discard("min")
+        types.discard("max")
+    if not has_sum:
+        types.discard("sum")
+        types.discard("state")
+    return metadata_ids
+
+
 def _statistics_during_period_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -1547,7 +1569,7 @@ def _statistics_during_period_with_session(
 
     metadata_ids = None
     if statistic_ids is not None:
-        metadata_ids = [metadata_id for metadata_id, _ in metadata.values()]
+        metadata_ids = _extract_metadata_and_discard_impossible_columns(metadata, types)
 
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
@@ -1661,7 +1683,8 @@ def _get_last_statistics(
         )
         if not metadata:
             return {}
-        metadata_id = metadata[statistic_id][0]
+        metadata_ids = _extract_metadata_and_discard_impossible_columns(metadata, types)
+        metadata_id = metadata_ids[0]
         if table == Statistics:
             stmt = _get_last_statistics_stmt(metadata_id, number_of_stats)
         else:
@@ -1753,11 +1776,7 @@ def get_latest_short_term_statistics(
             )
         if not metadata:
             return {}
-        metadata_ids = [
-            metadata[statistic_id][0]
-            for statistic_id in statistic_ids
-            if statistic_id in metadata
-        ]
+        metadata_ids = _extract_metadata_and_discard_impossible_columns(metadata, types)
         stmt = _latest_short_term_statistics_stmt(metadata_ids)
         stats = cast(
             Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
@@ -2314,7 +2333,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 250000;"
+                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"
                         )
                     )
                     .rowcount
@@ -2330,7 +2349,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     .execute(
                         text(
                             f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # nosec
-                            f"where id in (select id from {table} where start is not NULL LIMIT 250000)"
+                            f"where id in (select id from {table} where start is not NULL LIMIT 100000)"
                         )
                     )
                     .rowcount
