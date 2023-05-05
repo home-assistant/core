@@ -17,10 +17,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -105,6 +106,13 @@ async def async_setup_platform(
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise PlatformNotReady from coordinator.last_exception
+
+    async def _on_hass_stop(_: Event) -> None:
+        """Shutdown coordinator on HomeAssistant stop."""
+        await coordinator.async_shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
+
     async_add_entities([HistoryStatsSensor(coordinator, sensor_type, name)])
 
 
