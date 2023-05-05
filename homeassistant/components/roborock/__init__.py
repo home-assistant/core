@@ -7,7 +7,6 @@ import logging
 
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
-from roborock.code_mappings import ModelSpecification
 from roborock.containers import HomeDataDevice, RoborockDeviceInfo, UserData
 
 from homeassistant.config_entries import ConfigEntry
@@ -36,13 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device.duid: device for device in home_data.devices + home_data.received_devices
     }
     product_info = {product.id: product for product in home_data.products}
-    models: dict[str, ModelSpecification] = {
-        product.id: product.model_specification for product in product_info.values()
-    }
     # Create a mqtt_client, which is needed to get the networking information of the device for local connection and in the future, get the map.
     mqtt_clients = [
         RoborockMqttClient(
-            user_data, RoborockDeviceInfo(device, models[device.product_id])
+            user_data, RoborockDeviceInfo(device, product_info[device.product_id].model)
         )
         for device in device_map.values()
     ]
@@ -69,13 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device,
             network_info[device_id],
             product_info[device.product_id],
-            models[device.product_id],
         )
-    # If one device update fails - we don't want
+    # If one device update fails - we still want to set up other devices
     await asyncio.gather(
         *(
-            device.async_config_entry_first_refresh()
-            for device in coordinator_map.values()
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinator_map.values()
         ),
         return_exceptions=True,
     )

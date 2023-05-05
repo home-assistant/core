@@ -1,7 +1,6 @@
 """Mock data for Roborock tests."""
 from __future__ import annotations
 
-from roborock.code_mappings import model_specifications
 from roborock.containers import (
     CleanRecord,
     CleanSummary,
@@ -9,7 +8,7 @@ from roborock.containers import (
     DNDTimer,
     HomeData,
     NetworkInfo,
-    Status,
+    S7Status,
     UserData,
 )
 from roborock.roborock_typing import DeviceProp
@@ -322,7 +321,7 @@ DND_TIMER = DNDTimer.from_dict(
     }
 )
 
-STATUS = Status.from_dict(
+STATUS = S7Status.from_dict(
     {
         "msg_ver": 2,
         "msg_seq": 458,
@@ -368,7 +367,6 @@ STATUS = Status.from_dict(
         "unsave_map_flag": 0,
     }
 )
-STATUS.update_status(model_specifications.get("roborock.vacuum.a27"))
 PROP = DeviceProp(STATUS, DND_TIMER, CLEAN_SUMMARY, CONSUMABLE, CLEAN_RECORD)
 
 NETWORK_INFO = NetworkInfo(

@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from roborock.code_mappings import ModelSpecification
 from roborock.containers import (
     HomeDataDevice,
     HomeDataProduct,
@@ -35,7 +34,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         device: HomeDataDevice,
         device_networking: NetworkInfo,
         product_info: HomeDataProduct,
-        model_specification: ModelSpecification,
     ) -> None:
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
@@ -44,9 +42,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             device_networking,
             product_info,
             DeviceProp(),
-            model_specification,
         )
-        device_info = RoborockDeviceInfo(device, model_specification)
+        device_info = RoborockDeviceInfo(device, product_info.model)
         self.api = RoborockLocalClient(device_info, device_networking.ip)
 
     async def release(self) -> None:

@@ -31,7 +31,6 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
         self._device_id = coordinator.device_info.device.duid
         self._device_model = coordinator.device_info.product.model
         self._fw_version = coordinator.device_info.device.fv
-        self._model_specification = coordinator.device_info.model_specification
 
     @property
     def _device_status(self) -> Status:

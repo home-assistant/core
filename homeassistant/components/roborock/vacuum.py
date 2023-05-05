@@ -91,7 +91,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
         RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
-        self._attr_fan_speed_list = self._model_specification.fan_power_code.values()
+        self._attr_fan_speed_list = self._device_status.fan_power.values()
 
     @property
     def state(self) -> str | None:
@@ -106,7 +106,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return self._device_status.fan_power_enum.name
+        return self._device_status.fan_power.name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
@@ -136,11 +136,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Set vacuum fan speed."""
         await self.send(
             RoborockCommand.SET_CUSTOM_MODE,
-            [
-                k
-                for k, v in self._model_specification.fan_power_code.items()
-                if v == fan_speed
-            ],
+            [k for k, v in self._device_status.fan_power.items() if v == fan_speed],
         )
         await self.coordinator.async_request_refresh()
 
