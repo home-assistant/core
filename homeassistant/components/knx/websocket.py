@@ -188,21 +188,21 @@ def ws_subscribe_telegram(
             if telegram.direction is TelegramDirection.INCOMING
             else "group_monitor_outgoing"
         )
-        _dst = str(telegram.destination_address)
-        _src = str(telegram.source_address)
+        dst = str(telegram.destination_address)
+        src = str(telegram.source_address)
         bus_message: KNXBusMonitorMessage = KNXBusMonitorMessage(
-            destination_address=_dst,
+            destination_address=dst,
             destination_text=None,
             payload=payload,
             type=str(telegram.payload.__class__.__name__),
             value=None,
-            source_address=_src,
+            source_address=src,
             source_text=None,
             direction=direction,
             timestamp=dt_util.as_local(dt_util.utcnow()).strftime("%H:%M:%S.%f")[:-3],
         )
         if project.loaded:
-            if ga_infos := project.group_addresses.get(_dst):
+            if ga_infos := project.group_addresses.get(dst):
                 bus_message["destination_text"] = ga_infos.name
                 if dpt_payload is not None and ga_infos.transcoder is not None:
                     try:
@@ -216,7 +216,7 @@ def ws_subscribe_telegram(
                             else ""
                         )
                         bus_message["value"] = f"{value}{unit}"
-            if ia_infos := project.devices.get(_src):
+            if ia_infos := project.devices.get(src):
                 bus_message[
                     "source_text"
                 ] = f"{ia_infos['manufacturer_name']} {ia_infos['name']}"

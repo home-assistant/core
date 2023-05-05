@@ -39,8 +39,27 @@ class GroupAddressInfo:
     transcoder: type[DPTBase] | None
 
 
+def _create_group_address_info(ga_model: GroupAddressModel) -> GroupAddressInfo:
+    """Convert GroupAddress dict value into GroupAddressInfo instance."""
+    dpt = ga_model["dpt"]
+    transcoder = DPTBase.transcoder_by_dpt(dpt["main"], dpt.get("sub")) if dpt else None
+    return GroupAddressInfo(
+        address=ga_model["address"],
+        name=ga_model["name"],
+        description=ga_model["description"],
+        transcoder=transcoder,
+        dpt_main=dpt["main"] if dpt else None,
+        dpt_sub=dpt["sub"] if dpt else None,
+    )
+
+
 class KNXProject:
     """Manage KNX project data."""
+
+    loaded: bool
+    devices: dict[str, Device]
+    group_addresses: dict[str, GroupAddressInfo]
+    info: ProjectInfo | None
 
     def __init__(
         self,
@@ -50,11 +69,6 @@ class KNXProject:
         """Initialize project data."""
         self.hass = hass
         self._store = Store[KNXProjectModel](hass, STORAGE_VERSION, STORAGE_KEY)
-
-        self.loaded: bool
-        self.devices: dict[str, Device]
-        self.group_addresses: dict[str, GroupAddressInfo]
-        self.info: ProjectInfo | None
 
         self.initial_state()
 
@@ -71,8 +85,8 @@ class KNXProject:
             self.devices = project["devices"]
             self.info = project["info"]
 
-            for _ga_model in project["group_addresses"].values():
-                ga_info = self._create_group_address_info(_ga_model)
+            for ga_model in project["group_addresses"].values():
+                ga_info = _create_group_address_info(ga_model)
                 self.group_addresses[ga_info.address] = ga_info
 
             _LOGGER.debug(
@@ -80,23 +94,6 @@ class KNXProject:
                 len(self.group_addresses),
             )
             self.loaded = True
-
-    def _create_group_address_info(
-        self, ga_model: GroupAddressModel
-    ) -> GroupAddressInfo:
-        """Add items to GroupAddressModel values."""
-        dpt = ga_model["dpt"]
-        transcoder = (
-            DPTBase.transcoder_by_dpt(dpt["main"], dpt.get("sub")) if dpt else None
-        )
-        return GroupAddressInfo(
-            address=ga_model["address"],
-            name=ga_model["name"],
-            description=ga_model["description"],
-            transcoder=transcoder,
-            dpt_main=dpt["main"] if dpt else None,
-            dpt_sub=dpt["sub"] if dpt else None,
-        )
 
     async def process_project_file(self, file_id: str, password: str) -> None:
         """Process an uploaded project file."""
