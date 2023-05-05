@@ -34,7 +34,7 @@ def stringify_onvif_error(error: Exception) -> str:
             message += f" (actor:{error.actor})"
     else:
         message = str(error)
-    return message or "Device sent empty error"
+    return message or f"Device sent empty error with type {type(error)}"
 
 
 def is_auth_error(error: Exception) -> bool:
