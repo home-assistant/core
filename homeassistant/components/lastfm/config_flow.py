@@ -1,7 +1,6 @@
 """Config flow for LastFm."""
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Any
 
 from pylast import LastFMNetwork, User, WSError
