@@ -232,7 +232,7 @@ async def test_yaml_imported_config(
     setup_integration: ComponentSetup,
     responses: list[AiohttpClientMockResponse],
 ) -> None:
-    """Test switch platform with fake data that creates 7 zones with one enabled."""
+    """Test a config entry that was previously imported from yaml."""
     assert await setup_integration()
 
     assert hass.states.get("switch.garden_sprinkler")
