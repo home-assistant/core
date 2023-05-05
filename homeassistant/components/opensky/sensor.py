@@ -155,8 +155,7 @@ class OpenSkySensor(SensorEntity):
         """Update device state."""
         currently_tracked = set()
         flight_metadata = {}
-        res = self._session.get(OPENSKY_API_URL)
-        states = res.json().get(ATTR_STATES)
+        states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
         for state in states:
             flight = dict(zip(OPENSKY_API_FIELDS, state))
             callsign = flight[ATTR_CALLSIGN].strip()
