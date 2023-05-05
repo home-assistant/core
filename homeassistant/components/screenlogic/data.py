@@ -1,6 +1,7 @@
 """Data constants for the ScreenLogic integration."""
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
 from screenlogicpy import ScreenLogicGateway
@@ -90,6 +91,18 @@ SupportedGroupDescriptions = dict[int | str, SupportedValueDescriptions]
 SupportedDeviceDescriptions = dict[str, SupportedGroupDescriptions]
 
 
+@dataclass
+class BaseScreenLogicEntityData:
+    """Generic representation of a ScreenLogic entity."""
+
+    data_path: tuple[str | int, ...]
+    enabled: bool
+    entity_key: str
+    subscription_code: int | None
+    value_data: dict
+    value_parameters: dict
+
+
 DEVICE_INCLUSION_RULES = {
     DEVICE.PUMP: ScreenLogicDataRule(
         lambda pump_data: pump_data[VALUE.DATA] != 0,
@@ -139,7 +152,7 @@ def realize_path_template(
     return tuple(realized_path)
 
 
-def process_entity(
+def process_supported_values(
     gateway: ScreenLogicGateway, supported_devices: SupportedDeviceDescriptions
 ):
     """Process template data."""
@@ -160,11 +173,12 @@ def process_entity(
                     if not inclusion_rule.test(gateway, data_path):
                         continue
 
-                entity_data = gateway.get_data(*data_path, strict=True)
+                value_data = gateway.get_data(*data_path, strict=True)
 
                 sub_code = value_params.get(
                     EntityParameter.SUBSCRIPTION_CODE
                 ) or DEVICE_SUBSCRIPTION.get(device)
+                assert sub_code is None or isinstance(sub_code, int)
 
                 enabled = True
                 if (
@@ -175,7 +189,9 @@ def process_entity(
 
                 entity_key = generate_unique_id(device, group, value_key)
 
-                yield data_path, enabled, entity_data, entity_key, sub_code, value_params
+                yield BaseScreenLogicEntityData(
+                    data_path, enabled, entity_key, sub_code, value_data, value_params
+                )
 
 
 ENTITY_MIGRATIONS = {

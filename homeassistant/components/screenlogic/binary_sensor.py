@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
-from .data import EntityParameter, SupportedDeviceDescriptions, process_entity
+from .data import EntityParameter, SupportedDeviceDescriptions, process_supported_values
 from .entity import (
     ScreenlogicEntity,
     ScreenLogicEntityDescription,
@@ -86,35 +86,28 @@ async def async_setup_entry(
     ]
     gateway = coordinator.gateway
 
-    for (
-        data_path,
-        enabled,
-        entity_data,
-        entity_key,
-        sub_code,
-        value_params,
-    ) in process_entity(gateway, SUPPORTED_DATA):
+    for base_data in process_supported_values(gateway, SUPPORTED_DATA):
         base_kwargs = {
-            "data_path": data_path,
-            "key": entity_key,
+            "data_path": base_data.data_path,
+            "key": base_data.entity_key,
             "device_class": SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
-                entity_data.get(ATTR.DEVICE_TYPE)
+                base_data.value_data.get(ATTR.DEVICE_TYPE)
             ),
-            "entity_category": value_params.get(
+            "entity_category": base_data.value_parameters.get(
                 EntityParameter.ENTITY_CATEGORY, EntityCategory.DIAGNOSTIC
             ),
-            "entity_registry_enabled_default": enabled,
-            "name": entity_data.get(ATTR.NAME),
+            "entity_registry_enabled_default": base_data.enabled,
+            "name": base_data.value_data.get(ATTR.NAME),
         }
 
         entities.append(
             ScreenLogicPushBinarySensor(
                 coordinator,
                 ScreenLogicPushBinarySensorDescription(
-                    subscription_code=sub_code, **base_kwargs
+                    subscription_code=base_data.subscription_code, **base_kwargs
                 ),
             )
-            if sub_code
+            if base_data.subscription_code
             else ScreenLogicBinarySensor(
                 coordinator, ScreenLogicBinarySensorDescription(**base_kwargs)
             )

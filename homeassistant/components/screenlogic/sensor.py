@@ -29,7 +29,7 @@ from .data import (
     ScreenLogicEquipmentRule,
     SupportedDeviceDescriptions,
     get_ha_unit,
-    process_entity,
+    process_supported_values,
 )
 from .entity import (
     ScreenlogicEntity,
@@ -158,42 +158,37 @@ async def async_setup_entry(
     ]
     gateway = coordinator.gateway
 
-    for (
-        data_path,
-        enabled,
-        entity_data,
-        entity_key,
-        sub_code,
-        value_params,
-    ) in process_entity(gateway, SUPPORTED_DATA):
+    for base_data in process_supported_values(gateway, SUPPORTED_DATA):
         base_kwargs = {
-            "data_path": data_path,
-            "key": entity_key,
+            "data_path": base_data.data_path,
+            "key": base_data.entity_key,
             "device_class": SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
-                entity_data.get(ATTR.DEVICE_TYPE)
+                base_data.value_data.get(ATTR.DEVICE_TYPE)
             ),
-            "entity_category": value_params.get(
+            "entity_category": base_data.value_parameters.get(
                 EntityParameter.ENTITY_CATEGORY, EntityCategory.DIAGNOSTIC
             ),
-            "entity_registry_enabled_default": enabled,
-            "name": entity_data.get(ATTR.NAME),
-            "native_unit_of_measurement": get_ha_unit(entity_data),
-            "options": entity_data.get(ATTR.ENUM_OPTIONS),
+            "entity_registry_enabled_default": base_data.enabled,
+            "name": base_data.value_data.get(ATTR.NAME),
+            "native_unit_of_measurement": get_ha_unit(base_data.value_data),
+            "options": base_data.value_data.get(ATTR.ENUM_OPTIONS),
             "state_class": SL_STATE_TYPE_TO_HA_STATE_CLASS.get(
-                entity_data.get(ATTR.STATE_TYPE)
+                base_data.value_data.get(ATTR.STATE_TYPE)
             ),
-            "value_mod": value_params.get(EntityParameter.VALUE_MODIFICATION),
+            "value_mod": base_data.value_parameters.get(
+                EntityParameter.VALUE_MODIFICATION
+            ),
         }
 
         entities.append(
             ScreenLogicPushSensor(
                 coordinator,
                 ScreenLogicPushSensorDescription(
-                    subscription_code=sub_code,
+                    subscription_code=base_data.subscription_code,
                     **base_kwargs,
                 ),
             )
-            if sub_code
+            if base_data.subscription_code
             else ScreenLogicSensor(
                 coordinator,
                 ScreenLogicSensorDescription(

@@ -17,7 +17,7 @@ from .data import (
     EntityParameter,
     SupportedDeviceDescriptions,
     get_ha_unit,
-    process_entity,
+    process_supported_values,
     realize_path_template,
 )
 from .entity import ScreenlogicEntity, ScreenLogicEntityDescription
@@ -64,29 +64,22 @@ async def async_setup_entry(
     ]
     gateway = coordinator.gateway
 
-    for (
-        data_path,
-        enabled,
-        entity_data,
-        entity_key,
-        _sub_code,
-        value_params,
-    ) in process_entity(gateway, SUPPORTED_DATA):
-        if set_value_data := value_params.get(EntityParameter.SET_VALUE):
+    for base_data in process_supported_values(gateway, SUPPORTED_DATA):
+        if set_value_data := base_data.value_parameters.get(EntityParameter.SET_VALUE):
             set_value_str, set_value_params = set_value_data
             set_value_func = getattr(gateway, set_value_str)
         base_kwargs = {
-            "data_path": data_path,
-            "key": entity_key,
-            "entity_category": value_params.get(
+            "data_path": base_data.data_path,
+            "key": base_data.entity_key,
+            "entity_category": base_data.value_parameters.get(
                 "entity_category", EntityCategory.DIAGNOSTIC
             ),
-            "entity_registry_enabled_default": enabled,
-            "name": entity_data.get(ATTR.NAME),
-            "native_unit_of_measurement": get_ha_unit(entity_data),
-            "native_max_value": entity_data.get(ATTR.MAX_SETPOINT),
-            "native_min_value": entity_data.get(ATTR.MIN_SETPOINT),
-            "native_step": entity_data.get(ATTR.STEP),
+            "entity_registry_enabled_default": base_data.enabled,
+            "name": base_data.value_data.get(ATTR.NAME),
+            "native_unit_of_measurement": get_ha_unit(base_data.value_data),
+            "native_max_value": base_data.value_data.get(ATTR.MAX_SETPOINT),
+            "native_min_value": base_data.value_data.get(ATTR.MIN_SETPOINT),
+            "native_step": base_data.value_data.get(ATTR.STEP),
             "set_value": set_value_func,
             "set_value_params": set_value_params,
         }
