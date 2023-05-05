@@ -19,18 +19,18 @@ def mock_device():
         yield device
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_repeater_device(mock_device: MockDevice):
     """Mock connecting to a devolo home network repeater device."""
     mock_device.plcnet = None
-    yield mock_device
+    return mock_device
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_nonwifi_device(mock_device: MockDevice):
     """Mock connecting to a devolo home network device without wifi."""
     mock_device.device.features = ["reset", "update", "led", "intmtg"]
-    yield mock_device
+    return mock_device
 
 
 @pytest.fixture(name="info")
