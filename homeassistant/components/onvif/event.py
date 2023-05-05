@@ -51,7 +51,7 @@ RENEW_ERRORS = (ONVIFError, RequestError, XMLParseError, *SUBSCRIPTION_ERRORS)
 #
 SUBSCRIPTION_TIME = dt.timedelta(minutes=10)
 SUBSCRIPTION_RELATIVE_TIME = (
-    "PT10M"  # use relative time since the time on the camera is not reliable
+    "PT600S"  # use relative time since the time on the camera is not reliable
 )
 SUBSCRIPTION_ATTEMPTS = 3
 SUBSCRIPTION_RENEW_INTERVAL = (
