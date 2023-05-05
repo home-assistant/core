@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TypeVar
 
 from plugwise import DeviceData, Smile
 
@@ -22,18 +21,16 @@ from .const import DOMAIN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
-T = TypeVar("T", bound=DeviceData)
-
 
 @dataclass
 class PlugwiseNumberMixin:
     """Mixin values for Plugwse entities."""
 
     command: Callable[[Smile, str, float], Awaitable[None]]
-    native_max_value_fn: Callable[[T], float]
-    native_min_value_fn: Callable[[T], float]
-    native_step_key_fn: Callable[[T], float]
-    native_value_fn: Callable[[T], float]
+    native_max_value_fn: Callable[[DeviceData], float]
+    native_min_value_fn: Callable[[DeviceData], float]
+    native_step_key_fn: Callable[[DeviceData], float]
+    native_value_fn: Callable[[DeviceData], float]
 
 
 @dataclass

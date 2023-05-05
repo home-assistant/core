@@ -119,11 +119,10 @@ async def async_setup_entry(
 
     entities: list[PlugwiseBinarySensorEntity] = []
     for device_id, device in coordinator.data.devices.items():
+        if "binary_sensors" not in device:
+            continue
         for description in BINARY_SENSORS:
-            if description.key not in device and (
-                "binary_sensors" not in device
-                or description.key not in device["binary_sensors"]
-            ):
+            if description.key not in device["binary_sensors"]:
                 continue
 
             entities.append(
