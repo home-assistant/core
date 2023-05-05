@@ -18,6 +18,7 @@ from . import (
     ENTRY_CONFIG_INVALID_QUERY,
     ENTRY_CONFIG_INVALID_QUERY_OPT,
     ENTRY_CONFIG_NO_RESULTS,
+    ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
 )
 
 from tests.common import MockConfigEntry
@@ -49,6 +50,39 @@ async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_with_value_template(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test for with value template."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.sql.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Get Value"
+    assert result2["options"] == {
+        "name": "Get Value",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "unit_of_measurement": "MiB",
+        "value_template": "{{ value }}",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
