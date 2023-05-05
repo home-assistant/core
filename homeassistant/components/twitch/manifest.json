@@ -1,7 +1,7 @@
 {
   "domain": "twitch",
   "name": "Twitch",
-  "codeowners": [],
+  "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/twitch",

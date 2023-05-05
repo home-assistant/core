@@ -4,24 +4,34 @@ from __future__ import annotations
 from twitchAPI.helper import first
 from twitchAPI.twitch import (
     AuthType,
-    InvalidTokenException,
-    MissingScopeException,
     Twitch,
     TwitchAPIException,
-    TwitchAuthorizationException,
     TwitchResourceNotFound,
     TwitchUser,
 )
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_CHANNELS, LOGGER, OAUTH_SCOPES
+from .const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CHANNELS,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
+    LOGGER,
+    OAUTH_SCOPES,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -56,40 +66,59 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Twitch platform."""
-    channels = config[CONF_CHANNELS]
-    client_id = config[CONF_CLIENT_ID]
-    client_secret = config[CONF_CLIENT_SECRET]
-    oauth_token = config.get(CONF_TOKEN)
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(
+            config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET], name="Twitch"
+        ),
+    )
 
-    try:
-        client = await Twitch(
-            app_id=client_id,
-            app_secret=client_secret,
-            target_app_auth_scope=OAUTH_SCOPES,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
-        client.auto_refresh_auth = False
-    except TwitchAuthorizationException:
-        LOGGER.error("Invalid client ID or client secret")
-        return
+    )
 
-    if oauth_token:
-        try:
-            await client.set_user_authentication(
-                token=oauth_token, scope=OAUTH_SCOPES, validate=True
-            )
-        except MissingScopeException:
-            LOGGER.error("OAuth token is missing required scope")
-            return
-        except InvalidTokenException:
-            LOGGER.error("OAuth token is invalid")
-            return
 
-    twitch_users: list[TwitchUser] = []
-    async for channel in client.get_users(logins=channels):
-        twitch_users.append(channel)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize entries."""
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+
+    await session.async_ensure_token_valid()
+
+    app_id = implementation.__dict__[CONF_CLIENT_ID]
+    app_secret = implementation.__dict__[CONF_CLIENT_SECRET]
+    access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+    refresh_token = entry.data[CONF_TOKEN][CONF_REFRESH_TOKEN]
+
+    client = await Twitch(
+        app_id=app_id,
+        app_secret=app_secret,
+        target_app_auth_scope=OAUTH_SCOPES,
+    )
+    client.auto_refresh_auth = False
+    await client.set_user_authentication(
+        token=access_token,
+        refresh_token=refresh_token,
+        scope=OAUTH_SCOPES,
+        validate=True,
+    )
 
     async_add_entities(
-        [TwitchSensor(channel, client) for channel in twitch_users],
+        [
+            TwitchSensor(channel, client)
+            async for channel in client.get_users(logins=entry.options[CONF_CHANNELS])
+        ],
         True,
     )
 
@@ -105,6 +134,7 @@ class TwitchSensor(SensorEntity):
         self._channel = channel
         self._enable_user_auth = client.has_required_auth(AuthType.USER, OAUTH_SCOPES)
         self._attr_name = channel.display_name
+        self.entity_id = f"sensor.lastfm_{channel.display_name}"
         self._attr_unique_id = channel.id
 
     async def async_update(self) -> None:
