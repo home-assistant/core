@@ -18,6 +18,7 @@ from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
+from .config import AbstractConfig
 from .const import API_CHANGE, DATE_FORMAT, DOMAIN, Cause
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
 from .errors import NoTokenAvailable, RequireRelink
@@ -188,7 +189,9 @@ async def async_send_changereport_message(
     )
 
 
-async def async_send_add_or_update_message(hass, config, entity_ids):
+async def async_send_add_or_update_message(
+    hass: HomeAssistant, config: AbstractConfig, entity_ids: list[str]
+) -> aiohttp.ClientResponse:
     """Send an AddOrUpdateReport message for entities.
 
     https://developer.amazon.com/docs/device-apis/alexa-discovery.html#add-or-update-report
@@ -223,7 +226,9 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
     )
 
 
-async def async_send_delete_message(hass, config, entity_ids):
+async def async_send_delete_message(
+    hass: HomeAssistant, config: AbstractConfig, entity_ids: list[str]
+) -> aiohttp.ClientResponse:
     """Send an DeleteReport message for entities.
 
     https://developer.amazon.com/docs/device-apis/alexa-discovery.html#deletereport-event

@@ -86,6 +86,7 @@ homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
+homeassistant.components.cloud.*
 homeassistant.components.configurator.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
