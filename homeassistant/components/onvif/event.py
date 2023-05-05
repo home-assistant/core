@@ -373,10 +373,11 @@ class PullPointManager:
             # scheduled when the current one is done if needed.
             return
         async with self._renew_lock:
-            next_attempt = SUBSCRIPTION_RENEW_INTERVAL
+            next_attempt = SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR
             try:
-                if not await self._async_renew_pullpoint():
-                    next_attempt = SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR
+                if await self._async_renew_pullpoint():
+                    next_attempt = SUBSCRIPTION_RENEW_INTERVAL
+                else:
                     await self._async_restart_pullpoint()
             finally:
                 self.async_schedule_pullpoint_renew(next_attempt)
@@ -748,10 +749,11 @@ class WebHookManager:
             # scheduled when the current one is done if needed.
             return
         async with self._renew_lock:
-            next_attempt = SUBSCRIPTION_RENEW_INTERVAL
+            next_attempt = SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR
             try:
-                if not await self._async_renew_webhook():
-                    next_attempt = SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR
+                if await self._async_renew_webhook():
+                    next_attempt = SUBSCRIPTION_RENEW_INTERVAL
+                else:
                     await self._async_restart_webhook()
             finally:
                 self._async_schedule_webhook_renew(next_attempt)
