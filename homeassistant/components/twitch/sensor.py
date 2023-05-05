@@ -17,22 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    ATTR_FOLLOW,
-    ATTR_FOLLOW_SINCE,
-    ATTR_FOLLOWING,
-    ATTR_GAME,
-    ATTR_SUBSCRIPTION,
-    ATTR_SUBSCRIPTION_GIFTED,
-    ATTR_TITLE,
-    ATTR_VIEWS,
-    CONF_CHANNELS,
-    ICON,
-    LOGGER,
-    OAUTH_SCOPES,
-    STATE_OFFLINE,
-    STATE_STREAMING,
-)
+from .const import CONF_CHANNELS, ICON, LOGGER, OAUTH_SCOPES
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -42,6 +27,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TOKEN): cv.string,
     }
 )
+
+
+ATTR_GAME = "game"
+ATTR_TITLE = "title"
+ATTR_SUBSCRIPTION = "subscribed"
+ATTR_SUBSCRIPTION_SINCE = "subscribed_since"
+ATTR_SUBSCRIPTION_GIFTED = "subscription_is_gifted"
+ATTR_FOLLOW = "following"
+ATTR_FOLLOW_SINCE = "following_since"
+ATTR_FOLLOWING = "followers"
+ATTR_VIEWS = "views"
+
+
+STATE_OFFLINE = "offline"
+STATE_STREAMING = "streaming"
 
 
 def setup_platform(
