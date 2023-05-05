@@ -8,11 +8,7 @@ from homeassistant.components.rainbird import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import (
-    CONFIG_ENTRY_DATA,
-    UNAVAILABLE_RESPONSE,
-    ComponentSetup,
-)
+from .conftest import CONFIG_ENTRY_DATA, UNAVAILABLE_RESPONSE, ComponentSetup
 
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
