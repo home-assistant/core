@@ -24,7 +24,7 @@ async def test_sensors(
     await setup_integration()
 
     state = hass.states.get("sensor.netgear_lte_cell_id")
-    assert state.state == "13851650"
+    assert state.state == "12345678"
     state = hass.states.get("sensor.netgear_lte_connection_text")
     assert state.state == "4G"
     state = hass.states.get("sensor.netgear_lte_connection_type")
