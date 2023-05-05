@@ -2991,6 +2991,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "lockster": {
+      "name": "Lockster",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "logentries": {
       "name": "Logentries",
       "integration_type": "hub",
@@ -5842,7 +5848,7 @@
     "twitch": {
       "name": "Twitch",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "twitter": {
