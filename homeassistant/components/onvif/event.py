@@ -40,8 +40,8 @@ SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
 RENEW_ERRORS = (ONVIFError, RequestError, XMLParseError, *SUBSCRIPTION_ERRORS)
 #
-# We only keep the subscription alive for 3 minutes, and will keep
-# renewing it every 1.5 minutes. This is to avoid the camera
+# We only keep the subscription alive for 10 minutes, and will keep
+# renewing it every 5 minutes. This is to avoid the camera
 # accumulating subscriptions which will be impossible to clean up
 # since ONVIF does not provide a way to list existing subscriptions.
 #
@@ -49,18 +49,19 @@ RENEW_ERRORS = (ONVIFError, RequestError, XMLParseError, *SUBSCRIPTION_ERRORS)
 # sending events to us, and we will not be able to recover until
 # the subscriptions expire or the camera is rebooted.
 #
-SUBSCRIPTION_TIME = dt.timedelta(minutes=3)
+SUBSCRIPTION_TIME = dt.timedelta(minutes=10)
 SUBSCRIPTION_RELATIVE_TIME = (
-    "PT3M"  # use relative time since the time on the camera is not reliable
+    "PT10M"  # use relative time since the time on the camera is not reliable
 )
+SUBSCRIPTION_ATTEMPTS = 3
 SUBSCRIPTION_RENEW_INTERVAL = SUBSCRIPTION_TIME.total_seconds() / 2
+# SUBSCRIPTION_RENEW_INTERVAL Must be less than the overall timeout of 90 * (SUBSCRIPTION_ATTEMPTS) 3 = 270 seconds
+
 SUBSCRIPTION_RENEW_INTERVAL_ON_ERROR = 60.0
 
 PULLPOINT_POLL_TIME = dt.timedelta(seconds=60)
 PULLPOINT_MESSAGE_LIMIT = 100
 PULLPOINT_COOLDOWN_TIME = 0.75
-
-SUBSCRIPTION_ATTEMPTS = 3
 
 
 class EventManager:
