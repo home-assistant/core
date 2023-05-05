@@ -1,5 +1,6 @@
 """Test Home Assistant ssl utility functions."""
 
+import ssl
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -15,7 +16,7 @@ from homeassistant.util.ssl import (
 @pytest.fixture
 def mock_sslcontext():
     """Mock the ssl lib."""
-    ssl_mock = MagicMock(set_ciphers=Mock(return_value=True))
+    ssl_mock = MagicMock(set_ciphers=Mock(return_value=True), options=0)
     return ssl_mock
 
 
@@ -35,6 +36,10 @@ def test_client_context(mock_sslcontext) -> None:
             SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE]
         )
 
+        client_context(allow_legacy_insecure_renegotiation=True)
+        # ssl.OP_LEGACY_SERVER_CONNECT is only available in Python 3.12a4+
+        assert mock_sslcontext.options & getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
+
 
 def test_no_verify_ssl_context(mock_sslcontext) -> None:
     """Test no verify ssl context."""
@@ -51,3 +56,7 @@ def test_no_verify_ssl_context(mock_sslcontext) -> None:
         mock_sslcontext.set_ciphers.assert_called_with(
             SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE]
         )
+
+        create_no_verify_ssl_context(allow_legacy_insecure_renegotiation=True)
+        # ssl.OP_LEGACY_SERVER_CONNECT is only available in Python 3.12a4+
+        assert mock_sslcontext.options & getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)

@@ -61,6 +61,7 @@ def create_async_httpx_client(
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+    allow_legacy_insecure_renegotiation: bool = False,
     **kwargs: Any,
 ) -> httpx.AsyncClient:
     """Create a new httpx.AsyncClient with kwargs, i.e. for cookies.
@@ -71,9 +72,11 @@ def create_async_httpx_client(
     This method must be run in the event loop.
     """
     ssl_context = (
-        client_context(ssl_cipher_list)
+        client_context(ssl_cipher_list, allow_legacy_insecure_renegotiation)
         if verify_ssl
-        else create_no_verify_ssl_context(ssl_cipher_list)
+        else create_no_verify_ssl_context(
+            ssl_cipher_list, allow_legacy_insecure_renegotiation
+        )
     )
     client = HassHttpXAsyncClient(
         verify=ssl_context,

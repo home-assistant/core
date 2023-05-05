@@ -64,6 +64,7 @@ SSL_CIPHER_LISTS = {
 @cache
 def create_no_verify_ssl_context(
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+    allow_legacy_insecure_renegotiation: bool = False,
 ) -> ssl.SSLContext:
     """Return an SSL context that does not verify the server certificate.
 
@@ -73,6 +74,11 @@ def create_no_verify_ssl_context(
     https://github.com/aio-libs/aiohttp/blob/33953f110e97eecc707e1402daa8d543f38a189b/aiohttp/connector.py#L911
     """
     sslcontext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+
+    if allow_legacy_insecure_renegotiation:
+        # ssl.OP_LEGACY_SERVER_CONNECT is only available in Python 3.12a4+
+        sslcontext.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
+
     sslcontext.check_hostname = False
     sslcontext.verify_mode = ssl.CERT_NONE
     with contextlib.suppress(AttributeError):
@@ -88,6 +94,7 @@ def create_no_verify_ssl_context(
 @cache
 def client_context(
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+    allow_legacy_insecure_renegotiation: bool = False,
 ) -> ssl.SSLContext:
     """Return an SSL context for making requests."""
 
@@ -99,6 +106,11 @@ def client_context(
     sslcontext = ssl.create_default_context(
         purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
     )
+
+    if allow_legacy_insecure_renegotiation:
+        # ssl.OP_LEGACY_SERVER_CONNECT is only available in Python 3.12a4+
+        sslcontext.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
+
     if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
 
