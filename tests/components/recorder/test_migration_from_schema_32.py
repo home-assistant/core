@@ -553,6 +553,16 @@ async def test_migrate_event_type_ids(
     assert len(events_by_type["event_type_one"]) == 2
     assert len(events_by_type["event_type_two"]) == 1
 
+    def _get_many():
+        with session_scope(hass=hass, read_only=True) as session:
+            return instance.event_type_manager.get_many(
+                ("event_type_one", "event_type_two"), session
+            )
+
+    mapped = await instance.async_add_executor_job(_get_many)
+    assert mapped["event_type_one"] is not None
+    assert mapped["event_type_two"] is not None
+
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 async def test_migrate_entity_ids(
