@@ -176,7 +176,7 @@ class CloudGoogleConfig(AbstractConfig):
             return
 
         for entity_id in {
-            *(state.entity_id for state in self.hass.states.async_all()),
+            *self.hass.states.async_entity_ids(),
             *self._prefs.google_entity_configs,
         }:
             async_expose_entity(
