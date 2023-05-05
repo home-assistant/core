@@ -152,7 +152,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "LastFM"
-    assert result["data"] == {
+    assert result["options"] == {
         "api_key": "asdasdasdasdasd",
         "main_user": None,
         "users": ["testaccount1", "testaccount2"],
