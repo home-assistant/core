@@ -1,7 +1,8 @@
 {
   "domain": "netgear_lte",
   "name": "NETGEAR LTE",
-  "codeowners": [],
+  "codeowners": ["@tkdrob"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/netgear_lte",
   "iot_class": "local_polling",
   "loggers": ["eternalegypt"],

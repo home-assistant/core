@@ -10,7 +10,8 @@ from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_NOTIFY, CONF_RECIPIENT, DATA_KEY
+from . import CONF_NOTIFY, CONF_RECIPIENT
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,12 +38,12 @@ class NetgearNotifyService(BaseNotificationService):
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
 
-        modem_data = self.hass.data[DATA_KEY].get_modem_data(self.config)
+        modem_data = self.hass.data[DOMAIN].get_modem_data(self.config)
         if not modem_data:
             _LOGGER.error("Modem not ready")
             return
-
-        targets = kwargs.get(ATTR_TARGET, self.config[CONF_NOTIFY][CONF_RECIPIENT])
+        if not (targets := kwargs.get(ATTR_TARGET)):
+            targets = self.config[CONF_NOTIFY][CONF_RECIPIENT]
         if not targets:
             _LOGGER.warning("No recipients")
             return

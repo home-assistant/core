@@ -1,44 +1,122 @@
 """Support for Netgear LTE sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_MONITORED_CONDITIONS, CONF_SENSOR, DATA_KEY, LTEEntity
+from . import LTEEntity
+from .const import DOMAIN
 from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_UNITS, SENSOR_USAGE
 
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="cell_id",
+        name="Cell ID",
+        icon="mdi:radio-tower",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="connection_text",
+        name="Connection text",
+        icon="mdi:radio-tower",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="connection_type",
+        name="Connection type",
+        icon="mdi:ip",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="current_band",
+        name="Current band",
+        icon="mdi:radio-tower",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="current_ps_service_type",
+        name="Current PS service type",
+        icon="mdi:radio-tower",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="radio_quality",
+        name="Radio quality",
+        icon="mdi:percent",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="register_network_display",
+        name="Register network display",
+        icon="mdi:web",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="rx_level",
+        name="RX Level",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="sms",
+        name="SMS",
+        icon="mdi:message-processing",
+    ),
+    SensorEntityDescription(
+        key="sms_total",
+        name="SMS Total",
+        icon="mdi:message-processing",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="tx_level",
+        name="TX level",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="upstream",
+        name="Upstream",
+        icon="mdi:ip-network",
+    ),
+    SensorEntityDescription(
+        key="usage",
+        name="Usage",
+    ),
+)
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Netgear LTE sensor devices."""
-    if discovery_info is None:
-        return
-
-    modem_data = hass.data[DATA_KEY].get_modem_data(discovery_info)
-
-    if not modem_data or not modem_data.data:
-        raise PlatformNotReady
-
-    sensor_conf = discovery_info[CONF_SENSOR]
-    monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
+    """Set up the Netgear LTE sensor."""
+    modem_data = hass.data[DOMAIN].get_modem_data(entry.data)
 
     sensors: list[SensorEntity] = []
-    for sensor_type in monitored_conditions:
-        if sensor_type == SENSOR_SMS:
-            sensors.append(SMSUnreadSensor(modem_data, sensor_type))
-        elif sensor_type == SENSOR_SMS_TOTAL:
-            sensors.append(SMSTotalSensor(modem_data, sensor_type))
-        elif sensor_type == SENSOR_USAGE:
-            sensors.append(UsageSensor(modem_data, sensor_type))
+    for description in SENSOR_TYPES:
+        if description.key == SENSOR_SMS:
+            sensors.append(SMSUnreadSensor(modem_data, description))
+        elif description.key == SENSOR_SMS_TOTAL:
+            sensors.append(SMSTotalSensor(modem_data, description))
+        elif description.key == SENSOR_USAGE:
+            sensors.append(UsageSensor(modem_data, description))
         else:
-            sensors.append(GenericSensor(modem_data, sensor_type))
+            sensors.append(GenericSensor(modem_data, description))
 
     async_add_entities(sensors)
 
@@ -49,7 +127,7 @@ class LTESensor(LTEEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
-        return SENSOR_UNITS[self.sensor_type]
+        return SENSOR_UNITS[self.entity_description.key]
 
 
 class SMSUnreadSensor(LTESensor):
@@ -87,4 +165,4 @@ class GenericSensor(LTESensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return getattr(self.modem_data.data, self.sensor_type)
+        return getattr(self.modem_data.data, self.entity_description.key)
