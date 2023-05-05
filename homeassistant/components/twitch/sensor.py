@@ -1,10 +1,7 @@
 """Support for the Twitch stream status."""
 from __future__ import annotations
 
-import logging
-
 from twitchAPI.twitch import (
-    AuthScope,
     AuthType,
     InvalidTokenException,
     MissingScopeException,
@@ -20,26 +17,22 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_GAME = "game"
-ATTR_TITLE = "title"
-ATTR_SUBSCRIPTION = "subscribed"
-ATTR_SUBSCRIPTION_SINCE = "subscribed_since"
-ATTR_SUBSCRIPTION_GIFTED = "subscription_is_gifted"
-ATTR_FOLLOW = "following"
-ATTR_FOLLOW_SINCE = "following_since"
-ATTR_FOLLOWING = "followers"
-ATTR_VIEWS = "views"
-
-CONF_CHANNELS = "channels"
-
-ICON = "mdi:twitch"
-
-STATE_OFFLINE = "offline"
-STATE_STREAMING = "streaming"
-
-OAUTH_SCOPES = [AuthScope.USER_READ_SUBSCRIPTIONS]
+from .const import (
+    ATTR_FOLLOW,
+    ATTR_FOLLOW_SINCE,
+    ATTR_FOLLOWING,
+    ATTR_GAME,
+    ATTR_SUBSCRIPTION,
+    ATTR_SUBSCRIPTION_GIFTED,
+    ATTR_TITLE,
+    ATTR_VIEWS,
+    CONF_CHANNELS,
+    ICON,
+    LOGGER,
+    OAUTH_SCOPES,
+    STATE_OFFLINE,
+    STATE_STREAMING,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -71,7 +64,7 @@ def setup_platform(
         )
         client.auto_refresh_auth = False
     except TwitchAuthorizationException:
-        _LOGGER.error("Invalid client ID or client secret")
+        LOGGER.error("Invalid client ID or client secret")
         return
 
     if oauth_token:
@@ -80,10 +73,10 @@ def setup_platform(
                 token=oauth_token, scope=OAUTH_SCOPES, validate=True
             )
         except MissingScopeException:
-            _LOGGER.error("OAuth token is missing required scope")
+            LOGGER.error("OAuth token is missing required scope")
             return
         except InvalidTokenException:
-            _LOGGER.error("OAuth token is invalid")
+            LOGGER.error("OAuth token is invalid")
             return
 
     channels = client.get_users(logins=channels)
@@ -128,12 +121,12 @@ class TwitchSensor(SensorEntity):
             elif "status" in subs and subs["status"] == 404:
                 self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = False
             elif "error" in subs:
-                _LOGGER.error(
+                LOGGER.error(
                     "Error response on check_user_subscription: %s", subs["error"]
                 )
                 return
             else:
-                _LOGGER.error("Unknown error response on check_user_subscription")
+                LOGGER.error("Unknown error response on check_user_subscription")
                 return
 
             follows = self._client.get_users_follows(
