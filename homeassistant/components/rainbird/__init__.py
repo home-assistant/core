@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERIAL_NUMBER
