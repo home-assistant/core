@@ -30,10 +30,10 @@ class PlugwiseNumberMixin:
     """Mixin values for Plugwse entities."""
 
     command: Callable[[Smile, str, float], Awaitable[None]]
-    max_value_fn: Callable[[T], float]
-    min_value_fn: Callable[[T], float]
-    step_key_fn: Callable[[T], float]
-    value_fn: Callable[[T], float]
+    native_max_value_fn: Callable[[T], float]
+    native_min_value_fn: Callable[[T], float]
+    native_step_key_fn: Callable[[T], float]
+    native_value_fn: Callable[[T], float]
 
 
 @dataclass
@@ -48,24 +48,13 @@ NUMBER_TYPES = (
         command=lambda api, number, value: api.set_number_setpoint(number, value),
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
-        max_value_fn=lambda data: data["maximum_boiler_temperature"]["upper_bound"] or 0.0,  # type: ignore [index]
-        min_value_fn=lambda data: data["maximum_boiler_temperature"]["lower_bound"] or 0.0,  # type: ignore [index]
-        step_key_fn=lambda data: data["maximum_boiler_temperature"]["resolution"] or 0.0,  # type: ignore [index]
-        value_fn=lambda data: data["maximum_boiler_temperature"]["setpoint"] or 0.0,  # type: ignore [index]
+        native_max_value_fn=lambda data: data["maximum_boiler_temperature"]["upper_bound"],  # type: ignore [index]
+        native_min_value_fn=lambda data: data["maximum_boiler_temperature"]["lower_bound"],  # type: ignore [index]
+        native_step_key_fn=lambda data: data["maximum_boiler_temperature"]["resolution"],  # type: ignore [index]
+        native_value_fn=lambda data: data["maximum_boiler_temperature"]["setpoint"],  # type: ignore [index]
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    PlugwiseNumberEntityDescription(
-        key="domestic_hot_water_setpoint",
-        translation_key="domestic_hot_water_setpoint",
-        command=lambda api, number, value: api.set_number_setpoint(number, value),
-        device_class=NumberDeviceClass.TEMPERATURE,
-        entity_category=EntityCategory.CONFIG,
-        max_value_fn=lambda data: data["domestic_hot_water_setpoint"]["upper_bound"] or 0.0,  # type: ignore [index]
-        min_value_fn=lambda data: data["domestic_hot_water_setpoint"]["lower_bound"] or 0.0,  # type: ignore [index]
-        step_key_fn=lambda data: data["domestic_hot_water_setpoint"]["resolution"] or 0.0,  # type: ignore [index]
-        value_fn=lambda data: data["domestic_hot_water_setpoint"]["setpoint"] or 0.0,  # type: ignore [index]
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
+    # Placeholder new max_dhw_temperature entity
 )
 
 
@@ -111,22 +100,22 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     @property
     def native_step(self) -> float:
         """Return the setpoint step value."""
-        return self.entity_description.step_key_fn(self.device)
+        return self.entity_description.native_step_key_fn(self.device)
 
     @property
     def native_value(self) -> float:
         """Return the present setpoint value."""
-        return self.entity_description.value_fn(self.device)
+        return self.entity_description.native_value_fn(self.device)
 
     @property
     def native_min_value(self) -> float:
         """Return the setpoint min. value."""
-        return self.entity_description.min_value_fn(self.device)
+        return self.entity_description.native_min_value_fn(self.device)
 
     @property
     def native_max_value(self) -> float:
         """Return the setpoint max. value."""
-        return self.entity_description.max_value_fn(self.device)
+        return self.entity_description.native_max_value_fn(self.device)
 
     async def async_set_native_value(self, value: float) -> None:
         """Change to the new setpoint value."""
