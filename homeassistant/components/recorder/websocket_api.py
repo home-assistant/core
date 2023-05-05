@@ -48,6 +48,7 @@ from .util import (
     async_migration_is_live,
     get_instance,
     resolve_period,
+    session_scope,
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -87,6 +88,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_validate_statistics)
+    websocket_api.async_register_command(hass, ws_get_recorded_entities)
 
 
 def _ws_get_statistic_during_period(
@@ -545,3 +547,36 @@ async def ws_backup_end(
             msg["id"], "database_unlock_failed", "Failed to unlock database."
         )
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/recorded_entities",
+    }
+)
+@websocket_api.async_response
+async def ws_get_recorded_entities(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get the list of entities being recorded."""
+    instance = get_instance(hass)
+
+    def _get_recorded_entities() -> str:
+        """Get the list of entities being recorded."""
+        with session_scope(hass=hass, read_only=True) as session:
+            return JSON_DUMP(
+                messages.result_message(
+                    msg["id"],
+                    {
+                        "entity_ids": list(
+                            instance.states_meta_manager.get_metadata_id_to_entity_id(
+                                session
+                            ).values()
+                        )
+                    },
+                )
+            )
+
+    return connection.send_message(
+        await instance.async_add_executor_job(_get_recorded_entities)
+    )

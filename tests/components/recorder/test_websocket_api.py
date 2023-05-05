@@ -3267,3 +3267,27 @@ async def test_adjust_sum_statistics_errors(
         stats = statistics_during_period(hass, zero, period="hour")
         assert stats != previous_stats
         previous_stats = stats
+
+
+async def test_recorder_recorded_entities(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting the list of recorded entities."""
+    client = await hass_ws_client()
+
+    await client.send_json({"id": 1, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": []}
+    assert response["id"] == 1
+    assert response["success"]
+    assert response["type"] == "result"
+
+    hass.states.async_set("sensor.test", 10)
+    await async_wait_recording_done(hass)
+
+    await client.send_json({"id": 2, "type": "recorder/recorded_entities"})
+    response = await client.receive_json()
+    assert response["result"] == {"entity_ids": ["sensor.test"]}
+    assert response["id"] == 2
+    assert response["success"]
+    assert response["type"] == "result"
