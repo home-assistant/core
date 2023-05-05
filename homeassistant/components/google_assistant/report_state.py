@@ -139,7 +139,9 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
 
         unsub = async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
 
-    unsub = async_call_later(hass, INITIAL_REPORT_DELAY, initial_report)
+    unsub = async_call_later(
+        hass, INITIAL_REPORT_DELAY, HassJob(initial_report, cancel_on_shutdown=True)
+    )
 
     @callback
     def unsub_all():
