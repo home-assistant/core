@@ -156,7 +156,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.7.2
+aioesphomeapi==13.7.3
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -644,7 +644,7 @@ elgato==4.0.1
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.1
+elkm1-lib==2.2.2
 
 # homeassistant.components.elmax
 elmax_api==0.0.4
@@ -881,7 +881,7 @@ hass_splunk==0.1.1
 hassil==1.0.6
 
 # homeassistant.components.tasmota
-hatasmota==0.6.4
+hatasmota==0.6.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
