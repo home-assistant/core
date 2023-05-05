@@ -700,7 +700,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230503.2
+home-assistant-frontend==20230503.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.4.26
@@ -945,7 +945,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==2.0.0
+onvif-zeep-async==2.1.1
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1242,6 +1242,9 @@ pyiss==1.0.1
 
 # homeassistant.components.isy994
 pyisy==3.1.14
+
+# homeassistant.components.jvc_projector
+pyjvcprojector==1.0.6
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1548,7 +1551,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.2.3
+pytrafikverket==0.3.1
 
 # homeassistant.components.usb
 pyudev==0.23.2

@@ -5,6 +5,11 @@ from collections.abc import Mapping
 from typing import Any
 
 from pytrafikverket import TrafikverketTrain
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleTrainStationsFound,
+    NoTrainStationFound,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -22,10 +27,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id
-
-ERROR_INVALID_AUTH = "Source: Security, message: Invalid authentication"
-ERROR_INVALID_STATION = "Could not find a station with the specified name"
-ERROR_MULTIPLE_STATION = "Found multiple stations with the specified name"
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -86,15 +87,14 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.validate_input(
                     api_key, self.entry.data[CONF_FROM], self.entry.data[CONF_TO]
                 )
-            except ValueError as err:
-                if str(err) == ERROR_INVALID_AUTH:
-                    errors["base"] = "invalid_auth"
-                elif str(err) == ERROR_INVALID_STATION:
-                    errors["base"] = "invalid_station"
-                elif str(err) == ERROR_MULTIPLE_STATION:
-                    errors["base"] = "more_stations"
-                else:
-                    errors["base"] = "cannot_connect"
+            except InvalidAuthentication:
+                errors["base"] = "invalid_auth"
+            except NoTrainStationFound:
+                errors["base"] = "invalid_station"
+            except MultipleTrainStationsFound:
+                errors["base"] = "more_stations"
+            except Exception:  # pylint: disable=broad-exception-caught
+                errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
@@ -131,15 +131,14 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.validate_input(api_key, train_from, train_to)
-            except ValueError as err:
-                if str(err) == ERROR_INVALID_AUTH:
-                    errors["base"] = "invalid_auth"
-                elif str(err) == ERROR_INVALID_STATION:
-                    errors["base"] = "invalid_station"
-                elif str(err) == ERROR_MULTIPLE_STATION:
-                    errors["base"] = "more_stations"
-                else:
-                    errors["base"] = "cannot_connect"
+            except InvalidAuthentication:
+                errors["base"] = "invalid_auth"
+            except NoTrainStationFound:
+                errors["base"] = "invalid_station"
+            except MultipleTrainStationsFound:
+                errors["base"] = "more_stations"
+            except Exception:  # pylint: disable=broad-exception-caught
+                errors["base"] = "cannot_connect"
             else:
                 if train_time:
                     if bool(dt_util.parse_time(train_time) is None):
