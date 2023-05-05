@@ -20,6 +20,7 @@ from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
+    async_remove_entity,
     mock_restore_cache,
 )
 
@@ -69,6 +70,9 @@ async def test_restore_state_last_on(hass: HomeAssistant) -> None:
     state = hass.states.get("switch.flux")
     assert state
     assert state.state == "on"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
 
 
 async def test_restore_state_last_off(hass: HomeAssistant) -> None:
@@ -243,6 +247,9 @@ async def test_flux_before_sunrise(
     assert call.data[light.ATTR_BRIGHTNESS] == 112
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
+
 
 async def test_flux_before_sunrise_known_location(
     hass: HomeAssistant, enable_custom_integrations: None
@@ -300,6 +307,9 @@ async def test_flux_before_sunrise_known_location(
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_BRIGHTNESS] == 112
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
 
 
 # pylint: disable=invalid-name
@@ -359,6 +369,9 @@ async def test_flux_after_sunrise_before_sunset(
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_BRIGHTNESS] == 173
     assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
 
 
 # pylint: disable=invalid-name
@@ -420,6 +433,9 @@ async def test_flux_after_sunset_before_stop(
     assert call.data[light.ATTR_BRIGHTNESS] == 146
     assert call.data[light.ATTR_XY_COLOR] == [0.506, 0.385]
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
+
 
 # pylint: disable=invalid-name
 async def test_flux_after_stop_before_sunrise(
@@ -478,6 +494,9 @@ async def test_flux_after_stop_before_sunrise(
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_BRIGHTNESS] == 112
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
 
 
 # pylint: disable=invalid-name
@@ -539,6 +558,9 @@ async def test_flux_with_custom_start_stop_times(
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_BRIGHTNESS] == 147
     assert call.data[light.ATTR_XY_COLOR] == [0.504, 0.385]
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
 
 
 async def test_flux_before_sunrise_stop_next_day(
@@ -602,6 +624,9 @@ async def test_flux_before_sunrise_stop_next_day(
     assert call.data[light.ATTR_BRIGHTNESS] == 112
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
+
 
 # pylint: disable=invalid-name
 async def test_flux_after_sunrise_before_sunset_stop_next_day(
@@ -664,6 +689,9 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_BRIGHTNESS] == 173
     assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
 
 
 # pylint: disable=invalid-name
@@ -729,6 +757,9 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(
     assert call.data[light.ATTR_BRIGHTNESS] == 119
     assert call.data[light.ATTR_XY_COLOR] == [0.588, 0.386]
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
+
 
 # pylint: disable=invalid-name
 async def test_flux_after_sunset_after_midnight_stop_next_day(
@@ -791,6 +822,9 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_BRIGHTNESS] == 114
     assert call.data[light.ATTR_XY_COLOR] == [0.601, 0.382]
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
 
 
 # pylint: disable=invalid-name
@@ -855,6 +889,9 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(
     assert call.data[light.ATTR_BRIGHTNESS] == 112
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
+
 
 # pylint: disable=invalid-name
 async def test_flux_with_custom_colortemps(
@@ -917,6 +954,9 @@ async def test_flux_with_custom_colortemps(
     assert call.data[light.ATTR_BRIGHTNESS] == 159
     assert call.data[light.ATTR_XY_COLOR] == [0.469, 0.378]
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
+
 
 # pylint: disable=invalid-name
 async def test_flux_with_custom_brightness(
@@ -977,6 +1017,9 @@ async def test_flux_with_custom_brightness(
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_BRIGHTNESS] == 255
     assert call.data[light.ATTR_XY_COLOR] == [0.506, 0.385]
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
 
 
 async def test_flux_with_multiple_lights(
@@ -1059,6 +1102,9 @@ async def test_flux_with_multiple_lights(
     assert call.data[light.ATTR_BRIGHTNESS] == 163
     assert call.data[light.ATTR_XY_COLOR] == [0.46, 0.376]
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
+
 
 async def test_flux_with_mired(
     hass: HomeAssistant, enable_custom_integrations: None
@@ -1115,6 +1161,9 @@ async def test_flux_with_mired(
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_COLOR_TEMP] == 269
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
 
 
 async def test_flux_with_rgb(
@@ -1174,3 +1223,6 @@ async def test_flux_with_rgb(
     rgb = (255, 198, 152)
     rounded_call = tuple(map(round, call.data[light.ATTR_RGB_COLOR]))
     assert rounded_call == rgb
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "switch.flux")
