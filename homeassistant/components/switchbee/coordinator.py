@@ -79,6 +79,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
                         DeviceType.Shutter,
                         DeviceType.Somfy,
                         DeviceType.Thermostat,
+                        DeviceType.VRFAC,
                     ]
                 )
             except SwitchBeeError as exp:
