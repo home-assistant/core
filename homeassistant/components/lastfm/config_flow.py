@@ -97,8 +97,8 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Form to select other users and friends."""
         errors = {}
-        valid_users = []
         if user_input is not None:
+            valid_users = []
             for username in user_input[CONF_USERS]:
                 lastfm_user = get_lastfm_user(self.data[CONF_API_KEY], username)
                 lastfm_errors = validate_lastfm_user(lastfm_user)
@@ -106,6 +106,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     errors = lastfm_errors
                 else:
                     valid_users.append(username)
+            user_input[CONF_USERS] = valid_users
             if not errors:
                 return self.async_create_entry(
                     title="LastFM",
@@ -132,14 +133,17 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="friends",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERS, default=valid_users): SelectSelector(
-                        SelectSelectorConfig(
-                            options=friends, custom_value=True, multiple=True
-                        )
-                    ),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_USERS): SelectSelector(
+                            SelectSelectorConfig(
+                                options=friends, custom_value=True, multiple=True
+                            )
+                        ),
+                    }
+                ),
+                user_input or {CONF_USERS: []},
             ),
         )
 
@@ -165,7 +169,6 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Initialize form."""
-        valid_users = self._config_entry.data[CONF_USERS]
         errors = {}
         if user_input is not None:
             valid_users = []
@@ -178,6 +181,7 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     errors = lastfm_errors
                 else:
                     valid_users.append(username)
+            user_input[CONF_USERS] = valid_users
             if not errors:
                 return self.async_create_entry(
                     title="LastFM",
@@ -213,6 +217,6 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         ),
                     }
                 ),
-                {CONF_USERS: valid_users},
+                user_input or self.options,
             ),
         )
