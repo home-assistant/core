@@ -509,6 +509,13 @@ async def test_google_config_migrate_expose_entity_prefs(
         suggested_object_id="no_2fa_exposed",
     )
 
+    entity_migrated = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_migrated",
+        suggested_object_id="migrated",
+    )
+
     entity_config = entity_registry.async_get_or_create(
         "light",
         "test",
@@ -537,6 +544,7 @@ async def test_google_config_migrate_expose_entity_prefs(
         google_report_state=False,
         google_settings_version=google_settings_version,
     )
+    expose_entity(hass, entity_migrated.entity_id, False)
 
     cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS]["light.unknown"] = {
         PREF_SHOULD_EXPOSE: True,
@@ -551,6 +559,9 @@ async def test_google_config_migrate_expose_entity_prefs(
     cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS][entity_no_2fa_exposed.entity_id] = {
         PREF_SHOULD_EXPOSE: True,
         PREF_DISABLE_2FA: True,
+    }
+    cloud_prefs._prefs[PREF_GOOGLE_ENTITY_CONFIGS][entity_migrated.entity_id] = {
+        PREF_SHOULD_EXPOSE: True
     }
     conf = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
@@ -568,6 +579,9 @@ async def test_google_config_migrate_expose_entity_prefs(
         "cloud.google_assistant": {"should_expose": False}
     }
     assert async_get_entity_settings(hass, entity_exposed.entity_id) == {
+        "cloud.google_assistant": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
         "cloud.google_assistant": {"should_expose": True}
     }
     assert async_get_entity_settings(hass, entity_no_2fa_exposed.entity_id) == {
