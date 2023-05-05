@@ -40,7 +40,7 @@ async def test_config_entry_unload(hass: HomeAssistant) -> None:
 
 
 async def test_entity_id_migration(
-    hass: HomeAssistant, entity_registry: er.RegistryEntry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the migration of unique IDs on config entry setup."""
     config_entry = mock_config_entry(unique_id="binary_sensor_test_diffuser_v1")
