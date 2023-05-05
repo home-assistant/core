@@ -1,8 +1,6 @@
 """Test pushbullet integration."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
-import aiohttp
 from pushover_complete import BadAPIRequestError
 import pytest
 import requests_mock
@@ -17,6 +15,7 @@ from . import MOCK_CONFIG
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import get_repairs
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=False)
@@ -30,9 +29,7 @@ def mock_pushover():
 
 async def test_setup(
     hass: HomeAssistant,
-    hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
-    ],
+    hass_ws_client: WebSocketGenerator,
     mock_pushover: MagicMock,
 ) -> None:
     """Test integration failed due to an error."""

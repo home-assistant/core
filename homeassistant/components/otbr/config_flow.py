@@ -8,15 +8,17 @@ import aiohttp
 import python_otbr_api
 from python_otbr_api import tlv_parser
 import voluptuous as vol
+import yarl
 
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.thread import async_get_preferred_dataset
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow
 from homeassistant.const import CONF_URL
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_CHANNEL, DOMAIN
+from .util import get_allowed_channel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,13 +28,12 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _connect_and_create_dataset(self, url: str) -> None:
-        """Connect to the OTBR and create a dataset if it doesn't have one."""
-        api = python_otbr_api.OTBR(url, async_get_clientsession(self.hass), 10)
+    async def _connect_and_set_dataset(self, otbr_url: str) -> None:
+        """Connect to the OTBR and create or apply a dataset if it doesn't have one."""
+        api = python_otbr_api.OTBR(otbr_url, async_get_clientsession(self.hass), 10)
         if await api.get_active_dataset_tlvs() is None:
-            # We currently have no way to know which channel zha is using, assume it's
-            # the default
-            zha_channel = DEFAULT_CHANNEL
+            allowed_channel = await get_allowed_channel(self.hass, otbr_url)
+
             thread_dataset_channel = None
             thread_dataset_tlv = await async_get_preferred_dataset(self.hass)
             if thread_dataset_tlv:
@@ -40,7 +41,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 if channel_str := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL):
                     thread_dataset_channel = int(channel_str, base=16)
 
-            if thread_dataset_tlv is not None and zha_channel == thread_dataset_channel:
+            if thread_dataset_tlv is not None and (
+                not allowed_channel or allowed_channel == thread_dataset_channel
+            ):
                 await api.set_active_dataset_tlvs(bytes.fromhex(thread_dataset_tlv))
             else:
                 _LOGGER.debug(
@@ -48,7 +51,8 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 await api.create_active_dataset(
                     python_otbr_api.OperationalDataSet(
-                        channel=zha_channel, network_name="home-assistant"
+                        channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
+                        network_name="home-assistant",
                     )
                 )
             await api.set_enabled(True)
@@ -65,7 +69,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             url = user_input[CONF_URL]
             try:
-                await self._connect_and_create_dataset(url)
+                await self._connect_and_set_dataset(url)
             except (
                 python_otbr_api.OTBRError,
                 aiohttp.ClientError,
@@ -86,20 +90,38 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle hassio discovery."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         config = discovery_info.config
         url = f"http://{config['host']}:{config['port']}"
+        config_entry_data = {"url": url}
+
+        if current_entries := self._async_current_entries():
+            for current_entry in current_entries:
+                if current_entry.source != SOURCE_HASSIO:
+                    continue
+                if current_entry.unique_id != discovery_info.uuid:
+                    self.hass.config_entries.async_update_entry(
+                        current_entry, unique_id=discovery_info.uuid
+                    )
+                current_url = yarl.URL(current_entry.data["url"])
+                if (
+                    current_url.host != config["host"]
+                    or current_url.port == config["port"]
+                ):
+                    continue
+                # Update URL with the new port
+                self.hass.config_entries.async_update_entry(
+                    current_entry, data=config_entry_data
+                )
+            return self.async_abort(reason="single_instance_allowed")
 
         try:
-            await self._connect_and_create_dataset(url)
+            await self._connect_and_set_dataset(url)
         except python_otbr_api.OTBRError as exc:
             _LOGGER.warning("Failed to communicate with OTBR@%s: %s", url, exc)
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(DOMAIN)
+        await self.async_set_unique_id(discovery_info.uuid)
         return self.async_create_entry(
             title="Open Thread Border Router",
-            data={"url": url},
+            data=config_entry_data,
         )

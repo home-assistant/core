@@ -41,7 +41,7 @@ async def async_setup_platform(
         [
             GeniusClimateZone(broker, z)
             for z in broker.client.zone_objs
-            if z.data["type"] in GH_ZONES
+            if z.data.get("type") in GH_ZONES
         ]
     )
 

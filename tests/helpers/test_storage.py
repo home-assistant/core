@@ -5,6 +5,7 @@ import json
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
+import py
 import pytest
 
 from homeassistant.const import (
@@ -505,7 +506,7 @@ async def test_changing_delayed_written_data(
     }
 
 
-async def test_saving_load_round_trip(tmpdir) -> None:
+async def test_saving_load_round_trip(tmpdir: py.path.local) -> None:
     """Test saving and loading round trip."""
     loop = asyncio.get_running_loop()
     hass = await async_test_home_assistant(loop)

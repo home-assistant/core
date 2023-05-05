@@ -1103,8 +1103,9 @@ async def test_state_template(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.tv").state == STATE_OFF
 
 
-async def test_browse_media(hass: HomeAssistant):
+async def test_browse_media(hass: HomeAssistant) -> None:
     """Test browse media."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
@@ -1133,8 +1134,9 @@ async def test_browse_media(hass: HomeAssistant):
         assert result == MOCK_BROWSE_MEDIA
 
 
-async def test_browse_media_override(hass: HomeAssistant):
+async def test_browse_media_override(hass: HomeAssistant) -> None:
     """Test browse media override."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )

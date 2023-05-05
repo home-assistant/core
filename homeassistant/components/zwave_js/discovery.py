@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.const import (
@@ -60,6 +60,9 @@ from .discovery_data_template import (
 )
 from .helpers import ZwaveValueID
 
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
+
 
 class ValueType(StrEnum):
     """Enum with all value types."""
@@ -73,7 +76,7 @@ class ValueType(StrEnum):
 class DataclassMustHaveAtLeastOne:
     """A dataclass that must have at least one input parameter that is not None."""
 
-    def __post_init__(self) -> None:
+    def __post_init__(self: DataclassInstance) -> None:
         """Post dataclass initialization."""
         if all(val is None for val in asdict(self).values()):
             raise ValueError("At least one input parameter must not be None")
@@ -144,6 +147,8 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     property_key_name: set[str | None] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
+    # [optional] the value's states map must include ANY of these key/value pairs
+    any_available_states: set[tuple[int, str]] | None = None
 
 
 @dataclass
@@ -342,7 +347,7 @@ DISCOVERY_SCHEMAS = [
     # Fibaro Shutter Fibaro FGR222
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_shutter_tilt",
+        hint="shutter_tilt",
         manufacturer_id={0x010F},
         product_id={0x1000, 0x1001},
         product_type={0x0301, 0x0302},
@@ -366,7 +371,7 @@ DISCOVERY_SCHEMAS = [
     # Qubino flush shutter
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_shutter",
+        hint="shutter",
         manufacturer_id={0x0159},
         product_id={0x0052, 0x0053},
         product_type={0x0003},
@@ -375,7 +380,7 @@ DISCOVERY_SCHEMAS = [
     # Graber/Bali/Spring Fashion Covers
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_blind",
+        hint="blind",
         manufacturer_id={0x026E},
         product_id={0x5A31},
         product_type={0x4353},
@@ -384,7 +389,7 @@ DISCOVERY_SCHEMAS = [
     # iBlinds v2 window blind motor
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_blind",
+        hint="blind",
         manufacturer_id={0x0287},
         product_id={0x000D},
         product_type={0x0003},
@@ -393,7 +398,7 @@ DISCOVERY_SCHEMAS = [
     # Merten 507801 Connect Roller Shutter
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_shutter",
+        hint="shutter",
         manufacturer_id={0x007A},
         product_id={0x0001},
         product_type={0x8003},
@@ -409,7 +414,7 @@ DISCOVERY_SCHEMAS = [
     # Disable endpoint 2, as it has no practical function. CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_shutter",
+        hint="shutter",
         manufacturer_id={0x007A},
         product_id={0x0001},
         product_type={0x8003},
@@ -802,7 +807,7 @@ DISCOVERY_SCHEMAS = [
     # window coverings
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_cover",
+        hint="cover",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={
             "Motor Control Class A",
@@ -892,6 +897,17 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.PROTECTION},
             property={LOCAL_PROPERTY, RF_PROPERTY},
             type={ValueType.NUMBER},
+        ),
+    ),
+    # button
+    # Notification CC idle
+    ZWaveDiscoverySchema(
+        platform=Platform.BUTTON,
+        hint="notification idle",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states={(0, "idle")},
         ),
     ),
 ]
@@ -1068,6 +1084,16 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         return False
     # check metadata_type
     if schema.type is not None and value.metadata.type not in schema.type:
+        return False
+    # check available states
+    if (
+        schema.any_available_states is not None
+        and value.metadata.states is not None
+        and not any(
+            str(key) in value.metadata.states and value.metadata.states[str(key)] == val
+            for key, val in schema.any_available_states
+        )
+    ):
         return False
     return True
 

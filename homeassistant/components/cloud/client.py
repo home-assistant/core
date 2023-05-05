@@ -16,7 +16,7 @@ from homeassistant.components.alexa import (
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.aiohttp import MockRequest, serialize_response
@@ -47,6 +47,7 @@ class CloudClient(Interface):
         self._google_config: google_config.CloudGoogleConfig | None = None
         self._alexa_config_init_lock = asyncio.Lock()
         self._google_config_init_lock = asyncio.Lock()
+        self._relayer_region: str | None = None
 
     @property
     def base_path(self) -> Path:
@@ -75,7 +76,7 @@ class CloudClient(Interface):
         return self._hass.http.runner
 
     @property
-    def cloudhooks(self) -> dict[str, dict[str, str]]:
+    def cloudhooks(self) -> dict[str, dict[str, str | bool]]:
         """Return list of cloudhooks."""
         return self._prefs.cloudhooks
 
@@ -84,14 +85,17 @@ class CloudClient(Interface):
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
 
+    @property
+    def relayer_region(self) -> str | None:
+        """Return the connected relayer region."""
+        return self._relayer_region
+
     async def get_alexa_config(self) -> alexa_config.CloudAlexaConfig:
         """Return Alexa config."""
         if self._alexa_config is None:
             async with self._alexa_config_init_lock:
                 if self._alexa_config is not None:
                     return self._alexa_config
-
-                assert self.cloud is not None
 
                 cloud_user = await self._prefs.get_cloud_user()
 
@@ -114,8 +118,6 @@ class CloudClient(Interface):
                 if self._google_config is not None:
                     return self._google_config
 
-                assert self.cloud is not None
-
                 cloud_user = await self._prefs.get_cloud_user()
 
                 google_conf = google_config.CloudGoogleConfig(
@@ -130,8 +132,8 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    async def cloud_started(self) -> None:
-        """When cloud is started."""
+    async def on_cloud_connected(self) -> None:
+        """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_):
@@ -148,9 +150,11 @@ class CloudClient(Interface):
                         ),
                         err,
                     )
-                async_call_later(self._hass, 30, enable_alexa)
+                async_call_later(self._hass, 30, enable_alexa_job)
             except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
                 pass
+
+        enable_alexa_job = HassJob(enable_alexa, cancel_on_shutdown=True)
 
         async def enable_google(_):
             """Enable Google."""
@@ -174,6 +178,9 @@ class CloudClient(Interface):
 
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
+
+    async def cloud_started(self) -> None:
+        """When cloud is started."""
 
     async def cloud_stopped(self) -> None:
         """When the cloud is stopped."""
@@ -256,6 +263,13 @@ class CloudClient(Interface):
             "headers": {"Content-Type": response.content_type},
         }
 
-    async def async_cloudhooks_update(self, data: dict[str, dict[str, str]]) -> None:
+    async def async_system_message(self, payload: dict[Any, Any] | None) -> None:
+        """Handle system messages."""
+        if payload and (region := payload.get("region")):
+            self._relayer_region = region
+
+    async def async_cloudhooks_update(
+        self, data: dict[str, dict[str, str | bool]]
+    ) -> None:
         """Update local list of cloudhooks."""
         await self._prefs.async_update(cloudhooks=data)

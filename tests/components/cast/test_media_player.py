@@ -1336,7 +1336,17 @@ async def test_entity_play_media_playlist(
     )
 
 
-async def test_entity_media_content_type(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("cast_type", "default_content_type"),
+    [
+        (pychromecast.const.CAST_TYPE_AUDIO, "music"),
+        (pychromecast.const.CAST_TYPE_GROUP, "music"),
+        (pychromecast.const.CAST_TYPE_CHROMECAST, "video"),
+    ],
+)
+async def test_entity_media_content_type(
+    hass: HomeAssistant, cast_type, default_content_type
+) -> None:
     """Test various content types."""
     entity_id = "media_player.speaker"
     reg = er.async_get(hass)
@@ -1344,6 +1354,7 @@ async def test_entity_media_content_type(hass: HomeAssistant) -> None:
     info = get_fake_chromecast_info()
 
     chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = cast_type
     _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -1364,7 +1375,7 @@ async def test_entity_media_content_type(hass: HomeAssistant) -> None:
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes.get("media_content_type") is None
+    assert state.attributes.get("media_content_type") == default_content_type
 
     media_status.media_is_tvshow = True
     media_status_cb(media_status)
@@ -1877,6 +1888,7 @@ async def test_failed_cast_other_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test warning when casting from internal_url fails."""
+    await async_setup_component(hass, "homeassistant", {})
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(
             hass,
@@ -1900,6 +1912,7 @@ async def test_failed_cast_internal_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test warning when casting from internal_url fails."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_process_ha_core_config(
         hass,
         {"internal_url": "http://example.local:8123"},
@@ -1928,6 +1941,7 @@ async def test_failed_cast_external_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test warning when casting from external_url fails."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_process_ha_core_config(
         hass,
         {"external_url": "http://example.com:8123"},
@@ -1958,6 +1972,7 @@ async def test_failed_cast_tts_base_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test warning when casting from tts.base_url fails."""
+    await async_setup_component(hass, "homeassistant", {})
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(
             hass,

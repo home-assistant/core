@@ -107,3 +107,54 @@ async def test_bad_requests(
     if fail_on_query_string:
         message = "Filtered a request with a potential harmful query string:"
     assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("request_path", "request_params", "fail_on_query_string"),
+    [
+        ("/some\thing", {}, False),
+        ("/new\nline/cinema", {}, False),
+        ("/return\r/to/sender", {}, False),
+        ("/", {"some": "\thing"}, True),
+        ("/", {"\newline": "cinema"}, True),
+        ("/", {"return": "t\rue"}, True),
+    ],
+)
+async def test_bad_requests_with_unsafe_bytes(
+    request_path,
+    request_params,
+    fail_on_query_string,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    loop,
+) -> None:
+    """Test request with unsafe bytes in their URLs."""
+    app = web.Application()
+    app.router.add_get("/{all:.*}", mock_handler)
+
+    setup_security_filter(app)
+
+    mock_api_client = await aiohttp_client(app)
+
+    # Manual params handling
+    if request_params:
+        raw_params = "&".join(f"{val}={key}" for val, key in request_params.items())
+        man_params = f"?{raw_params}"
+    else:
+        man_params = ""
+
+    http = urllib3.PoolManager()
+    resp = await loop.run_in_executor(
+        None,
+        http.request,
+        "GET",
+        f"http://{mock_api_client.host}:{mock_api_client.port}{request_path}{man_params}",
+        request_params,
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+
+    message = "Filtered a request with an unsafe byte in path:"
+    if fail_on_query_string:
+        message = "Filtered a request with unsafe byte query string:"
+    assert message in caplog.text

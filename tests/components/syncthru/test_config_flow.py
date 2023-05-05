@@ -119,10 +119,10 @@ async def test_success(
             context={"source": config_entries.SOURCE_USER},
             data=FIXTURE_USER_INPUT,
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_URL] == FIXTURE_USER_INPUT[CONF_URL]
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 
