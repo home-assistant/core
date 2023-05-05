@@ -160,7 +160,6 @@ class EventManager:
     # pylint: disable=protected-access
     async def async_parse_messages(self, messages) -> None:
         """Parse notification message."""
-        LOGGER.debug("%s: Parsing messages: %s", self.name, messages)
         unique_id = self.unique_id
         assert unique_id is not None
         for msg in messages:
