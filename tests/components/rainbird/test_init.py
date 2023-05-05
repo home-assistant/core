@@ -5,25 +5,19 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components.rainbird import DOMAIN
-from homeassistant.components.rainbird.const import ATTR_CONFIG_ENTRY_ID, ATTR_DURATION
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import (
-    ACK_ECHO,
     CONFIG,
     CONFIG_ENTRY_DATA,
-    SERIAL_NUMBER,
     SERIAL_RESPONSE,
     UNAVAILABLE_RESPONSE,
     ComponentSetup,
     mock_response,
 )
 
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
+from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
 @pytest.mark.parametrize(
@@ -100,65 +94,3 @@ async def test_communication_failure(
     assert [
         entry.state for entry in hass.config_entries.async_entries(DOMAIN)
     ] == config_entry_states
-
-
-@pytest.mark.parametrize("platforms", [[Platform.NUMBER, Platform.SENSOR]])
-async def test_rain_delay_service(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    aioclient_mock: AiohttpClientMocker,
-    responses: list[str],
-    config_entry: ConfigEntry,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test calling the rain delay service."""
-
-    assert await setup_integration()
-
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, SERIAL_NUMBER)})
-    assert device
-    assert device.name == "Rain Bird Controller"
-
-    aioclient_mock.mock_calls.clear()
-    responses.append(mock_response(ACK_ECHO))
-
-    await hass.services.async_call(
-        DOMAIN,
-        "set_rain_delay",
-        {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id, ATTR_DURATION: 3},
-        blocking=True,
-    )
-
-    assert len(aioclient_mock.mock_calls) == 1
-
-    issue = issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="deprecated_raindelay"
-    )
-    assert issue
-    assert issue.translation_placeholders == {
-        "alternate_target": "number.rain_bird_controller_rain_delay"
-    }
-
-
-async def test_rain_delay_invalid_config_entry(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry: ConfigEntry,
-) -> None:
-    """Test calling the rain delay service."""
-
-    assert await setup_integration()
-
-    aioclient_mock.mock_calls.clear()
-
-    with pytest.raises(HomeAssistantError, match="Config entry id does not exist"):
-        await hass.services.async_call(
-            DOMAIN,
-            "set_rain_delay",
-            {ATTR_CONFIG_ENTRY_ID: "invalid", ATTR_DURATION: 3},
-            blocking=True,
-        )
-
-    assert len(aioclient_mock.mock_calls) == 0
