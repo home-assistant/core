@@ -398,6 +398,10 @@ class PullPointManager:
             sync_result = await self._pullpoint_service.SetSynchronizationPoint()
             LOGGER.debug("%s: SetSynchronizationPoint: %s", self._name, sync_result)
 
+        # Immediately renew the subscription since some cameras will
+        # will ignore the InitialTerminationTime parameter.
+        await self._async_call_pullpoint_subscription_renew()
+
         # Always schedule an initial pull messages
         self.async_schedule_pull_messages(0.0)
 
