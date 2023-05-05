@@ -679,7 +679,7 @@ hass-nabucasa==0.66.2
 hassil==1.0.6
 
 # homeassistant.components.tasmota
-hatasmota==0.6.4
+hatasmota==0.6.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
