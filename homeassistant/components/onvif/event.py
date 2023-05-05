@@ -289,7 +289,13 @@ class PullPointManager:
         """Pause pullpoint subscription."""
         LOGGER.debug("%s: Pausing PullPoint manager", self._name)
         self.state = PullPointManagerState.PAUSED
-        self._hass.async_create_task(self._async_cancel_and_unsubscribe())
+        # Cancel the renew job so we don't renew the subscription
+        # and stop pulling messages.
+        self._async_cancel_pullpoint_renew()
+        self.async_cancel_pull_messages()
+        # We do not unsubscribe from the pullpoint subscription and instead
+        # let the subscription expire since some cameras will terminate all
+        # subscriptions if we unsubscribe which will break the webhook.
 
     @callback
     def async_resume(self) -> None:
