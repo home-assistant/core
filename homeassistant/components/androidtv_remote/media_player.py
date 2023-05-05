@@ -57,7 +57,8 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         super().__init__(api, config_entry)
 
         self._volume_max: int | None = None
-        # These tasks are needed to create a job that sends a key press sequence
+        # These tasks are needed to create a job that sends a key press
+        # sequence that can be canceled if concurrency occurs
         self._volume_set_task: asyncio.Task | None = None
         self._channel_set_task: asyncio.Task | None = None
 
