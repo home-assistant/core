@@ -199,7 +199,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         raise ValueError(f"Invalid media type: {media_type}")
 
     async def _send_key_commands(
-        self, key_codes: list[str], delay: float = 0.1
+        self, key_codes: list[str], delay_secs: float = 0.1
     ) -> None:
         """Send a key press sequence to Android TV.
 
@@ -209,7 +209,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         try:
             for key_code in key_codes:
                 self._api.send_key_command(key_code)
-                await asyncio.sleep(delay)
+                await asyncio.sleep(delay_secs)
         except ConnectionClosed as exc:
             raise HomeAssistantError(
                 "Connection to Android TV device is closed"
