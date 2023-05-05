@@ -1,4 +1,6 @@
 """Support for the Mailgun mail notifications."""
+from __future__ import annotations
+
 import logging
 
 from pymailgunner import (
@@ -17,6 +19,8 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_RECIPIENT, CONF_SENDER
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_SANDBOX, DOMAIN as MAILGUN_DOMAIN
 
@@ -33,7 +37,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MailgunNotificationService | None:
     """Get the Mailgun notification service."""
     data = hass.data[MAILGUN_DOMAIN]
     mailgun_service = MailgunNotificationService(

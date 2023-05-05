@@ -68,7 +68,6 @@ class MockConnection:
 
     async def connect(self):
         """Mock connect."""
-        pass
 
     @property
     def connected(self):
@@ -82,7 +81,6 @@ class MockConnection:
 
     async def close(self):
         """Mock close."""
-        pass
 
     @property
     def server(self):
@@ -99,7 +97,6 @@ class MockWSConnection:
 
     async def connect(self):
         """Mock connect."""
-        pass
 
     @property
     def connected(self):
@@ -113,7 +110,6 @@ class MockWSConnection:
 
     async def close(self):
         """Mock close."""
-        pass
 
     @property
     def server(self):

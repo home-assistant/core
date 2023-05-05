@@ -33,15 +33,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
-    ENERGY_KILO_WATT_HOUR,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
+    EntityCategory,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
@@ -107,11 +110,10 @@ class DeconzSensorDescription(SensorEntityDescription, DeconzSensorDescriptionMi
 ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
     DeconzSensorDescription[AirQuality](
         key="air_quality",
-        supported_fn=lambda device: device.air_quality is not None,
+        supported_fn=lambda device: device.supports_air_quality,
         update_key="airquality",
         value_fn=lambda device: device.air_quality,
         instance_check=AirQuality,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     DeconzSensorDescription[AirQuality](
         key="air_quality_ppb",
@@ -121,8 +123,41 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=AirQuality,
         name_suffix="PPB",
         old_unique_id_suffix="ppb",
-        device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+    ),
+    DeconzSensorDescription[AirQuality](
+        key="air_quality_formaldehyde",
+        supported_fn=lambda device: device.air_quality_formaldehyde is not None,
+        update_key="airquality_formaldehyde_density",
+        value_fn=lambda device: device.air_quality_formaldehyde,
+        instance_check=AirQuality,
+        name_suffix="CH2O",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ),
+    DeconzSensorDescription[AirQuality](
+        key="air_quality_co2",
+        supported_fn=lambda device: device.air_quality_co2 is not None,
+        update_key="airquality_co2_density",
+        value_fn=lambda device: device.air_quality_co2,
+        instance_check=AirQuality,
+        name_suffix="CO2",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    ),
+    DeconzSensorDescription[AirQuality](
+        key="air_quality_pm2_5",
+        supported_fn=lambda device: device.pm_2_5 is not None,
+        update_key="pm2_5",
+        value_fn=lambda device: device.pm_2_5,
+        instance_check=AirQuality,
+        name_suffix="PM25",
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     DeconzSensorDescription[Consumption](
         key="consumption",
@@ -132,7 +167,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Consumption,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     DeconzSensorDescription[Daylight](
         key="daylight_status",
@@ -178,7 +213,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Power,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     DeconzSensorDescription[Pressure](
         key="pressure",
@@ -188,7 +223,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Pressure,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     DeconzSensorDescription[Temperature](
         key="temperature",
@@ -198,7 +233,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Temperature,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     DeconzSensorDescription[Time](
         key="last_set",
@@ -229,7 +264,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         old_unique_id_suffix="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
 )
 
@@ -372,7 +407,6 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
             attr[ATTR_DAYLIGHT] = self._device.daylight
 
         elif isinstance(self._device, LightLevel):
-
             if self._device.dark is not None:
                 attr[ATTR_DARK] = self._device.dark
 

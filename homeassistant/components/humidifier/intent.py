@@ -1,4 +1,6 @@
 """Intents for the humidifier integration."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
@@ -39,10 +41,18 @@ class HumidityHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        state = intent.async_match_state(
-            hass, slots["name"]["value"], hass.states.async_all(DOMAIN)
+        states = list(
+            intent.async_match_states(
+                hass,
+                name=slots["name"]["value"],
+                states=hass.states.async_all(DOMAIN),
+            )
         )
 
+        if not states:
+            raise intent.IntentHandleError("No entities matched")
+
+        state = states[0]
         service_data = {ATTR_ENTITY_ID: state.entity_id}
 
         humidity = slots["humidity"]["value"]
@@ -83,12 +93,18 @@ class SetModeHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        state = intent.async_match_state(
-            hass,
-            slots["name"]["value"],
-            hass.states.async_all(DOMAIN),
+        states = list(
+            intent.async_match_states(
+                hass,
+                name=slots["name"]["value"],
+                states=hass.states.async_all(DOMAIN),
+            )
         )
 
+        if not states:
+            raise intent.IntentHandleError("No entities matched")
+
+        state = states[0]
         service_data = {ATTR_ENTITY_ID: state.entity_id}
 
         intent.async_test_feature(state, HumidifierEntityFeature.MODES, "modes")

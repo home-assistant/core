@@ -1,9 +1,9 @@
 {
   "domain": "openhome",
   "name": "Linn / OpenHome",
-  "documentation": "https://www.home-assistant.io/integrations/openhome",
-  "requirements": ["openhomedevice==2.0.2"],
   "codeowners": ["@bazwilliams"],
+  "documentation": "https://www.home-assistant.io/integrations/openhome",
   "iot_class": "local_polling",
-  "loggers": ["async_upnp_client", "openhomedevice"]
+  "loggers": ["async_upnp_client", "openhomedevice"],
+  "requirements": ["openhomedevice==2.0.2"]
 }

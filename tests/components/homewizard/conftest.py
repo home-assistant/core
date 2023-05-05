@@ -1,8 +1,9 @@
 """Fixtures for HomeWizard integration tests."""
+from collections.abc import Generator
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from homewizard_energy.models import Data, Device, State
+from homewizard_energy.models import Data, Device, State, System
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
@@ -37,24 +38,29 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_homewizardenergy():
-    """Return a mocked P1 meter."""
+    """Return a mocked all-feature device."""
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
     ) as device:
         client = device.return_value
         client.device = AsyncMock(
-            return_value=Device.from_dict(
+            side_effect=lambda: Device.from_dict(
                 json.loads(load_fixture("homewizard/device.json"))
             )
         )
         client.data = AsyncMock(
-            return_value=Data.from_dict(
+            side_effect=lambda: Data.from_dict(
                 json.loads(load_fixture("homewizard/data.json"))
             )
         )
         client.state = AsyncMock(
-            return_value=State.from_dict(
+            side_effect=lambda: State.from_dict(
                 json.loads(load_fixture("homewizard/state.json"))
+            )
+        )
+        client.system = AsyncMock(
+            side_effect=lambda: System.from_dict(
+                json.loads(load_fixture("homewizard/system.json"))
             )
         )
         yield device
@@ -73,3 +79,13 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_onboarding() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        yield mock_onboarding

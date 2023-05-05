@@ -6,9 +6,11 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
+from aioswitcher.api.remotes import SwitcherBreezeRemoteManager
 from aioswitcher.bridge import SwitcherBase, SwitcherBridge
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import singleton
 
 from .const import DATA_BRIDGE, DISCOVERY_TIME_SEC, DOMAIN
 
@@ -53,3 +55,9 @@ async def async_discover_devices() -> dict[str, SwitcherBase]:
 
     _LOGGER.debug("Finished discovery, discovered devices: %s", len(discovered_devices))
     return discovered_devices
+
+
+@singleton.singleton("switcher_breeze_remote_manager")
+def get_breeze_remote_manager(hass: HomeAssistant) -> SwitcherBreezeRemoteManager:
+    """Get Switcher Breeze remote manager."""
+    return SwitcherBreezeRemoteManager()

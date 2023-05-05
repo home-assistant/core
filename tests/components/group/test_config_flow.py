@@ -13,7 +13,15 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "group_type,group_state,member_state,member_attributes,extra_input,extra_options,extra_attrs",
+    (
+        "group_type",
+        "group_state",
+        "member_state",
+        "member_attributes",
+        "extra_input",
+        "extra_options",
+        "extra_attrs",
+    ),
     (
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
@@ -22,6 +30,15 @@ from tests.common import MockConfigEntry
         ("light", "on", "on", {}, {}, {}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
+        (
+            "sensor",
+            "20.0",
+            "10",
+            {},
+            {"type": "sum"},
+            {"type": "sum"},
+            {},
+        ),
         ("switch", "on", "on", {}, {}, {}, {}),
     ),
 )
@@ -96,10 +113,10 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
-    "hide_members,hidden_by", ((False, None), (True, "integration"))
+    ("hide_members", "hidden_by"), ((False, None), (True, "integration"))
 )
 @pytest.mark.parametrize(
-    "group_type,extra_input",
+    ("group_type", "extra_input"),
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),
@@ -161,7 +178,7 @@ async def test_config_flow_hides_members(
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
-    for k in schema.keys():
+    for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:
                 return None
@@ -171,19 +188,25 @@ def get_suggested(schema, key):
 
 
 @pytest.mark.parametrize(
-    "group_type,member_state,extra_options",
+    ("group_type", "member_state", "extra_options", "options_options"),
     (
-        ("binary_sensor", "on", {"all": False}),
-        ("cover", "open", {}),
-        ("fan", "on", {}),
-        ("light", "on", {"all": False}),
-        ("lock", "locked", {}),
-        ("media_player", "on", {}),
-        ("switch", "on", {"all": False}),
+        ("binary_sensor", "on", {"all": False}, {}),
+        ("cover", "open", {}, {}),
+        ("fan", "on", {}, {}),
+        ("light", "on", {"all": False}, {}),
+        ("lock", "locked", {}, {}),
+        ("media_player", "on", {}, {}),
+        (
+            "sensor",
+            "10",
+            {"ignore_non_numeric": False, "type": "sum"},
+            {"ignore_non_numeric": False, "type": "sum"},
+        ),
+        ("switch", "on", {"all": False}, {}),
     ),
 )
 async def test_options(
-    hass: HomeAssistant, group_type, member_state, extra_options
+    hass: HomeAssistant, group_type, member_state, extra_options, options_options
 ) -> None:
     """Test reconfiguring."""
     members1 = [f"{group_type}.one", f"{group_type}.two"]
@@ -226,9 +249,7 @@ async def test_options(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            "entities": members2,
-        },
+        user_input={"entities": members2, **options_options},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -272,7 +293,7 @@ async def test_options(
 
 
 @pytest.mark.parametrize(
-    "group_type,extra_options,extra_options_after,advanced",
+    ("group_type", "extra_options", "extra_options_after", "advanced"),
     (
         ("light", {"all": False}, {"all": False}, False),
         ("light", {"all": True}, {"all": True}, False),
@@ -343,14 +364,14 @@ async def test_all_options(
 
 
 @pytest.mark.parametrize(
-    "hide_members,hidden_by_initial,hidden_by",
+    ("hide_members", "hidden_by_initial", "hidden_by"),
     (
         (False, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, er.RegistryEntryHider.INTEGRATION),
     ),
 )
 @pytest.mark.parametrize(
-    "group_type,extra_input",
+    ("group_type", "extra_input"),
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),

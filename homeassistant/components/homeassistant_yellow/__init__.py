@@ -1,24 +1,17 @@
 """The Home Assistant Yellow integration."""
 from __future__ import annotations
 
-import logging
-
-from homeassistant.components.hassio import (
-    AddonError,
-    AddonInfo,
-    AddonManager,
-    AddonState,
-    get_os_info,
-)
+from homeassistant.components.hassio import get_os_info
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
-    get_addon_manager,
+    check_multi_pan_addon,
     get_zigbee_socket,
+    multi_pan_addon_using_device,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
-_LOGGER = logging.getLogger(__name__)
+from .const import RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -28,46 +21,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     board: str | None
-    if (board := os_info.get("board")) is None or not board == "yellow":
+    if (board := os_info.get("board")) is None or board != "yellow":
         # Not running on a Home Assistant Yellow, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return False
 
-    addon_manager: AddonManager = get_addon_manager(hass)
     try:
-        addon_info: AddonInfo = await addon_manager.async_get_addon_info()
-    except AddonError as err:
-        _LOGGER.error(err)
+        await check_multi_pan_addon(hass)
+    except HomeAssistantError as err:
         raise ConfigEntryNotReady from err
 
-    # Start the addon if it's not started
-    if addon_info.state == AddonState.NOT_RUNNING:
-        await addon_manager.async_start_addon()
-
-    if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.RUNNING):
-        _LOGGER.debug(
-            "Multi pan addon in state %s, delaying yellow config entry setup",
-            addon_info.state,
-        )
-        raise ConfigEntryNotReady
-
-    if addon_info.state == AddonState.NOT_INSTALLED:
-        path = "/dev/ttyAMA1"
+    if not await multi_pan_addon_using_device(hass, RADIO_DEVICE):
+        hw_discovery_data = ZHA_HW_DISCOVERY_DATA
     else:
-        path = get_zigbee_socket(hass, addon_info)
+        hw_discovery_data = {
+            "name": "Yellow Multi-PAN",
+            "port": {
+                "path": get_zigbee_socket(),
+            },
+            "radio_type": "ezsp",
+        }
 
     await hass.config_entries.flow.async_init(
         "zha",
         context={"source": "hardware"},
-        data={
-            "name": "Yellow",
-            "port": {
-                "path": path,
-                "baudrate": 115200,
-                "flow_control": "hardware",
-            },
-            "radio_type": "efr32",
-        },
+        data=hw_discovery_data,
     )
 
     return True

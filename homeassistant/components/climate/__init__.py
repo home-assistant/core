@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -225,7 +225,7 @@ class ClimateEntity(Entity):
     _attr_precision: float
     _attr_preset_mode: str | None
     _attr_preset_modes: list[str] | None
-    _attr_supported_features: ClimateEntityFeature | int = 0
+    _attr_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
     _attr_swing_mode: str | None
     _attr_swing_modes: list[str] | None
     _attr_target_humidity: int | None = None
@@ -250,7 +250,7 @@ class ClimateEntity(Entity):
         """Return the precision of the system."""
         if hasattr(self, "_attr_precision"):
             return self._attr_precision
-        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
 
@@ -552,7 +552,7 @@ class ClimateEntity(Entity):
             await self.async_set_hvac_mode(HVACMode.OFF)
 
     @property
-    def supported_features(self) -> ClimateEntityFeature | int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
@@ -561,7 +561,7 @@ class ClimateEntity(Entity):
         """Return the minimum temperature."""
         if not hasattr(self, "_attr_min_temp"):
             return TemperatureConverter.convert(
-                DEFAULT_MIN_TEMP, TEMP_CELSIUS, self.temperature_unit
+                DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
             )
         return self._attr_min_temp
 
@@ -570,7 +570,7 @@ class ClimateEntity(Entity):
         """Return the maximum temperature."""
         if not hasattr(self, "_attr_max_temp"):
             return TemperatureConverter.convert(
-                DEFAULT_MAX_TEMP, TEMP_CELSIUS, self.temperature_unit
+                DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
             )
         return self._attr_max_temp
 

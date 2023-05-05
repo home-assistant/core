@@ -95,7 +95,7 @@ async def async_setup_platform(
             DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
             DemoVacuum(DEMO_VACUUM_BASIC, SUPPORT_BASIC_SERVICES),
             DemoVacuum(DEMO_VACUUM_MINIMAL, SUPPORT_MINIMAL_SERVICES),
-            DemoVacuum(DEMO_VACUUM_NONE, 0),
+            DemoVacuum(DEMO_VACUUM_NONE, VacuumEntityFeature(0)),
             StateDemoVacuum(DEMO_VACUUM_STATE),
         ]
     )
@@ -105,10 +105,9 @@ class DemoVacuum(VacuumEntity):
     """Representation of a demo vacuum."""
 
     _attr_should_poll = False
+    _attr_translation_key = "model_s"
 
-    def __init__(
-        self, name: str, supported_features: VacuumEntityFeature | int
-    ) -> None:
+    def __init__(self, name: str, supported_features: VacuumEntityFeature) -> None:
         """Initialize the vacuum."""
         self._attr_name = name
         self._attr_supported_features = supported_features
@@ -249,6 +248,7 @@ class StateDemoVacuum(StateVacuumEntity):
 
     _attr_should_poll = False
     _attr_supported_features = SUPPORT_STATE_SERVICES
+    _attr_translation_key = "model_s"
 
     def __init__(self, name: str) -> None:
         """Initialize the vacuum."""

@@ -113,7 +113,7 @@ async def _create_august_api_with_devices(  # noqa: C901
                 {"base": _mock_august_doorbell(device.device_id), "detail": device}
             )
         else:
-            raise ValueError
+            raise ValueError  # noqa: TRY004
 
     def _get_device_detail(device_type, device_id):
         for device in device_data[device_type]:

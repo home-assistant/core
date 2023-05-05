@@ -1,11 +1,11 @@
 {
   "domain": "airq",
   "name": "air-Q",
+  "codeowners": ["@Sibgatulin", "@dl2080"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airq",
-  "requirements": ["aioairq==0.2.4"],
-  "codeowners": ["@Sibgatulin", "@dl2080"],
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aioairq"],
-  "integration_type": "hub"
+  "requirements": ["aioairq==0.2.4"]
 }

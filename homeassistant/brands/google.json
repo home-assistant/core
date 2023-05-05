@@ -3,8 +3,10 @@
   "name": "Google",
   "integrations": [
     "google_assistant",
+    "google_assistant_sdk",
     "google_cloud",
     "google_domains",
+    "google_mail",
     "google_maps",
     "google_pubsub",
     "google_sheets",
@@ -14,7 +16,6 @@
     "google",
     "nest",
     "cast",
-    "hangouts",
     "dialogflow"
   ]
 }

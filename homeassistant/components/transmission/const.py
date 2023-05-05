@@ -10,9 +10,9 @@ ORDER_WORST_RATIO_FIRST = "worst_ratio_first"
 
 SUPPORTED_ORDER_MODES = {
     ORDER_NEWEST_FIRST: lambda torrents: sorted(
-        torrents, key=lambda t: t.addedDate, reverse=True
+        torrents, key=lambda t: t.date_added, reverse=True
     ),
-    ORDER_OLDEST_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.addedDate),
+    ORDER_OLDEST_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.date_added),
     ORDER_WORST_RATIO_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.ratio),
     ORDER_BEST_RATIO_FIRST: lambda torrents: sorted(
         torrents, key=lambda t: t.ratio, reverse=True
@@ -44,3 +44,7 @@ DATA_UPDATED = "transmission_data_updated"
 EVENT_STARTED_TORRENT = "transmission_started_torrent"
 EVENT_REMOVED_TORRENT = "transmission_removed_torrent"
 EVENT_DOWNLOADED_TORRENT = "transmission_downloaded_torrent"
+
+STATE_UP_DOWN = "up_down"
+STATE_SEEDING = "seeding"
+STATE_DOWNLOADING = "downloading"

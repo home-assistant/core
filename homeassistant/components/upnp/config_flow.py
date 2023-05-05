@@ -77,7 +77,8 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     # Paths:
-    # - ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
+    # - ssdp(discovery_info) --> ssdp_confirm(None)
+    # --> ssdp_confirm({}) --> create_entry()
     # - user(None): scan --> user({...}) --> create_entry()
 
     @property
@@ -173,7 +174,8 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info.ssdp_headers["_host"]
         self._abort_if_unique_id_configured(
             # Store mac address and other data for older entries.
-            # The location is stored in the config entry such that when the location changes, the entry is reloaded.
+            # The location is stored in the config entry such that
+            # when the location changes, the entry is reloaded.
             updates={
                 CONFIG_ENTRY_MAC_ADDRESS: mac_address,
                 CONFIG_ENTRY_LOCATION: discovery_info.ssdp_location,
@@ -205,8 +207,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data={**entry.data, CONFIG_ENTRY_UDN: discovery_info.ssdp_udn},
             )
             if entry.state == config_entries.ConfigEntryState.LOADED:
-                # Only reload when entry has state LOADED; when entry has state SETUP_RETRY,
-                # another load is started, causing the entry to be loaded twice.
+                # Only reload when entry has state LOADED; when entry has state
+                # SETUP_RETRY, another load is started,
+                # causing the entry to be loaded twice.
                 LOGGER.debug("Reloading entry: %s", entry.entry_id)
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)

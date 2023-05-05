@@ -13,7 +13,7 @@ from RMVtransport.rmvtransport import (
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_TIMEOUT, TIME_MINUTES
+from homeassistant.const import CONF_NAME, CONF_TIMEOUT, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -103,7 +103,7 @@ async def async_setup_platform(
         for next_departure in config[CONF_NEXT_DEPARTURE]
     ]
 
-    tasks = [sensor.async_update() for sensor in sensors]
+    tasks = [asyncio.create_task(sensor.async_update()) for sensor in sensors]
     if tasks:
         await asyncio.wait(tasks)
 
@@ -184,7 +184,7 @@ class RMVDepartureSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""

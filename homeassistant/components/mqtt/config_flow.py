@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import queue
-from ssl import PROTOCOL_TLS, SSLContext, SSLError
+from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import Any
 
@@ -12,9 +12,9 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
@@ -25,8 +25,10 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
     FileSelector,
@@ -42,9 +44,9 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .client import MqttClientSetup
-from .config_integration import CONFIG_SCHEMA_ENTRY
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -58,7 +60,10 @@ from .const import (
     CONF_DISCOVERY_PREFIX,
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
@@ -66,9 +71,13 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
+    DEFAULT_TRANSPORT,
     DEFAULT_WILL,
+    DEFAULT_WS_PATH,
     DOMAIN,
     SUPPORTED_PROTOCOLS,
+    TRANSPORT_TCP,
+    TRANSPORT_WEBSOCKETS,
 )
 from .util import (
     async_create_certificate_temp_files,
@@ -109,15 +118,29 @@ PROTOCOL_SELECTOR = SelectSelector(
         mode=SelectSelectorMode.DROPDOWN,
     )
 )
+SUPPORTED_TRANSPORTS = [
+    SelectOptionDict(value=TRANSPORT_TCP, label="TCP"),
+    SelectOptionDict(value=TRANSPORT_WEBSOCKETS, label="WebSocket"),
+]
+TRANSPORT_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=SUPPORTED_TRANSPORTS,
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+WS_HEADERS_SELECTOR = TextSelector(
+    TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)
+)
 CA_VERIFICATION_MODES = [
-    SelectOptionDict(value="off", label="Off"),
-    SelectOptionDict(value="auto", label="Auto"),
-    SelectOptionDict(value="custom", label="Custom"),
+    "off",
+    "auto",
+    "custom",
 ]
 BROKER_VERIFICATION_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=CA_VERIFICATION_MODES,
         mode=SelectSelectorMode.DROPDOWN,
+        translation_key=SET_CA_CERT,
     )
 )
 
@@ -131,17 +154,17 @@ CERT_UPLOAD_SELECTOR = FileSelector(
 KEY_UPLOAD_SELECTOR = FileSelector(FileSelectorConfig(accept=".key,application/pkcs8"))
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
 
-    _hassio_discovery = None
+    _hassio_discovery: dict[str, Any] | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> MQTTOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MQTTOptionsFlowHandler(config_entry)
@@ -163,7 +186,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
-            self.hass,
+            self,
             fields,
             None,
             user_input,
@@ -232,10 +255,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
+class MQTTOptionsFlowHandler(OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize MQTT options flow."""
         self.config_entry = config_entry
         self.broker_config: dict[str, str | int] = {}
@@ -253,7 +276,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
-            self.hass,
+            self,
             fields,
             self.config_entry.data,
             user_input,
@@ -345,7 +368,6 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 updated_config = {}
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
-                CONFIG_SCHEMA_ENTRY(updated_config)
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=updated_config,
@@ -426,7 +448,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 
 
 async def async_get_broker_settings(
-    hass: HomeAssistant,
+    flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
     user_input: dict[str, Any] | None,
@@ -439,6 +461,7 @@ async def async_get_broker_settings(
     or when the advanced_broker_options checkbox was selected.
     Returns True when settings are collected successfully.
     """
+    hass = flow.hass
     advanced_broker_options: bool = False
     user_input_basic: dict[str, Any] = {}
     current_config: dict[str, Any] = (
@@ -493,6 +516,8 @@ async def async_get_broker_settings(
             or not certificate
             and user_input.get(SET_CA_CERT, "off") == "custom"
             and not certificate_id
+            or user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
+            and CONF_WS_PATH not in user_input
         ):
             return False
 
@@ -526,6 +551,23 @@ async def async_get_broker_settings(
             del validated_user_input[SET_CA_CERT]
         if SET_CLIENT_CERT in validated_user_input:
             del validated_user_input[SET_CLIENT_CERT]
+        if validated_user_input.get(CONF_TRANSPORT, TRANSPORT_TCP) == TRANSPORT_TCP:
+            if CONF_WS_PATH in validated_user_input:
+                del validated_user_input[CONF_WS_PATH]
+            if CONF_WS_HEADERS in validated_user_input:
+                del validated_user_input[CONF_WS_HEADERS]
+            return True
+        try:
+            validated_user_input[CONF_WS_HEADERS] = json_loads(
+                validated_user_input.get(CONF_WS_HEADERS, "{}")
+            )
+            schema = vol.Schema({cv.string: cv.template})
+            schema(validated_user_input[CONF_WS_HEADERS])
+        except JSON_DECODE_EXCEPTIONS + (  # pylint: disable=wrong-exception-operation
+            vol.MultipleInvalid,
+        ):
+            errors["base"] = "bad_ws_headers"
+            return False
         return True
 
     if user_input:
@@ -545,13 +587,14 @@ async def async_get_broker_settings(
         current_user = user_input_basic.get(CONF_USERNAME)
         current_pass = user_input_basic.get(CONF_PASSWORD)
     else:
-        # Get default settings from entry or yaml (if any)
+        # Get default settings from entry (if any)
         current_broker = current_config.get(CONF_BROKER)
         current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
         current_user = current_config.get(CONF_USERNAME)
         current_pass = current_config.get(CONF_PASSWORD)
 
-    # Treat the previous post as an update of the current settings (if there was a basic broker setup step)
+    # Treat the previous post as an update of the current settings
+    # (if there was a basic broker setup step)
     current_config.update(user_input_basic)
 
     # Get default settings for advanced broker options
@@ -562,6 +605,13 @@ async def async_get_broker_settings(
     current_client_key = current_config.get(CONF_CLIENT_KEY)
     current_tls_insecure = current_config.get(CONF_TLS_INSECURE, False)
     current_protocol = current_config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
+    current_transport = current_config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
+    current_ws_path = current_config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
+    current_ws_headers = (
+        json_dumps(current_config.get(CONF_WS_HEADERS))
+        if CONF_WS_HEADERS in current_config
+        else None
+    )
     advanced_broker_options |= bool(
         current_client_id
         or current_keepalive != DEFAULT_KEEPALIVE
@@ -572,6 +622,7 @@ async def async_get_broker_settings(
         or current_protocol != DEFAULT_PROTOCOL
         or current_config.get(SET_CA_CERT, "off") != "off"
         or current_config.get(SET_CLIENT_CERT)
+        or current_transport == TRANSPORT_WEBSOCKETS
     )
 
     # Build form
@@ -589,9 +640,12 @@ async def async_get_broker_settings(
             description={"suggested_value": current_pass},
         )
     ] = PASSWORD_SELECTOR
-    # show advanced options checkbox if requested
+    # show advanced options checkbox if requested and
+    # advanced options are enabled
     # or when the defaults of advanced options are overridden
     if not advanced_broker_options:
+        if not flow.show_advanced_options:
+            return False
         fields[
             vol.Optional(
                 ADVANCED_OPTIONS,
@@ -665,6 +719,21 @@ async def async_get_broker_settings(
             description={"suggested_value": current_protocol},
         )
     ] = PROTOCOL_SELECTOR
+    fields[
+        vol.Optional(
+            CONF_TRANSPORT,
+            description={"suggested_value": current_transport},
+        )
+    ] = TRANSPORT_SELECTOR
+    if current_transport == TRANSPORT_WEBSOCKETS:
+        fields[
+            vol.Optional(CONF_WS_PATH, description={"suggested_value": current_ws_path})
+        ] = TEXT_SELECTOR
+        fields[
+            vol.Optional(
+                CONF_WS_HEADERS, description={"suggested_value": current_ws_headers}
+            )
+        ] = WS_HEADERS_SELECTOR
 
     # Show form
     return False
@@ -722,7 +791,7 @@ def check_certicate_chain() -> str | None:
         except (TypeError, ValueError):
             return "bad_client_key"
     # Check the certificate chain
-    context = SSLContext(PROTOCOL_TLS)
+    context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:
         try:
             context.load_cert_chain(client_certificate, private_key)

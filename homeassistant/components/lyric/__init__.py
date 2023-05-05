@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     if not isinstance(implementation, LyricLocalOAuth2Implementation):
-        raise ValueError("Unexpected auth implementation; can't find oauth client id")
+        raise TypeError("Unexpected auth implementation; can't find oauth client id")
 
     session = aiohttp_client.async_get_clientsession(hass)
     oauth_session = OAuth2SessionLyric(hass, entry, implementation)
@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[Lyric](
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
@@ -133,12 +133,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class LyricEntity(CoordinatorEntity):
+class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
     """Defines a base Honeywell Lyric entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Lyric],
         location: LyricLocation,
         device: LyricDevice,
         key: str,

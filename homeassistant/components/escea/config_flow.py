@@ -21,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
-
     controller_ready = asyncio.Event()
 
     @callback

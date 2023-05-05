@@ -12,6 +12,12 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+    TextSelector,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
@@ -23,12 +29,17 @@ ERROR_MULTIPLE_STATION = "Found multiple stations with the specified name"
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_FROM): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_TIME): cv.string,
-        vol.Required(CONF_WEEKDAY, default=WEEKDAYS): cv.multi_select(
-            {day: day for day in WEEKDAYS}
+        vol.Required(CONF_API_KEY): TextSelector(),
+        vol.Required(CONF_FROM): TextSelector(),
+        vol.Required(CONF_TO): TextSelector(),
+        vol.Optional(CONF_TIME): TextSelector(),
+        vol.Required(CONF_WEEKDAY, default=WEEKDAYS): SelectSelector(
+            SelectSelectorConfig(
+                options=WEEKDAYS,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_WEEKDAY,
+            )
         ),
     }
 )

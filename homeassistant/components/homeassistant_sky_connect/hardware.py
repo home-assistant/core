@@ -1,4 +1,4 @@
-"""The Home Assistant Sky Connect hardware platform."""
+"""The Home Assistant SkyConnect hardware platform."""
 from __future__ import annotations
 
 from homeassistant.components.hardware.models import HardwareInfo, USBInfo
@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
 
-DONGLE_NAME = "Home Assistant Sky Connect"
+DONGLE_NAME = "Home Assistant SkyConnect"
 
 
 @callback

@@ -72,7 +72,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class AwairDataUpdateCoordinator(DataUpdateCoordinator):
+class AwairDataUpdateCoordinator(DataUpdateCoordinator[dict[str, AwairResult]]):
     """Define a wrapper class to update Awair data."""
 
     def __init__(
@@ -107,7 +107,7 @@ class AwairCloudDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
         super().__init__(hass, config_entry, UPDATE_INTERVAL_CLOUD)
 
-    async def _async_update_data(self) -> dict[str, AwairResult] | None:
+    async def _async_update_data(self) -> dict[str, AwairResult]:
         """Update data via Awair client library."""
         async with timeout(API_TIMEOUT):
             try:
@@ -139,7 +139,7 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
         super().__init__(hass, config_entry, UPDATE_INTERVAL_LOCAL)
 
-    async def _async_update_data(self) -> dict[str, AwairResult] | None:
+    async def _async_update_data(self) -> dict[str, AwairResult]:
         """Update data via Awair client library."""
         async with timeout(API_TIMEOUT):
             try:

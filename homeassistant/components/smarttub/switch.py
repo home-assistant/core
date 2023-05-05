@@ -33,7 +33,7 @@ async def async_setup_entry(
 class SmartTubPump(SmartTubEntity, SwitchEntity):
     """A pump on a spa."""
 
-    def __init__(self, coordinator, pump: SpaPump):
+    def __init__(self, coordinator, pump: SpaPump) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, pump.spa, "pump")
         self.pump_id = pump.id

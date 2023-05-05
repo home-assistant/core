@@ -17,12 +17,13 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_MBAR,
-    TEMP_CELSIUS,
+    EntityCategory,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -63,25 +64,29 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         name="Temperature",
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         name="Humidity",
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_MBAR,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
         name="Pressure",
     ),
     "battery": SensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Battery",
     ),
@@ -89,12 +94,13 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
         name="co2",
     ),
     "voc": SensorEntityDescription(
         key="voc",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        state_class=SensorStateClass.MEASUREMENT,
         name="VOC",
         icon="mdi:cloud",
     ),
@@ -102,6 +108,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
         name="Illuminance",
     ),
 }
@@ -149,12 +156,11 @@ class AirthingsSensor(
 ):
     """Airthings BLE sensors for the device."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[AirthingsDevice],
         airthings_device: AirthingsDevice,
         entity_description: SensorEntityDescription,
     ) -> None:

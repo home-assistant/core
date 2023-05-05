@@ -6,9 +6,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -18,7 +15,6 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -26,8 +22,7 @@ from .const import (
     ACTION_PRESS,
     ACTION_RELEASE,
     ATTR_ACTION,
-    ATTR_LEAP_BUTTON_NUMBER,
-    ATTR_SERIAL,
+    ATTR_BUTTON_TYPE,
     CONF_SUBTYPE,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
@@ -317,7 +312,7 @@ DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP = {
     "FourGroupRemote": FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LEAP,
 }
 
-LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP = {
+LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP: dict[str, dict[int, str]] = {
     k: _reverse_dict(v) for k, v in DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.items()
 }
 
@@ -421,53 +416,22 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    device_id = config[CONF_DEVICE_ID]
-    subtype = config[CONF_SUBTYPE]
-    if not (data := get_lutron_data_by_dr_id(hass, device_id)) or not (
-        keypad := data.keypad_data.dr_device_id_to_keypad[device_id]
-    ):
-        raise HomeAssistantError(
-            f"Cannot attach trigger {config} because device with id {device_id} is missing or invalid"
-        )
-
-    keypad_trigger_schemas = data.keypad_data.trigger_schemas
-    keypad_button_names_to_leap = data.keypad_data.button_names_to_leap
-
-    device_type = keypad["type"]
-    serial = keypad["serial"]
-    lutron_device_id = keypad["lutron_device_id"]
-
-    # Retrieve trigger schema, preferring hard-coded triggers from device_trigger.py
-    schema = DEVICE_TYPE_SCHEMA_MAP.get(
-        device_type,
-        keypad_trigger_schemas[lutron_device_id],
-    )
-
-    # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
-        device_type,
-        keypad_button_names_to_leap[lutron_device_id],
-    )
-
-    if subtype not in valid_buttons:
-        raise InvalidDeviceAutomationConfig(
-            f"Cannot attach trigger {config} because subtype {subtype} is invalid"
-        )
-
-    config = schema(config)
-    event_config = {
-        event_trigger.CONF_PLATFORM: CONF_EVENT,
-        event_trigger.CONF_EVENT_TYPE: LUTRON_CASETA_BUTTON_EVENT,
-        event_trigger.CONF_EVENT_DATA: {
-            ATTR_SERIAL: serial,
-            ATTR_LEAP_BUTTON_NUMBER: valid_buttons[subtype],
-            ATTR_ACTION: config[CONF_TYPE],
-        },
-    }
-    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
-
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, trigger_info, platform_type="device"
+        hass,
+        event_trigger.TRIGGER_SCHEMA(
+            {
+                event_trigger.CONF_PLATFORM: CONF_EVENT,
+                event_trigger.CONF_EVENT_TYPE: LUTRON_CASETA_BUTTON_EVENT,
+                event_trigger.CONF_EVENT_DATA: {
+                    CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+                    ATTR_ACTION: config[CONF_TYPE],
+                    ATTR_BUTTON_TYPE: config[CONF_SUBTYPE],
+                },
+            }
+        ),
+        action,
+        trigger_info,
+        platform_type="device",
     )
 
 

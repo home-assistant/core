@@ -11,11 +11,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
-    LENGTH_FEET,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
-    LENGTH_MILES,
-    LENGTH_YARD,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
@@ -42,11 +38,11 @@ DEFAULT_TOLERANCE = 1
 DOMAIN = "proximity"
 
 UNITS = [
-    LENGTH_METERS,
-    LENGTH_KILOMETERS,
-    LENGTH_FEET,
-    LENGTH_YARD,
-    LENGTH_MILES,
+    UnitOfLength.METERS,
+    UnitOfLength.KILOMETERS,
+    UnitOfLength.FEET,
+    UnitOfLength.YARDS,
+    UnitOfLength.MILES,
 ]
 
 ZONE_SCHEMA = vol.Schema(
@@ -236,7 +232,7 @@ class Proximity(Entity):
                 continue
             distances_to_zone[device] = round(
                 DistanceConverter.convert(
-                    proximity, LENGTH_METERS, self.unit_of_measurement
+                    proximity, UnitOfLength.METERS, self.unit_of_measurement
                 ),
                 1,
             )

@@ -158,6 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_local_input(self.hass, user_input)
             except CannotConnectError:
+                _LOGGER.debug("Cannot connect", exc_info=1)
                 errors["base"] = "cannot_connect"
             except UnauthorizedError:
                 errors["base"] = "invalid_auth"

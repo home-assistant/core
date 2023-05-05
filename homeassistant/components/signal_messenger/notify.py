@@ -151,7 +151,8 @@ class SignalNotificationService(BaseNotificationService):
                     > attachment_size_limit
                 ):
                     raise ValueError(
-                        "Attachment too large (Content-Length reports {}). Max size: {} bytes".format(
+                        "Attachment too large (Content-Length reports {}). Max size: {}"
+                        " bytes".format(
                             int(str(resp.headers.get("Content-Length"))),
                             CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,
                         )
@@ -163,9 +164,8 @@ class SignalNotificationService(BaseNotificationService):
                     size += len(chunk)
                     if size > attachment_size_limit:
                         raise ValueError(
-                            "Attachment too large (Stream reports {}). Max size: {} bytes".format(
-                                size, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
-                            )
+                            "Attachment too large (Stream reports {}). Max size: {}"
+                            " bytes".format(size, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES)
                         )
 
                     chunks.extend(chunk)

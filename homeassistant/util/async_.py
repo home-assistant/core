@@ -1,17 +1,15 @@
 """Asyncio utilities."""
 from __future__ import annotations
 
-from asyncio import Semaphore, coroutines, ensure_future, gather, get_running_loop
+from asyncio import Semaphore, gather, get_running_loop
 from asyncio.events import AbstractEventLoop
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable
 import concurrent.futures
 import functools
 import logging
 import threading
 from traceback import extract_stack
-from typing import Any, TypeVar
-
-from typing_extensions import ParamSpec
+from typing import Any, ParamSpec, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,29 +18,6 @@ _SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown_run_callback_threadsafe"
 _T = TypeVar("_T")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
-
-
-def fire_coroutine_threadsafe(
-    coro: Coroutine[Any, Any, Any], loop: AbstractEventLoop
-) -> None:
-    """Submit a coroutine object to a given event loop.
-
-    This method does not provide a way to retrieve the result and
-    is intended for fire-and-forget use. This reduces the
-    work involved to fire the function on the loop.
-    """
-    ident = loop.__dict__.get("_thread_ident")
-    if ident is not None and ident == threading.get_ident():
-        raise RuntimeError("Cannot be called from within the event loop")
-
-    if not coroutines.iscoroutine(coro):
-        raise TypeError(f"A coroutine object is required: {coro}")
-
-    def callback() -> None:
-        """Handle the firing of a coroutine."""
-        ensure_future(coro, loop=loop)
-
-    loop.call_soon_threadsafe(callback)
 
 
 def run_callback_threadsafe(
@@ -100,7 +75,7 @@ def check_loop(
     """Warn if called inside the event loop. Raise if `strict` is True.
 
     The default advisory message is 'Use `await hass.async_add_executor_job()'
-    Set `advise_msg` to an alternate message if the the solution differs.
+    Set `advise_msg` to an alternate message if the solution differs.
     """
     try:
         get_running_loop()
@@ -155,8 +130,11 @@ def check_loop(
         extra = ""
 
     _LOGGER.warning(
-        "Detected blocking call to %s inside the event loop. This is causing stability issues. "
-        "Please report issue%s for %s doing blocking calls at %s, line %s: %s",
+        (
+            "Detected blocking call to %s inside the event loop. This is causing"
+            " stability issues. Please report issue%s for %s doing blocking calls at"
+            " %s, line %s: %s"
+        ),
         func.__name__,
         extra,
         integration,
@@ -166,9 +144,10 @@ def check_loop(
     )
     if strict:
         raise RuntimeError(
-            "Blocking calls must be done in the executor or a separate thread; "
-            f"{advise_msg or 'Use `await hass.async_add_executor_job()`'}; "
-            f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {(found_frame.line or '?').strip()}"
+            "Blocking calls must be done in the executor or a separate thread;"
+            f" {advise_msg or 'Use `await hass.async_add_executor_job()`'}; at"
+            f" {found_frame.filename[index:]}, line {found_frame.lineno}:"
+            f" {(found_frame.line or '?').strip()}"
         )
 
 

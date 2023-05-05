@@ -3,23 +3,22 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from homeassistant.loader import async_process_zeroconf_match_dict
+from homeassistant.loader import (
+    async_process_zeroconf_match_dict,
+    homekit_always_discover,
+)
 
 from .model import Config, Integration
 from .serializer import format_python_namespace
 
 
-def generate_and_validate(integrations: dict[str, Integration]):
+def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate zeroconf data."""
     service_type_dict = defaultdict(list)
-    homekit_dict = {}
+    homekit_dict: dict[str, dict[str, str]] = {}
 
     for domain in sorted(integrations):
         integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
-            continue
-
         service_types = integration.manifest.get("zeroconf", [])
         homekit = integration.manifest.get("homekit", {})
         homekit_models = homekit.get("models", [])
@@ -46,7 +45,12 @@ def generate_and_validate(integrations: dict[str, Integration]):
                 )
                 break
 
-            homekit_dict[model] = domain
+            homekit_dict[model] = {
+                "domain": domain,
+                "always_discover": homekit_always_discover(
+                    integration.manifest["iot_class"]
+                ),
+            }
 
     # HomeKit models are matched on starting string, make sure none overlap.
     warned = set()
@@ -77,7 +81,7 @@ def generate_and_validate(integrations: dict[str, Integration]):
     )
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate zeroconf file."""
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
     config.cache["zeroconf"] = content = generate_and_validate(integrations)
@@ -96,7 +100,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate zeroconf file."""
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
     with open(str(zeroconf_path), "w") as fp:

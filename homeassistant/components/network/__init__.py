@@ -51,11 +51,13 @@ async def async_get_source_ip(
 
     if not all_ipv4s:
         _LOGGER.warning(
-            "Because the system does not have any enabled IPv4 addresses, source address detection may be inaccurate"
+            "Because the system does not have any enabled IPv4 addresses, source"
+            " address detection may be inaccurate"
         )
         if source_ip is None:
             raise HomeAssistantError(
-                "Could not determine source ip because the system does not have any enabled IPv4 addresses and creating a socket failed"
+                "Could not determine source ip because the system does not have any"
+                " enabled IPv4 addresses and creating a socket failed"
             )
         return source_ip
 

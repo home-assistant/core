@@ -21,8 +21,10 @@ else:
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
+    "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
+    "azure-servicebus",  # depends on uamqp, which requires OpenSSL 1.1
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
@@ -71,8 +73,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.48.0
-grpcio-status==1.48.0
+grpcio==1.51.1
+grpcio-status==1.51.1
+grpcio-reflection==1.51.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -81,6 +84,9 @@ libcst==0.3.23
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
+
+# This is a old unmaintained library and is replaced with faust-cchardet
+cchardet==1000000000.0.0
 
 # To remove reliance on typing
 btlewrap>=0.0.10
@@ -99,9 +105,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.6.1
-h11==0.12.0
-httpcore==0.15.0
+anyio==3.6.2
+h11==0.14.0
+httpcore==0.17.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -109,9 +115,6 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==1.23.2
-
-# pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
-pytest_asyncio==1000000000.0.0
 
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated
@@ -143,10 +146,44 @@ pubnub!=6.4.0
 iso4217!=1.10.20220401
 
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
-pandas==1.4.3
+# Limit this to Python 3.10, to be able to install Python 3.11 wheels for now
+pandas==1.4.3;python_version<'3.11'
 
-# uamqp 1.6.1, has 1 failing test during built on armv7/armhf
-uamqp==1.6.0
+# Matplotlib 3.6.2 has issues building wheels on armhf/armv7
+# We need at least >=2.1.0 (tensorflow integration -> pycocotools)
+matplotlib==3.6.1
+
+# pyOpenSSL 23.1.0 or later required to avoid import errors when
+# cryptography 40.0.1 is installed with botocore
+pyOpenSSL>=23.1.0
+
+# uamqp newer versions we currently can't build for armv7/armhf
+# Limit this to Python 3.10, to not block Python 3.11 dev for now
+uamqp==1.6.0;python_version<'3.11'
+
+# protobuf must be in package constraints for the wheel
+# builder to build binary wheels
+protobuf==4.22.3
+
+# faust-cchardet: Ensure we have a version we can build wheels
+# 2.1.18 is the first version that works with our wheel builder
+faust-cchardet>=2.1.18
+
+# websockets 11.0 is missing files in the source distribution
+# which break wheel builds so we need at least 11.0.1
+# https://github.com/aaugustin/websockets/issues/1329
+websockets>=11.0.1
+
+# pyasn1 0.5.0 has breaking changes which cause pysnmplib to fail
+# until they are resolved, we need to pin pyasn1 to 0.4.8 and
+# pysnmplib to 5.0.21 to avoid the issue.
+# https://github.com/pyasn1/pyasn1/pull/30#issuecomment-1517564335
+# https://github.com/pysnmp/pysnmp/issues/51
+pyasn1==0.4.8
+pysnmplib==5.0.21
+# pysnmp is no longer maintained and does not work with newer
+# python
+pysnmp==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -261,10 +298,6 @@ def gather_requirements_from_manifests(
     integrations = Integration.load_dir(Path("homeassistant/components"))
     for domain in sorted(integrations):
         integration = integrations[domain]
-
-        if not integration.manifest:
-            errors.append(f"The manifest for integration {domain} is invalid.")
-            continue
 
         if integration.disabled:
             continue

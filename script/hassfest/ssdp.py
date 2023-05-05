@@ -7,18 +7,13 @@ from .model import Config, Integration
 from .serializer import format_python_namespace
 
 
-def generate_and_validate(integrations: dict[str, Integration]):
+def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate ssdp data."""
 
     data = defaultdict(list)
 
     for domain in sorted(integrations):
-        integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
-            continue
-
-        ssdp = integration.manifest.get("ssdp")
+        ssdp = integrations[domain].manifest.get("ssdp")
 
         if not ssdp:
             continue
@@ -29,7 +24,7 @@ def generate_and_validate(integrations: dict[str, Integration]):
     return format_python_namespace({"SSDP": data})
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate ssdp file."""
     ssdp_path = config.root / "homeassistant/generated/ssdp.py"
     config.cache["ssdp"] = content = generate_and_validate(integrations)
@@ -44,10 +39,9 @@ def validate(integrations: dict[str, Integration], config: Config):
                 "File ssdp.py is not up to date. Run python3 -m script.hassfest",
                 fixable=True,
             )
-        return
 
 
-def generate(integrations: dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate ssdp file."""
     ssdp_path = config.root / "homeassistant/generated/ssdp.py"
     with open(str(ssdp_path), "w") as fp:

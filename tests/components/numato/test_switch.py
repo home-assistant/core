@@ -6,6 +6,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
@@ -17,7 +18,9 @@ MOCKUP_ENTITY_IDS = {
 }
 
 
-async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
+async def test_failing_setups_no_entities(
+    hass: HomeAssistant, numato_fixture, monkeypatch
+) -> None:
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
@@ -26,7 +29,7 @@ async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
         assert entity_id not in hass.states.async_entity_ids()
 
 
-async def test_regular_hass_operations(hass, numato_fixture):
+async def test_regular_hass_operations(hass: HomeAssistant, numato_fixture) -> None:
     """Test regular operations from within Home Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
     await hass.async_block_till_done()  # wait until services are registered
@@ -64,7 +67,9 @@ async def test_regular_hass_operations(hass, numato_fixture):
     assert numato_fixture.devices[0].values[6] == 0
 
 
-async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
+async def test_failing_hass_operations(
+    hass: HomeAssistant, numato_fixture, monkeypatch
+) -> None:
     """Test failing operations called from within Home Assistant.
 
     Switches remain in their initial 'off' state when the device can't
@@ -108,7 +113,9 @@ async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
     assert not numato_fixture.devices[0].values[6]
 
 
-async def test_switch_setup_without_discovery_info(hass, config, numato_fixture):
+async def test_switch_setup_without_discovery_info(
+    hass: HomeAssistant, config, numato_fixture
+) -> None:
     """Test handling of empty discovery_info."""
     numato_fixture.discover()
     await discovery.async_load_platform(hass, Platform.SWITCH, "numato", None, config)

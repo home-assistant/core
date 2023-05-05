@@ -187,7 +187,9 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
         alarm_arm_night=OverkizCommand.ALARM_ZONE_ON,
         alarm_arm_night_args=f"{OverkizCommandParam.A}, {OverkizCommandParam.B}",
         alarm_arm_away=OverkizCommand.ALARM_ZONE_ON,
-        alarm_arm_away_args=f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}",
+        alarm_arm_away_args=(
+            f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}"
+        ),
     ),
     # MyFoxAlarmController
     OverkizAlarmDescription(

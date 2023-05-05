@@ -198,9 +198,11 @@ async def async_setup_entry(
             hass.data[DATA_KEY][host] = entity
         else:
             _LOGGER.error(
-                "Unsupported device found! Please create an issue at "
-                "https://github.com/syssi/philipslight/issues "
-                "and provide the following data: %s",
+                (
+                    "Unsupported device found! Please create an issue at "
+                    "https://github.com/syssi/philipslight/issues "
+                    "and provide the following data: %s"
+                ),
                 model,
             )
             return
@@ -445,12 +447,14 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                "Setting brightness and color temperature: "
-                "%s %s%%, %s mireds, %s%% cct",
+                (
+                    "Setting brightness and color temperature: "
+                    "%s %s%%, %s mireds, %s%% cct"
+                ),
                 brightness,
-                percent_brightness,
+                percent_brightness,  # pylint: disable=used-before-assignment
                 color_temp,
-                percent_color_temp,
+                percent_color_temp,  # pylint: disable=used-before-assignment
             )
 
             result = await self._try_command(
@@ -826,8 +830,8 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             _LOGGER.debug(
                 "Setting brightness and color: %s %s%%, %s",
                 brightness,
-                percent_brightness,
-                rgb,
+                percent_brightness,  # pylint: disable=used-before-assignment
+                rgb,  # pylint: disable=used-before-assignment
             )
 
             result = await self._try_command(
@@ -843,12 +847,14 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
         elif ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                "Setting brightness and color temperature: "
-                "%s %s%%, %s mireds, %s%% cct",
+                (
+                    "Setting brightness and color temperature: "
+                    "%s %s%%, %s mireds, %s%% cct"
+                ),
                 brightness,
                 percent_brightness,
                 color_temp,
-                percent_color_temp,
+                percent_color_temp,  # pylint: disable=used-before-assignment
             )
 
             result = await self._try_command(

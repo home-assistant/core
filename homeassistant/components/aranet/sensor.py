@@ -1,8 +1,6 @@
 """Support for Aranet sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from aranet4.client import Aranet4Advertisement
 from bleak.backends.device import BLEDevice
 
@@ -25,9 +23,9 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
-    TIME_SECONDS,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -40,7 +38,7 @@ SENSOR_DESCRIPTIONS = {
         key="temperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": SensorEntityDescription(
@@ -54,7 +52,7 @@ SENSOR_DESCRIPTIONS = {
         key="pressure",
         name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": SensorEntityDescription(
@@ -75,8 +73,10 @@ SENSOR_DESCRIPTIONS = {
         key="update_interval",
         name="Update Interval",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
+        # The interval setting is not a generally useful entity for most users.
+        entity_registry_enabled_default=False,
     ),
 }
 
@@ -143,9 +143,7 @@ async def async_setup_entry(
 
 
 class Aranet4BluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of an Aranet sensor."""

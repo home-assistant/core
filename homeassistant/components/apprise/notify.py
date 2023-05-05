@@ -1,4 +1,6 @@
 """Apprise platform for notify component."""
+from __future__ import annotations
+
 import logging
 
 import apprise
@@ -12,7 +14,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +30,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> AppriseNotificationService | None:
     """Get the Apprise notification service."""
     # Create our Apprise Instance (reference our asset)
     a_obj = apprise.Apprise()

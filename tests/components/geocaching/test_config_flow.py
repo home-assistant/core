@@ -1,9 +1,7 @@
 """Test the Geocaching config flow."""
-from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from unittest.mock import MagicMock
 
-from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -25,6 +23,7 @@ from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[ENVIRONMENT]
 
@@ -42,7 +41,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
@@ -52,9 +51,7 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert "flow_id" in result
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -94,7 +91,7 @@ async def test_full_flow(
 
 async def test_existing_entry(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
@@ -110,8 +107,7 @@ async def test_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert "flow_id" in result
-    # pylint: disable=protected-access
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -141,7 +137,7 @@ async def test_existing_entry(
 
 async def test_oauth_error(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
@@ -151,9 +147,7 @@ async def test_oauth_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert "flow_id" in result
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -190,7 +184,7 @@ async def test_oauth_error(
 
 async def test_reauthentication(
     hass: HomeAssistant,
-    hass_client_no_auth: Callable[[], Awaitable[TestClient]],
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host: None,
     mock_geocaching_config_flow: MagicMock,
@@ -209,9 +203,7 @@ async def test_reauthentication(
     assert "flow_id" in flows[0]
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
-    assert "flow_id" in result
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {

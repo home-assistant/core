@@ -1,9 +1,10 @@
 """The sensor tests for the tado platform."""
+from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_water_heater_create_sensors(hass):
+async def test_water_heater_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of water heater."""
 
     await async_init_integration(hass)

@@ -160,9 +160,10 @@ PLATFORM_SCHEMA_LEGACY_MODERN = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
-# Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Vacuums under the vacuum platform key was deprecated in
+# HA Core 2022.6;
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA_LEGACY = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_LEGACY_MODERN.schema),
     warn_for_legacy_schema(VACUUM_DOMAIN),
 )
 
@@ -220,6 +221,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
 
+    _command_topic: str | None
     _encoding: str | None
     _qos: bool
     _retain: bool
@@ -412,7 +414,8 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     def battery_icon(self) -> str:
         """Return the battery icon for the vacuum cleaner.
 
-        No need to check VacuumEntityFeature.BATTERY, this won't be called if battery_level is None.
+        No need to check VacuumEntityFeature.BATTERY, this won't be called if
+        battery_level is None.
         """
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=self._charging

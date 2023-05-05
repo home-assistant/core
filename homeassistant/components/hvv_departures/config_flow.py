@@ -81,7 +81,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_station(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
         if user_input is not None:
-
             errors = {}
 
             check_name = await self.hub.gti.checkName(
@@ -145,7 +144,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         errors = {}
         if not self.departure_filters:
-
             departure_list = {}
             hub: GTIHub = self.hass.data[DOMAIN][self.config_entry.entry_id]
 
@@ -172,7 +170,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
 
         if user_input is not None and not errors:
-
             options = {
                 CONF_FILTER: [
                     self.departure_filters[x] for x in user_input[CONF_FILTER]
@@ -198,7 +195,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(CONF_FILTER, default=old_filter): cv.multi_select(
                         {
-                            key: f"{departure_filter['serviceName']}, {departure_filter['label']}"
+                            key: (
+                                f"{departure_filter['serviceName']},"
+                                f" {departure_filter['label']}"
+                            )
                             for key, departure_filter in self.departure_filters.items()
                         }
                     ),

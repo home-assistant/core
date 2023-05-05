@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import cast
 
 from pyunifiprotect import ProtectApiClient
@@ -15,6 +16,8 @@ from homeassistant.helpers.issue_registry import async_get as async_get_issue_re
 
 from .const import CONF_ALLOW_EA
 from .utils import async_create_api_client
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class EAConfirm(RepairsFlow):
@@ -62,7 +65,7 @@ class EAConfirm(RepairsFlow):
         if await nvr.get_is_prerelease():
             return await self.async_step_confirm()
         await self.hass.config_entries.async_reload(self._entry.entry_id)
-        return self.async_create_entry(title="", data={})
+        return self.async_create_entry(data={})
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
@@ -72,7 +75,7 @@ class EAConfirm(RepairsFlow):
             options = dict(self._entry.options)
             options[CONF_ALLOW_EA] = True
             self.hass.config_entries.async_update_entry(self._entry, options=options)
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(data={})
 
         placeholders = self._async_get_placeholders()
         return self.async_show_form(

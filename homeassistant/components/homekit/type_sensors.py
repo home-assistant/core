@@ -6,6 +6,7 @@ import logging
 from typing import NamedTuple
 
 from pyhap.const import CATEGORY_SENSOR
+from pyhap.service import Service
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
@@ -13,7 +14,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_HOME,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import callback
 
@@ -40,6 +41,8 @@ from .const import (
     CHAR_SMOKE_DETECTED,
     CHAR_VOC_DENSITY,
     PROP_CELSIUS,
+    PROP_MAX_VALUE,
+    PROP_MIN_VALUE,
     SERV_AIR_QUALITY_SENSOR,
     SERV_CARBON_DIOXIDE_SENSOR,
     SERV_CARBON_MONOXIDE_SENSOR,
@@ -124,7 +127,9 @@ class TemperatureSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update temperature after state changed."""
-        unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
+        unit = new_state.attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
+        )
         if (temperature := convert_to_float(new_state.state)) is not None:
             temperature = temperature_to_homekit(temperature, unit)
             self.char_temp.set_value(temperature)
@@ -279,15 +284,25 @@ class NitrogenDioxideSensor(AirQualitySensor):
 
 @TYPES.register("VolatileOrganicCompoundsSensor")
 class VolatileOrganicCompoundsSensor(AirQualitySensor):
-    """Generate a VolatileOrganicCompoundsSensor accessory as VOCs sensor."""
+    """Generate a VolatileOrganicCompoundsSensor accessory as VOCs sensor.
+
+    Sensor entity must return VOC in µg/m3.
+    """
 
     def create_services(self):
-        """Override the init function for PM 2.5 Sensor."""
-        serv_air_quality = self.add_preload_service(
+        """Override the init function for VOC Sensor."""
+        serv_air_quality: Service = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_VOC_DENSITY]
         )
         self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
-        self.char_density = serv_air_quality.configure_char(CHAR_VOC_DENSITY, value=0)
+        self.char_density = serv_air_quality.configure_char(
+            CHAR_VOC_DENSITY,
+            value=0,
+            properties={
+                PROP_MIN_VALUE: 0,
+                PROP_MAX_VALUE: 5000,
+            },
+        )
 
     @callback
     def async_update_state(self, new_state):

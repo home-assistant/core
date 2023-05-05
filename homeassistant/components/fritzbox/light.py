@@ -1,7 +1,7 @@
 """Support for AVM FRITZ!SmartHome lightbulbs."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from requests.exceptions import HTTPError
 
@@ -72,12 +72,14 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         """Initialize the FritzboxLight entity."""
         super().__init__(coordinator, ain, None)
 
-        self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
-        self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
+        if supported_color_temps:
+            # only available for color bulbs
+            self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
+            self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
 
         # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
         # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
-        self._supported_hs = {}
+        self._supported_hs: dict[int, list[int]] = {}
         for values in supported_colors.values():
             hue = int(values[0][0])
             self._supported_hs[hue] = [
@@ -125,7 +127,11 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     @property
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
-        return SUPPORTED_COLOR_MODES
+        if self.data.has_color:
+            return SUPPORTED_COLOR_MODES
+        if self.data.has_level:
+            return {ColorMode.BRIGHTNESS}
+        return {ColorMode.ONOFF}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -138,7 +144,9 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
             try:
                 # HA gives 0..360 for hue, fritz light only supports 0..359
                 unmapped_hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
-                unmapped_saturation = round(kwargs[ATTR_HS_COLOR][1] * 255.0 / 100.0)
+                unmapped_saturation = round(
+                    cast(float, kwargs[ATTR_HS_COLOR][1]) * 255.0 / 100.0
+                )
                 await self.hass.async_add_executor_job(
                     self.data.set_unmapped_color, (unmapped_hue, unmapped_saturation)
                 )
@@ -147,7 +155,8 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
                 if err.response.status_code != 400:
                     raise
                 LOGGER.debug(
-                    "fritzbox does not support method 'setunmappedcolor', fallback to 'setcolor'"
+                    "fritzbox does not support method 'setunmappedcolor', fallback to"
+                    " 'setcolor'"
                 )
                 # find supported hs values closest to what user selected
                 hue = min(

@@ -39,7 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_AREA = "area"
 ATTR_POLLUTION_INDEX = "nilu_pollution_index"
-ATTRIBUTION = "Data provided by luftkvalitet.info and nilu.no"
 
 CONF_AREA = "area"
 CONF_STATION = "stations"
@@ -97,16 +96,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Exclusive(
             CONF_AREA,
             "station_collection",
-            "Can only configure one specific station or "
-            "stations in a specific area pr sensor. "
-            "Please only configure station or area.",
+            (
+                "Can only configure one specific station or "
+                "stations in a specific area pr sensor. "
+                "Please only configure station or area."
+            ),
         ): vol.All(cv.string, vol.In(CONF_ALLOWED_AREAS)),
         vol.Exclusive(
             CONF_STATION,
             "station_collection",
-            "Can only configure one specific station or "
-            "stations in a specific area pr sensor. "
-            "Please only configure station or area.",
+            (
+                "Can only configure one specific station or "
+                "stations in a specific area pr sensor. "
+                "Please only configure station or area."
+            ),
         ): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
@@ -169,6 +172,8 @@ class NiluData:
 class NiluSensor(AirQualityEntity):
     """Single nilu station air sensor."""
 
+    _attr_attribution = "Data provided by luftkvalitet.info and nilu.no"
+
     def __init__(self, api_data: NiluData, name: str, show_on_map: bool) -> None:
         """Initialize the sensor."""
         self._api = api_data
@@ -179,11 +184,6 @@ class NiluSensor(AirQualityEntity):
         if show_on_map:
             self._attrs[CONF_LATITUDE] = api_data.data.latitude
             self._attrs[CONF_LONGITUDE] = api_data.data.longitude
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def extra_state_attributes(self) -> dict:

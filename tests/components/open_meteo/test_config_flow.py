@@ -20,8 +20,7 @@ async def test_full_user_flow(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

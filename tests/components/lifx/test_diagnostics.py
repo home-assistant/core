@@ -19,9 +19,12 @@ from . import (
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
+async def test_bulb_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
@@ -66,7 +69,9 @@ async def test_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
     }
 
 
-async def test_clean_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
+async def test_clean_bulb_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
@@ -116,7 +121,9 @@ async def test_clean_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
     }
 
 
-async def test_infrared_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
+async def test_infrared_bulb_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
@@ -163,7 +170,7 @@ async def test_infrared_bulb_diagnostics(hass: HomeAssistant, hass_client) -> No
 
 
 async def test_legacy_multizone_bulb_diagnostics(
-    hass: HomeAssistant, hass_client
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
@@ -273,7 +280,9 @@ async def test_legacy_multizone_bulb_diagnostics(
     }
 
 
-async def test_multizone_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
+async def test_multizone_bulb_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,

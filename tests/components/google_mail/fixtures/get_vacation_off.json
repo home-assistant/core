@@ -1,0 +1,8 @@
+{
+  "enableAutoReply": false,
+  "responseSubject": "Vacation",
+  "responseBodyPlainText": "I am on vacation.",
+  "restrictToContacts": false,
+  "startTime": "1668402000000",
+  "endTime": "1668747600000"
+}

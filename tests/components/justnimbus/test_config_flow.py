@@ -25,7 +25,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,errors",
+    ("side_effect", "errors"),
     (
         (
             InvalidClientID(client_id="test_id"),
@@ -83,7 +83,6 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     )
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") is None
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"],

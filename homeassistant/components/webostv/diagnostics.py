@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    client: WebOsClient = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id].client
+    client: WebOsClient = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
 
     client_data = {
         "is_registered": client.is_registered(),

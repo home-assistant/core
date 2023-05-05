@@ -98,7 +98,8 @@ class SomaTilt(SomaEntity, CoverEntity):
         response = self.api.set_shade_position(self.device["mac"], target_api_position)
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                f'Error while setting the cover position ({self.name}): {response["msg"]}'
+                f"Error while setting the cover position ({self.name}):"
+                f' {response["msg"]}'
             )
         self.set_position(kwargs[ATTR_TILT_POSITION])
 
@@ -108,7 +109,7 @@ class SomaTilt(SomaEntity, CoverEntity):
 
         api_position = int(response["position"])
 
-        if "closed_upwards" in response.keys():
+        if "closed_upwards" in response:
             self.current_position = 50 + ((api_position * 50) / 100)
         else:
             self.current_position = 50 - ((api_position * 50) / 100)
@@ -169,7 +170,8 @@ class SomaShade(SomaEntity, CoverEntity):
         )
         if not is_api_response_success(response):
             raise HomeAssistantError(
-                f'Error while setting the cover position ({self.name}): {response["msg"]}'
+                f"Error while setting the cover position ({self.name}):"
+                f' {response["msg"]}'
             )
 
     async def async_update(self) -> None:

@@ -69,7 +69,7 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP blind module."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> CoverDeviceClass:
         """Return the class of the cover."""
         return CoverDeviceClass.BLIND
 
@@ -162,7 +162,7 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         )
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> CoverDeviceClass:
         """Return the class of the cover."""
         return CoverDeviceClass.SHUTTER
 
@@ -284,7 +284,7 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
         return door_state_to_position.get(self._device.doorState)
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> CoverDeviceClass:
         """Return the class of the cover."""
         return CoverDeviceClass.GARAGE
 
@@ -315,7 +315,7 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         super().__init__(hap, device, post, is_multi_channel=False)
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> CoverDeviceClass:
         """Return the class of the cover."""
         return CoverDeviceClass.SHUTTER
 

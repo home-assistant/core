@@ -16,8 +16,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     with patch(
         "homeassistant.components.stookalert.async_setup_entry", return_value=True
@@ -47,8 +46,6 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

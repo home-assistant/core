@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import PRECISION_TENTHS, TEMP_CELSIUS
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -112,8 +112,10 @@ async def async_setup_platform(
 
         else:
             _LOGGER.warning(
-                "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
-                "report as an issue if you feel this zone type should be supported",
+                (
+                    "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
+                    "report as an issue if you feel this zone type should be supported"
+                ),
                 zone.zoneType,
                 zone.modelType,
                 zone.zoneId,
@@ -126,7 +128,7 @@ async def async_setup_platform(
 class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def hvac_modes(self) -> list[str]:

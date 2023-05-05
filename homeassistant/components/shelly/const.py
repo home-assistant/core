@@ -102,6 +102,7 @@ RPC_INPUTS_EVENTS_TYPES: Final = {
     "btn_up",
     "single_push",
     "double_push",
+    "triple_push",
     "long_push",
 }
 
@@ -147,6 +148,7 @@ SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "min": 4,
     "max": 31,
     "step": 0.5,
+    "default": 20.0,
 }
 
 # Kelvin value for colorTemp

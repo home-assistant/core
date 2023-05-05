@@ -33,6 +33,7 @@ from .const import (
     CHARGER_SOFTWARE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
+    CODE_KEY,
     CONF_STATION,
     DOMAIN,
     ChargerStatus,
@@ -129,9 +130,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data[CHARGER_ENERGY_PRICE_KEY] = data[CHARGER_DATA_KEY][
                 CHARGER_ENERGY_PRICE_KEY
             ]
-            data[CHARGER_CURRENCY_KEY] = data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][
-                "code"
-            ]
+            data[
+                CHARGER_CURRENCY_KEY
+            ] = f"{data[CHARGER_DATA_KEY][CHARGER_CURRENCY_KEY][CODE_KEY]}/kWh"
+
             data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
                 data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
             )
