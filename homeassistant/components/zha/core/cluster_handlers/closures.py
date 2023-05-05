@@ -117,6 +117,7 @@ class WindowCoveringClient(ClientClusterHandler):
     """Window client cluster handler."""
 
 
+@registries.BINDABLE_CLUSTERS.register(closures.WindowCovering.cluster_id)
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(closures.WindowCovering.cluster_id)
 class WindowCovering(ClusterHandler):
     """Window cluster handler."""

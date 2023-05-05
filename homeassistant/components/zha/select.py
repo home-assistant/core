@@ -20,9 +20,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
-    CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
@@ -367,7 +367,7 @@ class HueV1MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY,
+    cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML001"},
 )
@@ -390,7 +390,7 @@ class HueV2MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY,
+    cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML002", "SML003", "SML004"},
 )

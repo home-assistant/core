@@ -401,6 +401,31 @@ async def async_parse_face_detector(uid: str, msg) -> Event | None:
         return None
 
 
+@PARSERS.register("tns1:RuleEngine/MyRuleDetector/Visitor")
+# pylint: disable=protected-access
+async def async_parse_visitor_detector(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/MyRuleDetector/Visitor
+    """
+    try:
+        video_source = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "Source":
+                video_source = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}",
+            "Visitor Detection",
+            "binary_sensor",
+            "occupancy",
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
 @PARSERS.register("tns1:Device/Trigger/DigitalInput")
 # pylint: disable=protected-access
 async def async_parse_digital_input(uid: str, msg) -> Event | None:

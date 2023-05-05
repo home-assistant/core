@@ -91,6 +91,11 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Snips component."""
 
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return False
+
     async def async_set_feedback(site_ids, state):
         """Set Feedback sound state."""
         site_ids = site_ids if site_ids else config[DOMAIN].get(CONF_SITE_IDS)
