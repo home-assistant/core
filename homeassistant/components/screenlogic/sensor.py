@@ -27,7 +27,7 @@ from .data import (
     PathPart,
     ScreenLogicDataRule,
     ScreenLogicEquipmentRule,
-    TemplateData,
+    SupportedDeviceDescriptions,
     get_ha_unit,
     process_entity,
 )
@@ -41,7 +41,7 @@ from .entity import (
 _LOGGER = logging.getLogger(__name__)
 
 
-SUPPORTED_DATA: TemplateData = {
+SUPPORTED_DATA: SupportedDeviceDescriptions = {
     DEVICE.CONTROLLER: {
         GROUP.SENSOR: {
             VALUE.AIR_TEMPERATURE: {

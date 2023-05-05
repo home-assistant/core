@@ -15,7 +15,7 @@ from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
 from .data import (
     EntityParameter,
-    TemplateData,
+    SupportedDeviceDescriptions,
     get_ha_unit,
     process_entity,
     realize_path_template,
@@ -36,7 +36,7 @@ SET_SCG_CONFIG_FUNC_DATA = (
 )
 
 
-SUPPORTED_DATA: TemplateData = {
+SUPPORTED_DATA: SupportedDeviceDescriptions = {
     DEVICE.SCG: {
         GROUP.CONFIGURATION: {
             VALUE.POOL_SETPOINT: {

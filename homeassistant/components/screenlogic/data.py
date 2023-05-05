@@ -78,19 +78,16 @@ class ScreenLogicEquipmentRule(ScreenLogicRule):
         return self._test(gateway.equipment_flags)
 
 
-TemplateParameters = dict[
+SupportedValueParameters = dict[
     EntityParameter,
     Callable | EntityCategory | int | ScreenLogicRule | tuple,
 ]
 
+SupportedValueDescriptions = dict[str, SupportedValueParameters | dict]
 
-TemplateValues = dict[str, TemplateParameters | dict]
+SupportedGroupDescriptions = dict[int | str, SupportedValueDescriptions]
 
-TemplateGroups = dict[int | str, TemplateValues]
-
-TemplateDevices = dict[str, TemplateGroups]
-
-TemplateData = dict[str, TemplateGroups]
+SupportedDeviceDescriptions = dict[str, SupportedGroupDescriptions]
 
 
 DEVICE_INCLUSION_RULES = {
@@ -142,9 +139,11 @@ def realize_path_template(
     return tuple(realized_path)
 
 
-def process_entity(gateway: ScreenLogicGateway, template_entities: TemplateData):
+def process_entity(
+    gateway: ScreenLogicGateway, supported_devices: SupportedDeviceDescriptions
+):
     """Process template data."""
-    for device, device_groups in template_entities.items():
+    for device, device_groups in supported_devices.items():
         if "*" in device_groups:
             indexed_values = device_groups.pop("*")
             for index in gateway.get_data(device):

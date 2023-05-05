@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
-from .data import EntityParameter, TemplateData, process_entity
+from .data import EntityParameter, SupportedDeviceDescriptions, process_entity
 from .entity import (
     ScreenlogicEntity,
     ScreenLogicEntityDescription,
@@ -27,7 +27,7 @@ from .entity import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DATA: TemplateData = {
+SUPPORTED_DATA: SupportedDeviceDescriptions = {
     DEVICE.CONTROLLER: {
         GROUP.SENSOR: {
             VALUE.ACTIVE_ALERT: {},
