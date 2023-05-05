@@ -135,26 +135,11 @@ async def test_media_player_volume_set(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote media player setting volume."""
+    mock_api.volume_info = {"level": 10, "muted": False, "max": 100}
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    mock_api._on_volume_info_updated({"level": 0, "muted": False, "max": 0})
-    assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") is None
-    assert (
-        hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("supported_features")
-        & MediaPlayerEntityFeature.VOLUME_SET
-        == 0
-    )
-    with pytest.raises(HomeAssistantError):
-        assert await hass.services.async_call(
-            "media_player",
-            "volume_set",
-            {"entity_id": MEDIA_PLAYER_ENTITY, "volume_level": 0.1},
-            blocking=True,
-        )
-
-    mock_api._on_volume_info_updated({"level": 10, "muted": False, "max": 100})
     assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") == 0.1
     assert (
         hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("supported_features")
@@ -201,6 +186,30 @@ async def test_media_player_volume_set(
         blocking=True,
     )
     assert mock_api.send_key_command.call_count == 1
+
+
+async def test_media_player_volume_set_unsupported(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test the Android TV Remote media player if the device does not return the max volume."""
+    mock_api.volume_info = {"level": 0, "muted": False, "max": 0}
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("volume_level") is None
+    assert (
+        hass.states.get(MEDIA_PLAYER_ENTITY).attributes.get("supported_features")
+        & MediaPlayerEntityFeature.VOLUME_SET
+        == 0
+    )
+    with pytest.raises(HomeAssistantError):
+        assert await hass.services.async_call(
+            "media_player",
+            "volume_set",
+            {"entity_id": MEDIA_PLAYER_ENTITY, "volume_level": 0.1},
+            blocking=True,
+        )
 
 
 async def test_media_player_controls(

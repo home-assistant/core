@@ -56,11 +56,15 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         """Initialize the entity."""
         super().__init__(api, config_entry)
 
-        self._volume_max: int | None = None
         # These tasks are needed to create a job that sends a key press
         # sequence that can be canceled if concurrency occurs
         self._volume_set_task: asyncio.Task | None = None
         self._channel_set_task: asyncio.Task | None = None
+
+        # Only if the device returned the max volume, set VOLUME_SET support
+        if volume_max := api.volume_info.get("max"):
+            self._volume_max = volume_max
+            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
     def _update_current_app(self, current_app: str) -> None:
         """Update current app info."""
@@ -73,12 +77,10 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
             self._volume_max = int(volume_info["max"])
             self._attr_volume_level = int(volume_info["level"]) / self._volume_max
             self._attr_is_volume_muted = bool(volume_info["muted"])
-            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
         else:
             self._volume_max = None
             self._attr_volume_level = None
             self._attr_is_volume_muted = None
-            self._attr_supported_features &= ~MediaPlayerEntityFeature.VOLUME_SET
 
     @callback
     def _current_app_updated(self, current_app: str) -> None:
