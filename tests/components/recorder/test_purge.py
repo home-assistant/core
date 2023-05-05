@@ -1451,7 +1451,7 @@ async def _add_test_events(hass: HomeAssistant, iterations: int = 1):
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
-    # Make sure recorded is done before freezing time
+    # Make sure recording is done before freezing time
     # because the time freeze can affect the recorder
     # thread as well can cause the test to fail
     await async_wait_recording_done(hass)
