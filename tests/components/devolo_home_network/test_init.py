@@ -81,7 +81,7 @@ async def test_hass_stop(hass: HomeAssistant, mock_device: MockDevice) -> None:
 
 
 @pytest.mark.parametrize(
-    "device, expected_platforms",
+    ("device", "expected_platforms"),
     [
         ["mock_device", (BINARY_SENSOR, DEVICE_TRACKER, SENSOR, SWITCH)],
         ["mock_repeater_device", (DEVICE_TRACKER, SENSOR, SWITCH)],
