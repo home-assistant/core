@@ -520,7 +520,7 @@ class PullPointManager:
             return False
         except (XMLParseError, RequestError, TimeoutError, TransportError) as err:
             LOGGER.debug(
-                "%s: PullPoint subscription encountered an unexpected and will be retried "
+                "%s: PullPoint subscription encountered an unexpected error and will be retried "
                 "(this is normal for some cameras): %s",
                 self._name,
                 stringify_onvif_error(err),
