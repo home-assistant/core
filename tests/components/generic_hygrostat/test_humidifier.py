@@ -37,6 +37,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
+    async_remove_entity,
     mock_restore_cache,
 )
 
@@ -1166,6 +1167,9 @@ async def test_humidity_change_dry_trigger_on_long_enough_3(
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "humidifier.test")
+
 
 async def test_humidity_change_dry_trigger_off_long_enough_3(
     hass: HomeAssistant, setup_comp_7
@@ -1185,6 +1189,9 @@ async def test_humidity_change_dry_trigger_off_long_enough_3(
     assert call.domain == HASS_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "humidifier.test")
 
 
 @pytest.fixture
@@ -1230,6 +1237,9 @@ async def test_humidity_change_humidifier_trigger_on_long_enough_2(
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "humidifier.test")
+
 
 async def test_humidity_change_humidifier_trigger_off_long_enough_2(
     hass: HomeAssistant, setup_comp_8
@@ -1249,6 +1259,9 @@ async def test_humidity_change_humidifier_trigger_off_long_enough_2(
     assert call.domain == HASS_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "humidifier.test")
 
 
 async def test_float_tolerance_values(hass: HomeAssistant) -> None:
@@ -1723,3 +1736,6 @@ async def test_sensor_stale_duration(
 
     # Not turning on by itself
     assert hass.states.get(humidifier_switch).state == STATE_OFF
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "humidifier.test")
