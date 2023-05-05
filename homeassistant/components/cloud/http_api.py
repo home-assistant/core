@@ -1,6 +1,7 @@
 """The HTTP api to control the cloud integration."""
 import asyncio
 from collections.abc import Mapping
+from contextlib import suppress
 import dataclasses
 from functools import wraps
 from http import HTTPStatus
@@ -15,20 +16,22 @@ from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import MAP_VOICE
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import assist_pipeline, conversation, websocket_api
 from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
 )
 from homeassistant.components.google_assistant import helpers as google_helpers
+from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
 
+from .alexa_config import entity_supported as entity_supported_by_alexa
 from .const import (
     DOMAIN,
     PREF_ALEXA_REPORT_STATE,
@@ -73,6 +76,7 @@ async def async_setup(hass):
     websocket_api.async_register_command(hass, google_assistant_list)
     websocket_api.async_register_command(hass, google_assistant_update)
 
+    websocket_api.async_register_command(hass, alexa_get)
     websocket_api.async_register_command(hass, alexa_list)
     websocket_api.async_register_command(hass, alexa_sync)
 
@@ -182,11 +186,32 @@ class CloudLoginView(HomeAssistantView):
     )
     async def post(self, request, data):
         """Handle login request."""
+
+        def cloud_assist_pipeline(hass: HomeAssistant) -> str | None:
+            """Return the ID of a cloud-enabled assist pipeline or None."""
+            for pipeline in assist_pipeline.async_get_pipelines(hass):
+                if (
+                    pipeline.conversation_engine == conversation.HOME_ASSISTANT_AGENT
+                    and pipeline.stt_engine == DOMAIN
+                    and pipeline.tts_engine == DOMAIN
+                ):
+                    return pipeline.id
+            return None
+
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
-        return self.json({"success": True})
+        # Make sure the pipeline store is loaded, needed because assist_pipeline
+        # is an after dependency of cloud
+        await assist_pipeline.async_setup_pipeline_store(hass)
+        new_cloud_pipeline_id: str | None = None
+        if (cloud_assist_pipeline(hass)) is None:
+            if cloud_pipeline := await assist_pipeline.async_create_default_pipeline(
+                hass, DOMAIN, DOMAIN
+            ):
+                new_cloud_pipeline_id = cloud_pipeline.id
+        return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
 class CloudLogoutView(HomeAssistantView):
@@ -543,15 +568,14 @@ async def google_assistant_get(
     """Get data for a single google assistant entity."""
     cloud = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
-    entity_registry = er.async_get(hass)
     entity_id: str = msg["entity_id"]
     state = hass.states.get(entity_id)
 
-    if not entity_registry.async_is_registered(entity_id) or not state:
+    if not state:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
-            f"{entity_id} unknown or not in the entity registry",
+            f"{entity_id} unknown",
         )
         return
 
@@ -564,10 +588,16 @@ async def google_assistant_get(
         )
         return
 
+    assistant_options: Mapping[str, Any] = {}
+    with suppress(HomeAssistantError, KeyError):
+        settings = exposed_entities.async_get_entity_settings(hass, entity_id)
+        assistant_options = settings[CLOUD_GOOGLE]
+
     result = {
         "entity_id": entity.entity_id,
         "traits": [trait.name for trait in entity.traits()],
         "might_2fa": entity.might_2fa_traits(),
+        PREF_DISABLE_2FA: assistant_options.get(PREF_DISABLE_2FA),
     }
 
     connection.send_result(msg["id"], result)
@@ -586,14 +616,11 @@ async def google_assistant_list(
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
-    entity_registry = er.async_get(hass)
     entities = google_helpers.async_get_entities(hass, gconf)
 
     result = []
 
     for entity in entities:
-        if not entity_registry.async_is_registered(entity.entity_id):
-            continue
         result.append(
             {
                 "entity_id": entity.entity_id,
@@ -622,28 +649,51 @@ async def google_assistant_update(
     msg: dict[str, Any],
 ) -> None:
     """Update google assistant entity config."""
-    entity_registry = er.async_get(hass)
     entity_id: str = msg["entity_id"]
 
-    if not (registry_entry := entity_registry.async_get(entity_id)):
+    assistant_options: Mapping[str, Any] = {}
+    with suppress(HomeAssistantError, KeyError):
+        settings = exposed_entities.async_get_entity_settings(hass, entity_id)
+        assistant_options = settings[CLOUD_GOOGLE]
+
+    disable_2fa = msg[PREF_DISABLE_2FA]
+    if assistant_options.get(PREF_DISABLE_2FA) == disable_2fa:
+        return
+
+    exposed_entities.async_set_assistant_option(
+        hass, CLOUD_GOOGLE, entity_id, PREF_DISABLE_2FA, disable_2fa
+    )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        "type": "cloud/alexa/entities/get",
+        "entity_id": str,
+    }
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def alexa_get(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get data for a single alexa entity."""
+    entity_id: str = msg["entity_id"]
+
+    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
+        hass, entity_id
+    ):
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_ALLOWED,
-            f"can't configure {entity_id}",
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            f"{entity_id} not supported by Alexa",
         )
         return
 
-    disable_2fa = msg[PREF_DISABLE_2FA]
-    assistant_options: Mapping[str, Any]
-    if (
-        assistant_options := registry_entry.options.get(CLOUD_GOOGLE, {})
-    ) and assistant_options.get(PREF_DISABLE_2FA) == disable_2fa:
-        return
-
-    assistant_options = assistant_options | {PREF_DISABLE_2FA: disable_2fa}
-    entity_registry.async_update_entity_options(
-        entity_id, CLOUD_GOOGLE, assistant_options
-    )
     connection.send_result(msg["id"])
 
 
@@ -660,14 +710,11 @@ async def alexa_list(
     """List all alexa entities."""
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
-    entity_registry = er.async_get(hass)
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
     result = []
 
     for entity in entities:
-        if not entity_registry.async_is_registered(entity.entity_id):
-            continue
         result.append(
             {
                 "entity_id": entity.entity_id,

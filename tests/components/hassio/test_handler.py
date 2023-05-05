@@ -7,7 +7,9 @@ import aiohttp
 from aiohttp import hdrs, web
 import pytest
 
+from homeassistant.components.hassio import handler
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -360,3 +362,54 @@ async def test_api_headers(
         assert received_request.headers[hdrs.CONTENT_TYPE] == "application/json"
     else:
         assert received_request.headers[hdrs.CONTENT_TYPE] == "application/octet-stream"
+
+
+async def test_api_get_yellow_settings(
+    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API ping."""
+    aioclient_mock.get(
+        "http://127.0.0.1/os/boards/yellow",
+        json={
+            "result": "ok",
+            "data": {"disk_led": True, "heartbeat_led": True, "power_led": True},
+        },
+    )
+
+    assert await handler.async_get_yellow_settings(hass) == {
+        "disk_led": True,
+        "heartbeat_led": True,
+        "power_led": True,
+    }
+    assert aioclient_mock.call_count == 1
+
+
+async def test_api_set_yellow_settings(
+    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API ping."""
+    aioclient_mock.post(
+        "http://127.0.0.1/os/boards/yellow",
+        json={"result": "ok", "data": {}},
+    )
+
+    assert (
+        await handler.async_set_yellow_settings(
+            hass, {"disk_led": True, "heartbeat_led": True, "power_led": True}
+        )
+        == {}
+    )
+    assert aioclient_mock.call_count == 1
+
+
+async def test_api_reboot_host(
+    hass: HomeAssistant, hassio_stubs, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with API ping."""
+    aioclient_mock.post(
+        "http://127.0.0.1/host/reboot",
+        json={"result": "ok", "data": {}},
+    )
+
+    assert await handler.async_reboot_host(hass) == {}
+    assert aioclient_mock.call_count == 1
