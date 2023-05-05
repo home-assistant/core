@@ -72,9 +72,7 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
         description: RitualsNumberEntityDescription,
     ) -> None:
         """Initialize the diffuser perfume amount number."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.diffuser.hublot}-{description.key}"
+        super().__init__(coordinator, description)
         self._attr_name = f"{coordinator.diffuser.name} {description.name}"
 
     @property
