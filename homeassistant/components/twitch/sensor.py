@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_CHANNELS, ICON, LOGGER, OAUTH_SCOPES
+from .const import CONF_CHANNELS, LOGGER, OAUTH_SCOPES
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -38,6 +38,8 @@ ATTR_FOLLOW = "following"
 ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
 ATTR_VIEWS = "views"
+
+ICON = "mdi:twitch"
 
 
 STATE_OFFLINE = "offline"
