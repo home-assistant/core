@@ -27,6 +27,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import (
+    _async_register_default_clientsession_shutdown,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
@@ -168,6 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ssl=False if not entry.data[CONF_VERIFY_SSL] else None,
     )
     session = aiohttp.ClientSession(connector=connector)
+    _async_register_default_clientsession_shutdown(hass, session)
 
     client = OctoprintClient(
         host=entry.data[CONF_HOST],
