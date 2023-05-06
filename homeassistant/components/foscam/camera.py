@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 
-from libpyfoscam import FoscamCamera
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -13,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FoscamCoordinator
 from .const import (
@@ -89,17 +89,14 @@ async def async_setup_entry(
         "async_perform_ptz_preset",
     )
 
-    session: FoscamCamera = hass.data[DOMAIN][config_entry.entry_id]["session"]
     coordinator: FoscamCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         "coordinator"
     ]
 
-    await coordinator.async_config_entry_first_refresh()
-
-    async_add_entities([HassFoscamCamera(session, coordinator, config_entry)])
+    async_add_entities([HassFoscamCamera(coordinator, config_entry)])
 
 
-class HassFoscamCamera(Camera):
+class HassFoscamCamera(CoordinatorEntity[FoscamCoordinator], Camera):
     """An implementation of a Foscam IP camera."""
 
     _attr_has_entity_name = True
@@ -111,7 +108,8 @@ class HassFoscamCamera(Camera):
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize a Foscam camera."""
-        super().__init__()
+        super().__init__(coordinator)
+        Camera.__init__(self)
 
         self._foscam_session = coordinator.session
         self._username = config_entry.data[CONF_USERNAME]

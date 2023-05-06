@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import async_migrate_entries
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .config_flow import DEFAULT_RTSP_PORT
 from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
@@ -35,8 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     coordinator = FoscamCoordinator(hass, session)
 
+    await coordinator.async_config_entry_first_refresh()
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "session": session,
         "coordinator": coordinator,
     }
 
@@ -103,7 +104,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class FoscamCoordinator(DataUpdateCoordinator):
     """My custom coordinator."""
 
-    def __init__(self, hass, session, update_interval=timedelta(seconds=30)):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        session: FoscamCamera,
+        update_interval=timedelta(seconds=30),
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
@@ -115,21 +121,23 @@ class FoscamCoordinator(DataUpdateCoordinator):
         )
         self._session = session
 
-    async def _async_update_data(self):
+    def get_session(self) -> FoscamCamera:
+        """Return the foscam camera session."""
+        return self._session
+
+    async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
-        try:
-            async with async_timeout.timeout(30):
-                data = {}
-                ret, dev_info = await self.hass.async_add_executor_job(
-                    self._session.get_dev_info
+
+        async with async_timeout.timeout(30):
+            data = {}
+            ret, dev_info = await self.hass.async_add_executor_job(
+                self._session.get_dev_info
+            )
+            if ret == 0:
+                data["dev_info"] = dev_info
+            data["product_info"] = (
+                await self.hass.async_add_executor_job(
+                    self._session.get_product_all_info
                 )
-                if ret == 0:
-                    data["dev_info"] = dev_info
-                data["product_info"] = (
-                    await self.hass.async_add_executor_job(
-                        self._session.get_product_all_info
-                    )
-                )[1]
-                return data
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            )[1]
+            return data
