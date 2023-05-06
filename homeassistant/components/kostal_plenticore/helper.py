@@ -407,10 +407,14 @@ class PlenticoreDataFormatter:
         return PlenticoreDataFormatter.EM_STATES.get(value)
 
 
-async def get_hostname_id(client: ApiClient) -> str:
+async def get_hostname_id(client: ApiClient) -> str | None:
     """Check for known existing hostname ids."""
-    all_settings = await client.get_settings()
-    for entry in all_settings["scb:network"]:
-        if entry.id in KNOWN_HOSTNAME_IDS:
-            return entry.id
-    raise ApiException("Hostname identifier not found in KNOWN_HOSTNAME_IDS")
+    try:
+        all_settings = await client.get_settings()
+        for entry in all_settings["scb:network"]:
+            if entry.id in KNOWN_HOSTNAME_IDS:
+                return entry.id
+    except (TypeError, ValueError):
+        return "Network:Hostname"
+
+    return None
