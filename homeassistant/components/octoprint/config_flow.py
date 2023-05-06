@@ -269,7 +269,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ssl=False if not verify_ssl else None,
         )
         session = aiohttp.ClientSession(connector=connector)
-        _async_register_default_clientsession_shutdown(hass, session)
+        _async_register_default_clientsession_shutdown(self.hass, session)
 
         return OctoprintClient(
             host=user_input[CONF_HOST],
