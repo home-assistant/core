@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import cast
 
+import aiohttp
 from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
 from pyoctoprintapi.exceptions import UnauthorizedException
 import voluptuous as vol
@@ -26,7 +27,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
@@ -163,8 +163,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = {**entry.data, CONF_VERIFY_SSL: True}
         hass.config_entries.async_update_entry(entry, data=data)
 
+    connector = aiohttp.TCPConnector(
+        force_close=True,
+        ssl=False if not entry.data[CONF_VERIFY_SSL] else None,
+    )
+    session = aiohttp.ClientSession(connector=connector)
+
     client = OctoprintClient(
         host=entry.data[CONF_HOST],
+        session=session,
         port=entry.data[CONF_PORT],
         ssl=entry.data[CONF_SSL],
         path=entry.data[CONF_PATH],

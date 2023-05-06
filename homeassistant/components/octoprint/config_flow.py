@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
@@ -259,8 +258,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _get_octoprint_client(self, user_input: dict) -> OctoprintClient:
         """Build an octoprint client from the user_input."""
+        import aiohttp
+
+        connector = aiohttp.TCPConnector(
+            force_close=True,
+            ssl=False if not user_input[CONF_VERIFY_SSL] else None,
+        )
+        session = aiohttp.ClientSession(connector=connector)
+
         return OctoprintClient(
             host=user_input[CONF_HOST],
+            session=session,
             port=user_input[CONF_PORT],
             ssl=user_input[CONF_SSL],
             path=user_input[CONF_PATH],
