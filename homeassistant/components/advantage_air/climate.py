@@ -230,7 +230,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             change[ADVANTAGE_AIR_MYTEMP_ENABLED] = preset_mode == ADVANTAGE_AIR_MYTEMP
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             change[ADVANTAGE_AIR_MYAUTO_ENABLED] = preset_mode == ADVANTAGE_AIR_MYAUTO
-        await self.async_update_ac({"info": change})
+        await self.async_update_ac(change)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to state changes if required."""
