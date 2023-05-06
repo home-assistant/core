@@ -208,9 +208,10 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     def get_number_of_zones(self) -> int:
         """Return the number of zones.
 
-        If the number of zones is not yet populated, return 0
+        If the number of zones is not yet populated, return 1 since
+        the device will have a least one zone.
         """
-        return len(self.device.color_zones) if self.device.color_zones else 0
+        return len(self.device.color_zones) if self.device.color_zones else 1
 
     @callback
     def _async_build_color_zones_update_requests(self) -> list[Callable]:
