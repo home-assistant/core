@@ -108,9 +108,9 @@ class ImapMessage:
 
         Will look for text/plain or use text/html if not found.
         """
-        message_text = None
-        message_html = None
-        message_untyped_text = None
+        message_text: str | None = None
+        message_html: str | None = None
+        message_untyped_text: str | None = None
 
         for part in self.email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
@@ -134,7 +134,7 @@ class ImapMessage:
         if message_untyped_text is not None:
             return message_untyped_text
 
-        return self.email_message.get_payload()
+        return str(self.email_message.get_payload())
 
 
 class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
@@ -231,7 +231,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                     _LOGGER.debug("Error while cleaning up imap connection")
             self.imap_client = None
 
-    async def shutdown(self, *_) -> None:
+    async def shutdown(self, *_: Any) -> None:
         """Close resources."""
         await self._cleanup(log_error=True)
 
@@ -336,7 +336,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
 
-    async def shutdown(self, *_) -> None:
+    async def shutdown(self, *_: Any) -> None:
         """Close resources."""
         if self._push_wait_task:
             self._push_wait_task.cancel()
