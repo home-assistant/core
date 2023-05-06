@@ -53,11 +53,9 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 # Set the name for this config entry.
-                user_input[CONF_NAME] = f"{DEFAULT_NAME} {region_identifier}"
+                name = f"{DEFAULT_NAME} {region_identifier}"
 
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+                return self.async_create_entry(title=name, data=user_input)
 
         return self.async_show_form(
             step_id="user", errors=errors, data_schema=CONFIG_SCHEMA
@@ -83,11 +81,8 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="invalid_identifier")
 
-        if CONF_NAME not in import_config:
-            import_config[
-                CONF_NAME
-            ] = f"{DEFAULT_NAME} {import_config[CONF_REGION_IDENTIFIER]}"
-
-        return self.async_create_entry(
-            title=import_config[CONF_NAME], data=import_config
+        name = import_config.get(
+            CONF_NAME, f"{DEFAULT_NAME} {import_config[CONF_REGION_IDENTIFIER]}"
         )
+
+        return self.async_create_entry(title=name, data=import_config)

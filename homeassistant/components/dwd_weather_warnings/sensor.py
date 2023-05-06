@@ -108,17 +108,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up entities from config entry."""
-    name: str = entry.data[CONF_NAME]
     api = WrappedDwDWWAPI(hass.data[DOMAIN][entry.entry_id])
 
-    # Add sensor for every monitored condition.
-    entities: list[DwdWeatherWarningsSensor] = []
-    for description in SENSOR_TYPES:
-        entities.append(
-            DwdWeatherWarningsSensor(api, name, entry.unique_id, description)
-        )
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        [
+            DwdWeatherWarningsSensor(api, entry.title, entry.unique_id, description)
+            for description in SENSOR_TYPES
+        ],
+        True,
+    )
 
 
 class DwdWeatherWarningsSensor(SensorEntity):

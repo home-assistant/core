@@ -66,7 +66,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "DWD Weather Warnings 807111000"
     assert result["data"] == {
-        CONF_NAME: "DWD Weather Warnings 807111000",
         CONF_REGION_IDENTIFIER: "807111000",
     }
 
@@ -126,7 +125,6 @@ async def test_import_flow_no_name(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "DWD Weather Warnings 807111000"
     assert result["data"] == {
-        CONF_NAME: "DWD Weather Warnings 807111000",
         CONF_REGION_IDENTIFIER: "807111000",
         CONF_MONITORED_CONDITIONS: [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR],
     }
@@ -150,7 +148,6 @@ async def test_import_flow_only_required(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "DWD Weather Warnings 807111000"
     assert result["data"] == {
-        CONF_NAME: "DWD Weather Warnings 807111000",
         CONF_REGION_IDENTIFIER: "807111000",
     }
 
