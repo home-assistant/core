@@ -226,14 +226,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                 get_color_zones_args: dict[str, Any],
             ) -> None:
                 def _wrapped_callback(
-                    response: Message, args: dict[str, Any] | None
+                    response: Message, args: dict[str, Any] | None, **kwargs: Any
                 ) -> None:
                     # We need to call resp_set_multizonemultizone to populate
                     # the color_zones attribute before calling the callback
                     device.resp_set_multizonemultizone(
                         response, get_color_zones_args | (args or {})
                     )
-                    callb(response, args)
+                    callb(response, args, **kwargs)
 
                 device.get_color_zones(**get_color_zones_args, callb=_wrapped_callback)
 
