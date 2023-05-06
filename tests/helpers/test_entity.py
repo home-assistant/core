@@ -551,9 +551,7 @@ async def test_async_parallel_updates_with_one_using_executor(
             """Test update."""
             locked.append(self.parallel_updates.locked())
 
-    ent_1 = SyncEntity("sensor.test_1")
-    ent_2 = SyncEntity("sensor.test_2")
-    ent_3 = SyncEntity("sensor.test_3")
+    entities = [SyncEntity(f"sensor.test_{i}") for i in range(3)]
 
     await asyncio.gather(
         *[
@@ -561,7 +559,7 @@ async def test_async_parallel_updates_with_one_using_executor(
                 ent.async_update_ha_state(True),
                 f"Entity schedule update ha state {ent.entity_id}",
             )
-            for ent in (ent_1, ent_2, ent_3)
+            for ent in entities
         ]
     )
 
