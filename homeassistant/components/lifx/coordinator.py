@@ -218,7 +218,11 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         """Build a color zones update request."""
         device = self.device
         return [
-            partial(device.get_color_zones, start_index=zone)
+            partial(
+                device.get_color_zones,
+                start_index=zone,
+                callb=device.resp_set_multizonemultizone,
+            )
             for zone in range(0, self.get_number_of_zones(), 8)
         ]
 
