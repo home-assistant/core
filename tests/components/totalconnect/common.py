@@ -157,7 +157,7 @@ ZONE_NORMAL = {
 ZONE_2 = {
     "ZoneID": "2",
     "ZoneDescription": "Fire",
-    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneStatus": ZoneStatus.LOW_BATTERY,
     "ZoneTypeId": ZoneType.FIRE_SMOKE,
     "PartitionId": "1",
     "CanBeBypassed": 1,
@@ -165,7 +165,7 @@ ZONE_2 = {
 ZONE_3 = {
     "ZoneID": "3",
     "ZoneDescription": "Gas",
-    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneStatus": ZoneStatus.TAMPER,
     "ZoneTypeId": ZoneType.CARBON_MONOXIDE,
     "PartitionId": "1",
     "CanBeBypassed": 1,

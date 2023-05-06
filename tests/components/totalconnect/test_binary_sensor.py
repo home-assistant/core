@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR,
     BinarySensorDeviceClass,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_ON
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -61,3 +61,26 @@ async def test_state_and_attributes(hass: HomeAssistant) -> None:
             state.attributes.get(ATTR_FRIENDLY_NAME) == ZONE_NORMAL["ZoneDescription"]
         )
         assert state.attributes.get("device_class") == BinarySensorDeviceClass.DOOR
+
+        state = hass.states.get(f"{ZONE_ENTITY_ID}_low_battery")
+        assert state.state == STATE_OFF
+        state = hass.states.get(f"{ZONE_ENTITY_ID}_tamper")
+        assert state.state == STATE_OFF
+
+        # Zone 2 is fire with low battery
+        state = hass.states.get("binary_sensor.fire")
+        assert state.state == STATE_OFF
+        assert state.attributes.get("device_class") == BinarySensorDeviceClass.SMOKE
+        state = hass.states.get("binary_sensor.fire_low_battery")
+        assert state.state == STATE_ON
+        state = hass.states.get("binary_sensor.fire_tamper")
+        assert state.state == STATE_OFF
+
+        # Zone 3 is gas with tamper
+        state = hass.states.get("binary_sensor.gas")
+        assert state.state == STATE_OFF
+        assert state.attributes.get("device_class") == BinarySensorDeviceClass.GAS
+        state = hass.states.get("binary_sensor.gas_low_battery")
+        assert state.state == STATE_OFF
+        state = hass.states.get("binary_sensor.gas_tamper")
+        assert state.state == STATE_ON
