@@ -258,9 +258,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _get_octoprint_client(self, user_input: dict) -> OctoprintClient:
         """Build an octoprint client from the user_input."""
+        verify_ssl = user_input.get(CONF_VERIFY_SSL, True)
+
         connector = aiohttp.TCPConnector(
             force_close=True,
-            ssl=False if not user_input[CONF_VERIFY_SSL] else None,
+            ssl=False if not verify_ssl else None,
         )
         session = aiohttp.ClientSession(connector=connector)
 
