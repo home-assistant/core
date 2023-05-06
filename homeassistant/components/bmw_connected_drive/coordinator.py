@@ -78,9 +78,6 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 self.account.refresh_token,
             )
 
-        if self.last_update_success is False:
-            _LOGGER.info("Reconnected to BMW API")
-
     def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
         """Update or delete the refresh_token in the Config Entry."""
         data = {
