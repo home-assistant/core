@@ -38,7 +38,7 @@ async def async_setup_entry(
     requester = ObihaiConnection(host, username, password)
 
     await hass.async_add_executor_job(requester.update)
-    buttons = [ObihaiButton(requester.pyobihai, requester.serial)]
+    buttons = [ObihaiButton(requester.pyobihai, requester.get_serial())]
     async_add_entities(buttons, update_before_add=True)
 
 
