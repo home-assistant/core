@@ -57,6 +57,8 @@ from .util import (
 LIGHT_UPDATE_INTERVAL = 10
 REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
+ZONES_PER_COLOR_UPDATE_REQUEST = 8
+
 RSSI_DBM_FW = AwesomeVersion("2.77")
 
 
@@ -219,13 +221,16 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         """Build a color zones update request."""
         device = self.device
         calls: list[Callable] = []
-        zones_per_request = 8
-        for zone in range(0, self.get_number_of_zones(), zones_per_request):
+        for zone in range(
+            0, self.get_number_of_zones(), ZONES_PER_COLOR_UPDATE_REQUEST
+        ):
 
             def _wrap_get_color_zones(
                 callb: Callable[[Message, dict[str, Any] | None], None],
                 get_color_zones_args: dict[str, Any],
             ) -> None:
+                """Capture the callback and make sure resp_set_multizonemultizone is called before."""
+
                 def _wrapped_callback(
                     response: Message, args: dict[str, Any] | None, **kwargs: Any
                 ) -> None:
@@ -234,6 +239,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                     device.resp_set_multizonemultizone(
                         response, get_color_zones_args | (args or {})
                     )
+                    # Now call the original callback
                     callb(response, args, **kwargs)
 
                 device.get_color_zones(**get_color_zones_args, callb=_wrapped_callback)
@@ -243,7 +249,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                     _wrap_get_color_zones,
                     get_color_zones_args={
                         "start_index": zone,
-                        "end_index": zone + zones_per_request - 1,
+                        "end_index": zone + ZONES_PER_COLOR_UPDATE_REQUEST - 1,
                     },
                 )
             )
