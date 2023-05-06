@@ -11,6 +11,7 @@ from typing import Any, cast
 
 from aiolifx.aiolifx import (
     Light,
+    Message,
     MultiZoneDirection,
     MultiZoneEffectType,
     TileEffectType,
@@ -217,14 +218,36 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     def _async_build_color_zones_update_requests(self) -> list[Callable]:
         """Build a color zones update request."""
         device = self.device
-        return [
-            partial(
-                device.get_color_zones,
-                start_index=zone,
-                callb=device.resp_set_multizonemultizone,
+        calls: list[Callable] = []
+        for zone in range(0, self.get_number_of_zones(), 8):
+
+            def _wrap_get_color_zones(
+                callb: Callable[[Message, dict[str, Any] | None], None],
+                get_color_zones_args: dict[str, Any],
+            ) -> None:
+                def _wrapped_callback(
+                    response: Message, args: dict[str, Any] | None
+                ) -> None:
+                    # We need to call resp_set_multizonemultizone to populate
+                    # the color_zones attribute before calling the callback
+                    device.resp_set_multizonemultizone(
+                        response, get_color_zones_args | (args or {})
+                    )
+                    callb(response, args)
+
+                device.get_color_zones(**get_color_zones_args, callb=_wrapped_callback)
+
+            calls.append(
+                partial(
+                    _wrap_get_color_zones,
+                    get_color_zones_args={
+                        "start_index": zone,
+                        "end_index": zone + 7,
+                    },
+                )
             )
-            for zone in range(0, self.get_number_of_zones(), 8)
-        ]
+
+        return calls
 
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
