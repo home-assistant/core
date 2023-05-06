@@ -223,7 +223,7 @@ aionanoleaf==0.2.1
 aionotify==0.2.0
 
 # homeassistant.components.notion
-aionotion==2023.05.0
+aionotion==2023.05.1
 
 # homeassistant.components.oncue
 aiooncue==0.3.4
@@ -339,7 +339,7 @@ androidtvremote2==0.0.8
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anova
-anova-wifi==0.9.0
+anova-wifi==0.10.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -1934,7 +1934,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.25
+pysensibo==1.0.28
 
 # homeassistant.components.serial
 # homeassistant.components.zha
