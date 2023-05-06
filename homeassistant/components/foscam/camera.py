@@ -8,12 +8,13 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import FoscamCoordinator
 from .const import (
     CONF_RTSP_PORT,
     CONF_STREAM,
@@ -88,15 +89,14 @@ async def async_setup_entry(
         "async_perform_ptz_preset",
     )
 
-    camera = FoscamCamera(
-        config_entry.data[CONF_HOST],
-        config_entry.data[CONF_PORT],
-        config_entry.data[CONF_USERNAME],
-        config_entry.data[CONF_PASSWORD],
-        verbose=False,
-    )
+    session: FoscamCamera = hass.data[DOMAIN][config_entry.entry_id]["session"]
+    coordinator: FoscamCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        "coordinator"
+    ]
 
-    async_add_entities([HassFoscamCamera(camera, config_entry)])
+    await coordinator.async_config_entry_first_refresh()
+
+    async_add_entities([HassFoscamCamera(session, coordinator, config_entry)])
 
 
 class HassFoscamCamera(Camera):
@@ -105,11 +105,15 @@ class HassFoscamCamera(Camera):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, camera: FoscamCamera, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        coordinator: FoscamCoordinator,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize a Foscam camera."""
         super().__init__()
 
-        self._foscam_session = camera
+        self._foscam_session = coordinator.session
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._stream = config_entry.data[CONF_STREAM]
@@ -121,6 +125,8 @@ class HassFoscamCamera(Camera):
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="Foscam",
         )
+
+        self._name = config_entry.title
 
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""
