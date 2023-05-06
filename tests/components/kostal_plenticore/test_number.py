@@ -62,7 +62,20 @@ def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
                     "id": "Battery:MinHomeComsumption",
                 }
             ),
-        ]
+        ],
+        "scb:network": [
+            SettingsData(
+                {
+                    "id": "Network:Hostname",
+                    "unit": None,
+                    "type": "string",
+                    "min": "1",
+                    "max": "78",
+                    "default": None,
+                    "access": "readwrite",
+                }
+            ),
+        ],
     }
 
     # this values are always retrieved by the integration on startup
@@ -75,7 +88,7 @@ def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
                 "Properties:VersionIOC": "01.45",
                 "Properties:VersionMC": " 01.46",
             },
-            "scb:network": {"Hostname": "scb"},
+            "scb:network": {"Network:Hostname": "scb"},
         }
     ]
 
