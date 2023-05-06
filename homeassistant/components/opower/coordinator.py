@@ -174,16 +174,22 @@ class OpowerCoordinator(DataUpdateCoordinator):
         - day resolution for past 3 years
         - hour resolution for past 2 months, only for electricity, not gas
         """
+        cost_reads = []
         start = None
         end = datetime.now() - timedelta(days=3 * 365)
-        cost_reads = await self.api.async_get_cost_reads(
-            account, AggregateType.BILL, start, end
-        )
+        try:
+            cost_reads += await self.api.async_get_cost_reads(
+                account, AggregateType.BILL, start, end
+            )
+        except ClientResponseError as err:
+            # Ignore server errors that could happen if end is before account activation
+            if err.status != 500:
+                raise err
         start = end if not cost_reads else cost_reads[-1].end_time
         end = (
-            datetime.now()
-            if account.meter_type == MeterType.GAS
-            else datetime.now() - timedelta(days=2 * 30)
+            datetime.now() - timedelta(days=2 * 30)
+            if account.meter_type == MeterType.ELEC
+            else datetime.now()
         )
         cost_reads += await self.api.async_get_cost_reads(
             account, AggregateType.DAY, start, end
@@ -197,7 +203,7 @@ class OpowerCoordinator(DataUpdateCoordinator):
         return cost_reads
 
     async def _async_get_recent_cost_reads(self, account: Account) -> list[CostRead]:
-        """Get cost reads within the past 30 days to allow corrections in date from utilities.
+        """Get cost reads within the past 30 days to allow corrections in data from utilities.
 
         Hourly for electricity, daily for gas.
         """
