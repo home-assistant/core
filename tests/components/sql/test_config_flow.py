@@ -224,6 +224,7 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             "query": "SELECT 5 as size",
             "column": "size",
             "unit_of_measurement": "MiB",
+            "value_template": "{{ value }}",
         },
     )
 
@@ -233,6 +234,7 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         "query": "SELECT 5 as size",
         "column": "size",
         "unit_of_measurement": "MiB",
+        "value_template": "{{ value }}",
     }
 
 
