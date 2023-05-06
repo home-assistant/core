@@ -46,7 +46,7 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
     assert panel_power.unique_id == f"{LOCATION_ID}_power"
 
 
-async def test_attributes(hass: HomeAssistant) -> None:
+async def test_state_and_attributes(hass: HomeAssistant) -> None:
     """Test the binary sensor attributes are correct."""
 
     with patch(

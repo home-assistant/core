@@ -26,7 +26,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up TotalConnect device sensors based on a config entry."""
-    sensors: Any = []
+    sensors: list = []
 
     client_locations = hass.data[DOMAIN][entry.entry_id].client.locations
 
@@ -107,7 +107,7 @@ class TotalConnectLowBatteryBinarySensor(TotalConnectZoneBinarySensor):
         key=LOW_BATTERY,
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=f" {LOW_BATTERY}",
+        name=" low battery",
     )
 
     def update(self):
@@ -151,7 +151,7 @@ class TotalConnectAlarmLowBatteryBinarySensor(TotalConnectAlarmBinarySensor):
         key=LOW_BATTERY,
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name=f" {LOW_BATTERY}",
+        name=" low battery",
     )
 
     def update(self):
