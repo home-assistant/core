@@ -4,12 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from roborock.containers import (
-    HomeDataDevice,
-    HomeDataProduct,
-    NetworkInfo,
-    RoborockDeviceInfo,
-)
+from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.exceptions import RoborockException
 from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import DeviceProp
@@ -43,8 +38,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             product_info,
             DeviceProp(),
         )
-        device_info = RoborockDeviceInfo(device, product_info.model)
-        self.api = RoborockLocalClient(device_info, device_networking.ip)
+        device_info = DeviceData(device, product_info.model, device_networking.ip)
+        self.api = RoborockLocalClient(device_info)
 
     async def release(self) -> None:
         """Disconnect from API."""

@@ -7,8 +7,7 @@ import logging
 
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
-from roborock.containers import HomeDataDevice, RoborockDeviceInfo, UserData
-from roborock.exceptions import RoborockException
+from roborock.containers import DeviceData, HomeDataDevice, UserData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -39,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create a mqtt_client, which is needed to get the networking information of the device for local connection and in the future, get the map.
     mqtt_clients = [
         RoborockMqttClient(
-            user_data, RoborockDeviceInfo(device, product_info[device.product_id].model)
+            user_data, DeviceData(device, product_info[device.product_id].model)
         )
         for device in device_map.values()
     ]
