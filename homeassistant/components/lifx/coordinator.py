@@ -232,15 +232,15 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                 """Capture the callback and make sure resp_set_multizonemultizone is called before."""
 
                 def _wrapped_callback(
-                    response: Message, args: dict[str, Any] | None, **kwargs: Any
+                    bulb: Light,
+                    response: Message,
+                    **kwargs: Any,
                 ) -> None:
                     # We need to call resp_set_multizonemultizone to populate
                     # the color_zones attribute before calling the callback
-                    device.resp_set_multizonemultizone(
-                        response, get_color_zones_args | (args or {})
-                    )
+                    device.resp_set_multizonemultizone(response)
                     # Now call the original callback
-                    callb(response, args, **kwargs)
+                    callb(bulb, response, **kwargs)
 
                 device.get_color_zones(**get_color_zones_args, callb=_wrapped_callback)
 

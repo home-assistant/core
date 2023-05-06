@@ -1765,8 +1765,12 @@ async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
     entity_id = "light.my_bulb"
     # Make sure we at least try to fetch the first zone
     # to ensure we populate the zones from the 503 response
-    assert len(bulb.get_color_zones.calls) == 1
+    assert len(bulb.get_color_zones.calls) == 3
+    # Once to populate the number of zones
     assert bulb.get_color_zones.calls[0][1]["start_index"] == 0
+    # Again once we know the number of zones
+    assert bulb.get_color_zones.calls[1][1]["start_index"] == 0
+    assert bulb.get_color_zones.calls[2][1]["start_index"] == 8
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
