@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN
 
@@ -59,16 +59,9 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except MyBMWAuthError as err:
             # Clear refresh token and trigger reauth
             self._update_config_entry_refresh_token(None)
-            raise ConfigEntryAuthFailed(str(err)) from err
-
+            raise ConfigEntryAuthFailed(err) from err
         except (MyBMWAPIError, RequestError) as err:
-            if self.last_update_success is True:
-                _LOGGER.warning(
-                    "Error communicating with BMW API (%s): %s",
-                    type(err).__name__,
-                    err,
-                )
-                self.last_update_success = False
+            raise UpdateFailed(err) from err
 
         if self.account.refresh_token != old_refresh_token:
             self._update_config_entry_refresh_token(self.account.refresh_token)
