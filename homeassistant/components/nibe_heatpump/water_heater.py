@@ -77,7 +77,8 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
         self._attr_current_operation = None
         self._attr_target_temperature_high = None
         self._attr_target_temperature_low = None
-        self._attr_operation_list = [STATE_HEAT_PUMP]
+        self._attr_operation_list = []
+        self._operation_mode_to_lux: dict[str, str] = {}
 
         def _get(address: int) -> Coil:
             return coordinator.heatpump.get_coil_by_address(address)
@@ -97,15 +98,22 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
 
         self._coil_hot_water_comfort_mode = _get(desc.hot_water_comfort_mode)
 
-        if self._coil_temporary_lux:
+        def _add_lux_mode(temporary_lux: str, operation_mode: str) -> None:
+            assert self._attr_operation_list is not None
             if (
-                self._coil_temporary_lux.reverse_mappings
-                and VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE
-                in self._coil_temporary_lux.reverse_mappings
+                not self._coil_temporary_lux
+                or not self._coil_temporary_lux.reverse_mappings
             ):
-                self._attr_operation_list.append(STATE_HIGH_DEMAND)
-            else:
-                LOGGER.warning("Skipping temporary lux since no mappings exist")
+                return
+
+            if temporary_lux not in self._coil_temporary_lux.reverse_mappings:
+                return
+
+            self._attr_operation_list.append(operation_mode)
+            self._operation_mode_to_lux[operation_mode] = temporary_lux
+
+        _add_lux_mode(VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE, STATE_HIGH_DEMAND)
+        _add_lux_mode(VALUES_TEMPORARY_LUX_INACTIVE, STATE_HEAT_PUMP)
 
         self._attr_temperature_unit = self._coil_current.unit
 
@@ -147,7 +155,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
         else:
             self._attr_current_operation = STATE_HEAT_PUMP
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
@@ -170,13 +178,8 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
         if not self._coil_temporary_lux:
             raise HomeAssistantError("Not supported")
 
-        if operation_mode == STATE_HEAT_PUMP:
-            await self.coordinator.async_write_coil(
-                self._coil_temporary_lux, VALUES_TEMPORARY_LUX_INACTIVE
-            )
-        elif operation_mode == STATE_HIGH_DEMAND:
-            await self.coordinator.async_write_coil(
-                self._coil_temporary_lux, VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE
-            )
-        else:
+        lux = self._operation_mode_to_lux.get(operation_mode)
+        if not lux:
             raise ValueError(f"Unsupported operation mode {operation_mode}")
+
+        await self.coordinator.async_write_coil(self._coil_temporary_lux, lux)
