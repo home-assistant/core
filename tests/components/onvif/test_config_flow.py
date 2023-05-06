@@ -5,7 +5,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.onvif import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DHCP
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -710,6 +710,14 @@ async def test_discovered_by_dhcp_does_not_update_if_no_matching_entry(
     assert result["reason"] == "no_devices_found"
 
 
+def _get_schema_default(schema, key_name):
+    """Iterate schema to find a key."""
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")
+
+
 async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test reauthenticate."""
     entry, _, _ = await setup_onvif_integration(hass)
@@ -721,6 +729,10 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert (
+        _get_schema_default(result["data_schema"].schema, CONF_USERNAME)
+        == entry.data[CONF_USERNAME]
+    )
 
     with patch(
         "homeassistant.components.onvif.config_flow.get_device"

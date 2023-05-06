@@ -142,10 +142,14 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 hass.async_create_task(hass.config_entries.async_reload(entry_id))
                 return self.async_abort(reason="reauth_successful")
 
+        username = (user_input or {}).get(CONF_USERNAME) or entry.data[CONF_USERNAME]
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+                {
+                    vol.Required(CONF_USERNAME, default=username): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
             ),
             errors=errors,
             description_placeholders=description_placeholders,
