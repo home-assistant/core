@@ -25,9 +25,6 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
-)
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
@@ -94,6 +91,15 @@ _COLOR_MODE_MAPPING = {
         | LightColorCapability.WHITE
     ],
 }
+
+
+def _mired_to_kelvin(mired_temperature: float) -> int:
+    """Convert absolute mired shift to degrees kelvin.
+
+    This function rounds the converted value instead of flooring the value as
+    is done in homeassistant.util.color.color_temperature_mired_to_kelvin().
+    """
+    return round(1000000 / mired_temperature)
 
 
 def _color_mode_to_ha(mode: int) -> str:
@@ -355,7 +361,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     @property
     def color_temp_kelvin(self) -> int:
         """Return the CT color value in Kelvin."""
-        return mired_to_kelvin(self._state.color_temperature)
+        return _mired_to_kelvin(self._state.color_temperature)
 
     @property
     @esphome_state_property
@@ -410,9 +416,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp that this light supports, in Kelvin."""
-        return mired_to_kelvin(self._static_info.max_mireds)
+        return _mired_to_kelvin(self._static_info.max_mireds)
 
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp that this light supports, in Kelvin."""
-        return mired_to_kelvin(self._static_info.min_mireds)
+        return _mired_to_kelvin(self._static_info.min_mireds)
