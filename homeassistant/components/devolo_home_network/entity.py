@@ -54,6 +54,7 @@ class DevoloEntity(Entity):
             name=entry.title,
             sw_version=device.firmware_version,
         )
+        self._attr_translation_key = self.entity_description.key
         self._attr_unique_id = f"{device.serial_number}_{self.entity_description.key}"
 
 

@@ -41,26 +41,22 @@ BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {
         key=IDENTIFY,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:led-on",
-        name="Identify device with a blinking LED",
         press_func=lambda device: device.plcnet.async_identify_device_start(),  # type: ignore[union-attr]
     ),
     PAIRING: DevoloButtonEntityDescription(
         key=PAIRING,
         icon="mdi:plus-network-outline",
-        name="Start PLC pairing",
         press_func=lambda device: device.plcnet.async_pair_device(),  # type: ignore[union-attr]
     ),
     RESTART: DevoloButtonEntityDescription(
         key=RESTART,
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
-        name="Restart device",
         press_func=lambda device: device.device.async_restart(),  # type: ignore[union-attr]
     ),
     START_WPS: DevoloButtonEntityDescription(
         key=START_WPS,
         icon="mdi:wifi-plus",
-        name="Start WPS",
         press_func=lambda device: device.device.async_start_wps(),  # type: ignore[union-attr]
     ),
 }
