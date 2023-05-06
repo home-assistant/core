@@ -100,14 +100,14 @@ def assert_result_info(
     assert info.filter("invalid_entity_name.somewhere") == all_states
     if entities is not None:
         assert info.entities == frozenset(entities)
-        assert all([info.filter(entity) for entity in entities])
+        assert all(info.filter(entity) for entity in entities)
         if not all_states:
             assert not info.filter("invalid_entity_name.somewhere")
     else:
         assert not info.entities
     if domains is not None:
         assert info.domains == frozenset(domains)
-        assert all([info.filter(domain + ".entity") for domain in domains])
+        assert all(info.filter(domain + ".entity") for domain in domains)
     else:
         assert not hasattr(info, "_domains")
 
@@ -1202,32 +1202,28 @@ def test_min_max_attribute(hass: HomeAssistant, attribute) -> None:
     )
     assert (
         template.Template(
-            "{{ (state_attr('test.object', 'objects') | min(attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (state_attr('test.object', 'objects') | min(attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 1
     )
     assert (
         template.Template(
-            "{{ (min(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (min(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 1
     )
     assert (
         template.Template(
-            "{{ (state_attr('test.object', 'objects') | max(attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (state_attr('test.object', 'objects') | max(attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 3
     )
     assert (
         template.Template(
-            "{{ (max(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (max(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 3
@@ -1645,7 +1641,7 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "available"
 
 
-def test_has_value(hass):
+def test_has_value(hass: HomeAssistant) -> None:
     """Test has_value method."""
     hass.states.async_set("test.value1", 1)
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
@@ -2323,8 +2319,7 @@ def test_distance_function_with_2_coords(hass: HomeAssistant) -> None:
     _set_up_units(hass)
     assert (
         template.Template(
-            '{{ distance("32.87336", "-117.22943", %s, %s) | round }}'
-            % (hass.config.latitude, hass.config.longitude),
+            f'{{{{ distance("32.87336", "-117.22943", {hass.config.latitude}, {hass.config.longitude}) | round }}}}',
             hass,
         ).async_render()
         == 187
@@ -3352,16 +3347,14 @@ def test_closest_function_to_coord(hass: HomeAssistant) -> None:
     )
 
     tpl = template.Template(
-        '{{ closest("%s", %s, states.test_domain).entity_id }}'
-        % (hass.config.latitude + 0.3, hass.config.longitude + 0.3),
+        f'{{{{ closest("{hass.config.latitude + 0.3}", {hass.config.longitude + 0.3}, states.test_domain).entity_id }}}}',
         hass,
     )
 
     assert tpl.async_render() == "test_domain.closest_zone"
 
     tpl = template.Template(
-        '{{ (states.test_domain | closest("%s", %s)).entity_id }}'
-        % (hass.config.latitude + 0.3, hass.config.longitude + 0.3),
+        f'{{{{ (states.test_domain | closest("{hass.config.latitude + 0.3}", {hass.config.longitude + 0.3})).entity_id }}}}',
         hass,
     )
 

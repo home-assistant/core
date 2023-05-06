@@ -20,6 +20,7 @@ async def test_diagnostics(
     await setup.async_setup_component(
         hass, switch.DOMAIN, {"switch": [{"platform": "demo"}]}
     )
+    await async_setup_component(hass, "homeassistant", {})
 
     await async_setup_component(
         hass,

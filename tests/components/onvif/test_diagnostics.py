@@ -55,7 +55,7 @@ async def test_diagnostics(
             "capabilities": {
                 "snapshot": False,
                 "events": False,
-                "ptz": False,
+                "ptz": True,
                 "imaging": True,
             },
             "profiles": [
@@ -71,5 +71,15 @@ async def test_diagnostics(
                     "video_source_token": None,
                 }
             ],
+        },
+        "events": {
+            "pullpoint_manager_state": {
+                "__type": "<enum " "'PullPointManagerState'>",
+                "repr": "<PullPointManagerState.PAUSED: " "2>",
+            },
+            "webhook_manager_state": {
+                "__type": "<enum 'WebHookManagerState'>",
+                "repr": "<WebHookManagerState.STARTED: " "1>",
+            },
         },
     }
