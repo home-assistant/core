@@ -292,7 +292,12 @@ class OnkyoDevice(MediaPlayerEntity):
 
     def update(self) -> None:
         """Get the latest state from the device."""
-        status = self.command("system-power query")
+        
+        try:
+            status = self.command("system-power query")
+        except (ValueError, OSError, AttributeError, AssertionError):
+            _LOGGER.exception("Couldn't fetch the latest state from the device: %s", self.name)
+            return
 
         if not status:
             return
@@ -466,7 +471,12 @@ class OnkyoDeviceZone(OnkyoDevice):
 
     def update(self) -> None:
         """Get the latest state from the device."""
-        status = self.command(f"zone{self._zone}.power=query")
+
+        try:
+            status = self.command(f"zone{self._zone}.power=query")
+        except (ValueError, OSError, AttributeError, AssertionError):
+            _LOGGER.exception("Couldn't fetch the latest state from the device: %s", self.name)
+            return
 
         if not status:
             return
