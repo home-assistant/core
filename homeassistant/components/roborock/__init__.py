@@ -8,6 +8,7 @@ import logging
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import HomeDataDevice, RoborockDeviceInfo, UserData
+from roborock.exceptions import RoborockException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME

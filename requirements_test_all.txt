@@ -146,7 +146,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.7.2
+aioesphomeapi==13.7.3
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -204,7 +204,7 @@ aiomusiccast==0.14.8
 aionanoleaf==0.2.1
 
 # homeassistant.components.notion
-aionotion==2023.05.0
+aionotion==2023.05.1
 
 # homeassistant.components.oncue
 aiooncue==0.3.4
@@ -308,10 +308,10 @@ ambiclimate==0.2.1
 androidtv[async]==0.0.70
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.7
+androidtvremote2==0.0.8
 
 # homeassistant.components.anova
-anova-wifi==0.9.0
+anova-wifi==0.10.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -364,7 +364,7 @@ beautifulsoup4==4.11.1
 bellows==0.35.2
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.13.2
+bimmer_connected==0.13.3
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.0.2
@@ -506,7 +506,7 @@ easyenergy==0.3.0
 elgato==4.0.1
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.1
+elkm1-lib==2.2.2
 
 # homeassistant.components.elmax
 elmax_api==0.0.4
@@ -679,7 +679,7 @@ hass-nabucasa==0.66.2
 hassil==1.0.6
 
 # homeassistant.components.tasmota
-hatasmota==0.6.4
+hatasmota==0.6.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -700,7 +700,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230503.2
+home-assistant-frontend==20230503.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.4.26
@@ -945,7 +945,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==2.0.0
+onvif-zeep-async==2.1.1
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1243,6 +1243,9 @@ pyiss==1.0.1
 # homeassistant.components.isy994
 pyisy==3.1.14
 
+# homeassistant.components.jvc_projector
+pyjvcprojector==1.0.6
+
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
 
@@ -1414,7 +1417,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.25
+pysensibo==1.0.28
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1548,7 +1551,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.2.3
+pytrafikverket==0.3.1
 
 # homeassistant.components.usb
 pyudev==0.23.2
