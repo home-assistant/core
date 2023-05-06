@@ -93,7 +93,9 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_min_temp = 16
     _attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, instance: AdvantageAirData, ac_key: str, config_entry: ConfigEntry
+    ) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
         self._config_entry = config_entry
@@ -228,7 +230,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             change[ADVANTAGE_AIR_MYTEMP_ENABLED] = preset_mode == ADVANTAGE_AIR_MYTEMP
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             change[ADVANTAGE_AIR_MYAUTO_ENABLED] = preset_mode == ADVANTAGE_AIR_MYAUTO
-        await self.aircon({self.ac_key: {"info": change}})
+        await self.async_update_ac({"info": change})
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to state changes if required."""
