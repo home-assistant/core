@@ -219,7 +219,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         """Build a color zones update request."""
         device = self.device
         calls: list[Callable] = []
-        for zone in range(0, self.get_number_of_zones(), 8):
+        zones_per_request = 8
+        for zone in range(0, self.get_number_of_zones(), zones_per_request):
 
             def _wrap_get_color_zones(
                 callb: Callable[[Message, dict[str, Any] | None], None],
@@ -242,7 +243,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                     _wrap_get_color_zones,
                     get_color_zones_args={
                         "start_index": zone,
-                        "end_index": zone + 7,
+                        "end_index": zone + zones_per_request - 1,
                     },
                 )
             )
