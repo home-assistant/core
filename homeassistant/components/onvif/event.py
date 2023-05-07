@@ -19,13 +19,7 @@ from zeep.exceptions import Fault, ValidationError, XMLParseError
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    CoreState,
-    HassJob,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
@@ -297,7 +291,7 @@ class PullPointManager:
     async def _async_start_pullpoint(self) -> bool:
         """Start pullpoint subscription."""
         try:
-            started = await self._async_create_pullpoint_subscription()
+            await self._async_create_pullpoint_subscription()
         except CREATE_ERRORS as err:
             LOGGER.debug(
                 "%s: Device does not support PullPoint service or has too many subscriptions: %s",
@@ -305,9 +299,8 @@ class PullPointManager:
                 stringify_onvif_error(err),
             )
             return False
-        if started:
-            self.async_schedule_pull_messages()
-        return started
+        self.async_schedule_pull_messages()
+        return True
 
     async def _async_cancel_and_unsubscribe(self) -> None:
         """Cancel and unsubscribe from PullPoint."""
@@ -317,13 +310,12 @@ class PullPointManager:
         await self._async_unsubscribe_pullpoint()
 
     @retry_connection_error(SUBSCRIPTION_ATTEMPTS)
-    async def _async_create_pullpoint_subscription(self) -> bool:
+    async def _async_create_pullpoint_subscription(self) -> None:
         """Create pullpoint subscription."""
         self._pullpoint_manager = await self._device.create_pullpoint_manager(
             SUBSCRIPTION_TIME, self._event_manager.async_mark_events_stale
         )
         self._pullpoint_service = self._pullpoint_manager.get_service()
-        return True
 
     async def _async_unsubscribe_pullpoint(self) -> None:
         """Unsubscribe the pullpoint subscription."""
@@ -357,7 +349,7 @@ class PullPointManager:
         next_pull_delay = None
         response = None
         try:
-            if self._hass.state == CoreState.running:
+            if self._hass.is_running:
                 response = await self._pullpoint_service.PullMessages(
                     {
                         "MessageLimit": PULLPOINT_MESSAGE_LIMIT,
