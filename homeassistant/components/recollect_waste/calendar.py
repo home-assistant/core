@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime
+from typing import Any
 
 from aiorecollect.client import PickupEvent
 
@@ -9,6 +10,7 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -41,7 +43,7 @@ async def async_setup_entry(
         entry.entry_id
     ]
 
-    async_add_entities([ReCollectWasteCalendar(coordinator, entry)])
+    async_add_entities([ReCollectWasteCalendar(hass, coordinator, entry)])
 
 
 class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
@@ -51,11 +53,30 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: DataUpdateCoordinator[list[PickupEvent]],
         entry: ConfigEntry,
     ) -> None:
         """Initialize the ReCollect Waste entity."""
         super().__init__(coordinator, entry)
+
+        @callback
+        def update_state(*_: Any) -> None:
+            """Update the entity state.
+
+            This exists to force update the calendar state regularly, regardless of when
+            the coordinator last received data. We do this to ensure the entity will
+            update near the start of a pickup event.
+            """
+            self.async_write_ha_state()
+
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass,
+                update_state,
+                datetime.timedelta(minutes=1),
+            )
+        )
 
         self._attr_unique_id = self._identifier
         self._event: CalendarEvent | None = None
