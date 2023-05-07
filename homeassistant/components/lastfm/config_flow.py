@@ -58,6 +58,22 @@ def validate_lastfm_user(user: User) -> dict[str, str]:
     return errors
 
 
+def validate_lastfm_users(
+    api_key: str, usernames: list[str]
+) -> tuple[list[str], dict[str, str]]:
+    """Validate list of users. Return tuple of valid users and errors."""
+    valid_users = []
+    errors = {}
+    for username in usernames:
+        lastfm_user = get_lastfm_user(api_key, username)
+        lastfm_errors = validate_lastfm_user(lastfm_user)
+        if lastfm_errors:
+            errors = lastfm_errors
+        else:
+            valid_users.append(username)
+    return valid_users, errors
+
+
 class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
@@ -95,17 +111,12 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Form to select other users and friends."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            valid_users = []
-            for username in user_input[CONF_USERS]:
-                lastfm_user = get_lastfm_user(self.data[CONF_API_KEY], username)
-                lastfm_errors = validate_lastfm_user(lastfm_user)
-                if lastfm_errors:
-                    errors = lastfm_errors
-                else:
-                    valid_users.append(username)
-            user_input[CONF_USERS] = valid_users
+            users, errors = validate_lastfm_users(
+                self.data[CONF_API_KEY], user_input[CONF_USERS]
+            )
+            user_input[CONF_USERS] = users
             if not errors:
                 return self.async_create_entry(
                     title="LastFM",
@@ -151,13 +162,16 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
                 return self.async_abort(reason="already_configured")
+        users, _ = validate_lastfm_users(
+            import_config[CONF_API_KEY], import_config[CONF_USERS]
+        )
         return self.async_create_entry(
             title="LastFM",
             data={},
             options={
                 CONF_API_KEY: import_config[CONF_API_KEY],
                 CONF_MAIN_USER: None,
-                CONF_USERS: import_config[CONF_USERS],
+                CONF_USERS: users,
             },
         )
 
@@ -169,32 +183,25 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Initialize form."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            valid_users = []
-            for username in user_input[CONF_USERS]:
-                lastfm_user = get_lastfm_user(
-                    self._config_entry.data[CONF_API_KEY], username
-                )
-                lastfm_errors = validate_lastfm_user(lastfm_user)
-                if lastfm_errors:
-                    errors = lastfm_errors
-                else:
-                    valid_users.append(username)
-            user_input[CONF_USERS] = valid_users
+            users, errors = validate_lastfm_users(
+                self.options[CONF_API_KEY], user_input[CONF_USERS]
+            )
+            user_input[CONF_USERS] = users
             if not errors:
                 return self.async_create_entry(
                     title="LastFM",
                     data={
-                        **self._config_entry.data,
+                        **self.options,
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
-        if self._config_entry.data[CONF_MAIN_USER]:
+        if self.options[CONF_MAIN_USER]:
             try:
                 main_user = get_lastfm_user(
-                    self._config_entry.data[CONF_API_KEY],
-                    self._config_entry.data[CONF_MAIN_USER],
+                    self.options[CONF_API_KEY],
+                    self.options[CONF_MAIN_USER],
                 )
                 friends = [
                     SelectOptionDict(value=friend.name, label=friend.get_name(True))

@@ -183,7 +183,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
+        data={},
+        options={
             CONF_API_KEY: API_KEY,
             CONF_MAIN_USER: USERNAME_1,
             CONF_USERS: [USERNAME_1],
@@ -216,7 +217,8 @@ async def test_options_flow_incorrect_username(hass: HomeAssistant) -> None:
     """Test updating options doesn't work with incorrect username."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
+        data={},
+        options={
             CONF_API_KEY: API_KEY,
             CONF_MAIN_USER: USERNAME_1,
             CONF_USERS: [USERNAME_1],
@@ -247,7 +249,8 @@ async def test_options_flow_from_import(hass: HomeAssistant) -> None:
     """Test updating options gained from import."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
+        data={},
+        options={
             CONF_API_KEY: API_KEY,
             CONF_MAIN_USER: None,
             CONF_USERS: [USERNAME_1],
@@ -268,7 +271,8 @@ async def test_options_flow_without_friends(hass: HomeAssistant) -> None:
     """Test updating options for someone without friends."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
+        data={},
+        options={
             CONF_API_KEY: API_KEY,
             CONF_MAIN_USER: USERNAME_1,
             CONF_USERS: [USERNAME_1],
