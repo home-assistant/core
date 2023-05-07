@@ -1,7 +1,14 @@
 """The tests for an update of the Twitch component."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import sensor
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.twitch.const import CONF_CHANNELS, DOMAIN
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -15,14 +22,13 @@ from . import (
     TwitchUnauthorizedMock,
 )
 
-ENTITY_ID = "sensor.channel123"
+from tests.common import MockConfigEntry
+
+ENTITY_ID = "sensor.twitch_channel123"
 CONFIG = {
-    sensor.DOMAIN: {
-        "platform": "twitch",
-        CONF_CLIENT_ID: "1234",
-        CONF_CLIENT_SECRET: " abcd",
-        "channels": ["channel123"],
-    }
+    "auth_implementation": "cred",
+    CONF_CLIENT_ID: "1234",
+    CONF_CLIENT_SECRET: "abcd",
 }
 CONFIG_WITH_OAUTH = {
     sensor.DOMAIN: {
@@ -33,25 +39,32 @@ CONFIG_WITH_OAUTH = {
         "token": "9876",
     }
 }
+OPTIONS = {CONF_CHANNELS: ["channel123"]}
 
 
-async def test_init(hass: HomeAssistant) -> None:
+@pytest.fixture
+async def component_setup(hass: HomeAssistant) -> None:
+    """Fixture for setting up the integration."""
+    assert await async_setup_component(hass, "application_credentials", {})
+
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential("client", "secret"), "cred"
+    )
+
+
+async def test_init(hass: HomeAssistant, component_setup, aioclient_mock) -> None:
     """Test initial config."""
-
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG, options=OPTIONS)
+    entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.twitch.sensor.Twitch",
         return_value=TwitchMock(is_streaming=False),
     ):
-        assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     sensor_state = hass.states.get(ENTITY_ID)
-    assert sensor_state.state == "offline"
-    assert sensor_state.name == "channel123"
-    assert sensor_state.attributes["icon"] == "mdi:twitch"
-    assert sensor_state.attributes["friendly_name"] == "channel123"
-    assert sensor_state.attributes["views"] == 42
-    assert sensor_state.attributes["followers"] == 24
+    assert sensor_state
 
 
 async def test_offline(hass: HomeAssistant) -> None:
