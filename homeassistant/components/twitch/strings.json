@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "channels": {
+        "description": "Please enter the channels you want to follow.",
+        "data": {
+          "channels": "Channels"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  }
+}

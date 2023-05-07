@@ -677,7 +677,6 @@ build.json @home-assistant/supervisor
 /tests/components/local_ip/ @issacg
 /homeassistant/components/lock/ @home-assistant/core
 /tests/components/lock/ @home-assistant/core
-/homeassistant/components/lockster/ @joostlek
 /homeassistant/components/logbook/ @home-assistant/core
 /tests/components/logbook/ @home-assistant/core
 /homeassistant/components/logger/ @home-assistant/core

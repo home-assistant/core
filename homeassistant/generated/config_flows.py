@@ -244,7 +244,6 @@ FLOWS = {
         "local_calendar",
         "local_ip",
         "locative",
-        "lockster",
         "logi_circle",
         "lookin",
         "luftdaten",
