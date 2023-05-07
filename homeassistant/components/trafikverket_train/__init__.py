@@ -6,8 +6,8 @@ from typing import Any
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
-    NoTrainStationFound,
     MultipleTrainStationsFound,
+    NoTrainStationFound,
 )
 
 from homeassistant.config_entries import ConfigEntry
