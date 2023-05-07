@@ -23,7 +23,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _DataT = TypeVar("_DataT")
-KNOWN_HOSTNAME_IDS = ("Network:Hostname", "Hostname")
+_KNOWN_HOSTNAME_IDS = ("Network:Hostname", "Hostname")
 
 
 class Plenticore:
@@ -411,6 +411,6 @@ async def get_hostname_id(client: ApiClient) -> str:
     """Check for known existing hostname ids."""
     all_settings = await client.get_settings()
     for entry in all_settings["scb:network"]:
-        if entry.id in KNOWN_HOSTNAME_IDS:
+        if entry.id in _KNOWN_HOSTNAME_IDS:
             return entry.id
     raise ApiException("Hostname identifier not found in KNOWN_HOSTNAME_IDS")
