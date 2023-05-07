@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.5.0
+        uses: actions/setup-python@v4.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -70,7 +70,7 @@ jobs:
         uses: actions/checkout@v3.5.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.5.0
+        uses: actions/setup-python@v4.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -131,7 +131,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v4.5.0
+        uses: actions/setup-python@v4.6.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -140,7 +140,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install packaging tomli
-          python3 -m pip install --use-deprecated=legacy-resolver .
+          python3 -m pip install .
           version="$(python3 script/version_bump.py nightly)"
 
           if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
@@ -173,6 +173,18 @@ jobs:
 
             python -m script.gen_requirements_all
           fi
+
+      - name: Adjustments for armhf
+        if: matrix.arch == 'armhf'
+        run: |
+          # Pandas has issues building on armhf, it is expected they
+          # will drop the platform in the near future (they consider it
+          # "flimsy" on 386). The following packages depend on pandas,
+          # so we comment them out.
+          sed -i "s|env_canada|# env_canada|g" requirements_all.txt
+          sed -i "s|noaa-coops|# noaa-coops|g" requirements_all.txt
+          sed -i "s|pyezviz|# pyezviz|g" requirements_all.txt
+          sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
 
       - name: Download Translations
         run: python3 -m script.translations download
