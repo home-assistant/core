@@ -104,18 +104,13 @@ class EventManager:
             or self.pullpoint_manager.state == PullPointManagerState.STARTED
         )
 
-    @property
-    def has_listeners(self) -> bool:
-        """Return if there are listeners."""
-        return bool(self._listeners)
-
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
         """Listen for data updates."""
-        # This is the first listener, set up polling.
-        if not self._listeners:
-            self.pullpoint_manager.async_schedule_pull_messages()
-
+        # We always have to listen for events or we will never
+        # know which sensors to create. In practice we always have
+        # a listener anyways since binary_sensor and sensor will
+        # create a listener when they are created.
         self._listeners.append(update_callback)
 
         @callback
@@ -130,9 +125,6 @@ class EventManager:
         """Remove data update."""
         if update_callback in self._listeners:
             self._listeners.remove(update_callback)
-
-        if not self._listeners:
-            self.pullpoint_manager.async_cancel_pull_messages()
 
     async def async_start(self, try_pullpoint: bool, try_webhook: bool) -> bool:
         """Start polling events."""
@@ -313,6 +305,8 @@ class PullPointManager:
                 stringify_onvif_error(err),
             )
             return False
+        if started:
+            self.async_schedule_pull_messages()
         return started
 
     async def _async_cancel_and_unsubscribe(self) -> None:
@@ -403,7 +397,7 @@ class PullPointManager:
             # for some cameras, mainly the Tapo ones.
             next_pull_delay = SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR
         finally:
-            self._async_schedule_pull_if_listeners(next_pull_delay)
+            self.async_schedule_pull_messages(next_pull_delay)
 
         if self.state != PullPointManagerState.STARTED:
             # If the webhook became started working during the long poll,
@@ -458,12 +452,6 @@ class PullPointManager:
             )
 
     @callback
-    def _async_schedule_pull_if_listeners(self, delay: float | None = None) -> None:
-        """Schedule async_pull_messages to run if there are listeners."""
-        if self._event_manager.has_listeners:
-            self.async_schedule_pull_messages(delay)
-
-    @callback
     def _async_background_pull_messages_or_reschedule(
         self, _now: dt.datetime | None = None
     ) -> None:
@@ -473,7 +461,7 @@ class PullPointManager:
                 "%s: PullPoint message pull is already in process, skipping pull",
                 self._name,
             )
-            self._async_schedule_pull_if_listeners()
+            self.async_schedule_pull_messages()
             return
         self._pull_messages_task = self._hass.async_create_background_task(
             self._async_pull_messages(),
