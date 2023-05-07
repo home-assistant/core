@@ -7,6 +7,10 @@ from homeassistant import config_entries
 from homeassistant.components import dynalite
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_get as async_get_issue_registry,
+)
 
 from tests.common import MockConfigEntry
 
@@ -23,6 +27,9 @@ async def test_flow(
     hass: HomeAssistant, first_con, second_con, exp_type, exp_result, exp_reason
 ) -> None:
     """Run a flow with or without errors and return result."""
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(dynalite.DOMAIN, "deprecated_yaml")
+    assert issue is None
     host = "1.2.3.4"
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
@@ -39,6 +46,9 @@ async def test_flow(
         assert result["result"].state == exp_result
     if exp_reason:
         assert result["reason"] == exp_reason
+    issue = registry.async_get_issue(dynalite.DOMAIN, "deprecated_yaml")
+    assert issue is not None
+    assert issue.severity == IssueSeverity.WARNING
 
 
 async def test_existing(hass: HomeAssistant) -> None:

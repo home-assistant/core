@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .bridge import DynaliteBridge
 from .const import DEFAULT_PORT, DOMAIN, LOGGER
@@ -26,8 +27,20 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Import a new bridge as a config entry."""
-        LOGGER.debug("Starting async_step_import - %s", import_info)
+        LOGGER.debug("Starting async_step_import (deprecated) - %s", import_info)
+        # Raise an issue that this is deprecated and has been imported
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_yaml",
+            is_fixable=False,
+            is_persistent=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
+
         host = import_info[CONF_HOST]
+        # Check if host already exists
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == host:
                 self.hass.config_entries.async_update_entry(
