@@ -1,12 +1,18 @@
 """Common fixtures for Anova."""
 from unittest.mock import AsyncMock, patch
 
-from anova_wifi import AnovaApi, AnovaPrecisionCooker, InvalidLogin, NoDevicesFound
+from anova_wifi import (
+    AnovaApi,
+    AnovaException,
+    AnovaPrecisionCooker,
+    InvalidLogin,
+    NoDevicesFound,
+)
 import pytest
 
 from homeassistant.core import HomeAssistant
 
-from . import DEVICE_UNIQUE_ID
+from . import DEVICE_UNIQUE_ID, ONLINE_UPDATE
 
 
 @pytest.fixture
@@ -17,6 +23,7 @@ async def anova_api(
     api_mock = AsyncMock()
 
     new_device = AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)
+    new_device.status = ONLINE_UPDATE
 
     async def authenticate_side_effect():
         api_mock.jwt = "my_test_jwt"
@@ -83,3 +90,55 @@ async def anova_api_wrong_login(
             "sample",
         )
         yield api
+
+
+@pytest.fixture
+async def anova_precision_cooker(hass: HomeAssistant) -> AsyncMock:
+    """Mock a APC object."""
+    apc_patch = AsyncMock()
+
+    async def apc_update_side_effect():
+        apc_patch.status = ONLINE_UPDATE
+        return ONLINE_UPDATE
+
+    apc_patch.status = ONLINE_UPDATE
+    apc_patch.update.side_effect = apc_update_side_effect
+    apc_patch.device_key = "sample_key"
+    apc_patch.type = "sample_type"
+
+    with patch(
+        "homeassistant.components.anova.AnovaPrecisionCooker", return_value=apc_patch
+    ):
+        yield apc_patch
+
+
+@pytest.fixture
+async def anova_precision_cooker_setter_failure(hass: HomeAssistant) -> AsyncMock:
+    """Mock a APC object."""
+    apc_patch = AsyncMock()
+
+    async def apc_update_side_effect():
+        apc_patch.status = ONLINE_UPDATE
+        return ONLINE_UPDATE
+
+    apc_patch.status = ONLINE_UPDATE
+    apc_patch.update.side_effect = apc_update_side_effect
+    apc_patch.device_key = "sample_key"
+    apc_patch.type = "sample_type"
+
+    async def apc_build_request_side_effect():
+        raise AnovaException()
+
+    async def apc_set_mode_side_effect(mode: str):
+        raise AnovaException()
+
+    async def apc_set_temperature_side_effect(temperature: float):
+        raise AnovaException()
+
+    apc_patch.build_request.side_effect = apc_build_request_side_effect
+    apc_patch.set_mode.side_effect = apc_set_mode_side_effect
+    apc_patch.set_target_temperature.side_effect = apc_set_temperature_side_effect
+    with patch(
+        "homeassistant.components.anova.AnovaPrecisionCooker", return_value=apc_patch
+    ):
+        yield apc_patch

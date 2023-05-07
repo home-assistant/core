@@ -15,7 +15,7 @@ from .coordinator import AnovaCoordinator
 from .models import AnovaData
 from .util import serialize_device_list
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.CLIMATE]
 
 _LOGGER = logging.getLogger(__name__)
 

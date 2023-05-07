@@ -42,6 +42,7 @@ def create_entry(hass: HomeAssistant, device_id: str = DEVICE_UNIQUE_ID) -> Conf
 
 async def async_init_integration(
     hass: HomeAssistant,
+    update_value: APCUpdate = ONLINE_UPDATE,
     skip_setup: bool = False,
     error: str | None = None,
 ) -> ConfigEntry:
@@ -53,7 +54,7 @@ async def async_init_integration(
     ), patch(
         "homeassistant.components.anova.AnovaApi.get_devices"
     ) as device_patch:
-        update_patch.return_value = ONLINE_UPDATE
+        update_patch.return_value = update_value
         device_patch.return_value = [
             AnovaPrecisionCooker(None, DEVICE_UNIQUE_ID, "type_sample", None)
         ]
