@@ -25,15 +25,12 @@ async def test_formx(hass: HomeAssistant) -> None:
     ) as mock_api_class, patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.kostal_plenticore.config_flow.get_hostname_id",
-        return_value="Network:Hostname",
-    ):
+    ) as mock_setup_entry:
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
         mock_api_ctx.login = AsyncMock()
         mock_api_ctx.get_setting_values = AsyncMock(
-            return_value={"scb:network": {"Network:Hostname": "scb"}}
+            return_value={"scb:network": {"Hostname": "scb"}}
         )
 
         # mock of the return instance of ApiClient
