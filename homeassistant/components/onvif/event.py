@@ -413,6 +413,7 @@ class PullPointManager:
                 self._name,
                 self.state,
             )
+            return
 
         if not response:
             return
