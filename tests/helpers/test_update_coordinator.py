@@ -186,6 +186,38 @@ async def test_shutdown_on_entry_unload(
     assert crd._unsub_refresh is None
 
 
+async def test_shutdown_on_hass_stop(
+    hass: HomeAssistant,
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
+    """Test shutdown can be shutdown on STOP event."""
+    calls = 0
+
+    async def _refresh() -> int:
+        nonlocal calls
+        calls += 1
+        return calls
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        name="test",
+        update_method=_refresh,
+        update_interval=DEFAULT_UPDATE_INTERVAL,
+    )
+    await crd.async_register_shutdown()
+
+    crd.async_add_listener(lambda: None)
+    assert crd._unsub_refresh is not None
+    assert not crd._shutdown_requested
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert crd._shutdown_requested
+    assert crd._unsub_refresh is None
+
+
 async def test_update_context(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:

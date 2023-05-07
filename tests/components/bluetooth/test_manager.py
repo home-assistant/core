@@ -992,3 +992,60 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
     cancel()
     unsetup_connectable_scanner()
     cancel_connectable_scanner()
+
+
+async def test_debug_logging(
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test debug logging."""
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.bluetooth": "DEBUG"},
+        blocking=True,
+    )
+
+    address = "44:44:33:11:23:41"
+    start_time_monotonic = 50.0
+
+    switchbot_device_poor_signal_hci0 = generate_ble_device(
+        address, "wohand_poor_signal_hci0"
+    )
+    switchbot_adv_poor_signal_hci0 = generate_advertisement_data(
+        local_name="wohand_poor_signal_hci0", service_uuids=[], rssi=-100
+    )
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci0,
+        switchbot_adv_poor_signal_hci0,
+        start_time_monotonic,
+        "hci0",
+    )
+    assert "wohand_poor_signal_hci0" in caplog.text
+    caplog.clear()
+
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.bluetooth": "WARNING"},
+        blocking=True,
+    )
+
+    switchbot_device_good_signal_hci0 = generate_ble_device(
+        address, "wohand_good_signal_hci0"
+    )
+    switchbot_adv_good_signal_hci0 = generate_advertisement_data(
+        local_name="wohand_good_signal_hci0", service_uuids=[], rssi=-33
+    )
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_good_signal_hci0,
+        switchbot_adv_good_signal_hci0,
+        start_time_monotonic,
+        "hci0",
+    )
+    assert "wohand_good_signal_hci0" not in caplog.text

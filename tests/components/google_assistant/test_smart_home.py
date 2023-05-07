@@ -451,8 +451,8 @@ async def test_execute(
     hass: HomeAssistant, report_state, on, brightness, value
 ) -> None:
     """Test an execute command."""
-    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -909,7 +909,7 @@ async def test_serialize_input_boolean(hass: HomeAssistant) -> None:
     """Test serializing an input boolean entity."""
     state = State("input_boolean.bla", "on")
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
-    result = await entity.sync_serialize(None, "mock-uuid")
+    result = entity.sync_serialize(None, "mock-uuid")
     assert result == {
         "id": "input_boolean.bla",
         "attributes": {},

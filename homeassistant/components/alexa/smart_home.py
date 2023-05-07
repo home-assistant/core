@@ -34,7 +34,7 @@ async def async_handle_message(hass, config, request, context=None, enabled=True
         await config.set_authorized(True)
 
         if directive.has_endpoint:
-            await directive.load_entity(hass, config)
+            directive.load_entity(hass, config)
 
         funct_ref = HANDLERS.get((directive.namespace, directive.name))
         if funct_ref:
