@@ -259,6 +259,7 @@ class PullPointManager:
             self.state = PullPointManagerState.FAILED
             return False
         self.state = PullPointManagerState.STARTED
+        self.async_schedule_pull_messages()
         return True
 
     @callback
@@ -300,7 +301,6 @@ class PullPointManager:
                 stringify_onvif_error(err),
             )
             return False
-        self.async_schedule_pull_messages()
         return True
 
     async def _async_cancel_and_unsubscribe(self) -> None:
@@ -356,6 +356,11 @@ class PullPointManager:
                         "MessageLimit": PULLPOINT_MESSAGE_LIMIT,
                         "Timeout": PULLPOINT_POLL_TIME,
                     }
+                )
+            else:
+                LOGGER.debug(
+                    "%s: PullPoint skipped because Home Assistant is not shutting down",
+                    self._name,
                 )
         except RemoteProtocolError as err:
             # Either a shutdown event or the camera closed the connection. Because
