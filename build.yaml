@@ -1,11 +1,11 @@
 image: homeassistant/{arch}-homeassistant
 shadow_repository: ghcr.io/home-assistant
 build_from:
-  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2023.02.0
-  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2023.02.0
-  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2023.02.0
-  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2023.02.0
-  i386: ghcr.io/home-assistant/i386-homeassistant-base:2023.02.0
+  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2023.04.2
+  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2023.04.2
+  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2023.04.2
+  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2023.04.2
+  i386: ghcr.io/home-assistant/i386-homeassistant-base:2023.04.2
 codenotary:
   signer: notary@home-assistant.io
   base_image: notary@home-assistant.io

@@ -9,15 +9,7 @@ from devolo_plc_api.device_api import (
     WIFI_VAP_MAIN_AP,
 )
 
-from homeassistant.const import Platform
-
 DOMAIN = "devolo_home_network"
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.DEVICE_TRACKER,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
 
 PRODUCT = "product"
 SERIAL_NUMBER = "serial_number"
