@@ -33,7 +33,7 @@
     "step": {
       "init": {
         "data": {
-          "sheets_access": "Home Assistant access to Google Sheets"
+          "sheets_access": "Allow write access to edit other sheets in your drive"
         }
       }
     }
