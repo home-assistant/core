@@ -47,6 +47,7 @@ from .const import (
     ATTR_WARNING_COUNT,
     CONF_REGION_NAME,
     CURRENT_WARNING_SENSOR,
+    DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
@@ -112,7 +113,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            DwdWeatherWarningsSensor(api, entry.title, entry.unique_id, description)
+            DwdWeatherWarningsSensor(api, entry, description)
             for description in SENSOR_TYPES
         ],
         True,
@@ -127,15 +128,14 @@ class DwdWeatherWarningsSensor(SensorEntity):
     def __init__(
         self,
         api,
-        name,
-        unique_id,
+        entry: ConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a DWD-Weather-Warnings sensor."""
-        self._api = api
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{unique_id}-{description.key}"
+        self._attr_name = f"{DEFAULT_NAME} {entry.title} {description.name}"
+        self._attr_unique_id = f"{entry.unique_id}-{description.key}"
+        self._api = api
 
     @property
     def native_value(self):
