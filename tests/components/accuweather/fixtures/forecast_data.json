@@ -15,34 +15,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 32,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 5,
-      "Category": "Moderate",
+      "Category": "moderate",
       "CategoryValue": 2
     },
     "TemperatureMin": {
@@ -214,34 +215,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 39,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 7,
-      "Category": "High",
+      "Category": "high",
       "CategoryValue": 3
     },
     "TemperatureMin": {
@@ -409,34 +411,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 29,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 7,
-      "Category": "High",
+      "Category": "high",
       "CategoryValue": 3
     },
     "TemperatureMin": {
@@ -604,34 +607,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 18,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 6,
-      "Category": "High",
+      "Category": "high",
       "CategoryValue": 3
     },
     "TemperatureMin": {
@@ -799,34 +803,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 14,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 7,
-      "Category": "High",
+      "Category": "high",
       "CategoryValue": 3
     },
     "TemperatureMin": {

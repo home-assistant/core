@@ -205,7 +205,7 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-@dataclass
+@dataclass(slots=True)
 class EntityDescription:
     """A class that describes Home Assistant entities."""
 
@@ -248,6 +248,10 @@ class Entity(ABC):
 
     # If we reported this entity is updated while disabled
     _disabled_reported = False
+
+    # If we reported this entity is using async_update_ha_state, while
+    # it should be using async_write_ha_state.
+    _async_update_ha_state_reported = False
 
     # Protect for multiple updates
     _update_staged = False
@@ -551,6 +555,19 @@ class Entity(ABC):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
+        elif not self._async_update_ha_state_reported:
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                (
+                    "Entity %s (%s) is using self.async_update_ha_state(), without"
+                    " enabling force_update. Instead it should use"
+                    " self.async_write_ha_state(), please %s"
+                ),
+                self.entity_id,
+                type(self),
+                report_issue,
+            )
+            self._async_update_ha_state_reported = True
 
         self._async_write_ha_state()
 
@@ -698,10 +715,13 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.create_task(
-            self.async_update_ha_state(force_refresh),
-            f"Entity {self.entity_id} schedule update ha state",
-        )
+        if force_refresh:
+            self.hass.create_task(
+                self.async_update_ha_state(force_refresh),
+                f"Entity {self.entity_id} schedule update ha state",
+            )
+        else:
+            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:
@@ -743,13 +763,6 @@ class Entity(ABC):
         hass = self.hass
         assert hass is not None
 
-        if hasattr(self, "async_update"):
-            coro: asyncio.Future[None] = self.async_update()
-        elif hasattr(self, "update"):
-            coro = hass.async_add_executor_job(self.update)
-        else:
-            return
-
         self._update_staged = True
 
         # Process update sequential
@@ -760,8 +773,14 @@ class Entity(ABC):
             update_warn = hass.loop.call_later(
                 SLOW_UPDATE_WARNING, self._async_slow_update_warning
             )
+
         try:
-            await coro
+            if hasattr(self, "async_update"):
+                await self.async_update()
+            elif hasattr(self, "update"):
+                await hass.async_add_executor_job(self.update)
+            else:
+                return
         finally:
             self._update_staged = False
             if warning:
@@ -981,7 +1000,7 @@ class Entity(ABC):
         return report_issue
 
 
-@dataclass
+@dataclass(slots=True)
 class ToggleEntityDescription(EntityDescription):
     """A class that describes toggle entities."""
 

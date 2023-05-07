@@ -20,7 +20,7 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "pyeconet.EcoNetApiInterface.login",
@@ -50,7 +50,7 @@ async def test_generic_error_from_library(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "pyeconet.EcoNetApiInterface.login",
@@ -80,7 +80,7 @@ async def test_auth_worked(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "pyeconet.EcoNetApiInterface.login",
@@ -117,7 +117,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "pyeconet.EcoNetApiInterface.login",

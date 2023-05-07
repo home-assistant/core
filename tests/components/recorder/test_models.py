@@ -256,7 +256,9 @@ async def test_event_to_db_model() -> None:
     assert native.as_dict() == event.as_dict()
 
     native = Events.from_event(event).to_native()
-    event.data = {}
+    native.data = (
+        event.data
+    )  # data is not set by from_event as its in the event_data table
     native.event_type = event.event_type
     assert native.as_dict() == event.as_dict()
 
@@ -269,20 +271,19 @@ async def test_lazy_state_handles_include_json(
         entity_id="sensor.invalid",
         shared_attrs="{INVALID_JSON}",
     )
-    assert LazyState(row, {}, None).attributes == {}
+    assert LazyState(row, {}, None, row.entity_id, "", 1).attributes == {}
     assert "Error converting row to state attributes" in caplog.text
 
 
-async def test_lazy_state_prefers_shared_attrs_over_attrs(
+async def test_lazy_state_can_decode_attributes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that the LazyState prefers shared_attrs over attributes."""
+    """Test that the LazyState prefers can decode attributes."""
     row = PropertyMock(
         entity_id="sensor.invalid",
-        shared_attrs='{"shared":true}',
-        attributes='{"shared":false}',
+        attributes='{"shared":true}',
     )
-    assert LazyState(row, {}, None).attributes == {"shared": True}
+    assert LazyState(row, {}, None, row.entity_id, "", 1).attributes == {"shared": True}
 
 
 async def test_lazy_state_handles_different_last_updated_and_last_changed(
@@ -293,11 +294,11 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
     row = PropertyMock(
         entity_id="sensor.valid",
         state="off",
-        shared_attrs='{"shared":true}',
+        attributes='{"shared":true}',
         last_updated_ts=now.timestamp(),
         last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
     )
-    lstate = LazyState(row, {}, None)
+    lstate = LazyState(row, {}, None, row.entity_id, row.state, row.last_updated_ts)
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -324,11 +325,11 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
     row = PropertyMock(
         entity_id="sensor.valid",
         state="off",
-        shared_attrs='{"shared":true}',
+        attributes='{"shared":true}',
         last_updated_ts=now.timestamp(),
         last_changed_ts=now.timestamp(),
     )
-    lstate = LazyState(row, {}, None)
+    lstate = LazyState(row, {}, None, row.entity_id, row.state, row.last_updated_ts)
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",

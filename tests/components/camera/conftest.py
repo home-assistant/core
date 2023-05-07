@@ -5,9 +5,16 @@ import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import StreamType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import WEBRTC_ANSWER
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture(name="mock_camera")

@@ -4,8 +4,8 @@
       "user": {
         "description": "Default host: {host}\nDefault username: {username}",
         "data": {
-          "host": "[%key:common::config_flow::data::host%] (Optional)",
-          "username": "[%key:common::config_flow::data::username%] (Optional)",
+          "host": "Host (Optional)",
+          "username": "Username (Optional)",
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
