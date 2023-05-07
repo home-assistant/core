@@ -65,15 +65,6 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
         """Return the next upcoming event."""
         return self._event
 
-    @property
-    def should_poll(self) -> bool:
-        """Enable polling for the entity.
-
-        We set this to True so that the calendar entity will check for new state more
-        frequently than the update coordinator retrieves new data.
-        """
-        return True
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
