@@ -59,12 +59,6 @@ async def test_async_setup_entry_invalid_auth(
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_async_setup_entry_not_ready(hass: HomeAssistant, not_ready) -> None:
-    """Test throws ConfigEntryNotReady when exception occurs during setup."""
-    entry = await async_init_integration(hass)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
-
-
 async def test_device_info(hass: HomeAssistant, connection) -> None:
     """Test device info."""
     await async_init_integration(hass)

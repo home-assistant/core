@@ -149,7 +149,7 @@ def create_skybell(hass: HomeAssistant) -> Skybell:
     )
 
 
-def mock_skybell(hass: HomeAssistant) -> None:
+def mock_skybell(hass: HomeAssistant):
     """Mock Skybell object."""
     return patch(
         "homeassistant.components.skybell.Skybell", return_value=create_skybell(hass)

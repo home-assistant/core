@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-def _mock_skybell(hass: HomeAssistant) -> None:
+def _mock_skybell(hass: HomeAssistant):
     """Mock Skybell config flow object."""
     return patch(
         "homeassistant.components.skybell.config_flow.Skybell",
@@ -29,7 +29,7 @@ def _mock_skybell(hass: HomeAssistant) -> None:
     )
 
 
-def _patch_setup_entry() -> None:
+def _patch_setup_entry():
     return patch(
         "homeassistant.components.skybell.async_setup_entry", return_value=True
     )
@@ -45,7 +45,6 @@ async def test_flow_user(hass: HomeAssistant, connection) -> None:
     assert result["step_id"] == "user"
 
     with _mock_skybell(hass), _patch_setup_entry():
-        await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DATA,
