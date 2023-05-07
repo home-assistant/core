@@ -6,7 +6,8 @@ from typing import Any
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.api.regions import get_region_from_name
-from httpx import HTTPError
+from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
+from httpx import RequestError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -41,7 +42,9 @@ async def validate_input(
 
     try:
         await auth.login()
-    except HTTPError as ex:
+    except MyBMWAuthError as ex:
+        raise InvalidAuth from ex
+    except (MyBMWAPIError, RequestError) as ex:
         raise CannotConnect from ex
 
     # Return info that you want to store in the config entry.
@@ -80,6 +83,8 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
 
             if info:
                 if self._reauth_entry:
@@ -160,3 +165,7 @@ class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""
