@@ -34,8 +34,6 @@ async def test_sensors(
     assert state.state == "2"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get("test") == "downloading"
-    assert state.attributes.get("test2") == "stopped"
 
 
 async def test_windows(
