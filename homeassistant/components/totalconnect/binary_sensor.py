@@ -1,6 +1,5 @@
 """Interfaces with TotalConnect sensors."""
 import logging
-from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
