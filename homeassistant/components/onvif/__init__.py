@@ -5,6 +5,7 @@ import logging
 
 from httpx import RequestError
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
+from onvif.util import is_auth_error, stringify_onvif_error
 from zeep.exceptions import Fault, TransportError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
@@ -21,7 +22,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
 from .device import ONVIFDevice
-from .util import is_auth_error, stringify_onvif_error
 
 LOGGER = logging.getLogger(__name__)
 

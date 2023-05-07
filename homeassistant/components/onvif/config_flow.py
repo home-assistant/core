@@ -6,6 +6,7 @@ from pprint import pformat
 from typing import Any
 from urllib.parse import urlparse
 
+from onvif.util import is_auth_error, stringify_onvif_error
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.scope import Scope
@@ -40,7 +41,6 @@ from .const import (
     LOGGER,
 )
 from .device import get_device
-from .util import is_auth_error, stringify_onvif_error
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
