@@ -17,6 +17,9 @@ from .const import CONNECTION_ERRORS
 
 _LOGGER = logging.getLogger(__name__)
 
+# Desired refresh rate (min 5 sec)
+REFRESH_RATE=5
+
 # Matches iotwatt data log interval
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 5
 
@@ -33,7 +36,7 @@ class IotawattUpdater(DataUpdateCoordinator):
             hass=hass,
             logger=_LOGGER,
             name=entry.title,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=REFRESH_RATE),
             request_refresh_debouncer=Debouncer(
                 hass,
                 _LOGGER,
@@ -73,6 +76,6 @@ class IotawattUpdater(DataUpdateCoordinator):
 
             self.api = api
 
-        await self.api.update(lastUpdate=self._last_run)
+        await self.api.update(lastUpdate=self._last_run, timespan=REFRESH_RATE)
         self._last_run = None
         return self.api.getSensors()
