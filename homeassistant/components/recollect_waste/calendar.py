@@ -65,8 +65,8 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
             """Update the entity state.
 
             This exists to force update the calendar state regularly, regardless of when
-            the coordinator last received data. We do this to ensure the entity will
-            update near the start of a pickup event.
+            the coordinator last received data; doing so ensures the entity will update
+            near the start of a pickup event.
             """
             self.async_write_ha_state()
 
