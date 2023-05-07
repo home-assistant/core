@@ -25,6 +25,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -49,7 +52,9 @@ API_KEY_SCHEMA = vol.Schema(
 SENSOR_INDEX_SCHEMA = vol.Schema(
     {
         # The PurpleAir sensor index is an integer, but the UI for a string fits better:
-        vol.Required(CONF_SENSOR_INDEX): cv.string,
+        vol.Required(CONF_SENSOR_INDEX): NumberSelector(
+            NumberSelectorConfig(mode=NumberSelectorMode.BOX)
+        )
     }
 )
 
@@ -194,7 +199,7 @@ async def async_validate_coordinates(
 async def async_validate_sensor_index(
     hass: HomeAssistant,
     api_key: str,
-    sensor_index: int,
+    sensor_index: float,
 ) -> ValidationResult:
     """Validate a sensor index."""
     api = async_get_api(hass, api_key)
@@ -202,7 +207,7 @@ async def async_validate_sensor_index(
 
     try:
         sensor_response = await api.sensors.async_get_sensor(
-            sensor_index, fields=["name"]
+            int(sensor_index), fields=["name"]
         )
     except NotFoundError:
         errors["base"] = "unknown_sensor_index"
@@ -276,10 +281,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="by_sensor_index", data_schema=SENSOR_INDEX_SCHEMA
             )
 
-        sensor_index = int(user_input[CONF_SENSOR_INDEX])
-
         validation = await async_validate_sensor_index(
-            self.hass, self._flow_data[CONF_API_KEY], sensor_index
+            self.hass, self._flow_data[CONF_API_KEY], user_input[CONF_SENSOR_INDEX]
         )
         if validation.errors:
             return self.async_show_form(
@@ -293,7 +296,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=self._flow_data,
             # Note that we store the sensor indices in options so that later on, we can
             # add/remove additional sensors via an options flow:
-            options={CONF_SENSOR_INDICES: [sensor_index]},
+            options={CONF_SENSOR_INDICES: [user_input[CONF_SENSOR_INDEX]]},
         )
 
     async def async_step_choose_method(
@@ -321,7 +324,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=self._flow_data,
             # Note that we store the sensor indices in options so that later on, we can
             # add/remove additional sensors via an options flow:
-            options={CONF_SENSOR_INDICES: [int(user_input[CONF_SENSOR_INDEX])]},
+            options={CONF_SENSOR_INDICES: [user_input[CONF_SENSOR_INDEX]]},
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
@@ -437,11 +440,10 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
                 step_id="add_sensor_by_index", data_schema=SENSOR_INDEX_SCHEMA
             )
 
-        input_sensor_index = user_input[CONF_SENSOR_INDEX]
-        real_sensor_index = int(input_sensor_index)
-
         validation = await async_validate_sensor_index(
-            self.hass, self.config_entry.data[CONF_API_KEY], real_sensor_index
+            self.hass,
+            self.config_entry.data[CONF_API_KEY],
+            user_input[CONF_SENSOR_INDEX],
         )
         if validation.errors:
             return self.async_show_form(
@@ -451,10 +453,12 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
         device_registry = dr.async_get(self.hass)
-        if device_registry.async_get_device({(DOMAIN, input_sensor_index)}):
+        if device_registry.async_get_device(
+            {(DOMAIN, str(user_input[CONF_SENSOR_INDEX]))}
+        ):
             return self.async_abort(reason="already_configured")
 
-        return self._async_update_entry(real_sensor_index)
+        return self._async_update_entry(user_input[CONF_SENSOR_INDEX])
 
     async def async_step_choose_add_sensor_method(
         self, user_input: dict[str, Any] | None = None
@@ -476,12 +480,13 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
                 data_schema=async_get_nearby_sensors_schema(options),
             )
 
-        sensor_index = int(user_input[CONF_SENSOR_INDEX])
-
-        if sensor_index in self.config_entry.options[CONF_SENSOR_INDICES]:
+        if (
+            user_input[CONF_SENSOR_INDEX]
+            in self.config_entry.options[CONF_SENSOR_INDICES]
+        ):
             return self.async_abort(reason="already_configured")
 
-        return self._async_update_entry(sensor_index)
+        return self._async_update_entry(user_input[CONF_SENSOR_INDEX])
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
