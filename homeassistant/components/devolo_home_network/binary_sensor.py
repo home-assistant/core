@@ -68,15 +68,14 @@ async def async_setup_entry(
     ]["coordinators"]
 
     entities: list[BinarySensorEntity] = []
-    if device.plcnet:
-        entities.append(
-            DevoloBinarySensorEntity(
-                entry,
-                coordinators[CONNECTED_PLC_DEVICES],
-                SENSOR_TYPES[CONNECTED_TO_ROUTER],
-                device,
-            )
+    entities.append(
+        DevoloBinarySensorEntity(
+            entry,
+            coordinators[CONNECTED_PLC_DEVICES],
+            SENSOR_TYPES[CONNECTED_TO_ROUTER],
+            device,
         )
+    )
     async_add_entities(entities)
 
 
