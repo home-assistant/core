@@ -125,7 +125,7 @@ class DevoloButtonEntity(DevoloEntity, ButtonEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} is password protected"
+                f"Device {self.entry.title} require re-authenticatication to set or change the password"
             ) from ex
         except DeviceUnavailable as ex:
             raise HomeAssistantError(
