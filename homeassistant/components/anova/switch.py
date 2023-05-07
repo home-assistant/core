@@ -78,13 +78,15 @@ class AnovaSwitch(AnovaDescriptionEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Anova device on."""
         try:
-            return await self.entity_description.turn_on_lambda(self.coordinator)
+            await self.entity_description.turn_on_lambda(self.coordinator)
+            await self.coordinator.async_request_refresh()
         except AnovaException as err:
             raise HomeAssistantError("Failed to turn the switch on.") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Anova device off."""
         try:
-            return await self.entity_description.turn_off_lambda(self.coordinator)
+            await self.entity_description.turn_off_lambda(self.coordinator)
+            await self.coordinator.async_request_refresh()
         except AnovaException as err:
             raise HomeAssistantError("Failed to turn the switch off.") from err
