@@ -317,6 +317,7 @@ class PullPointManager:
             SUBSCRIPTION_TIME, self._event_manager.async_mark_events_stale
         )
         self._pullpoint_service = self._pullpoint_manager.get_service()
+        await self._pullpoint_manager.set_synchronization_point()
 
     async def _async_unsubscribe_pullpoint(self) -> None:
         """Unsubscribe the pullpoint subscription."""
@@ -532,6 +533,7 @@ class WebHookManager:
                 err,
             )
             raise
+        await self._notification_manager.set_synchronization_point()
         LOGGER.debug(
             "%s: Webhook subscription created with URL: %s",
             self._name,
