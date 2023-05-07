@@ -37,6 +37,10 @@ from .util import create_unique_id, next_departuredate
 
 _LOGGER = logging.getLogger(__name__)
 
+OPTION_SCHEMA = {
+    vol.Optional(CONF_FILTER_PRODUCT): TextSelector(),
+}
+
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): TextSelector(),
@@ -51,17 +55,11 @@ DATA_SCHEMA = vol.Schema(
                 translation_key=CONF_WEEKDAY,
             )
         ),
-        vol.Optional(CONF_FILTER_PRODUCT): TextSelector(),
     }
-)
+).extend(OPTION_SCHEMA)
 DATA_SCHEMA_REAUTH = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
-    }
-)
-OPTION_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FILTER_PRODUCT): TextSelector(),
     }
 )
 
@@ -226,12 +224,8 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class TVTrainOptionsFlowHandler(config_entries.OptionsFlow):
+class TVTrainOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle Trafikverket Train options."""
-
-    def __init__(self, entry: config_entries.ConfigEntry) -> None:
-        """Initialize Trafikverket Train options flow."""
-        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -240,24 +234,14 @@ class TVTrainOptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, Any] = {}
 
         if user_input:
-            product_filter: str | None = user_input.get(CONF_FILTER_PRODUCT)
-            if isinstance(product_filter, str) and product_filter.isspace():
+            if not user_input.get(CONF_FILTER_PRODUCT):
                 user_input[CONF_FILTER_PRODUCT] = None
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_FILTER_PRODUCT,
-                        description={
-                            "suggested_value": self.entry.options.get(
-                                CONF_FILTER_PRODUCT
-                            )
-                        },
-                    ): TextSelector(),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(OPTION_SCHEMA), user_input
             ),
             errors=errors,
         )

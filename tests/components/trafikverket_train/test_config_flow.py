@@ -495,7 +495,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
-        user_input={"filter_product": " "},
+        user_input={"filter_product": ""},
     )
     await hass.async_block_till_done()
 
