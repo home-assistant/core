@@ -20,14 +20,14 @@ async def test_binary_sensors(
     await init_integration(hass, config_entry, [diffuser])
     hublot = diffuser.hublot
 
-    state = hass.states.get("binary_sensor.genie_battery_charging")
+    state = hass.states.get("binary_sensor.genie_charging")
     assert state
     assert state.state == STATE_ON
     assert (
         state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.BATTERY_CHARGING
     )
 
-    entry = entity_registry.async_get("binary_sensor.genie_battery_charging")
+    entry = entity_registry.async_get("binary_sensor.genie_charging")
     assert entry
     assert entry.unique_id == f"{hublot}-charging"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
