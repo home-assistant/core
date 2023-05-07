@@ -65,6 +65,15 @@ class RidwellCalendar(RidwellEntity, CalendarEntity):
         """Return the next upcoming event."""
         return async_get_calendar_event_from_pickup_event(self.next_pickup_event)
 
+    @property
+    def should_poll(self) -> bool:
+        """Enable polling for the entity.
+
+        We set this to True so that the calendar entity will check for new state more
+        frequently than the update coordinator retrieves new data.
+        """
+        return True
+
     async def async_get_events(
         self,
         hass: HomeAssistant,
