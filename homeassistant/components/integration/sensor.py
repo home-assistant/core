@@ -178,6 +178,9 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             try:
                 if state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     self._state = Decimal(state.state)
+                else:
+                    self._attr_available = False
+                    self._state = None
             except (DecimalException, ValueError) as err:
                 _LOGGER.warning(
                     "%s could not restore last state %s: %s",
