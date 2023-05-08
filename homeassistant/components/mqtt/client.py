@@ -688,16 +688,11 @@ class MQTT:
         topics = set(self._pending_unsubscribes)
         self._pending_unsubscribes = set()
 
-        def _process_client_unsubscribes() -> tuple[int, int]:
-            """Initiate all subscriptions on the MQTT client and return the results."""
-            result, mid = self._mqttc.unsubscribe(list(topics))
-            return result, mid
-
         async with self._paho_lock:
             result, mid = await self.hass.async_add_executor_job(
-                _process_client_unsubscribes
+                self._mqttc.unsubscribe, list(topics)
             )
-            _raise_on_error(result)
+        _raise_on_error(result)
         for topic in topics:
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
 
