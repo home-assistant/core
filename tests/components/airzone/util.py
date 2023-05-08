@@ -25,6 +25,8 @@ from aioairzone.const import (
     API_ROOM_TEMP,
     API_SET_POINT,
     API_SLEEP,
+    API_SPEED,
+    API_SPEEDS,
     API_SYSTEM_FIRMWARE,
     API_SYSTEM_ID,
     API_SYSTEM_TYPE,
@@ -85,6 +87,8 @@ HVAC_MOCK = {
                     API_FLOOR_DEMAND: 0,
                     API_HEAT_ANGLE: 0,
                     API_COLD_ANGLE: 0,
+                    API_SPEED: 0,
+                    API_SPEEDS: 4,
                 },
                 {
                     API_SYSTEM_ID: 1,
