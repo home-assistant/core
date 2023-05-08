@@ -21,7 +21,7 @@ REQUIRED = 1
 REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
-RE_TRANSLATION_KEY = re.compile(r"^(?!.+[_-]{2})(?![_-])[a-z0-9-_]+(?<![_-])$")
+RE_TRANSLATION_KEY = re.compile(r"^(?!.+[\._-]{2})(?![\._-])[a-z0-9-_\.]+(?<![\._-])$")
 RE_COMBINED_REFERENCE = re.compile(r"(.+\[%)|(%\].+)")
 
 # Only allow translation of integration names if they contain non-brand names
@@ -110,8 +110,8 @@ def translation_key_validator(value: str) -> str:
     """Validate value is valid translation key."""
     if RE_TRANSLATION_KEY.match(value) is None:
         raise vol.Invalid(
-            f"Invalid translation key '{value}', need to be [a-z0-9-_]+ and"
-            " cannot start or end with a hyphen or underscore."
+            f"Invalid translation key '{value}', need to be [a-z0-9-_\\.]+ and"
+            " cannot start or end with a hyphen, underscore or dot."
         )
 
     return value
