@@ -21,13 +21,16 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 from homeassistant.util.uuid import random_uuid_hex
 
+DOMAIN = "persistent_notification"
+
 ATTR_CREATED_AT: Final = "created_at"
 ATTR_MESSAGE: Final = "message"
 ATTR_NOTIFICATION_ID: Final = "notification_id"
 ATTR_TITLE: Final = "title"
 ATTR_STATUS: Final = "status"
 
-DOMAIN = "persistent_notification"
+STATUS_UNREAD = "unread"
+STATUS_READ = "read"
 
 
 class Notification(TypedDict):
@@ -49,20 +52,13 @@ class UpdateType(StrEnum):
     UPDATED = "updated"
 
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
 SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED = "persistent_notifications_updated"
 
 SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
     {vol.Required(ATTR_NOTIFICATION_ID): cv.string}
 )
 
-DEFAULT_OBJECT_ID = "notification"
 _LOGGER = logging.getLogger(__name__)
-
-STATE = "notifying"
-STATUS_UNREAD = "unread"
-STATUS_READ = "read"
 
 
 @bind_hass
