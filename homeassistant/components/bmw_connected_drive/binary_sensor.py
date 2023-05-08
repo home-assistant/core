@@ -189,6 +189,14 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         icon="mdi:car-electric",
         value_fn=lambda v: v.fuel_and_battery.is_charger_connected,
     ),
+    BMWBinarySensorEntityDescription(
+        key="is_pre_entry_climatization_enabled",
+        name="Pre entry climatization",
+        icon="mdi:car-seat-heater",
+        value_fn=lambda v: v.charging_profile.is_pre_entry_climatization_enabled
+        if v.charging_profile
+        else False,
+    ),
 )
 
 

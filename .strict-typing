@@ -170,6 +170,7 @@ homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
+homeassistant.components.imap.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
@@ -177,6 +178,7 @@ homeassistant.components.iqvia.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
+homeassistant.components.jvc_projector.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
@@ -284,6 +286,7 @@ homeassistant.components.smhi.*
 homeassistant.components.snooz.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
+homeassistant.components.sql.*
 homeassistant.components.ssdp.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
