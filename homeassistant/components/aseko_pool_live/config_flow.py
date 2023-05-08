@@ -4,12 +4,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioaseko import APIUnavailable, InvalidAuthCredentials, MobileAccount, WebAccount
+from aioaseko import APIUnavailable, InvalidAuthCredentials, WebAccount
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
     CONF_EMAIL,
     CONF_PASSWORD,
     CONF_UNIQUE_ID,
@@ -34,12 +33,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         web_account = WebAccount(session, email, password)
         web_account_info = await web_account.login()
 
-        mobile_account = MobileAccount(session, email, password)
-        await mobile_account.login()
-
         return {
-            CONF_ACCESS_TOKEN: mobile_account.access_token,
-            CONF_EMAIL: web_account_info.email,
+            CONF_EMAIL: email,
+            CONF_PASSWORD: password,
             CONF_UNIQUE_ID: web_account_info.user_id,
         }
 
@@ -66,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=info[CONF_EMAIL],
-                    data={CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN]},
+                    data={CONF_EMAIL: info[CONF_EMAIL], CONF_PASSWORD: info[CONF_PASSWORD]},
                 )
 
         return self.async_show_form(

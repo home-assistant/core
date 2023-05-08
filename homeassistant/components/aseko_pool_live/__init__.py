@@ -6,7 +6,7 @@ import logging
 from aioaseko import APIUnavailable, MobileAccount
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -22,10 +22,13 @@ PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aseko Pool Live from a config entry."""
     account = MobileAccount(
-        async_get_clientsession(hass), access_token=entry.data[CONF_ACCESS_TOKEN]
+        async_get_clientsession(hass),
+        username=entry.data[CONF_EMAIL],
+        password=entry.data[CONF_PASSWORD]
     )
 
     try:
+        await account.login()
         units = await account.get_units()
     except APIUnavailable as err:
         raise ConfigEntryNotReady from err
