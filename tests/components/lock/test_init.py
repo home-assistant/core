@@ -24,7 +24,7 @@ from homeassistant.components.lock import (
     _async_open,
     _async_unlock,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -60,10 +60,6 @@ class MockLockEntity(LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         self.calls_open(kwargs)
-
-    @callback
-    def async_registry_entry_updated(self) -> None:
-        """Run when the entity registry entry has been updated."""
 
 
 async def test_lock_default(hass: HomeAssistant) -> None:
@@ -106,11 +102,11 @@ async def test_lock_states(hass: HomeAssistant) -> None:
     assert not lock.is_locked
 
 
-async def test_lock_reg_entry_update(
+async def test_set_default_code_option(
     hass: HomeAssistant,
     enable_custom_integrations: None,
 ) -> None:
-    """Test lock entity states."""
+    """Test default code stored in the registry."""
     entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get_or_create("lock", "test", "very_unique")
@@ -129,6 +125,49 @@ async def test_lock_reg_entry_update(
     await hass.async_block_till_done()
 
     entity0: MockLock = platform.ENTITIES["lock1"]
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "lock", {CONF_DEFAULT_CODE: "1234"}
+    )
+    await hass.async_block_till_done()
+
+    assert entity0._lock_option_default_code == "1234"
+
+
+async def test_default_code_option_update(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test default code stored in the registry is updated."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("lock", "test", "very_unique")
+    await hass.async_block_till_done()
+
+    platform = getattr(hass.components, "test.lock")
+    platform.init(empty=True)
+
+    # Pre-register entities
+    entry = entity_registry.async_get_or_create("lock", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "lock",
+        {
+            "default_code": "5432",
+        },
+    )
+    platform.ENTITIES["lock1"] = platform.MockLock(
+        name="Test",
+        code_format=r"^\d{4}$",
+        supported_features=LockEntityFeature.OPEN,
+        unique_id="very_unique",
+    )
+
+    assert await async_setup_component(hass, "lock", {"lock": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    entity0: MockLock = platform.ENTITIES["lock1"]
+    assert entity0._lock_option_default_code == "5432"
+
     entity_registry.async_update_entity_options(
         entry.entity_id, "lock", {CONF_DEFAULT_CODE: "1234"}
     )

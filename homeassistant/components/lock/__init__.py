@@ -252,9 +252,25 @@ class LockEntity(Entity):
         """Return the list of supported features."""
         return self._attr_supported_features
 
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the sensor entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self._async_read_entity_options()
+
     @callback
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
+        self._async_read_entity_options()
+
+    @callback
+    def _async_read_entity_options(self) -> None:
+        """Read entity options from entity registry.
+
+        Called when the entity registry entry has been updated and before the lock is
+        added to the state machine.
+        """
         assert self.registry_entry
         if (lock_options := self.registry_entry.options.get(DOMAIN)) and (
             custom_default_lock_code := lock_options.get(CONF_DEFAULT_CODE)
