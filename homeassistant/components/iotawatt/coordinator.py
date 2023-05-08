@@ -18,7 +18,7 @@ from .const import CONNECTION_ERRORS
 _LOGGER = logging.getLogger(__name__)
 
 # Desired refresh rate (min 5 sec)
-REFRESH_RATE=5
+REFRESH_RATE = 5
 
 # Matches iotwatt data log interval
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 5

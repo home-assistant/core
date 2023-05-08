@@ -170,7 +170,9 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
                 f"{data.hub_mac_address}-input-{data.getChannel()}-{data.getUnit()}"
             )
         elif data.getType() == "Output":
-            self._attr_unique_id = f"{data.hub_mac_address}-output-{data.getSourceName()}"
+            self._attr_unique_id = (
+                f"{data.hub_mac_address}-output-{data.getSourceName()}"
+            )
         self.entity_description = entity_description
 
     @property
