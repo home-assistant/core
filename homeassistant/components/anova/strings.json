@@ -46,6 +46,11 @@
       "water_temperature": {
         "name": "Water temperature"
       }
+    },
+    "switch": {
+      "precision_cooker_switch": {
+        "name": "Circulating"
+      }
     }
   }
 }
