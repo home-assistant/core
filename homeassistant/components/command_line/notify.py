@@ -33,8 +33,11 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> CommandLineNotificationService:
     """Get the Command Line notification service."""
-    command: str = config[CONF_COMMAND]
-    timeout: int = config[CONF_COMMAND_TIMEOUT]
+    notify_config = config
+    if discovery_info:
+        notify_config = discovery_info["config"]
+    command: str = notify_config[CONF_COMMAND]
+    timeout: int = notify_config[CONF_COMMAND_TIMEOUT]
 
     return CommandLineNotificationService(command, timeout)
 
