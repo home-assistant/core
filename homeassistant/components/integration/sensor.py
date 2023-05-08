@@ -189,10 +189,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     err,
                 )
             self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-            if self._unit_of_measurement is None:
-                self._unit_of_measurement = state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
+            self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         @callback
         def calc_integration(event: Event) -> None:
