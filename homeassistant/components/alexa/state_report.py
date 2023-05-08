@@ -5,7 +5,7 @@ import asyncio
 from http import HTTPStatus
 import json
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import aiohttp
 import async_timeout
@@ -18,11 +18,13 @@ from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .config import AbstractConfig
 from .const import API_CHANGE, DATE_FORMAT, DOMAIN, Cause
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
 from .errors import NoTokenAvailable, RequireRelink
 from .messages import AlexaResponse
+
+if TYPE_CHECKING:
+    from .config import AbstractConfig
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10
