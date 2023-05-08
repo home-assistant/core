@@ -50,6 +50,11 @@ class RestData:
         self.last_exception: Exception | None = None
         self.headers: httpx.Headers | None = None
 
+    @property
+    def url(self) -> str:
+        """Get url."""
+        return self._resource
+
     def set_url(self, url: str) -> None:
         """Set url."""
         self._resource = url
