@@ -228,6 +228,7 @@ def websocket_subscribe_notifications(
     notifications = _async_get_or_create_notifications(hass)
     msg_id = msg["id"]
 
+    @callback
     def _async_send_notification_update(
         update_type: UpdateType, notifications: dict[str, Notification]
     ) -> None:
