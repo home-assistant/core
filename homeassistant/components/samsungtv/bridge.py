@@ -458,8 +458,11 @@ class SamsungTVWSBridge(
         self._rest_api: SamsungTVAsyncRest | None = None
         self._device_info: dict[str, Any] | None = None
 
-    def _get_device_spec(self, key: str) -> Any | None:
+    async def _get_device_spec(self, key: str) -> Any | None:
         """Check if a flag exists in latest device info."""
+        if self._device_info is None:
+            # Initialise device info on first connect
+            await self.async_device_info()
         if not ((info := self._device_info) and (device := info.get("device"))):
             return None
         return device.get(key)
@@ -469,7 +472,7 @@ class SamsungTVWSBridge(
         # On some TVs, opening a websocket turns on the TV
         # so first check "PowerState" if device_info has it
         # then fallback to default, trying to open a websocket
-        if self._get_device_spec("PowerState") is not None:
+        if await self._get_device_spec("PowerState") is not None:
             LOGGER.debug("Checking if TV %s is on using device info", self.host)
             # Ensure we get an updated value
             info = await self.async_device_info(force=True)
@@ -655,7 +658,7 @@ class SamsungTVWSBridge(
 
     async def _async_send_power_off(self) -> None:
         """Send power off command to remote."""
-        if self._get_device_spec("FrameTVSupport") == "true":
+        if str(self._get_device_spec("FrameTVSupport")) == "true":
             await self._async_send_commands(SendRemoteKey.hold("KEY_POWER", 3))
         else:
             await self._async_send_commands([SendRemoteKey.click("KEY_POWER")])
