@@ -1,4 +1,6 @@
 """Google config for Cloud."""
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -128,7 +130,7 @@ class CloudGoogleConfig(AbstractConfig):
         config: dict[str, Any],
         cloud_user: str,
         prefs: CloudPreferences,
-        cloud: Cloud["CloudClient"],
+        cloud: Cloud[CloudClient],
     ) -> None:
         """Initialize the Google config."""
         super().__init__(hass)

@@ -64,13 +64,14 @@ class CloudPreferencesStore(Store):
 class CloudPreferences:
     """Handle cloud preferences."""
 
+    _prefs: dict[str, Any]
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize cloud prefs."""
         self._hass = hass
         self._store = CloudPreferencesStore(
             hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
         )
-        self._prefs: dict[str, Any]
         self._listeners: list[
             Callable[[CloudPreferences], Coroutine[Any, Any, None]]
         ] = []
