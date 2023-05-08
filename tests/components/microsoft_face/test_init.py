@@ -25,6 +25,12 @@ from tests.common import assert_setup_component, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 def create_group(hass, name):
     """Create a new person group.
 
