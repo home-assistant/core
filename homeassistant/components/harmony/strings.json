@@ -41,5 +41,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_switches": {
+      "title": "The Logitech Harmony switch platform is being removed",
+      "description": "Using the switch platform to change the current activity is now deprecated and will be removed in a future version of Home Assistant.\n\nPlease adjust any automations or scripts that you may have to use the select entity that is already available to fix this issue."
+    }
   }
 }
