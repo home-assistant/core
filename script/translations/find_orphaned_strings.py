@@ -4,6 +4,10 @@ import glob
 import json
 import os
 
+IGNORE_FILES = [
+    "homeassistant/components/scrape/strings.json",
+]
+
 
 def dig_recursive(dic: dict, keys: list):
     """Recursively dig into dict looking for key/value = string/string."""
@@ -47,6 +51,8 @@ if __name__ == "__main__":
         dig_recursive(j, ignorelist)
 
     for path in sorted(glob.glob("homeassistant/components/*/strings.json")):
+        if path in IGNORE_FILES:
+            continue
         dirname = os.path.dirname(path)
         if os.path.isfile(os.path.join(dirname, "config_flow.py")):
             orphans = find_orphan_strings(dirname, ignorelist)
