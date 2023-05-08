@@ -477,7 +477,6 @@ class TriggerBaseEntity(Entity):
         self._set_unique_id(config.get(CONF_UNIQUE_ID))
 
         self._config = config
-        _LOGGER.debug("config %s", config)
 
         self._static_rendered = {}
         self._to_render_simple = []
@@ -491,7 +490,6 @@ class TriggerBaseEntity(Entity):
         ):
             if itm not in config or config[itm] is None:
                 continue
-            _LOGGER.debug("itm %s", config[itm])
             if config[itm].is_static:
                 self._static_rendered[itm] = config[itm].template
             else:
