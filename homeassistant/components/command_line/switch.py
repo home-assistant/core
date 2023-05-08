@@ -26,11 +26,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .utils import call_shell_with_timeout, check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,6 +63,15 @@ async def async_setup_platform(
     """Find and return switches controlled by shell commands."""
 
     if config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_switch",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_switch",
+        )
         devices: dict[str, Any] = config.get(CONF_SWITCHES, {})
     elif discovery_info:
         devices = {discovery_info["object_id"]: discovery_info["config"]}

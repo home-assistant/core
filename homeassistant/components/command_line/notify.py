@@ -11,10 +11,11 @@ from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationSer
 from homeassistant.const import CONF_COMMAND, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +34,16 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> CommandLineNotificationService:
     """Get the Command Line notification service."""
-    notify_config = config
+    if notify_config := config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_notify",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_notify",
+        )
     if discovery_info:
         notify_config = discovery_info["config"]
     command: str = notify_config[CONF_COMMAND]

@@ -23,10 +23,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .sensor import CommandSensorData
 
 DEFAULT_NAME = "Binary Command Sensor"
@@ -58,7 +59,16 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Command line Binary Sensor."""
 
-    binary_sensor_config = config
+    if binary_sensor_config := config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_binary_sensor",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_binary_sensor",
+        )
     if discovery_info:
         binary_sensor_config = discovery_info["config"]
 
