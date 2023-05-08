@@ -477,6 +477,7 @@ class TriggerBaseEntity(Entity):
         self._set_unique_id(config.get(CONF_UNIQUE_ID))
 
         self._config = config
+        _LOGGER.debug("config %s", config)
 
         self._static_rendered = {}
         self._to_render_simple = []
@@ -488,9 +489,9 @@ class TriggerBaseEntity(Entity):
             CONF_NAME,
             CONF_PICTURE,
         ):
-            if itm not in config:
+            if itm not in config or config[itm] is None:
                 continue
-
+            _LOGGER.debug("itm %s", config[itm])
             if config[itm].is_static:
                 self._static_rendered[itm] = config[itm].template
             else:
@@ -625,6 +626,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
             this = state.as_dict()
 
         run_variables: dict[str, Any] = {"value": value}
+        # Silently try if variable is a json and store result in `value_json` if it is.
         with contextlib.suppress(*JSON_DECODE_EXCEPTIONS):
             run_variables["value_json"] = json_loads(run_variables["value"])
         variables = {"this": this, **(run_variables or {})}

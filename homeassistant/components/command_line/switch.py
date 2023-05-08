@@ -68,23 +68,20 @@ async def async_setup_platform(
     switches = []
 
     for object_id, device_config in devices.items():
-        _config = {CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID)}
-        _config[CONF_NAME] = Template(
-            device_config.get(CONF_FRIENDLY_NAME, object_id), hass
-        )
+        trigger_entity_config = {
+            CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
+            CONF_NAME: Template(device_config.get(CONF_FRIENDLY_NAME, object_id), hass),
+            CONF_ICON: device_config.get(CONF_ICON_TEMPLATE),
+        }
+
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
             value_template.hass = hass
 
-        icon_template: Template | None = device_config.get(CONF_ICON_TEMPLATE)
-        if icon_template is not None:
-            icon_template.hass = hass
-            _config[CONF_ICON] = icon_template
-
         switches.append(
             CommandSwitch(
-                _config,
+                trigger_entity_config,
                 object_id,
                 device_config[CONF_COMMAND_ON],
                 device_config[CONF_COMMAND_OFF],
