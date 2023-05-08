@@ -2227,6 +2227,44 @@ async def test_mqtt_subscribes_topics_on_connect(
     assert ("still/pending", 1) in subscribe_calls
 
 
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {},
+            mqtt.CONF_DISCOVERY: False,
+        }
+    ],
+)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+async def test_mqtt_subscribes_in_single_call(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test bundled client subscription to topic."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    mqtt_client_mock.subscribe.reset_mock()
+    await mqtt.async_subscribe(hass, "topic/test", record_calls)
+    await mqtt.async_subscribe(hass, "home/sensor", record_calls)
+    await hass.async_block_till_done()
+    # Make sure the debouncer finishes
+    await asyncio.sleep(0.2)
+
+    assert mqtt_client_mock.subscribe.call_count == 1
+    # Assert we have a single subscription call with both subscriptions
+    assert mqtt_client_mock.subscribe.mock_calls[0][1][0] in [
+        [("topic/test", 0), ("home/sensor", 0)],
+        [("home/sensor", 0), ("topic/test", 0)],
+    ]
+
+
 async def test_default_entry_setting_are_applied(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
