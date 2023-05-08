@@ -915,11 +915,11 @@ async def test_compile_hourly_sum_statistics_amount(
     }
     assert stats == expected_stats
 
-    # With an offset of 1 minute, we expect to get all periods
+    # With an offset of 1 minute, we expect to get the 2nd and 3rd periods
     stats = statistics_during_period(
         hass, period0 + timedelta(minutes=1), period="5minute"
     )
-    assert stats == expected_stats
+    assert stats == {"sensor.test1": expected_stats["sensor.test1"][1:3]}
 
     # With an offset of 5 minutes, we expect to get the 2nd and 3rd periods
     stats = statistics_during_period(
@@ -927,11 +927,11 @@ async def test_compile_hourly_sum_statistics_amount(
     )
     assert stats == {"sensor.test1": expected_stats["sensor.test1"][1:3]}
 
-    # With an offset of 6 minutes, we expect to get the 2nd and 3rd periods
+    # With an offset of 6 minutes, we expect to get the 3rd period
     stats = statistics_during_period(
         hass, period0 + timedelta(minutes=6), period="5minute"
     )
-    assert stats == {"sensor.test1": expected_stats["sensor.test1"][1:3]}
+    assert stats == {"sensor.test1": expected_stats["sensor.test1"][2:3]}
 
     assert "Error while processing event StatisticsTask" not in caplog.text
     assert "Detected new cycle for sensor.test1, last_reset set to" in caplog.text
