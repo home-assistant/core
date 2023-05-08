@@ -8,18 +8,23 @@
     "created_by": "ETS5",
     "schema_version": "20",
     "tool_version": "5.7.1428.39779",
-    "xknxproject_version": "3.0.0",
-    "language_code": null
+    "xknxproject_version": "3.1.0",
+    "language_code": "de-DE"
   },
   "communication_objects": {
     "1.0.9/O-57_R-21": {
       "name": "Ch A Current Setpoint",
       "number": 57,
-      "text": "Channel A - Controller",
-      "function_text": "Current setpoint",
+      "text": "Kanal A - Regler",
+      "function_text": "aktueller Sollwert",
       "description": "",
       "device_address": "1.0.9",
-      "dpt": { "main": 9, "sub": 1 },
+      "dpts": [
+        {
+          "main": 9,
+          "sub": 1
+        }
+      ],
       "object_size": "2 Bytes",
       "flags": {
         "read": true,
@@ -34,11 +39,16 @@
     "1.0.9/O-73_R-29": {
       "name": "Ch A On/Off Request Master",
       "number": 73,
-      "text": "Channel A - Controller",
-      "function_text": "Activate/deactivate control",
+      "text": "Kanal A - Regler",
+      "function_text": "Regelung aktivieren/deaktivieren",
       "description": "",
       "device_address": "1.0.9",
-      "dpt": { "main": 1, "sub": 1 },
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 1
+        }
+      ],
       "object_size": "1 Bit",
       "flags": {
         "read": false,
@@ -53,11 +63,16 @@
     "1.1.6/O-4_R-4": {
       "name": "DayNight_General_1_GO",
       "number": 4,
-      "text": "Time",
-      "function_text": "Day (0) / Night (1)",
+      "text": "Zeit",
+      "function_text": "Tag (0) / Nacht (1)",
       "description": "",
       "device_address": "1.1.6",
-      "dpt": { "main": 1, "sub": 24 },
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 24
+        }
+      ],
       "object_size": "1 Bit",
       "flags": {
         "read": false,
@@ -72,11 +87,16 @@
     "1.1.6/O-1_R-1": {
       "name": "Time_General_1_GO",
       "number": 1,
-      "text": "Time",
-      "function_text": "Time",
+      "text": "Zeit",
+      "function_text": "Uhrzeit",
       "description": "",
       "device_address": "1.1.6",
-      "dpt": { "main": 10, "sub": 1 },
+      "dpts": [
+        {
+          "main": 10,
+          "sub": 1
+        }
+      ],
       "object_size": "3 Bytes",
       "flags": {
         "read": false,
@@ -92,10 +112,15 @@
       "name": "StatusOnOff_RGB_1_GO",
       "number": 241,
       "text": "RGB:",
-      "function_text": "Status On/Off",
+      "function_text": "Status An/Aus",
       "description": "",
       "device_address": "1.1.6",
-      "dpt": { "main": 1, "sub": 1 },
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 1
+        }
+      ],
       "object_size": "1 Bit",
       "flags": {
         "read": true,
@@ -114,7 +139,12 @@
       "function_text": "Eingang / Ausgang",
       "description": "",
       "device_address": "2.0.5",
-      "dpt": { "main": 10, "sub": 1 },
+      "dpts": [
+        {
+          "main": 10,
+          "sub": 1
+        }
+      ],
       "object_size": "3 Bytes",
       "flags": {
         "read": true,
@@ -133,7 +163,12 @@
       "function_text": "Ausgang",
       "description": "",
       "device_address": "2.0.5",
-      "dpt": { "main": 9, "sub": 1 },
+      "dpts": [
+        {
+          "main": 9,
+          "sub": 1
+        }
+      ],
       "object_size": "2 Bytes",
       "flags": {
         "read": true,
@@ -152,7 +187,12 @@
       "function_text": "Ausgang",
       "description": "",
       "device_address": "2.0.5",
-      "dpt": { "main": 1, "sub": 1 },
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 1
+        }
+      ],
       "object_size": "1 Bit",
       "flags": {
         "read": true,
@@ -167,11 +207,16 @@
     "2.0.15/O-1_R-0": {
       "name": "Time",
       "number": 1,
-      "text": "Time",
-      "function_text": "Send",
+      "text": "Uhrzeit",
+      "function_text": "Senden",
       "description": "",
       "device_address": "2.0.15",
-      "dpt": { "main": 10, "sub": 1 },
+      "dpts": [
+        {
+          "main": 10,
+          "sub": 1
+        }
+      ],
       "object_size": "3 Bytes",
       "flags": {
         "read": false,
@@ -186,11 +231,16 @@
     "2.0.15/O-3_R-2": {
       "name": "Trigger send date/time",
       "number": 3,
-      "text": "Trigger send date/time",
-      "function_text": "Receive",
+      "text": "Trigger sende Datum/Uhrzeit",
+      "function_text": "Empfangen",
       "description": "",
       "device_address": "2.0.15",
-      "dpt": { "main": 1, "sub": 17 },
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 17
+        }
+      ],
       "object_size": "1 Bit",
       "flags": {
         "read": false,
@@ -258,8 +308,8 @@
       "communication_object_ids": []
     },
     "1.0.9": {
-      "name": "HCC/S2.2.1.1 Heating/Cooling Circuit Controller,3-point,2-fold,MDRC",
-      "hardware_name": "HCC/S2.2.1.1 Heiz-/K\u00fchlkreis Controller,3-Punkt,2-fach,REG",
+      "name": "HCC/S2.2.1.1 Heiz-/Kühlkreis Controller,3-Punkt,2-fach,REG",
+      "hardware_name": "HCC/S2.2.1.1 Heiz-/Kühlkreis Controller,3-Punkt,2-fach,REG",
       "description": "",
       "manufacturer_name": "ABB",
       "individual_address": "1.0.9",
@@ -276,7 +326,7 @@
       "communication_object_ids": []
     },
     "1.1.1": {
-      "name": "SCN-IP000.03 IP Interface with Secure",
+      "name": "SCN-IP000.03 IP Interface mit Secure",
       "hardware_name": "IP Interface Secure",
       "description": "",
       "manufacturer_name": "MDT technologies",
@@ -298,7 +348,7 @@
       ]
     },
     "2.0.0": {
-      "name": "KNX/IP Router",
+      "name": "KNX/IP-Router",
       "hardware_name": "IP Router",
       "description": "",
       "manufacturer_name": "GIRA Giersiepen",
@@ -329,7 +379,7 @@
       "communication_object_ids": []
     },
     "2.0.15": {
-      "name": "KNX/IP Router",
+      "name": "KNX/IP-Router",
       "hardware_name": "Router Applications",
       "description": "",
       "manufacturer_name": "GIRA Giersiepen",
@@ -345,7 +395,10 @@
       "raw_address": 1,
       "address": "0/0/1",
       "project_uid": 43,
-      "dpt": { "main": 1, "sub": 1 },
+      "dpt": {
+        "main": 1,
+        "sub": 1
+      },
       "communication_object_ids": [
         "1.0.9/O-73_R-29",
         "1.1.6/O-4_R-4",
@@ -359,7 +412,10 @@
       "raw_address": 2,
       "address": "0/0/2",
       "project_uid": 44,
-      "dpt": { "main": 9, "sub": 1 },
+      "dpt": {
+        "main": 9,
+        "sub": 1
+      },
       "communication_object_ids": ["1.0.9/O-57_R-21", "2.0.5/O-123_R-3923"],
       "description": ""
     },
@@ -369,7 +425,10 @@
       "raw_address": 3,
       "address": "0/0/3",
       "project_uid": 45,
-      "dpt": { "main": 10, "sub": 1 },
+      "dpt": {
+        "main": 10,
+        "sub": 1
+      },
       "communication_object_ids": ["2.0.5/O-107_R-61"],
       "description": ""
     },
@@ -379,7 +438,10 @@
       "raw_address": 4,
       "address": "0/0/4",
       "project_uid": 69,
-      "dpt": { "main": 232, "sub": 600 },
+      "dpt": {
+        "main": 232,
+        "sub": 600
+      },
       "communication_object_ids": [],
       "description": ""
     },
@@ -389,7 +451,10 @@
       "raw_address": 256,
       "address": "0/1/0",
       "project_uid": 47,
-      "dpt": { "main": 1, "sub": 17 },
+      "dpt": {
+        "main": 1,
+        "sub": 17
+      },
       "communication_object_ids": ["1.1.6/O-241_R-124", "2.0.15/O-3_R-2"],
       "description": ""
     },
@@ -399,7 +464,10 @@
       "raw_address": 257,
       "address": "0/1/1",
       "project_uid": 48,
-      "dpt": { "main": 5, "sub": 1 },
+      "dpt": {
+        "main": 5,
+        "sub": 1
+      },
       "communication_object_ids": [],
       "description": ""
     },
@@ -409,7 +477,10 @@
       "raw_address": 258,
       "address": "0/1/2",
       "project_uid": 49,
-      "dpt": { "main": 10, "sub": 1 },
+      "dpt": {
+        "main": 10,
+        "sub": 1
+      },
       "communication_object_ids": ["1.1.6/O-1_R-1", "2.0.15/O-1_R-0"],
       "description": ""
     }
