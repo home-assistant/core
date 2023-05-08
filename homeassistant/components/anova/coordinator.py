@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from anova_wifi import AnovaOffline, AnovaPrecisionCooker
+from anova_wifi import AnovaOffline, AnovaPrecisionCooker, APCUpdate
 import async_timeout
 
 from homeassistant.core import HomeAssistant, callback
@@ -14,10 +14,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class AnovaCoordinator(DataUpdateCoordinator):
+class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
     """Anova custom coordinator."""
-
-    data: dict[str, dict[str, str | int | float]]
 
     def __init__(
         self,
@@ -47,7 +45,7 @@ class AnovaCoordinator(DataUpdateCoordinator):
             sw_version=firmware_version,
         )
 
-    async def _async_update_data(self) -> dict[str, dict[str, str | int | float]]:
+    async def _async_update_data(self) -> APCUpdate:
         try:
             async with async_timeout.timeout(5):
                 return await self.anova_device.update()

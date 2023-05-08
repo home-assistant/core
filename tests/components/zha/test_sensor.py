@@ -1,6 +1,6 @@
 """Test ZHA sensor."""
 import math
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import zigpy.profiles.zha
@@ -586,6 +586,10 @@ async def test_temp_uom(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == uom
 
 
+@patch(
+    "zigpy.zcl.ClusterPersistingListener",
+    MagicMock(),
+)
 async def test_electrical_measurement_init(
     hass: HomeAssistant,
     zigpy_device_mock,
@@ -605,7 +609,9 @@ async def test_electrical_measurement_init(
     )
     cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
     zha_device = await zha_device_joined(zigpy_device)
-    entity_id = await find_entity_id(Platform.SENSOR, zha_device, hass)
+    entity_id = await find_entity_id(
+        Platform.SENSOR, zha_device, hass, qualifier="active_power"
+    )
 
     # allow traffic to flow through the gateway and devices
     await async_enable_traffic(hass, [zha_device])

@@ -127,10 +127,11 @@ class NumberEntityDescription(EntityDescription):
     device_class: NumberDeviceClass | None = None
     max_value: None = None
     min_value: None = None
+    mode: NumberMode | None = None
     native_max_value: float | None = None
     native_min_value: float | None = None
-    native_unit_of_measurement: str | None = None
     native_step: float | None = None
+    native_unit_of_measurement: str | None = None
     step: None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
@@ -193,7 +194,7 @@ class NumberEntity(Entity):
     _attr_device_class: NumberDeviceClass | None
     _attr_max_value: None
     _attr_min_value: None
-    _attr_mode: NumberMode = NumberMode.AUTO
+    _attr_mode: NumberMode
     _attr_state: None = None
     _attr_step: None
     _attr_unit_of_measurement: None  # Subclasses of NumberEntity should not set this
@@ -201,8 +202,8 @@ class NumberEntity(Entity):
     _attr_native_max_value: float
     _attr_native_min_value: float
     _attr_native_step: float
-    _attr_native_value: float | None = None
     _attr_native_unit_of_measurement: str | None
+    _attr_native_value: float | None = None
     _deprecated_number_entity_reported = False
     _number_option_unit_of_measurement: str | None = None
 
@@ -357,7 +358,14 @@ class NumberEntity(Entity):
     @property
     def mode(self) -> NumberMode:
         """Return the mode of the entity."""
-        return self._attr_mode
+        if hasattr(self, "_attr_mode"):
+            return self._attr_mode
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.mode is not None
+        ):
+            return self.entity_description.mode
+        return NumberMode.AUTO
 
     @property
     @final

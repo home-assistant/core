@@ -1206,7 +1206,7 @@
     "dwd_weather_warnings": {
       "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "dweet": {
@@ -2664,6 +2664,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "jvc_projector": {
+      "name": "JVC Projector",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "kaiterra": {
       "name": "Kaiterra",
       "integration_type": "hub",
@@ -3628,7 +3634,7 @@
       "name": "NextBus",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
+      "iot_class": "cloud_polling"
     },
     "nextcloud": {
       "name": "Nextcloud",
@@ -6065,7 +6071,7 @@
     },
     "vizio": {
       "name": "VIZIO SmartCast",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },

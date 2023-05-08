@@ -139,6 +139,22 @@
             }),
           ]),
         }),
+        'climate': dict({
+          'account_timezone': dict({
+            '_dst_offset': '0:00:00',
+            '_dst_saved': '0:00:00',
+            '_hasdst': False,
+            '_std_offset': '0:00:00',
+            '_tznames': list([
+              'UTC',
+              'UTC',
+            ]),
+          }),
+          'activity': 'STANDBY',
+          'activity_end_time': None,
+          'activity_end_time_no_tz': None,
+          'is_climate_on': False,
+        }),
         'condition_based_services': dict({
           'is_service_required': False,
           'messages': list([
@@ -808,6 +824,32 @@
         ]),
         'name': 'i4 eDrive40',
         'timestamp': '2023-01-04T14:57:06+00:00',
+        'tires': dict({
+          'front_left': dict({
+            'current_pressure': 241,
+            'manufacturing_week': '2021-10-04T00:00:00',
+            'season': 2,
+            'target_pressure': 269,
+          }),
+          'front_right': dict({
+            'current_pressure': 255,
+            'manufacturing_week': '2019-06-10T00:00:00',
+            'season': 2,
+            'target_pressure': 269,
+          }),
+          'rear_left': dict({
+            'current_pressure': 324,
+            'manufacturing_week': '2019-03-18T00:00:00',
+            'season': 2,
+            'target_pressure': 303,
+          }),
+          'rear_right': dict({
+            'current_pressure': 331,
+            'manufacturing_week': '2019-03-18T00:00:00',
+            'season': 2,
+            'target_pressure': 303,
+          }),
+        }),
         'vehicle_location': dict({
           'account_region': 'row',
           'heading': '**REDACTED**',
@@ -968,6 +1010,22 @@
           'has_check_control_messages': False,
           'messages': list([
           ]),
+        }),
+        'climate': dict({
+          'account_timezone': dict({
+            '_dst_offset': '0:00:00',
+            '_dst_saved': '0:00:00',
+            '_hasdst': False,
+            '_std_offset': '0:00:00',
+            '_tznames': list([
+              'UTC',
+              'UTC',
+            ]),
+          }),
+          'activity': 'UNKNOWN',
+          'activity_end_time': None,
+          'activity_end_time_no_tz': None,
+          'is_climate_on': False,
         }),
         'condition_based_services': dict({
           'is_service_required': False,
@@ -1466,6 +1524,7 @@
         ]),
         'name': 'i3 (+ REX)',
         'timestamp': '2022-07-10T09:25:53+00:00',
+        'tires': None,
         'vehicle_location': dict({
           'account_region': 'row',
           'heading': None,
@@ -2456,6 +2515,22 @@
         'messages': list([
         ]),
       }),
+      'climate': dict({
+        'account_timezone': dict({
+          '_dst_offset': '0:00:00',
+          '_dst_saved': '0:00:00',
+          '_hasdst': False,
+          '_std_offset': '0:00:00',
+          '_tznames': list([
+            'UTC',
+            'UTC',
+          ]),
+        }),
+        'activity': 'UNKNOWN',
+        'activity_end_time': None,
+        'activity_end_time_no_tz': None,
+        'is_climate_on': False,
+      }),
       'condition_based_services': dict({
         'is_service_required': False,
         'messages': list([
@@ -2953,6 +3028,7 @@
       ]),
       'name': 'i3 (+ REX)',
       'timestamp': '2022-07-10T09:25:53+00:00',
+      'tires': None,
       'vehicle_location': dict({
         'account_region': 'row',
         'heading': None,
