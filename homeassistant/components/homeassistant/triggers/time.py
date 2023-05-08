@@ -163,6 +163,17 @@ async def async_attach_trigger(
             # entity
             to_track.append(at_time)
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
+        elif isinstance(at_time, datetime):
+            # datetime.datetime
+            localdt = dt_util.as_local(at_time)
+            if localdt >= dt_util.now():
+                removes.append(
+                    async_track_point_in_time(
+                        hass,
+                        partial(time_automation_listener, "datetime"),
+                        localdt,
+                    )
+                )
         else:
             # datetime.time
             removes.append(

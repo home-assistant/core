@@ -543,10 +543,12 @@ def test_schema_invalid(conf) -> None:
 async def test_date_and_datetime(hass: HomeAssistant, calls, val) -> None:
     """Make sure we handle date or datetime string."""
     when = cv.datetime(val)
+    yr_before = when - timedelta(days=365)
     before = when - timedelta(minutes=1)
+    after = when + timedelta(seconds=1)
     with patch(
         "homeassistant.util.dt.utcnow",
-        return_value=dt_util.as_utc(before),
+        return_value=dt_util.as_utc(yr_before),
     ):
         assert await async_setup_component(
             hass,
@@ -565,7 +567,9 @@ async def test_date_and_datetime(hass: HomeAssistant, calls, val) -> None:
         )
         await hass.async_block_till_done()
     assert len(calls) == 0
-    after = when + timedelta(seconds=1)
+    async_fire_time_changed(hass, before)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
     async_fire_time_changed(hass, after)
     await hass.async_block_till_done()
     assert len(calls) == 1
