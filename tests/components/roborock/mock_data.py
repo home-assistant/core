@@ -7,10 +7,11 @@ from roborock.containers import (
     Consumable,
     DNDTimer,
     HomeData,
+    NetworkInfo,
     Status,
     UserData,
 )
-from roborock.typing import RoborockDeviceProp
+from roborock.typing import DeviceProp
 
 # All data is based on a U.S. customer with a Roborock S7 MaxV Ultra
 USER_EMAIL = "user@domain.com"
@@ -367,4 +368,8 @@ STATUS = Status.from_dict(
     }
 )
 
-PROP = RoborockDeviceProp(STATUS, DND_TIMER, CLEAN_SUMMARY, CONSUMABLE, CLEAN_RECORD)
+PROP = DeviceProp(STATUS, DND_TIMER, CLEAN_SUMMARY, CONSUMABLE, CLEAN_RECORD)
+
+NETWORK_INFO = NetworkInfo(
+    ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc", bssid="bssid", rssi=90
+)

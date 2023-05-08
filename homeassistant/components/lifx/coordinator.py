@@ -205,13 +205,20 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
             methods, DEFAULT_ATTEMPTS, OVERALL_TIMEOUT
         )
 
+    def get_number_of_zones(self) -> int:
+        """Return the number of zones.
+
+        If the number of zones is not yet populated, return 0
+        """
+        return len(self.device.color_zones) if self.device.color_zones else 0
+
     @callback
     def _async_build_color_zones_update_requests(self) -> list[Callable]:
         """Build a color zones update request."""
         device = self.device
         return [
             partial(device.get_color_zones, start_index=zone)
-            for zone in range(0, len(device.color_zones), 8)
+            for zone in range(0, self.get_number_of_zones(), 8)
         ]
 
     async def _async_update_data(self) -> None:
@@ -224,7 +231,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         ):
             await self._async_populate_device_info()
 
-        num_zones = len(device.color_zones) if device.color_zones is not None else 0
+        num_zones = self.get_number_of_zones()
         features = lifx_features(self.device)
         is_extended_multizone = features["extended_multizone"]
         is_legacy_multizone = not is_extended_multizone and features["multizone"]
@@ -256,7 +263,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
 
         if is_extended_multizone or is_legacy_multizone:
             self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
-        if is_legacy_multizone and num_zones != len(device.color_zones):
+        if is_legacy_multizone and num_zones != self.get_number_of_zones():
             # The number of zones has changed so we need
             # to update the zones again. This happens rarely.
             await self.async_get_color_zones()

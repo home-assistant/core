@@ -9,6 +9,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import NotionData
 from .const import DOMAIN
 
 CONF_DEVICE_KEY = "device_key"
@@ -33,7 +34,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[NotionData] = hass.data[DOMAIN][entry.entry_id]
 
     return async_redact_data(
         {

@@ -25,6 +25,7 @@ from aioesphomeapi import (
     NumberInfo,
     SelectInfo,
     SensorInfo,
+    SensorState,
     SwitchInfo,
     TextSensorInfo,
     UserService,
@@ -240,9 +241,18 @@ class RuntimeEntryData:
         current_state_by_type = self.state[state_type]
         current_state = current_state_by_type.get(key, _SENTINEL)
         subscription_key = (state_type, key)
-        if current_state == state and subscription_key not in stale_state:
+        if (
+            current_state == state
+            and subscription_key not in stale_state
+            and not (
+                type(state) is SensorState  # pylint: disable=unidiomatic-typecheck
+                and (platform_info := self.info.get(Platform.SENSOR))
+                and (entity_info := platform_info.get(state.key))
+                and (cast(SensorInfo, entity_info)).force_update
+            )
+        ):
             _LOGGER.debug(
-                "%s: ignoring duplicate update with and key %s: %s",
+                "%s: ignoring duplicate update with key %s: %s",
                 self.name,
                 key,
                 state,

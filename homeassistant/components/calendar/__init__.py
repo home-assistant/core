@@ -164,7 +164,7 @@ def _validate_rrule(value: Any) -> str:
     try:
         rrulestr(value)
     except ValueError as err:
-        raise vol.Invalid(f"Invalid rrule: {str(err)}") from err
+        raise vol.Invalid(f"Invalid rrule '{value}': {err}") from err
 
     # Example format: FREQ=DAILY;UNTIL=...
     rule_parts = dict(s.split("=", 1) for s in value.split(";"))
