@@ -6,12 +6,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "step": {
-      "user": {
-        "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]"
-        }
-      }
-    }
+    "step": {}
   }
 }
