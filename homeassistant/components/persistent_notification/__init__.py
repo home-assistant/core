@@ -195,6 +195,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_register_command(hass, websocket_get_notifications)
+    websocket_api.async_register_command(hass, websocket_subscribe_notifications)
 
     return True
 
