@@ -64,7 +64,6 @@ class MockLockEntity(LockEntity):
     @callback
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
-        self._lock_option_default_code = self._lock_option_default_code
 
 
 async def test_lock_default(hass: HomeAssistant) -> None:
