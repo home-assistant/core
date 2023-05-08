@@ -41,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
@@ -140,7 +141,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     load_coroutines: list[Coroutine[Any, Any, None]] = []
+    platforms: list[Platform] = []
     for platform, configs in command_line_config.items():
+        platforms.append(PLATFORM_MAPPING[platform])
         for object_id, object_config in configs.items():
             load_coroutines.append(
                 discovery.async_load_platform(
@@ -151,6 +154,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     config,
                 )
             )
+
+    await async_setup_reload_service(hass, DOMAIN, platforms)
 
     if load_coroutines:
         await asyncio.gather(*load_coroutines)

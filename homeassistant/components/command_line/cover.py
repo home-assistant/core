@@ -20,11 +20,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 from .utils import call_shell_with_timeout, check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,10 +54,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up cover controlled by shell commands."""
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    devices: dict[str, Any] = config.get(CONF_COVERS, {})
     covers = []
+    if config:
+        devices: dict[str, Any] = config.get(CONF_COVERS, {})
+    elif discovery_info:
+        devices = {discovery_info["object_id"]: discovery_info["config"]}
+    else:
+        return
 
     for device_name, device_config in devices.items():
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)

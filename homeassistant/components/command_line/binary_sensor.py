@@ -23,11 +23,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT
 from .sensor import CommandSensorData
 
 DEFAULT_NAME = "Binary Command Sensor"
@@ -59,16 +58,20 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Command line Binary Sensor."""
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    binary_sensor_config = config
+    if discovery_info:
+        binary_sensor_config = discovery_info["config"]
 
-    name: str = config.get(CONF_NAME, DEFAULT_NAME)
-    command: str = config[CONF_COMMAND]
-    payload_off: str = config[CONF_PAYLOAD_OFF]
-    payload_on: str = config[CONF_PAYLOAD_ON]
-    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
-    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-    command_timeout: int = config[CONF_COMMAND_TIMEOUT]
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    name: str = binary_sensor_config.get(CONF_NAME, DEFAULT_NAME)
+    command: str = binary_sensor_config[CONF_COMMAND]
+    payload_off: str = binary_sensor_config[CONF_PAYLOAD_OFF]
+    payload_on: str = binary_sensor_config[CONF_PAYLOAD_ON]
+    device_class: BinarySensorDeviceClass | None = binary_sensor_config.get(
+        CONF_DEVICE_CLASS
+    )
+    value_template: Template | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
+    command_timeout: int = binary_sensor_config[CONF_COMMAND_TIMEOUT]
+    unique_id: str | None = binary_sensor_config.get(CONF_UNIQUE_ID)
     if value_template is not None:
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
