@@ -46,7 +46,7 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
                     [
                         vol.Or(
                             cv.uuid4_hex,
-                            vol.Schema({vol.Required(CONF_GROUP): cv.uuid4_hex}),
+                            vol.Schema({vol.Required(CONF_GROUP): str}),
                         )
                     ],
                 )
