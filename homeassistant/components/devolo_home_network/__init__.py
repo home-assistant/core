@@ -212,10 +212,11 @@ def platforms(device: Device) -> set[Platform]:
         Platform.BUTTON,
         Platform.SENSOR,
         Platform.SWITCH,
-        Platform.UPDATE,
     }
     if device.plcnet:
         supported_platforms.add(Platform.BINARY_SENSOR)
     if device.device and "wifi1" in device.device.features:
         supported_platforms.add(Platform.DEVICE_TRACKER)
+    if device.device and "update" in device.device.features:
+        supported_platforms.add(Platform.UPDATE)
     return supported_platforms

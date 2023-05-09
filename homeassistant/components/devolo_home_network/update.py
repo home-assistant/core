@@ -64,15 +64,14 @@ async def async_setup_entry(
     ]["coordinators"]
 
     entities: list[DevoloUpdateEntity] = []
-    if device.device and "update" in device.device.features:
-        entities.append(
-            DevoloUpdateEntity(
-                entry,
-                coordinators[REGULAR_FIRMWARE],
-                UPDATE_TYPES[REGULAR_FIRMWARE],
-                device,
-            )
+    entities.append(
+        DevoloUpdateEntity(
+            entry,
+            coordinators[REGULAR_FIRMWARE],
+            UPDATE_TYPES[REGULAR_FIRMWARE],
+            device,
         )
+    )
     async_add_entities(entities)
 
 
