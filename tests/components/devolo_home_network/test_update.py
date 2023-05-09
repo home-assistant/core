@@ -15,7 +15,7 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
@@ -27,7 +27,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_update_setup(hass: HomeAssistant):
+async def test_update_setup(hass: HomeAssistant) -> None:
     """Test default setup of the update component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -39,13 +39,13 @@ async def test_update_setup(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_update_firmware(hass: HomeAssistant, mock_device: MockDevice):
+async def test_update_firmware(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test updating a device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{PLATFORM}.{device_name}_firmware_update"
-
-    er = entity_registry.async_get(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -60,7 +60,7 @@ async def test_update_firmware(hass: HomeAssistant, mock_device: MockDevice):
         == FIRMWARE_UPDATE_AVAILABLE.new_firmware_version.split("_")[0]
     )
 
-    assert er.async_get(state_key).entity_category == EntityCategory.CONFIG
+    assert entity_registry.async_get(state_key).entity_category == EntityCategory.CONFIG
 
     assert await hass.services.async_call(
         PLATFORM,
@@ -84,7 +84,9 @@ async def test_update_firmware(hass: HomeAssistant, mock_device: MockDevice):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_device_failure_check(hass: HomeAssistant, mock_device: MockDevice):
+async def test_device_failure_check(
+    hass: HomeAssistant, mock_device: MockDevice
+) -> None:
     """Test device failure during check."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -109,7 +111,7 @@ async def test_device_failure_update(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_device: MockDevice,
-):
+) -> None:
     """Test device failure when starting update."""
     caplog.clear()
     entry = configure_integration(hass)
@@ -135,7 +137,7 @@ async def test_device_failure_update(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice):
+async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test updating unautherized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
