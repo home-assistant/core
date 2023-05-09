@@ -4,8 +4,9 @@ from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,17 +33,12 @@ class ForecastSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_id: str = entity_id
         self._name: str = "Awattar forecast"
-        self._unit: str = UNIT
+        self._attr_native_unit_of_measurement = UNIT
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor, if any."""
-        return self._unit
 
     @property
     def device_info(self) -> entity.DeviceInfo:
@@ -51,7 +47,6 @@ class ForecastSensor(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, self.entity_id)},
             "name": self._name,
             "manufacturer": MANUFACTURER,
-            "model": "",
         }
 
     @property
@@ -82,7 +77,7 @@ def _setup_entities(
         [
             ForecastSensor(
                 hass.data[DOMAIN][coordinator_name],
-                f"{SENSOR_DOMAIN}.{DOMAIN}_forecast",
+                f"{Platform.SENSOR}.{DOMAIN}_forecast",
             ),
         ]
     )

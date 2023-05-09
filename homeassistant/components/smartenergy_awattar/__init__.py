@@ -9,15 +9,13 @@ import aiohttp
 from awattar_api.awattar_api import AwattarApi
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     API,
@@ -29,16 +27,14 @@ from .const import (
     INIT_STATE,
     UNSUB_OPTIONS_UPDATE_LISTENER,
 )
-from .state import StateFetcher, init_state
+from .coordinator import AwattarCoordinator
+from .state import init_state
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 MIN_UPDATE_INTERVAL: timedelta = timedelta(seconds=10)
-DEFAULT_UPDATE_INTERVAL: timedelta = timedelta(seconds=10)
 
-PLATFORMS: list[str] = [
-    SENSOR_DOMAIN,
-]
+PLATFORMS: list[str] = [Platform.SENSOR]
 
 # Configuration validation
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
@@ -46,9 +42,9 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_COUNTRY): vol.In(sorted(CONF_COUNTRY_LIST)),
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
-                ): vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
+                vol.Optional(CONF_SCAN_INTERVAL, default=MIN_UPDATE_INTERVAL): vol.All(
+                    cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)
+                ),
             }
         )
     },
@@ -66,32 +62,26 @@ async def ping_awattar(hass: HomeAssistant) -> None:
         raise ConfigEntryNotReady(ex) from ex
 
 
-def _setup_coordinator(
+async def _setup_coordinator(
     hass: HomeAssistant,
     scan_interval: timedelta,
     coordinator_name: str,
-) -> DataUpdateCoordinator:
+) -> None:
     """Initialize the coordinator with empty state."""
     _LOGGER.debug("Configuring coordinator=%s", coordinator_name)
 
-    state_fetcher: StateFetcher = StateFetcher(hass)
-    coordinator: DataUpdateCoordinator[dict] = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DOMAIN,
-        update_method=state_fetcher.fetch_states,
-        update_interval=scan_interval,
-    )
-    state_fetcher.coordinator = coordinator
-    hass.data[DOMAIN][coordinator_name] = coordinator
+    coordinator = AwattarCoordinator(hass, scan_interval)
 
-    return coordinator
+    # Query the API for the first time and initialise coordinator.data
+    await coordinator.async_config_entry_first_refresh()
+
+    # Record the coordinator in a global store
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][coordinator_name] = coordinator
 
 
 def _setup_api(config: ConfigType) -> dict:
     """Initialize the API and save the reference in the state."""
-    awattar_api = {}
-
     country: str = config[DOMAIN].get(CONF_COUNTRY)
     _LOGGER.debug("Configuring Awattar API")
     awattar_api = init_state(AWATTAR_API_URL[country])
@@ -108,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     - sensors.
     """
     data = dict(config_entry.data)
-    entry_id = config_entry.entry_id
+    entry_id: str = config_entry.entry_id
 
     _LOGGER.debug(
         "Setting up an entry with id=%s",
@@ -129,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass,
         scan_interval,
         f"{entry_id}_coordinator",
-    ).async_config_entry_first_refresh()
+    )
 
     hass.data[DOMAIN][entry_id] = data
 
@@ -195,19 +185,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _LOGGER.debug("Setting up the Awattar integration")
 
     hass.data[DOMAIN] = hass.data[DOMAIN] if DOMAIN in hass.data else {}
-    scan_interval: timedelta = DEFAULT_UPDATE_INTERVAL
-
     hass.data[DOMAIN] = {INIT_STATE: {}}
 
     if DOMAIN in config:
+        scan_interval: timedelta = config[DOMAIN].get(CONF_SCAN_INTERVAL)
         hass.data[DOMAIN][INIT_STATE] = _setup_api(config)
 
         # handle platform not ready
         await ping_awattar(hass)
 
-        await _setup_coordinator(
-            hass, scan_interval, AWATTAR_COORDINATOR
-        ).async_refresh()
+        await _setup_coordinator(hass, scan_interval, AWATTAR_COORDINATOR)
 
         # load all platforms
         for platform in PLATFORMS:

@@ -4,9 +4,8 @@ from typing import Any, Literal
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_COUNTRY, CONF_COUNTRY_LIST, DOMAIN
@@ -33,19 +32,10 @@ class AwattarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION: Literal[1] = 1
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return AwattarOptionsFlowHandler(config_entry)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        errors: dict = {}
         data_schema: dict = _get_config_schema({CONF_SCAN_INTERVAL: 10})
 
         if user_input is not None:
@@ -61,56 +51,13 @@ class AwattarConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            if not errors:
-                return self.async_create_entry(
-                    title="Awattar",
-                    data=user_input,
-                    options=user_input,
-                )
+            return self.async_create_entry(
+                title="Awattar",
+                data=user_input,
+                options=user_input,
+            )
 
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
-            errors=errors if errors else None,
-        )
-
-
-class AwattarOptionsFlowHandler(OptionsFlow):
-    """Config flow options handler for the Awattar component."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry: ConfigEntry = config_entry
-        self.options: dict[str, Any] = dict(config_entry.options)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        errors: dict = {}
-        data_schema: dict = _get_config_schema(
-            {
-                CONF_COUNTRY: self.config_entry.options.get(CONF_COUNTRY),
-                CONF_SCAN_INTERVAL: self.config_entry.options.get(CONF_SCAN_INTERVAL),
-            }
-        )
-
-        if user_input is not None:
-            # set default values to the current so the user is still within the same context,
-            # otherwise it makes each input empty
-            data_schema = _get_config_schema(
-                {
-                    CONF_COUNTRY: user_input.get(CONF_COUNTRY),
-                    CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL),
-                }
-            )
-
-            if not errors:
-                self.options.update(user_input)
-                return self.async_create_entry(title="", data=self.options)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=data_schema,
-            errors=errors if errors else None,
         )
