@@ -175,9 +175,8 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
-            if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            if state.state == STATE_UNAVAILABLE:
                 self._attr_available = False
-                self._state = None
             else:
                 try:
                     self._state = Decimal(state.state)
@@ -188,7 +187,6 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                         state.state,
                         err,
                     )
-                    self._state = None
 
             self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
