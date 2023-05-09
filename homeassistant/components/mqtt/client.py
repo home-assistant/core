@@ -684,12 +684,12 @@ class MQTT:
         if not self._pending_unsubscribes:
             return
 
-        topics = set(self._pending_unsubscribes)
+        topics = list(self._pending_unsubscribes)
         self._pending_unsubscribes = set()
 
         async with self._paho_lock:
             result, mid = await self.hass.async_add_executor_job(
-                self._mqttc.unsubscribe, list(topics)
+                self._mqttc.unsubscribe, topics
             )
         _raise_on_error(result)
         for topic in topics:
