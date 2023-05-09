@@ -1625,7 +1625,20 @@ def _statistics_during_period_with_session(
         ):
             _metadata = dict(metadata.values())
             for row in tmp:
-                prev_sums[_metadata[row.metadata_id]["statistic_id"]] = row.sum
+                metadata_by_id = _metadata[row.metadata_id]
+                statistic_id = metadata_by_id["statistic_id"]
+
+                state_unit = unit = metadata_by_id["unit_of_measurement"]
+                if state := hass.states.get(statistic_id):
+                    state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                convert = _get_statistic_to_display_unit_converter(
+                    unit, state_unit, units
+                )
+
+                if convert is not None:
+                    prev_sums[statistic_id] = convert(row.sum)
+                else:
+                    prev_sums[statistic_id] = row.sum
 
         for statistic_id, rows in result.items():
             prev_sum = prev_sums.get(statistic_id) or 0
