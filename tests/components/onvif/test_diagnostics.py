@@ -74,6 +74,7 @@ async def test_diagnostics(
                 }
             ],
             "services": ANY,
+            "xaddrs": ANY,
         },
         "events": {
             "pullpoint_manager_state": {
