@@ -11,6 +11,8 @@ import threading
 import traceback
 from typing import Any
 
+import uvloop
+
 from . import bootstrap
 from .core import callback
 from .helpers.frame import warn_use
@@ -171,11 +173,22 @@ def _enable_posix_spawn() -> None:
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     _enable_posix_spawn()
-    asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
-    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    loop = asyncio.get_event_loop()
+    asyncio.set_event_loop(loop)
+    if runtime_config.debug:
+        loop.set_debug(True)
+    loop.set_exception_handler(_async_loop_exception_handler)
+    executor = InterruptibleThreadPoolExecutor(
+        thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
+    )
+    loop.set_default_executor(executor)
+    loop.set_default_executor = warn_use(  # type: ignore[method-assign]
+        loop.set_default_executor, "sets default executor on the event loop"
+    )
+    # uvloop doesn't have child watchers
     try:
-        asyncio.set_event_loop(loop)
         return loop.run_until_complete(setup_and_run_hass(runtime_config))
     finally:
         try:
