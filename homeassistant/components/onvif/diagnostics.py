@@ -28,7 +28,7 @@ async def async_get_config_entry_diagnostics(
         "capabilities": asdict(device.capabilities),
         "profiles": [asdict(profile) for profile in device.profiles],
         "services": {
-            key: str(service.url) for key, service in device.device.services.items()
+            str(key): service.url for key, service in device.device.services.items()
         },
         "xaddrs": device.device.xaddrs,
     }
