@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -60,6 +61,8 @@ PLATFORM_MAPPING = {
     CONF_SENSORS: Platform.SENSOR,
     CONF_SWITCHES: Platform.SWITCH,
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
@@ -119,17 +122,28 @@ SWITCH_SCHEMA = vol.Schema(
 )
 COMBINED_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
-            CONF_BINARY_SENSORS
+        vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
+            BINARY_SENSOR_SCHEMA
         ),
-        vol.Required(CONF_COVERS): cv.schema_with_slug_keys(CONF_COVERS),
-        vol.Required(CONF_NOTIFIERS): cv.schema_with_slug_keys(CONF_NOTIFIERS),
-        vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(CONF_SENSORS),
-        vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA),
+        vol.Optional(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA),
+        vol.Optional(CONF_NOTIFIERS): cv.schema_with_slug_keys(NOTIFY_SCHEMA),
+        vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
+        vol.Optional(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA),
     }
 )
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): COMBINED_SCHEMA},
+    {
+        vol.Optional(DOMAIN): vol.All(
+            COMBINED_SCHEMA,
+            cv.has_at_least_one_key(
+                CONF_BINARY_SENSORS,
+                CONF_COVERS,
+                CONF_NOTIFIERS,
+                CONF_SENSORS,
+                CONF_SWITCHES,
+            ),
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -140,17 +154,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not command_line_config:
         return True
 
+    _LOGGER.debug("Full config loaded: %s", command_line_config)
+
     load_coroutines: list[Coroutine[Any, Any, None]] = []
     platforms: list[Platform] = []
     for platform, configs in command_line_config.items():
         platforms.append(PLATFORM_MAPPING[platform])
         for object_id, object_config in configs.items():
+            platform_config = {"object_id": object_id, "config": object_config}
+            if PLATFORM_MAPPING[platform] == Platform.NOTIFY and (
+                add_name := object_config.get(CONF_NAME)
+            ):
+                platform_config[CONF_NAME] = add_name
+            _LOGGER.debug(
+                "Loading config %s for platform %s",
+                platform_config,
+                PLATFORM_MAPPING[platform],
+            )
             load_coroutines.append(
                 discovery.async_load_platform(
                     hass,
                     PLATFORM_MAPPING[platform],
                     DOMAIN,
-                    {"object_id": object_id, "config": object_config},
+                    platform_config,
                     config,
                 )
             )
@@ -158,6 +184,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_setup_reload_service(hass, DOMAIN, platforms)
 
     if load_coroutines:
+        _LOGGER.debug("Loading platforms: %s", platforms)
         await asyncio.gather(*load_coroutines)
 
     return True
