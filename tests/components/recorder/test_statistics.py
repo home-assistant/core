@@ -1058,13 +1058,11 @@ def test_weekly_statistics(
                 "start": week1_start.timestamp(),
                 "end": week1_end.timestamp(),
                 "change": 3.0,
-                "sum": 3.0,
             },
             {
                 "start": week2_start.timestamp(),
                 "end": week2_end.timestamp(),
                 "change": 2.0,
-                "sum": 5.0,
             },
         ]
     }
@@ -1426,6 +1424,48 @@ def test_change(
                 "start": hour1_start.timestamp(),
                 "end": hour1_end.timestamp(),
                 "change": 2.0,
+            },
+            {
+                "start": hour2_start.timestamp(),
+                "end": hour2_end.timestamp(),
+                "change": 1.0,
+            },
+            {
+                "start": hour3_start.timestamp(),
+                "end": hour3_end.timestamp(),
+                "change": 2.0,
+            },
+            {
+                "start": hour4_start.timestamp(),
+                "end": hour4_end.timestamp(),
+                "change": 3.0,
+            },
+        ]
+    }
+    assert stats == expected_stats
+
+    # Get change + sum from far in the past
+    stats = statistics_during_period(
+        hass,
+        zero,
+        period="hour",
+        statistic_ids={"test:total_energy_import"},
+        types={"change", "sum"},
+    )
+    hour1_start = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
+    hour1_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
+    hour2_start = hour1_end
+    hour2_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
+    hour3_start = hour2_end
+    hour3_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
+    hour4_start = hour3_end
+    hour4_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+    expected_stats_change_sum = {
+        "test:total_energy_import": [
+            {
+                "start": hour1_start.timestamp(),
+                "end": hour1_end.timestamp(),
+                "change": 2.0,
                 "sum": 2.0,
             },
             {
@@ -1448,7 +1488,42 @@ def test_change(
             },
         ]
     }
-    assert stats == expected_stats
+    assert stats == expected_stats_change_sum
+
+    # Get change from far in the past with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"test:total_energy_import"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    expected_stats_wh = {
+        "test:total_energy_import": [
+            {
+                "start": hour1_start.timestamp(),
+                "end": hour1_end.timestamp(),
+                "change": 2.0 * 1000,
+            },
+            {
+                "start": hour2_start.timestamp(),
+                "end": hour2_end.timestamp(),
+                "change": 1.0 * 1000,
+            },
+            {
+                "start": hour3_start.timestamp(),
+                "end": hour3_end.timestamp(),
+                "change": 2.0 * 1000,
+            },
+            {
+                "start": hour4_start.timestamp(),
+                "end": hour4_end.timestamp(),
+                "change": 3.0 * 1000,
+            },
+        ]
+    }
+    assert stats == expected_stats_wh
 
     # Get change from the first recorded hour
     stats = statistics_during_period(
@@ -1460,6 +1535,17 @@ def test_change(
     )
     assert stats == expected_stats
 
+    # Get change from the first recorded hour with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"test:total_energy_import"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    assert stats == expected_stats_wh
+
     # Get change from the second recorded hour
     stats = statistics_during_period(
         hass,
@@ -1470,6 +1556,19 @@ def test_change(
     )
     assert stats == {
         "test:total_energy_import": expected_stats["test:total_energy_import"][1:4]
+    }
+
+    # Get change from the second recorded hour with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        statistic_ids={"test:total_energy_import"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    assert stats == {
+        "test:total_energy_import": expected_stats_wh["test:total_energy_import"][1:4]
     }
 
     # Get change from the second until the third recorded hour
@@ -1595,29 +1694,60 @@ def test_change_with_none(
                 "start": hour1_start.timestamp(),
                 "end": hour1_end.timestamp(),
                 "change": 2.0,
-                "sum": 2.0,
             },
             {
                 "start": hour2_start.timestamp(),
                 "end": hour2_end.timestamp(),
                 "change": 1.0,
-                "sum": 3.0,
             },
             {
                 "start": hour3_start.timestamp(),
                 "end": hour3_end.timestamp(),
                 "change": None,
-                "sum": None,
             },
             {
                 "start": hour4_start.timestamp(),
                 "end": hour4_end.timestamp(),
                 "change": 5.0,
-                "sum": 8.0,
             },
         ]
     }
     assert stats == expected_stats
+
+    # Get change from far in the past with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"test:total_energy_import"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    expected_stats_wh = {
+        "test:total_energy_import": [
+            {
+                "start": hour1_start.timestamp(),
+                "end": hour1_end.timestamp(),
+                "change": 2.0 * 1000,
+            },
+            {
+                "start": hour2_start.timestamp(),
+                "end": hour2_end.timestamp(),
+                "change": 1.0 * 1000,
+            },
+            {
+                "start": hour3_start.timestamp(),
+                "end": hour3_end.timestamp(),
+                "change": None,
+            },
+            {
+                "start": hour4_start.timestamp(),
+                "end": hour4_end.timestamp(),
+                "change": 5.0 * 1000,
+            },
+        ]
+    }
+    assert stats == expected_stats_wh
 
     # Get change from the first recorded hour
     stats = statistics_during_period(
@@ -1629,6 +1759,17 @@ def test_change_with_none(
     )
     assert stats == expected_stats
 
+    # Get change from the first recorded hour with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"test:total_energy_import"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    assert stats == expected_stats_wh
+
     # Get change from the second recorded hour
     stats = statistics_during_period(
         hass,
@@ -1639,6 +1780,19 @@ def test_change_with_none(
     )
     assert stats == {
         "test:total_energy_import": expected_stats["test:total_energy_import"][1:4]
+    }
+
+    # Get change from the second recorded hour with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        statistic_ids={"test:total_energy_import"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    assert stats == {
+        "test:total_energy_import": expected_stats_wh["test:total_energy_import"][1:4]
     }
 
     # Get change from the second until the third recorded hour
@@ -1667,8 +1821,7 @@ def test_change_with_none(
             {
                 "start": hour4_start.timestamp(),
                 "end": hour4_end.timestamp(),
-                "change": 8.0,
-                "sum": 8.0,  # Assumed to be 8 because the previous hour has no data
+                "change": 8.0,  # Assumed to be 8 because the previous hour has no data
             },
         ]
     }

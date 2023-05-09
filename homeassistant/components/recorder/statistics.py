@@ -1615,6 +1615,7 @@ def _statistics_during_period_with_session(
         result = _reduce_statistics_per_month(result, types)
 
     if "change" in _types:
+        drop_sum = "sum" not in _types
         prev_sums = {}
         if tmp := _statistics_at_time(
             session,
@@ -1645,7 +1646,10 @@ def _statistics_during_period_with_session(
             for statistics_row in rows:
                 if "sum" not in statistics_row:
                     continue
-                _sum = statistics_row["sum"]
+                if drop_sum:
+                    _sum = statistics_row.pop("sum")
+                else:
+                    _sum = statistics_row["sum"]
                 if _sum is None:
                     statistics_row["change"] = None
                     continue
