@@ -987,32 +987,24 @@ def websocket_get_engine(
     engine_id = msg["engine_id"]
     provider_info: dict[str, Any]
 
-    entity = next(
+    provider: TextToSpeechEntity | Provider | None = next(
         (entity for entity in component.entities if entity.entity_id == engine_id), None
     )
-
-    if entity:
-        provider_info = {
-            "engine_id": entity.entity_id,
-            "supported_languages": entity.supported_languages,
-        }
-
-    if not provider_info:
+    if not provider:
         provider = manager.providers.get(engine_id)
 
-        if provider:
-            provider_info = {
-                "engine_id": engine_id,
-                "supported_languages": provider.supported_languages,
-            }
-
-    if not provider_info:
+    if not provider:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_FOUND,
             f"tts engine {engine_id} not found",
         )
         return
+
+    provider_info = {
+        "engine_id": engine_id,
+        "supported_languages": provider.supported_languages,
+    }
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"provider": provider_info})
