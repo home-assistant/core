@@ -2293,7 +2293,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==2.5.0
+samsungtvws[async,encrypted]==2.6.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.7
