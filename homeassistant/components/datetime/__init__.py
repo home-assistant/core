@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 import functools
 import logging
 from typing import final
@@ -33,12 +33,16 @@ _LOGGER = logging.getLogger(__name__)
 
 __all__ = ["DOMAIN", "DateTimeEntity", "DateTimeEntityDescription"]
 
+ATTR_OFFSET = "offset"
+
 
 def _split_date_time(config):
     """Split date/time components."""
     datetime_ = config.pop(ATTR_DATETIME, None)
     config[ATTR_DATE] = datetime_.date()
     config[ATTR_TIME] = datetime_.time()
+    if (offset := datetime_.utcoffset()) is not None:
+        config[ATTR_OFFSET] = offset
     return config
 
 
@@ -68,7 +72,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Schema(
                         {
                             vol.Required(ATTR_DATETIME): cv.datetime,
-                            vol.Optional(ATTR_TIME_ZONE): cv.time_zone,
                             **ENTITY_SERVICE_FIELDS,
                         }
                     ),
@@ -100,8 +103,12 @@ async def _async_set_value(
         if not time_:
             time_ = entity.native_value.time()
 
-    time_zone_str = service_call.data.get(ATTR_TIME_ZONE, hass.config.time_zone)
-    time_zone = dt_util.get_time_zone(time_zone_str)
+    time_zone: tzinfo | None
+    if ATTR_OFFSET in service_call.data:
+        time_zone = timezone(service_call.data[ATTR_OFFSET])
+    else:
+        time_zone_str = service_call.data.get(ATTR_TIME_ZONE, hass.config.time_zone)
+        time_zone = dt_util.get_time_zone(time_zone_str)
     return await entity.async_set_value(datetime.combine(date_, time_, time_zone))
 
 
