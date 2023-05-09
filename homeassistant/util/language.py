@@ -54,6 +54,20 @@ def is_region(language: str, region: str | None) -> bool:
     return True
 
 
+def is_language_match(lang_1: str, lang_2: str) -> bool:
+    """Return true if two languages are considered the same."""
+    if lang_1 == lang_2:
+        # Exact match
+        return True
+
+    if {lang_1, lang_2} == {"no", "nb"}:
+        # no = spoken Norwegian
+        # nb = written Norwegian (Bokmål)
+        return True
+
+    return False
+
+
 @dataclass
 class Dialect:
     """Language with optional region and script/code."""
@@ -71,26 +85,35 @@ class Dialect:
             # Regions are upper-cased
             self.region = self.region.upper()
 
-    def score(self, dialect: Dialect, country: str | None = None) -> float:
+    def score(
+        self, dialect: Dialect, country: str | None = None
+    ) -> tuple[float, float]:
         """Return score for match with another dialect where higher is better.
 
         Score < 0 indicates a failure to match.
         """
-        if self.language != dialect.language:
+        if not is_language_match(self.language, dialect.language):
             # Not a match
-            return -1
+            return (-1, 0)
+
+        is_exact_language = self.language == dialect.language
 
         if (self.region is None) and (dialect.region is None):
             # Weak match with no region constraint
-            return 1
+            # Prefer exact language match
+            return (2 if is_exact_language else 1, 0)
 
         if (self.region is not None) and (dialect.region is not None):
             if self.region == dialect.region:
-                # Exact language + region match
-                return math.inf
+                # Same language + region match
+                # Prefer exact language match
+                return (
+                    math.inf,
+                    1 if is_exact_language else 0,
+                )
 
             # Regions are both set, but don't match
-            return 0
+            return (0, 0)
 
         # Generate ordered list of preferred regions
         pref_regions = list(
@@ -113,13 +136,13 @@ class Dialect:
 
             # More preferred regions are at the front.
             # Add 1 to boost above a weak match where no regions are set.
-            return 1 + (len(pref_regions) - region_idx)
+            return (1 + (len(pref_regions) - region_idx), 0)
         except ValueError:
             # Region was not in preferred list
             pass
 
         # Not a preferred region
-        return 0
+        return (0, 0)
 
     @staticmethod
     def parse(tag: str) -> Dialect:
@@ -169,4 +192,4 @@ def matches(
     )
 
     # Score < 0 is not a match
-    return [tag for _dialect, score, tag in scored if score >= 0]
+    return [tag for _dialect, score, tag in scored if score[0] >= 0]
