@@ -17,13 +17,13 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, REGULAR_FIRMWARE
-from .entity import DevoloEntity
+from .entity import DevoloCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,6 @@ UPDATE_TYPES: dict[str, DevoloUpdateEntityDescription] = {
         key=REGULAR_FIRMWARE,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        name="Firmware Update",
         latest_version=lambda data: data.new_firmware_version.split("_")[0],
         update_func=lambda device: device.device.async_start_firmware_update(),  # type: ignore[union-attr]
     ),
@@ -77,8 +76,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloUpdateEntity(DevoloEntity, UpdateEntity):
-    """Representation of a devolo switch."""
+class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
+    """Representation of a devolo update."""
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
