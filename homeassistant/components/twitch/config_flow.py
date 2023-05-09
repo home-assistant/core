@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
         # vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_TOKEN): cv.string,
     }
 )
 
@@ -48,7 +48,7 @@ class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_CLIENT_ID): cv.string,
                     vol.Required(CONF_CLIENT_SECRET): cv.string,
-                    vol.Required(CONF_TOKEN): cv.string,
+                    vol.Optional(CONF_TOKEN): cv.string,
                 }
             ),
             errors=errors or {},
@@ -65,7 +65,7 @@ class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         client_id = user_input[CONF_CLIENT_ID]
         client_secret = user_input[CONF_CLIENT_SECRET]
-        oauth_token = user_input[CONF_TOKEN]
+        oauth_token = user_input.get(CONF_TOKEN)
 
         # Check if already configured
         if self.unique_id is None:
@@ -89,16 +89,17 @@ class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 client.set_user_authentication(
                     token=oauth_token, scope=OAUTH_SCOPES, validate=True
                 )
-
-                return self.async_create_entry(title="Twitch", data=user_input)
             except MissingScopeException:
                 _LOGGER.error("OAuth token is missing required scope")
                 errors["base"] = "invalid_auth"
+                return self._show_setup_form(user_input, errors)
+
             except InvalidTokenException:
                 _LOGGER.error("OAuth token is invalid")
                 errors["base"] = "invalid_auth"
+                return self._show_setup_form(user_input, errors)
 
-        return self._show_setup_form(user_input, errors)
+        return self.async_create_entry(title="Twitch", data=user_input)
 
     async def async_step_import(
         self, import_info: dict[str, Any] | None = None
