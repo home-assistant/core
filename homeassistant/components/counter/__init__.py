@@ -270,11 +270,11 @@ class Counter(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_set_value(self, value: int) -> None:
         """Set counter to value."""
-        if (maximum := self._config.get(CONF_MAXIMUM) is not None) and value > maximum:
+        if (maximum := self._config.get(CONF_MAXIMUM)) is not None and value > maximum:
             raise ValueError(
                 f"Value {value} for {self.entity_id} exceeding the maximum value of {maximum}"
             )
-        if (minimum := self._config.get(CONF_MAXIMUM) is not None) and value < minimum:
+        if (minimum := self._config.get(CONF_MINIMUM)) is not None and value < minimum:
             raise ValueError(
                 f"Value {value} for {self.entity_id} exceeding the minimum value of {minimum}"
             )
