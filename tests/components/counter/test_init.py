@@ -17,8 +17,10 @@ from homeassistant.components.counter import (
     DEFAULT_INITIAL,
     DEFAULT_STEP,
     DOMAIN,
+    SERVICE_SET_VALUE,
+    VALUE,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -124,7 +126,7 @@ async def test_config_options(hass: HomeAssistant) -> None:
 
 
 async def test_methods(hass: HomeAssistant) -> None:
-    """Test increment, decrement, and reset methods."""
+    """Test increment, decrement, set value, and reset methods."""
     config = {DOMAIN: {"test_1": {}}}
 
     assert await async_setup_component(hass, "counter", config)
@@ -158,6 +160,18 @@ async def test_methods(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert int(state.state) == 0
 
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            VALUE: 5,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
+
 
 async def test_methods_with_config(hass: HomeAssistant) -> None:
     """Test increment, decrement, and reset methods with configuration."""
@@ -189,6 +203,18 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert int(state.state) == 15
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            VALUE: 5,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
 
 
 async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
