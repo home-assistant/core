@@ -531,6 +531,41 @@ async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
         test_lock.release()
 
 
+async def test_async_parallel_updates_with_one_using_executor(
+    hass: HomeAssistant,
+) -> None:
+    """Test parallel updates with 1 (sequential) using the executor."""
+    test_semaphore = asyncio.Semaphore(1)
+    locked = []
+
+    class SyncEntity(entity.Entity):
+        """Test entity."""
+
+        def __init__(self, entity_id):
+            """Initialize sync test entity."""
+            self.entity_id = entity_id
+            self.hass = hass
+            self.parallel_updates = test_semaphore
+
+        def update(self):
+            """Test update."""
+            locked.append(self.parallel_updates.locked())
+
+    entities = [SyncEntity(f"sensor.test_{i}") for i in range(3)]
+
+    await asyncio.gather(
+        *[
+            hass.async_create_task(
+                ent.async_update_ha_state(True),
+                f"Entity schedule update ha state {ent.entity_id}",
+            )
+            for ent in entities
+        ]
+    )
+
+    assert locked == [True, True, True]
+
+
 async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
     """Test async_remove method when no platform set."""
     ent = entity.Entity()
