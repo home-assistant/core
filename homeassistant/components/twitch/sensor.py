@@ -4,21 +4,20 @@ from __future__ import annotations
 import logging
 
 from twitchAPI.twitch import (
-    AuthScope,
     AuthType,
     InvalidTokenException,
     MissingScopeException,
     Twitch,
     TwitchAuthorizationException,
 )
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import CONF_CHANNELS, OAUTH_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,23 +31,10 @@ ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
 ATTR_VIEWS = "views"
 
-CONF_CHANNELS = "channels"
-
 ICON = "mdi:twitch"
 
 STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
-
-OAUTH_SCOPES = [AuthScope.USER_READ_SUBSCRIPTIONS]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_TOKEN): cv.string,
-    }
-)
 
 
 def setup_platform(
