@@ -24,7 +24,6 @@ COMMENT_REQUIREMENTS = (
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
-    "azure-servicebus",  # depends on uamqp, which requires OpenSSL 1.1
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
