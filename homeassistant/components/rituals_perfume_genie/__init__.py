@@ -1,14 +1,17 @@
 """The Rituals Perfume Genie integration."""
+import asyncio
+
 import aiohttp
-from pyrituals import Account
+from pyrituals import Account, Diffuser
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN
+from .const import ACCOUNT_HASH, DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 
 PLATFORMS = [
@@ -30,20 +33,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        COORDINATORS: {},
-        DEVICES: {},
+    # Migrate old unique_ids to the new format
+    async_migrate_entities_unique_ids(hass, entry, account_devices)
+
+    # Create a coordinator for each diffuser
+    coordinators = {
+        diffuser.hublot: RitualsDataUpdateCoordinator(hass, diffuser)
+        for diffuser in account_devices
     }
 
-    for device in account_devices:
-        hublot = device.hublot
+    # Refresh all coordinators
+    await asyncio.gather(
+        *[
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators.values()
+        ]
+    )
 
-        coordinator = RitualsDataUpdateCoordinator(hass, device)
-        await coordinator.async_config_entry_first_refresh()
-
-        hass.data[DOMAIN][entry.entry_id][DEVICES][hublot] = device
-        hass.data[DOMAIN][entry.entry_id][COORDINATORS][hublot] = coordinator
-
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -56,3 +63,38 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+@callback
+def async_migrate_entities_unique_ids(
+    hass: HomeAssistant, config_entry: ConfigEntry, diffusers: list[Diffuser]
+) -> None:
+    """Migrate unique_ids in the entity registry to the new format."""
+    entity_registry = er.async_get(hass)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+
+    conversion: dict[tuple[str, str], str] = {
+        (Platform.BINARY_SENSOR, " Battery Charging"): "charging",
+        (Platform.NUMBER, " Perfume Amount"): "perfume_amount",
+        (Platform.SELECT, " Room Size"): "room_size_square_meter",
+        (Platform.SENSOR, " Battery"): "battery_percentage",
+        (Platform.SENSOR, " Fill"): "fill",
+        (Platform.SENSOR, " Perfume"): "perfume",
+        (Platform.SENSOR, " Wifi"): "wifi_percentage",
+        (Platform.SWITCH, ""): "is_on",
+    }
+
+    for diffuser in diffusers:
+        for registry_entry in registry_entries:
+            if new_unique_id := conversion.get(
+                (
+                    registry_entry.domain,
+                    registry_entry.unique_id.removeprefix(diffuser.hublot),
+                )
+            ):
+                entity_registry.async_update_entity(
+                    registry_entry.entity_id,
+                    new_unique_id=f"{diffuser.hublot}-{new_unique_id}",
+                )

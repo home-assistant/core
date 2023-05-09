@@ -123,7 +123,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         """
         new_state = None
         if sia_event.code:
-            new_state = self.entity_description.code_consequences[sia_event.code]
+            new_state = self.entity_description.code_consequences.get(sia_event.code)
         if new_state is None:
             return False
         _LOGGER.debug("New state will be %s", new_state)

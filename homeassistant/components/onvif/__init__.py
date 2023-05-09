@@ -1,4 +1,6 @@
 """The ONVIF integration."""
+import asyncio
+from http import HTTPStatus
 import logging
 
 from httpx import RequestError
@@ -55,8 +57,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ONVIFError as err:
         await device.device.close()
         raise ConfigEntryNotReady(
-            f"Could not setup camera {device.device.host}:{device.device.port}: {err}"
+            f"Could not setup camera {device.device.host}:{device.device.port}: {stringify_onvif_error(err)}"
         ) from err
+    except TransportError as err:
+        await device.device.close()
+        stringified_onvif_error = stringify_onvif_error(err)
+        if err.status_code in (
+            HTTPStatus.UNAUTHORIZED.value,
+            HTTPStatus.FORBIDDEN.value,
+        ):
+            raise ConfigEntryAuthFailed(
+                f"Auth Failed: {stringified_onvif_error}"
+            ) from err
+        raise ConfigEntryNotReady(
+            f"Could not setup camera {device.device.host}:{device.device.port}: {stringified_onvif_error}"
+        ) from err
+    except asyncio.CancelledError as err:
+        # After https://github.com/agronholm/anyio/issues/374 is resolved
+        # this may be able to be removed
+        await device.device.close()
+        raise ConfigEntryNotReady(f"Setup was unexpectedly canceled: {err}") from err
 
     if not device.available:
         raise ConfigEntryNotReady()

@@ -80,8 +80,8 @@ build.json @home-assistant/supervisor
 /tests/components/android_ip_webcam/ @engrbm87
 /homeassistant/components/androidtv/ @JeffLIrion @ollo69
 /tests/components/androidtv/ @JeffLIrion @ollo69
-/homeassistant/components/androidtv_remote/ @tronikos
-/tests/components/androidtv_remote/ @tronikos
+/homeassistant/components/androidtv_remote/ @tronikos @Drafteed
+/tests/components/androidtv_remote/ @tronikos @Drafteed
 /homeassistant/components/anova/ @Lash-L
 /tests/components/anova/ @Lash-L
 /homeassistant/components/anthemav/ @hyralex
@@ -234,6 +234,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/cups/ @fabaff
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/date/ @home-assistant/core
+/tests/components/date/ @home-assistant/core
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -288,6 +290,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/dunehd/ @bieniu
 /tests/components/dunehd/ @bieniu
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95 @andarotajo
+/tests/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95 @andarotajo
 /homeassistant/components/dynalite/ @ziv1234
 /tests/components/dynalite/ @ziv1234
 /homeassistant/components/eafm/ @Jc2k
@@ -606,6 +609,8 @@ build.json @home-assistant/supervisor
 /tests/components/juicenet/ @jesserockz
 /homeassistant/components/justnimbus/ @kvanzuijlen
 /tests/components/justnimbus/ @kvanzuijlen
+/homeassistant/components/jvc_projector/ @SteveEasley
+/tests/components/jvc_projector/ @SteveEasley
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
@@ -1234,6 +1239,8 @@ build.json @home-assistant/supervisor
 /tests/components/tile/ @bachya
 /homeassistant/components/tilt_ble/ @apt-itude
 /tests/components/tilt_ble/ @apt-itude
+/homeassistant/components/time/ @home-assistant/core
+/tests/components/time/ @home-assistant/core
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
 /homeassistant/components/tmb/ @alemuro
