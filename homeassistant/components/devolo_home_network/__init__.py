@@ -208,11 +208,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def platforms(device: Device) -> set[Platform]:
     """Assemble supported platforms."""
-    supported_platforms = {
-        Platform.BUTTON,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    }
+    supported_platforms = {Platform.BUTTON, Platform.SENSOR, Platform.SWITCH}
     if device.plcnet:
         supported_platforms.add(Platform.BINARY_SENSOR)
     if device.device and "wifi1" in device.device.features:
