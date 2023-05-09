@@ -11,10 +11,6 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.rituals_perfume_genie.number import (
-    MAX_PERFUME_AMOUNT,
-    MIN_PERFUME_AMOUNT,
-)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -40,8 +36,8 @@ async def test_number_entity(
     assert state
     assert state.state == str(diffuser.perfume_amount)
     assert state.attributes[ATTR_ICON] == "mdi:gauge"
-    assert state.attributes[ATTR_MIN] == MIN_PERFUME_AMOUNT
-    assert state.attributes[ATTR_MAX] == MAX_PERFUME_AMOUNT
+    assert state.attributes[ATTR_MIN] == 1
+    assert state.attributes[ATTR_MAX] == 3
 
     entry = entity_registry.async_get("number.genie_perfume_amount")
     assert entry
