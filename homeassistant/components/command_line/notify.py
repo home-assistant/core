@@ -11,7 +11,7 @@ from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationSer
 from homeassistant.const import CONF_COMMAND, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
@@ -35,7 +35,7 @@ def get_service(
 ) -> CommandLineNotificationService:
     """Get the Command Line notification service."""
     if notify_config := config:
-        async_create_issue(
+        create_issue(
             hass,
             DOMAIN,
             "deprecated_yaml_notify",
