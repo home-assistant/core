@@ -582,6 +582,9 @@ class MQTT:
             max_qos = max(qos, self._max_qos.setdefault(topic, qos))
             self._max_qos[topic] = max_qos
             self._pending_subscriptions[topic] = max_qos
+            # Cancel any pending unsubscribe since we are subscribing now
+            if topic in set(self._pending_unsubscribes):
+                self._pending_unsubscribes.remove(topic)
         if queue_only:
             return
         self._subscribe_debouncer.async_schedule()
@@ -659,11 +662,6 @@ class MQTT:
 
         subscriptions: dict[str, int] = self._pending_subscriptions
         self._pending_subscriptions = {}
-
-        for topic in subscriptions:
-            # Do not unsubscribe if subscribe is pending
-            if topic in set(self._pending_unsubscribes):
-                self._pending_unsubscribes.remove(topic)
 
         async with self._paho_lock:
             subscription_list = list(subscriptions.items())
