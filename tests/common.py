@@ -29,7 +29,7 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import device_automation
+from homeassistant.components import device_automation, persistent_notification as pn
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
@@ -1396,3 +1396,11 @@ def raise_contains_mocks(val: Any) -> None:
     if isinstance(val, list):
         for dict_value in val:
             raise_contains_mocks(dict_value)
+
+
+@callback
+def async_get_persistent_notifications(
+    hass: HomeAssistant,
+) -> dict[str, pn.Notification]:
+    """Get the current persistent notifications."""
+    return pn._async_get_or_create_notifications(hass)
