@@ -175,19 +175,21 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
-            try:
-                if state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                self._attr_available = False
+                self._state = None
+            else:
+                try:
                     self._state = Decimal(state.state)
-                else:
-                    self._attr_available = False
+                except (DecimalException, ValueError) as err:
+                    _LOGGER.warning(
+                        "%s could not restore last state %s: %s",
+                        self.entity_id,
+                        state.state,
+                        err,
+                    )
                     self._state = None
-            except (DecimalException, ValueError) as err:
-                _LOGGER.warning(
-                    "%s could not restore last state %s: %s",
-                    self.entity_id,
-                    state.state,
-                    err,
-                )
+
             self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
