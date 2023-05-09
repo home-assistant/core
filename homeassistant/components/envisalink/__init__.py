@@ -250,11 +250,12 @@ class EnvisalinkDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, name, info, controller):
+    def __init__(self, name, info, controller, unique_id):
         """Initialize the device."""
         self._controller = controller
         self._info = info
         self._name = name
+        self._attr_unique_id = unique_id
 
     @property
     def name(self):
