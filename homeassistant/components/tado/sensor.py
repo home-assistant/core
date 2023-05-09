@@ -23,6 +23,8 @@ from .const import (
     CONDITIONS_MAP,
     DATA,
     DOMAIN,
+    SENSOR_DATA_CATEGORY_GEOFENCE,
+    SENSOR_DATA_CATEGORY_WEATHER,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
@@ -47,6 +49,7 @@ class TadoSensorEntityDescription(
     """Describes Tado sensor entity."""
 
     attributes_fn: Callable[[Any], dict[Any, StateType]] | None = None
+    data_category: str | None = None
 
 
 HOME_SENSORS = [
@@ -60,6 +63,7 @@ HOME_SENSORS = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        data_category=SENSOR_DATA_CATEGORY_WEATHER,
     ),
     TadoSensorEntityDescription(
         key="solar percentage",
@@ -70,12 +74,35 @@ HOME_SENSORS = [
         },
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        data_category=SENSOR_DATA_CATEGORY_WEATHER,
     ),
     TadoSensorEntityDescription(
         key="weather condition",
         name="Weather condition",
         state_fn=lambda data: format_condition(data["weatherState"]["value"]),
         attributes_fn=lambda data: {"time": data["weatherState"]["timestamp"]},
+        data_category=SENSOR_DATA_CATEGORY_WEATHER,
+    ),
+    TadoSensorEntityDescription(
+        key="tado mode",
+        name="Tado mode",
+        # pylint: disable=unnecessary-lambda
+        state_fn=lambda data: get_tado_mode(data),
+        data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
+    ),
+    TadoSensorEntityDescription(
+        key="geofencing mode",
+        name="Geofencing mode",
+        # pylint: disable=unnecessary-lambda
+        state_fn=lambda data: get_geofencing_mode(data),
+        data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
+    ),
+    TadoSensorEntityDescription(
+        key="automatic geofencing",
+        name="Automatic geofencing",
+        # pylint: disable=unnecessary-lambda
+        state_fn=lambda data: get_automatic_geofencing(data),
+        data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
     ),
 ]
 
@@ -145,6 +172,39 @@ def format_condition(condition: str) -> str:
     return condition
 
 
+def get_tado_mode(data) -> str | None:
+    """Return Tado Mode based on Presence attribute."""
+    if "presence" in data:
+        return data["presence"]
+    return None
+
+
+def get_automatic_geofencing(data) -> bool:
+    """Return whether Automatic Geofencing is enabled based on Presence Locked attribute."""
+    if "presenceLocked" in data:
+        if data["presenceLocked"]:
+            return False
+        return True
+    return False
+
+
+def get_geofencing_mode(data) -> str:
+    """Return Geofencing Mode based on Presence and Presence Locked attributes."""
+    tado_mode = ""
+    tado_mode = data.get("presence", "unknown")
+
+    geofencing_switch_mode = ""
+    if "presenceLocked" in data:
+        if data["presenceLocked"]:
+            geofencing_switch_mode = "manual"
+        else:
+            geofencing_switch_mode = "auto"
+    else:
+        geofencing_switch_mode = "manual"
+
+    return f"{tado_mode.capitalize()} ({geofencing_switch_mode.capitalize()})"
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -200,9 +260,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.home_id, "weather", "data"
-                ),
+                SIGNAL_TADO_UPDATE_RECEIVED.format(self._tado.home_id, "home", "data"),
                 self._async_update_callback,
             )
         )
@@ -219,13 +277,19 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         """Handle update callbacks."""
         try:
             tado_weather_data = self._tado.data["weather"]
+            tado_geofence_data = self._tado.data["geofence"]
         except KeyError:
             return
 
-        self._attr_native_value = self.entity_description.state_fn(tado_weather_data)
+        if self.entity_description.data_category is not None:
+            if self.entity_description.data_category == SENSOR_DATA_CATEGORY_WEATHER:
+                tado_sensor_data = tado_weather_data
+            else:
+                tado_sensor_data = tado_geofence_data
+        self._attr_native_value = self.entity_description.state_fn(tado_sensor_data)
         if self.entity_description.attributes_fn is not None:
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
-                tado_weather_data
+                tado_sensor_data
             )
 
 
