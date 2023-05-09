@@ -56,7 +56,11 @@ async def async_setup_platform(
     """Set up cover controlled by shell commands."""
 
     covers = []
-    if config:
+    if discovery_info:
+        devices: dict[str, Any] = {
+            discovery_info["object_id"]: discovery_info["config"]
+        }
+    else:
         async_create_issue(
             hass,
             DOMAIN,
@@ -66,11 +70,7 @@ async def async_setup_platform(
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_cover",
         )
-        devices: dict[str, Any] = config.get(CONF_COVERS, {})
-    elif discovery_info:
-        devices = {discovery_info["object_id"]: discovery_info["config"]}
-    else:
-        return
+        devices = config.get(CONF_COVERS, {})
 
     for device_name, device_config in devices.items():
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)

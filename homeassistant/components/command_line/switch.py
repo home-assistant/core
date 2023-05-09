@@ -62,7 +62,11 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
-    if config:
+    if discovery_info:
+        devices: dict[str, Any] = {
+            discovery_info["object_id"]: discovery_info["config"]
+        }
+    else:
         async_create_issue(
             hass,
             DOMAIN,
@@ -72,11 +76,8 @@ async def async_setup_platform(
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_switch",
         )
-        devices: dict[str, Any] = config.get(CONF_SWITCHES, {})
-    elif discovery_info:
-        devices = {discovery_info["object_id"]: discovery_info["config"]}
-    else:
-        return
+        devices = config.get(CONF_SWITCHES, {})
+
     switches = []
 
     for object_id, device_config in devices.items():
