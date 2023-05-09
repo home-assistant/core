@@ -177,7 +177,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         if (state := await self.async_get_last_state()) is not None:
             if state.state == STATE_UNAVAILABLE:
                 self._attr_available = False
-            else:
+            elif state.state != STATE_UNKNOWN:
                 try:
                     self._state = Decimal(state.state)
                 except (DecimalException, ValueError) as err:
