@@ -981,6 +981,14 @@ def _reduce_statistics_per_week(
     )
 
 
+def _find_month_end_time(timestamp: datetime) -> datetime:
+    """Return the end of the month (midnight at the first day of the next month)."""
+    # We add 4 days to the end to make sure we are in the next month
+    return (timestamp.replace(day=28) + timedelta(days=4)).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+
+
 def reduce_month_ts_factory() -> (
     tuple[
         Callable[[float, float], bool],
@@ -1007,10 +1015,7 @@ def reduce_month_ts_factory() -> (
         start_local = _local_from_timestamp(time).replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
-        # We add 4 days to the end to make sure we are in the next month
-        end_local = (start_local.replace(day=28) + timedelta(days=4)).replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
+        end_local = _find_month_end_time(start_local)
         return (
             start_local.astimezone(dt_util.UTC).timestamp(),
             end_local.astimezone(dt_util.UTC).timestamp(),
@@ -1657,11 +1662,7 @@ def _statistics_during_period_with_session(
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
         if end_time is not None:
-            end_local = dt_util.as_local(end_time)
-            # We add 4 days to the end to make sure we are in the next month
-            end_time = (end_local.replace(day=28) + timedelta(days=4)).replace(
-                day=1, hour=0, minute=0, second=0, microsecond=0
-            )
+            end_time = _find_month_end_time(dt_util.as_local(end_time))
 
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
