@@ -473,7 +473,7 @@ class MQTT:
                 msg_info.mid,
                 qos,
             )
-            _raise_on_error(msg_info.rc)
+        _raise_on_error(msg_info.rc)
         await self._wait_for_mid(msg_info.mid)
 
     async def async_connect(self) -> None:
