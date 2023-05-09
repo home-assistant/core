@@ -61,7 +61,7 @@ class ReolinkHost:
         self._base_url: str = ""
         self._webhook_url: str = ""
         self._webhook_reachable: asyncio.Event = asyncio.Event()
-        self._cancell_poll: CALLBACK_TYPE | None = None
+        self._cancel_poll: CALLBACK_TYPE | None = None
         self._lost_subscription: bool = False
 
     @property
@@ -232,8 +232,9 @@ class ReolinkHost:
 
     async def stop(self, event=None):
         """Disconnect the API."""
-        if self._cancell_poll is not None:
-            self._cancell_poll()
+        if self._cancel_poll is not None:
+            self._cancel_poll()
+            self._cancel_poll = None
         self.unregister_webhook()
         await self.disconnect()
 
@@ -369,7 +370,7 @@ class ReolinkHost:
         """Poll motion and AI states until the first ONVIF push is received."""
         if self._webhook_reachable.is_set():
             # ONVIF push is working, stop polling
-            self._cancell_poll = None
+            self._cancel_poll = None
             return
 
         try:
@@ -389,7 +390,7 @@ class ReolinkHost:
         async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
 
         # schedule next poll
-        self._cancell_poll = async_call_later(
+        self._cancel_poll = async_call_later(
             self._hass, POLL_INTERVAL_NO_PUSH, self._poll_all_motion
         )
 
