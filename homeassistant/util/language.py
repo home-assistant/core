@@ -56,12 +56,16 @@ def is_region(language: str, region: str | None) -> bool:
 
 def is_language_match(lang_1: str, lang_2: str) -> bool:
     """Return true if two languages are considered the same."""
-    if {lang_1, lang_2} == {"no", "nb"}:
-        # no = spoken Norwegian
-        # nb = written Norwegian (Bokmål )
+    if lang_1 == lang_2:
+        # Exact match
         return True
 
-    return lang_1 == lang_2
+    if {lang_1, lang_2} == {"no", "nb"}:
+        # no = spoken Norwegian
+        # nb = written Norwegian (Bokmål)
+        return True
+
+    return False
 
 
 @dataclass
