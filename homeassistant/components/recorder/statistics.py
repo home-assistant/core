@@ -1541,6 +1541,57 @@ def _extract_metadata_and_discard_impossible_columns(
     return metadata_ids
 
 
+def _augment_result_with_change(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    units: dict[str, str] | None,
+    _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    table: type[Statistics | StatisticsShortTerm],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+    result: dict[str, list[StatisticsRow]],
+) -> None:
+    """Add change to the result."""
+    drop_sum = "sum" not in _types
+    prev_sums = {}
+    if tmp := _statistics_at_time(
+        session,
+        {metadata[statistic_id][0] for statistic_id in result},
+        table,
+        start_time,
+        {"sum"},
+    ):
+        _metadata = dict(metadata.values())
+        for row in tmp:
+            metadata_by_id = _metadata[row.metadata_id]
+            statistic_id = metadata_by_id["statistic_id"]
+
+            state_unit = unit = metadata_by_id["unit_of_measurement"]
+            if state := hass.states.get(statistic_id):
+                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+
+            if convert is not None:
+                prev_sums[statistic_id] = convert(row.sum)
+            else:
+                prev_sums[statistic_id] = row.sum
+
+    for statistic_id, rows in result.items():
+        prev_sum = prev_sums.get(statistic_id) or 0
+        for statistics_row in rows:
+            if "sum" not in statistics_row:
+                continue
+            if drop_sum:
+                _sum = statistics_row.pop("sum")
+            else:
+                _sum = statistics_row["sum"]
+            if _sum is None:
+                statistics_row["change"] = None
+                continue
+            statistics_row["change"] = _sum - prev_sum
+            prev_sum = _sum
+
+
 def _statistics_during_period_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -1560,7 +1611,6 @@ def _statistics_during_period_with_session(
         # This is for backwards compatibility to avoid a breaking change
         # for custom integrations that call this method.
         statistic_ids = set(statistic_ids)  # type: ignore[unreachable]
-    metadata = None
     # Fetch metadata for the given (or all) statistic_ids
     metadata = get_instance(hass).statistics_meta_manager.get_many(
         session, statistic_ids=statistic_ids
@@ -1615,46 +1665,9 @@ def _statistics_during_period_with_session(
         result = _reduce_statistics_per_month(result, types)
 
     if "change" in _types:
-        drop_sum = "sum" not in _types
-        prev_sums = {}
-        if tmp := _statistics_at_time(
-            session,
-            {metadata[statistic_id][0] for statistic_id in result},
-            table,
-            start_time,
-            {"sum"},
-        ):
-            _metadata = dict(metadata.values())
-            for row in tmp:
-                metadata_by_id = _metadata[row.metadata_id]
-                statistic_id = metadata_by_id["statistic_id"]
-
-                state_unit = unit = metadata_by_id["unit_of_measurement"]
-                if state := hass.states.get(statistic_id):
-                    state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                convert = _get_statistic_to_display_unit_converter(
-                    unit, state_unit, units
-                )
-
-                if convert is not None:
-                    prev_sums[statistic_id] = convert(row.sum)
-                else:
-                    prev_sums[statistic_id] = row.sum
-
-        for statistic_id, rows in result.items():
-            prev_sum = prev_sums.get(statistic_id) or 0
-            for statistics_row in rows:
-                if "sum" not in statistics_row:
-                    continue
-                if drop_sum:
-                    _sum = statistics_row.pop("sum")
-                else:
-                    _sum = statistics_row["sum"]
-                if _sum is None:
-                    statistics_row["change"] = None
-                    continue
-                statistics_row["change"] = _sum - prev_sum
-                prev_sum = _sum
+        _augment_result_with_change(
+            hass, session, start_time, units, _types, table, metadata, result
+        )
 
     # Return statistics combined with metadata
     return result
