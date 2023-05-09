@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
-from .entity import DevoloEntity
+from .entity import DevoloCoordinatorEntity
 
 _DataT = TypeVar("_DataT", bound=WifiGuestAccessGet | bool)
 
@@ -88,7 +88,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloSwitchEntity(DevoloEntity[_DataT], SwitchEntity):
+class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
     """Representation of a devolo switch."""
 
     entity_description: DevoloSwitchEntityDescription[_DataT]
