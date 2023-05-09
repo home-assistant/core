@@ -108,7 +108,7 @@ def _get_utc_hour(local_hour: int):
 
 
 def _get_local_hour(utc_hour: int):
-    """Get the utc hour."""
+    """Get the local hour."""
     now = dt_util.utcnow()
     now_local = dt_util.now()
     utc_time = now.replace(hour=utc_hour, minute=0, second=0, microsecond=0)
@@ -134,11 +134,6 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
     _attr_operation_list = OPERATION_LIST
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID of entity."""
-        return self._unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -215,7 +210,7 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
         await self.osoenergy.hotwater.turn_on(self.device, True)
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn on hotwater."""
+        """Turn off hotwater."""
         await self.osoenergy.hotwater.turn_off(self.device, True)
 
     async def async_oso_turn_on(self, full_utilization) -> None:

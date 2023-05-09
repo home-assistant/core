@@ -5,7 +5,7 @@ from apyosoenergyapi.helper import osoenergy_exceptions
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.osoenergy.const import DOMAIN, TITLE
-from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -120,7 +120,6 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id=TITLE,
         data={CONF_API_KEY: SUBSCRIPTION_KEY},
-        options={CONF_SCAN_INTERVAL: SCAN_INTERVAL},
     )
     config_entry.add_to_hass(hass)
 

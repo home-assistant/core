@@ -1,5 +1,4 @@
 """Support for the OSO Energy devices and services."""
-from functools import wraps
 import logging
 from typing import Any
 
@@ -12,10 +11,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
@@ -61,17 +56,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def refresh_system(func):
-    """Force update all entities after state change."""
-
-    @wraps(func)
-    async def wrapper(self, *args, **kwargs):
-        await func(self, *args, **kwargs)
-        async_dispatcher_send(self.hass, DOMAIN)
-
-    return wrapper
-
-
 class OSOEnergyEntity(Entity):
     """Initiate OSO Energy Base Class."""
 
@@ -79,11 +63,8 @@ class OSOEnergyEntity(Entity):
         """Initialize the instance."""
         self.osoenergy = osoenergy
         self.device = osoenergy_device
-        self.attributes: dict[str, Any] = {}
-        self._unique_id = self.device["device_id"]
 
-    async def async_added_to_hass(self):
-        """When entity is added to Home Assistant."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
-        )
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID of entity."""
+        return self.device["device_id"]
