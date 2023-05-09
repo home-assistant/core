@@ -465,15 +465,15 @@ class MQTT:
             msg_info = await self.hass.async_add_executor_job(
                 self._mqttc.publish, topic, payload, qos, retain
             )
-            _LOGGER.debug(
-                "Transmitting%s message on %s: '%s', mid: %s, qos: %s",
-                " retained" if retain else "",
-                topic,
-                payload,
-                msg_info.mid,
-                qos,
-            )
-            _raise_on_error(msg_info.rc)
+        _LOGGER.debug(
+            "Transmitting%s message on %s: '%s', mid: %s, qos: %s",
+            " retained" if retain else "",
+            topic,
+            payload,
+            msg_info.mid,
+            qos,
+        )
+        _raise_on_error(msg_info.rc)
         await self._wait_for_mid(msg_info.mid)
 
     async def async_connect(self) -> None:
