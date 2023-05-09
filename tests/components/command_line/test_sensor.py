@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -181,9 +182,15 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     ],
 )
 async def test_bad_template_render(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, get_config: dict[str, Any]
 ) -> None:
     """Test rendering a broken template."""
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        get_config,
+    )
+    await hass.async_block_till_done()
 
     assert "Error rendering command template" in caplog.text
 
@@ -203,8 +210,14 @@ async def test_bad_template_render(
         }
     ],
 )
-async def test_bad_command(hass: HomeAssistant, load_yaml_integration: None) -> None:
+async def test_bad_command(hass: HomeAssistant, get_config: dict[str, Any]) -> None:
     """Test bad command."""
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        get_config,
+    )
+    await hass.async_block_till_done()
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -227,9 +240,15 @@ async def test_bad_command(hass: HomeAssistant, load_yaml_integration: None) -> 
     ],
 )
 async def test_return_code(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, get_config: dict[str, Any]
 ) -> None:
     """Test that an error return code is logged."""
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        get_config,
+    )
+    await hass.async_block_till_done()
 
     assert "return code 33" in caplog.text
 
@@ -314,9 +333,15 @@ async def test_update_with_json_attrs_and_value_template(
     ],
 )
 async def test_update_with_json_attrs_no_data(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, get_config: dict[str, Any]
 ) -> None:
     """Test attributes when no JSON result fetched."""
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        get_config,
+    )
+    await hass.async_block_till_done()
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -341,9 +366,15 @@ async def test_update_with_json_attrs_no_data(
     ],
 )
 async def test_update_with_json_attrs_not_dict(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, get_config: dict[str, Any]
 ) -> None:
     """Test attributes when the return value not a dict."""
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        get_config,
+    )
+    await hass.async_block_till_done()
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -368,9 +399,15 @@ async def test_update_with_json_attrs_not_dict(
     ],
 )
 async def test_update_with_json_attrs_bad_json(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant, get_config: dict[str, Any]
 ) -> None:
     """Test attributes when the return value is invalid JSON."""
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        get_config,
+    )
+    await hass.async_block_till_done()
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state

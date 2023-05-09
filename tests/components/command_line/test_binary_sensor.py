@@ -1,10 +1,13 @@
 """The tests for the Command line Binary sensor platform."""
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from homeassistant import setup
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.command_line.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -167,8 +170,13 @@ async def test_unique_id(
     ],
 )
 async def test_return_code(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, load_yaml_integration: None
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, get_config: dict[str, Any]
 ) -> None:
     """Test setting the state with a template."""
-
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        get_config,
+    )
+    await hass.async_block_till_done()
     assert "return code 33" in caplog.text
