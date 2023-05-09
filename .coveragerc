@@ -788,6 +788,7 @@ omit =
     homeassistant/components/nibe_heatpump/select.py
     homeassistant/components/nibe_heatpump/sensor.py
     homeassistant/components/nibe_heatpump/switch.py
+    homeassistant/components/nibe_heatpump/water_heater.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
@@ -1292,7 +1293,6 @@ omit =
     homeassistant/components/toon/switch.py
     homeassistant/components/torque/sensor.py
     homeassistant/components/totalconnect/__init__.py
-    homeassistant/components/totalconnect/binary_sensor.py
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/tplink_omada/__init__.py

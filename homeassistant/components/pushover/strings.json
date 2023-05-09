@@ -24,11 +24,5 @@
         }
       }
     }
-  },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Pushover YAML configuration has been removed",
-      "description": "Configuring Pushover using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the Pushover YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

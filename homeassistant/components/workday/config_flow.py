@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import holidays
-from holidays import HolidayBase
+from holidays import country_holidays, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -48,15 +47,14 @@ NONE_SENTINEL = "none"
 
 def add_province_to_schema(
     schema: vol.Schema,
-    options: dict[str, Any],
+    country: str,
 ) -> vol.Schema:
     """Update schema with province from country."""
-    year: int = dt.now().year
-    obj_holidays: HolidayBase = getattr(holidays, options[CONF_COUNTRY])(years=year)
-    if not obj_holidays.subdivisions:
+    all_countries = list_supported_countries()
+    if not all_countries[country]:
         return schema
 
-    province_list = [NONE_SENTINEL, *obj_holidays.subdivisions]
+    province_list = [NONE_SENTINEL, *all_countries[country]]
     add_schema = {
         vol.Optional(CONF_PROVINCE, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
@@ -78,11 +76,9 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             raise AddDatesError("Incorrect date")
 
     year: int = dt.now().year
-    obj_holidays: HolidayBase = getattr(holidays, user_input[CONF_COUNTRY])(years=year)
-    if user_input.get(CONF_PROVINCE):
-        obj_holidays = getattr(holidays, user_input[CONF_COUNTRY])(
-            subdiv=user_input[CONF_PROVINCE], years=year
-        )
+    obj_holidays = country_holidays(
+        user_input[CONF_COUNTRY], user_input.get(CONF_PROVINCE), year
+    )
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
         if dt.parse_date(remove_date) is None:
@@ -95,7 +91,7 @@ DATA_SCHEMA_SETUP = vol.Schema(
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Required(CONF_COUNTRY): SelectSelector(
             SelectSelectorConfig(
-                options=list(holidays.list_supported_countries()),
+                options=list(list_supported_countries()),
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),
@@ -231,7 +227,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.data
+            add_province_to_schema, DATA_SCHEMA_OPT, self.data[CONF_COUNTRY]
         )
         new_schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(
@@ -282,7 +278,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     return self.async_create_entry(data=combined_input)
 
         schema: vol.Schema = await self.hass.async_add_executor_job(
-            add_province_to_schema, DATA_SCHEMA_OPT, self.options
+            add_province_to_schema, DATA_SCHEMA_OPT, self.options[CONF_COUNTRY]
         )
 
         new_schema = self.add_suggested_values_to_schema(
