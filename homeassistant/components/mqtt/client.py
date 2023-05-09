@@ -577,14 +577,13 @@ class MQTT:
         self, subscriptions: Iterable[tuple[str, int]], queue_only: bool = False
     ) -> None:
         """Queue requested subscriptions."""
-        pending_unsubscribes = set(self._pending_unsubscribes)
         for subscription in subscriptions:
             topic, qos = subscription
             max_qos = max(qos, self._max_qos.setdefault(topic, qos))
             self._max_qos[topic] = max_qos
             self._pending_subscriptions[topic] = max_qos
             # Cancel any pending unsubscribe since we are subscribing now
-            if topic in pending_unsubscribes:
+            if topic in self._pending_unsubscribes:
                 self._pending_unsubscribes.remove(topic)
         if queue_only:
             return
