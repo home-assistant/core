@@ -1,4 +1,5 @@
 """Support for Wyoming text to speech services."""
+import asyncio
 from collections import defaultdict
 import io
 import logging
@@ -8,7 +9,7 @@ from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStop
 from wyoming.client import AsyncTcpClient
 from wyoming.tts import Synthesize
 
-from homeassistant.components import tts
+from homeassistant.components import ffmpeg, tts
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -18,6 +19,7 @@ from .data import WyomingService
 from .error import WyomingError
 
 _LOGGER = logging.getLogger(__name__)
+_DEFAULT_FORMAT = "mp3"
 
 
 async def async_setup_entry(
@@ -27,9 +29,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Wyoming speech to text."""
     service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
+    ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
     async_add_entities(
         [
-            WyomingTtsProvider(config_entry, service),
+            WyomingTtsProvider(config_entry, service, ffmpeg_manager),
         ]
     )
 
@@ -41,9 +44,11 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self,
         config_entry: ConfigEntry,
         service: WyomingService,
+        ffmpeg_manager: ffmpeg.FFmpegManager,
     ) -> None:
         """Set up provider."""
         self.service = service
+        self._ffmpeg_manager = ffmpeg_manager
         self._tts_service = next(tts for tts in service.info.tts if tts.installed)
 
         voice_languages: set[str] = set()
@@ -87,7 +92,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
     @property
     def default_options(self):
         """Return a dict include default options."""
-        return {tts.ATTR_AUDIO_OUTPUT: "wav"}
+        return {tts.ATTR_AUDIO_OUTPUT: _DEFAULT_FORMAT}
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
@@ -129,8 +134,19 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         except (OSError, WyomingError):
             return (None, None)
 
-        if (options is None) or (options[tts.ATTR_AUDIO_OUTPUT] == "wav"):
+        if options is None:
+            output_format = _DEFAULT_FORMAT
+        else:
+            output_format = options.get(tts.ATTR_AUDIO_OUTPUT, _DEFAULT_FORMAT)
+
+        if output_format == "wav":
+            # Already WAV data
             return ("wav", data)
+
+        if output_format != "raw":
+            # Convert with ffmpeg
+            converted_data = await self._convert_audio(data, output_format)
+            return (output_format, converted_data)
 
         # Raw output (convert to 16Khz, 16-bit mono)
         with io.BytesIO(data) as wav_io:
@@ -153,3 +169,33 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
             )
 
         return ("raw", raw_data)
+
+    async def _convert_audio(self, wav_data: bytes, output_format: str) -> bytes:
+        """Convert from WAV to a different format using ffmpeg asynchronously."""
+        ffmpeg_input = [
+            "-f",
+            "wav",
+            "-i",
+            "pipe:",  # input from stdin
+        ]
+        ffmpeg_output = [
+            "-f",
+            output_format,
+        ]
+
+        if output_format == "mp3":
+            ffmpeg_output.extend(["-q:a", "0"])  # max quality
+
+        ffmpeg_output.append("pipe:")  # output to stdout
+
+        ffmpeg_proc = await asyncio.create_subprocess_exec(
+            self._ffmpeg_manager.binary,
+            *ffmpeg_input,
+            *ffmpeg_output,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+
+        stdout, _stderr = await ffmpeg_proc.communicate(input=wav_data)
+        return stdout
