@@ -930,13 +930,12 @@ async def test_subscribe_and_resubscribe(
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
     await hass.async_block_till_done()
+
     assert len(calls) == 1
     assert calls[0].topic == "test-topic"
     assert calls[0].payload == "test-payload"
-
-    # aseert unsubscribe was not called
+    # assert unsubscribe was not called
     mqtt_client_mock.unsubscribe.assert_not_called()
 
     unsub()
