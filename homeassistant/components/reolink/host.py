@@ -366,7 +366,7 @@ class ReolinkHost:
         self.webhook_id = None
 
     async def _poll_all_motion(self, *_) -> None:
-        """Poll motion and AI states untill the first ONVIF push comes in."""
+        """Poll motion and AI states until the first ONVIF push is received."""
         if self._webhook_reachable.is_set():
             # ONVIF push is working, stop polling
             self._cancell_poll = None
@@ -389,7 +389,9 @@ class ReolinkHost:
         async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
 
         # schedule next poll
-        self._cancell_poll = async_call_later(self._hass, POLL_INTERVAL_NO_PUSH, self._poll_all_motion)
+        self._cancell_poll = async_call_later(
+            self._hass, POLL_INTERVAL_NO_PUSH, self._poll_all_motion
+        )
 
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
