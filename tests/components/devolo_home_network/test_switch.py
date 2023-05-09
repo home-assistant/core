@@ -21,6 +21,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import dt
@@ -300,9 +301,10 @@ async def test_auth_failed(
     api = getattr(mock_device.device, set_method)
     api.side_effect = DevicePasswordProtected
 
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
+        )
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
@@ -313,9 +315,10 @@ async def test_auth_failed(
     assert flow["context"]["source"] == SOURCE_REAUTH
     assert flow["context"]["entry_id"] == entry.entry_id
 
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
+        )
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
