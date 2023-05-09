@@ -12,6 +12,7 @@ from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed
@@ -39,6 +40,10 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     assert entity_state.state == "5"
     assert entity_state.name == "Test"
     assert entity_state.attributes["unit_of_measurement"] == "in"
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_sensor")
+    assert issue.translation_key == "deprecated_yaml_sensor"
 
 
 @pytest.mark.parametrize(

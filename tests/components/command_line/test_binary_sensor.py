@@ -11,6 +11,7 @@ from homeassistant.components.command_line.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.issue_registry as ir
 
 
 async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
@@ -34,6 +35,10 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     assert entity_state
     assert entity_state.state == STATE_ON
     assert entity_state.name == "Test"
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_binary_sensor")
+    assert issue.translation_key == "deprecated_yaml_binary_sensor"
 
 
 @pytest.mark.parametrize(

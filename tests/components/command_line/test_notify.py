@@ -12,6 +12,7 @@ from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.issue_registry as ir
 
 
 async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
@@ -27,6 +28,10 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert hass.services.has_service(NOTIFY_DOMAIN, "test")
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_notify")
+    assert issue.translation_key == "deprecated_yaml_notify"
 
 
 @pytest.mark.parametrize(

@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.issue_registry as ir
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -74,6 +75,10 @@ async def test_state_platform_yaml(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_OFF
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_switch")
+    assert issue.translation_key == "deprecated_yaml_switch"
 
 
 async def test_state_integration_yaml(hass: HomeAssistant) -> None:

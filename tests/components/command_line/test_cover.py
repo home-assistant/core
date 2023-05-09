@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.issue_registry as ir
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, get_fixture_path
@@ -44,6 +45,10 @@ async def test_no_covers_platform_yaml(
         )
         await hass.async_block_till_done()
         assert "No covers added" in caplog.text
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_cover")
+    assert issue.translation_key == "deprecated_yaml_cover"
 
 
 async def test_state_value_platform_yaml(hass: HomeAssistant) -> None:
