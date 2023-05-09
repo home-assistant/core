@@ -1,9 +1,7 @@
 """Test tts."""
 from __future__ import annotations
 
-import io
 from unittest.mock import patch
-import wave
 
 import pytest
 from wyoming.audio import AudioChunk, AudioStop
@@ -56,14 +54,8 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
             tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
         )
 
-    assert extension == "wav"
+    assert extension == "mp3"
     assert data is not None
-    with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
-        assert wav_file.getframerate() == 16000
-        assert wav_file.getsampwidth() == 2
-        assert wav_file.getnchannels() == 1
-        assert wav_file.readframes(wav_file.getnframes()) == audio
-
     assert mock_client.written == snapshot
 
 
