@@ -1292,9 +1292,8 @@ async def test_subscribe_same_topic(
         calls_b.append(msg)
 
     await mqtt.async_subscribe(hass, "test/state", _callback_a, qos=0)
-    async_fire_mqtt_message(
-        hass, "test/state", "online", qos=0, retain=False
-    )  # Simulate a non retained message after the first subscription
+    # Simulate a non retained message after the first subscription
+    async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(calls_a) == 1
@@ -1305,9 +1304,8 @@ async def test_subscribe_same_topic(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
     await mqtt.async_subscribe(hass, "test/state", _callback_b, qos=1)
-    async_fire_mqtt_message(
-        hass, "test/state", "online", qos=0, retain=False
-    )  # Simulate an other non retained message after the second subscription
+    # Simulate an other non retained message after the second subscription
+    async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))

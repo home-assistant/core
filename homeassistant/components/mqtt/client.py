@@ -621,7 +621,7 @@ class MQTT:
             """Remove subscription."""
             self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
-            # make sure we allow retained payloads when resubscribing
+            # Make sure we allow retained payloads when resubscribing
             if subscription in self._retained_init:
                 del self._retained_init[subscription]
             # Only unsubscribe if currently connected
@@ -643,7 +643,7 @@ class MQTT:
         if topic in self._max_qos:
             del self._max_qos[topic]
         if topic in self._pending_subscriptions:
-            # avoid any pending subscription to be executed
+            # Avoid any pending subscription to be executed
             del self._pending_subscriptions[topic]
 
         self._pending_unsubscribes.add(topic)
@@ -808,10 +808,10 @@ class MQTT:
         for subscription in subscriptions:
             if msg.retain:
                 init_status = self._retained_init.setdefault(subscription, set())
-                # skip already initialized subscriptions
+                # Skip already initialized subscriptions
                 if msg.topic in init_status:
                     continue
-                # remember the subscription had an initial retained payload
+                # Remember the subscription had an initial retained payload
                 self._retained_init[subscription].add(msg.topic)
 
             payload: SubscribePayloadType = msg.payload
