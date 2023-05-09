@@ -29,11 +29,14 @@ from .panel import async_register_dynalite_frontend
 from .schema import BRIDGE_SCHEMA
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Optional(CONF_BRIDGES): vol.All(cv.ensure_list, [BRIDGE_SCHEMA])}
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {vol.Optional(CONF_BRIDGES): vol.All(cv.ensure_list, [BRIDGE_SCHEMA])}
+            ),
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

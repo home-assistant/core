@@ -11,6 +11,7 @@ from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_get as async_get_issue_registry,
 )
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +25,12 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_flow(
-    hass: HomeAssistant, first_con, second_con, exp_type, exp_result, exp_reason
+    hass: HomeAssistant,
+    first_con,
+    second_con,
+    exp_type,
+    exp_result,
+    exp_reason,
 ) -> None:
     """Run a flow with or without errors and return result."""
     registry = async_get_issue_registry(hass)
@@ -49,6 +55,16 @@ async def test_flow(
     issue = registry.async_get_issue(dynalite.DOMAIN, "deprecated_yaml")
     assert issue is not None
     assert issue.severity == IssueSeverity.WARNING
+
+
+async def test_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Check that deprecation warning appears in caplog."""
+    await async_setup_component(
+        hass, dynalite.DOMAIN, {dynalite.DOMAIN: {dynalite.CONF_HOST: "aaa"}}
+    )
+    assert "The 'dynalite' option is deprecated" in caplog.text
 
 
 async def test_existing(hass: HomeAssistant) -> None:
