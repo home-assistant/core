@@ -116,7 +116,7 @@ aio_georss_gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone
-aioairzone==0.5.2
+aioairzone==0.5.5
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -156,7 +156,7 @@ aioecowitt==2023.01.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.7.3
+aioesphomeapi==13.7.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -872,7 +872,7 @@ ha-philipsjs==3.0.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.66.2
+hass-nabucasa==0.67.1
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -1313,7 +1313,7 @@ p1monitor==2.1.1
 paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_bluray
-panacotta==0.1
+panacotta==0.2
 
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.6
@@ -2384,7 +2384,7 @@ solax==0.3.0
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonos
-sonos-websocket==0.1.0
+sonos-websocket==0.1.1
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
