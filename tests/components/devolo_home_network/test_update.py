@@ -15,6 +15,7 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
@@ -109,11 +110,9 @@ async def test_device_failure_check(
 
 async def test_device_failure_update(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     mock_device: MockDevice,
 ) -> None:
     """Test device failure when starting update."""
-    caplog.clear()
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{PLATFORM}.{device_name}_firmware_update"
@@ -124,15 +123,14 @@ async def test_device_failure_update(
     mock_device.device.async_start_firmware_update.side_effect = DeviceUnavailable
 
     # Emulate update start
-    await hass.services.async_call(
-        PLATFORM,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: state_key},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    assert "Device Mock Title did not respond" in caplog.text
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            PLATFORM,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: state_key},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -148,13 +146,14 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
 
     mock_device.device.async_start_firmware_update.side_effect = DevicePasswordProtected
 
-    assert await hass.services.async_call(
-        PLATFORM,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: state_key},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        assert await hass.services.async_call(
+            PLATFORM,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: state_key},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 

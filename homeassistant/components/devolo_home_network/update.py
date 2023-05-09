@@ -19,6 +19,7 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -122,7 +123,12 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
         self._in_progress_old_version = self.installed_version
         try:
             await self.entity_description.update_func(self.device)
-        except DevicePasswordProtected:
+        except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
-        except DeviceUnavailable:
-            _LOGGER.error("Device %s did not respond", self.entry.title)
+            raise HomeAssistantError(
+                f"Device {self.entry.title} require re-authenticatication to set or change the password"
+            ) from ex
+        except DeviceUnavailable as ex:
+            raise HomeAssistantError(
+                f"Device {self.entry.title} did not respond"
+            ) from ex
