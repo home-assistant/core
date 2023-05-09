@@ -58,46 +58,26 @@ class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
 
         if user_input is None:
             return self._show_setup_form(user_input, errors=None)
 
-        client_id = user_input[CONF_CLIENT_ID]
-        client_secret = user_input[CONF_CLIENT_SECRET]
-        oauth_token = user_input.get(CONF_TOKEN)
-
         # Check if already configured
         if self.unique_id is None:
-            await self.async_set_unique_id(oauth_token)
+            await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
             self._abort_if_unique_id_configured()
 
         try:
-            client = Twitch(
-                app_id=client_id,
-                app_secret=client_secret,
-                target_app_auth_scope=OAUTH_SCOPES,
-            )
-            client.auto_refresh_auth = False
+            await self.hass.async_add_executor_job(_attempt_login, user_input)
+        except MissingScopeException:
+            _LOGGER.error("OAuth token is missing required scope")
+            return self._show_setup_form(user_input, {"base": "invalid_auth"})
         except TwitchAuthorizationException:
             _LOGGER.error("Invalid client ID or client secret")
-            errors["base"] = "invalid_auth"
-            return self._show_setup_form(user_input, errors)
-
-        if oauth_token:
-            try:
-                client.set_user_authentication(
-                    token=oauth_token, scope=OAUTH_SCOPES, validate=True
-                )
-            except MissingScopeException:
-                _LOGGER.error("OAuth token is missing required scope")
-                errors["base"] = "invalid_auth"
-                return self._show_setup_form(user_input, errors)
-
-            except InvalidTokenException:
-                _LOGGER.error("OAuth token is invalid")
-                errors["base"] = "invalid_auth"
-                return self._show_setup_form(user_input, errors)
+            return self._show_setup_form(user_input, {"base": "invalid_auth"})
+        except InvalidTokenException:
+            _LOGGER.error("OAuth token is invalid")
+            return self._show_setup_form(user_input, {"base": "invalid_auth"})
 
         return self.async_create_entry(title="Twitch", data=user_input)
 
@@ -106,3 +86,22 @@ class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle import from legacy config."""
         return await self.async_step_user(import_info)
+
+
+def _attempt_login(user_input: dict[str, Any]):
+    client_id = user_input[CONF_CLIENT_ID]
+    client_secret = user_input[CONF_CLIENT_SECRET]
+    oauth_token = user_input.get(CONF_TOKEN)
+
+    client = Twitch(
+        app_id=client_id,
+        app_secret=client_secret,
+        target_app_auth_scope=OAUTH_SCOPES,
+    )
+
+    client.auto_refresh_auth = False
+
+    if oauth_token:
+        client.set_user_authentication(
+            token=oauth_token, scope=OAUTH_SCOPES, validate=True
+        )
