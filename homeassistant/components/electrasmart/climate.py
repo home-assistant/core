@@ -22,11 +22,10 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
@@ -70,13 +69,6 @@ HVAC_MODE_HASS_TO_ELECTRA = {
     HVACMode.AUTO: OperationMode.MODE_AUTO,
 }
 
-HVAC_ACTION_ELECTRA_TO_HASS = {
-    OperationMode.MODE_COOL: HVACAction.COOLING,
-    OperationMode.MODE_HEAT: HVACAction.HEATING,
-    OperationMode.MODE_FAN: HVACAction.FAN,
-    OperationMode.MODE_DRY: HVACAction.DRYING,
-}
-
 ELECTRA_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 ELECTRA_MODES = [
     HVACMode.OFF,
@@ -113,7 +105,7 @@ class ElectraClimateEntity(ClimateEntity):
     _attr_target_temperature_step = 1
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = ELECTRA_MODES
 
     def __init__(self, device: ElectraAirConditioner, api: ElectraAPI) -> None:
@@ -248,7 +240,6 @@ class ElectraClimateEntity(ClimateEntity):
         await self._async_operate_electra_ac()
 
     def _update_device_attrs(self) -> None:
-
         self._attr_fan_mode = FAN_ELECTRA_TO_HASS[
             self._electra_ac_device.get_fan_speed()
         ]
@@ -262,15 +253,6 @@ class ElectraClimateEntity(ClimateEntity):
             if not self._electra_ac_device.is_on()
             else HVAC_MODE_ELECTRA_TO_HASS[self._electra_ac_device.get_mode()]
         )
-
-        if self._electra_ac_device.get_mode() == OperationMode.MODE_AUTO:
-            self._attr_hvac_action = None
-        else:
-            self._attr_hvac_action = (
-                HVACAction.OFF
-                if not self._electra_ac_device.is_on()
-                else HVAC_ACTION_ELECTRA_TO_HASS[self._electra_ac_device.get_mode()]
-            )
 
         if (
             self._electra_ac_device.is_horizontal_swing()
