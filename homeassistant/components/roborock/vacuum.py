@@ -113,6 +113,11 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Get the error str if an error code exists."""
         return self._device_status.error_code.name
 
+    @property
+    def status(self) -> str | None:
+        """Return the status of the vacuum cleaner."""
+        return self._device_status.state.name
+
     async def async_start(self) -> None:
         """Start the vacuum."""
         await self.send(RoborockCommand.APP_START)
