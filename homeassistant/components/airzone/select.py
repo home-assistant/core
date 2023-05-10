@@ -93,7 +93,7 @@ async def async_setup_entry(
             if description.key in zone_data:
                 _desc = replace(
                     description,
-                    options=list(description.options_dict.keys()),
+                    options=list(description.options_dict),
                 )
                 entities.append(
                     AirzoneZoneSelect(
