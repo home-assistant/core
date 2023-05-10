@@ -1,7 +1,9 @@
 """Test tts."""
 from __future__ import annotations
 
+import io
 from unittest.mock import patch
+import wave
 
 import pytest
 from wyoming.audio import AudioChunk, AudioStop
@@ -38,6 +40,33 @@ async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     assert not entity.async_get_supported_voices("de-DE")
 
 
+async def test_no_options(hass: HomeAssistant, init_wyoming_tts, snapshot) -> None:
+    """Test options=None."""
+    audio = bytes(100)
+    audio_events = [
+        AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
+        AudioStop().event(),
+    ]
+
+    state = hass.states.get("tts.test_tts")
+    assert state is not None
+
+    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.test_tts")
+    assert entity is not None
+
+    with patch(
+        "homeassistant.components.wyoming.tts.AsyncTcpClient",
+        MockAsyncTcpClient(audio_events),
+    ) as mock_client:
+        extension, data = await entity.async_get_tts_audio(
+            "Hello world", "en-US", options=None
+        )
+
+        assert extension == "mp3"
+        assert data is not None
+        assert mock_client.written == snapshot
+
+
 async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) -> None:
     """Test get audio."""
     audio = bytes(100)
@@ -60,10 +89,14 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
         assert mock_client.written == snapshot
 
 
-async def test_get_tts_audio_raw(
-    hass: HomeAssistant, init_wyoming_tts, snapshot
+@pytest.mark.parametrize(
+    "audio_format",
+    [("wav",), ("raw",)],
+)
+async def test_get_tts_audio_format(
+    hass: HomeAssistant, init_wyoming_tts, snapshot, audio_format: str
 ) -> None:
-    """Test get raw audio."""
+    """Test get audio in a specific format."""
     audio = bytes(100)
     audio_events = [
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
@@ -81,12 +114,22 @@ async def test_get_tts_audio_raw(
                 "Hello world",
                 "tts.test_tts",
                 "en-US",
-                options={tts.ATTR_AUDIO_OUTPUT: "raw"},
+                options={tts.ATTR_AUDIO_OUTPUT: audio_format},
             ),
         )
 
-    assert extension == "raw"
-    assert data == audio
+    assert extension == audio_format
+
+    if audio_format == "raw":
+        assert data == audio
+    else:
+        # Verify WAV audio
+        with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
+            assert wav_file.getframerate() == 16000
+            assert wav_file.getsampwidth() == 2
+            assert wav_file.getnchannels() == 1
+            assert wav_file.readframes(wav_file.getnframes()) == audio
+
     assert mock_client.written == snapshot
 
 
@@ -126,7 +169,5 @@ async def test_get_tts_audio_audio_oserror(
     ):
         await tts.async_get_media_source_audio(
             hass,
-            tts.generate_media_source_id(
-                hass, "Hello world", "tts.test_tts", hass.config.language
-            ),
+            tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
         )

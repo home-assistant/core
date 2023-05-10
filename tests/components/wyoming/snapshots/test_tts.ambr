@@ -21,7 +21,40 @@
     }),
   ])
 # ---
+# name: test_get_tts_audio_format[raw]
+  list([
+    dict({
+      'data': dict({
+        'text': 'Hello world',
+      }),
+      'payload': None,
+      'type': 'synthesize',
+    }),
+  ])
+# ---
+# name: test_get_tts_audio_format[wav]
+  list([
+    dict({
+      'data': dict({
+        'text': 'Hello world',
+      }),
+      'payload': None,
+      'type': 'synthesize',
+    }),
+  ])
+# ---
 # name: test_get_tts_audio_raw
+  list([
+    dict({
+      'data': dict({
+        'text': 'Hello world',
+      }),
+      'payload': None,
+      'type': 'synthesize',
+    }),
+  ])
+# ---
+# name: test_no_options
   list([
     dict({
       'data': dict({
