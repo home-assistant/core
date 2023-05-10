@@ -7,6 +7,7 @@ from homeassistant.components import http
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.decorator import Registry
 
 from .const import DOMAIN, SYN_RESOLUTION_MATCH
@@ -39,6 +40,17 @@ class CardType(enum.Enum):
 def async_setup(hass):
     """Activate Alexa component."""
     hass.http.register_view(AlexaIntentsView)
+
+    # Resolution behavior deprecation warning
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "resolution_behavior_deprecated",
+        breaks_in_ha_version="2023.7.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="resolution_behavior_deprecated",
+    )
 
 
 async def async_setup_intents(hass):
@@ -188,10 +200,9 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
     # reference to the request object structure, see the Alexa docs:
     # https://tinyurl.com/ybvm7jhs
     resolved_data = {}
+    resolved_data["value_old"] = request["value"]
     resolved_data["value"] = request["value"]
-    resolved_data["value_nearest"] = request["value"]
     resolved_data["id"] = ""
-    resolved_data["id_nearest"] = ""
 
     if (
         "resolutions" in request
@@ -211,18 +222,16 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
         # Always set nearest name and id if available, otherwise the spoken slot
         # value and an empty string as id is used
         if len(possible_values) >= 1:
-            resolved_data["value_nearest"] = possible_values[0]["name"]
-            # Set ID if available
-            if "id" in possible_values[0]:
-                resolved_data["id_nearest"] = possible_values[0]["id"]
-
-        # If there is only one match use the resolved value, otherwise the
-        # resolution cannot be determined, so use the spoken slot value and empty string as id
-        if len(possible_values) == 1:
             resolved_data["value"] = possible_values[0]["name"]
             # Set ID if available
             if "id" in possible_values[0]:
                 resolved_data["id"] = possible_values[0]["id"]
+
+        # Deprecated Behavior
+        # If there is only one match use the resolved value, otherwise the
+        # resolution cannot be determined, so use the spoken slot value and empty string as id
+        if len(possible_values) == 1:
+            resolved_data["value_old"] = possible_values[0]["name"]
         else:
             _LOGGER.debug(
                 "Found multiple synonym resolutions for slot value: {%s: %s}",
@@ -256,10 +265,9 @@ class AlexaResponse:
                 _key = key.replace(".", "_")
                 _slot_data = resolve_slot_data(key, value)
 
-                self.variables[_key] = _slot_data["value"]
-                self.variables[_key + "_ID"] = _slot_data["id"]
-                self.variables[_key + "_NEAREST"] = _slot_data["value_nearest"]
-                self.variables[_key + "_NEAREST_ID"] = _slot_data["id_nearest"]
+                # In a future release use: value instead of value_old
+                self.variables[_key] = _slot_data["value_old"]
+                self.variables[_key + "_Id"] = _slot_data["id"]
 
     def add_card(self, card_type, title, content):
         """Add a card to the response."""

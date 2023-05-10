@@ -80,19 +80,13 @@ def alexa_client(event_loop, hass, hass_client):
                     "GetZodiacHoroscopeIDIntent": {
                         "speech": {
                             "type": "plain",
-                            "text": "You told us your sign is {{ ZodiacSign_ID }}.",
+                            "text": "You told us your sign is {{ ZodiacSign_Id }}.",
                         }
                     },
                     "GetZodiacHoroscopeNearestValueIntent": {
                         "speech": {
                             "type": "plain",
-                            "text": "You told us your sign is {{ ZodiacSign_NEAREST }}.",
-                        }
-                    },
-                    "GetZodiacHoroscopeNearestIDIntent": {
-                        "speech": {
-                            "type": "plain",
-                            "text": "You told us your sign is {{ ZodiacSign_NEAREST_ID }}.",
+                            "text": "You told us your sign is {{ ZodiacSign_Value }}.",
                         }
                     },
                     "AMAZON.PlaybackAction<object@MusicCreativeWork>": {
@@ -448,7 +442,7 @@ async def test_intent_request_with_slots_and_multi_synonym_nearest_id_resolution
             "requestId": REQUEST_ID,
             "timestamp": "2015-05-13T12:34:56Z",
             "intent": {
-                "name": "GetZodiacHoroscopeNearestIDIntent",
+                "name": "GetZodiacHoroscopeIDIntent",
                 "slots": {
                     "ZodiacSign": {
                         "name": "ZodiacSign",
