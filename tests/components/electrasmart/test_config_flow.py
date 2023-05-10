@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import load_fixture
 
 
-async def test_user(hass: HomeAssistant):
+async def test_form(hass: HomeAssistant):
     """Test user config."""
 
     mock_generate_token = loads(load_fixture("generate_token_response.json", DOMAIN))
@@ -27,8 +27,18 @@ async def test_user(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
+            data=None,
+        )
+
+        assert result["step_id"] == "user"
+
+        # test with required
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567"},
         )
+
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == CONF_OTP
 
@@ -58,6 +68,29 @@ async def test_one_time_password(hass: HomeAssistant):
             result["flow_id"], {CONF_OTP: "1234"}
         )
     assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_one_time_password_api_error(hass: HomeAssistant):
+    """Test one time password."""
+    mock_generate_token = loads(load_fixture("generate_token_response.json", DOMAIN))
+    with patch(
+        "electrasmart.api.ElectraAPI.generate_new_token",
+        return_value=mock_generate_token,
+    ), patch(
+        "electrasmart.api.ElectraAPI.validate_one_time_password",
+        side_effect=ElectraApiError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_PHONE_NUMBER: "0521234567"},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_OTP: "1234"}
+        )
+
+    assert result["type"] == FlowResultType.FORM
 
 
 async def test_cannot_connect(hass: HomeAssistant):
