@@ -24,6 +24,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "connectable": False,
+        "domain": "beewi_smartclim",
+        "manufacturer_id": 13,
+    },
+    {
+        "connectable": False,
         "domain": "bluemaestro",
         "manufacturer_id": 307,
     },

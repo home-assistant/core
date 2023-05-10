@@ -1,85 +1,136 @@
 """Platform for beewi_smartclim integration."""
+
 from __future__ import annotations
 
-from beewi_smartclim import BeewiSmartClimPoller  # pylint: disable=import-error
-import voluptuous as vol
+from bleak.backends.device import BLEDevice
+from smartclim_ble import BeeWiSmartClimAdvertisement
 
+from homeassistant import config_entries
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothDataProcessor,
+    PassiveBluetoothDataUpdate,
+    PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorCoordinator,
+    PassiveBluetoothProcessorEntity,
+)
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, UnitOfTemperature
+from homeassistant.const import ATTR_NAME, PERCENTAGE, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DEVICE_CLASS_NAME, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-# Default values
-DEFAULT_NAME = "BeeWi SmartClim"
+from .const import DOMAIN
 
-# Sensor config
-SENSOR_TYPES = [
-    [SensorDeviceClass.TEMPERATURE, "Temperature", UnitOfTemperature.CELSIUS],
-    [SensorDeviceClass.HUMIDITY, "Humidity", PERCENTAGE],
-    [SensorDeviceClass.BATTERY, "Battery", PERCENTAGE],
-]
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    "temperature": SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "humidity": SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "battery": SensorEntityDescription(
+        key="battery",
+        name="Battery",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "interval": SensorEntityDescription(
+        key="update_interval",
+        name="Update Interval",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        # The interval setting is not a generally useful entity for most users.
+        entity_registry_enabled_default=False,
+    ),
+}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+
+def _device_key_to_bluetooth_entity_key(
+    device: BLEDevice,
+    key: str,
+) -> PassiveBluetoothEntityKey:
+    """Convert a device key to an entity key."""
+    return PassiveBluetoothEntityKey(key, device.address)
 
 
-def setup_platform(
+def _sensor_device_info_to_hass(
+    adv: BeeWiSmartClimAdvertisement,
+) -> DeviceInfo:
+    """Convert a sensor device info to hass device info."""
+    hass_device_info = DeviceInfo({})
+    if adv.readings and adv.readings.name:
+        hass_device_info[ATTR_NAME] = adv.readings.name
+    return hass_device_info
+
+
+def sensor_update_to_bluetooth_data_update(
+    adv: BeeWiSmartClimAdvertisement,
+) -> PassiveBluetoothDataUpdate:
+    """Convert a sensor update to a Bluetooth data update."""
+    entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
+    for key, desc in SENSOR_DESCRIPTIONS.items():
+        # PassiveBluetoothDataUpdate does not support DEVICE_CLASS_NAME
+        # the assert satisfies the type checker and will catch attempts
+        # to use DEVICE_CLASS_NAME in the entity descriptions.
+        assert desc.name is not DEVICE_CLASS_NAME
+        entity_names[_device_key_to_bluetooth_entity_key(adv.device, key)] = desc.name
+
+    return PassiveBluetoothDataUpdate(
+        devices={adv.device.address: _sensor_device_info_to_hass(adv)},
+        entity_descriptions={
+            _device_key_to_bluetooth_entity_key(adv.device, key): desc
+            for key, desc in SENSOR_DESCRIPTIONS.items()
+        },
+        entity_data={
+            _device_key_to_bluetooth_entity_key(adv.device, key): getattr(
+                adv.readings, key, None
+            )
+            for key in SENSOR_DESCRIPTIONS
+        },
+        entity_names=entity_names,
+    )
+
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: config_entries.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the beewi_smartclim platform."""
+    """Set up the BeeWi SmartClim BLE sensors."""
+    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]
 
-    mac = config[CONF_MAC]
-    prefix = config[CONF_NAME]
-    poller = BeewiSmartClimPoller(mac)
-
-    sensors = []
-
-    for sensor_type in SENSOR_TYPES:
-        device = sensor_type[0]
-        name = sensor_type[1]
-        unit = sensor_type[2]
-        # `prefix` is the name configured by the user for the sensor, we're appending
-        #  the device type at the end of the name (garden -> garden temperature)
-        if prefix:
-            name = f"{prefix} {name}"
-
-        sensors.append(BeewiSmartclimSensor(poller, name, mac, device, unit))
-
-    add_entities(sensors)
+    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
+    entry.async_on_unload(
+        processor.async_add_entities_listener(
+            BeeWiSmartClimBluetoothSensorEntity, async_add_entities
+        )
+    )
+    entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
-class BeewiSmartclimSensor(SensorEntity):
-    """Representation of a Sensor."""
+class BeeWiSmartClimBluetoothSensorEntity(
+    PassiveBluetoothProcessorEntity, SensorEntity
+):
+    """Representation of an BeeWi SmartClim BLE sensor."""
 
-    def __init__(self, poller, name, mac, device, unit):
-        """Initialize the sensor."""
-        self._poller = poller
-        self._attr_name = name
-        self._device = device
-        self._attr_native_unit_of_measurement = unit
-        self._attr_device_class = self._device
-        self._attr_unique_id = f"{mac}_{device}"
-
-    def update(self) -> None:
-        """Fetch new state data from the poller."""
-        self._poller.update_sensor()
-        self._attr_native_value = None
-        if self._device == SensorDeviceClass.TEMPERATURE:
-            self._attr_native_value = self._poller.get_temperature()
-        if self._device == SensorDeviceClass.HUMIDITY:
-            self._attr_native_value = self._poller.get_humidity()
-        if self._device == SensorDeviceClass.BATTERY:
-            self._attr_native_value = self._poller.get_battery()
+    @property
+    def native_value(self) -> float | int | str | None:
+        """Return the native value."""
+        return self.processor.entity_data.get(self.entity_key)

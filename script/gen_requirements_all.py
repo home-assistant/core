@@ -25,7 +25,6 @@ COMMENT_REQUIREMENTS = (
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
-    "beewi_smartclim",  # depends on bluepy
     "bluepy",
     "decora",
     "decora_wifi",
