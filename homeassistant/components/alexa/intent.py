@@ -223,7 +223,7 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
             _LOGGER.debug(
                 "Found multiple synonym resolutions for slot value: {%s: %s}",
                 key,
-                resolved_data["value"],
+                resolved_data["value_old"],
             )
 
     return resolved_data
