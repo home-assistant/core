@@ -24,7 +24,6 @@ COMMENT_REQUIREMENTS = (
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
-    "azure-servicebus",  # depends on uamqp, which requires OpenSSL 1.1
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
@@ -156,10 +155,6 @@ matplotlib==3.6.1
 # pyOpenSSL 23.1.0 or later required to avoid import errors when
 # cryptography 40.0.1 is installed with botocore
 pyOpenSSL>=23.1.0
-
-# uamqp newer versions we currently can't build for armv7/armhf
-# Limit this to Python 3.10, to not block Python 3.11 dev for now
-uamqp==1.6.0;python_version<'3.11'
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
