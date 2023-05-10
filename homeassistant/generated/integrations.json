@@ -1300,9 +1300,10 @@
       "iot_class": "cloud_polling"
     },
     "electrasmart": {
+      "name": "Electra Smart",
+      "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling",
-      "name": "Electra Smart"
+      "iot_class": "cloud_polling"
     },
     "elgato": {
       "name": "Elgato",
