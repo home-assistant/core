@@ -274,10 +274,17 @@ class Counter(collection.CollectionEntity, RestoreEntity):
             raise ValueError(
                 f"Value {value} for {self.entity_id} exceeding the maximum value of {maximum}"
             )
+
         if (minimum := self._config.get(CONF_MINIMUM)) is not None and value < minimum:
             raise ValueError(
                 f"Value {value} for {self.entity_id} exceeding the minimum value of {minimum}"
             )
+
+        if (step := self._config.get(CONF_STEP)) is not None and value % step != 0:
+            raise ValueError(
+                f"Value {value} for {self.entity_id} is not a multiple of the step size {step}"
+            )
+
         self._state = value
         self.async_write_ha_state()
 

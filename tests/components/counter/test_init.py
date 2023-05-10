@@ -243,14 +243,31 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
     assert state.state == "5"
 
     with pytest.raises(
-        ValueError, match=r"Value 1 for counter.test exceeding the minimum value of 5"
+        ValueError, match=r"Value 0 for counter.test exceeding the minimum value of 5"
     ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: entity_id,
-                VALUE: 1,
+                VALUE: 0,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
+
+    with pytest.raises(
+        ValueError,
+        match=r"Value 6 for counter.test is not a multiple of the step size 5",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                VALUE: 6,
             },
             blocking=True,
         )
