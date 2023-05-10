@@ -428,7 +428,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.2
+bellows==0.35.3
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.13.3
@@ -2559,7 +2559,7 @@ unifi-discovery==1.1.7
 unifiled==0.11
 
 # homeassistant.components.upb
-upb_lib==0.5.3
+upb_lib==0.5.4
 
 # homeassistant.components.upcloud
 upcloud-api==2.0.0
