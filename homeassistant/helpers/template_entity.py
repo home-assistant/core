@@ -8,6 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
+    CONF_PATH,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
@@ -189,6 +191,7 @@ class TemplateEntity(Entity):
         config: ConfigType | None = None,
         fallback_name: str | None = None,
         unique_id: str | None = None,
+        blueprint_inputs: dict[str, Any] | None = None,
     ) -> None:
         """Template Entity."""
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
@@ -196,6 +199,7 @@ class TemplateEntity(Entity):
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
+        self._referenced_blueprint = blueprint_inputs
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template
@@ -208,6 +212,8 @@ class TemplateEntity(Entity):
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
+
+        self._blueprint_inputs = config.get("BLUEPRINT_INPUTS")
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -222,7 +228,10 @@ class TemplateEntity(Entity):
                 """Name of this state."""
                 return "<None>"
 
-        variables = {"this": DummyState()}
+        variables = {
+            "this": DummyState(),
+            **(self._blueprint_inputs or {}),
+        }
 
         # Try to render the name as it can influence the entity ID
         self._attr_name = fallback_name
@@ -248,6 +257,13 @@ class TemplateEntity(Entity):
                 self._attr_icon = self._icon_template.async_render(
                     variables=variables, parse_result=False
                 )
+
+    @property
+    def referenced_blueprint(self):
+        """Return referenced blueprint or None."""
+        if self._referenced_blueprint is None:
+            return None
+        return self._referenced_blueprint[CONF_USE_BLUEPRINT][CONF_PATH]
 
     @callback
     def _update_available(self, result: str | TemplateError) -> None:
@@ -354,7 +370,10 @@ class TemplateEntity(Entity):
         template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
 
-        variables = {"this": TemplateStateFromEntityId(self.hass, self.entity_id)}
+        variables = {
+            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            **(self._blueprint_inputs or {}),
+        }
 
         for template, attributes in self._template_attrs.items():
             template_var_tup = TrackTemplate(template, variables)
@@ -433,6 +452,7 @@ class TemplateEntity(Entity):
         return await script.async_run(
             run_variables={
                 "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+                **(self._blueprint_inputs or {}),
                 **run_variables,
             },
             context=context,
@@ -452,7 +472,10 @@ class TemplateSensor(TemplateEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
-            hass, config=config, fallback_name=fallback_name, unique_id=unique_id
+            hass,
+            config=config,
+            fallback_name=fallback_name,
+            unique_id=unique_id,
         )
 
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -468,6 +491,7 @@ class TriggerBaseEntity(Entity):
     extra_template_keys_complex: tuple | None = None
     _unique_id: str | None
 
+    # blueprint_inputs: dict[str, Any] | None = None,
     def __init__(
         self,
         hass: HomeAssistant,
@@ -483,6 +507,7 @@ class TriggerBaseEntity(Entity):
         self._static_rendered = {}
         self._to_render_simple = []
         self._to_render_complex: list[str] = []
+        self._blueprint_inputs = config.get("BLUEPRINT_INPUTS")
 
         for itm in (
             CONF_AVAILABILITY,
@@ -572,6 +597,8 @@ class TriggerBaseEntity(Entity):
 
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
+
+        _LOGGER.warning("_render_templates, variables: %s", variables)
         try:
             rendered = dict(self._static_rendered)
 
@@ -629,6 +656,10 @@ class ManualTriggerEntity(TriggerBaseEntity):
         # Silently try if variable is a json and store result in `value_json` if it is.
         with contextlib.suppress(*JSON_DECODE_EXCEPTIONS):
             run_variables["value_json"] = json_loads(run_variables["value"])
-        variables = {"this": this, **(run_variables or {})}
+        variables = {
+            "this": this,
+            **(self._blueprint_inputs or {}),
+            **(run_variables or {}),
+        }
 
         self._render_templates(variables)

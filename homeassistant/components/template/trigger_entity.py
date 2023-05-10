@@ -43,7 +43,11 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
         if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
         run_variables = self.coordinator.data["run_variables"]
-        variables = {"this": this, **(run_variables or {})}
+        variables = {
+            "this": this,
+            **(self._blueprint_inputs or {}),
+            **(run_variables or {}),
+        }
 
         self._render_templates(variables)
 

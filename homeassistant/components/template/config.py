@@ -3,6 +3,10 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.blueprint import (
+    BlueprintException,
+    is_blueprint_instance_config,
+)
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -10,8 +14,11 @@ from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_ID
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import async_validate_trigger_config
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from . import (
     binary_sensor as binary_sensor_platform,
@@ -20,7 +27,8 @@ from . import (
     select as select_platform,
     sensor as sensor_platform,
 )
-from .const import CONF_TRIGGER, DOMAIN
+from .const import CONF_TRIGGER, DOMAIN, LOGGER
+from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -53,6 +61,58 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
 )
 
 
+async def _async_validate_config_item(hass, config):
+    """Validate template config item."""
+
+    LOGGER.debug("Validating template config: %s", config)
+    blueprint_inputs = None
+    if is_blueprint_instance_config(config):
+        blueprints = async_get_blueprints(hass)
+
+        try:
+            blueprint_inputs = await blueprints.async_inputs_from_config(config)
+        except BlueprintException as err:
+            LOGGER.error(
+                "Failed to generate template from blueprint: %s",
+                err,
+            )
+            raise
+
+        LOGGER.debug("Blueprint inputs: %s", blueprint_inputs.inputs)
+
+        try:
+            config = blueprint_inputs.async_substitute()
+        except UndefinedSubstitution as err:
+            LOGGER.error(
+                "Blueprint '%s' failed to generate template with inputs %s: %s",
+                blueprint_inputs.blueprint.name,
+                blueprint_inputs.inputs,
+                err,
+            )
+            raise HomeAssistantError from err
+
+    config = CONFIG_SECTION_SCHEMA(config)
+    if blueprint_inputs:
+        for dom in [
+            BINARY_SENSOR_DOMAIN,
+            BUTTON_DOMAIN,
+            NUMBER_DOMAIN,
+            SELECT_DOMAIN,
+            SENSOR_DOMAIN,
+        ]:
+            if dom in config:
+                for idx in range(len(config[dom])):
+                    config[dom][idx]["BLUEPRINT_INPUTS"] = blueprint_inputs.inputs
+        config["BLUEPRINT_INPUTS"] = blueprint_inputs.inputs
+        LOGGER.debug("Blueprint final config: %s", config)
+
+    if CONF_TRIGGER in config:
+        config[CONF_TRIGGER] = await async_validate_trigger_config(
+            hass, config[CONF_TRIGGER]
+        )
+    return config
+
+
 async def async_validate_config(hass, config):
     """Validate config."""
     if DOMAIN not in config:
@@ -62,12 +122,7 @@ async def async_validate_config(hass, config):
 
     for cfg in cv.ensure_list(config[DOMAIN]):
         try:
-            cfg = CONFIG_SECTION_SCHEMA(cfg)
-
-            if CONF_TRIGGER in cfg:
-                cfg[CONF_TRIGGER] = await async_validate_trigger_config(
-                    hass, cfg[CONF_TRIGGER]
-                )
+            cfg = await _async_validate_config_item(hass, cfg)
         except vol.Invalid as err:
             async_log_exception(err, DOMAIN, cfg, hass)
             continue
@@ -91,7 +146,7 @@ async def async_validate_config(hass, config):
 
             if not legacy_warn_printed:
                 legacy_warn_printed = True
-                logging.getLogger(__name__).warning(
+                LOGGER.warning(
                     "The entity definition format under template: differs from the"
                     " platform "
                     "configuration format. See "
