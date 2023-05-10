@@ -41,14 +41,14 @@ class AirzoneSelectDescription(SelectEntityDescription, AirzoneSelectDescription
 
 
 GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
-    "90º": GrilleAngle.DEG_90,
-    "50º": GrilleAngle.DEG_50,
-    "45º": GrilleAngle.DEG_45,
-    "40º": GrilleAngle.DEG_40,
+    "90deg": GrilleAngle.DEG_90,
+    "50deg": GrilleAngle.DEG_50,
+    "45deg": GrilleAngle.DEG_45,
+    "40deg": GrilleAngle.DEG_40,
 }
 
 SLEEP_DICT: Final[dict[str, int]] = {
-    "Off": SleepTimeout.SLEEP_OFF,
+    "off": SleepTimeout.SLEEP_OFF,
     "30m": SleepTimeout.SLEEP_30,
     "60m": SleepTimeout.SLEEP_60,
     "90m": SleepTimeout.SLEEP_90,
@@ -62,6 +62,7 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         key=AZD_COLD_ANGLE,
         name="Cold Angle",
         options_dict=GRILLE_ANGLE_DICT,
+        translation_key="grille_angles",
     ),
     AirzoneSelectDescription(
         api_param=API_HEAT_ANGLE,
@@ -69,6 +70,7 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         key=AZD_HEAT_ANGLE,
         name="Heat Angle",
         options_dict=GRILLE_ANGLE_DICT,
+        translation_key="grille_angles",
     ),
     AirzoneSelectDescription(
         api_param=API_SLEEP,
@@ -76,6 +78,7 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         key=AZD_SLEEP,
         name="Sleep",
         options_dict=SLEEP_DICT,
+        translation_key="sleep_times",
     ),
 )
 
