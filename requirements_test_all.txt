@@ -499,6 +499,9 @@ dwdwfsapi==1.0.6
 # homeassistant.components.dynalite
 dynalite_devices==0.1.47
 
+# homeassistant.components.dynalite
+dynalite_panel==0.0.4
+
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
 
