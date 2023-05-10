@@ -1,0 +1,8 @@
+{
+  "domain": "govee",
+  "name": "Govee",
+  "integrations": [
+    "govee_ble",
+    "govee_local_api"
+  ]
+}

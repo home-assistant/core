@@ -1,0 +1,20 @@
+"""Tests for the Govee Local API integration."""
+
+
+from homeassistant.components.govee_local_api.const import (
+    CONF_BIND_ADDRESS,
+    CONF_DISCOVERY_INTERVAL,
+    CONF_LISENING_PORT,
+    CONF_MULTICAST_ADDRESS,
+    CONF_TARGET_PORT,
+)
+
+DEFAULT_CONFIG = {
+    CONF_BIND_ADDRESS: "192.168.1.1",
+    CONF_MULTICAST_ADDRESS: "239.255.255.250",
+    CONF_TARGET_PORT: 4001,
+    CONF_LISENING_PORT: 4002,
+    CONF_DISCOVERY_INTERVAL: 60,
+}
+
+DEFAULT_UNIQUE_ID = "GoveeLocalApi:192.168.1.1:4002:239.255.255.250:4001"
