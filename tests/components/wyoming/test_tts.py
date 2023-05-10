@@ -89,10 +89,7 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
         assert mock_client.written == snapshot
 
 
-@pytest.mark.parametrize(
-    "audio_format",
-    [("wav",), ("raw",)],
-)
+@pytest.mark.parametrize("audio_format", ("wav", "raw"))
 async def test_get_tts_audio_format(
     hass: HomeAssistant, init_wyoming_tts, snapshot, audio_format: str
 ) -> None:
