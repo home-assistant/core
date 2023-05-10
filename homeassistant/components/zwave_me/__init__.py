@@ -115,7 +115,7 @@ async def async_setup_platforms(
 class ZWaveMeEntity(Entity):
     """Representation of a ZWaveMe device."""
 
-    def __init__(self, controller, device):
+    def __init__(self, controller: ZWaveMeController, device: ZWaveMeData) -> None:
         """Initialize the device."""
         self.controller = controller
         self.device = device
@@ -124,13 +124,9 @@ class ZWaveMeEntity(Entity):
             f"{self.controller.config.unique_id}-{self.device.id}"
         )
         self._attr_should_poll = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.deviceIdentifier)},
-            name=self._attr_name,
+            name=device.title,
             manufacturer=self.device.manufacturer,
             sw_version=self.device.firmware,
             suggested_area=self.device.locationName,

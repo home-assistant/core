@@ -199,6 +199,7 @@ def execute_stmt_lambda_element(
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int = DEFAULT_YIELD_STATES_ROWS,
+    orm_rows: bool = True,
 ) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
 
@@ -211,10 +212,13 @@ def execute_stmt_lambda_element(
     specific entities) since they are usually faster
     with .all().
     """
-    executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
         try:
+            if orm_rows:
+                executed = session.execute(stmt)
+            else:
+                executed = session.connection().execute(stmt)
             if use_all:
                 return executed.all()
             return executed.yield_per(yield_per)
@@ -673,6 +677,7 @@ def periodic_db_cleanups(instance: Recorder) -> None:
         _LOGGER.debug("WAL checkpoint")
         with instance.engine.connect() as connection:
             connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE);"))
+            connection.execute(text("PRAGMA OPTIMIZE;"))
 
 
 @contextmanager

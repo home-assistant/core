@@ -512,7 +512,7 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
     MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "wrong_host",
+            CONF_HOST: "192.168.1.3",
             CONF_VERIFY_SSL: VERIFY_SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
@@ -539,14 +539,24 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_skip_reconfig_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
+@pytest.mark.parametrize(
+    ("current_host", "new_host"),
+    [
+        ("some.fqdn", "192.168.1.5"),
+        ("192.168.1.5", "abcd:1234::"),
+        ("abcd:1234::", "192.168.1.5"),
+    ],
+)
+async def test_skip_reconfig_ssdp(
+    hass: HomeAssistant, current_host: str, new_host: str, service: MagicMock
+) -> None:
     """Test re-configuration of already existing entry by ssdp."""
 
     MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "wrong_host",
-            CONF_VERIFY_SSL: True,
+            CONF_HOST: current_host,
+            CONF_VERIFY_SSL: VERIFY_SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_MAC: MACS,
@@ -560,7 +570,7 @@ async def test_skip_reconfig_ssdp(hass: HomeAssistant, service: MagicMock) -> No
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location="http://192.168.1.5:5000",
+            ssdp_location=f"http://{new_host}:5000",
             upnp={
                 ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
                 ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`

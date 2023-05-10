@@ -7,7 +7,7 @@ import sqlite3
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
@@ -18,7 +18,7 @@ from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.history.modern import (
-    _get_single_entity_states_stmt,
+    _get_single_entity_start_time_stmt,
 )
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
@@ -893,22 +893,28 @@ def test_execute_stmt_lambda_element(
     now = dt_util.utcnow()
     tomorrow = now + timedelta(days=1)
     one_week_from_now = now + timedelta(days=7)
+    all_calls = 0
 
     class MockExecutor:
         def __init__(self, stmt):
             assert isinstance(stmt, StatementLambdaElement)
-            self.calls = 0
 
         def all(self):
-            self.calls += 1
-            if self.calls == 2:
+            nonlocal all_calls
+            all_calls += 1
+            if all_calls == 2:
                 return ["mock_row"]
             raise SQLAlchemyError
 
     with session_scope(hass=hass) as session:
         # No time window, we always get a list
         metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
-        stmt = _get_single_entity_states_stmt(dt_util.utcnow(), metadata_id, False)
+        start_time_ts = dt_util.utcnow().timestamp()
+        stmt = lambda_stmt(
+            lambda: _get_single_entity_start_time_stmt(
+                start_time_ts, metadata_id, False, False
+            )
+        )
         rows = util.execute_stmt_lambda_element(session, stmt)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
@@ -917,6 +923,16 @@ def test_execute_stmt_lambda_element(
         # Time window >= 2 days, we get a ChunkedIteratorResult
         rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
         assert isinstance(rows, ChunkedIteratorResult)
+        row = next(rows)
+        assert row.state == new_state.state
+        assert row.metadata_id == metadata_id
+
+        # Time window >= 2 days, we should not get a ChunkedIteratorResult
+        # because orm_rows=False
+        rows = util.execute_stmt_lambda_element(
+            session, stmt, now, one_week_from_now, orm_rows=False
+        )
+        assert not isinstance(rows, ChunkedIteratorResult)
         row = next(rows)
         assert row.state == new_state.state
         assert row.metadata_id == metadata_id
