@@ -1,0 +1,11 @@
+{
+  "domain": "jvc_projector",
+  "name": "JVC Projector",
+  "codeowners": ["@SteveEasley"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/jvc_projector",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["jvcprojector"],
+  "requirements": ["pyjvcprojector==1.0.6"]
+}
