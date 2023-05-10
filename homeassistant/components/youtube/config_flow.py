@@ -18,6 +18,7 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
 )
+
 from .const import CONF_CHANNELS, DEFAULT_ACCESS, DOMAIN
 
 
@@ -88,15 +89,26 @@ class OAuth2FlowHandler(
                     CONF_CHANNELS: user_input[CONF_CHANNELS],
                 },
             )
+
         def _get_subscriptions() -> list[dict[str, Any]]:
             """Get profile from inside the executor."""
-            request = build("youtube", "v3", credentials=Credentials(self._data[CONF_TOKEN][CONF_ACCESS_TOKEN])).subscriptions().list(
-                part="snippet", mine=True, maxResults=50
+            request = (
+                build(
+                    "youtube",
+                    "v3",
+                    credentials=Credentials(self._data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
+                )
+                .subscriptions()
+                .list(part="snippet", mine=True, maxResults=50)
             )
             return request.execute()["items"]
+
         subscriptions = await self.hass.async_add_executor_job(_get_subscriptions)
         channels = [
-            SelectOptionDict(value=subscription["snippet"]["resourceId"]["channelId"], label=subscription["snippet"]["title"])
+            SelectOptionDict(
+                value=subscription["snippet"]["resourceId"]["channelId"],
+                label=subscription["snippet"]["title"],
+            )
             for subscription in subscriptions
         ]
         return self.async_show_form(
@@ -104,9 +116,7 @@ class OAuth2FlowHandler(
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CHANNELS): SelectSelector(
-                        SelectSelectorConfig(
-                            options=channels, multiple=True
-                        )
+                        SelectSelectorConfig(options=channels, multiple=True)
                     ),
                 }
             ),
