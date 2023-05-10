@@ -283,7 +283,7 @@ class FritzBoxTools(
                 entity_data["entity_states"][
                     key
                 ] = await self.hass.async_add_executor_job(
-                    update_fn, self.fritz_status, self.data.get(key)
+                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
                 )
             if self.has_call_deflections:
                 entity_data[
