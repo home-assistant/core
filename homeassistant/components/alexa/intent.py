@@ -188,7 +188,6 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
     # reference to the request object structure, see the Alexa docs:
     # https://tinyurl.com/ybvm7jhs
     resolved_data = {}
-    resolved_data["value_old"] = request["value"]
     resolved_data["value"] = request["value"]
     resolved_data["id"] = ""
 
@@ -207,10 +206,8 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
 
             possible_values.extend([item["value"] for item in entry["values"]])
 
-        # Always set nearest name and id if available, otherwise the spoken slot
-        # value and an empty string as id is used
+        # Always set id if available, otherwise an empty string is used as id
         if len(possible_values) >= 1:
-            resolved_data["value"] = possible_values[0]["name"]
             # Set ID if available
             if "id" in possible_values[0]:
                 resolved_data["id"] = possible_values[0]["id"]
@@ -218,12 +215,12 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
         # If there is only one match use the resolved value, otherwise the
         # resolution cannot be determined, so use the spoken slot value and empty string as id
         if len(possible_values) == 1:
-            resolved_data["value_old"] = possible_values[0]["name"]
+            resolved_data["value"] = possible_values[0]["name"]
         else:
             _LOGGER.debug(
                 "Found multiple synonym resolutions for slot value: {%s: %s}",
                 key,
-                resolved_data["value_old"],
+                resolved_data["value"],
             )
 
     return resolved_data
@@ -252,8 +249,7 @@ class AlexaResponse:
                 _key = key.replace(".", "_")
                 _slot_data = resolve_slot_data(key, value)
 
-                # In a future release use: value instead of value_old
-                self.variables[_key] = _slot_data["value_old"]
+                self.variables[_key] = _slot_data["value"]
                 self.variables[_key + "_Id"] = _slot_data["id"]
 
     def add_card(self, card_type, title, content):
