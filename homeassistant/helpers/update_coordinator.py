@@ -15,7 +15,8 @@ import aiohttp
 import requests
 
 from homeassistant import config_entries
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -97,6 +98,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
             job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
         self._job = HassJob(self._handle_refresh_interval, job_name)
         self._unsub_refresh: CALLBACK_TYPE | None = None
+        self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
         self.last_update_success = True
         self.last_exception: Exception | None = None
@@ -116,6 +118,22 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
 
         if self.config_entry:
             self.config_entry.async_on_unload(self.async_shutdown)
+
+    async def async_register_shutdown(self) -> None:
+        """Register shutdown on HomeAssistant stop.
+
+        Should only be used by coordinators that are not linked to a config entry.
+        """
+        if self.config_entry:
+            raise RuntimeError("This should only be used outside of config entries.")
+
+        async def _on_hass_stop(_: Event) -> None:
+            """Shutdown coordinator on HomeAssistant stop."""
+            await self.async_shutdown()
+
+        self._unsub_shutdown = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _on_hass_stop
+        )
 
     @callback
     def async_add_listener(
@@ -149,6 +167,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         """Cancel any scheduled call, and ignore new runs."""
         self._shutdown_requested = True
         self._async_unsub_refresh()
+        self._async_unsub_shutdown()
         await self._debounced_refresh.async_shutdown()
 
     @callback
@@ -168,6 +187,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
+
+    def _async_unsub_shutdown(self) -> None:
+        """Cancel any scheduled call."""
+        if self._unsub_shutdown:
+            self._unsub_shutdown()
+            self._unsub_shutdown = None
 
     @callback
     def _schedule_refresh(self) -> None:
