@@ -1,4 +1,4 @@
-"""Test zha fan."""
+"""Test ZHA fan."""
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -33,6 +33,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -52,7 +53,7 @@ IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
 
 @pytest.fixture(autouse=True)
 def fan_platform_only():
-    """Only setup the fan and required base platforms to speed up tests."""
+    """Only set up the fan and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -88,7 +89,7 @@ def zigpy_device(zigpy_device_mock):
 
 @pytest.fixture
 async def coordinator(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha fan platform."""
+    """Test ZHA fan platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -110,7 +111,7 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_fan_1(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha fan platform."""
+    """Test ZHA fan platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -135,7 +136,7 @@ async def device_fan_1(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_fan_2(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha fan platform."""
+    """Test ZHA fan platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -159,8 +160,10 @@ async def device_fan_2(hass, zigpy_device_mock, zha_device_joined):
     return zha_device
 
 
-async def test_fan(hass, zha_device_joined_restored, zigpy_device):
-    """Test zha fan platform."""
+async def test_fan(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
+    """Test ZHA fan platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).fan
@@ -271,10 +274,12 @@ async def async_set_preset_mode(hass, entity_id, preset_mode=None):
     new=AsyncMock(return_value=zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "homeassistant.components.zha.entity.DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
-async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinator):
+async def test_zha_group_fan_entity(
+    hass: HomeAssistant, device_fan_1, device_fan_2, coordinator
+) -> None:
     """Test the fan entity for a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -383,12 +388,16 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
     new=AsyncMock(side_effect=ZigbeeException),
 )
 @patch(
-    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    "homeassistant.components.zha.entity.DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY",
     new=0,
 )
 async def test_zha_group_fan_entity_failure_state(
-    hass, device_fan_1, device_fan_2, coordinator, caplog
-):
+    hass: HomeAssistant,
+    device_fan_1,
+    device_fan_2,
+    coordinator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the fan entity for a ZHA group when writing attributes generates an exception."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -443,7 +452,7 @@ async def test_zha_group_fan_entity_failure_state(
 
 
 @pytest.mark.parametrize(
-    "plug_read, expected_state, expected_percentage",
+    ("plug_read", "expected_state", "expected_percentage"),
     (
         (None, STATE_OFF, None),
         ({"fan_mode": 0}, STATE_OFF, 0),
@@ -453,14 +462,14 @@ async def test_zha_group_fan_entity_failure_state(
     ),
 )
 async def test_fan_init(
-    hass,
+    hass: HomeAssistant,
     zha_device_joined_restored,
     zigpy_device,
     plug_read,
     expected_state,
     expected_percentage,
-):
-    """Test zha fan platform."""
+) -> None:
+    """Test ZHA fan platform."""
 
     cluster = zigpy_device.endpoints.get(1).fan
     cluster.PLUGGED_ATTR_READS = plug_read
@@ -474,11 +483,11 @@ async def test_fan_init(
 
 
 async def test_fan_update_entity(
-    hass,
+    hass: HomeAssistant,
     zha_device_joined_restored,
     zigpy_device,
-):
-    """Test zha fan platform."""
+) -> None:
+    """Test ZHA fan platform."""
 
     cluster = zigpy_device.endpoints.get(1).fan
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 0}
@@ -547,8 +556,10 @@ def zigpy_device_ikea(zigpy_device_mock):
     )
 
 
-async def test_fan_ikea(hass, zha_device_joined_restored, zigpy_device_ikea):
-    """Test zha fan Ikea platform."""
+async def test_fan_ikea(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device_ikea
+) -> None:
+    """Test ZHA fan Ikea platform."""
     zha_device = await zha_device_joined_restored(zigpy_device_ikea)
     cluster = zigpy_device_ikea.endpoints.get(1).ikea_airpurifier
     entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
@@ -610,7 +621,12 @@ async def test_fan_ikea(hass, zha_device_joined_restored, zigpy_device_ikea):
 
 
 @pytest.mark.parametrize(
-    "ikea_plug_read, ikea_expected_state, ikea_expected_percentage, ikea_preset_mode",
+    (
+        "ikea_plug_read",
+        "ikea_expected_state",
+        "ikea_expected_percentage",
+        "ikea_preset_mode",
+    ),
     (
         (None, STATE_OFF, None, None),
         ({"fan_mode": 0}, STATE_OFF, 0, None),
@@ -627,15 +643,15 @@ async def test_fan_ikea(hass, zha_device_joined_restored, zigpy_device_ikea):
     ),
 )
 async def test_fan_ikea_init(
-    hass,
+    hass: HomeAssistant,
     zha_device_joined_restored,
     zigpy_device_ikea,
     ikea_plug_read,
     ikea_expected_state,
     ikea_expected_percentage,
     ikea_preset_mode,
-):
-    """Test zha fan platform."""
+) -> None:
+    """Test ZHA fan platform."""
     cluster = zigpy_device_ikea.endpoints.get(1).ikea_airpurifier
     cluster.PLUGGED_ATTR_READS = ikea_plug_read
 
@@ -651,11 +667,11 @@ async def test_fan_ikea_init(
 
 
 async def test_fan_ikea_update_entity(
-    hass,
+    hass: HomeAssistant,
     zha_device_joined_restored,
     zigpy_device_ikea,
-):
-    """Test zha fan platform."""
+) -> None:
+    """Test ZHA fan platform."""
     cluster = zigpy_device_ikea.endpoints.get(1).ikea_airpurifier
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 0}
 

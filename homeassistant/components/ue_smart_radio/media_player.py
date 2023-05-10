@@ -82,6 +82,7 @@ def setup_platform(
 class UERadioDevice(MediaPlayerEntity):
     """Representation of a Logitech UE Smart Radio device."""
 
+    _attr_icon = ICON
     _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.PLAY
@@ -99,13 +100,9 @@ class UERadioDevice(MediaPlayerEntity):
         """Initialize the Logitech UE Smart Radio device."""
         self._session = session
         self._player_id = player_id
-        self._name = player_name
-        self._state = None
-        self._volume = 0
+        self._attr_name = player_name
+        self._attr_volume_level = 0
         self._last_volume = 0
-        self._media_title = None
-        self._media_artist = None
-        self._media_artwork_url = None
 
     def send_command(self, command):
         """Send command to radio."""
@@ -128,63 +125,28 @@ class UERadioDevice(MediaPlayerEntity):
         )
 
         if request["error"] is not None:
-            self._state = None
+            self._attr_state = None
             return
 
         if request["result"]["power"] == 0:
-            self._state = MediaPlayerState.OFF
+            self._attr_state = MediaPlayerState.OFF
         else:
-            self._state = PLAYBACK_DICT[request["result"]["mode"]]
+            self._attr_state = PLAYBACK_DICT[request["result"]["mode"]]
 
         media_info = request["result"]["playlist_loop"][0]
 
-        self._volume = request["result"]["mixer volume"] / 100
-        self._media_artwork_url = media_info["artwork_url"]
-        self._media_title = media_info["title"]
+        self._attr_volume_level = request["result"]["mixer volume"] / 100
+        self._attr_media_image_url = media_info["artwork_url"]
+        self._attr_media_title = media_info["title"]
         if "artist" in media_info:
-            self._media_artist = media_info["artist"]
+            self._attr_media_artist = media_info["artist"]
         else:
-            self._media_artist = media_info.get("remote_title")
+            self._attr_media_artist = media_info.get("remote_title")
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
-        return self._volume <= 0
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
-
-    @property
-    def media_image_url(self):
-        """Image URL of current playing media."""
-        return self._media_artwork_url
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media, music track only."""
-        return self._media_artist
-
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        return self._media_title
+        return self.volume_level is not None and self.volume_level <= 0
 
     def turn_on(self) -> None:
         """Turn on specified media player or all."""
@@ -217,7 +179,7 @@ class UERadioDevice(MediaPlayerEntity):
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         if mute:
-            self._last_volume = self._volume
+            self._last_volume = self.volume_level
             self.send_command(["mixer", "volume", 0])
         else:
             self.send_command(["mixer", "volume", self._last_volume * 100])

@@ -42,15 +42,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 exc_info=api_error,
             )
             raise api_error
-        else:
-            # if the printer is offline, we raise an UpdateFailed
-            if printer.is_unknown_state():
-                raise UpdateFailed(
-                    f"Configured printer at {printer.url} does not respond."
-                )
-            return printer
 
-    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+        # if the printer is offline, we raise an UpdateFailed
+        if printer.is_unknown_state():
+            raise UpdateFailed(f"Configured printer at {printer.url} does not respond.")
+        return printer
+
+    coordinator = DataUpdateCoordinator[SyncThru](
         hass,
         _LOGGER,
         name=DOMAIN,
@@ -69,6 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id,
         configuration_url=printer.url,
         connections=device_connections(printer),
+        default_manufacturer="Samsung",
         identifiers=device_identifiers(printer),
         model=printer.model(),
         name=printer.hostname(),

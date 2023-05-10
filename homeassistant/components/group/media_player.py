@@ -1,6 +1,8 @@
-"""This platform allows several media players to be grouped into one media player."""
+"""Platform allowing several media players to be grouped into one media player."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from contextlib import suppress
 from typing import Any
 
 import voluptuous as vol
@@ -19,6 +21,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -108,8 +111,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
         self._name = name
-        self._state: str | None = None
-        self._supported_features: int = 0
         self._attr_unique_id = unique_id
 
         self._entities = entities
@@ -208,17 +209,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self) -> str | None:
-        """Return the state of the media group."""
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
-
-    @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 
@@ -309,7 +300,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         data = {
@@ -401,17 +392,19 @@ class MediaPlayerGroup(MediaPlayerEntity):
         )
         if not valid_state:
             # Set as unknown if all members are unknown or unavailable
-            self._state = None
+            self._attr_state = None
         else:
             off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
-            if states.count(states[0]) == len(states):
-                self._state = states[0]
+            if states.count(single_state := states[0]) == len(states):
+                self._attr_state = None
+                with suppress(ValueError):
+                    self._attr_state = MediaPlayerState(single_state)
             elif any(state for state in states if state not in off_values):
-                self._state = MediaPlayerState.ON
+                self._attr_state = MediaPlayerState.ON
             else:
-                self._state = MediaPlayerState.OFF
+                self._attr_state = MediaPlayerState.OFF
 
-        supported_features = 0
+        supported_features = MediaPlayerEntityFeature(0)
         if self._features[KEY_CLEAR_PLAYLIST]:
             supported_features |= MediaPlayerEntityFeature.CLEAR_PLAYLIST
         if self._features[KEY_TRACKS]:
@@ -442,5 +435,5 @@ class MediaPlayerGroup(MediaPlayerEntity):
                 | MediaPlayerEntityFeature.VOLUME_STEP
             )
 
-        self._supported_features = supported_features
+        self._attr_supported_features = supported_features
         self.async_write_ha_state()

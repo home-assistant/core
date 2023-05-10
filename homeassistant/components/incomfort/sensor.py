@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import PRESSURE_BAR, TEMP_CELSIUS
+from homeassistant.const import UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -28,6 +28,10 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
     """Describes Incomfort sensor entity."""
 
     extra_key: str | None = None
+    # IncomfortSensor does not support DEVICE_CLASS_NAME
+    # Restrict the type to satisfy the type checker and catch attempts
+    # to use DEVICE_CLASS_NAME in the entity descriptions.
+    name: str | None = None
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
@@ -35,20 +39,20 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         key="pressure",
         name=INCOMFORT_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_BAR,
+        native_unit_of_measurement=UnitOfPressure.BAR,
     ),
     IncomfortSensorEntityDescription(
         key="heater_temp",
         name=INCOMFORT_HEATER_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_pumping",
     ),
     IncomfortSensorEntityDescription(
         key="tap_temp",
         name=INCOMFORT_TAP_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_tapping",
     ),
 )

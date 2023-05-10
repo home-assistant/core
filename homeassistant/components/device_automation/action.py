@@ -1,7 +1,7 @@
 """Device action validator."""
 from __future__ import annotations
 
-from typing import Any, Protocol, cast
+from typing import Any, Protocol
 
 import voluptuous as vol
 
@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
-from .exceptions import InvalidDeviceAutomationConfig
+from .helpers import async_validate_device_automation_config
 
 
 class DeviceAutomationActionProtocol(Protocol):
@@ -51,16 +51,9 @@ async def async_validate_action_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
-    try:
-        config = cv.DEVICE_ACTION_SCHEMA(config)
-        platform = await async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], DeviceAutomationType.ACTION
-        )
-        if hasattr(platform, "async_validate_action_config"):
-            return await platform.async_validate_action_config(hass, config)
-        return cast(ConfigType, platform.ACTION_SCHEMA(config))
-    except (vol.Invalid, InvalidDeviceAutomationConfig) as err:
-        raise vol.Invalid("invalid action configuration: " + str(err)) from err
+    return await async_validate_device_automation_config(
+        hass, config, cv.DEVICE_ACTION_SCHEMA, DeviceAutomationType.ACTION
+    )
 
 
 async def async_call_action_from_config(

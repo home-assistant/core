@@ -4,28 +4,37 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 from aiolifx import products
 from aiolifx.aiolifx import Light
 from aiolifx.message import Message
-import async_timeout
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
-    preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.color as color_util
 
-from .const import _LOGGER, DOMAIN, INFRARED_BRIGHTNESS_VALUES_MAP, OVERALL_TIMEOUT
+from .const import (
+    _LOGGER,
+    DEFAULT_ATTEMPTS,
+    DOMAIN,
+    INFRARED_BRIGHTNESS_VALUES_MAP,
+    OVERALL_TIMEOUT,
+)
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 
@@ -81,7 +90,16 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
     """
     hue, saturation, brightness, kelvin = [None] * 4
 
-    preprocess_turn_on_alternatives(hass, kwargs)
+    if (color_name := kwargs.get(ATTR_COLOR_NAME)) is not None:
+        try:
+            hue, saturation = color_util.color_RGB_to_hs(
+                *color_util.color_name_to_rgb(color_name)
+            )
+        except ValueError:
+            _LOGGER.warning(
+                "Got unknown color %s, falling back to neutral white", color_name
+            )
+            hue, saturation = (0, 0)
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
@@ -96,14 +114,29 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
 
-    if ATTR_COLOR_TEMP in kwargs:
-        kelvin = int(
-            color_util.color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
+    if ATTR_KELVIN in kwargs:
+        _LOGGER.warning(
+            "The 'kelvin' parameter is deprecated. Please use 'color_temp_kelvin' for"
+            " all service calls"
         )
+        kelvin = kwargs.pop(ATTR_KELVIN)
+        saturation = 0
+
+    if ATTR_COLOR_TEMP in kwargs:
+        kelvin = color_util.color_temperature_mired_to_kelvin(
+            kwargs.pop(ATTR_COLOR_TEMP)
+        )
+        saturation = 0
+
+    if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        kelvin = kwargs.pop(ATTR_COLOR_TEMP_KELVIN)
         saturation = 0
 
     if ATTR_BRIGHTNESS in kwargs:
         brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
+
+    if ATTR_BRIGHTNESS_PCT in kwargs:
+        brightness = convert_8_to_16(round(255 * kwargs[ATTR_BRIGHTNESS_PCT] / 100))
 
     hsbk = [hue, saturation, brightness, kelvin]
     return None if hsbk == [None] * 4 else hsbk
@@ -150,23 +183,61 @@ def mac_matches_serial_number(mac_addr: str, serial_number: str) -> bool:
 
 
 async def async_execute_lifx(method: Callable) -> Message:
-    """Execute a lifx coroutine and wait for a response."""
-    future: asyncio.Future[Message] = asyncio.Future()
+    """Execute a lifx callback method and wait for a response."""
+    return (
+        await async_multi_execute_lifx_with_retries(
+            [method], DEFAULT_ATTEMPTS, OVERALL_TIMEOUT
+        )
+    )[0]
 
-    def _callback(bulb: Light, message: Message) -> None:
-        if not future.done():
-            # The future will get canceled out from under
-            # us by async_timeout when we hit the OVERALL_TIMEOUT
+
+async def async_multi_execute_lifx_with_retries(
+    methods: list[Callable], attempts: int, overall_timeout: int
+) -> list[Message]:
+    """Execute multiple lifx callback methods with retries and wait for a response.
+
+    This functional will the overall timeout by the number of attempts and
+    wait for each method to return a result. If we don't get a result
+    within the split timeout, we will send all methods that did not generate
+    a response again.
+
+    If we don't get a result after all attempts, we will raise an
+    asyncio.TimeoutError exception.
+    """
+    loop = asyncio.get_running_loop()
+    futures: list[asyncio.Future] = [loop.create_future() for _ in methods]
+
+    def _callback(
+        bulb: Light, message: Message | None, future: asyncio.Future[Message]
+    ) -> None:
+        if message and not future.done():
             future.set_result(message)
 
-    _LOGGER.debug("Sending LIFX command: %s", method)
+    timeout_per_attempt = overall_timeout / attempts
 
-    method(callb=_callback)
-    result = None
+    for _ in range(attempts):
+        for idx, method in enumerate(methods):
+            future = futures[idx]
+            if not future.done():
+                method(callb=partial(_callback, future=future))
 
-    async with async_timeout.timeout(OVERALL_TIMEOUT):
-        result = await future
+        _, pending = await asyncio.wait(futures, timeout=timeout_per_attempt)
+        if not pending:
+            break
 
-    if result is None:
-        raise asyncio.TimeoutError("No response from LIFX bulb")
-    return result
+    results: list[Message] = []
+    failed: list[str] = []
+    for idx, future in enumerate(futures):
+        if not future.done() or not (result := future.result()):
+            method = methods[idx]
+            failed.append(str(getattr(method, "__name__", method)))
+        else:
+            results.append(result)
+
+    if failed:
+        failed_methods = ", ".join(failed)
+        raise asyncio.TimeoutError(
+            f"{failed_methods} timed out after {attempts} attempts"
+        )
+
+    return results

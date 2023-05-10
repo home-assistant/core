@@ -8,13 +8,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_BASE,
-    CONF_NAME,
-    CONF_QUOTE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_NAME, CONF_QUOTE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,12 +17,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "http://apilayer.net/api/live"
 
-ATTRIBUTION = "Data provided by currencylayer.com"
-
 DEFAULT_BASE = "USD"
 DEFAULT_NAME = "CurrencyLayer Sensor"
 
-ICON = "mdi:currency"
 
 SCAN_INTERVAL = timedelta(hours=4)
 
@@ -67,6 +58,9 @@ def setup_platform(
 class CurrencylayerSensor(SensorEntity):
     """Implementing the Currencylayer sensor."""
 
+    _attr_attribution = "Data provided by currencylayer.com"
+    _attr_icon = "mdi:currency"
+
     def __init__(self, rest, base, quote):
         """Initialize the sensor."""
         self.rest = rest
@@ -85,19 +79,9 @@ class CurrencylayerSensor(SensorEntity):
         return self._base
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self) -> None:
         """Update current date."""

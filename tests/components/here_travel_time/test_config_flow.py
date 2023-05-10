@@ -1,8 +1,7 @@
 """Test the HERE Travel Time config flow."""
 from unittest.mock import patch
 
-from herepy import HEREError
-from herepy.routing_api import InvalidCredentialsError
+from here_routing import HERERoutingError, HERERoutingUnauthorizedError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -15,29 +14,21 @@ from homeassistant.components.here_travel_time.const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
-    CONF_TRAFFIC_MODE,
     DOMAIN,
     ROUTE_MODE_FASTEST,
-    TRAFFIC_MODE_ENABLED,
     TRAVEL_MODE_CAR,
-    TRAVEL_MODE_PUBLIC_TIME_TABLE,
+    TRAVEL_MODE_PUBLIC,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-)
+from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .const import (
     API_KEY,
-    CAR_DESTINATION_LATITUDE,
-    CAR_DESTINATION_LONGITUDE,
-    CAR_ORIGIN_LATITUDE,
-    CAR_ORIGIN_LONGITUDE,
+    DEFAULT_CONFIG,
+    DESTINATION_LATITUDE,
+    DESTINATION_LONGITUDE,
+    ORIGIN_LATITUDE,
+    ORIGIN_LONGITUDE,
 )
 
 from tests.common import MockConfigEntry
@@ -78,12 +69,12 @@ async def option_init_result_fixture(hass: HomeAssistant) -> data_entry_flow.Flo
         domain=DOMAIN,
         unique_id="0123456789",
         data={
-            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
-            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
-            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
-            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
-            CONF_MODE: TRAVEL_MODE_PUBLIC_TIME_TABLE,
+            CONF_MODE: TRAVEL_MODE_PUBLIC,
             CONF_NAME: "test",
         },
     )
@@ -94,9 +85,7 @@ async def option_init_result_fixture(hass: HomeAssistant) -> data_entry_flow.Flo
     result = await hass.config_entries.options.async_configure(
         flow["flow_id"],
         user_input={
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         },
     )
     return result
@@ -115,8 +104,8 @@ async def origin_step_result_fixture(
         origin_menu_result["flow_id"],
         {
             "origin": {
-                "latitude": float(CAR_ORIGIN_LATITUDE),
-                "longitude": float(CAR_ORIGIN_LONGITUDE),
+                "latitude": float(ORIGIN_LATITUDE),
+                "longitude": float(ORIGIN_LONGITUDE),
                 "radius": 3.0,
             }
         },
@@ -165,8 +154,8 @@ async def test_step_origin_coordinates(
         menu_result["flow_id"],
         {
             "origin": {
-                "latitude": float(CAR_ORIGIN_LATITUDE),
-                "longitude": float(CAR_ORIGIN_LONGITUDE),
+                "latitude": float(ORIGIN_LATITUDE),
+                "longitude": float(ORIGIN_LONGITUDE),
                 "radius": 3.0,
             }
         },
@@ -205,8 +194,8 @@ async def test_step_destination_coordinates(
         menu_result["flow_id"],
         {
             "destination": {
-                "latitude": float(CAR_DESTINATION_LATITUDE),
-                "longitude": float(CAR_DESTINATION_LONGITUDE),
+                "latitude": float(DESTINATION_LATITUDE),
+                "longitude": float(DESTINATION_LONGITUDE),
                 "radius": 3.0,
             }
         },
@@ -218,17 +207,18 @@ async def test_step_destination_coordinates(
     assert entry.data == {
         CONF_NAME: "test",
         CONF_API_KEY: API_KEY,
-        CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
-        CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
-        CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
-        CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+        CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
+        CONF_ORIGIN_LONGITUDE: float(ORIGIN_LONGITUDE),
+        CONF_DESTINATION_LATITUDE: float(DESTINATION_LATITUDE),
+        CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
         CONF_MODE: TRAVEL_MODE_CAR,
     }
 
 
 @pytest.mark.usefixtures("valid_response")
 async def test_step_destination_entity(
-    hass: HomeAssistant, origin_step_result: data_entry_flow.FlowResult
+    hass: HomeAssistant,
+    origin_step_result: data_entry_flow.FlowResult,
 ) -> None:
     """Test the origin coordinates step."""
     menu_result = await hass.config_entries.flow.async_configure(
@@ -245,10 +235,15 @@ async def test_step_destination_entity(
     assert entry.data == {
         CONF_NAME: "test",
         CONF_API_KEY: API_KEY,
-        CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
-        CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+        CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
+        CONF_ORIGIN_LONGITUDE: float(ORIGIN_LONGITUDE),
         CONF_DESTINATION_ENTITY_ID: "zone.home",
         CONF_MODE: TRAVEL_MODE_CAR,
+    }
+    assert entry.options == {
+        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_ARRIVAL_TIME: None,
+        CONF_DEPARTURE_TIME: None,
     }
 
 
@@ -259,8 +254,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "herepy.RoutingApi.public_transport_timetable",
-        side_effect=InvalidCredentialsError,
+        "here_routing.HERERoutingApi.route",
+        side_effect=HERERoutingUnauthorizedError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -282,8 +277,8 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "herepy.RoutingApi.public_transport_timetable",
-        side_effect=HEREError,
+        "here_routing.HERERoutingApi.route",
+        side_effect=HERERoutingError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -304,15 +299,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="0123456789",
-        data={
-            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
-            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
-            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
-            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
-            CONF_API_KEY: API_KEY,
-            CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_NAME: "test",
-        },
+        data=DEFAULT_CONFIG,
     )
     entry.add_to_hass(hass)
 
@@ -328,9 +315,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         },
     )
 
@@ -356,9 +341,7 @@ async def test_options_flow_arrival_time_step(
     assert time_selector_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
         CONF_ARRIVAL_TIME: "08:00:00",
     }
 
@@ -382,9 +365,7 @@ async def test_options_flow_departure_time_step(
     assert time_selector_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
         CONF_DEPARTURE_TIME: "08:00:00",
     }
 
@@ -401,7 +382,5 @@ async def test_options_flow_no_time_step(
     assert menu_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
     }

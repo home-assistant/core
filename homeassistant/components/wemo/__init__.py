@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime
 import logging
-from typing import Optional
 
 import pywemo
 import voluptuous as vol
@@ -43,7 +42,7 @@ WEMO_MODEL_DISPATCH = {
 
 _LOGGER = logging.getLogger(__name__)
 
-HostPortTuple = tuple[str, Optional[int]]
+HostPortTuple = tuple[str, int | None]
 
 
 def coerce_host_port(value: str) -> HostPortTuple:
@@ -141,6 +140,7 @@ class WemoDispatcher:
         """Initialize the WemoDispatcher."""
         self._config_entry = config_entry
         self._added_serial_numbers: set[str] = set()
+        self._failed_serial_numbers: set[str] = set()
         self._loaded_platforms: set[Platform] = set()
 
     async def async_add_unique_device(
@@ -150,7 +150,16 @@ class WemoDispatcher:
         if wemo.serialnumber in self._added_serial_numbers:
             return
 
-        coordinator = await async_register_device(hass, self._config_entry, wemo)
+        try:
+            coordinator = await async_register_device(hass, self._config_entry, wemo)
+        except pywemo.PyWeMoException as err:
+            if wemo.serialnumber not in self._failed_serial_numbers:
+                self._failed_serial_numbers.add(wemo.serialnumber)
+                _LOGGER.error(
+                    "Unable to add WeMo %s %s: %s", repr(wemo), wemo.host, err
+                )
+            return
+
         platforms = set(WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]))
         platforms.add(Platform.SENSOR)
         for platform in platforms:
@@ -179,6 +188,7 @@ class WemoDispatcher:
                 )
 
         self._added_serial_numbers.add(wemo.serialnumber)
+        self._failed_serial_numbers.discard(wemo.serialnumber)
 
 
 class WemoDiscovery:

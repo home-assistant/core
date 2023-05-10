@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import POWER_WATT
+from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -60,8 +60,9 @@ def _inverter_last_report_time(
 INVERTER_SENSORS = (
     EnvoySensorEntityDescription(
         key=INVERTERS_KEY,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
         value_fn=lambda watt_report_time: watt_report_time[0],
     ),
     EnvoySensorEntityDescription(

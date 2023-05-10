@@ -1,12 +1,14 @@
 {
   "domain": "default_config",
   "name": "Default Config",
-  "documentation": "https://www.home-assistant.io/integrations/default_config",
+  "codeowners": ["@home-assistant/core"],
   "dependencies": [
     "application_credentials",
+    "assist_pipeline",
     "automation",
     "bluetooth",
     "cloud",
+    "conversation",
     "counter",
     "dhcp",
     "energy",
@@ -21,6 +23,7 @@
     "input_select",
     "input_text",
     "logbook",
+    "logger",
     "map",
     "media_source",
     "mobile_app",
@@ -31,6 +34,7 @@
     "schedule",
     "script",
     "ssdp",
+    "stream",
     "sun",
     "system_health",
     "tag",
@@ -40,6 +44,7 @@
     "zeroconf",
     "zone"
   ],
-  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/default_config",
+  "integration_type": "system",
   "quality_scale": "internal"
 }

@@ -4,6 +4,10 @@ from __future__ import annotations
 from collections.abc import Generator
 from typing import TYPE_CHECKING
 
+from homeassistant.exceptions import HomeAssistantError
+
+from .core import Orientation
+
 if TYPE_CHECKING:
     from io import BufferedIOBase
 
@@ -11,7 +15,7 @@ if TYPE_CHECKING:
 def find_box(
     mp4_bytes: bytes, target_type: bytes, box_start: int = 0
 ) -> Generator[int, None, None]:
-    """Find location of first box (or sub_box if box_start provided) of given type."""
+    """Find location of first box (or sub box if box_start provided) of given type."""
     if box_start == 0:
         index = 0
         box_end = len(mp4_bytes)
@@ -141,12 +145,26 @@ def get_codec_string(mp4_bytes: bytes) -> str:
     return ",".join(codecs)
 
 
+def find_moov(mp4_io: BufferedIOBase) -> int:
+    """Find location of moov atom in a BufferedIOBase mp4."""
+    index = 0
+    while 1:
+        mp4_io.seek(index)
+        box_header = mp4_io.read(8)
+        if len(box_header) != 8:
+            raise HomeAssistantError("moov atom not found")
+        if box_header[4:8] == b"moov":
+            return index
+        index += int.from_bytes(box_header[0:4], byteorder="big")
+
+
 def read_init(bytes_io: BufferedIOBase) -> bytes:
     """Read the init from a mp4 file."""
-    bytes_io.seek(24)
+    moov_loc = find_moov(bytes_io)
+    bytes_io.seek(moov_loc)
     moov_len = int.from_bytes(bytes_io.read(4), byteorder="big")
     bytes_io.seek(0)
-    return bytes_io.read(24 + moov_len)
+    return bytes_io.read(moov_loc + moov_len)
 
 
 ZERO32 = b"\x00\x00\x00\x00"
@@ -163,22 +181,24 @@ ROTATE_LEFT_FLIP = (ZERO32 + NEGONE32 + ZERO32) + (NEGONE32 + ZERO32 + ZERO32)
 ROTATE_RIGHT_FLIP = (ZERO32 + ONE32 + ZERO32) + (ONE32 + ZERO32 + ZERO32)
 
 TRANSFORM_MATRIX_TOP = (
-    # The first two entries are just to align the indices with the EXIF orientation tags
-    b"",
-    b"",
-    MIRROR,
-    ROTATE_180,
-    FLIP,
-    ROTATE_LEFT_FLIP,
-    ROTATE_LEFT,
-    ROTATE_RIGHT_FLIP,
-    ROTATE_RIGHT,
+    # The index into this tuple corresponds to the EXIF orientation tag
+    # Only index values of 2 through 8 are used
+    # The first two entries are just to keep everything aligned
+    b"",  # 0
+    b"",  # 1
+    MIRROR,  # 2
+    ROTATE_180,  # 3
+    FLIP,  # 4
+    ROTATE_LEFT_FLIP,  # 5
+    ROTATE_LEFT,  # 6
+    ROTATE_RIGHT_FLIP,  # 7
+    ROTATE_RIGHT,  # 8
 )
 
 
-def transform_init(init: bytes, orientation: int) -> bytes:
+def transform_init(init: bytes, orientation: Orientation) -> bytes:
     """Change the transformation matrix in the header."""
-    if orientation == 1:
+    if orientation == Orientation.NO_TRANSFORM:
         return init
     # Find moov
     moov_location = next(find_box(init, b"moov"))

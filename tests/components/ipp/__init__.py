@@ -3,8 +3,14 @@ import aiohttp
 from pyipp import IPPConnectionUpgradeRequired, IPPError
 
 from homeassistant.components import zeroconf
-from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_UUID,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, get_fixture_path

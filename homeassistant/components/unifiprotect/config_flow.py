@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+from pathlib import Path
 from typing import Any
 
 from aiohttp import CookieJar
@@ -28,12 +29,14 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_ALL_UPDATES,
+    CONF_ALLOW_EA,
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
     CONF_OVERRIDE_CHOST,
@@ -224,6 +227,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ALL_UPDATES: False,
                 CONF_OVERRIDE_CHOST: False,
                 CONF_MAX_MEDIA: DEFAULT_MAX_MEDIA,
+                CONF_ALLOW_EA: False,
             },
         )
 
@@ -246,6 +250,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
             verify_ssl=verify_ssl,
+            cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
         )
 
         errors = {}
@@ -392,6 +397,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=100, max=10000)),
+                    vol.Optional(
+                        CONF_ALLOW_EA,
+                        default=self.config_entry.options.get(CONF_ALLOW_EA, False),
+                    ): bool,
                 }
             ),
         )

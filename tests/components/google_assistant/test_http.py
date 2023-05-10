@@ -1,7 +1,10 @@
 """Test Google http services."""
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import ANY, patch
+
+import pytest
 
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
@@ -18,10 +21,12 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_token,
 )
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, async_mock_service
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 DUMMY_CONFIG = GOOGLE_ASSISTANT_SCHEMA(
     {
@@ -41,7 +46,7 @@ MOCK_HEADER = {
 }
 
 
-async def test_get_jwt(hass):
+async def test_get_jwt(hass: HomeAssistant) -> None:
     """Test signing of key."""
 
     jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkdW1teUBkdW1teS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInNjb3BlIjoiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9ob21lZ3JhcGgiLCJhdWQiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvdG9rZW4iLCJpYXQiOjE1NzEwMTEyMDAsImV4cCI6MTU3MTAxNDgwMH0.akHbMhOflXdIDHVvUVwO0AoJONVOPUdCghN6hAdVz4gxjarrQeGYc_Qn2r84bEvCU7t6EvimKKr0fyupyzBAzfvKULs5mTHO3h2CwSgvOBMv8LnILboJmbO4JcgdnRV7d9G3ktQs7wWSCXJsI5i5jUr1Wfi9zWwxn2ebaAAgrp8"
@@ -53,7 +58,9 @@ async def test_get_jwt(hass):
     assert res == jwt
 
 
-async def test_get_access_token(hass, aioclient_mock):
+async def test_get_access_token(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the function to get access token."""
     jwt = "dummyjwt"
 
@@ -71,7 +78,7 @@ async def test_get_access_token(hass, aioclient_mock):
     }
 
 
-async def test_update_access_token(hass):
+async def test_update_access_token(hass: HomeAssistant) -> None:
     """Test the function to update access token when expired."""
     jwt = "dummyjwt"
 
@@ -106,7 +113,12 @@ async def test_update_access_token(hass):
         mock_get_token.assert_called_once()
 
 
-async def test_call_homegraph_api(hass, aioclient_mock, hass_storage, caplog):
+async def test_call_homegraph_api(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the function to call the homegraph api."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
@@ -129,7 +141,11 @@ async def test_call_homegraph_api(hass, aioclient_mock, hass_storage, caplog):
         assert call[3] == MOCK_HEADER
 
 
-async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
+async def test_call_homegraph_api_retry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test the that the calls get retried with new token on 401."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
@@ -154,7 +170,11 @@ async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
         assert call[3] == MOCK_HEADER
 
 
-async def test_report_state(hass, aioclient_mock, hass_storage):
+async def test_report_state(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test the report state function."""
     agent_user_id = "user"
     config = GoogleConfig(hass, DUMMY_CONFIG)
@@ -175,7 +195,11 @@ async def test_report_state(hass, aioclient_mock, hass_storage):
         )
 
 
-async def test_google_config_local_fulfillment(hass, aioclient_mock, hass_storage):
+async def test_google_config_local_fulfillment(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test the google config for local fulfillment."""
     agent_user_id = "user"
     local_webhook_id = "webhook"
@@ -205,7 +229,7 @@ async def test_google_config_local_fulfillment(hass, aioclient_mock, hass_storag
     assert config.get_local_agent_user_id("INCORRECT") is None
 
 
-async def test_secure_device_pin_config(hass):
+async def test_secure_device_pin_config(hass: HomeAssistant) -> None:
     """Test the setting of the secure device pin configuration."""
     secure_pin = "TEST"
     secure_config = GOOGLE_ASSISTANT_SCHEMA(
@@ -223,7 +247,7 @@ async def test_secure_device_pin_config(hass):
     assert config.secure_devices_pin == secure_pin
 
 
-async def test_should_expose(hass):
+async def test_should_expose(hass: HomeAssistant) -> None:
     """Test the google config should expose method."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
     await config.async_initialize()
@@ -244,7 +268,7 @@ async def test_should_expose(hass):
     assert config.should_expose(State(CLOUD_NEVER_EXPOSED_ENTITIES[0], "mock")) is False
 
 
-async def test_missing_service_account(hass):
+async def test_missing_service_account(hass: HomeAssistant) -> None:
     """Test the google config _async_request_sync_devices."""
     incorrect_config = GOOGLE_ASSISTANT_SCHEMA(
         {
@@ -267,7 +291,12 @@ async def test_missing_service_account(hass):
     assert config._access_token_renew is renew
 
 
-async def test_async_enable_local_sdk(hass, hass_client, hass_storage, caplog):
+async def test_async_enable_local_sdk(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test the google config enable and disable local sdk."""
     command_events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
     turn_on_calls = async_mock_service(hass, "light", "turn_on")

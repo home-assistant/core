@@ -1,0 +1,75 @@
+{
+  "info": {
+    "device_identification": {
+      "name": "Gerte-Identifikation",
+      "unit": "",
+      "desc": "",
+      "value": "RVS21.831F/127",
+      "dataType": 7
+    },
+    "controller_family": {
+      "name": "Device family",
+      "unit": "",
+      "desc": "",
+      "value": "211",
+      "dataType": 0
+    },
+    "controller_variant": {
+      "name": "Device variant",
+      "unit": "",
+      "desc": "",
+      "value": "127",
+      "dataType": 0
+    }
+  },
+  "device": {
+    "name": "BSB-LAN",
+    "version": "1.0.38-20200730234859",
+    "MAC": "00:80:41:19:69:90",
+    "uptime": 969402857
+  },
+  "state": {
+    "hvac_mode": {
+      "name": "Operating mode",
+      "unit": "",
+      "desc": "Komfort",
+      "value": "heat",
+      "dataType": 1
+    },
+    "hvac_mode2": {
+      "name": "Operating mode",
+      "unit": "",
+      "desc": "Reduziert",
+      "value": "2",
+      "dataType": 1
+    },
+    "target_temperature": {
+      "name": "Room temperature Comfort setpoint",
+      "unit": "&deg;C",
+      "desc": "",
+      "value": "18.5",
+      "dataType": 0
+    },
+    "hvac_action": {
+      "name": "Status heating circuit 1",
+      "unit": "",
+      "desc": "Raumtemp\u2019begrenzung",
+      "value": "122",
+      "dataType": 1
+    },
+    "current_temperature": {
+      "name": "Room temp 1 actual value",
+      "unit": "&deg;C",
+      "desc": "",
+      "value": "18.6",
+      "dataType": 0
+    },
+    "room1_thermostat_mode": {
+      "name": "Raumthermostat 1",
+      "unit": "",
+      "desc": "Kein Bedarf",
+      "value": "0",
+      "dataType": 1
+    }
+  }
+}

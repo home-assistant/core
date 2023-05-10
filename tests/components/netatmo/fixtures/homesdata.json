@@ -23,7 +23,6 @@
               "12:34:56:00:f1:62",
               "12:34:56:10:f1:66",
               "12:34:56:00:e3:9b",
-              "12:34:56:00:86:99",
               "0009999992"
             ]
           },
@@ -38,12 +37,6 @@
             "name": "Cocina",
             "type": "kitchen",
             "module_ids": ["12:34:56:03:a0:ac"]
-          },
-          {
-            "id": "2940411588",
-            "name": "Child",
-            "type": "custom",
-            "module_ids": ["12:34:56:26:cc:01"]
           },
           {
             "id": "222452125",
@@ -76,6 +69,12 @@
             "name": "Corridor",
             "type": "corridor",
             "module_ids": ["10:20:30:bd:b8:1e"]
+          },
+          {
+            "id": "100007520",
+            "name": "Toilettes",
+            "type": "toilets",
+            "module_ids": ["00:11:22:33:00:11:45:fe"]
           }
         ],
         "modules": [
@@ -120,15 +119,29 @@
             "name": "Hall",
             "setup_date": 1544828430,
             "room_id": "3688132631",
-            "reachable": true,
             "modules_bridged": ["12:34:56:00:86:99", "12:34:56:00:e3:9b"]
           },
           {
-            "id": "12:34:56:00:a5:a4",
+            "id": "12:34:56:10:f1:66",
+            "type": "NDB",
+            "name": "Netatmo-Doorbell",
+            "setup_date": 1602691361,
+            "room_id": "3688132631",
+            "reachable": true,
+            "hk_device_id": "123456007df1",
+            "customer_id": "1000010",
+            "network_lock": false,
+            "quick_display_zone": 62
+          },
+          {
+            "id": "12:34:56:10:b9:0e",
             "type": "NOC",
-            "name": "Garden",
-            "setup_date": 1544828430,
-            "reachable": true
+            "name": "Front",
+            "setup_date": 1509290599,
+            "reachable": true,
+            "customer_id": "A00010",
+            "network_lock": false,
+            "use_pincode": false
           },
           {
             "id": "12:34:56:20:f5:44",
@@ -156,33 +169,6 @@
             "bridge": "12:34:56:20:f5:44"
           },
           {
-            "id": "12:34:56:10:f1:66",
-            "type": "NDB",
-            "name": "Netatmo-Doorbell",
-            "setup_date": 1602691361,
-            "room_id": "3688132631",
-            "reachable": true,
-            "hk_device_id": "123456007df1",
-            "customer_id": "1000010",
-            "network_lock": false,
-            "quick_display_zone": 62
-          },
-          {
-            "id": "12:34:56:00:e3:9b",
-            "type": "NIS",
-            "setup_date": 1620479901,
-            "bridge": "12:34:56:00:f1:62",
-            "name": "Sirene in hall"
-          },
-          {
-            "id": "12:34:56:00:86:99",
-            "type": "NACamDoorTag",
-            "name": "Window Hall",
-            "setup_date": 1581177375,
-            "bridge": "12:34:56:00:f1:62",
-            "category": "window"
-          },
-          {
             "id": "12:34:56:30:d5:d4",
             "type": "NBG",
             "name": "module iDiamant",
@@ -199,16 +185,17 @@
             "bridge": "12:34:56:30:d5:d4"
           },
           {
-            "id": "12:34:56:37:11:ca",
+            "id": "12:34:56:80:bb:26",
             "type": "NAMain",
-            "name": "NetatmoIndoor",
+            "name": "Villa",
             "setup_date": 1419453350,
+            "room_id": "4122897288",
             "reachable": true,
             "modules_bridged": [
-              "12:34:56:07:bb:3e",
-              "12:34:56:03:1b:e4",
-              "12:34:56:36:fc:de",
-              "12:34:56:05:51:20"
+              "12:34:56:80:44:92",
+              "12:34:56:80:7e:18",
+              "12:34:56:80:1c:42",
+              "12:34:56:80:c1:ea"
             ],
             "customer_id": "C00016",
             "hardware_version": 251,
@@ -271,48 +258,46 @@
             "module_offset": {
               "12:34:56:80:bb:26": {
                 "a": 0.1
+              },
+              "03:00:00:03:1b:0e": {
+                "a": 0
               }
             }
           },
           {
-            "id": "12:34:56:36:fc:de",
+            "id": "12:34:56:80:1c:42",
             "type": "NAModule1",
             "name": "Outdoor",
             "setup_date": 1448565785,
-            "bridge": "12:34:56:37:11:ca"
+            "bridge": "12:34:56:80:bb:26"
+          },
+          {
+            "id": "12:34:56:80:c1:ea",
+            "type": "NAModule3",
+            "name": "Rain",
+            "setup_date": 1591770206,
+            "bridge": "12:34:56:80:bb:26"
+          },
+          {
+            "id": "12:34:56:80:44:92",
+            "type": "NAModule4",
+            "name": "Bedroom",
+            "setup_date": 1484997703,
+            "bridge": "12:34:56:80:bb:26"
+          },
+          {
+            "id": "12:34:56:80:7e:18",
+            "type": "NAModule4",
+            "name": "Bathroom",
+            "setup_date": 1543579864,
+            "bridge": "12:34:56:80:bb:26"
           },
           {
             "id": "12:34:56:03:1b:e4",
             "type": "NAModule2",
             "name": "Garden",
             "setup_date": 1543579864,
-            "bridge": "12:34:56:37:11:ca"
-          },
-          {
-            "id": "12:34:56:05:51:20",
-            "type": "NAModule3",
-            "name": "Rain",
-            "setup_date": 1591770206,
-            "bridge": "12:34:56:37:11:ca"
-          },
-          {
-            "id": "12:34:56:07:bb:3e",
-            "type": "NAModule4",
-            "name": "Bedroom",
-            "setup_date": 1484997703,
-            "bridge": "12:34:56:37:11:ca"
-          },
-          {
-            "id": "12:34:56:26:68:92",
-            "type": "NHC",
-            "name": "Indoor",
-            "setup_date": 1571342643
-          },
-          {
-            "id": "12:34:56:26:cc:01",
-            "type": "BNS",
-            "name": "Child",
-            "setup_date": 1571634243
+            "bridge": "12:34:56:80:bb:26"
           },
           {
             "id": "12:34:56:80:60:40",
@@ -324,7 +309,8 @@
               "12:34:56:80:00:12:ac:f2",
               "12:34:56:80:00:c3:69:3c",
               "12:34:56:00:00:a1:4c:da",
-              "12:34:56:00:01:01:01:a1"
+              "12:34:56:00:01:01:01:a1",
+              "00:11:22:33:00:11:45:fe"
             ]
           },
           {
@@ -341,6 +327,21 @@
             "name": "Commande sans fil",
             "setup_date": 1641841262,
             "bridge": "12:34:56:80:60:40"
+          },
+          {
+            "id": "12:34:56:00:86:99",
+            "type": "NACamDoorTag",
+            "name": "Window Hall",
+            "setup_date": 1581177375,
+            "bridge": "12:34:56:00:f1:62",
+            "category": "window"
+          },
+          {
+            "id": "12:34:56:00:e3:9b",
+            "type": "NIS",
+            "setup_date": 1620479901,
+            "bridge": "12:34:56:00:f1:62",
+            "name": "Sirene in hall"
           },
           {
             "id": "12:34:56:00:16:0e",
@@ -438,6 +439,24 @@
             "name": "Consumption meter",
             "setup_date": 1638376602,
             "room_id": "100008999",
+            "bridge": "12:34:56:80:60:40"
+          },
+          {
+            "id": "10:20:30:bd:b8:1e",
+            "type": "BNS",
+            "name": "Smarther",
+            "setup_date": 1638022197,
+            "room_id": "1002003001"
+          },
+          {
+            "id": "00:11:22:33:00:11:45:fe",
+            "type": "NLF",
+            "on": false,
+            "brightness": 63,
+            "firmware_revision": 57,
+            "last_seen": 1657086939,
+            "power": 0,
+            "reachable": true,
             "bridge": "12:34:56:80:60:40"
           },
           {
@@ -761,80 +780,13 @@
         "therm_mode": "schedule"
       },
       {
-        "id": "111111111111111111111401",
-        "name": "Home with no modules",
-        "altitude": 9,
-        "coordinates": [1.23456789, 50.0987654],
-        "country": "BE",
-        "timezone": "Europe/Brussels",
-        "rooms": [
-          {
-            "id": "1111111401",
-            "name": "Livingroom",
-            "type": "livingroom"
-          }
-        ],
-        "temperature_control_mode": "heating",
-        "therm_mode": "away",
-        "therm_setpoint_default_duration": 120,
-        "cooling_mode": "schedule",
-        "schedules": [
-          {
-            "away_temp": 14,
-            "hg_temp": 7,
-            "name": "Week",
-            "timetable": [
-              {
-                "zone_id": 1,
-                "m_offset": 0
-              },
-              {
-                "zone_id": 6,
-                "m_offset": 420
-              }
-            ],
-            "zones": [
-              {
-                "type": 0,
-                "name": "Comfort",
-                "rooms_temp": [],
-                "id": 0,
-                "rooms": []
-              },
-              {
-                "type": 1,
-                "name": "Nacht",
-                "rooms_temp": [],
-                "id": 1,
-                "rooms": []
-              },
-              {
-                "type": 5,
-                "name": "Eco",
-                "rooms_temp": [],
-                "id": 4,
-                "rooms": []
-              },
-              {
-                "type": 4,
-                "name": "Tussenin",
-                "rooms_temp": [],
-                "id": 5,
-                "rooms": []
-              },
-              {
-                "type": 4,
-                "name": "Ochtend",
-                "rooms_temp": [],
-                "id": 6,
-                "rooms": []
-              }
-            ],
-            "id": "700000000000000000000401",
-            "selected": true,
-            "type": "therm"
-          }
-        ]
+        "id": "91763b24c43d3e344f424e8c",
+        "altitude": 112,
+        "coordinates": [52.516263, 13.377726],
+        "country": "DE",
+        "timezone": "Europe/Berlin",
+        "therm_setpoint_default_duration": 180,
+        "therm_mode": "schedule"
       }
     ],
     "user": {
@@ -845,6 +797,8 @@
       "unit_pressure": 0,
       "unit_system": 0,
       "unit_wind": 0,
+      "all_linked": false,
+      "type": "netatmo",
       "id": "91763b24c43d3e344f424e8b"
     }
   },

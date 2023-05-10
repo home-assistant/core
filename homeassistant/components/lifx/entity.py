@@ -25,4 +25,5 @@ class LIFXEntity(CoordinatorEntity[LIFXUpdateCoordinator]):
             name=coordinator.label,
             model=products.product_map.get(self.bulb.product, "LIFX Bulb"),
             sw_version=self.bulb.host_firmware_version,
+            suggested_area=self.bulb.group,
         )

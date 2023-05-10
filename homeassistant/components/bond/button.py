@@ -35,6 +35,11 @@ class BondButtonEntityDescription(
 ):
     """Class to describe a Bond Button entity."""
 
+    # BondEntity does not support DEVICE_CLASS_NAME
+    # Restrict the type to satisfy the type checker and catch attempts
+    # to use DEVICE_CLASS_NAME in the entity descriptions.
+    name: str | None = None
+
 
 STOP_BUTTON = BondButtonEntityDescription(
     key=Action.STOP,
@@ -274,8 +279,7 @@ async def async_setup_entry(
             )
         entities.extend(device_entities)
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class BondButtonEntity(BondEntity, ButtonEntity):

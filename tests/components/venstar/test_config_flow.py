@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.venstar.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -105,7 +104,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.venstar.VenstarColorTouch.update_info",

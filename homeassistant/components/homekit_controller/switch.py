@@ -14,8 +14,8 @@ from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,6 +55,18 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
         key=CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS,
         name="Lock Physical Controls",
         icon="mdi:lock-open",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.MUTE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.MUTE,
+        name="Mute",
+        icon="mdi:volume-mute",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE,
+        name="Sleep Mode",
+        icon="mdi:power-sleep",
         entity_category=EntityCategory.CONFIG,
     ),
 }
@@ -182,7 +194,7 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
         )
 
 
-ENTITY_TYPES = {
+ENTITY_TYPES: dict[str, type[HomeKitSwitch] | type[HomeKitValve]] = {
     ServicesTypes.SWITCH: HomeKitSwitch,
     ServicesTypes.OUTLET: HomeKitSwitch,
     ServicesTypes.VALVE: HomeKitValve,
@@ -195,15 +207,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit switches."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([entity_class(conn, info)], True)
+        entity: HomeKitSwitch | HomeKitValve = entity_class(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.SWITCH
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)
@@ -214,9 +230,11 @@ async def async_setup_entry(
             return False
 
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        async_add_entities(
-            [DeclarativeCharacteristicSwitch(conn, info, char, description)], True
+        entity = DeclarativeCharacteristicSwitch(conn, info, char, description)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.SWITCH
         )
+        async_add_entities([entity])
         return True
 
     conn.add_char_factory(async_add_characteristic)

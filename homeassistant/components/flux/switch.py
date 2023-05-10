@@ -1,5 +1,4 @@
-"""
-Flux for Home-Assistant.
+"""Flux for Home-Assistant.
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
@@ -316,8 +315,10 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
                 self.hass, self._lights, x_val, y_val, brightness, self._transition
             )
             _LOGGER.debug(
-                "Lights updated to x:%s y:%s brightness:%s, %s%% "
-                "of %s cycle complete at %s",
+                (
+                    "Lights updated to x:%s y:%s brightness:%s, %s%% "
+                    "of %s cycle complete at %s"
+                ),
                 x_val,
                 y_val,
                 brightness,
@@ -341,8 +342,10 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
                 self.hass, self._lights, mired, brightness, self._transition
             )
             _LOGGER.debug(
-                "Lights updated to mired:%s brightness:%s, %s%% "
-                "of %s cycle complete at %s",
+                (
+                    "Lights updated to mired:%s brightness:%s, %s%% "
+                    "of %s cycle complete at %s"
+                ),
                 mired,
                 brightness,
                 round(percentage_complete * 100),

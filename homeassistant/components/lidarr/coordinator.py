@@ -1,7 +1,7 @@
 """Data update coordinator for the Lidarr integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from datetime import timedelta
 from typing import Generic, TypeVar, cast
 
@@ -16,10 +16,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
-T = TypeVar("T", list[LidarrRootFolder], LidarrQueue, str, LidarrAlbum)
+T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum)
 
 
-class LidarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
+class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     """Data update coordinator for the Lidarr integration."""
 
     config_entry: ConfigEntry
@@ -59,15 +59,19 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
         raise NotImplementedError
 
 
-class DiskSpaceDataUpdateCoordinator(LidarrDataUpdateCoordinator):
+class DiskSpaceDataUpdateCoordinator(
+    LidarrDataUpdateCoordinator[list[LidarrRootFolder]]
+):
     """Disk space update coordinator for Lidarr."""
 
     async def _fetch_data(self) -> list[LidarrRootFolder]:
         """Fetch the data."""
-        return cast(list, await self.api_client.async_get_root_folders())
+        return cast(
+            list[LidarrRootFolder], await self.api_client.async_get_root_folders()
+        )
 
 
-class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator):
+class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrQueue]):
     """Queue update coordinator."""
 
     async def _fetch_data(self) -> LidarrQueue:
@@ -75,7 +79,7 @@ class QueueDataUpdateCoordinator(LidarrDataUpdateCoordinator):
         return await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
 
 
-class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator):
+class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator[str]):
     """Status update coordinator for Lidarr."""
 
     async def _fetch_data(self) -> str:
@@ -83,7 +87,7 @@ class StatusDataUpdateCoordinator(LidarrDataUpdateCoordinator):
         return (await self.api_client.async_get_system_status()).version
 
 
-class WantedDataUpdateCoordinator(LidarrDataUpdateCoordinator):
+class WantedDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrAlbum]):
     """Wanted update coordinator."""
 
     async def _fetch_data(self) -> LidarrAlbum:

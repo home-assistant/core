@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
+from typing import Any
 
 import psutil_home_assistant as ha_psutil
 import voluptuous as vol
@@ -19,7 +20,7 @@ from .hardware import async_process_hardware_platforms
 from .models import HardwareProtocol
 
 
-@dataclass
+@dataclass(slots=True)
 class SystemStatus:
     """System status."""
 
@@ -46,7 +47,7 @@ async def async_setup(hass: HomeAssistant) -> None:
 )
 @websocket_api.async_response
 async def ws_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return hardware info."""
     hardware_info = []
@@ -72,8 +73,8 @@ async def ws_info(
 )
 @websocket_api.async_response
 async def ws_subscribe_system_status(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Subscribe to system status updates."""
 
     system_status: SystemStatus = hass.data[DOMAIN]["system_status"]

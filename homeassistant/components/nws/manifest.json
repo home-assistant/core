@@ -1,11 +1,11 @@
 {
   "domain": "nws",
   "name": "National Weather Service (NWS)",
-  "documentation": "https://www.home-assistant.io/integrations/nws",
-  "codeowners": ["@MatthewFlamm"],
-  "requirements": ["pynws==1.4.1"],
-  "quality_scale": "platinum",
+  "codeowners": ["@MatthewFlamm", "@kamiyo"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nws",
   "iot_class": "cloud_polling",
-  "loggers": ["metar", "pynws"]
+  "loggers": ["metar", "pynws"],
+  "quality_scale": "platinum",
+  "requirements": ["pynws==1.4.1"]
 }

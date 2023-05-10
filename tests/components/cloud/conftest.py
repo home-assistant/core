@@ -8,6 +8,13 @@ from homeassistant.components.cloud import const, prefs
 
 from . import mock_cloud, mock_cloud_prefs
 
+# Prevent TTS cache from being created
+from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
+    init_cache_dir_side_effect,
+    mock_get_cache_files,
+    mock_init_cache_dir,
+)
+
 
 @pytest.fixture(autouse=True)
 def mock_user_data():
@@ -49,6 +56,15 @@ def mock_cloud_login(hass, mock_cloud_setup):
         "test",
     )
     with patch.object(hass.data[const.DOMAIN].auth, "async_check_token"):
+        yield
+
+
+@pytest.fixture(name="mock_auth")
+def mock_auth_fixture():
+    """Mock check token."""
+    with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"), patch(
+        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
+    ):
         yield
 
 

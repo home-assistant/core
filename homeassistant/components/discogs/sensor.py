@@ -13,12 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    CONF_TOKEN,
-)
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
@@ -28,8 +23,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_IDENTITY = "identity"
-
-ATTRIBUTION = "Data provided by Discogs"
 
 DEFAULT_NAME = "Discogs"
 
@@ -111,7 +104,11 @@ def setup_platform(
 class DiscogsSensor(SensorEntity):
     """Create a new Discogs sensor for a specific type."""
 
-    def __init__(self, discogs_data, name, description: SensorEntityDescription):
+    _attr_attribution = "Data provided by Discogs"
+
+    def __init__(
+        self, discogs_data, name, description: SensorEntityDescription
+    ) -> None:
         """Initialize the Discogs sensor."""
         self.entity_description = description
         self._discogs_data = discogs_data
@@ -132,15 +129,15 @@ class DiscogsSensor(SensorEntity):
             return {
                 "cat_no": self._attrs["labels"][0]["catno"],
                 "cover_image": self._attrs["cover_image"],
-                "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
+                "format": (
+                    f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})"
+                ),
                 "label": self._attrs["labels"][0]["name"],
                 "released": self._attrs["year"],
-                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_IDENTITY: self._discogs_data["user"],
             }
 
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_IDENTITY: self._discogs_data["user"],
         }
 
@@ -153,7 +150,10 @@ class DiscogsSensor(SensorEntity):
             random_record = collection.releases[random_index].release
 
             self._attrs = random_record.data
-            return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
+            return (
+                f"{random_record.data['artists'][0]['name']} -"
+                f" {random_record.data['title']}"
+            )
 
         return None
 

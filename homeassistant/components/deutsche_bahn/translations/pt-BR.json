@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "A integra\u00e7\u00e3o da Deutsche Bahn est\u00e1 com remo\u00e7\u00e3o pendente do Home Assistant e n\u00e3o estar\u00e1 mais dispon\u00edvel a partir do Home Assistant 2022.11. \n\n A integra\u00e7\u00e3o est\u00e1 sendo removida, pois depende de webscraping, o que n\u00e3o \u00e9 permitido. \n\n Remova a configura\u00e7\u00e3o YAML da Deutsche Bahn do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
-            "title": "A integra\u00e7\u00e3o da Deutsche Bahn est\u00e1 sendo removida"
-        }
-    }
-}

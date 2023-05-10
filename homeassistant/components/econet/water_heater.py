@@ -106,7 +106,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         return op_list
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         if self.water_heater.modes:
             if self.water_heater.supports_away:

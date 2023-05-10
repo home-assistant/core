@@ -1,6 +1,7 @@
 """Test the Melnor sensors."""
-
 from __future__ import annotations
+
+from homeassistant.core import HomeAssistant
 
 from .conftest import (
     mock_config_entry,
@@ -10,13 +11,12 @@ from .conftest import (
 )
 
 
-async def test_manual_watering_minutes(hass):
+async def test_manual_watering_minutes(hass: HomeAssistant) -> None:
     """Test the manual watering switch."""
 
     entry = mock_config_entry(hass)
 
     with patch_async_ble_device_from_address(), patch_melnor_device() as device_patch, patch_async_register_callback():
-
         device = device_patch.return_value
 
         assert await hass.config_entries.async_setup(entry.entry_id)

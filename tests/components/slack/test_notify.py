@@ -1,10 +1,7 @@
 """Test slack notifications."""
 from __future__ import annotations
 
-import logging
 from unittest.mock import AsyncMock, Mock
-
-from _pytest.logging import LogCaptureFixture
 
 from homeassistant.components import notify
 from homeassistant.components.slack import DOMAIN
@@ -16,7 +13,6 @@ from homeassistant.const import ATTR_ICON, CONF_API_KEY, CONF_NAME, CONF_PLATFOR
 
 from . import CONF_DATA
 
-MODULE_PATH = "homeassistant.components.slack.notify"
 SERVICE_NAME = f"notify_{DOMAIN}"
 
 DEFAULT_CONFIG = {
@@ -31,14 +27,7 @@ DEFAULT_CONFIG = {
 }
 
 
-def filter_log_records(caplog: LogCaptureFixture) -> list[logging.LogRecord]:
-    """Filter all unrelated log records."""
-    return [
-        rec for rec in caplog.records if rec.name.endswith(f"{DOMAIN}.{notify.DOMAIN}")
-    ]
-
-
-async def test_message_includes_default_emoji():
+async def test_message_includes_default_emoji() -> None:
     """Tests that default icon is used when no message icon is given."""
     mock_client = Mock()
     mock_client.chat_postMessage = AsyncMock()
@@ -55,7 +44,7 @@ async def test_message_includes_default_emoji():
     assert kwargs["icon_emoji"] == expected_icon
 
 
-async def test_message_emoji_overrides_default():
+async def test_message_emoji_overrides_default() -> None:
     """Tests that overriding the default icon emoji when sending a message works."""
     mock_client = Mock()
     mock_client.chat_postMessage = AsyncMock()
@@ -72,7 +61,7 @@ async def test_message_emoji_overrides_default():
     assert kwargs["icon_emoji"] == expected_icon
 
 
-async def test_message_includes_default_icon_url():
+async def test_message_includes_default_icon_url() -> None:
     """Tests that overriding the default icon url when sending a message works."""
     mock_client = Mock()
     mock_client.chat_postMessage = AsyncMock()
@@ -89,7 +78,7 @@ async def test_message_includes_default_icon_url():
     assert kwargs["icon_url"] == expected_icon
 
 
-async def test_message_icon_url_overrides_default():
+async def test_message_icon_url_overrides_default() -> None:
     """Tests that overriding the default icon url when sending a message works."""
     mock_client = Mock()
     mock_client.chat_postMessage = AsyncMock()

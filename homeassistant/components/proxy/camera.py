@@ -118,8 +118,10 @@ def _resize_image(image, opts):
     newimage = imgbuf.getvalue()
     if not opts.force_resize and len(newimage) >= old_size:
         _LOGGER.debug(
-            "Using original image (%d bytes) "
-            "because resized image (%d bytes) is not smaller",
+            (
+                "Using original image (%d bytes) "
+                "because resized image (%d bytes) is not smaller"
+            ),
             old_size,
             len(newimage),
         )

@@ -15,8 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BlockDeviceWrapper, RpcDeviceWrapper
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import get_device_entry_gen, get_rpc_key_ids
 
@@ -40,13 +39,14 @@ def async_setup_block_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up cover for device."""
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
-    blocks = [block for block in wrapper.device.blocks if block.type == "roller"]
+    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    assert coordinator and coordinator.device.blocks
+    blocks = [block for block in coordinator.device.blocks if block.type == "roller"]
 
     if not blocks:
         return
 
-    async_add_entities(BlockShellyCover(wrapper, block) for block in blocks)
+    async_add_entities(BlockShellyCover(coordinator, block) for block in blocks)
 
 
 @callback
@@ -56,14 +56,14 @@ def async_setup_rpc_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
-
-    cover_key_ids = get_rpc_key_ids(wrapper.device.status, "cover")
+    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    assert coordinator
+    cover_key_ids = get_rpc_key_ids(coordinator.device.status, "cover")
 
     if not cover_key_ids:
         return
 
-    async_add_entities(RpcShellyCover(wrapper, id_) for id_ in cover_key_ids)
+    async_add_entities(RpcShellyCover(coordinator, id_) for id_ in cover_key_ids)
 
 
 class BlockShellyCover(ShellyBlockEntity, CoverEntity):
@@ -71,14 +71,14 @@ class BlockShellyCover(ShellyBlockEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.SHUTTER
 
-    def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
+    def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
         """Initialize block cover."""
-        super().__init__(wrapper, block)
+        super().__init__(coordinator, block)
         self.control_result: dict[str, Any] | None = None
-        self._attr_supported_features: int = (
+        self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
-        if self.wrapper.device.settings["rollers"][0]["positioning"]:
+        if self.coordinator.device.settings["rollers"][0]["positioning"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     @property
@@ -147,11 +147,11 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.SHUTTER
 
-    def __init__(self, wrapper: RpcDeviceWrapper, id_: int) -> None:
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize rpc cover."""
-        super().__init__(wrapper, f"cover:{id_}")
+        super().__init__(coordinator, f"cover:{id_}")
         self._id = id_
-        self._attr_supported_features: int = (
+        self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
         if self.status["pos_control"]:

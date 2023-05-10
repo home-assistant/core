@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
     CONF_PASSWORD,
@@ -112,12 +111,13 @@ async def async_setup_platform(
 class SeventeenTrackSummarySensor(SensorEntity):
     """Define a summary sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_icon = "mdi:package"
     _attr_native_unit_of_measurement = "packages"
 
     def __init__(self, data, status, initial_state):
         """Initialize."""
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._data = data
         self._state = initial_state
         self._status = status
@@ -164,12 +164,12 @@ class SeventeenTrackSummarySensor(SensorEntity):
 class SeventeenTrackPackageSensor(SensorEntity):
     """Define an individual package sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_icon = "mdi:package"
 
     def __init__(self, data, package):
         """Initialize."""
         self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DESTINATION_COUNTRY: package.destination_country,
             ATTR_INFO_TEXT: package.info_text,
             ATTR_TIMESTAMP: package.timestamp,

@@ -46,7 +46,6 @@ INTELLIFIRE_FANS: tuple[IntellifireFanEntityDescription, ...] = (
     IntellifireFanEntityDescription(
         key="fan",
         name="Fan",
-        has_entity_name=True,
         set_fn=lambda control_api, speed: control_api.set_fan_speed(speed=speed),
         value_fn=lambda data: data.fanspeed,
         speed_range=(1, 4),
@@ -72,7 +71,7 @@ async def async_setup_entry(
 
 
 class IntellifireFan(IntellifireEntity, FanEntity):
-    """This is Fan entity for the fireplace."""
+    """Fan entity for the fireplace."""
 
     entity_description: IntellifireFanEntityDescription
     _attr_supported_features = FanEntityFeature.SET_SPEED
@@ -125,6 +124,5 @@ class IntellifireFan(IntellifireEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        self.coordinator.control_api.fan_off()
         await self.entity_description.set_fn(self.coordinator.control_api, 0)
         await self.coordinator.async_request_refresh()

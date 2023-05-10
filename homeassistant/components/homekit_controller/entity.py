@@ -30,7 +30,6 @@ class HomeKitEntity(Entity):
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
         self._char_name: str | None = None
-        self._features = 0
         self.setup()
 
         super().__init__()
@@ -73,8 +72,7 @@ class HomeKitEntity(Entity):
         self._accessory.remove_watchable_characteristics(self._aid)
 
     async def async_put_characteristics(self, characteristics: dict[str, Any]) -> None:
-        """
-        Write characteristics to the device.
+        """Write characteristics to the device.
 
         A characteristic type is unique within a service, but in order to write
         to a named characteristic on a bridge we need to turn its type into
@@ -121,14 +119,19 @@ class HomeKitEntity(Entity):
             self._char_name = char.service.value(CharacteristicsTypes.NAME)
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
+    def old_unique_id(self) -> str:
+        """Return the OLD ID of this device."""
         info = self.accessory_info
         serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
         if valid_serial_number(serial):
             return f"homekit-{serial}-{self._iid}"
         # Some accessories do not have a serial number
         return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        return f"{self._accessory.unique_id}_{self._aid}_{self._iid}"
 
     @property
     def default_name(self) -> str | None:
@@ -170,20 +173,28 @@ class HomeKitEntity(Entity):
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
 
+    async def async_update(self) -> None:
+        """Update the entity."""
+        await self._accessory.async_request_update()
+
 
 class AccessoryEntity(HomeKitEntity):
     """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
+    def old_unique_id(self) -> str:
+        """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-aid:{self._aid}"
 
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        return f"{self._accessory.unique_id}_{self._aid}"
+
 
 class CharacteristicEntity(HomeKitEntity):
-    """
-    A HomeKit entity that is related to an single characteristic rather than a whole service.
+    """A HomeKit entity that is related to an single characteristic rather than a whole service.
 
     This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
     the service entity.
@@ -197,7 +208,12 @@ class CharacteristicEntity(HomeKitEntity):
         super().__init__(accessory, devinfo)
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
+    def old_unique_id(self) -> str:
+        """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-aid:{self._aid}-sid:{self._char.service.iid}-cid:{self._char.iid}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        return f"{self._accessory.unique_id}_{self._aid}_{self._char.service.iid}_{self._char.iid}"

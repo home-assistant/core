@@ -7,10 +7,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,7 +27,6 @@ from .const import (
     DOMAIN,
     FROM_GRID_ID,
     FROM_GRID_NAME,
-    ICON,
     MDI_ICONS,
     NET_PRODUCTION_ID,
     NET_PRODUCTION_NAME,
@@ -156,8 +155,8 @@ async def async_setup_entry(
 class SenseActiveSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
-    _attr_icon = ICON
-    _attr_native_unit_of_measurement = POWER_WATT
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
     _attr_available = False
@@ -210,9 +209,9 @@ class SenseActiveSensor(SensorEntity):
 class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
-    _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+    _attr_device_class = SensorDeviceClass.VOLTAGE
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_attribution = ATTRIBUTION
-    _attr_icon = ICON
     _attr_should_poll = False
     _attr_available = False
 
@@ -256,9 +255,8 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL
-    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_attribution = ATTRIBUTION
-    _attr_icon = ICON
     _attr_should_poll = False
 
     def __init__(
@@ -309,7 +307,7 @@ class SenseEnergyDevice(SensorEntity):
 
     _attr_available = False
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_attribution = ATTRIBUTION
     _attr_device_class = SensorDeviceClass.POWER
     _attr_should_poll = False

@@ -1,7 +1,8 @@
 """Volume conversion util functions."""
 from __future__ import annotations
 
-from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
+# pylint: disable-next=unused-import,hass-deprecated-import
+from homeassistant.const import (  # noqa: F401
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
     VOLUME_CUBIC_FEET,
@@ -41,9 +42,11 @@ def cubic_feet_to_cubic_meter(cubic_feet: float) -> float:
 def convert(volume: float, from_unit: str, to_unit: str) -> float:
     """Convert a volume from one unit to another."""
     report(
-        "uses volume utility. This is deprecated since 2022.10 and will "
-        "stop working in Home Assistant 2022.4, it should be updated to use "
-        "unit_conversion.VolumeConverter instead",
+        (
+            "uses volume utility. This is deprecated since 2022.10 and will "
+            "stop working in Home Assistant 2023.4, it should be updated to use "
+            "unit_conversion.VolumeConverter instead"
+        ),
         error_if_core=False,
     )
     return VolumeConverter.convert(volume, from_unit, to_unit)

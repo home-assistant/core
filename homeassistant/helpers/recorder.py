@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 DOMAIN = "recorder"
 
 
-@dataclass
+@dataclass(slots=True)
 class RecorderData:
     """Recorder data stored in hass.data."""
 
@@ -38,7 +38,6 @@ async def async_wait_recorder(hass: HomeAssistant) -> bool:
 
     Returns False immediately if the recorder is not enabled.
     """
-    # pylint: disable-next=import-outside-toplevel
     if DOMAIN not in hass.data:
         return False
     db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected

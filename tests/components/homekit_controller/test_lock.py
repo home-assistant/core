@@ -2,7 +2,10 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from .common import setup_test_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .common import get_next_aid, setup_test_component
 
 
 def create_lock_service(accessory):
@@ -25,7 +28,7 @@ def create_lock_service(accessory):
     return service
 
 
-async def test_switch_change_lock_state(hass, utcnow):
+async def test_switch_change_lock_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can turn a HomeKit lock on and off again."""
     helper = await setup_test_component(hass, create_lock_service)
 
@@ -50,7 +53,7 @@ async def test_switch_change_lock_state(hass, utcnow):
     )
 
 
-async def test_switch_read_lock_state(hass, utcnow):
+async def test_switch_read_lock_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit lock accessory."""
     helper = await setup_test_component(hass, create_lock_service)
 
@@ -112,3 +115,20 @@ async def test_switch_read_lock_state(hass, utcnow):
     )
     state = await helper.poll_and_get_state()
     assert state.state == "unlocking"
+
+
+async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+    """Test a we can migrate a lock unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    lock_entry = entity_registry.async_get_or_create(
+        "lock",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_lock_service)
+
+    assert (
+        entity_registry.async_get(lock_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

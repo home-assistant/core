@@ -5,11 +5,12 @@ from aiohttp import ClientResponseError
 
 from homeassistant import config_entries
 from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -47,7 +48,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_credentials(hass):
+async def test_form_invalid_credentials(hass: HomeAssistant) -> None:
     """Test we handle invalid credentials error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -73,7 +74,7 @@ async def test_form_invalid_credentials(hass):
     assert result2["errors"] == {"base": "invalid_credentials"}
 
 
-async def test_form_unexpected_exception(hass):
+async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle unexpected exception error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -99,7 +100,7 @@ async def test_form_unexpected_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_manual_flow_config_exist(hass):
+async def test_manual_flow_config_exist(hass: HomeAssistant) -> None:
     """Test config flow discovers only already configured config."""
     MockConfigEntry(
         domain=DOMAIN,

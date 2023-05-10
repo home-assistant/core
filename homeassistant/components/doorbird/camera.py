@@ -96,9 +96,8 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         self._stream_url = stream_url
         self._attr_name = name
         self._last_image: bytes | None = None
-        self._attr_supported_features = (
-            CameraEntityFeature.STREAM if self._stream_url else 0
-        )
+        if self._stream_url:
+            self._attr_supported_features = CameraEntityFeature.STREAM
         self._interval = interval
         self._last_update = datetime.datetime.min
         self._attr_unique_id = f"{self._mac_addr}_{camera_id}"

@@ -1,7 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "invalid_host": "Ugyldig vertsnavn eller IP-adresse"
-        }
-    }
-}

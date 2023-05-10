@@ -7,7 +7,7 @@ from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEM
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import CONF_DEVICE_ID, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
@@ -16,11 +16,13 @@ from homeassistant.helpers.typing import ConfigType
 from . import trigger
 from .const import DOMAIN
 from .helpers import (
-    async_get_client_wrapper_by_device_entry,
+    async_get_client_by_device_entry,
     async_get_device_entry_by_device_id,
-    async_is_device_config_entry_not_loaded,
 )
-from .triggers.turn_on import PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE
+from .triggers.turn_on import (
+    PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE,
+    async_get_turn_on_trigger,
+)
 
 TRIGGER_TYPES = {TURN_ON_PLATFORM_TYPE}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -36,17 +38,12 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    try:
-        if async_is_device_config_entry_not_loaded(hass, config[CONF_DEVICE_ID]):
-            return config
-    except ValueError as err:
-        raise InvalidDeviceAutomationConfig(err) from err
-
     if config[CONF_TYPE] == TURN_ON_PLATFORM_TYPE:
         device_id = config[CONF_DEVICE_ID]
         try:
             device = async_get_device_entry_by_device_id(hass, device_id)
-            async_get_client_wrapper_by_device_entry(hass, device)
+            if DOMAIN in hass.data:
+                async_get_client_by_device_entry(hass, device)
         except ValueError as err:
             raise InvalidDeviceAutomationConfig(err) from err
 
@@ -57,15 +54,7 @@ async def async_get_triggers(
     _hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for device."""
-    triggers = []
-    base_trigger = {
-        CONF_PLATFORM: "device",
-        CONF_DEVICE_ID: device_id,
-        CONF_DOMAIN: DOMAIN,
-    }
-
-    triggers.append({**base_trigger, CONF_TYPE: TURN_ON_PLATFORM_TYPE})
-
+    triggers = [async_get_turn_on_trigger(device_id)]
     return triggers
 
 

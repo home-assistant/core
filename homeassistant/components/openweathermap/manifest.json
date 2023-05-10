@@ -1,10 +1,10 @@
 {
   "domain": "openweathermap",
   "name": "OpenWeatherMap",
+  "codeowners": ["@fabaff", "@freekode", "@nzapponi"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openweathermap",
-  "requirements": ["pyowm==3.2.0"],
-  "codeowners": ["@fabaff", "@freekode", "@nzapponi"],
   "iot_class": "cloud_polling",
-  "loggers": ["geojson", "pyowm", "pysocks"]
+  "loggers": ["geojson", "pyowm", "pysocks"],
+  "requirements": ["pyowm==3.2.0"]
 }

@@ -59,6 +59,7 @@
 - [ ] Local tests pass. **Your PR cannot be merged unless tests pass**
 - [ ] There is no commented out code in this PR.
 - [ ] I have followed the [development checklist][dev-checklist]
+- [ ] I have followed the [perfect PR recommendations][perfect-pr]
 - [ ] The code has been formatted using Black (`black --fast homeassistant tests`)
 - [ ] Tests have been added to verify that the new code works.
 
@@ -74,18 +75,6 @@ If the code communicates with devices, web services, or third-party tools:
       Updated by running `python3 -m script.gen_requirements_all`.
 - [ ] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
 - [ ] Untested files have been added to `.coveragerc`.
-
-The integration reached or maintains the following [Integration Quality Scale][quality-scale]:
-<!--
-  The Integration Quality Scale scores an integration on the code quality
-  and user experience. Each level of the quality scale consists of a list
-  of requirements. We highly recommend getting your integration scored!
--->
-
-- [ ] No score or internal
-- [ ] 🥈 Silver
-- [ ] 🥇 Gold
-- [ ] 🏆 Platinum
 
 <!--
   This project is very active and we have a high turnover of pull requests.
@@ -115,7 +104,8 @@ To help with the load of incoming pull requests:
 
   Below, some useful links you could explore:
 -->
-[dev-checklist]: https://developers.home-assistant.io/docs/en/development_checklist.html
-[manifest-docs]: https://developers.home-assistant.io/docs/en/creating_integration_manifest.html
-[quality-scale]: https://developers.home-assistant.io/docs/en/next/integration_quality_scale_index.html
+[dev-checklist]: https://developers.home-assistant.io/docs/development_checklist/
+[manifest-docs]: https://developers.home-assistant.io/docs/creating_integration_manifest/
+[quality-scale]: https://developers.home-assistant.io/docs/integration_quality_scale_index/
 [docs-repository]: https://github.com/home-assistant/home-assistant.io
+[perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr

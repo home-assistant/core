@@ -78,6 +78,16 @@ BROADLINK_DEVICES = {
         57,
         5,
     ),
+    "Gaming room": (
+        "192.168.0.65",
+        "34ea34b61d2d",
+        "MP1-1K4S",
+        "Broadlink",
+        "MP1",
+        0x4EB5,
+        57,
+        5,
+    ),
 }
 
 

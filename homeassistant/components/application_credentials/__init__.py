@@ -50,8 +50,8 @@ DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
 CREATE_FIELDS = {
     vol.Required(CONF_DOMAIN): cv.string,
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_CLIENT_SECRET): cv.string,
+    vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Strip),
+    vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Strip),
     vol.Optional(CONF_AUTH_DOMAIN): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 }
@@ -75,7 +75,7 @@ class AuthorizationServer:
     token_url: str
 
 
-class ApplicationCredentialsStorageCollection(collection.StorageCollection):
+class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
     """Application credential collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -94,7 +94,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         return f"{info[CONF_DOMAIN]}.{info[CONF_CLIENT_ID]}"
 
     async def _update_data(
-        self, data: dict[str, str], update_data: dict[str, str]
+        self, item: dict[str, str], update_data: dict[str, str]
     ) -> dict[str, str]:
         """Return a new updated data object."""
         raise ValueError("Updates not supported")
@@ -144,13 +144,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     id_manager = collection.IDManager()
     storage_collection = ApplicationCredentialsStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     await storage_collection.async_load()
     hass.data[DOMAIN][DATA_STORAGE] = storage_collection
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
@@ -302,8 +301,8 @@ async def _get_platform(
         platform, "async_get_auth_implementation"
     ):
         raise ValueError(
-            f"Integration '{integration_domain}' platform {DOMAIN} did not "
-            f"implement 'async_get_authorization_server' or 'async_get_auth_implementation'"
+            f"Integration '{integration_domain}' platform {DOMAIN} did not implement"
+            " 'async_get_authorization_server' or 'async_get_auth_implementation'"
         )
     return platform
 

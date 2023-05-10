@@ -1,7 +1,6 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
@@ -9,26 +8,16 @@ import inspect
 import logging
 from typing import Any, Final, TypedDict, final
 
+from typing_extensions import Required
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    LENGTH_MILLIMETERS,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_MBAR,
-    PRESSURE_MMHG,
-    SPEED_FEET_PER_SECOND,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_KNOTS,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -38,12 +27,26 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_conversion import (
-    DistanceConverter,
-    PressureConverter,
-    SpeedConverter,
-    TemperatureConverter,
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+from .const import (
+    ATTR_WEATHER_HUMIDITY,
+    ATTR_WEATHER_OZONE,
+    ATTR_WEATHER_PRECIPITATION_UNIT,
+    ATTR_WEATHER_PRESSURE,
+    ATTR_WEATHER_PRESSURE_UNIT,
+    ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_TEMPERATURE_UNIT,
+    ATTR_WEATHER_VISIBILITY,
+    ATTR_WEATHER_VISIBILITY_UNIT,
+    ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_SPEED,
+    ATTR_WEATHER_WIND_SPEED_UNIT,
+    DOMAIN,
+    UNIT_CONVERSIONS,
+    VALID_UNITS,
 )
+from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,68 +81,12 @@ ATTR_FORECAST_TIME: Final = "datetime"
 ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
 ATTR_FORECAST_NATIVE_WIND_SPEED: Final = "native_wind_speed"
 ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
-ATTR_WEATHER_HUMIDITY = "humidity"
-ATTR_WEATHER_OZONE = "ozone"
-ATTR_WEATHER_PRESSURE = "pressure"
-ATTR_WEATHER_PRESSURE_UNIT = "pressure_unit"
-ATTR_WEATHER_TEMPERATURE = "temperature"
-ATTR_WEATHER_TEMPERATURE_UNIT = "temperature_unit"
-ATTR_WEATHER_VISIBILITY = "visibility"
-ATTR_WEATHER_VISIBILITY_UNIT = "visibility_unit"
-ATTR_WEATHER_WIND_BEARING = "wind_bearing"
-ATTR_WEATHER_WIND_SPEED = "wind_speed"
-ATTR_WEATHER_WIND_SPEED_UNIT = "wind_speed_unit"
-ATTR_WEATHER_PRECIPITATION_UNIT = "precipitation_unit"
-
-DOMAIN = "weather"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
-
-VALID_UNITS_PRESSURE: set[str] = {
-    PRESSURE_HPA,
-    PRESSURE_MBAR,
-    PRESSURE_INHG,
-    PRESSURE_MMHG,
-}
-VALID_UNITS_TEMPERATURE: set[str] = {
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-}
-VALID_UNITS_PRECIPITATION: set[str] = {
-    LENGTH_MILLIMETERS,
-    LENGTH_INCHES,
-}
-VALID_UNITS_VISIBILITY: set[str] = {
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-}
-VALID_UNITS_WIND_SPEED: set[str] = {
-    SPEED_FEET_PER_SECOND,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_KNOTS,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-}
-
-UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    ATTR_WEATHER_PRESSURE_UNIT: PressureConverter.convert,
-    ATTR_WEATHER_TEMPERATURE_UNIT: TemperatureConverter.convert,
-    ATTR_WEATHER_VISIBILITY_UNIT: DistanceConverter.convert,
-    ATTR_WEATHER_PRECIPITATION_UNIT: DistanceConverter.convert,
-    ATTR_WEATHER_WIND_SPEED_UNIT: SpeedConverter.convert,
-}
-
-VALID_UNITS: dict[str, set[str]] = {
-    ATTR_WEATHER_PRESSURE_UNIT: VALID_UNITS_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT: VALID_UNITS_TEMPERATURE,
-    ATTR_WEATHER_VISIBILITY_UNIT: VALID_UNITS_VISIBILITY,
-    ATTR_WEATHER_PRECIPITATION_UNIT: VALID_UNITS_PRECIPITATION,
-    ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
-}
 
 # mypy: disallow-any-generics
 
@@ -164,11 +111,12 @@ def round_temperature(temperature: float | None, precision: float) -> float | No
 class Forecast(TypedDict, total=False):
     """Typed weather forecast dict.
 
-    All attributes are in native units and old attributes kept for backwards compatibility.
+    All attributes are in native units and old attributes kept
+    for backwards compatibility.
     """
 
     condition: str | None
-    datetime: str
+    datetime: Required[str]
     precipitation_probability: int | None
     native_precipitation: float | None
     precipitation: None
@@ -188,6 +136,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
+    async_setup_ws_api(hass)
     await component.async_setup(config)
     return True
 
@@ -306,9 +255,11 @@ class WeatherEntity(Entity):
                         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                     )
                 _LOGGER.warning(
-                    "%s::%s is overriding deprecated methods on an instance of "
-                    "WeatherEntity, this is not valid and will be unsupported "
-                    "from Home Assistant 2023.1. Please %s",
+                    (
+                        "%s::%s is overriding deprecated methods on an instance of "
+                        "WeatherEntity, this is not valid and will be unsupported "
+                        "from Home Assistant 2023.1. Please %s"
+                    ),
                     cls.__module__,
                     cls.__name__,
                     report_issue,
@@ -419,7 +370,9 @@ class WeatherEntity(Entity):
 
         Should not be set by integrations.
         """
-        return PRESSURE_HPA if self.hass.config.units.is_metric else PRESSURE_INHG
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
+            return UnitOfPressure.INHG
+        return UnitOfPressure.HPA
 
     @final
     @property
@@ -481,11 +434,9 @@ class WeatherEntity(Entity):
 
         Should not be set by integrations.
         """
-        return (
-            SPEED_KILOMETERS_PER_HOUR
-            if self.hass.config.units.is_metric
-            else SPEED_MILES_PER_HOUR
-        )
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
+            return UnitOfSpeed.MILES_PER_HOUR
+        return UnitOfSpeed.KILOMETERS_PER_HOUR
 
     @final
     @property
@@ -620,14 +571,17 @@ class WeatherEntity(Entity):
             return self._attr_precision
         return (
             PRECISION_TENTHS
-            if self._temperature_unit == TEMP_CELSIUS
+            if self._temperature_unit == UnitOfTemperature.CELSIUS
             else PRECISION_WHOLE
         )
 
     @final
     @property
     def state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes, converted from native units to user-configured units."""
+        """Return the state attributes, converted.
+
+        Attributes are configured from native units to user-configured units.
+        """
         data: dict[str, Any] = {}
 
         precision = self.precision

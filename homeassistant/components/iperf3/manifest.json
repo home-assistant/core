@@ -1,9 +1,9 @@
 {
   "domain": "iperf3",
   "name": "Iperf3",
-  "documentation": "https://www.home-assistant.io/integrations/iperf3",
-  "requirements": ["iperf3==0.1.11"],
   "codeowners": ["@rohankapoorcom"],
+  "documentation": "https://www.home-assistant.io/integrations/iperf3",
   "iot_class": "local_polling",
-  "loggers": ["iperf3"]
+  "loggers": ["iperf3"],
+  "requirements": ["iperf3==0.1.11"]
 }

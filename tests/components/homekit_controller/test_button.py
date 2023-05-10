@@ -2,7 +2,10 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from .common import Helper, setup_test_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .common import Helper, get_next_aid, setup_test_component
 
 
 def create_switch_with_setup_button(accessory):
@@ -35,7 +38,7 @@ def create_switch_with_ecobee_clear_hold_button(accessory):
     return service
 
 
-async def test_press_button(hass):
+async def test_press_button(hass: HomeAssistant) -> None:
     """Test a switch service that has a button characteristic is correctly handled."""
     helper = await setup_test_component(hass, create_switch_with_setup_button)
 
@@ -62,7 +65,7 @@ async def test_press_button(hass):
     )
 
 
-async def test_ecobee_clear_hold_press_button(hass):
+async def test_ecobee_clear_hold_press_button(hass: HomeAssistant) -> None:
     """Test ecobee clear hold button characteristic is correctly handled."""
     helper = await setup_test_component(
         hass, create_switch_with_ecobee_clear_hold_button
@@ -88,4 +91,20 @@ async def test_ecobee_clear_hold_press_button(hass):
         {
             CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD: True,
         },
+    )
+
+
+async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+    """Test a we can migrate a button unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    button_entry = entity_registry.async_get_or_create(
+        "button",
+        "homekit_controller",
+        f"homekit-0001-aid:{aid}-sid:1-cid:2",
+    )
+    await setup_test_component(hass, create_switch_with_ecobee_clear_hold_button)
+    assert (
+        entity_registry.async_get(button_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_1_2"
     )

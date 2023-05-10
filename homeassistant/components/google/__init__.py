@@ -11,7 +11,6 @@ from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, AuthException
 from gcal_sync.model import DateOrDatetime, Event
 import voluptuous as vol
-from voluptuous.error import Error as VoluptuousError
 import yaml
 
 from homeassistant.config_entries import ConfigEntry
@@ -36,6 +35,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from .api import ApiAuthImpl, get_feature_access
 from .const import (
     DATA_SERVICE,
+    DATA_STORE,
     DOMAIN,
     EVENT_DESCRIPTION,
     EVENT_END_DATE,
@@ -43,12 +43,14 @@ from .const import (
     EVENT_IN,
     EVENT_IN_DAYS,
     EVENT_IN_WEEKS,
+    EVENT_LOCATION,
     EVENT_START_DATE,
     EVENT_START_DATETIME,
     EVENT_SUMMARY,
     EVENT_TYPES_CONF,
     FeatureAccess,
 )
+from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,6 +117,7 @@ ADD_EVENT_SERVICE_SCHEMA = vol.All(
         vol.Required(EVENT_CALENDAR_ID): cv.string,
         vol.Required(EVENT_SUMMARY): cv.string,
         vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+        vol.Optional(EVENT_LOCATION, default=""): cv.string,
         vol.Inclusive(
             EVENT_START_DATE, "dates", "Start and end dates must both be specified"
         ): cv.date,
@@ -140,6 +143,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
+
+    # Validate google_calendars.yaml (if present) as soon as possible to return
+    # helpful error messages.
+    try:
+        await hass.async_add_executor_job(load_config, hass.config.path(YAML_DEVICES))
+    except vol.Invalid as err:
+        _LOGGER.error("Configuration error in %s: %s", YAML_DEVICES, str(err))
+        return False
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -171,6 +182,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ApiAuthImpl(async_get_clientsession(hass), session)
     )
     hass.data[DOMAIN][entry.entry_id][DATA_SERVICE] = calendar_service
+    hass.data[DOMAIN][entry.entry_id][DATA_STORE] = LocalCalendarStore(
+        hass, entry.entry_id
+    )
 
     if entry.unique_id is None:
         try:
@@ -179,8 +193,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed from err
         except ApiException as err:
             raise ConfigEntryNotReady from err
-        else:
-            hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
+
+        hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
 
     # Only expose the add event service if we have the correct permissions
     if get_feature_access(hass, entry) is FeatureAccess.read_write:
@@ -211,6 +225,12 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry if the access options change."""
     if not async_entry_has_scopes(hass, entry):
         await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of a local storage."""
+    store = LocalCalendarStore(hass, entry.entry_id)
+    await store.async_remove()
 
 
 async def async_setup_add_event_service(
@@ -265,16 +285,18 @@ async def async_setup_add_event_service(
             raise ValueError(
                 "Missing required fields to set start or end date/datetime"
             )
-
+        event = Event(
+            summary=call.data[EVENT_SUMMARY],
+            description=call.data[EVENT_DESCRIPTION],
+            start=start,
+            end=end,
+        )
+        if location := call.data.get(EVENT_LOCATION):
+            event.location = location
         try:
             await calendar_service.async_create_event(
                 call.data[EVENT_CALENDAR_ID],
-                Event(
-                    summary=call.data[EVENT_SUMMARY],
-                    description=call.data[EVENT_DESCRIPTION],
-                    start=start,
-                    end=end,
-                ),
+                event,
             )
         except ApiException as err:
             raise HomeAssistantError(str(err)) from err
@@ -309,13 +331,9 @@ def load_config(path: str) -> dict[str, Any]:
     calendars = {}
     try:
         with open(path, encoding="utf8") as file:
-            data = yaml.safe_load(file)
+            data = yaml.safe_load(file) or []
             for calendar in data:
-                try:
-                    calendars.update({calendar[CONF_CAL_ID]: DEVICE_SCHEMA(calendar)})
-                except VoluptuousError as exception:
-                    # keep going
-                    _LOGGER.warning("Calendar Invalid Data: %s", exception)
+                calendars[calendar[CONF_CAL_ID]] = DEVICE_SCHEMA(calendar)
     except FileNotFoundError as err:
         _LOGGER.debug("Error reading calendar configuration: %s", err)
         # When YAML file could not be loaded/did not contain a dict

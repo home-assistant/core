@@ -1,5 +1,4 @@
-"""
-Provide a mock light platform.
+"""Provide a mock light platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
@@ -37,13 +36,13 @@ class MockLight(MockToggleEntity, LightEntity):
     """Mock light class."""
 
     color_mode = None
-    max_mireds = 500
-    min_mireds = 153
+    _attr_max_color_temp_kelvin = 6500
+    _attr_min_color_temp_kelvin = 2000
     supported_color_modes = None
     supported_features = 0
 
     brightness = None
-    color_temp = None
+    color_temp_kelvin = None
     hs_color = None
     rgb_color = None
     rgbw_color = None
@@ -61,7 +60,7 @@ class MockLight(MockToggleEntity, LightEntity):
                 "rgb_color",
                 "rgbw_color",
                 "rgbww_color",
-                "color_temp",
+                "color_temp_kelvin",
             ]:
                 setattr(self, key, value)
             if key == "white":
