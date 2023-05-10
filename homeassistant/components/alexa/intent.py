@@ -1,6 +1,7 @@
 """Support for Alexa skill service end point."""
 import enum
 import logging
+from typing import Any
 
 from homeassistant.components import http
 from homeassistant.core import callback
@@ -180,7 +181,7 @@ async def async_handle_intent(hass, message):
     return alexa_response.as_dict()
 
 
-def resolve_slot_data(key: str, request: dict) -> dict[str, str]:
+def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
     """Check slot request for synonym resolutions."""
     # Default to the spoken slot value if more than one or none are found. Always
     # passes the id and name of the nearest possible slot resolution. For
