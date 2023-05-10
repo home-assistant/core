@@ -8,7 +8,7 @@ from zwave_js_server.model.value import Value as ZwaveValue, get_value_id_str
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DEVICE_CLASS_NAME, DeviceInfo, Entity
 
 from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
@@ -136,6 +136,10 @@ class ZWaveBaseEntity(Entity):
             and self.entity_description
             and self.entity_description.name
         ):
+            # It's not possible to do string manipulations on DEVICE_CLASS_NAME
+            # the assert satisfies the type checker and will catch attempts
+            # to use DEVICE_CLASS_NAME in the entity descriptions.
+            assert self.entity_description.name is not DEVICE_CLASS_NAME
             name = self.entity_description.name
 
         if name_prefix:
