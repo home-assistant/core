@@ -7,7 +7,6 @@ from homeassistant.components import http
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.decorator import Registry
 
 from .const import DOMAIN, SYN_RESOLUTION_MATCH
@@ -40,17 +39,6 @@ class CardType(enum.Enum):
 def async_setup(hass):
     """Activate Alexa component."""
     hass.http.register_view(AlexaIntentsView)
-
-    # Resolution behavior deprecation warning
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "resolution_behavior_deprecated",
-        breaks_in_ha_version="2023.7.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="resolution_behavior_deprecated",
-    )
 
 
 async def async_setup_intents(hass):
@@ -227,7 +215,6 @@ def resolve_slot_data(key: str, request: dict[str, Any]) -> dict[str, str]:
             if "id" in possible_values[0]:
                 resolved_data["id"] = possible_values[0]["id"]
 
-        # Deprecated Behavior
         # If there is only one match use the resolved value, otherwise the
         # resolution cannot be determined, so use the spoken slot value and empty string as id
         if len(possible_values) == 1:

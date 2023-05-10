@@ -1,8 +1,0 @@
-{
-  "issues": {
-    "resolution_behavior_deprecated": {
-      "title": "Slot Synonym resolution behavior of Alexa Custom Skill changes",
-      "description": "At the moment the spoken text is used when there is more than one possible synonym resolution. In future the first resolution will always be used. It will only fall back to the spoken text if there is no synonym resolution.\n\nPlease be aware that the Template Variable Value could be slightly different (uppercase, lowercase or whitespaces)."
-    }
-  }
-}
