@@ -35,6 +35,8 @@ from .const import (
     API_DELAY,
     CONSECUTIVE_FAILURE_THRESHOLD,
     DOMAIN,
+    PRESET_NONE,
+    PRESET_SHABAT,
     SCAN_INTERVAL_SEC,
     UNAVAILABLE_THRESH_SEC,
 )
@@ -130,6 +132,11 @@ class ElectraClimateEntity(ClimateEntity):
             swing_modes.append(SWING_OFF)
             self._attr_swing_modes = swing_modes
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+
+        self._attr_preset_modes = [
+            PRESET_NONE,
+            PRESET_SHABAT,
+        ]
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._electra_ac_device.mac)},
@@ -266,6 +273,10 @@ class ElectraClimateEntity(ClimateEntity):
         else:
             self._attr_swing_mode = SWING_OFF
 
+        self._attr_preset_mode = (
+            PRESET_SHABAT if self._electra_ac_device.get_shabat_mode() else PRESET_NONE
+        )
+
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set AC swing mdde."""
         if swing_mode == SWING_BOTH:
@@ -282,6 +293,15 @@ class ElectraClimateEntity(ClimateEntity):
         else:
             self._electra_ac_device.set_horizontal_swing(False)
             self._electra_ac_device.set_vertical_swing(False)
+
+        await self._async_operate_electra_ac()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set Preset mode."""
+        if preset_mode == PRESET_SHABAT:
+            self._electra_ac_device.set_shabat_mode(True)
+        else:
+            self._electra_ac_device.set_shabat_mode(False)
 
         await self._async_operate_electra_ac()
 
