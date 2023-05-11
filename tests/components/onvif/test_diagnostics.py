@@ -1,4 +1,6 @@
 """Test ONVIF diagnostics."""
+from unittest.mock import ANY
+
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -71,6 +73,8 @@ async def test_diagnostics(
                     "video_source_token": None,
                 }
             ],
+            "services": ANY,
+            "xaddrs": ANY,
         },
         "events": {
             "pullpoint_manager_state": {
