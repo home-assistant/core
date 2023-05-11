@@ -74,7 +74,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
         return_exceptions=True,
     )
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator_map
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        device_id: coordinator
+        for device_id, coordinator in coordinator_map.items()
+        if coordinator.last_update_success
+    }  # Only add coordinators that succeeded
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
