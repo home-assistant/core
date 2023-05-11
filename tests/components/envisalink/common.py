@@ -4,6 +4,10 @@ from homeassistant.components.envisalink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+KEEP_ALIVE_PATCH = "pyenvisalink.DSCClient.keep_alive"
+PERIODIC_PATCH = "pyenvisalink.DSCClient.periodic_zone_timer_dump"
+RECONNECT_PATCH = "pyenvisalink.EnvisalinkClient.reconnect"
+
 PARTITIONS = {1: {"name": "Partition 1"}, 2: {"name": "Partition 2"}}
 
 ZONES = {
