@@ -1,7 +1,6 @@
 """Support for Netgear LTE modems."""
 import asyncio
 from datetime import timedelta
-from typing import Final
 
 import aiohttp
 import attr
@@ -37,6 +36,9 @@ from .const import (
     ATTR_MESSAGE,
     ATTR_SMS_ID,
     AUTOCONNECT_MODES,
+    CONF_BINARY_SENSOR,
+    CONF_NOTIFY,
+    CONF_SENSOR,
     DISPATCHER_NETGEAR_LTE,
     DOMAIN,
     FAILOVER_MODES,
@@ -44,10 +46,6 @@ from .const import (
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
-
-CONF_NOTIFY: Final = "notify"
-CONF_BINARY_SENSOR: Final = "binary_sensor"
-CONF_SENSOR: Final = "sensor"
 
 EVENT_SMS = "netgear_lte_sms"
 
