@@ -23,7 +23,6 @@ from .auth import AuthPhase, auth_required_message
 from .const import (
     CANCELLATION_ERRORS,
     DATA_CONNECTIONS,
-    FEATURE_COALESCE_MESSAGES,
     MAX_PENDING_MSG,
     PENDING_MSG_PEAK,
     PENDING_MSG_PEAK_TIME,
@@ -99,28 +98,32 @@ class WebSocketHandler:
             with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
                 while not self.wsock.closed:
                     await queue_ready.wait()
-                    queue_ready.clear()
-                    if (process := message_queue.pop()) is None:
+                    if (process := message_queue.popleft()) is None:
                         return
+
                     message = process if isinstance(process, str) else process()
+                    no_remaining_messages = len(message_queue) == 0
+
                     if (
-                        len(message_queue) == 0
+                        no_remaining_messages
                         or not self.connection
-                        or FEATURE_COALESCE_MESSAGES
-                        not in self.connection.supported_features
+                        or not self.connection.can_coalesce
                     ):
+                        if no_remaining_messages:
+                            queue_ready.clear()
                         logger.debug("Sending %s", message)
                         await wsock.send_str(message)
                         continue
 
                     messages: list[str] = [message]
                     while len(message_queue):
-                        if (process := message_queue.pop()) is None:
+                        if (process := message_queue.popleft()) is None:
                             return
                         messages.append(
                             process if isinstance(process, str) else process()
                         )
 
+                    queue_ready.clear()
                     coalesced_messages = "[" + ",".join(messages) + "]"
                     logger.debug("Sending %s", coalesced_messages)
                     await wsock.send_str(coalesced_messages)
