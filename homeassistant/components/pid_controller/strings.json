@@ -1,0 +1,76 @@
+{
+  "title": "PID controller",
+  "config": {
+    "step": {
+      "user": {
+        "title": "PID controller",
+        "description": "Number that functions as PID regulator, using one or two sensor inputs and a number output.",
+        "data": {
+          "name": "Name",
+          "output": "Output number entity",
+          "input1": "Input sensor entity",
+          "input2": "Optional secondary input sensor entity",
+          "kp": "Proportional gain factor (Kp)",
+          "ki": "Integration factor (Ki)",
+          "kd": "Differential factor (Kd)",
+          "direction": "Controller direction",
+          "minimum": "Minimum",
+          "maximum": "Maximum",
+          "cycle_time": "Duration between controller cycles",
+          "step": "Step size",
+          "mode": "Mode"
+        },
+        "data_description": {
+          "kp": "Proportional gain factor, directly gaining the error to compensate the fault (Kp).",
+          "ki": "Integration factor, reducing offset fault over time (Ki).",
+          "kd": "Differential factor, damping the overshoot (Kd).",
+          "direction": "When direct, output will increase to decrease fault, when reverse output will decrease to decrease fault",
+          "input2": "Secondary input sensor. If selected, the regulator will work in differential mode.",
+          "minimum": "Minimum regulation setpoint value.",
+          "maximum": "Maximum regulation setpoint value.",
+          "step": "Step size of the number.",
+          "mode": "Mode of user interface elements"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "output": "[%key:component::pid_controller::config::step::user::data::output%]",
+          "input1": "[%key:component::pid_controller::config::step::user::data::input1%]",
+          "input2": "[%key:component::pid_controller::config::step::user::data::input2%]",
+          "kp": "[%key:component::pid_controller::config::step::user::data::kp%]",
+          "ki": "[%key:component::pid_controller::config::step::user::data::ki%]",
+          "kd": "[%key:component::pid_controller::config::step::user::data::kd%]",
+          "direction": "[%key:component::pid_controller::config::step::user::data::direction%]",
+          "minimum": "[%key:component::pid_controller::config::step::user::data::minimum%]",
+          "maximum": "[%key:component::pid_controller::config::step::user::data::maximum%]",
+          "cycle_time": "[%key:component::pid_controller::config::step::user::data::cycle_time%]",
+          "step": "[%key:component::pid_controller::config::step::user::data::step%]",
+          "mode": "[%key:component::pid_controller::config::step::user::data::mode%]"
+        },
+        "data_description": {
+          "kp": "[%key:component::pid_controller::config::step::user::data_description::kd%]",
+          "ki": "[%key:component::pid_controller::config::step::user::data_description::ki%]",
+          "kd": "[%key:component::pid_controller::config::step::user::data_description::kd%]",
+          "direction": "[%key:component::pid_controller::config::step::user::data_description::direction%]",
+          "input2": "[%key:component::pid_controller::config::step::user::data_description::input2%]",
+          "minimum": "[%key:component::pid_controller::config::step::user::data_description::minimum%]",
+          "maximum": "[%key:component::pid_controller::config::step::user::data_description::maximum%]",
+          "step": "[%key:component::pid_controller::config::step::user::data_description::step%]",
+          "mode": "[%key:component::pid_controller::config::step::user::data_description::mode%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "direction": {
+      "options": {
+        "direct": "Direct",
+        "reverse": "Reverse"
+      }
+    }
+  }
+}

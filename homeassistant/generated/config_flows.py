@@ -326,6 +326,7 @@ FLOWS = {
         "philips_js",
         "pi_hole",
         "picnic",
+        "pid_controller",
         "plaato",
         "plex",
         "plugwise",

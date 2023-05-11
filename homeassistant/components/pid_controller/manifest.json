@@ -1,0 +1,14 @@
+{
+  "domain": "pid_controller",
+  "name": "PID Controller",
+  "codeowners": ["@antonverburg"],
+  "config_flow": true,
+  "dependencies": ["sensor", "number"],
+  "documentation": "https://www.home-assistant.io/integrations/pid_controller",
+  "homekit": {},
+  "iot_class": "calculated",
+  "quality_scale": "platinum",
+  "requirements": ["dvg-pid-controller==2.1.0"],
+  "ssdp": [],
+  "zeroconf": []
+}

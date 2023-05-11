@@ -899,6 +899,8 @@ build.json @home-assistant/supervisor
 /tests/components/pi_hole/ @johnluetke @shenxn
 /homeassistant/components/picnic/ @corneyl
 /tests/components/picnic/ @corneyl
+/homeassistant/components/pid_controller/ @antonverburg
+/tests/components/pid_controller/ @antonverburg
 /homeassistant/components/pilight/ @trekky12
 /tests/components/pilight/ @trekky12
 /homeassistant/components/plaato/ @JohNan

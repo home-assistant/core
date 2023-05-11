@@ -4132,6 +4132,11 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "pid_controller": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "pilight": {
       "name": "Pilight",
       "integration_type": "hub",
@@ -6620,6 +6625,7 @@
     "moehlenhoff_alpha2",
     "moon",
     "nmap_tracker",
+    "pid_controller",
     "plant",
     "proximity",
     "rpi_power",

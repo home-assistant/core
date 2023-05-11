@@ -1,0 +1,14 @@
+# Describes the format for available Number entity services
+enable:
+  name: Enable PID controller
+  description: Enable the PID controller.
+  target:
+    entity:
+      integration: pid_controller
+  fields:
+    value:
+      name: Value
+      description: True to enable, False to disable the controller.
+      example: true
+      selector:
+        text:
