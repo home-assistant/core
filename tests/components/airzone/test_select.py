@@ -26,49 +26,49 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
     await async_init_integration(hass)
 
     state = hass.states.get("select.despacho_cold_angle")
-    assert state.state == str(GrilleAngle.DEG_90)
+    assert state.state == str(GrilleAngle.DEG_90.value)
 
     state = hass.states.get("select.despacho_heat_angle")
-    assert state.state == str(GrilleAngle.DEG_90)
+    assert state.state == str(GrilleAngle.DEG_90.value)
 
     state = hass.states.get("select.despacho_sleep")
-    assert state.state == str(SleepTimeout.SLEEP_OFF)
+    assert state.state == str(SleepTimeout.SLEEP_OFF.value)
 
     state = hass.states.get("select.dorm_1_cold_angle")
-    assert state.state == str(GrilleAngle.DEG_90)
+    assert state.state == str(GrilleAngle.DEG_90.value)
 
     state = hass.states.get("select.dorm_1_heat_angle")
-    assert state.state == str(GrilleAngle.DEG_90)
+    assert state.state == str(GrilleAngle.DEG_90.value)
 
     state = hass.states.get("select.dorm_1_sleep")
-    assert state.state == str(SleepTimeout.SLEEP_OFF)
+    assert state.state == str(SleepTimeout.SLEEP_OFF.value)
 
     state = hass.states.get("select.dorm_2_cold_angle")
-    assert state.state == str(GrilleAngle.DEG_90)
+    assert state.state == str(GrilleAngle.DEG_90.value)
 
     state = hass.states.get("select.dorm_2_heat_angle")
-    assert state.state == str(GrilleAngle.DEG_90)
+    assert state.state == str(GrilleAngle.DEG_90.value)
 
     state = hass.states.get("select.dorm_2_sleep")
-    assert state.state == str(SleepTimeout.SLEEP_OFF)
+    assert state.state == str(SleepTimeout.SLEEP_OFF.value)
 
     state = hass.states.get("select.dorm_ppal_cold_angle")
-    assert state.state == str(GrilleAngle.DEG_45)
+    assert state.state == str(GrilleAngle.DEG_45.value)
 
     state = hass.states.get("select.dorm_ppal_heat_angle")
-    assert state.state == str(GrilleAngle.DEG_50)
+    assert state.state == str(GrilleAngle.DEG_50.value)
 
     state = hass.states.get("select.dorm_ppal_sleep")
-    assert state.state == str(SleepTimeout.SLEEP_30)
+    assert state.state == str(SleepTimeout.SLEEP_30.value)
 
     state = hass.states.get("select.salon_cold_angle")
-    assert state.state == str(GrilleAngle.DEG_90)
+    assert state.state == str(GrilleAngle.DEG_90.value)
 
     state = hass.states.get("select.salon_heat_angle")
-    assert state.state == str(GrilleAngle.DEG_90)
+    assert state.state == str(GrilleAngle.DEG_90.value)
 
     state = hass.states.get("select.salon_sleep")
-    assert state.state == str(SleepTimeout.SLEEP_OFF)
+    assert state.state == str(SleepTimeout.SLEEP_OFF.value)
 
 
 async def test_airzone_select_sleep(hass: HomeAssistant) -> None:
@@ -106,13 +106,13 @@ async def test_airzone_select_sleep(hass: HomeAssistant) -> None:
             SERVICE_SELECT_OPTION,
             {
                 ATTR_ENTITY_ID: "select.dorm_1_sleep",
-                ATTR_OPTION: str(SleepTimeout.SLEEP_30),
+                ATTR_OPTION: str(SleepTimeout.SLEEP_30.value),
             },
             blocking=True,
         )
 
     state = hass.states.get("select.dorm_1_sleep")
-    assert state.state == str(SleepTimeout.SLEEP_30)
+    assert state.state == str(SleepTimeout.SLEEP_30.value)
 
 
 async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
@@ -141,13 +141,13 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
             SERVICE_SELECT_OPTION,
             {
                 ATTR_ENTITY_ID: "select.dorm_1_cold_angle",
-                ATTR_OPTION: str(GrilleAngle.DEG_50),
+                ATTR_OPTION: str(GrilleAngle.DEG_50.value),
             },
             blocking=True,
         )
 
     state = hass.states.get("select.dorm_1_cold_angle")
-    assert state.state == str(GrilleAngle.DEG_50)
+    assert state.state == str(GrilleAngle.DEG_50.value)
 
     # Heat Angle
 
@@ -169,10 +169,10 @@ async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
             SERVICE_SELECT_OPTION,
             {
                 ATTR_ENTITY_ID: "select.dorm_1_heat_angle",
-                ATTR_OPTION: str(GrilleAngle.DEG_45),
+                ATTR_OPTION: str(GrilleAngle.DEG_45.value),
             },
             blocking=True,
         )
 
     state = hass.states.get("select.dorm_1_heat_angle")
-    assert state.state == str(GrilleAngle.DEG_45)
+    assert state.state == str(GrilleAngle.DEG_45.value)
