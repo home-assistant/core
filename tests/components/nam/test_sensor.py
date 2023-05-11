@@ -265,9 +265,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_caqi"
 
-    state = hass.states.get(
-        "sensor.nettigo_air_monitor_pmsx003_particulate_matter_10_mm"
-    )
+    state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_pm10")
     assert state
     assert state.state == "10.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
@@ -277,15 +275,11 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_pmsx003_particulate_matter_10_mm"
-    )
+    entry = registry.async_get("sensor.nettigo_air_monitor_pmsx003_pm10")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_p1"
 
-    state = hass.states.get(
-        "sensor.nettigo_air_monitor_pmsx003_particulate_matter_2_5_mm"
-    )
+    state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_pm2_5")
     assert state
     assert state.state == "11.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
@@ -295,15 +289,11 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_pmsx003_particulate_matter_2_5_mm"
-    )
+    entry = registry.async_get("sensor.nettigo_air_monitor_pmsx003_pm2_5")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_p2"
 
-    state = hass.states.get(
-        "sensor.nettigo_air_monitor_pmsx003_particulate_matter_1_mm"
-    )
+    state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_pm1")
     assert state
     assert state.state == "6.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
@@ -313,15 +303,11 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_pmsx003_particulate_matter_1_mm"
-    )
+    entry = registry.async_get("sensor.nettigo_air_monitor_pmsx003_pm1")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_p0"
 
-    state = hass.states.get(
-        "sensor.nettigo_air_monitor_sds011_particulate_matter_10_mm"
-    )
+    state = hass.states.get("sensor.nettigo_air_monitor_sds011_pm10")
     assert state
     assert state.state == "18.6"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
@@ -331,9 +317,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_sds011_particulate_matter_10_mm"
-    )
+    entry = registry.async_get("sensor.nettigo_air_monitor_sds011_pm10")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sds011_p1"
 
@@ -372,9 +356,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sds011_caqi_level"
     assert entry.translation_key == "sds011_caqi_level"
 
-    state = hass.states.get(
-        "sensor.nettigo_air_monitor_sds011_particulate_matter_2_5_mm"
-    )
+    state = hass.states.get("sensor.nettigo_air_monitor_sds011_pm2_5")
     assert state
     assert state.state == "11.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
@@ -384,9 +366,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_sds011_particulate_matter_2_5_mm"
-    )
+    entry = registry.async_get("sensor.nettigo_air_monitor_sds011_pm2_5")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sds011_p2"
 
@@ -423,7 +403,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sps30_caqi_level"
     assert entry.translation_key == "sps30_caqi_level"
 
-    state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_1_mm")
+    state = hass.states.get("sensor.nettigo_air_monitor_sps30_pm1")
     assert state
     assert state.state == "31.2"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
@@ -433,13 +413,11 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_sps30_particulate_matter_1_mm"
-    )
+    entry = registry.async_get("sensor.nettigo_air_monitor_sps30_pm1")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sps30_p0"
 
-    state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_10_mm")
+    state = hass.states.get("sensor.nettigo_air_monitor_sps30_pm10")
     assert state
     assert state.state == "21.2"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
@@ -449,15 +427,11 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_sps30_particulate_matter_10_mm"
-    )
+    entry = registry.async_get("sensor.nettigo_air_monitor_sps30_pm10")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sps30_p1"
 
-    state = hass.states.get(
-        "sensor.nettigo_air_monitor_sps30_particulate_matter_2_5_mm"
-    )
+    state = hass.states.get("sensor.nettigo_air_monitor_sps30_pm2_5")
     assert state
     assert state.state == "34.3"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
@@ -467,13 +441,11 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_sps30_particulate_matter_2_5_mm"
-    )
+    entry = registry.async_get("sensor.nettigo_air_monitor_sps30_pm2_5")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sps30_p2"
 
-    state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_4_mm")
+    state = hass.states.get("sensor.nettigo_air_monitor_sps30_pm4")
     assert state
     assert state.state == "24.7"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
@@ -483,9 +455,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:molecule"
 
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_sps30_particulate_matter_4_mm"
-    )
+    entry = registry.async_get("sensor.nettigo_air_monitor_sps30_pm4")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sps30_p4"
 

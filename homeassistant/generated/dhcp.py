@@ -340,6 +340,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "00146F*",
     },
     {
+        "domain": "onvif",
+        "registered_devices": True,
+    },
+    {
         "domain": "overkiz",
         "hostname": "gateway*",
         "macaddress": "F8811A*",

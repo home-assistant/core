@@ -481,13 +481,31 @@ async def test_device_with_ten_minute_advertising_interval(
         connectable=False,
     )
 
-    for _ in range(0, 20):
+    with patch(
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        return_value=new_time,
+    ):
+        scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
+
+    original_device = scanner.discovered_devices_and_advertisement_data[
+        bparasite_device.address
+    ][0]
+    assert original_device is not bparasite_device
+
+    for _ in range(1, 20):
         new_time += advertising_interval
         with patch(
             "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
             return_value=new_time,
         ):
             scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
+
+    # Make sure the BLEDevice object gets updated
+    # and not replaced
+    assert (
+        scanner.discovered_devices_and_advertisement_data[bparasite_device.address][0]
+        is original_device
+    )
 
     future_time = new_time
     assert (

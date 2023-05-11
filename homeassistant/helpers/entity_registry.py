@@ -42,13 +42,11 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.json import format_unserializable_data
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
 
@@ -1075,19 +1073,6 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = EntityRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-@bind_hass
-async def async_get_registry(hass: HomeAssistant) -> EntityRegistry:
-    """Get entity registry.
-
-    This is deprecated and will be removed in the future. Use async_get instead.
-    """
-    report(
-        "uses deprecated `async_get_registry` to access entity registry, use async_get"
-        " instead"
-    )
-    return async_get(hass)
 
 
 @callback

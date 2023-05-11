@@ -94,7 +94,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except UnknownAuth:  # pylint: disable=broad-except
+        except UnknownAuth:
             errors["base"] = "unknown"
         return info, errors
 

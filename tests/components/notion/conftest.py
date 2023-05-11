@@ -3,10 +3,13 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
+from aionotion.bridge.models import Bridge
+from aionotion.sensor.models import Listener, Sensor
 import pytest
 
 from homeassistant.components.notion import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -24,17 +27,29 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="client")
-def client_fixture(data_bridge, data_sensor, data_task):
+def client_fixture(data_bridge, data_listener, data_sensor):
     """Define a fixture for an aionotion client."""
     return Mock(
-        bridge=Mock(async_all=AsyncMock(return_value=data_bridge)),
-        sensor=Mock(async_all=AsyncMock(return_value=data_sensor)),
-        task=Mock(async_all=AsyncMock(return_value=data_task)),
+        bridge=Mock(
+            async_all=AsyncMock(
+                return_value=[Bridge.parse_obj(bridge) for bridge in data_bridge]
+            )
+        ),
+        sensor=Mock(
+            async_all=AsyncMock(
+                return_value=[Sensor.parse_obj(sensor) for sensor in data_sensor]
+            ),
+            async_listeners=AsyncMock(
+                return_value=[
+                    Listener.parse_obj(listener) for listener in data_listener
+                ]
+            ),
+        ),
     )
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config):
+def config_entry_fixture(hass: HomeAssistant, config):
     """Define a config entry fixture."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=TEST_USERNAME, data=config)
     entry.add_to_hass(hass)
@@ -56,16 +71,16 @@ def data_bridge_fixture():
     return json.loads(load_fixture("bridge_data.json", "notion"))
 
 
+@pytest.fixture(name="data_listener", scope="package")
+def data_listener_fixture():
+    """Define listener data."""
+    return json.loads(load_fixture("listener_data.json", "notion"))
+
+
 @pytest.fixture(name="data_sensor", scope="package")
 def data_sensor_fixture():
     """Define sensor data."""
     return json.loads(load_fixture("sensor_data.json", "notion"))
-
-
-@pytest.fixture(name="data_task", scope="package")
-def data_task_fixture():
-    """Define task data."""
-    return json.loads(load_fixture("task_data.json", "notion"))
 
 
 @pytest.fixture(name="get_client")
@@ -88,7 +103,7 @@ async def mock_aionotion_fixture(client):
 
 
 @pytest.fixture(name="setup_config_entry")
-async def setup_config_entry_fixture(hass, config_entry, mock_aionotion):
+async def setup_config_entry_fixture(hass: HomeAssistant, config_entry, mock_aionotion):
     """Define a fixture to set up notion."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

@@ -75,7 +75,7 @@ class SensorDeviceClass(StrEnum):
     DURATION = "duration"
     """Fixed duration.
 
-    Unit of measurement: `d`, `h`, `min`, `s`
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
     """
 
     ENUM = "enum"

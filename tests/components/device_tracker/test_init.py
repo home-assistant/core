@@ -218,6 +218,7 @@ async def test_discover_platform(
     mock_demo_setup_scanner, mock_see, hass: HomeAssistant
 ) -> None:
     """Test discovery of device_tracker demo platform."""
+    await async_setup_component(hass, "homeassistant", {})
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
         await discovery.async_load_platform(
             hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}

@@ -7,7 +7,12 @@ import pytest
 
 from homeassistant.components import person
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SourceType
-from homeassistant.components.person import ATTR_SOURCE, ATTR_USER_ID, DOMAIN
+from homeassistant.components.person import (
+    ATTR_DEVICE_TRACKERS,
+    ATTR_SOURCE,
+    ATTR_USER_ID,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_GPS_ACCURACY,
@@ -35,7 +40,6 @@ def storage_collection(hass):
     id_manager = collection.IDManager()
     return person.PersonStorageCollection(
         person.PersonStore(hass, person.STORAGE_VERSION, person.STORAGE_KEY),
-        logging.getLogger(f"{person.__name__}.storage_collection"),
         id_manager,
         collection.YamlCollection(
             logging.getLogger(f"{person.__name__}.yaml_collection"), id_manager
@@ -166,6 +170,7 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     assert state.attributes.get(ATTR_LONGITUDE) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
     hass.states.async_set(
         DEVICE_TRACKER,
@@ -182,6 +187,7 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 10
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
 
 
 async def test_setup_two_trackers(
@@ -221,6 +227,10 @@ async def test_setup_two_trackers(
     assert state.attributes.get(ATTR_GPS_ACCURACY) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER,
+        DEVICE_TRACKER_2,
+    ]
 
     hass.states.async_set(
         DEVICE_TRACKER_2,
@@ -246,6 +256,10 @@ async def test_setup_two_trackers(
     assert state.attributes.get(ATTR_GPS_ACCURACY) == 12
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
     assert state.attributes.get(ATTR_USER_ID) == user_id
+    assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [
+        DEVICE_TRACKER,
+        DEVICE_TRACKER_2,
+    ]
 
     hass.states.async_set(DEVICE_TRACKER_2, "zone1", {ATTR_SOURCE_TYPE: SourceType.GPS})
     await hass.async_block_till_done()

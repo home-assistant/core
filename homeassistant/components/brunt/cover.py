@@ -88,7 +88,7 @@ class BruntDevice(
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},  # type: ignore[arg-type]
-            name=self._attr_name,
+            name=self._thing.name,
             via_device=(DOMAIN, self._entry_id),
             manufacturer="Brunt",
             sw_version=self._thing.fw_version,

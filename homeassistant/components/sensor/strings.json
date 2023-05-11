@@ -197,13 +197,13 @@
       "name": "Ozone"
     },
     "pm1": {
-      "name": "Particulate matter 1 μm"
+      "name": "PM1"
     },
     "pm10": {
-      "name": "Particulate matter 10 μm"
+      "name": "PM10"
     },
     "pm25": {
-      "name": "Particulate matter 2.5 μm"
+      "name": "PM2.5"
     },
     "power_factor": {
       "name": "Power factor"

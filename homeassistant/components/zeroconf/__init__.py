@@ -97,7 +97,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@dataclass
+@dataclass(slots=True)
 class ZeroconfServiceInfo(BaseServiceInfo):
     """Prepared info from mDNS entries."""
 

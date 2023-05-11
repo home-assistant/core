@@ -159,6 +159,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         translation_key="comfort_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=suitable_comfort_temperature,
         native_value=lambda device: device.comfort_temperature,  # type: ignore[no-any-return]
     ),
@@ -167,6 +168,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         translation_key="eco_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=suitable_eco_temperature,
         native_value=lambda device: device.eco_temperature,  # type: ignore[no-any-return]
     ),
@@ -175,6 +177,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         translation_key="nextchange_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=suitable_nextchange_temperature,
         native_value=lambda device: device.nextchange_temperature,  # type: ignore[no-any-return]
     ),
@@ -182,18 +185,21 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         key="nextchange_time",
         translation_key="nextchange_time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=suitable_nextchange_time,
         native_value=lambda device: utc_from_timestamp(device.nextchange_endperiod),
     ),
     FritzSensorEntityDescription(
         key="nextchange_preset",
         translation_key="nextchange_preset",
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=suitable_nextchange_temperature,
         native_value=value_nextchange_preset,
     ),
     FritzSensorEntityDescription(
         key="scheduled_preset",
         translation_key="scheduled_preset",
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=suitable_nextchange_temperature,
         native_value=value_scheduled_preset,
     ),
