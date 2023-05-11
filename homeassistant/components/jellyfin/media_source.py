@@ -390,7 +390,13 @@ class JellyfinSource(MediaSource):
     async def _build_seasons(self, series_id: str) -> list[BrowseMediaSource]:
         """Return all seasons in the series."""
         seasons = await self._get_children(series_id, ITEM_TYPE_SEASON)
-        seasons = sorted(seasons, key=lambda k: k[ITEM_KEY_NAME])
+        seasons = sorted(
+            seasons,
+            key=lambda k: (
+                ITEM_KEY_INDEX_NUMBER not in k,
+                k.get(ITEM_KEY_INDEX_NUMBER, None),
+            ),
+        )
         return [await self._build_season(season, False) for season in seasons]
 
     async def _build_season(
@@ -421,7 +427,13 @@ class JellyfinSource(MediaSource):
     async def _build_episodes(self, season_id: str) -> list[BrowseMediaSource]:
         """Return all episode in the season."""
         episodes = await self._get_children(season_id, ITEM_TYPE_EPISODE)
-        episodes = sorted(episodes, key=lambda k: k[ITEM_KEY_NAME])
+        episodes = sorted(
+            episodes,
+            key=lambda k: (
+                ITEM_KEY_INDEX_NUMBER not in k,
+                k.get(ITEM_KEY_INDEX_NUMBER, None),
+            ),
+        )
         return [
             self._build_episode(episode)
             for episode in episodes
