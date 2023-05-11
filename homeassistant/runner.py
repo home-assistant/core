@@ -135,23 +135,20 @@ class HassEventLoop(uvloop.Loop):
         # pylint: disable=arguments-differ
         """Call callback at a future time.
 
-        Args:
-            when (float): seconds from now to call
-            cb (Callable[[Any, Any], Any]): function to call
-            args: function arguments
-            context (Any | None, optional): Optional context, Defaults to None.
-
-        Returns:
-            asyncio.TimerHandle: TimerHandle for cancellation
+        Overridden from base class to track cancellable timers
         """
+        self._prune_cancellable_timers()
         timer = super().call_at(when, cb, *args, context=context)
         self._handle_cancellable_timer(timer, *args)
         return timer
 
-    def run_forever(self) -> None:
-        """Run loop forever."""
+    def create_future(self) -> asyncio.Future[Any]:
+        """Create future.
+
+        Overridden from base class to call _prune_cancellable_timers() first
+        """
         self._prune_cancellable_timers()
-        return super().run_forever()
+        return super().create_future()
 
 
 @callback
