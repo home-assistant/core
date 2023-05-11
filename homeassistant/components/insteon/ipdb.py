@@ -1,4 +1,6 @@
 """Utility methods for the Insteon platform."""
+from collections.abc import Iterable
+
 from pyinsteon.device_types.device_base import Device
 from pyinsteon.device_types.ipdb import (
     AccessControl_Morningstar,
@@ -45,7 +47,7 @@ from pyinsteon.device_types.ipdb import (
 
 from homeassistant.const import Platform
 
-DEVICE_PLATFORM: dict[Device, dict[Platform, list[int] | range]] = {
+DEVICE_PLATFORM: dict[Device, dict[Platform, Iterable[int]]] = {
     AccessControl_Morningstar: {Platform.LOCK: [1]},
     DimmableLightingControl: {Platform.LIGHT: [1]},
     DimmableLightingControl_Dial: {Platform.LIGHT: [1]},
@@ -102,11 +104,11 @@ DEVICE_PLATFORM: dict[Device, dict[Platform, list[int] | range]] = {
 }
 
 
-def get_device_platforms(device) -> dict[Platform, list[int] | range]:
+def get_device_platforms(device) -> dict[Platform, Iterable[int]]:
     """Return the HA platforms for a device type."""
     return DEVICE_PLATFORM.get(type(device), {})
 
 
-def get_device_platform_groups(device: Device, platform: Platform) -> list[int] | range:
+def get_device_platform_groups(device: Device, platform: Platform) -> Iterable[int]:
     """Return the list of device groups for a platform."""
     return get_device_platforms(device).get(platform, [])

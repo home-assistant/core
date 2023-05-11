@@ -391,11 +391,11 @@ def async_add_insteon_entities(
     discovery_info: dict[str, Any],
 ) -> None:
     """Add an Insteon group to a platform."""
-    new_entities = []
     address = discovery_info["address"]
     device = devices[address]
-    for group in discovery_info["groups"]:
-        new_entities.append(entity_type(device=device, group=group))
+    new_entities = [
+        entity_type(device=device, group=group) for group in discovery_info["groups"]
+    ]
     async_add_entities(new_entities)
 
 
