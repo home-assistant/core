@@ -132,7 +132,7 @@ class HassEventLoop(uvloop.Loop):
         self,
         when: float,
         cb: Callable[[Any, Any], Any],
-        *args: ParamSpecArgs,
+        *args: Any,
         context: Any | None = None,
     ) -> asyncio.TimerHandle:
         # pylint: disable=arguments-differ
@@ -149,7 +149,7 @@ class HassEventLoop(uvloop.Loop):
         self,
         delay: float,
         cb: Callable[[Any, Any], Any],
-        *args: ParamSpecArgs,
+        *args: Any,
         context: Any | None = None,
     ) -> asyncio.TimerHandle:
         # pylint: disable=arguments-differ
