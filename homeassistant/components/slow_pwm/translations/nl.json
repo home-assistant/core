@@ -3,44 +3,46 @@
         "step": {
             "user": {
                 "data": {
-                    "outputs": "Output schakelaar entiteiten",
+                    "cycle_time": "Duur van een enkele controller loop",
+                    "maximum": "Maximum",
+                    "minimal_switch_time": "Kortst mogelijke tijd dat een schakelaar aan- of uit mag zijn",
+                    "minimum": "Minimum",
+                    "mode": "Modus",
                     "name": "Naam",
-					"minimum": "Minimum",
-          			"maximum": "Maximum",
-          			"cycle_time": "Duur van een enkele controller loop",
-          			"minimal_switch_time": "Kortst mogelijke tijd dat een schakelaar aan- of uit mag zijn.",
-         			"step": "Step size",
-         			"mode": "Modus"
+                    "outputs": "Output schakelaar entiteiten",
+                    "step": "Stap grootte"
                 },
                 "data_description": {
-					"minimum": "Waarde waarop alle swiches continu uit staan.",
-          			"maximum": "Waarde waarop alle schakelaars continu aan staan.",
-          			"step": "Stap grootte voor het aan te maken nummer.",
-          			"mode": "Modus voor gebruikersinterface."
+                    "maximum": "Waarde waarop alle schakelaars continu aan staan.",
+                    "minimum": "Waarde waarop alle schakelaars continu uit staan.",
+                    "mode": "Modus voor gebruikersinterface.",
+                    "step": "Stap grootte voor het aan te maken nummer."
                 },
                 "description": "Maak een numerieke output waarmee een- meerdere schakelaars bediend worden met puls breedte modulatie.",
-                "title": "Moduleer een- of meerdere schakelaars met Puls breedte modulatie (PWM)."
+                "title": "Moduleer een- of meerdere schakelaars met Puls breedte modulatie (PWM)"
             }
         }
     },
     "options": {
         "step": {
-            "data": {
-				"outputs": "[%key:component::slow_pwm::config::step::user::data::outputs%]",
-          		"minimum": "[%key:component::slow_pwm::config::step::user::data::minimum%]",
-          		"maximum": "[%key:component::slow_pwm::config::step::user::data::maximum%]",
-          		"cycle_time": "[%key:component::slow_pwm::config::step::user::data::cycle_time%]",
-          		"minmal_switch_time": "[%key:component::slow_pwm::config::step::user::data::minimal_switch_time%]",
-          		"step": "[%key:component::slow_pwm::config::step::user::data::step%]",
-          		"mode": "[%key:component::slow_pwm::config::step::user::data::mode%]"
-            },
-            "data_description": {
-				"minimum": "[%key:component::slow_pwm::config::step::user::data_description::minimum%]",
-          		"maximum": "[%key:component::slow_pwm::config::step::user::data_description::maximum%]",
-          		"step": "[%key:component::slow_pwm::config::step::user::data_description::step%]",
-          		"mode": "[%key:component::slow_pwm::config::step::user::data_description::mode%]"
+            "init": {
+                "data": {
+                    "cycle_time": "Duur van een enkele controller loop",
+                    "maximum": "Maximum",
+                    "minimum": "Minimum",
+                    "minmal_switch_time": "Kortst mogelijke tijd dat een schakelaar aan- of uit mag zijn",
+                    "mode": "Modus",
+                    "outputs": "Output schakelaar entiteiten",
+                    "step": "Stap grootte"
+                },
+                "data_description": {
+                    "maximum": "Waarde waarop alle schakelaars continu aan staan.",
+                    "minimum": "Waarde waarop alle schakelaars continu uit staan.",
+                    "mode": "Modus voor gebruikersinterface.",
+                    "step": "Stap grootte voor het aan te maken nummer."
+                }
             }
         }
     },
-    "title": "SlowPWM"
+    "title": "Moduleer een- of meerdere schakelaars met Puls breedte modulatie (PWM)"
 }
