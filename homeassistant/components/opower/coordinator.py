@@ -64,7 +64,7 @@ class OpowerCoordinator(DataUpdateCoordinator):
                 raise ConfigEntryAuthFailed from err
             # Let DataUpdateCoordinator handle ClientError retries
             raise err
-        forecasts = await self.api.async_get_forecast()
+        forecasts: list[Forecast] = await self.api.async_get_forecast()
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
         await self._insert_statistics([forecast.account for forecast in forecasts])
         return {forecast.account.utility_account_id: forecast for forecast in forecasts}
