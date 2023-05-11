@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
-from functools import lru_cache
+from functools import lru_cache, partial
 import json
 from typing import Any, cast
 
@@ -283,18 +283,27 @@ def handle_subscribe_entities(
 ) -> None:
     """Handle subscribe entities command."""
     entity_ids = set(msg.get("entity_ids", []))
+    _cached_state_diff_message = partial(messages.cached_state_diff_message, msg["id"])
+    _send_message = connection.send_message
 
-    @callback
-    def forward_entity_changes(event: Event) -> None:
-        """Forward entity state changed events to websocket."""
-        if not connection.user.permissions.check_entity(
-            event.data["entity_id"], POLICY_READ
-        ):
-            return
-        if entity_ids and event.data["entity_id"] not in entity_ids:
-            return
+    if entity_ids or not connection.user.is_admin:
 
-        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
+        @callback
+        def forward_entity_changes(event: Event) -> None:
+            """Forward entity state changed events to websocket."""
+            entity_id = event.data["entity_id"]
+            if not connection.user.permissions.check_entity(entity_id, POLICY_READ):
+                return
+            if entity_ids and entity_id not in entity_ids:
+                return
+            _send_message(_cached_state_diff_message(event))
+
+    else:
+
+        @callback
+        def forward_entity_changes(event: Event) -> None:
+            """Forward entity state changed events to websocket."""
+            _send_message(_cached_state_diff_message(event))
 
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
