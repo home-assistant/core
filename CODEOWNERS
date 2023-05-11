@@ -783,6 +783,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/netdata/ @fabaff
 /homeassistant/components/netgear/ @hacf-fr @Quentame @starkillerOG
 /tests/components/netgear/ @hacf-fr @Quentame @starkillerOG
+/homeassistant/components/netgear_lte/ @tkdrob
 /homeassistant/components/network/ @home-assistant/core
 /tests/components/network/ @home-assistant/core
 /homeassistant/components/nexia/ @bdraco
