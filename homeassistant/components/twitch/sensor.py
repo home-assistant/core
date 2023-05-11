@@ -86,10 +86,9 @@ async def async_setup_entry(
 
 
 def _setup(entry: ConfigEntry) -> list[TwitchSensor]:
-    client_id: str = entry.data[CONF_CLIENT_ID]
-    client_secret: str = entry.data[CONF_CLIENT_SECRET]
-    oauth_token: str | None = entry.data.get(CONF_TOKEN)
-
+    client_id: str = entry.options[CONF_CLIENT_ID]
+    client_secret: str = entry.options[CONF_CLIENT_SECRET]
+    oauth_token: str | None = entry.options.get(CONF_TOKEN)
     channels: str | None = entry.options.get(CONF_CHANNELS)
 
     if not channels:

@@ -58,6 +58,18 @@ class TwitchOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_CLIENT_ID,
+                        default=self.config_entry.options.get(CONF_CLIENT_ID),
+                    ): cv.string,
+                    vol.Required(
+                        CONF_CLIENT_SECRET,
+                        default=self.config_entry.options.get(CONF_CLIENT_SECRET),
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_TOKEN,
+                        default=self.config_entry.options.get(CONF_TOKEN),
+                    ): cv.string,
                     vol.Optional(
                         CONF_CHANNELS,
                         default=self.config_entry.options.get(CONF_CHANNELS),
@@ -127,14 +139,8 @@ class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title="Twitch",
-            data={
-                CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
-                CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
-                CONF_TOKEN: user_input.get(CONF_TOKEN),
-            },
-            options={
-                CONF_CHANNELS: user_input.get(CONF_CHANNELS),
-            },
+            data={},
+            options=user_input,
         )
 
     async def async_step_import(
