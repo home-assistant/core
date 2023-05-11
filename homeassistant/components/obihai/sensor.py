@@ -75,9 +75,6 @@ async def async_setup_entry(
         for key in requester.line_services:
             sensors.append(ObihaiServiceSensors(requester, key))
 
-    for key in requester.call_direction:
-        sensors.append(ObihaiServiceSensors(requester, key))
-
     async_add_entities(sensors, update_before_add=True)
 
 
