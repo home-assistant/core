@@ -86,8 +86,15 @@ async def test_update_triggers_exceptions(
     with pytest.raises(expected):
         await hass.services.async_call(
             "switch",
-            "toggle",
+            "turn_on",
             blocking=True,
             target={"entity_id": "switch.i4_edrive40_climate"},
         )
-    assert RemoteServices.trigger_remote_service.call_count == 1
+    with pytest.raises(expected):
+        await hass.services.async_call(
+            "switch",
+            "turn_off",
+            blocking=True,
+            target={"entity_id": "switch.i4_edrive40_climate"},
+        )
+    assert RemoteServices.trigger_remote_service.call_count == 2
