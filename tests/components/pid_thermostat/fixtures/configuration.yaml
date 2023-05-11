@@ -1,0 +1,5 @@
+number:
+  - platform: pid_controller
+    output: number.output
+    input1: sensor.input1
+    name: second_test

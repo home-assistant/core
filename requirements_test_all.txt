@@ -493,6 +493,9 @@ doorbirdpy==2.1.0
 # homeassistant.components.dsmr
 dsmr_parser==0.33
 
+# homeassistant.components.pid_thermostat
+dvg-pid-controller==2.1.0
+
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.6
 

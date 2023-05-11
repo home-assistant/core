@@ -1,0 +1,53 @@
+{
+  "title": "PID thermostat",
+  "config": {
+    "step": {
+      "user": {
+        "description": "PID regulated thermostat",
+        "data": {
+          "cycle_time": "Duration between controller cycles",
+          "target_sensor": "Temperature input sensor entity",
+          "heater": "Heater device entity",
+          "kd": "Differential factor (Kd)",
+          "ki": "Integration factor (Ki)",
+          "kp": "Proportional gain factor (Kp)",
+          "ac_mode": "Thermostat mode",
+          "name": "Name"
+        },
+        "data_description": {
+          "kd": "Differential factor, damping the overshoot (Kd).",
+          "ki": "Integration factor, reducing offset fault over time (Ki).",
+          "kp": "Proportional gain factor, directly gaining the error to compensate the fault (Kp)."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "cycle_time": "[%key:component::pid_thermostat::config::step::user::data::cycle_time%]",
+          "target_sensor": "[%key:component::pid_thermostat::config::step::user::data::target_sensor%]",
+          "heater": "[%key:component::pid_thermostat::config::step::user::data::heater%]",
+          "kp": "[%key:component::pid_thermostat::config::step::user::data::kp%]",
+          "ki": "[%key:component::pid_thermostat::config::step::user::data::ki%]",
+          "kd": "[%key:component::pid_thermostat::config::step::user::data::kd%]",
+          "ac_mode": "[%key:component::pid_thermostat::config::step::user::data::ac_mode%]"
+        },
+        "data_description": {
+          "kp": "[%key:component::pid_thermostat::config::step::user::data_description::kp%]",
+          "ki": "[%key:component::pid_thermostat::config::step::user::data_description::ki%]",
+          "kd": "[%key:component::pid_thermostat::config::step::user::data_description::kd%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "ac_mode": {
+      "options": {
+        "heat": "Heat",
+        "cool": "Cool"
+      }
+    }
+  }
+}

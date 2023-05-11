@@ -1,0 +1,14 @@
+{
+  "domain": "pid_thermostat",
+  "name": "PID Thermostat",
+  "codeowners": ["@antonverburg"],
+  "config_flow": true,
+  "dependencies": ["pid_controller", "number", "sensor"],
+  "documentation": "https://www.home-assistant.io/integrations/pid_thermostat",
+  "homekit": {},
+  "iot_class": "calculated",
+  "quality_scale": "platinum",
+  "requirements": ["dvg-pid-controller==2.1.0"],
+  "ssdp": [],
+  "zeroconf": []
+}

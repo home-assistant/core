@@ -4132,6 +4132,11 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "pid_thermostat": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "pilight": {
       "name": "Pilight",
       "integration_type": "hub",
@@ -6620,6 +6625,11 @@
     "moehlenhoff_alpha2",
     "moon",
     "nmap_tracker",
+<<<<<<< HEAD
+=======
+    "pid_controller",
+    "pid_thermostat",
+>>>>>>> d5050d7c7d (Add pid thermostat)
     "plant",
     "proximity",
     "rpi_power",
