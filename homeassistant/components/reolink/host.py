@@ -27,7 +27,7 @@ from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotA
 DEFAULT_TIMEOUT = 60
 FIRST_ONVIF_TIMEOUT = 15
 SUBSCRIPTION_RENEW_THRESHOLD = 300
-POLL_INTERVAL_NO_PUSH = 2
+POLL_INTERVAL_NO_PUSH = 5
 
 _LOGGER = logging.getLogger(__name__)
 
