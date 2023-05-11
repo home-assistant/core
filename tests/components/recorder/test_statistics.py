@@ -1575,19 +1575,19 @@ def test_change(
         "has_mean": False,
         "has_sum": True,
         "name": "Total imported energy",
-        "source": "test",
-        "statistic_id": "test:total_energy_import",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import",
         "unit_of_measurement": "kWh",
     }
 
-    async_add_external_statistics(hass, external_metadata, external_statistics)
+    async_import_statistics(hass, external_metadata, external_statistics)
     wait_recording_done(hass)
     # Get change from far in the past
     stats = statistics_during_period(
         hass,
         zero,
         period="hour",
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         types={"change"},
     )
     hour1_start = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
@@ -1599,7 +1599,7 @@ def test_change(
     hour4_start = hour3_end
     hour4_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
     expected_stats = {
-        "test:total_energy_import": [
+        "sensor.total_energy_import": [
             {
                 "start": hour1_start.timestamp(),
                 "end": hour1_end.timestamp(),
@@ -1629,7 +1629,7 @@ def test_change(
         hass,
         zero,
         period="hour",
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         types={"change", "sum"},
     )
     hour1_start = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
@@ -1641,7 +1641,7 @@ def test_change(
     hour4_start = hour3_end
     hour4_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
     expected_stats_change_sum = {
-        "test:total_energy_import": [
+        "sensor.total_energy_import": [
             {
                 "start": hour1_start.timestamp(),
                 "end": hour1_end.timestamp(),
@@ -1674,13 +1674,13 @@ def test_change(
     stats = statistics_during_period(
         hass,
         start_time=hour1_start,
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         period="hour",
         types={"change"},
         units={"energy": "Wh"},
     )
     expected_stats_wh = {
-        "test:total_energy_import": [
+        "sensor.total_energy_import": [
             {
                 "start": hour1_start.timestamp(),
                 "end": hour1_end.timestamp(),
@@ -1705,11 +1705,49 @@ def test_change(
     }
     assert stats == expected_stats_wh
 
+    # Get change from far in the past with implicit unit conversion
+    hass.states.async_set(
+        "sensor.total_energy_import", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import"},
+        period="hour",
+        types={"change"},
+    )
+    expected_stats_mwh = {
+        "sensor.total_energy_import": [
+            {
+                "start": hour1_start.timestamp(),
+                "end": hour1_end.timestamp(),
+                "change": 2.0 / 1000,
+            },
+            {
+                "start": hour2_start.timestamp(),
+                "end": hour2_end.timestamp(),
+                "change": 1.0 / 1000,
+            },
+            {
+                "start": hour3_start.timestamp(),
+                "end": hour3_end.timestamp(),
+                "change": 2.0 / 1000,
+            },
+            {
+                "start": hour4_start.timestamp(),
+                "end": hour4_end.timestamp(),
+                "change": 3.0 / 1000,
+            },
+        ]
+    }
+    assert stats == expected_stats_mwh
+    hass.states.async_remove("sensor.total_energy_import")
+
     # Get change from the first recorded hour
     stats = statistics_during_period(
         hass,
         start_time=hour1_start,
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         period="hour",
         types={"change"},
     )
@@ -1719,61 +1757,95 @@ def test_change(
     stats = statistics_during_period(
         hass,
         start_time=hour1_start,
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         period="hour",
         types={"change"},
         units={"energy": "Wh"},
     )
     assert stats == expected_stats_wh
 
+    # Get change from the first recorded hour with implicit unit conversion
+    hass.states.async_set(
+        "sensor.total_energy_import", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == expected_stats_mwh
+    hass.states.async_remove("sensor.total_energy_import")
+
     # Get change from the second recorded hour
     stats = statistics_during_period(
         hass,
         start_time=hour2_start,
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         period="hour",
         types={"change"},
     )
     assert stats == {
-        "test:total_energy_import": expected_stats["test:total_energy_import"][1:4]
+        "sensor.total_energy_import": expected_stats["sensor.total_energy_import"][1:4]
     }
 
     # Get change from the second recorded hour with unit conversion
     stats = statistics_during_period(
         hass,
         start_time=hour2_start,
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         period="hour",
         types={"change"},
         units={"energy": "Wh"},
     )
     assert stats == {
-        "test:total_energy_import": expected_stats_wh["test:total_energy_import"][1:4]
+        "sensor.total_energy_import": expected_stats_wh["sensor.total_energy_import"][
+            1:4
+        ]
     }
+
+    # Get change from the second recorded hour with implicit unit conversion
+    hass.states.async_set(
+        "sensor.total_energy_import", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        statistic_ids={"sensor.total_energy_import"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {
+        "sensor.total_energy_import": expected_stats_mwh["sensor.total_energy_import"][
+            1:4
+        ]
+    }
+    hass.states.async_remove("sensor.total_energy_import")
 
     # Get change from the second until the third recorded hour
     stats = statistics_during_period(
         hass,
         start_time=hour2_start,
         end_time=hour4_start,
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         period="hour",
         types={"change"},
     )
     assert stats == {
-        "test:total_energy_import": expected_stats["test:total_energy_import"][1:3]
+        "sensor.total_energy_import": expected_stats["sensor.total_energy_import"][1:3]
     }
 
     # Get change from the fourth recorded hour
     stats = statistics_during_period(
         hass,
         start_time=hour4_start,
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         period="hour",
         types={"change"},
     )
     assert stats == {
-        "test:total_energy_import": expected_stats["test:total_energy_import"][3:4]
+        "sensor.total_energy_import": expected_stats["sensor.total_energy_import"][3:4]
     }
 
     # Test change with a far future start date
@@ -1781,7 +1853,7 @@ def test_change(
     stats = statistics_during_period(
         hass,
         start_time=future,
-        statistic_ids={"test:total_energy_import"},
+        statistic_ids={"sensor.total_energy_import"},
         period="hour",
         types={"change"},
     )
