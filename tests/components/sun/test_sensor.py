@@ -6,6 +6,7 @@ import astral.sun
 from freezegun import freeze_time
 
 from homeassistant.components import sun
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -98,4 +99,6 @@ async def test_setting_rising(hass: HomeAssistant) -> None:
     entity_reg = er.async_get(hass)
     entity = entity_reg.async_get("sensor.sun_next_dawn")
 
+    assert entity
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == f"{entry_ids[0].entry_id}-next_dawn"

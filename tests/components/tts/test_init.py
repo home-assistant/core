@@ -1623,7 +1623,7 @@ async def test_fetching_in_async(
 async def test_ws_list_engines(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup: str, engine_id: str
 ) -> None:
-    """Test streaming audio and getting response."""
+    """Test listing tts engines and supported languages."""
     client = await hass_ws_client()
 
     await client.send_json_auto_id({"type": "tts/engine/list"})
@@ -1698,10 +1698,54 @@ async def test_ws_list_engines(
     ],
     indirect=["setup"],
 )
+async def test_ws_get_engine(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup: str, engine_id: str
+) -> None:
+    """Test getting an tts engine."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "tts/engine/get", "engine_id": engine_id})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "provider": {
+            "engine_id": engine_id,
+            "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    ("setup", "engine_id"),
+    [("mock_setup", "not_existing"), ("mock_config_entry_setup", "tts.not_existing")],
+    indirect=["setup"],
+)
+async def test_ws_get_engine_none_existing(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup: str, engine_id: str
+) -> None:
+    """Test getting a non existing tts engine."""
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "tts/engine/get", "engine_id": engine_id})
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+
+@pytest.mark.parametrize(
+    ("setup", "engine_id"),
+    [
+        ("mock_setup", "test"),
+        ("mock_config_entry_setup", "tts.test"),
+    ],
+    indirect=["setup"],
+)
 async def test_ws_list_voices(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup: str, engine_id: str
 ) -> None:
-    """Test streaming audio and getting response."""
+    """Test listing supported voices for a tts engine and language."""
     client = await hass_ws_client()
 
     await client.send_json_auto_id(
