@@ -120,6 +120,7 @@ class HassEventLoop(uvloop.Loop):
         if (
             timer not in self._cancellable_timers
             and args is not None
+            and len(args) > 0
             and isinstance(args[0], HassJob)
             and args[0].cancel_on_shutdown
         ):
