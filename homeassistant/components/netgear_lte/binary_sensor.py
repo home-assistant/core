@@ -8,8 +8,8 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LTEEntity
 from .const import CONF_BINARY_SENSOR, DOMAIN
+from .entity import LTEEntity
 from .sensor_types import BINARY_SENSOR_CLASSES
 
 
