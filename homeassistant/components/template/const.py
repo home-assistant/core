@@ -1,7 +1,8 @@
 """Constants for the Template Platform Components."""
 
-from homeassistant.const import Platform
 import logging
+
+from homeassistant.const import Platform
 
 CONF_AVAILABILITY_TEMPLATE = "availability_template"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
@@ -30,6 +31,7 @@ PLATFORMS = [
 CONF_AVAILABILITY = "availability"
 CONF_ATTRIBUTES = "attributes"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
+CONF_BLUEPRINT_INPUTS = "BLUEPRINT_INPUTS"
 CONF_PICTURE = "picture"
 CONF_OBJECT_ID = "object_id"
 

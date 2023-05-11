@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import contextlib
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -49,6 +49,7 @@ from .typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AVAILABILITY = "availability"
+CONF_BLUEPRINT_INPUTS = "BLUEPRINT_INPUTS"
 CONF_ATTRIBUTES = "attributes"
 CONF_PICTURE = "picture"
 
@@ -206,14 +207,14 @@ class TemplateEntity(Entity):
             self._icon_template = icon_template
             self._entity_picture_template = entity_picture_template
             self._friendly_name_template = None
+            self._blueprint_inputs = None
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
             self._availability_template = config.get(CONF_AVAILABILITY)
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
-
-        self._blueprint_inputs = config.get("BLUEPRINT_INPUTS")
+            self._blueprint_inputs = config.get(CONF_BLUEPRINT_INPUTS)
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -259,11 +260,11 @@ class TemplateEntity(Entity):
                 )
 
     @property
-    def referenced_blueprint(self):
+    def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         if self._referenced_blueprint is None:
             return None
-        return self._referenced_blueprint[CONF_USE_BLUEPRINT][CONF_PATH]
+        return cast(str, self._referenced_blueprint[CONF_USE_BLUEPRINT][CONF_PATH])
 
     @callback
     def _update_available(self, result: str | TemplateError) -> None:
@@ -491,7 +492,6 @@ class TriggerBaseEntity(Entity):
     extra_template_keys_complex: tuple | None = None
     _unique_id: str | None
 
-    # blueprint_inputs: dict[str, Any] | None = None,
     def __init__(
         self,
         hass: HomeAssistant,
@@ -507,7 +507,7 @@ class TriggerBaseEntity(Entity):
         self._static_rendered = {}
         self._to_render_simple = []
         self._to_render_complex: list[str] = []
-        self._blueprint_inputs = config.get("BLUEPRINT_INPUTS")
+        self._blueprint_inputs = config.get(CONF_BLUEPRINT_INPUTS)
 
         for itm in (
             CONF_AVAILABILITY,
@@ -597,8 +597,6 @@ class TriggerBaseEntity(Entity):
 
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
-
-        _LOGGER.warning("_render_templates, variables: %s", variables)
         try:
             rendered = dict(self._static_rendered)
 

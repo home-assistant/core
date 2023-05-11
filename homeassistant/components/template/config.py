@@ -1,13 +1,12 @@
 """Template config validator."""
-import logging
 
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.blueprint import (
     BlueprintException,
     is_blueprint_instance_config,
 )
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
@@ -17,7 +16,6 @@ from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_I
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import async_validate_trigger_config
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from . import (
@@ -27,7 +25,7 @@ from . import (
     select as select_platform,
     sensor as sensor_platform,
 )
-from .const import CONF_TRIGGER, DOMAIN, LOGGER
+from .const import CONF_BLUEPRINT_INPUTS, CONF_TRIGGER, DOMAIN, LOGGER
 from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "list"
@@ -92,6 +90,7 @@ async def _async_validate_config_item(hass, config):
             raise HomeAssistantError from err
 
     config = CONFIG_SECTION_SCHEMA(config)
+    # Add blueprint inputs to entity config
     if blueprint_inputs:
         for dom in [
             BINARY_SENSOR_DOMAIN,
@@ -102,8 +101,9 @@ async def _async_validate_config_item(hass, config):
         ]:
             if dom in config:
                 for idx in range(len(config[dom])):
-                    config[dom][idx]["BLUEPRINT_INPUTS"] = blueprint_inputs.inputs
-        config["BLUEPRINT_INPUTS"] = blueprint_inputs.inputs
+                    config[dom][idx][CONF_BLUEPRINT_INPUTS] = {
+                        "blueprint": blueprint_inputs.inputs
+                    }
         LOGGER.debug("Blueprint final config: %s", config)
 
     if CONF_TRIGGER in config:
