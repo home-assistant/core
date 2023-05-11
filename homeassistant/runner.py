@@ -112,7 +112,8 @@ class HassEventLoop(uvloop.Loop):
         self._cancellable_timers: set[asyncio.TimerHandle] = set()
 
     def _prune_cancellable_timers(self) -> None:
-        for handle in self._cancellable_timers:
+        temp_timers = self._cancellable_timers.copy()
+        for handle in temp_timers:
             if handle.cancelled() or handle.when() > self.time():
                 self._cancellable_timers.remove(handle)
 
