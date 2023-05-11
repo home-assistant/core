@@ -346,6 +346,23 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections) -> N
     ("schema", "valid_selections", "invalid_selections"),
     (
         (
+            {},
+            ("23ouih2iu23ou2", "2j4hp3uy4p87wyrpiuhk34"),
+            (None, True, 1),
+        ),
+    ),
+)
+def test_assist_pipeline_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test assist pipeline selector."""
+    _test_selector("assist_pipeline", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
             {"min": 10, "max": 50},
             (
                 10,
@@ -431,7 +448,7 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections) -
 def test_config_entry_selector_schema(
     schema, valid_selections, invalid_selections
 ) -> None:
-    """Test boolean selector."""
+    """Test config entry selector."""
     _test_selector("config_entry", schema, valid_selections, invalid_selections)
 
 
@@ -746,6 +763,26 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
         invalid_selections,
         drop_metadata,
     )
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {},
+            ("nl", "fr"),
+            (None, True, 1),
+        ),
+        (
+            {"languages": ["nl", "fr"]},
+            ("nl", "fr"),
+            (None, True, 1, "de", "en"),
+        ),
+    ),
+)
+def test_language_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test language selector."""
+    _test_selector("language", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(

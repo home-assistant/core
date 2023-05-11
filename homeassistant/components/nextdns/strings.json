@@ -133,11 +133,17 @@
       "block_amazon": {
         "name": "Block Amazon"
       },
+      "block_bereal": {
+        "name": "Block BeReal"
+      },
       "block_blizzard": {
         "name": "Block Blizzard"
       },
       "block_bypass_methods": {
         "name": "Block bypass methods"
+      },
+      "block_chatgpt": {
+        "name": "Block ChatGPT"
       },
       "block_csam": {
         "name": "Block child sexual abuse material"
@@ -172,6 +178,12 @@
       "block_gambling": {
         "name": "Block gambling"
       },
+      "block_google_chat": {
+        "name": "Block Google Chat"
+      },
+      "block_hbomax": {
+        "name": "Block HBO Max"
+      },
       "block_hulu": {
         "name": "Block Hulu"
       },
@@ -183,6 +195,9 @@
       },
       "block_leagueoflegends": {
         "name": "Block League of Legends"
+      },
+      "block_mastodon": {
+        "name": "Block Mastodon"
       },
       "block_messenger": {
         "name": "Block Messenger"
@@ -196,6 +211,9 @@
       "block_nrd": {
         "name": "Block newly registered domains"
       },
+      "block_online_gaming": {
+        "name": "Block online gaming"
+      },
       "block_page": {
         "name": "Block page"
       },
@@ -207,6 +225,9 @@
       },
       "block_piracy": {
         "name": "Block piracy"
+      },
+      "block_playstation_network": {
+        "name": "Block PlayStation Network"
       },
       "block_porn": {
         "name": "Block porn"
@@ -255,6 +276,9 @@
       },
       "block_twitter": {
         "name": "Block Twitter"
+      },
+      "block_video_streaming": {
+        "name": "Block video streaming"
       },
       "block_vimeo": {
         "name": "Block Vimeo"

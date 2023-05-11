@@ -309,19 +309,19 @@ class LogMixin:
 
     def debug(self, msg, *args, **kwargs):
         """Debug level log."""
-        return self.log(logging.DEBUG, msg, *args)
+        return self.log(logging.DEBUG, msg, *args, **kwargs)
 
     def info(self, msg, *args, **kwargs):
         """Info level log."""
-        return self.log(logging.INFO, msg, *args)
+        return self.log(logging.INFO, msg, *args, **kwargs)
 
     def warning(self, msg, *args, **kwargs):
         """Warning method log."""
-        return self.log(logging.WARNING, msg, *args)
+        return self.log(logging.WARNING, msg, *args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """Error level log."""
-        return self.log(logging.ERROR, msg, *args)
+        return self.log(logging.ERROR, msg, *args, **kwargs)
 
 
 def retryable_req(

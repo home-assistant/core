@@ -36,7 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .test_common import help_test_validate_platform_config
+from .test_common import help_all_subscribe_calls, help_test_validate_platform_config
 
 from tests.common import (
     MockConfigEntry,
@@ -906,6 +906,45 @@ async def test_subscribe_topic(
         unsub()
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.2)
+async def test_subscribe_and_resubscribe(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test resubscribing within the debounce time."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    # This unsub will be un-done with the following subscribe
+    # unsubscribe should not be called at the broker
+    unsub()
+    await asyncio.sleep(0.1)
+    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload"
+    # assert unsubscribe was not called
+    mqtt_client_mock.unsubscribe.assert_not_called()
+
+    unsub()
+
+    await asyncio.sleep(0.2)
+    await hass.async_block_till_done()
+    mqtt_client_mock.unsubscribe.assert_called_once_with(["test-topic"])
+
+
 async def test_subscribe_topic_non_async(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1342,16 +1381,16 @@ async def test_unsubscribe_race(
     # We allow either calls [subscribe, unsubscribe, subscribe], [subscribe, subscribe] or
     # when both subscriptions were combined [subscribe]
     expected_calls_1 = [
-        call.subscribe("test/state", 0),
+        call.subscribe([("test/state", 0)]),
         call.unsubscribe("test/state"),
-        call.subscribe("test/state", 0),
+        call.subscribe([("test/state", 0)]),
     ]
     expected_calls_2 = [
-        call.subscribe("test/state", 0),
-        call.subscribe("test/state", 0),
+        call.subscribe([("test/state", 0)]),
+        call.subscribe([("test/state", 0)]),
     ]
     expected_calls_3 = [
-        call.subscribe("test/state", 0),
+        call.subscribe([("test/state", 0)]),
     ]
     assert mqtt_client_mock.mock_calls in (
         expected_calls_1,
@@ -1418,7 +1457,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
 
     # the subscribtion with the highest QoS should survive
     expected = [
-        call("test/state", 2),
+        call([("test/state", 2)]),
     ]
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
@@ -1432,7 +1471,7 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
     await hass.async_block_till_done()
 
-    expected.append(call("test/state", 1))
+    expected.append(call([("test/state", 1)]))
     assert mqtt_client_mock.subscribe.mock_calls == expected
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
@@ -1463,9 +1502,7 @@ async def test_subscribed_at_highest_qos(
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
     await hass.async_block_till_done()
-    assert mqtt_client_mock.subscribe.mock_calls == [
-        call("test/state", 0),
-    ]
+    assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
     mqtt_client_mock.reset_mock()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
     await hass.async_block_till_done()
@@ -1477,9 +1514,7 @@ async def test_subscribed_at_highest_qos(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))  # cooldown
     await hass.async_block_till_done()
     # the subscribtion with the highest QoS should survive
-    assert mqtt_client_mock.subscribe.mock_calls == [
-        call("test/state", 2),
-    ]
+    assert help_all_subscribe_calls(mqtt_client_mock) == [("test/state", 2)]
 
 
 async def test_reload_entry_with_restored_subscriptions(
@@ -2062,6 +2097,19 @@ async def test_no_birth_message(
         await asyncio.sleep(0.2)
         mqtt_client_mock.publish.assert_not_called()
 
+    async def callback(msg: ReceiveMessage) -> None:
+        """Handle birth message."""
+
+    # Assert the subscribe debouncer subscribes after
+    # about SUBSCRIBE_COOLDOWN (0.1) sec
+    # but sooner than INITIAL_SUBSCRIBE_COOLDOWN (1.0)
+
+    mqtt_client_mock.reset_mock()
+    await mqtt.async_subscribe(hass, "homeassistant/some-topic", callback)
+    await hass.async_block_till_done()
+    await asyncio.sleep(0.2)
+    mqtt_client_mock.subscribe.assert_called()
+
 
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
@@ -2211,10 +2259,49 @@ async def test_mqtt_subscribes_topics_on_connect(
 
     assert mqtt_client_mock.disconnect.call_count == 0
 
-    assert mqtt_client_mock.subscribe.call_count == 3
-    mqtt_client_mock.subscribe.assert_any_call("topic/test", 0)
-    mqtt_client_mock.subscribe.assert_any_call("home/sensor", 2)
-    mqtt_client_mock.subscribe.assert_any_call("still/pending", 1)
+    subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
+    assert len(subscribe_calls) == 3
+    assert ("topic/test", 0) in subscribe_calls
+    assert ("home/sensor", 2) in subscribe_calls
+    assert ("still/pending", 1) in subscribe_calls
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {},
+            mqtt.CONF_DISCOVERY: False,
+        }
+    ],
+)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+async def test_mqtt_subscribes_in_single_call(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test bundled client subscription to topic."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    mqtt_client_mock.subscribe.reset_mock()
+    await mqtt.async_subscribe(hass, "topic/test", record_calls)
+    await mqtt.async_subscribe(hass, "home/sensor", record_calls)
+    await hass.async_block_till_done()
+    # Make sure the debouncer finishes
+    await asyncio.sleep(0.2)
+
+    assert mqtt_client_mock.subscribe.call_count == 1
+    # Assert we have a single subscription call with both subscriptions
+    assert mqtt_client_mock.subscribe.mock_calls[0][1][0] in [
+        [("topic/test", 0), ("home/sensor", 0)],
+        [("home/sensor", 0), ("topic/test", 0)],
+    ]
 
 
 async def test_default_entry_setting_are_applied(

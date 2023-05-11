@@ -28,7 +28,10 @@ async def async_get_engine(hass, config, discovery_info=None):
     """Set up Cloud speech component."""
     cloud: Cloud = hass.data[DOMAIN]
 
-    return CloudProvider(cloud)
+    cloud_provider = CloudProvider(cloud)
+    if discovery_info is not None:
+        discovery_info["platform_loaded"].set()
+    return cloud_provider
 
 
 class CloudProvider(Provider):
@@ -85,7 +88,7 @@ class CloudProvider(Provider):
                 language=metadata.language,
             )
         except VoiceError as err:
-            _LOGGER.debug("Voice error: %s", err)
+            _LOGGER.error("Voice error: %s", err)
             return SpeechResult(None, SpeechResultState.ERROR)
 
         # Return Speech as Text

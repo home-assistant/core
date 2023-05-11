@@ -38,7 +38,6 @@ from homeassistant.const import EVENT_STATE_CHANGED, EVENT_THEMES_UPDATED, STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import json_loads
 
 from .common import (
     async_recorder_block_till_done,
@@ -1055,6 +1054,7 @@ async def test_purge_filtered_events(
     """Test filtered events are purged."""
     config: ConfigType = {"exclude": {"event_types": ["EVENT_PURGE"]}}
     instance = await async_setup_recorder_instance(hass, config)
+    await async_wait_recording_done(hass)
 
     def _add_db_entries(hass: HomeAssistant) -> None:
         with session_scope(hass=hass) as session:
@@ -1086,14 +1086,14 @@ async def test_purge_filtered_events(
             convert_pending_states_to_meta(instance, session)
 
     service_data = {"keep_days": 10}
-    _add_db_entries(hass)
+    await instance.async_add_executor_job(_add_db_entries, hass)
+    await async_wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         events_purge = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
         )
         states = session.query(States)
-
         assert events_purge.count() == 60
         assert states.count() == 10
 
@@ -1104,7 +1104,7 @@ async def test_purge_filtered_events(
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         events_purge = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
         )
@@ -1123,7 +1123,7 @@ async def test_purge_filtered_events(
     await async_recorder_block_till_done(hass)
     await async_wait_purge_done(hass)
 
-    with session_scope(hass=hass) as session:
+    with session_scope(hass=hass, read_only=True) as session:
         events_purge = session.query(Events).filter(
             Events.event_type_id.in_(select_event_type_ids(("EVENT_PURGE",)))
         )
@@ -1451,6 +1451,11 @@ async def _add_test_events(hass: HomeAssistant, iterations: int = 1):
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
+    # Make sure recording is done before freezing time
+    # because the time freeze can affect the recorder
+    # thread as well can cause the test to fail
+    await async_wait_recording_done(hass)
+
     for _ in range(iterations):
         for event_id in range(6):
             if event_id < 2:
@@ -1464,34 +1469,6 @@ async def _add_test_events(hass: HomeAssistant, iterations: int = 1):
                 event_type = "EVENT_TEST"
             with freeze_time(timestamp):
                 hass.bus.async_fire(event_type, event_data)
-
-    await async_wait_recording_done(hass)
-
-
-async def _add_events_with_event_data(hass: HomeAssistant, iterations: int = 1):
-    """Add a few events with linked event_data for testing."""
-    utcnow = dt_util.utcnow()
-    five_days_ago = utcnow - timedelta(days=5)
-    eleven_days_ago = utcnow - timedelta(days=11)
-
-    await hass.async_block_till_done()
-    for _ in range(iterations):
-        for event_id in range(6):
-            if event_id < 2:
-                timestamp = eleven_days_ago
-                event_type = "EVENT_TEST_AUTOPURGE_WITH_EVENT_DATA"
-                shared_data = '{"type":{"EVENT_TEST_AUTOPURGE_WITH_EVENT_DATA"}'
-            elif event_id < 4:
-                timestamp = five_days_ago
-                event_type = "EVENT_TEST_PURGE_WITH_EVENT_DATA"
-                shared_data = '{"type":{"EVENT_TEST_PURGE_WITH_EVENT_DATA"}'
-            else:
-                timestamp = utcnow
-                event_type = "EVENT_TEST_WITH_EVENT_DATA"
-                shared_data = '{"type":{"EVENT_TEST_WITH_EVENT_DATA"}'
-
-            with freeze_time(timestamp):
-                hass.bus.async_fire(event_type, json_loads(shared_data))
 
     await async_wait_recording_done(hass)
 

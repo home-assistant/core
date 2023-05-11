@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
 import re
@@ -22,7 +23,7 @@ from homeassistant.util import language as language_util
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import HOME_ASSISTANT_AGENT
-from .default_agent import DefaultAgent
+from .default_agent import DefaultAgent, async_setup as async_setup_default_agent
 
 __all__ = [
     "DOMAIN",
@@ -92,7 +93,9 @@ CONFIG_SCHEMA = vol.Schema(
 @core.callback
 def _get_agent_manager(hass: HomeAssistant) -> AgentManager:
     """Get the active agent."""
-    return AgentManager(hass)
+    manager = AgentManager(hass)
+    manager.async_setup()
+    return manager
 
 
 @core.callback
@@ -117,14 +120,25 @@ def async_unset_agent(
 
 
 async def async_get_conversation_languages(
-    hass: HomeAssistant,
+    hass: HomeAssistant, agent_id: str | None = None
 ) -> set[str] | Literal["*"]:
-    """Return a set with the union of languages supported by conversation agents."""
+    """Return languages supported by conversation agents.
+
+    If an agent is specified, returns a set of languages supported by that agent.
+    If no agent is specified, return a set with the union of languages supported by
+    all conversation agents.
+    """
     agent_manager = _get_agent_manager(hass)
     languages = set()
 
-    for agent_info in agent_manager.async_get_agent_info():
-        agent = await agent_manager.async_get_agent(agent_info.id)
+    agent_ids: Iterable[str]
+    if agent_id is None:
+        agent_ids = iter(info.id for info in agent_manager.async_get_agent_info())
+    else:
+        agent_ids = (agent_id,)
+
+    for _agent_id in agent_ids:
+        agent = await agent_manager.async_get_agent(_agent_id)
         if agent.supported_languages == MATCH_ALL:
             return MATCH_ALL
         for language_tag in agent.supported_languages:
@@ -266,15 +280,18 @@ async def websocket_list_agents(
 
     for agent_info in manager.async_get_agent_info():
         agent = await manager.async_get_agent(agent_info.id)
+
+        supported_languages = agent.supported_languages
+        if language and supported_languages != MATCH_ALL:
+            supported_languages = language_util.matches(
+                language, supported_languages, country
+            )
+
         agent_dict: dict[str, Any] = {
             "id": agent_info.id,
             "name": agent_info.name,
-            "supported_languages": agent.supported_languages,
+            "supported_languages": supported_languages,
         }
-        if language:
-            agent_dict["supported_languages"] = language_util.matches(
-                language, agent.supported_languages, country
-            )
         agents.append(agent_dict)
 
     connection.send_message(websocket_api.result_message(msg["id"], {"agents": agents}))
@@ -374,7 +391,11 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
-        self._default_agent_init_lock = asyncio.Lock()
+        self._builtin_agent_init_lock = asyncio.Lock()
+
+    def async_setup(self) -> None:
+        """Set up the conversation agents."""
+        async_setup_default_agent(self.hass)
 
     async def async_get_agent(
         self, agent_id: str | None = None
@@ -387,7 +408,7 @@ class AgentManager:
             if self._builtin_agent is not None:
                 return self._builtin_agent
 
-            async with self._default_agent_init_lock:
+            async with self._builtin_agent_init_lock:
                 if self._builtin_agent is not None:
                     return self._builtin_agent
 
@@ -427,7 +448,7 @@ class AgentManager:
             agents.append(
                 AgentInfo(
                     id=agent_id,
-                    name=config_entry.title,
+                    name=config_entry.title or config_entry.domain,
                 )
             )
         return agents

@@ -16,4 +16,6 @@ DEFAULT_TIME_MEMORY = 300
 
 DOMAIN = "tts"
 
+DATA_TTS_MANAGER = "tts_manager"
+
 TtsAudioType = tuple[str | None, bytes | None]
