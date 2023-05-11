@@ -361,7 +361,7 @@ base36==0.1.1
 beautifulsoup4==4.11.1
 
 # homeassistant.components.zha
-bellows==0.35.2
+bellows==0.35.3
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.13.3
@@ -385,7 +385,7 @@ bluemaestro-ble==0.2.3
 bluetooth-adapters==0.15.3
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.1.2
+bluetooth-auto-recovery==1.2.0
 
 # homeassistant.components.bluetooth
 # homeassistant.components.esphome
@@ -498,6 +498,9 @@ dwdwfsapi==1.0.6
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.47
+
+# homeassistant.components.dynalite
+dynalite_panel==0.0.4
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
@@ -779,6 +782,9 @@ justnimbus==0.6.0
 
 # homeassistant.components.kegtron
 kegtron-ble==0.4.0
+
+# homeassistant.components.knx
+knx_frontend==2023.5.2.143855
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1653,7 +1659,7 @@ rxv==0.7.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[async,encrypted]==2.5.0
+samsungtvws[async,encrypted]==2.6.0
 
 # homeassistant.components.dhcp
 scapy==2.5.0
@@ -1847,7 +1853,7 @@ ultraheat-api==0.5.1
 unifi-discovery==1.1.7
 
 # homeassistant.components.upb
-upb_lib==0.5.3
+upb_lib==0.5.4
 
 # homeassistant.components.upcloud
 upcloud-api==2.0.0
@@ -1864,7 +1870,7 @@ uvcclient==0.11.0
 vallox-websocket-api==3.2.1
 
 # homeassistant.components.rdw
-vehicle==1.0.0
+vehicle==1.0.1
 
 # homeassistant.components.velbus
 velbus-aio==2023.2.0
@@ -1879,7 +1885,7 @@ vilfo-api-client==0.3.2
 voip-utils==0.0.7
 
 # homeassistant.components.volvooncall
-volvooncall==0.10.2
+volvooncall==0.10.3
 
 # homeassistant.components.verisure
 vsure==2.6.1
@@ -1932,6 +1938,9 @@ xiaomi-ble==0.17.0
 
 # homeassistant.components.knx
 xknx==2.9.0
+
+# homeassistant.components.knx
+xknxproject==3.1.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
