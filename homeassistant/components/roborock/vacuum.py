@@ -109,11 +109,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         return self._device_status.fan_power.name
 
     @property
-    def error(self) -> str | None:
-        """Get the error str if an error code exists."""
-        return self._device_status.error_code.name
-
-    @property
     def status(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         return self._device_status.state.name
