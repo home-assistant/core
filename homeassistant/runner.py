@@ -118,7 +118,8 @@ class HassEventLoop(uvloop.Loop):
         self, timer: asyncio.TimerHandle, *args: ParamSpecArgs
     ) -> None:
         if (
-            args is not None
+            timer not in self._cancellable_timers
+            and args is not None
             and isinstance(args[0], HassJob)
             and args[0].cancel_on_shutdown
         ):
