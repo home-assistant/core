@@ -92,7 +92,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
-    hass.http.register_view(PrometheusView(prometheus_client))
+    hass.http.register_view(PrometheusView(prometheus_client,config))
 
     conf = config[DOMAIN]
     entity_filter = conf[CONF_FILTER]
