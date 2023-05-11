@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Generator
 import dataclasses
 import logging
 import os
 import subprocess
 import threading
 import traceback
-from typing import Any, ParamSpecArgs
+from typing import Any, ParamSpecArgs, TypeVar
 
 import uvloop
 
@@ -34,6 +34,8 @@ TASK_CANCELATION_TIMEOUT = 5
 ALPINE_RELEASE_FILE = "/etc/alpine-release"
 
 _LOGGER = logging.getLogger(__name__)
+
+_T = TypeVar("_T")
 
 
 @dataclasses.dataclass(slots=True)
@@ -146,10 +148,23 @@ class HassEventLoop(uvloop.Loop):
     def create_future(self) -> asyncio.Future[Any]:
         """Create future.
 
-        Overridden from base class to call _prune_cancellable_timers() first
+        Overridden from base class to call _prune_cancellable_timers()
         """
         self._prune_cancellable_timers()
         return super().create_future()
+
+    def create_task(
+        self,
+        coro: Awaitable[_T] | Generator[Any, None, _T],
+        *args: ParamSpecArgs,
+        name: str | None = None,
+    ) -> asyncio.Task[Any]:
+        """Create task.
+
+        Overridden from base class to call _prune_cancellable_timers()
+        """
+        self._prune_cancellable_timers()
+        return super().create_task(coro, *args, name=name)
 
 
 @callback
