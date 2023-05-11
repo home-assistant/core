@@ -92,13 +92,13 @@ async def _async_validate_config_item(hass, config):
     config = CONFIG_SECTION_SCHEMA(config)
     # Add blueprint inputs to entity config
     if blueprint_inputs:
-        for dom in [
+        for dom in (
             BINARY_SENSOR_DOMAIN,
             BUTTON_DOMAIN,
             NUMBER_DOMAIN,
             SELECT_DOMAIN,
             SENSOR_DOMAIN,
-        ]:
+        ):
             if dom in config:
                 for idx in range(len(config[dom])):
                     config[dom][idx][CONF_BLUEPRINT_INPUTS] = {
