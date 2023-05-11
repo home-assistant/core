@@ -38,14 +38,12 @@ async def async_setup_platform(
         zone_name = f"{entity_config_data[CONF_ZONENAME]}_bypass"
         _LOGGER.debug("Setting up zone_bypass switch: %s", zone_name)
 
-        unique_id = f"envisalink-sw-{zone_num}"
         entity = EnvisalinkSwitch(
             hass,
             zone_num,
             zone_name,
             hass.data[DATA_EVL].alarm_state["zone"][zone_num],
             hass.data[DATA_EVL],
-            unique_id,
         )
         entities.append(entity)
 
@@ -55,11 +53,11 @@ async def async_setup_platform(
 class EnvisalinkSwitch(EnvisalinkDevice, SwitchEntity):
     """Representation of an Envisalink switch."""
 
-    def __init__(self, hass, zone_number, zone_name, info, controller, unique_id):
+    def __init__(self, hass, zone_number, zone_name, info, controller):
         """Initialize the switch."""
         self._zone_number = zone_number
 
-        super().__init__(zone_name, info, controller, unique_id=unique_id)
+        super().__init__(zone_name, info, zone_number, controller)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

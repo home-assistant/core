@@ -18,4 +18,4 @@ async def test_sensor_entity_registry(hass: HomeAssistant) -> None:
         partition_name = partition_info["name"]
         entity_id = f"sensor.{slugify(partition_name)}_keypad"
         entity = entity_registry.async_get(entity_id)
-        assert entity.unique_id == f"envisalink-s-{partition_id}"
+        assert entity.unique_id == f"{partition_id}"

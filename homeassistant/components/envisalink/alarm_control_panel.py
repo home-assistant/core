@@ -66,7 +66,6 @@ async def async_setup_platform(
     entities = []
     for part_num in configured_partitions:
         entity_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
-        unique_id = f"envisalink-acp-{part_num}"
         entity = EnvisalinkAlarm(
             hass,
             part_num,
@@ -75,7 +74,6 @@ async def async_setup_platform(
             panic_type,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
-            unique_id,
         )
         entities.append(entity)
 
@@ -113,15 +111,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
     )
 
     def __init__(
-        self,
-        hass,
-        partition_number,
-        alarm_name,
-        code,
-        panic_type,
-        info,
-        controller,
-        unique_id,
+        self, hass, partition_number, alarm_name, code, panic_type, info, controller
     ):
         """Initialize the alarm panel."""
         self._partition_number = partition_number
@@ -129,7 +119,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
         self._panic_type = panic_type
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
-        super().__init__(alarm_name, info, controller, unique_id=unique_id)
+        super().__init__(alarm_name, info, partition_number, controller)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

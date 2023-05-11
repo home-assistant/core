@@ -35,14 +35,12 @@ async def async_setup_platform(
     entities = []
     for part_num in configured_partitions:
         entity_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
-        unique_id = f"envisalink-s-{part_num}"
         entity = EnvisalinkSensor(
             hass,
             entity_config_data[CONF_PARTITIONNAME],
             part_num,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
-            unique_id,
         )
 
         entities.append(entity)
@@ -53,17 +51,13 @@ async def async_setup_platform(
 class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
     """Representation of an Envisalink keypad."""
 
-    def __init__(
-        self, hass, partition_name, partition_number, info, controller, unique_id
-    ):
+    def __init__(self, hass, partition_name, partition_number, info, controller):
         """Initialize the sensor."""
         self._icon = "mdi:alarm"
         self._partition_number = partition_number
 
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
-        super().__init__(
-            f"{partition_name} Keypad", info, controller, unique_id=unique_id
-        )
+        super().__init__(f"{partition_name} Keypad", info, partition_number, controller)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

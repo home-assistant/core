@@ -19,5 +19,5 @@ async def test_binary_sensor_entity_registry(hass: HomeAssistant) -> None:
         zone_type = zone_info["type"]
         entity_id = f"binary_sensor.{slugify(zone_name)}"
         entity = entity_registry.async_get(entity_id)
-        assert entity.unique_id == f"envisalink-bs-{zone_id}"
+        assert entity.unique_id == f"{zone_id}"
         assert entity.original_device_class == zone_type

@@ -18,4 +18,4 @@ async def test_alarm_control_panel_entity_registry(hass: HomeAssistant) -> None:
         partition_name = partition_info["name"]
         entity_id = f"alarm_control_panel.{slugify(partition_name)}"
         entity = entity_registry.async_get(entity_id)
-        assert entity.unique_id == f"envisalink-acp-{partition_id}"
+        assert entity.unique_id == f"{partition_id}"

@@ -1,6 +1,7 @@
 """Support for Envisalink devices."""
 import asyncio
 import logging
+from typing import Any
 
 from pyenvisalink import EnvisalinkAlarmPanel
 import voluptuous as vol
@@ -250,12 +251,14 @@ class EnvisalinkDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, name, info, controller, unique_id):
+    def __init__(
+        self, name: str, info: Any, idx: int, controller: EnvisalinkAlarmPanel
+    ) -> None:
         """Initialize the device."""
         self._controller = controller
         self._info = info
         self._name = name
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{idx}"
 
     @property
     def name(self):
