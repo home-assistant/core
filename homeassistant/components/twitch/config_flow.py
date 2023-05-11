@@ -89,9 +89,9 @@ class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 def _attempt_login(user_input: dict[str, Any]):
-    client_id = user_input[CONF_CLIENT_ID]
-    client_secret = user_input[CONF_CLIENT_SECRET]
-    oauth_token = user_input.get(CONF_TOKEN)
+    client_id: str = user_input[CONF_CLIENT_ID]
+    client_secret: str = user_input[CONF_CLIENT_SECRET]
+    oauth_token: str | None = user_input.get(CONF_TOKEN)
 
     client = Twitch(
         app_id=client_id,

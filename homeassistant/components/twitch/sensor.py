@@ -12,12 +12,14 @@ from twitchAPI.twitch import (
 )
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_CHANNELS, OAUTH_SCOPES
+from . import CONF_CHANNELS, DOMAIN, OAUTH_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,47 +39,77 @@ STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Twitch platform."""
-    channels = config[CONF_CHANNELS]
-    client_id = config[CONF_CLIENT_ID]
-    client_secret = config[CONF_CLIENT_SECRET]
-    oauth_token = config.get(CONF_TOKEN)
+    """Import the legacy YAML configuration and log a warning message."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.8.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
 
-    try:
-        client = Twitch(
-            app_id=client_id,
-            app_secret=client_secret,
-            target_app_auth_scope=OAUTH_SCOPES,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
         )
-        client.auto_refresh_auth = False
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Twitch platform."""
+    try:
+        sensors: list[TwitchSensor] = await hass.async_add_executor_job(_setup, entry)
+        async_add_entities(sensors, True)
+    except MissingScopeException:
+        _LOGGER.error("OAuth token is missing required scope")
+        return
     except TwitchAuthorizationException:
         _LOGGER.error("Invalid client ID or client secret")
         return
+    except InvalidTokenException:
+        _LOGGER.error("OAuth token is invalid")
+        return
+
+
+def _setup(entry: ConfigEntry) -> list[TwitchSensor]:
+    client_id: str = entry.data[CONF_CLIENT_ID]
+    client_secret: str = entry.data[CONF_CLIENT_SECRET]
+    oauth_token: str | None = entry.data.get(CONF_TOKEN)
+
+    channels: list[str] = entry.options.get(CONF_CHANNELS, [])
+
+    if not channels:
+        return []
+
+    client = Twitch(
+        app_id=client_id,
+        app_secret=client_secret,
+        target_app_auth_scope=OAUTH_SCOPES,
+    )
+
+    client.auto_refresh_auth = False
 
     if oauth_token:
-        try:
-            client.set_user_authentication(
-                token=oauth_token, scope=OAUTH_SCOPES, validate=True
-            )
-        except MissingScopeException:
-            _LOGGER.error("OAuth token is missing required scope")
-            return
-        except InvalidTokenException:
-            _LOGGER.error("OAuth token is invalid")
-            return
+        client.set_user_authentication(
+            token=oauth_token, scope=OAUTH_SCOPES, validate=True
+        )
 
-    channels = client.get_users(logins=channels)
-
-    add_entities(
-        [TwitchSensor(channel, client) for channel in channels["data"]],
-        True,
-    )
+    channels_result: dict = client.get_users(logins=channels)
+    return [TwitchSensor(channel, client) for channel in channels_result["data"]]
 
 
 class TwitchSensor(SensorEntity):
