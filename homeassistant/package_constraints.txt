@@ -22,10 +22,10 @@ cryptography==40.0.2
 dbus-fast==1.86.0
 fnv-hash-fast==0.3.1
 ha-av==10.0.0
-hass-nabucasa==0.66.2
+hass-nabucasa==0.67.1
 hassil==1.0.6
 home-assistant-bluetooth==1.10.0
-home-assistant-frontend==20230503.2
+home-assistant-frontend==20230503.3
 home-assistant-intents==2023.4.26
 httpx==0.24.0
 ifaddr==0.1.7
@@ -151,10 +151,6 @@ matplotlib==3.6.1
 # pyOpenSSL 23.1.0 or later required to avoid import errors when
 # cryptography 40.0.1 is installed with botocore
 pyOpenSSL>=23.1.0
-
-# uamqp newer versions we currently can't build for armv7/armhf
-# Limit this to Python 3.10, to not block Python 3.11 dev for now
-uamqp==1.6.0;python_version<'3.11'
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
