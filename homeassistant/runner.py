@@ -166,6 +166,12 @@ class HassEventLoop(uvloop.Loop):
         self._prune_cancellable_timers()
         return super().create_task(coro, *args, name=name)
 
+    def cancel_cancellable_timers(self) -> None:
+        """Cancel cancellable timers."""
+        for handle in self._cancellable_timers:
+            if not handle.cancelled():
+                handle.cancel()
+
 
 @callback
 def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
