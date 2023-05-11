@@ -149,7 +149,7 @@ class HassEventLoop(uvloop.Loop):
         self,
         delay: float,
         cb: Callable[[Any, Any], Any],
-        *args: Any,
+        *args: ParamSpecArgs,
         context: Any | None = None,
     ) -> asyncio.TimerHandle:
         # pylint: disable=arguments-differ
@@ -158,7 +158,7 @@ class HassEventLoop(uvloop.Loop):
         Overridden from base class to track cancellable timers
         """
         self._prune_cancellable_timers()
-        timer = super().call_later(delay, cb, *args, context)
+        timer = super().call_later(delay, cb, *args, context=context)
         self._handle_cancellable_timer(timer, *args)
         return timer
 
