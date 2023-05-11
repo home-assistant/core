@@ -1,0 +1,28 @@
+blueprint:
+  name: Trigger template dummy sensor
+  description: >-
+    An example blueprint to demo re-usable template for template sensors.
+  domain: template
+  author: Home Assistant
+  input:
+    trigger_entity_id:
+      name: "Trigger entity ID"
+      description: "Entity ID of the state trigger to use."
+      selector:
+        entity:
+          multiple: false
+    name:
+      name: "Sensor name"
+      description: "The name of the produced Template Sensor."
+      selector:
+        text:
+
+trigger:
+  - platform: state
+    entity_id: !input trigger_entity_id
+
+sensor:
+  - name: !input name
+    # Yes this could be handled using 'trigger.entity_id', but for demo purposes we use the data passed by the blueprint itself
+    state: >-
+      Source state: {{ states(blueprint.trigger_entity_id) }}
