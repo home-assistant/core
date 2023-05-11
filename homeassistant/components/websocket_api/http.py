@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import deque
 from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
@@ -71,7 +72,8 @@ class WebSocketHandler:
         self.hass = hass
         self.request = request
         self.wsock = web.WebSocketResponse(heartbeat=55)
-        self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
+        self._message_queue: deque = deque()
+        self._queue_ready: asyncio.Event = asyncio.Event()
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
@@ -89,17 +91,20 @@ class WebSocketHandler:
     async def _writer(self) -> None:
         """Write outgoing messages."""
         # Exceptions if Socket disconnected or cancelled by connection handler
-        to_write = self._to_write
+        message_queue = self._message_queue
+        queue_ready = self._queue_ready
         logger = self._logger
         wsock = self.wsock
         try:
             with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
                 while not self.wsock.closed:
-                    if (process := await to_write.get()) is None:
+                    await queue_ready.wait()
+                    queue_ready.clear()
+                    if (process := message_queue.pop()) is None:
                         return
                     message = process if isinstance(process, str) else process()
                     if (
-                        to_write.empty()
+                        len(message_queue) == 0
                         or not self.connection
                         or FEATURE_COALESCE_MESSAGES
                         not in self.connection.supported_features
@@ -109,8 +114,8 @@ class WebSocketHandler:
                         continue
 
                     messages: list[str] = [message]
-                    while not to_write.empty():
-                        if (process := to_write.get_nowait()) is None:
+                    while len(message_queue):
+                        if (process := message_queue.pop()) is None:
                             return
                         messages.append(
                             process if isinstance(process, str) else process()
@@ -146,11 +151,9 @@ class WebSocketHandler:
         if isinstance(message, dict):
             message = message_to_json(message)
 
-        to_write = self._to_write
-
-        try:
-            to_write.put_nowait(message)
-        except asyncio.QueueFull:
+        message_queue = self._message_queue
+        queue_size_before_add = len(message_queue)
+        if queue_size_before_add >= MAX_PENDING_MSG:
             self._logger.error(
                 (
                     "%s: Client unable to keep up with pending messages. Reached %s pending"
@@ -163,9 +166,12 @@ class WebSocketHandler:
             )
             self._cancel()
 
+        message_queue.append(message)
+        self._queue_ready.set()
+
         peak_checker_active = self._peak_checker_unsub is not None
 
-        if to_write.qsize() < PENDING_MSG_PEAK:
+        if queue_size_before_add <= PENDING_MSG_PEAK:
             if peak_checker_active:
                 self._cancel_peak_checker()
             return
@@ -180,7 +186,7 @@ class WebSocketHandler:
         """Check that we are no longer above the write peak."""
         self._peak_checker_unsub = None
 
-        if self._to_write.qsize() < PENDING_MSG_PEAK:
+        if len(self._message_queue) < PENDING_MSG_PEAK:
             return
 
         self._logger.error(
@@ -357,7 +363,8 @@ class WebSocketHandler:
             self._closing = True
 
             try:
-                self._to_write.put_nowait(None)
+                self._message_queue.append(None)
+                self._queue_ready.set()
                 # Make sure all error messages are written before closing
                 await self._writer_task
                 await wsock.close()
