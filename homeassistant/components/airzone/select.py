@@ -1,7 +1,7 @@
 """Support for the Airzone sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any, Final
 
 from aioairzone.common import GrilleAngle, SleepTimeout
@@ -32,7 +32,6 @@ class AirzoneSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
     api_param: str
-    options_dict: dict[str, int]
 
 
 @dataclass
@@ -40,19 +39,9 @@ class AirzoneSelectDescription(SelectEntityDescription, AirzoneSelectDescription
     """Class to describe an Airzone select entity."""
 
 
-GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
-    "90deg": GrilleAngle.DEG_90,
-    "50deg": GrilleAngle.DEG_50,
-    "45deg": GrilleAngle.DEG_45,
-    "40deg": GrilleAngle.DEG_40,
-}
+GRILLE_ANGLE_OPTIONS: Final[list[str]] = [str(opt.value) for opt in GrilleAngle]
 
-SLEEP_DICT: Final[dict[str, int]] = {
-    "off": SleepTimeout.SLEEP_OFF,
-    "30m": SleepTimeout.SLEEP_30,
-    "60m": SleepTimeout.SLEEP_60,
-    "90m": SleepTimeout.SLEEP_90,
-}
+SLEEP_OPTIONS: Final[list[str]] = [str(opt.value) for opt in SleepTimeout]
 
 
 ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
@@ -61,7 +50,7 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         key=AZD_COLD_ANGLE,
         name="Cold Angle",
-        options_dict=GRILLE_ANGLE_DICT,
+        options=GRILLE_ANGLE_OPTIONS,
         translation_key="grille_angles",
     ),
     AirzoneSelectDescription(
@@ -69,7 +58,7 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         key=AZD_HEAT_ANGLE,
         name="Heat Angle",
-        options_dict=GRILLE_ANGLE_DICT,
+        options=GRILLE_ANGLE_OPTIONS,
         translation_key="grille_angles",
     ),
     AirzoneSelectDescription(
@@ -77,7 +66,7 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         key=AZD_SLEEP,
         name="Sleep",
-        options_dict=SLEEP_DICT,
+        options=SLEEP_OPTIONS,
         translation_key="sleep_times",
     ),
 )
@@ -94,14 +83,10 @@ async def async_setup_entry(
     for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
         for description in ZONE_SELECT_TYPES:
             if description.key in zone_data:
-                _desc = replace(
-                    description,
-                    options=list(description.options_dict),
-                )
                 entities.append(
                     AirzoneZoneSelect(
                         coordinator,
-                        _desc,
+                        description,
                         entry,
                         system_zone_id,
                         zone_data,
@@ -115,7 +100,6 @@ class AirzoneBaseSelect(AirzoneEntity, SelectEntity):
     """Define an Airzone select."""
 
     entity_description: AirzoneSelectDescription
-    values_dict: dict[int, str]
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -123,14 +107,12 @@ class AirzoneBaseSelect(AirzoneEntity, SelectEntity):
         self._async_update_attrs()
         super()._handle_coordinator_update()
 
-    def _get_current_option(self) -> str | None:
-        value = self.get_airzone_value(self.entity_description.key)
-        return self.values_dict.get(value)
-
     @callback
     def _async_update_attrs(self) -> None:
         """Update select attributes."""
-        self._attr_current_option = self._get_current_option()
+        self._attr_current_option = str(
+            self.get_airzone_value(self.entity_description.key)
+        )
 
 
 class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
@@ -152,12 +134,12 @@ class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )
         self.entity_description = description
-        self.values_dict = {v: k for k, v in description.options_dict.items()}
 
         self._async_update_attrs()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        param = self.entity_description.api_param
-        value = self.entity_description.options_dict[option]
-        await self._async_update_hvac_params({param: value})
+        params = {
+            self.entity_description.api_param: int(option),
+        }
+        await self._async_update_hvac_params(params)
