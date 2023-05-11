@@ -88,7 +88,7 @@ HVAC_MOCK = {
                     API_HEAT_ANGLE: 0,
                     API_COLD_ANGLE: 0,
                     API_SPEED: 0,
-                    API_SPEEDS: 4,
+                    API_SPEEDS: 3,
                 },
                 {
                     API_SYSTEM_ID: 1,
@@ -115,6 +115,8 @@ HVAC_MOCK = {
                     API_FLOOR_DEMAND: 1,
                     API_HEAT_ANGLE: 1,
                     API_COLD_ANGLE: 2,
+                    API_SPEED: 0,
+                    API_SPEEDS: 2,
                 },
                 {
                     API_SYSTEM_ID: 1,
@@ -217,6 +219,8 @@ HVAC_MOCK = {
                     API_HUMIDITY: 62,
                     API_UNITS: 0,
                     API_ERRORS: [],
+                    API_SPEED: 0,
+                    API_SPEEDS: 5,
                 },
             ]
         },
