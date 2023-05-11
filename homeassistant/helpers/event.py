@@ -1603,7 +1603,7 @@ def async_track_utc_time_change(
 
     pattern_time_change_listener_job = HassJob(
         pattern_time_change_listener,
-        "time change listener {hour}:{minute}:{second} {action}",
+        f"time change listener {hour}:{minute}:{second} {action}",
     )
     time_listener = async_track_point_in_utc_time(
         hass, pattern_time_change_listener_job, calculate_next(dt_util.utcnow())
