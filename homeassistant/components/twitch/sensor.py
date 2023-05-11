@@ -90,10 +90,12 @@ def _setup(entry: ConfigEntry) -> list[TwitchSensor]:
     client_secret: str = entry.data[CONF_CLIENT_SECRET]
     oauth_token: str | None = entry.data.get(CONF_TOKEN)
 
-    channels: list[str] = entry.options.get(CONF_CHANNELS, [])
+    channels: str | None = entry.options.get(CONF_CHANNELS)
 
     if not channels:
         return []
+
+    channels_list = channels.strip().split(",")
 
     client = Twitch(
         app_id=client_id,
@@ -108,7 +110,7 @@ def _setup(entry: ConfigEntry) -> list[TwitchSensor]:
             token=oauth_token, scope=OAUTH_SCOPES, validate=True
         )
 
-    channels_result: dict = client.get_users(logins=channels)
+    channels_result: dict = client.get_users(logins=channels_list)
     return [TwitchSensor(channel, client) for channel in channels_result["data"]]
 
 

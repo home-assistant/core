@@ -11,30 +11,75 @@ from twitchAPI.twitch import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import DOMAIN, OAUTH_SCOPES
+from . import CONF_CHANNELS, DOMAIN, OAUTH_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        # vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_TOKEN): cv.string,
-    }
-)
+def _attempt_login(user_input: dict[str, Any]):
+    client_id: str = user_input[CONF_CLIENT_ID]
+    client_secret: str = user_input[CONF_CLIENT_SECRET]
+    oauth_token: str | None = user_input.get(CONF_TOKEN)
+
+    client = Twitch(
+        app_id=client_id,
+        app_secret=client_secret,
+        target_app_auth_scope=OAUTH_SCOPES,
+    )
+
+    client.auto_refresh_auth = False
+
+    if oauth_token:
+        client.set_user_authentication(
+            token=oauth_token, scope=OAUTH_SCOPES, validate=True
+        )
+
+
+class TwitchOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Twitch options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage Twitch options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CHANNELS,
+                        default=self.config_entry.options.get(CONF_CHANNELS),
+                    ): cv.string,
+                }
+            ),
+            errors={},
+        )
 
 
 class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Twitch config flow."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> TwitchOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return TwitchOptionsFlowHandler(config_entry)
 
     def _show_setup_form(self, user_input=None, errors=None) -> FlowResult:
         """Show the setup form to the user."""
@@ -49,6 +94,7 @@ class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_CLIENT_ID): cv.string,
                     vol.Required(CONF_CLIENT_SECRET): cv.string,
                     vol.Optional(CONF_TOKEN): cv.string,
+                    vol.Optional(CONF_CHANNELS): cv.string,
                 }
             ),
             errors=errors or {},
@@ -79,29 +125,32 @@ class TwitchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("OAuth token is invalid")
             return self._show_setup_form(user_input, {"base": "invalid_auth"})
 
-        return self.async_create_entry(title="Twitch", data=user_input)
+        return self.async_create_entry(
+            title="Twitch",
+            data={
+                CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
+                CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
+                CONF_TOKEN: user_input.get(CONF_TOKEN),
+            },
+            options={
+                CONF_CHANNELS: user_input.get(CONF_CHANNELS),
+            },
+        )
 
     async def async_step_import(
         self, import_info: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle import from legacy config."""
-        return await self.async_step_user(import_info)
+        if not import_info:
+            return await self.async_step_user(user_input=None)
 
+        channels: list[str] = import_info.get(CONF_CHANNELS) or []
 
-def _attempt_login(user_input: dict[str, Any]):
-    client_id: str = user_input[CONF_CLIENT_ID]
-    client_secret: str = user_input[CONF_CLIENT_SECRET]
-    oauth_token: str | None = user_input.get(CONF_TOKEN)
-
-    client = Twitch(
-        app_id=client_id,
-        app_secret=client_secret,
-        target_app_auth_scope=OAUTH_SCOPES,
-    )
-
-    client.auto_refresh_auth = False
-
-    if oauth_token:
-        client.set_user_authentication(
-            token=oauth_token, scope=OAUTH_SCOPES, validate=True
+        return await self.async_step_user(
+            user_input={
+                CONF_CLIENT_ID: import_info[CONF_CLIENT_ID],
+                CONF_CLIENT_SECRET: import_info[CONF_CLIENT_SECRET],
+                CONF_TOKEN: import_info.get(CONF_TOKEN),
+                CONF_CHANNELS: ",".join(channels),
+            },
         )
