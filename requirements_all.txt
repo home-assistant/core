@@ -686,7 +686,7 @@ epsonprinter==0.0.9
 esphome-dashboard-api==1.2.3
 
 # homeassistant.components.netgear_lte
-eternalegypt==0.0.15
+eternalegypt==0.0.16
 
 # homeassistant.components.eufylife_ble
 eufylife_ble_client==0.1.7
