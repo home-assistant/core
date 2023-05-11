@@ -154,6 +154,7 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, airthings_device.device_id)},
             name=airthings_device.name,
             manufacturer="Airthings",
+            model=airthings_device.device_type.replace("_", " ").lower().title(),
         )
 
     @property
