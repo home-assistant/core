@@ -145,6 +145,23 @@ class HassEventLoop(uvloop.Loop):
         self._handle_cancellable_timer(timer, *args)
         return timer
 
+    def call_later(
+        self,
+        delay: float,
+        cb: Callable[[Any, Any], Any],
+        *args: ParamSpecArgs,
+        context: Any | None = None,
+    ) -> asyncio.TimerHandle:
+        # pylint: disable=arguments-differ
+        """Call coroutine later.
+
+        Overridden from base class to track cancellable timers
+        """
+        self._prune_cancellable_timers()
+        timer = super().call_later(delay, cb, args, context)
+        self._handle_cancellable_timer(timer, *args)
+        return timer
+
     def create_future(self) -> asyncio.Future[Any]:
         """Create future.
 
