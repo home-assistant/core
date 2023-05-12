@@ -161,9 +161,19 @@ def split_entity_id(entity_id: str) -> tuple[str, str]:
     return domain, object_id
 
 
-VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
+_OBJECT_ID = r"(?!_)[\da-z_]+(?<!_)"
+_DOMAIN = r"(?!.+__)" + _OBJECT_ID
+VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"$")
+VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"$")
 
 
+@functools.lru_cache(64)
+def valid_domain(domain: str) -> bool:
+    """Test if a domain a valid format."""
+    return VALID_DOMAIN.match(domain) is not None
+
+
+@functools.lru_cache(64)
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format.
 
