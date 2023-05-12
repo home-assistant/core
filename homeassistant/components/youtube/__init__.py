@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -15,7 +15,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
-from .const import DATA_HASS_CONFIG, DOMAIN
+from .const import AUTH, COORDINATOR, DATA_HASS_CONFIG, DOMAIN
+from .coordinator import YouTubeDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -42,7 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
-    hass.data[DOMAIN][entry.entry_id] = auth
+    coordinator = YouTubeDataUpdateCoordinator(hass, entry, auth)
+
+    await coordinator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        COORDINATOR: coordinator,
+        AUTH: auth,
+    }
     await hass.config_entries.async_forward_entry_setups(entry, list(PLATFORMS))
 
     return True
@@ -50,15 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
-        for service_name in hass.services.async_services()[DOMAIN]:
-            hass.services.async_remove(DOMAIN, service_name)
 
-    return unload_ok
+    if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+        return True
+    return False

@@ -15,10 +15,10 @@ class AsyncConfigEntryAuth(OAuthClientAuthHandler):
     def __init__(
         self,
         websession: ClientSession,
-        oauth2Session: config_entry_oauth2_flow.OAuth2Session,
+        oauth2_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize Google Mail Auth."""
-        self.oauth_session = oauth2Session
+        self.oauth_session = oauth2_session
         super().__init__(websession)
 
     @property

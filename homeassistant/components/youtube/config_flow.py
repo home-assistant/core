@@ -7,6 +7,7 @@ from typing import Any
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.http import HttpRequest
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +20,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_CHANNELS, DEFAULT_ACCESS, DOMAIN
+from .const import CONF_CHANNELS, CONF_UPLOAD_PLAYLIST, DEFAULT_ACCESS, DOMAIN
 
 
 class OAuth2FlowHandler(
@@ -81,42 +82,56 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select which channels to track."""
+        if not self._data:
+            return self.async_abort(reason="no_data")
+        service = build(
+            "youtube",
+            "v3",
+            credentials=Credentials(self._data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
+        )
         if user_input:
+            channel_request: HttpRequest = service.channels().list(
+                part="contentDetails",
+                id=",".join(user_input[CONF_CHANNELS]),
+                maxResults=50,
+            )
+            response: dict = await self.hass.async_add_executor_job(
+                channel_request.execute
+            )
+            channels = {
+                channel["id"]: {
+                    CONF_UPLOAD_PLAYLIST: channel["contentDetails"]["relatedPlaylists"][
+                        "uploads"
+                    ]
+                }
+                for channel in response["items"]
+            }
             return self.async_create_entry(
                 title="YouTube",
                 data=self._data,
                 options={
-                    CONF_CHANNELS: user_input[CONF_CHANNELS],
+                    CONF_CHANNELS: channels,
                 },
             )
-
-        def _get_subscriptions() -> list[dict[str, Any]]:
-            """Get profile from inside the executor."""
-            request = (
-                build(
-                    "youtube",
-                    "v3",
-                    credentials=Credentials(self._data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
-                )
-                .subscriptions()
-                .list(part="snippet", mine=True, maxResults=50)
-            )
-            return request.execute()["items"]
-
-        subscriptions = await self.hass.async_add_executor_job(_get_subscriptions)
-        channels = [
+        subscription_request: HttpRequest = service.subscriptions().list(
+            part="snippet", mine=True, maxResults=50
+        )
+        response = await self.hass.async_add_executor_job(
+            subscription_request.execute
+        )
+        selectable_channels = [
             SelectOptionDict(
                 value=subscription["snippet"]["resourceId"]["channelId"],
                 label=subscription["snippet"]["title"],
             )
-            for subscription in subscriptions
+            for subscription in response["items"]
         ]
         return self.async_show_form(
             step_id="channels",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CHANNELS): SelectSelector(
-                        SelectSelectorConfig(options=channels, multiple=True)
+                        SelectSelectorConfig(options=selectable_channels, multiple=True)
                     ),
                 }
             ),

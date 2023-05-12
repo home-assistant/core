@@ -3,21 +3,20 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any
-
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
+from . import YouTubeDataUpdateCoordinator
 from .api import AsyncConfigEntryAuth
-from .const import CONF_CHANNELS, DOMAIN
+from .const import AUTH, COORDINATOR, DOMAIN, MANUFACTURER
 from .entity import YouTubeEntity
 
 SCAN_INTERVAL = timedelta(minutes=15)
@@ -27,7 +26,8 @@ SCAN_INTERVAL = timedelta(minutes=15)
 class YouTubeMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Any], StateType | datetime]
+    value_fn: Callable[[Any], StateType]
+    entity_picture_fn: Callable[[Any], str] | None
 
 
 @dataclass
@@ -35,56 +35,55 @@ class YouTubeSensorEntityDescription(SensorEntityDescription, YouTubeMixin):
     """Describes Picnic sensor entity."""
 
 
-SENSOR_TYPE = YouTubeSensorEntityDescription(
-    key="live",
-    name="Live",
-    icon="mdi:clock",
-    value_fn=lambda channel: channel["snippet"]["title"],
-)
+SENSOR_TYPES = [
+    YouTubeSensorEntityDescription(
+        key="latest_upload",
+        translation_key="latest_upload",
+        icon="mdi:youtube",
+        value_fn=lambda channel: channel["latest_video"]["title"],
+        entity_picture_fn=lambda channel: channel["latest_video"]["thumbnail"],
+    ),
+    YouTubeSensorEntityDescription(
+        key="subscribers",
+        translation_key="subscribers",
+        icon="mdi:youtube-subscription",
+        native_unit_of_measurement="subscribers",
+        value_fn=lambda channel: channel["subscriber_count"],
+        entity_picture_fn=lambda channel: channel["icon"],
+    ),
+]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Google Mail sensor."""
-    channel_ids = entry.options[CONF_CHANNELS]
-    async_config_entry_auth: AsyncConfigEntryAuth = hass.data[DOMAIN][entry.entry_id]
-    await async_config_entry_auth.get_resource()
-
-    def _get_channels() -> list[dict[str, Any]]:
-        """Get profile from inside the executor."""
-        request = (
-            build(
-                "youtube",
-                "v3",
-                credentials=Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
-            )
-            .channels()
-            .list(
-                part="snippet,contentDetails,statistics",
-                id=",".join(channel_ids),
-                maxResults=50,
-            )
+    coordinator: YouTubeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
+    for channel in coordinator.data.values():
+        async_add_entities(
+            [
+                YouTubeSensor(
+                    hass.data[DOMAIN][entry.entry_id][AUTH], sensor_type, channel
+                )
+                for sensor_type in SENSOR_TYPES
+            ],
+            True,
         )
-        return request.execute()["items"]
-
-    channels = await hass.async_add_executor_job(_get_channels)
-    async_add_entities(
-        [
-            YouTubeSensor(hass.data[DOMAIN][entry.entry_id], SENSOR_TYPE, channel)
-            for channel in channels
-        ],
-        True,
-    )
 
 
 class YouTubeSensor(YouTubeEntity, SensorEntity):
     """Representation of a Google Mail sensor."""
 
+    _attr_has_entity_name = True
+
+    entity_description: YouTubeSensorEntityDescription
+
     def __init__(
         self,
         auth: AsyncConfigEntryAuth,
-        description: EntityDescription,
+        description: YouTubeSensorEntityDescription,
         channel: dict[str, Any],
     ) -> None:
         super().__init__(auth, description)
@@ -93,11 +92,21 @@ class YouTubeSensor(YouTubeEntity, SensorEntity):
         self._attr_unique_id = (
             f"{auth.oauth_session.config_entry.entry_id}_{channel_id}_{description.key}"
         )
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, auth.oauth_session.config_entry.entry_id)},
+            manufacturer=MANUFACTURER,
+            name=self._channel["title"],
+        )
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        # return self.entity_description.value_fn(self._channel)
-        name = self._channel["snippet"]["title"]
-        channel_id = self._channel["id"]
-        return f"{name}{channel_id}"
+        return self.entity_description.value_fn(self._channel)
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the value reported by the sensor."""
+        if self.entity_description.entity_picture_fn:
+            return self.entity_description.entity_picture_fn(self._channel)
+        return None
