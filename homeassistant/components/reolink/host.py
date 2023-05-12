@@ -393,7 +393,7 @@ class ReolinkHost:
                 self._api.port,
             )
 
-        # After receving the new motion states in the upstream lib,
+        # After receiving the new motion states in the upstream lib,
         # update the binary sensors with async_write_ha_state
         # The same dispatch as for the webhook can be used
         async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
