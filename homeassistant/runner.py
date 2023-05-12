@@ -84,7 +84,7 @@ class HassEventLoopPolicy(uvloop.EventLoopPolicy):
     @property
     def loop_name(self) -> str:
         """Return name of the loop."""
-        return self._loop_factory.__name__
+        return super()._loop_factory.__module__
 
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
