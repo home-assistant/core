@@ -9,35 +9,11 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
-      "user": {
+      "channels": {
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "area_id": "Area ID"
-        }
-      },
-      "reauth_confirm": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "area_id": "Area ID"
+          "channels": "YouTube channels"
         }
       }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "code": "Default code for locks, used if none is given",
-          "lock_code_digits": "Number of digits in PIN code for locks"
-        }
-      }
-    },
-    "error": {
-      "code_format_mismatch": "The code does not match the required number of digits"
     }
   },
   "entity": {
