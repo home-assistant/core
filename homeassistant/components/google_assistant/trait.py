@@ -2441,36 +2441,26 @@ class SensorStateTrait(_Trait):
 
         if device_class is None or data is None:
             return {}
-        
+
+        sensor_state = {
+            "name": data[0],
+            "numericCapabilities": {"rawValueUnit": data[1]},
+        }
+
         if device_class == sensor.SensorDeviceClass.AQI:
-            return {
-                "sensorStatesSupported": [
-                    {
-                        "name": data[0],
-                        "numericCapabilities": {"rawValueUnit": data[1]},
-                        "descriptiveCapabilities": {
-                            "availableStates": [
-                                "healthy",
-                                "moderate",
-                                "unhealthy for sensitive groups",
-                                "unhealthy",
-                                "very unhealthy",
-                                "hazardous",
-                                "unknown",
-                            ],
-                        },
-                    }
-                ]
+            sensor_state["descriptiveCapabilities"] = {
+                "availableStates": [
+                    "healthy",
+                    "moderate",
+                    "unhealthy for sensitive groups",
+                    "unhealthy",
+                    "very unhealthy",
+                    "hazardous",
+                    "unknown",
+                ],
             }
-        else:
-            return {
-                "sensorStatesSupported": [
-                    {
-                        "name": data[0],
-                        "numericCapabilities": {"rawValueUnit": data[1]},
-                    }
-                ]
-            }
+
+        return {"sensorStatesSupported": [sensor_state]}
 
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
@@ -2479,22 +2469,12 @@ class SensorStateTrait(_Trait):
 
         if device_class is None or data is None:
             return {}
-        
+
+        sensor_data = {"name": data[0], "rawValue": self.state.state}
+
         if device_class == sensor.SensorDeviceClass.AQI:
-            return {
-                "currentSensorStateData": [
-                    {
-                        "name": data[0],
-                        "currentSensorState": self._air_quality_description_for_aqi(
-                            self.state.state
-                        ),
-                    },
-                    {"name": data[1], "rawValue": self.state.state},
-                ]
-            }
-        else:
-            return {
-                "currentSensorStateData": [
-                    {"name": data[0], "rawValue": self.state.state}
-                ]
-            }
+            sensor_data["currentSensorState"] = self._air_quality_description_for_aqi(
+                self.state.state
+            )
+
+        return {"currentSensorStateData": [sensor_data]}

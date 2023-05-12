@@ -3362,8 +3362,8 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
                         "currentSensorState": trt._air_quality_description_for_aqi(
                             trt.state.state
                         ),
+                        "rawValue": trt.state.state,
                     },
-                    {"name": unit, "rawValue": trt.state.state},
                 ]
             }
         else:
