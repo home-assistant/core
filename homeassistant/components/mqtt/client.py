@@ -376,6 +376,11 @@ class MQTT:
 
         self._simple_subscriptions: dict[str, list[Subscription]] = {}
         self._wildcard_subscriptions: list[Subscription] = []
+        # _retained_topics prevents a Subscription from receiving a
+        # retained message more than once per topic. This prevents flooding
+        # already active subscribers when new subscribers subscribe to a topic
+        # which has subscribed messages.
+        self._retained_topics: dict[Subscription, set[str]] = {}
         self.connected = False
         self._ha_started = asyncio.Event()
         self._cleanup_on_unload: list[Callable[[], None]] = []
@@ -618,6 +623,8 @@ class MQTT:
             """Remove subscription."""
             self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
+            if subscription in self._retained_topics:
+                del self._retained_topics[subscription]
             # Only unsubscribe if currently connected
             if self.connected:
                 self._async_unsubscribe(topic)
@@ -637,7 +644,7 @@ class MQTT:
         if topic in self._max_qos:
             del self._max_qos[topic]
         if topic in self._pending_subscriptions:
-            # avoid any pending subscription to be executed
+            # Avoid any pending subscription to be executed
             del self._pending_subscriptions[topic]
 
         self._pending_unsubscribes.add(topic)
@@ -754,8 +761,9 @@ class MQTT:
 
     async def _async_resubscribe(self) -> None:
         """Resubscribe on reconnect."""
-        # Group subscriptions to only re-subscribe once for each topic.
         self._max_qos.clear()
+        self._retained_topics.clear()
+        # Group subscriptions to only re-subscribe once for each topic.
         keyfunc = attrgetter("topic")
         self._async_queue_subscriptions(
             [
@@ -799,6 +807,14 @@ class MQTT:
         subscriptions = self._matching_subscriptions(msg.topic)
 
         for subscription in subscriptions:
+            if msg.retain:
+                retained_topics = self._retained_topics.setdefault(subscription, set())
+                # Skip if the subscription already received a retained message
+                if msg.topic in retained_topics:
+                    continue
+                # Remember the subscription had an initial retained message
+                self._retained_topics[subscription].add(msg.topic)
+
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
                 try:
