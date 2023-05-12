@@ -165,6 +165,7 @@ class StatisticsRow(BaseStatisticsRow, total=False):
     min: float | None
     max: float | None
     mean: float | None
+    change: float | None
 
 
 def _get_unit_class(unit: str | None) -> str | None:
@@ -980,6 +981,14 @@ def _reduce_statistics_per_week(
     )
 
 
+def _find_month_end_time(timestamp: datetime) -> datetime:
+    """Return the end of the month (midnight at the first day of the next month)."""
+    # We add 4 days to the end to make sure we are in the next month
+    return (timestamp.replace(day=28) + timedelta(days=4)).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+
+
 def reduce_month_ts_factory() -> (
     tuple[
         Callable[[float, float], bool],
@@ -1006,10 +1015,7 @@ def reduce_month_ts_factory() -> (
         start_local = _local_from_timestamp(time).replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
-        # We add 4 days to the end to make sure we are in the next month
-        end_local = (start_local.replace(day=28) + timedelta(days=4)).replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
+        end_local = _find_month_end_time(start_local)
         return (
             start_local.astimezone(dt_util.UTC).timestamp(),
             end_local.astimezone(dt_util.UTC).timestamp(),
@@ -1540,6 +1546,57 @@ def _extract_metadata_and_discard_impossible_columns(
     return metadata_ids
 
 
+def _augment_result_with_change(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    units: dict[str, str] | None,
+    _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    table: type[Statistics | StatisticsShortTerm],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+    result: dict[str, list[StatisticsRow]],
+) -> None:
+    """Add change to the result."""
+    drop_sum = "sum" not in _types
+    prev_sums = {}
+    if tmp := _statistics_at_time(
+        session,
+        {metadata[statistic_id][0] for statistic_id in result},
+        table,
+        start_time,
+        {"sum"},
+    ):
+        _metadata = dict(metadata.values())
+        for row in tmp:
+            metadata_by_id = _metadata[row.metadata_id]
+            statistic_id = metadata_by_id["statistic_id"]
+
+            state_unit = unit = metadata_by_id["unit_of_measurement"]
+            if state := hass.states.get(statistic_id):
+                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+
+            if convert is not None:
+                prev_sums[statistic_id] = convert(row.sum)
+            else:
+                prev_sums[statistic_id] = row.sum
+
+    for statistic_id, rows in result.items():
+        prev_sum = prev_sums.get(statistic_id) or 0
+        for statistics_row in rows:
+            if "sum" not in statistics_row:
+                continue
+            if drop_sum:
+                _sum = statistics_row.pop("sum")
+            else:
+                _sum = statistics_row["sum"]
+            if _sum is None:
+                statistics_row["change"] = None
+                continue
+            statistics_row["change"] = _sum - prev_sum
+            prev_sum = _sum
+
+
 def _statistics_during_period_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -1548,7 +1605,7 @@ def _statistics_during_period_with_session(
     statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
@@ -1559,7 +1616,6 @@ def _statistics_during_period_with_session(
         # This is for backwards compatibility to avoid a breaking change
         # for custom integrations that call this method.
         statistic_ids = set(statistic_ids)  # type: ignore[unreachable]
-    metadata = None
     # Fetch metadata for the given (or all) statistic_ids
     metadata = get_instance(hass).statistics_meta_manager.get_many(
         session, statistic_ids=statistic_ids
@@ -1567,9 +1623,46 @@ def _statistics_during_period_with_session(
     if not metadata:
         return {}
 
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]] = set()
+    for stat_type in _types:
+        if stat_type == "change":
+            types.add("sum")
+            continue
+        types.add(stat_type)
+
     metadata_ids = None
     if statistic_ids is not None:
         metadata_ids = _extract_metadata_and_discard_impossible_columns(metadata, types)
+
+    # Align start_time and end_time with the period
+    if period == "day":
+        start_time = dt_util.as_local(start_time).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        start_time = start_time.replace()
+        if end_time is not None:
+            end_local = dt_util.as_local(end_time)
+            end_time = end_local.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            ) + timedelta(days=1)
+    elif period == "week":
+        start_local = dt_util.as_local(start_time)
+        start_time = start_local.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(days=start_local.weekday())
+        if end_time is not None:
+            end_local = dt_util.as_local(end_time)
+            end_time = (
+                end_local.replace(hour=0, minute=0, second=0, microsecond=0)
+                - timedelta(days=end_local.weekday())
+                + timedelta(days=7)
+            )
+    elif period == "month":
+        start_time = dt_util.as_local(start_time).replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        if end_time is not None:
+            end_time = _find_month_end_time(dt_util.as_local(end_time))
 
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
@@ -1597,17 +1690,22 @@ def _statistics_during_period_with_session(
         types,
     )
 
-    # Return statistics combined with metadata
-    if period not in ("day", "week", "month"):
-        return result
-
     if period == "day":
-        return _reduce_statistics_per_day(result, types)
+        result = _reduce_statistics_per_day(result, types)
 
     if period == "week":
-        return _reduce_statistics_per_week(result, types)
+        result = _reduce_statistics_per_week(result, types)
 
-    return _reduce_statistics_per_month(result, types)
+    if period == "month":
+        result = _reduce_statistics_per_month(result, types)
+
+    if "change" in _types:
+        _augment_result_with_change(
+            hass, session, start_time, units, _types, table, metadata, result
+        )
+
+    # Return statistics combined with metadata
+    return result
 
 
 def statistics_during_period(
@@ -1617,7 +1715,7 @@ def statistics_during_period(
     statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
@@ -1886,8 +1984,6 @@ def _sorted_statistics_to_dict(  # noqa: C901
     assert stats, "stats must not be empty"  # Guard against implementation error
     result: dict[str, list[StatisticsRow]] = defaultdict(list)
     metadata = dict(_metadata.values())
-    need_stat_at_start_time: set[int] = set()
-    start_time_ts = start_time.timestamp() if start_time else None
     # Identify metadata IDs for which no data was available at the requested start time
     field_map: dict[str, int] = {key: idx for idx, key in enumerate(stats[0]._fields)}
     metadata_id_idx = field_map["metadata_id"]
@@ -1898,9 +1994,6 @@ def _sorted_statistics_to_dict(  # noqa: C901
     for meta_id, group in groupby(stats, key_func):
         stats_list = stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
-        first_start_time_ts = stats_list[0][start_ts_idx]
-        if start_time_ts and first_start_time_ts > start_time_ts:
-            need_stat_at_start_time.add(meta_id)
 
     # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:
@@ -1910,15 +2003,6 @@ def _sorted_statistics_to_dict(  # noqa: C901
             # statistic IDs that are not in the data at the end
             if stat_id in seen_statistic_ids:
                 result[stat_id] = []
-
-    # Fetch last known statistics for the needed metadata IDs
-    if need_stat_at_start_time:
-        assert start_time  # Can not be None if need_stat_at_start_time is not empty
-        if tmp := _statistics_at_time(
-            session, need_stat_at_start_time, table, start_time, types
-        ):
-            for stat in tmp:
-                stats_by_meta_id[stat[metadata_id_idx]].insert(0, stat)
 
     # Figure out which fields we need to extract from the SQL result
     # and which indices they have in the result so we can avoid the overhead

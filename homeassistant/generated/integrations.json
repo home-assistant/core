@@ -1893,7 +1893,7 @@
     "geo_json_events": {
       "name": "GeoJSON",
       "integration_type": "service",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "geo_rss_events": {
