@@ -50,7 +50,7 @@ DISCONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for Google Mail integration."""
+    """Set up services for Netgear LTE integration."""
 
     async def service_handler(call: ServiceCall) -> None:
         """Apply a service."""
