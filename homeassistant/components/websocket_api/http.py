@@ -71,14 +71,19 @@ class WebSocketHandler:
         self.hass = hass
         self.request = request
         self.wsock = web.WebSocketResponse(heartbeat=55)
-        self._message_queue: deque = deque()
-        self._ready_future: asyncio.Future[None] | None = None
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub: Callable[[], None] | None = None
         self.connection: ActiveConnection | None = None
+
+        # The WebSocketHandler has a single consumer and path
+        # to where messages are queued. This allows the implementation
+        # to use a deque and an asyncio.Future to avoid the overhead of
+        # an asyncio.Queue.
+        self._message_queue: deque = deque()
+        self._ready_future: asyncio.Future[None] | None = None
 
     @property
     def description(self) -> str:
@@ -89,12 +94,13 @@ class WebSocketHandler:
 
     async def _writer(self) -> None:
         """Write outgoing messages."""
-        # Exceptions if Socket disconnected or cancelled by connection handler
+        # Variables are set locally to avoid lookups in the loop
         message_queue = self._message_queue
         logger = self._logger
         send_str = self.wsock.send_str
         loop = self.hass.loop
         debug = logger.debug
+        # Exceptions if Socket disconnected or cancelled by connection handler
         try:
             with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
                 while not self.wsock.closed:
@@ -103,6 +109,7 @@ class WebSocketHandler:
                         await self._ready_future
                         messages_remaining = len(message_queue)
 
+                    # A None message is used to signal the end of the connection
                     if (process := message_queue.popleft()) is None:
                         return
 
@@ -120,6 +127,7 @@ class WebSocketHandler:
 
                     messages: list[str] = [message]
                     while messages_remaining:
+                        # A None message is used to signal the end of the connection
                         if (process := message_queue.popleft()) is None:
                             return
                         messages.append(
