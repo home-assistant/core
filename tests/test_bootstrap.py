@@ -886,8 +886,10 @@ async def test_bootstrap_dependencies(
             dependencies=["file_upload", "http"],
         ),
     )
+
+    # We patch the _import platform method to avoid loading the platform module
+    # to avoid depending on non core components in the tests.
     mqtt_integration._import_platform = Mock()
-    # mqtt_integration.async_migrate = AsyncMock(return_value=False)
 
     integrations = {
         "mqtt": {

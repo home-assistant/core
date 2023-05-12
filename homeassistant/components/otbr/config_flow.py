@@ -98,6 +98,10 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             for current_entry in current_entries:
                 if current_entry.source != SOURCE_HASSIO:
                     continue
+                if current_entry.unique_id != discovery_info.uuid:
+                    self.hass.config_entries.async_update_entry(
+                        current_entry, unique_id=discovery_info.uuid
+                    )
                 current_url = yarl.URL(current_entry.data["url"])
                 if (
                     current_url.host != config["host"]
@@ -116,7 +120,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Failed to communicate with OTBR@%s: %s", url, exc)
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(DOMAIN)
+        await self.async_set_unique_id(discovery_info.uuid)
         return self.async_create_entry(
             title="Open Thread Border Router",
             data=config_entry_data,

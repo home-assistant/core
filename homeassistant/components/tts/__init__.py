@@ -66,10 +66,11 @@ from .const import (
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
+from .models import Voice
 
 __all__ = [
+    "async_default_engine",
     "async_get_media_source_audio",
-    "async_resolve_engine",
     "async_support_options",
     "ATTR_AUDIO_OUTPUT",
     "CONF_LANG",
@@ -80,6 +81,7 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "Provider",
     "TtsAudioType",
+    "Voice",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,6 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_PLATFORM = "platform"
 ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
+ATTR_VOICE = "voice"
 
 CONF_LANG = "language"
 
@@ -98,7 +101,7 @@ _RE_LEGACY_VOICE_FILE = re.compile(
     r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}"
 )
 _RE_VOICE_FILE = re.compile(
-    r"([a-f0-9]{40})_([^_]+)_([^_]+)_(tts\.[a-z_]+)\.[a-z0-9]{3,4}"
+    r"([a-f0-9]{40})_([^_]+)_([^_]+)_(tts\.[a-z0-9_]+)\.[a-z0-9]{3,4}"
 )
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
@@ -111,6 +114,26 @@ class TTSCache(TypedDict):
     filename: str
     voice: bytes
     pending: asyncio.Task | None
+
+
+@callback
+def async_default_engine(hass: HomeAssistant) -> str | None:
+    """Return the domain or entity id of the default engine.
+
+    Returns None if no engines found.
+    """
+    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
+    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+
+    if "cloud" in manager.providers:
+        return "cloud"
+
+    entity = next(iter(component.entities), None)
+
+    if entity is not None:
+        return entity.entity_id
+
+    return next(iter(manager.providers), None)
 
 
 @callback
@@ -127,15 +150,7 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
             return None
         return engine
 
-    if "cloud" in manager.providers:
-        return "cloud"
-
-    entity = next(iter(component.entities), None)
-
-    if entity is not None:
-        return entity.entity_id
-
-    return next(iter(manager.providers), None)
+    return async_default_engine(hass)
 
 
 async def async_support_options(
@@ -191,6 +206,7 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TTS."""
     websocket_api.async_register_command(hass, websocket_list_engines)
+    websocket_api.async_register_command(hass, websocket_get_engine)
     websocket_api.async_register_command(hass, websocket_list_engine_voices)
 
     # Legacy config options
@@ -302,7 +318,7 @@ class TextToSpeechEntity(RestoreEntity):
         return None
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
         return None
 
@@ -468,19 +484,12 @@ class SpeechManager:
         """Validate and process options."""
         # Languages
         language = language or engine_instance.default_language
-
-        if language is None or engine_instance.supported_languages is None:
-            raise HomeAssistantError(f"Not supported language {language}")
-
-        if language not in engine_instance.supported_languages:
-            language_matches = language_util.matches(
-                language, engine_instance.supported_languages
-            )
-            if language_matches:
-                # Choose best match
-                language = language_matches[0]
-            else:
-                raise HomeAssistantError(f"Not supported language {language}")
+        if (
+            language is None
+            or engine_instance.supported_languages is None
+            or language not in engine_instance.supported_languages
+        ):
+            raise HomeAssistantError(f"Language '{language}' not supported")
 
         # Options
         if (default_options := engine_instance.default_options) and options:
@@ -958,6 +967,47 @@ def websocket_list_engines(
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"providers": providers})
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "tts/engine/get",
+        vol.Required("engine_id"): str,
+    }
+)
+@callback
+def websocket_get_engine(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Get text to speech engine info."""
+    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
+    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+
+    engine_id = msg["engine_id"]
+    provider_info: dict[str, Any]
+
+    provider: TextToSpeechEntity | Provider | None = next(
+        (entity for entity in component.entities if entity.entity_id == engine_id), None
+    )
+    if not provider:
+        provider = manager.providers.get(engine_id)
+
+    if not provider:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_FOUND,
+            f"tts engine {engine_id} not found",
+        )
+        return
+
+    provider_info = {
+        "engine_id": engine_id,
+        "supported_languages": provider.supported_languages,
+    }
+
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"provider": provider_info})
     )
 
 

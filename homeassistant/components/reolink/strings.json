@@ -83,6 +83,13 @@
           "digitalfirst": "Digital first",
           "pantiltfirst": "Pan/tilt first"
         }
+      },
+      "status_led": {
+        "state": {
+          "stayoff": "Stay off",
+          "auto": "Auto",
+          "alwaysonatnight": "Auto & always on at night"
+        }
       }
     }
   }

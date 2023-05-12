@@ -1,8 +1,6 @@
 """Support for Netgear LTE modems."""
 import asyncio
 from datetime import timedelta
-import logging
-from typing import Final
 
 import aiohttp
 import attr
@@ -30,18 +28,24 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from . import sensor_types
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTR_AUTOCONNECT,
+    ATTR_FAILOVER,
+    ATTR_FROM,
+    ATTR_HOST,
+    ATTR_MESSAGE,
+    ATTR_SMS_ID,
+    AUTOCONNECT_MODES,
+    CONF_BINARY_SENSOR,
+    CONF_NOTIFY,
+    CONF_SENSOR,
+    DISPATCHER_NETGEAR_LTE,
+    DOMAIN,
+    FAILOVER_MODES,
+    LOGGER,
+)
 
 SCAN_INTERVAL = timedelta(seconds=10)
-DISPATCHER_NETGEAR_LTE = "netgear_lte_update"
-
-CONF_NOTIFY: Final = "notify"
-CONF_BINARY_SENSOR: Final = "binary_sensor"
-CONF_SENSOR: Final = "sensor"
-
-DOMAIN = "netgear_lte"
-DATA_KEY = "netgear_lte"
 
 EVENT_SMS = "netgear_lte_sms"
 
@@ -49,16 +53,6 @@ SERVICE_DELETE_SMS = "delete_sms"
 SERVICE_SET_OPTION = "set_option"
 SERVICE_CONNECT_LTE = "connect_lte"
 SERVICE_DISCONNECT_LTE = "disconnect_lte"
-
-ATTR_HOST = "host"
-ATTR_SMS_ID = "sms_id"
-ATTR_FROM = "from"
-ATTR_MESSAGE = "message"
-ATTR_FAILOVER = "failover"
-ATTR_AUTOCONNECT = "autoconnect"
-
-FAILOVER_MODES = ["auto", "wire", "mobile"]
-AUTOCONNECT_MODES = ["never", "home", "always"]
 
 
 NOTIFY_SCHEMA = vol.Schema(
@@ -148,11 +142,11 @@ class ModemData:
         try:
             self.data = await self.modem.information()
             if not self.connected:
-                _LOGGER.warning("Connected to %s", self.host)
+                LOGGER.warning("Connected to %s", self.host)
                 self.connected = True
         except eternalegypt.Error:
             if self.connected:
-                _LOGGER.warning("Lost connection to %s", self.host)
+                LOGGER.warning("Lost connection to %s", self.host)
                 self.connected = False
             self.data = None
 
@@ -177,20 +171,20 @@ class LTEData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Netgear LTE component."""
-    if DATA_KEY not in hass.data:
+    if DOMAIN not in hass.data:
         websession = async_create_clientsession(
             hass, cookie_jar=aiohttp.CookieJar(unsafe=True)
         )
-        hass.data[DATA_KEY] = LTEData(websession)
+        hass.data[DOMAIN] = LTEData(websession)
 
         async def service_handler(service: ServiceCall) -> None:
             """Apply a service."""
             host = service.data.get(ATTR_HOST)
             conf = {CONF_HOST: host}
-            modem_data = hass.data[DATA_KEY].get_modem_data(conf)
+            modem_data = hass.data[DOMAIN].get_modem_data(conf)
 
             if not modem_data:
-                _LOGGER.error("%s: host %s unavailable", service.service, host)
+                LOGGER.error("%s: host %s unavailable", service.service, host)
                 return
 
             if service.service == SERVICE_DELETE_SMS:
@@ -272,7 +266,7 @@ async def _setup_lte(hass, lte_config):
     host = lte_config[CONF_HOST]
     password = lte_config[CONF_PASSWORD]
 
-    websession = hass.data[DATA_KEY].websession
+    websession = hass.data[DOMAIN].websession
     modem = eternalegypt.Modem(hostname=host, websession=websession)
 
     modem_data = ModemData(hass, host, modem)
@@ -308,7 +302,7 @@ async def _login(hass, modem_data, password):
     await modem_data.modem.add_sms_listener(fire_sms_event)
 
     await modem_data.async_update()
-    hass.data[DATA_KEY].modem_data[modem_data.host] = modem_data
+    hass.data[DOMAIN].modem_data[modem_data.host] = modem_data
 
     async def _update(now):
         """Periodic update."""
@@ -320,7 +314,7 @@ async def _login(hass, modem_data, password):
         """Clean up resources."""
         update_unsub()
         await modem_data.modem.logout()
-        del hass.data[DATA_KEY].modem_data[modem_data.host]
+        del hass.data[DOMAIN].modem_data[modem_data.host]
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
@@ -328,7 +322,7 @@ async def _login(hass, modem_data, password):
 async def _retry_login(hass, modem_data, password):
     """Sleep and retry setup."""
 
-    _LOGGER.warning("Could not connect to %s. Will keep trying", modem_data.host)
+    LOGGER.warning("Could not connect to %s. Will keep trying", modem_data.host)
 
     modem_data.connected = False
     delay = 15

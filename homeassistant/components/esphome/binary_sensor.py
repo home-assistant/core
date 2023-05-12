@@ -34,7 +34,7 @@ async def async_setup_entry(
     entry_data = DomainData.get(hass).get_entry_data(entry)
     assert entry_data.device_info is not None
     if entry_data.device_info.voice_assistant_version:
-        async_add_entities([EsphomeCallActiveBinarySensor(entry_data)])
+        async_add_entities([EsphomeAssistInProgressBinarySensor(entry_data)])
 
 
 class EsphomeBinarySensor(
@@ -68,12 +68,12 @@ class EsphomeBinarySensor(
         return super().available
 
 
-class EsphomeCallActiveBinarySensor(EsphomeAssistEntity, BinarySensorEntity):
+class EsphomeAssistInProgressBinarySensor(EsphomeAssistEntity, BinarySensorEntity):
     """A binary sensor implementation for ESPHome for use with assist_pipeline."""
 
     entity_description = BinarySensorEntityDescription(
-        key="call_active",
-        translation_key="call_active",
+        key="assist_in_progress",
+        translation_key="assist_in_progress",
     )
 
     @property

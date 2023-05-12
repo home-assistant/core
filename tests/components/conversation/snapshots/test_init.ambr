@@ -17,6 +17,12 @@
     'name': 'Mock Title',
   })
 # ---
+# name: test_get_agent_info.3
+  dict({
+    'id': 'mock-entry',
+    'name': 'test',
+  })
+# ---
 # name: test_get_agent_list
   dict({
     'agents': list([
@@ -85,6 +91,11 @@
           'smurfish',
         ]),
       }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
     ]),
   })
 # ---
@@ -103,6 +114,11 @@
         'supported_languages': list([
           'smurfish',
         ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
       }),
     ]),
   })
@@ -123,6 +139,11 @@
         'supported_languages': list([
         ]),
       }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
     ]),
   })
 # ---
@@ -141,6 +162,11 @@
         'name': 'Mock Title',
         'supported_languages': list([
         ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
       }),
     ]),
   })
@@ -162,6 +188,11 @@
         'supported_languages': list([
         ]),
       }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
     ]),
   })
 # ---
@@ -181,6 +212,11 @@
         'name': 'Mock Title',
         'supported_languages': list([
         ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
       }),
     ]),
   })

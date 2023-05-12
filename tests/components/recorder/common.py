@@ -358,8 +358,9 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
             events.add(object)
 
     event_type_to_event_type_ids = instance.event_type_manager.get_many(
-        event_types, session
+        event_types, session, True
     )
+    manually_added_event_types: list[str] = []
 
     for event in events:
         event_type = event.event_type
@@ -371,7 +372,11 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
             continue
         if event_type not in event_types_objects:
             event_types_objects[event_type] = EventTypes(event_type=event_type)
+            manually_added_event_types.append(event_type)
         event.event_type_rel = event_types_objects[event_type]
+
+    for event_type in manually_added_event_types:
+        instance.event_type_manager._non_existent_event_types.pop(event_type, None)
 
 
 def create_engine_test_for_schema_version_postfix(

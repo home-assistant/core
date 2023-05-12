@@ -52,6 +52,7 @@ from .const import (
     TtsAudioType,
 )
 from .media_source import generate_media_source_id
+from .models import Voice
 
 if TYPE_CHECKING:
     from . import SpeechManager
@@ -229,7 +230,7 @@ class Provider:
         return None
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return a list of supported voices for a language."""
         return None
 

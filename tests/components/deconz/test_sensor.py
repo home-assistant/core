@@ -14,7 +14,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt
@@ -106,10 +113,130 @@ TEST_DATA = [
             "attributes": {
                 "friendly_name": "BOSCH Air quality sensor PPB",
                 "state_class": "measurement",
-                "unit_of_measurement": "ppb",
+                "unit_of_measurement": CONCENTRATION_PARTS_PER_BILLION,
             },
             "websocket_event": {"state": {"airqualityppb": 1000}},
             "next_state": "1000",
+        },
+    ),
+    (  # Air quality 6 in 1 (without airquality) -> airquality_co2_density
+        {
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "e1a406dbbe1438fa924007309ef46a01",
+            "lastseen": "2023-03-29T18:25Z",
+            "manufacturername": "_TZE200_dwcarsat",
+            "modelid": "TS0601",
+            "name": "AirQuality 1",
+            "state": {
+                "airquality_co2_density": 359,
+                "airquality_formaldehyde_density": 4,
+                "airqualityppb": 15,
+                "lastupdated": "2023-03-29T19:05:41.903",
+                "pm2_5": 8,
+            },
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:00:00:00:00:00:00:01-02-0113",
+        },
+        {
+            "entity_count": 4,
+            "device_count": 3,
+            "entity_id": "sensor.airquality_1_co2",
+            "unique_id": "00:00:00:00:00:00:00:01-02-0113-air_quality_co2",
+            "state": "359",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.CO2,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "friendly_name": "AirQuality 1 CO2",
+                "device_class": SensorDeviceClass.CO2,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
+            },
+            "websocket_event": {"state": {"airquality_co2_density": 332}},
+            "next_state": "332",
+        },
+    ),
+    (  # Air quality 6 in 1 (without airquality) -> airquality_formaldehyde_density
+        {
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "e1a406dbbe1438fa924007309ef46a01",
+            "lastseen": "2023-03-29T18:25Z",
+            "manufacturername": "_TZE200_dwcarsat",
+            "modelid": "TS0601",
+            "name": "AirQuality 1",
+            "state": {
+                "airquality_co2_density": 359,
+                "airquality_formaldehyde_density": 4,
+                "airqualityppb": 15,
+                "lastupdated": "2023-03-29T19:05:41.903",
+                "pm2_5": 8,
+            },
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:00:00:00:00:00:00:01-02-0113",
+        },
+        {
+            "entity_count": 4,
+            "device_count": 3,
+            "entity_id": "sensor.airquality_1_ch2o",
+            "unique_id": "00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde",
+            "state": "4",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "friendly_name": "AirQuality 1 CH2O",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            },
+            "websocket_event": {"state": {"airquality_formaldehyde_density": 5}},
+            "next_state": "5",
+        },
+    ),
+    (  # Air quality 6 in 1 (without airquality) -> pm2_5
+        {
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "e1a406dbbe1438fa924007309ef46a01",
+            "lastseen": "2023-03-29T18:25Z",
+            "manufacturername": "_TZE200_dwcarsat",
+            "modelid": "TS0601",
+            "name": "AirQuality 1",
+            "state": {
+                "airquality_co2_density": 359,
+                "airquality_formaldehyde_density": 4,
+                "airqualityppb": 15,
+                "lastupdated": "2023-03-29T19:05:41.903",
+                "pm2_5": 8,
+            },
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:00:00:00:00:00:00:01-02-0113",
+        },
+        {
+            "entity_count": 4,
+            "device_count": 3,
+            "entity_id": "sensor.airquality_1_pm25",
+            "unique_id": "00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5",
+            "state": "8",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.PM25,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "friendly_name": "AirQuality 1 PM25",
+                "device_class": SensorDeviceClass.PM25,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            },
+            "websocket_event": {"state": {"pm2_5": 11}},
+            "next_state": "11",
         },
     ),
     (  # Battery sensor

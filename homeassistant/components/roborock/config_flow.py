@@ -6,7 +6,13 @@ from typing import Any
 
 from roborock.api import RoborockApiClient
 from roborock.containers import UserData
-from roborock.exceptions import RoborockException
+from roborock.exceptions import (
+    RoborockAccountDoesNotExist,
+    RoborockException,
+    RoborockInvalidCode,
+    RoborockInvalidEmail,
+    RoborockUrlException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -43,9 +49,15 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._client = RoborockApiClient(username)
             try:
                 await self._client.request_code()
+            except RoborockAccountDoesNotExist:
+                errors["base"] = "invalid_email"
+            except RoborockUrlException:
+                errors["base"] = "unknown_url"
+            except RoborockInvalidEmail:
+                errors["base"] = "invalid_email_format"
             except RoborockException as ex:
                 _LOGGER.exception(ex)
-                errors["base"] = "invalid_email"
+                errors["base"] = "unknown_roborock"
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.exception(ex)
                 errors["base"] = "unknown"
@@ -70,9 +82,11 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Logging into Roborock account using email provided code")
             try:
                 login_data = await self._client.code_login(code)
+            except RoborockInvalidCode:
+                errors["base"] = "invalid_code"
             except RoborockException as ex:
                 _LOGGER.exception(ex)
-                errors["base"] = "invalid_code"
+                errors["base"] = "unknown_roborock"
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.exception(ex)
                 errors["base"] = "unknown"

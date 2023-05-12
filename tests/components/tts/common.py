@@ -13,6 +13,7 @@ from homeassistant.components.tts import (
     Provider,
     TextToSpeechEntity,
     TtsAudioType,
+    Voice,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -31,7 +32,6 @@ from tests.common import (
 DEFAULT_LANG = "en_US"
 SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
-TEST_LANGUAGES = ["de", "en"]
 
 
 async def get_media_source_url(hass: HomeAssistant, media_content_id: str) -> str:
@@ -61,10 +61,13 @@ class BaseProvider:
         return SUPPORT_LANGUAGES
 
     @callback
-    def async_get_supported_voices(self, language: str) -> list[str] | None:
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
         """Return list of supported languages."""
         if language == "en-US":
-            return ["James Earl Jones", "Fran Drescher"]
+            return [
+                Voice("james_earl_jones", "James Earl Jones"),
+                Voice("fran_drescher", "Fran Drescher"),
+            ]
         return None
 
     @property
@@ -101,11 +104,7 @@ class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
     PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(
-                SUPPORT_LANGUAGES + TEST_LANGUAGES
-            )
-        }
+        {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
     )
 
     def __init__(self, provider: MockProvider, **kwargs: Any) -> None:

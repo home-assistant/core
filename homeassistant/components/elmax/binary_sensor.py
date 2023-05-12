@@ -44,11 +44,14 @@ async def async_setup_entry(
                 coordinator=coordinator,
             )
             entities.append(entity)
-        async_add_entities(entities, True)
-        known_devices.update([e.unique_id for e in entities])
+
+        if entities:
+            async_add_entities(entities)
+            known_devices.update([e.unique_id for e in entities])
 
     # Register a listener for the discovery of new devices
-    coordinator.async_add_listener(_discover_new_devices)
+    remove_handle = coordinator.async_add_listener(_discover_new_devices)
+    config_entry.async_on_unload(remove_handle)
 
     # Immediately run a discovery, so we don't need to wait for the next update
     _discover_new_devices()
