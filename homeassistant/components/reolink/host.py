@@ -377,7 +377,6 @@ class ReolinkHost:
             await self._api.get_motion_state_all_ch()
         except (
             aiohttp.ClientConnectorError,
-            asyncio.TimeoutError,
             ReolinkError,
         ) as err:
             _LOGGER.error(
@@ -385,6 +384,12 @@ class ReolinkHost:
                 self._api.host,
                 self._api.port,
                 str(err),
+            )
+        except asyncio.TimeoutError:
+            _LOGGER.error(
+                "Reolink timeout error while polling motion state for host %s:%s",
+                self._api.host,
+                self._api.port,
             )
 
         async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
