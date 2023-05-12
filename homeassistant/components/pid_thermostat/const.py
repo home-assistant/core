@@ -18,7 +18,7 @@ AC_MODE_HEAT = "heat"
 
 
 DEFAULT_NAME = "PID Thermostat"
-DEFAULT_CYCLE_TIME = {"minutes": 5}
+DEFAULT_CYCLE_TIME = {"seconds": 30}
 DEFAULT_PID_KP = 100.0
 DEFAULT_PID_KI = 0.1
 DEFAULT_PID_KD = 0.0
