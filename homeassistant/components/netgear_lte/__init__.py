@@ -2,11 +2,13 @@
 import asyncio
 from datetime import timedelta
 
-import aiohttp
+from aiohttp.cookiejar import CookieJar
 import attr
 import eternalegypt
+from eternalegypt import Error, Modem
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -17,10 +19,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from . import sensor_types
@@ -32,6 +36,7 @@ from .const import (
     CONF_BINARY_SENSOR,
     CONF_NOTIFY,
     CONF_SENSOR,
+    DATA_HASS_CONFIG,
     DISPATCHER_NETGEAR_LTE,
     DOMAIN,
     LOGGER,
@@ -90,6 +95,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+]
+
 
 @attr.s
 class ModemData:
@@ -137,60 +148,114 @@ class LTEData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Netgear LTE component."""
-    if DOMAIN not in hass.data:
-        websession = async_create_clientsession(
-            hass, cookie_jar=aiohttp.CookieJar(unsafe=True)
-        )
-        hass.data[DOMAIN] = LTEData(websession)
+    hass.data[DATA_HASS_CONFIG] = config
 
-        await async_setup_services(hass)
-
-    netgear_lte_config = config[DOMAIN]
-
-    # Set up each modem
-    tasks = [
-        hass.async_create_task(_setup_lte(hass, lte_conf))
-        for lte_conf in netgear_lte_config
-    ]
-    await asyncio.wait(tasks)
-
-    # Load platforms for each modem
-    for lte_conf in netgear_lte_config:
-        # Notify
-        for notify_conf in lte_conf[CONF_NOTIFY]:
-            discovery_info = {
-                CONF_HOST: lte_conf[CONF_HOST],
-                CONF_NAME: notify_conf.get(CONF_NAME),
-                CONF_NOTIFY: notify_conf,
-            }
+    if lte_config := config.get(DOMAIN):
+        for entry in lte_config:
             hass.async_create_task(
-                discovery.async_load_platform(
-                    hass, Platform.NOTIFY, DOMAIN, discovery_info, config
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
                 )
             )
-
-        # Sensor
-        sensor_conf = lte_conf[CONF_SENSOR]
-        discovery_info = {CONF_HOST: lte_conf[CONF_HOST], CONF_SENSOR: sensor_conf}
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, Platform.SENSOR, DOMAIN, discovery_info, config
-            )
-        )
-
-        # Binary Sensor
-        binary_sensor_conf = lte_conf[CONF_BINARY_SENSOR]
-        discovery_info = {
-            CONF_HOST: lte_conf[CONF_HOST],
-            CONF_BINARY_SENSOR: binary_sensor_conf,
-        }
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, Platform.BINARY_SENSOR, DOMAIN, discovery_info, config
-            )
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2023.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
         )
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Netgear LTE from a config entry."""
+    host = entry.data[CONF_HOST]
+    password = entry.data[CONF_PASSWORD]
+
+    websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+
+    hass.data[DOMAIN] = LTEData(websession)
+
+    modem = Modem(
+        hostname=host,
+        password=password,
+        websession=websession,
+    )
+    try:
+        await modem.login()
+    except Error as ex:
+        raise ConfigEntryNotReady("Cannot connect/authenticate") from ex
+
+    # Set up modem
+    await _setup_lte(hass, entry.data)
+
+    await async_setup_services(hass)
+
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: entry.title},
+            hass.data[DATA_HASS_CONFIG],
+        )
+    )
+    if lte_configs := hass.data[DATA_HASS_CONFIG].get(DOMAIN, []):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_notify",
+            breaks_in_ha_version="2023.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_notify",
+            translation_placeholders={
+                "name": f"{Platform.NOTIFY}.{entry.title.lower().replace(' ', '_')}"
+            },
+        )
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass,
+                Platform.NOTIFY,
+                DOMAIN,
+                {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: DOMAIN},
+                hass.data[DATA_HASS_CONFIG],
+            )
+        )
+    for lte_config in lte_configs:
+        if lte_config[CONF_HOST] == entry.data[CONF_HOST]:
+            for notify_conf in lte_config[CONF_NOTIFY]:
+                discovery_info = {
+                    CONF_HOST: lte_config[CONF_HOST],
+                    CONF_NAME: notify_conf.get(CONF_NAME),
+                    CONF_NOTIFY: notify_conf,
+                }
+                hass.async_create_task(
+                    discovery.async_load_platform(
+                        hass,
+                        Platform.NOTIFY,
+                        DOMAIN,
+                        discovery_info,
+                        hass.data[DATA_HASS_CONFIG],
+                    )
+                )
+
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.data[DOMAIN].get_modem_data(entry.data).modem.logout()
+
+    return unload_ok
 
 
 async def _setup_lte(hass, lte_config):
@@ -247,7 +312,7 @@ async def _login(hass, modem_data, password):
         """Clean up resources."""
         update_unsub()
         await modem_data.modem.logout()
-        del hass.data[DOMAIN].modem_data[modem_data.host]
+        hass.data[DOMAIN].modem_data.pop(modem_data.host)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 

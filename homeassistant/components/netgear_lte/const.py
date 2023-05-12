@@ -14,9 +14,13 @@ CONF_BINARY_SENSOR: Final = "binary_sensor"
 CONF_NOTIFY: Final = "notify"
 CONF_SENSOR: Final = "sensor"
 
+DATA_HASS_CONFIG = "netgear_lte_hass_config"
+DEFAULT_HOST = "192.168.5.1"
 DISPATCHER_NETGEAR_LTE = "netgear_lte_update"
 DOMAIN: Final = "netgear_lte"
 
 FAILOVER_MODES = ["auto", "wire", "mobile"]
 
 LOGGER = logging.getLogger(__package__)
+
+MANUFACTURER: Final = "Netgear"
