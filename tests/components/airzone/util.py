@@ -226,7 +226,7 @@ HVAC_MOCK = {
                     API_UNITS: 0,
                     API_ERRORS: [],
                     API_SPEED: 0,
-                    API_SPEEDS: 5,
+                    API_SPEEDS: 4,
                 },
             ]
         },

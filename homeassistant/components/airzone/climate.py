@@ -46,6 +46,22 @@ from .const import API_TEMPERATURE_STEP, DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneZoneEntity
 
+BASE_FAN_SPEEDS: Final[dict[int, str]] = {
+    0: FAN_AUTO,
+    1: FAN_LOW,
+}
+FAN_SPEED_MAPS: Final[dict[int, dict[int, str]]] = {
+    2: BASE_FAN_SPEEDS
+    | {
+        2: FAN_HIGH,
+    },
+    3: BASE_FAN_SPEEDS
+    | {
+        2: FAN_MEDIUM,
+        3: FAN_HIGH,
+    },
+}
+
 HVAC_ACTION_LIB_TO_HASS: Final[dict[OperationAction, HVACAction]] = {
     OperationAction.COOLING: HVACAction.COOLING,
     OperationAction.DRYING: HVACAction.DRYING,
@@ -129,25 +145,18 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
 
         speeds = self.get_airzone_value(AZD_SPEEDS)
         max_speed = max(speeds)
-        if max_speed == 2:
-            self._speeds = {
-                0: FAN_AUTO,
-                1: FAN_LOW,
-                2: FAN_HIGH,
-            }
-        elif max_speed == 3:
-            self._speeds = {
-                0: FAN_AUTO,
-                1: FAN_LOW,
-                2: FAN_MEDIUM,
-                3: FAN_HIGH,
-            }
+        if _speeds := FAN_SPEED_MAPS.get(max_speed):
+            self._speeds = _speeds
         else:
             for speed in speeds:
                 if speed == 0:
                     self._speeds[speed] = FAN_AUTO
                 else:
                     self._speeds[speed] = f"{int(round((speed * 100) / max_speed, 0))}%"
+
+            self._speeds[1] = FAN_LOW
+            self._speeds[int(round((max_speed + 1) / 2, 0))] = FAN_MEDIUM
+            self._speeds[max_speed] = FAN_HIGH
 
         self._speeds_reverse = {v: k for k, v in self._speeds.items()}
         self._attr_fan_modes = list(self._speeds_reverse)
