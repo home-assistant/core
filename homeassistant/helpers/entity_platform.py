@@ -125,8 +125,8 @@ class EntityPlatform:
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
         self.entities: dict[str, Entity] = {}
-        self.component_translations: dict[str, Any] = {}
-        self.platform_translations: dict[str, Any] = {}
+        self.component_translations: dict[str, str] = {}
+        self.platform_translations: dict[str, str] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -627,7 +627,7 @@ class EntityPlatform:
             else:
                 if device and entity.has_entity_name:  # type: ignore[unreachable]
                     device_name = device.name_by_user or device.name
-                    if not entity.name:
+                    if entity.use_device_name:
                         suggested_object_id = device_name
                     else:
                         suggested_object_id = f"{device_name} {entity.name}"

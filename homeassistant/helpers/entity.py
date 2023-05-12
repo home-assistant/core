@@ -53,6 +53,15 @@ SOURCE_CONFIG_ENTRY = "config_entry"
 SOURCE_PLATFORM_CONFIG = "platform_config"
 
 
+class DeviceName(Enum):
+    """Singleton to use device name."""
+
+    _singleton = 0
+
+
+DEVICE_NAME = DeviceName._singleton  # pylint: disable=protected-access
+
+
 class DeviceClassName(Enum):
     """Singleton to use device class name."""
 
@@ -229,7 +238,7 @@ class EntityDescription:
     force_update: bool = False
     icon: str | None = None
     has_entity_name: bool = False
-    name: str | DeviceClassName | None = None
+    name: str | DeviceClassName | DeviceName | None = None
     translation_key: str | None = None
     unit_of_measurement: str | None = None
 
@@ -298,7 +307,7 @@ class Entity(ABC):
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
-    _attr_name: str | DeviceClassName | None
+    _attr_name: str | DeviceClassName | DeviceName | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
@@ -318,6 +327,39 @@ class Entity(ABC):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._attr_unique_id
+
+    @property
+    def use_device_name(self) -> bool:
+        """Return if this entity does not have its own name.
+
+        Should be True if the entity represents the single main feature of a device.
+        """
+        if not self.has_entity_name:
+            return False
+        if hasattr(self, "_attr_name"):
+            if (name := self._attr_name) is DEVICE_NAME:
+                return True
+            if not name:
+                # Backwards compatibility with setting _attr_name to None to indicate
+                # device name.
+                # Deprecated in HA Core 2023.6, remove in HA Core 2023.7
+                return True
+            return False
+        if hasattr(self, "entity_description"):
+            if (name := self.entity_description.name) is DEVICE_NAME:
+                return True
+            if not name:
+                # Backwards compatibility with setting EntityDescription.name to None
+                # for device name.
+                # Deprecated in HA Core 2023.6, remove in HA Core 2023.7
+                return True
+            return False
+        if not self.name:
+            # Backwards compatibility with setting EntityDescription.name to None
+            # for device name.
+            # Deprecated in HA Core 2023.6, remove in HA Core 2023.7
+            return True
+        return False
 
     @property
     def has_entity_name(self) -> bool:
@@ -342,11 +384,16 @@ class Entity(ABC):
 
     @property
     def name(self) -> str | None:
-        """Return the name of the entity."""
+        """Return the name of the entity.
+
+        Returns None if the name is set to DEVICE_NAME.
+        """
         if hasattr(self, "_attr_name"):
-            if self._attr_name is DEVICE_CLASS_NAME:
+            if (name := self._attr_name) is DEVICE_CLASS_NAME:
                 return self._device_class_name()
-            return self._attr_name
+            if name is DEVICE_NAME:
+                return None
+            return name
         if self.translation_key is not None and self.has_entity_name:
             assert self.platform
             name_translation_key = (
@@ -354,12 +401,14 @@ class Entity(ABC):
                 f".{self.translation_key}.name"
             )
             if name_translation_key in self.platform.platform_translations:
-                name: str = self.platform.platform_translations[name_translation_key]
+                name = self.platform.platform_translations[name_translation_key]
                 return name
         if hasattr(self, "entity_description"):
-            if self.entity_description.name is DEVICE_CLASS_NAME:
+            if (name := self.entity_description.name) is DEVICE_CLASS_NAME:
                 return self._device_class_name()
-            return self.entity_description.name
+            if name is DEVICE_NAME:
+                return None
+            return name
         return None
 
     @property
@@ -637,9 +686,9 @@ class Entity(ABC):
         ):
             return self.name
 
-        if not (name := self.name):
+        if self.use_device_name:
             return device_entry.name_by_user or device_entry.name
-        return f"{device_entry.name_by_user or device_entry.name} {name}"
+        return f"{device_entry.name_by_user or device_entry.name} {self.name}"
 
     @callback
     def _async_write_ha_state(self) -> None:
