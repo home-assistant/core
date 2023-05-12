@@ -1,8 +1,6 @@
 """Support for Netgear LTE modems."""
 import asyncio
 from datetime import timedelta
-import logging
-from typing import Final
 
 from aiohttp.cookiejar import CookieJar
 import attr
@@ -20,47 +18,34 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from . import sensor_types
-from .const import DATA_HASS_CONFIG, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTR_FROM,
+    ATTR_HOST,
+    ATTR_MESSAGE,
+    ATTR_SMS_ID,
+    CONF_BINARY_SENSOR,
+    CONF_NOTIFY,
+    CONF_SENSOR,
+    DATA_HASS_CONFIG,
+    DISPATCHER_NETGEAR_LTE,
+    DOMAIN,
+    LOGGER,
+)
+from .services import async_setup_services
 
 SCAN_INTERVAL = timedelta(seconds=10)
-DISPATCHER_NETGEAR_LTE = "netgear_lte_update"
-
-CONF_NOTIFY: Final = "notify"
-CONF_BINARY_SENSOR: Final = "binary_sensor"
-CONF_SENSOR: Final = "sensor"
 
 EVENT_SMS = "netgear_lte_sms"
-
-SERVICE_DELETE_SMS = "delete_sms"
-SERVICE_SET_OPTION = "set_option"
-SERVICE_CONNECT_LTE = "connect_lte"
-SERVICE_DISCONNECT_LTE = "disconnect_lte"
-
-ATTR_HOST = "host"
-ATTR_SMS_ID = "sms_id"
-ATTR_FROM = "from"
-ATTR_MESSAGE = "message"
-ATTR_FAILOVER = "failover"
-ATTR_AUTOCONNECT = "autoconnect"
-
-FAILOVER_MODES = ["auto", "wire", "mobile"]
-AUTOCONNECT_MODES = ["never", "home", "always"]
 
 
 NOTIFY_SCHEMA = vol.Schema(
@@ -110,28 +95,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DELETE_SMS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_HOST): cv.string,
-        vol.Required(ATTR_SMS_ID): vol.All(cv.ensure_list, [cv.positive_int]),
-    }
-)
-
-SET_OPTION_SCHEMA = vol.Schema(
-    vol.All(
-        cv.has_at_least_one_key(ATTR_FAILOVER, ATTR_AUTOCONNECT),
-        {
-            vol.Optional(ATTR_HOST): cv.string,
-            vol.Optional(ATTR_FAILOVER): vol.In(FAILOVER_MODES),
-            vol.Optional(ATTR_AUTOCONNECT): vol.In(AUTOCONNECT_MODES),
-        },
-    )
-)
-
-CONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
-
-DISCONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
-
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.NOTIFY,
@@ -156,11 +119,11 @@ class ModemData:
         try:
             self.data = await self.modem.information()
             if not self.connected:
-                _LOGGER.warning("Connected to %s", self.host)
+                LOGGER.warning("Connected to %s", self.host)
                 self.connected = True
         except eternalegypt.Error:
             if self.connected:
-                _LOGGER.warning("Lost connection to %s", self.host)
+                LOGGER.warning("Lost connection to %s", self.host)
                 self.connected = False
             self.data = None
 
@@ -229,39 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up modem
     await _setup_lte(hass, entry.data)
 
-    async def service_handler(service: ServiceCall) -> None:
-        """Apply a service."""
-        host = service.data.get(ATTR_HOST)
-        conf = {CONF_HOST: host}
-        data: LTEData = hass.data[DOMAIN]
-        modem_data: ModemData = data.get_modem_data(conf)
-
-        if not modem_data:
-            _LOGGER.error("%s: host %s unavailable", service.service, host)
-            return
-
-        if service.service == SERVICE_DELETE_SMS:
-            for sms_id in service.data[ATTR_SMS_ID]:
-                await modem_data.modem.delete_sms(sms_id)
-        elif service.service == SERVICE_SET_OPTION:
-            if failover := service.data.get(ATTR_FAILOVER):
-                await modem_data.modem.set_failover_mode(failover)
-            if autoconnect := service.data.get(ATTR_AUTOCONNECT):
-                await modem_data.modem.set_autoconnect_mode(autoconnect)
-        elif service.service == SERVICE_CONNECT_LTE:
-            await modem_data.modem.connect_lte()
-        elif service.service == SERVICE_DISCONNECT_LTE:
-            await modem_data.modem.disconnect_lte()
-
-    service_schemas = {
-        SERVICE_DELETE_SMS: DELETE_SMS_SCHEMA,
-        SERVICE_SET_OPTION: SET_OPTION_SCHEMA,
-        SERVICE_CONNECT_LTE: CONNECT_LTE_SCHEMA,
-        SERVICE_DISCONNECT_LTE: DISCONNECT_LTE_SCHEMA,
-    }
-
-    for service, schema in service_schemas.items():
-        hass.services.async_register(DOMAIN, service, service_handler, schema=schema)
+    await async_setup_services(hass)
 
     hass.async_create_task(
         discovery.async_load_platform(
@@ -389,7 +320,7 @@ async def _login(hass, modem_data, password):
 async def _retry_login(hass, modem_data, password):
     """Sleep and retry setup."""
 
-    _LOGGER.warning("Could not connect to %s. Will keep trying", modem_data.host)
+    LOGGER.warning("Could not connect to %s. Will keep trying", modem_data.host)
 
     modem_data.connected = False
     delay = 15
@@ -401,50 +332,3 @@ async def _retry_login(hass, modem_data, password):
             await _login(hass, modem_data, password)
         except eternalegypt.Error:
             delay = min(2 * delay, 300)
-
-
-@attr.s
-class LTEEntity(Entity):
-    """Base LTE entity."""
-
-    modem_data = attr.ib()
-    entity_description = attr.ib()
-
-    _unique_id = attr.ib(init=False)
-
-    @_unique_id.default
-    def _init_unique_id(self):
-        """Register unique_id while we know data is valid."""
-        return f"{self.entity_description.key}_{self.modem_data.data.serial_number}"
-
-    async def async_added_to_hass(self):
-        """Register callback."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DISPATCHER_NETGEAR_LTE, self.async_write_ha_state
-            )
-        )
-
-    async def async_update(self):
-        """Force update of state."""
-        await self.modem_data.async_update()
-
-    @property
-    def should_poll(self):
-        """Return that the sensor should not be polled."""
-        return False
-
-    @property
-    def available(self):
-        """Return the availability of the sensor."""
-        return self.modem_data.data is not None
-
-    @property
-    def unique_id(self):
-        """Return a unique ID like 'usage_5TG365AB0078V'."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Netgear LTE {self.entity_description.key}"
