@@ -195,6 +195,9 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state."""
+        if not self._nws.observation:
+            return None
+
         value = self._nws.observation.get(self.entity_description.key)
         if value is None:
             return None
