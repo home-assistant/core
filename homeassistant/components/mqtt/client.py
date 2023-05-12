@@ -623,7 +623,6 @@ class MQTT:
             """Remove subscription."""
             self._async_untrack_subscription(subscription)
             self._matching_subscriptions.cache_clear()
-            # Cleanup the track record for retained topics for this subscription
             if subscription in self._retained_topics:
                 del self._retained_topics[subscription]
             # Only unsubscribe if currently connected
