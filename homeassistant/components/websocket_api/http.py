@@ -97,18 +97,19 @@ class WebSocketHandler:
         try:
             with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
                 while not self.wsock.closed:
-                    if len(message_queue) == 0:
+                    if (messages_remaining := len(message_queue)) == 0:
                         self._ready_future = loop.create_future()
                         await self._ready_future
+                        messages_remaining = len(message_queue)
 
                     if (process := message_queue.popleft()) is None:
                         return
 
+                    messages_remaining -= 1
                     message = process if isinstance(process, str) else process()
-                    no_remaining_messages = len(message_queue) == 0
 
                     if (
-                        no_remaining_messages
+                        not messages_remaining
                         or not self.connection
                         or not self.connection.can_coalesce
                     ):
