@@ -622,10 +622,12 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
-            if entity.entity_id is not None:
+            # An entity may suggest the entity_id by setting entity_id itself
+            suggested_entity_id: str | None = entity.entity_id
+            if suggested_entity_id is not None:
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
             else:
-                if device and entity.has_entity_name:  # type: ignore[unreachable]
+                if device and entity.has_entity_name:
                     device_name = device.name_by_user or device.name
                     if not entity.name:
                         suggested_object_id = device_name
