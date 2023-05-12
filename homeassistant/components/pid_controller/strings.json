@@ -24,12 +24,12 @@
           "kp": "Proportional gain factor, directly gaining the error to compensate the fault (Kp).",
           "ki": "Integration factor, reducing offset fault over time (Ki).",
           "kd": "Differential factor, damping the overshoot (Kd).",
-          "direction": "When direct, output will increase to decrease fault, when reverse output will decrease to decrease fault",
+          "direction": "When direct, output will increase to decrease fault, when reverse output will decrease to decrease fault.",
           "input2": "Secondary input sensor. If selected, the regulator will work in differential mode.",
           "minimum": "Minimum regulation setpoint value.",
           "maximum": "Maximum regulation setpoint value.",
           "step": "Step size of the number.",
-          "mode": "Mode of user interface elements"
+          "mode": "Mode of user interface elements."
         }
       }
     }
