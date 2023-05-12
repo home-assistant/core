@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DEVICE_NAME
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -83,6 +84,9 @@ class BalboaBinarySensorEntity(BalboaEntity, BinarySensorEntity):
         self, spa: SpaClient, description: BalboaBinarySensorEntityDescription
     ) -> None:
         """Initialize a Balboa binary sensor entity."""
+        # The assert satisfies the type checker and will catch attempts
+        # to use DEVICE_NAME in the entity descriptions.
+        assert description.name is not DEVICE_NAME
         super().__init__(spa, description.name)
         self.entity_description = description
 
