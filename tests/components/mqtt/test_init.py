@@ -906,6 +906,45 @@ async def test_subscribe_topic(
         unsub()
 
 
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.2)
+async def test_subscribe_and_resubscribe(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+    calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test resubscribing within the debounce time."""
+    mqtt_mock = await mqtt_mock_entry()
+    # Fake that the client is connected
+    mqtt_mock().connected = True
+
+    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    # This unsub will be un-done with the following subscribe
+    # unsubscribe should not be called at the broker
+    unsub()
+    await asyncio.sleep(0.1)
+    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "test-payload")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].topic == "test-topic"
+    assert calls[0].payload == "test-payload"
+    # assert unsubscribe was not called
+    mqtt_client_mock.unsubscribe.assert_not_called()
+
+    unsub()
+
+    await asyncio.sleep(0.2)
+    await hass.async_block_till_done()
+    mqtt_client_mock.unsubscribe.assert_called_once_with(["test-topic"])
+
+
 async def test_subscribe_topic_non_async(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
