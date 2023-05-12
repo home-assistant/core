@@ -114,7 +114,7 @@ class HassEventLoop(uvloop.Loop):
     def _prune_cancellable_timers(self) -> None:
         temp_timers = self._scheduled.copy()
         for handle in temp_timers:
-            if handle.cancelled() or handle.when() > self.time():
+            if handle.cancelled() or handle.when() < self.time():
                 self._scheduled.remove(handle)
 
     def _handle_cancellable_timer(
