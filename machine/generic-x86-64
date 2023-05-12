@@ -2,5 +2,4 @@ ARG BUILD_VERSION
 FROM homeassistant/amd64-homeassistant:$BUILD_VERSION
 
 RUN apk --no-cache add \
-    libva-intel-driver \
-    usbutils
+    libva-intel-driver

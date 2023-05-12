@@ -42,6 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT): cv.port}
 )
 
+STREAM_STATUS = {
+    "idle": MediaPlayerState.IDLE,
+    "playing": MediaPlayerState.PLAYING,
+    "unknown": None,
+}
+
 
 def register_services():
     """Register snapcast services."""
@@ -157,11 +163,9 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
-        return {
-            "idle": MediaPlayerState.IDLE,
-            "playing": MediaPlayerState.PLAYING,
-            "unknown": None,
-        }.get(self._group.stream_status)
+        if self.is_volume_muted:
+            return MediaPlayerState.IDLE
+        return STREAM_STATUS.get(self._group.stream_status)
 
     @property
     def unique_id(self):
@@ -289,11 +293,13 @@ class SnapcastClientDevice(MediaPlayerEntity):
         return list(self._client.group.streams_by_name().keys())
 
     @property
-    def state(self) -> MediaPlayerState:
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self._client.connected:
-            return MediaPlayerState.ON
-        return MediaPlayerState.OFF
+            if self.is_volume_muted or self._client.group.muted:
+                return MediaPlayerState.IDLE
+            return STREAM_STATUS.get(self._client.group.stream_status)
+        return MediaPlayerState.STANDBY
 
     @property
     def extra_state_attributes(self):

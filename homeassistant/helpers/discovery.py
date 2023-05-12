@@ -67,7 +67,10 @@ def discover(
     hass_config: ConfigType,
 ) -> None:
     """Fire discovery event. Can ensure a component is loaded."""
-    hass.add_job(async_discover(hass, service, discovered, component, hass_config))
+    hass.create_task(
+        async_discover(hass, service, discovered, component, hass_config),
+        f"discover {service} {component} {discovered}",
+    )
 
 
 @bind_hass
@@ -127,8 +130,9 @@ def load_platform(
     hass_config: ConfigType,
 ) -> None:
     """Load a component and platform dynamically."""
-    hass.add_job(
-        async_load_platform(hass, component, platform, discovered, hass_config)
+    hass.create_task(
+        async_load_platform(hass, component, platform, discovered, hass_config),
+        f"discovery load_platform {component} {platform}",
     )
 
 

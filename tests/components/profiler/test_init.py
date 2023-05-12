@@ -2,11 +2,11 @@
 from datetime import timedelta
 from functools import lru_cache
 import os
+from pathlib import Path
 import sys
 from unittest.mock import patch
 
 from lru import LRU  # pylint: disable=no-name-in-module
-import py
 import pytest
 
 from homeassistant.components.profiler import (
@@ -19,7 +19,9 @@ from homeassistant.components.profiler import (
     SERVICE_LRU_STATS,
     SERVICE_MEMORY,
     SERVICE_START,
+    SERVICE_START_LOG_OBJECT_SOURCES,
     SERVICE_START_LOG_OBJECTS,
+    SERVICE_STOP_LOG_OBJECT_SOURCES,
     SERVICE_STOP_LOG_OBJECTS,
 )
 from homeassistant.components.profiler.const import DOMAIN
@@ -31,9 +33,10 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_basic_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we can setup and the service is registered."""
-    test_dir = tmpdir.mkdir("profiles")
+    test_dir = tmp_path / "profiles"
+    test_dir.mkdir()
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -45,9 +48,9 @@ async def test_basic_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
 
     last_filename = None
 
-    def _mock_path(filename):
+    def _mock_path(filename: str) -> str:
         nonlocal last_filename
-        last_filename = f"{test_dir}/{filename}"
+        last_filename = str(test_dir / filename)
         return last_filename
 
     with patch("cProfile.Profile"), patch.object(hass.config, "path", _mock_path):
@@ -64,9 +67,10 @@ async def test_basic_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
 @pytest.mark.skipif(
     sys.version_info >= (3, 11), reason="not yet available on python 3.11"
 )
-async def test_memory_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we can setup and the service is registered."""
-    test_dir = tmpdir.mkdir("profiles")
+    test_dir = tmp_path / "profiles"
+    test_dir.mkdir()
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -78,9 +82,9 @@ async def test_memory_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
 
     last_filename = None
 
-    def _mock_path(filename):
+    def _mock_path(filename: str) -> str:
         nonlocal last_filename
-        last_filename = f"{test_dir}/{filename}"
+        last_filename = str(test_dir / filename)
         return last_filename
 
     with patch("guppy.hpy") as mock_hpy, patch.object(hass.config, "path", _mock_path):
@@ -95,7 +99,7 @@ async def test_memory_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
 
 
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="still works on python 3.10")
-async def test_memory_usage_py311(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+async def test_memory_usage_py311(hass: HomeAssistant) -> None:
     """Test raise an error on python3.11."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -130,13 +134,20 @@ async def test_object_growth_logging(
         await hass.services.async_call(
             DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
         )
+        with pytest.raises(HomeAssistantError, match="Object logging already started"):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_START_LOG_OBJECTS,
+                {CONF_SCAN_INTERVAL: 10},
+                blocking=True,
+            )
 
-    assert "Growth" in caplog.text
-    caplog.clear()
+        assert "Growth" in caplog.text
+        caplog.clear()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
-    await hass.async_block_till_done()
-    assert "Growth" in caplog.text
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+        await hass.async_block_till_done()
+        assert "Growth" in caplog.text
 
     await hass.services.async_call(DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True)
     caplog.clear()
@@ -144,6 +155,17 @@ async def test_object_growth_logging(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
     await hass.async_block_till_done()
     assert "Growth" not in caplog.text
+
+    with pytest.raises(HomeAssistantError, match="Object logging not running"):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_STOP_LOG_OBJECTS, {}, blocking=True
+        )
+
+    with patch("objgraph.growth"):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_START_LOG_OBJECTS, {CONF_SCAN_INTERVAL: 10}, blocking=True
+        )
+        caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -276,3 +298,92 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
     assert "_dummy_test_lru_stats" in caplog.text
     assert "CacheInfo" in caplog.text
     assert "sqlalchemy_test" in caplog.text
+
+
+async def test_log_object_sources(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we can setup and the service and we can dump objects to the log."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_START_LOG_OBJECT_SOURCES)
+    assert hass.services.has_service(DOMAIN, SERVICE_STOP_LOG_OBJECT_SOURCES)
+
+    class FakeObject:
+        """Fake object."""
+
+        def __repr__(self):
+            """Return a fake repr.""."""
+            return "<FakeObject>"
+
+    fake_object = FakeObject()
+
+    with patch("gc.collect"), patch("gc.get_objects", return_value=[fake_object]):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_START_LOG_OBJECT_SOURCES,
+            {CONF_SCAN_INTERVAL: 10},
+            blocking=True,
+        )
+        with pytest.raises(HomeAssistantError, match="Object logging already started"):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_START_LOG_OBJECT_SOURCES,
+                {CONF_SCAN_INTERVAL: 10},
+                blocking=True,
+            )
+
+        assert "New object FakeObject (0/1)" in caplog.text
+        caplog.clear()
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+        await hass.async_block_till_done()
+        assert "No new object growth found" in caplog.text
+
+    fake_object2 = FakeObject()
+
+    with patch("gc.collect"), patch(
+        "gc.get_objects", return_value=[fake_object, fake_object2]
+    ):
+        caplog.clear()
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
+        await hass.async_block_till_done()
+        assert "New object FakeObject (1/2)" in caplog.text
+
+    many_objects = [FakeObject() for _ in range(30)]
+    with patch("gc.collect"), patch("gc.get_objects", return_value=many_objects):
+        caplog.clear()
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
+        await hass.async_block_till_done()
+        assert "New object FakeObject (2/30)" in caplog.text
+        assert "New objects overflowed by {'FakeObject': 25}" in caplog.text
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_STOP_LOG_OBJECT_SOURCES, {}, blocking=True
+    )
+    caplog.clear()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=41))
+    await hass.async_block_till_done()
+    assert "FakeObject" not in caplog.text
+    assert "No new object growth found" not in caplog.text
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=51))
+    await hass.async_block_till_done()
+    assert "FakeObject" not in caplog.text
+    assert "No new object growth found" not in caplog.text
+
+    with pytest.raises(HomeAssistantError, match="Object logging not running"):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_STOP_LOG_OBJECT_SOURCES, {}, blocking=True
+        )
