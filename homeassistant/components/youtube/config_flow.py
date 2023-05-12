@@ -10,8 +10,9 @@ from googleapiclient.discovery import build
 from googleapiclient.http import HttpRequest
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, OptionsFlowWithConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.selector import (
@@ -20,7 +21,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_CHANNELS, CONF_UPLOAD_PLAYLIST, DEFAULT_ACCESS, DOMAIN
+from . import AsyncConfigEntryAuth
+from .const import AUTH, CONF_CHANNELS, DEFAULT_ACCESS, DOMAIN
 
 
 class OAuth2FlowHandler(
@@ -33,6 +35,14 @@ class OAuth2FlowHandler(
     DOMAIN = DOMAIN
 
     reauth_entry: ConfigEntry | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> YouTubeOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return YouTubeOptionsFlowHandler(config_entry)
 
     @property
     def logger(self) -> logging.Logger:
@@ -109,22 +119,6 @@ class OAuth2FlowHandler(
         )
         if user_input:
             # pylint: disable=no-member
-            channel_request: HttpRequest = service.channels().list(
-                part="contentDetails",
-                id=",".join(user_input[CONF_CHANNELS]),
-                maxResults=50,
-            )
-            response: dict = await self.hass.async_add_executor_job(
-                channel_request.execute
-            )
-            channels = {
-                channel["id"]: {
-                    CONF_UPLOAD_PLAYLIST: channel["contentDetails"]["relatedPlaylists"][
-                        "uploads"
-                    ]
-                }
-                for channel in response["items"]
-            }
             own_channel_request: HttpRequest = service.channels().list(
                 part="snippet", mine=True
             )
@@ -134,9 +128,7 @@ class OAuth2FlowHandler(
             return self.async_create_entry(
                 title=response["items"][0]["snippet"]["title"],
                 data=self._data,
-                options={
-                    CONF_CHANNELS: channels,
-                },
+                options=user_input,
             )
         # pylint: disable=no-member
         subscription_request: HttpRequest = service.subscriptions().list(
@@ -158,5 +150,50 @@ class OAuth2FlowHandler(
                         SelectSelectorConfig(options=selectable_channels, multiple=True)
                     ),
                 }
+            ),
+        )
+
+
+class YouTubeOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """YouTube Options flow handler."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Initialize form."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.config_entry.title,
+                data=user_input,
+            )
+        auth: AsyncConfigEntryAuth = self.hass.data[DOMAIN][self.config_entry.entry_id][
+            AUTH
+        ]
+        service = await auth.get_resource()
+        # pylint: disable=no-member
+        subscription_request: HttpRequest = service.subscriptions().list(
+            part="snippet", mine=True, maxResults=50
+        )
+        response = await self.hass.async_add_executor_job(subscription_request.execute)
+        selectable_channels = [
+            SelectOptionDict(
+                value=subscription["snippet"]["resourceId"]["channelId"],
+                label=subscription["snippet"]["title"],
+            )
+            for subscription in response["items"]
+        ]
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_CHANNELS): SelectSelector(
+                            SelectSelectorConfig(
+                                options=selectable_channels, multiple=True
+                            )
+                        ),
+                    }
+                ),
+                self.options,
             ),
         )

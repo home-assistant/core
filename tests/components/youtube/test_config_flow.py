@@ -74,6 +74,7 @@ async def test_full_flow(
     assert (
         result.get("result").data["token"].get("refresh_token") == "mock-refresh-token"
     )
+    assert result["options"] == {CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}
 
 
 @pytest.mark.parametrize(

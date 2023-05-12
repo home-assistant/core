@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import AsyncConfigEntryAuth
-from .const import CONF_CHANNELS, CONF_UPLOAD_PLAYLIST, DOMAIN, LOGGER
+from .const import CONF_CHANNELS, DOMAIN, LOGGER
 
 
 class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
@@ -33,7 +33,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         data = {}
         service = await self._auth.get_resource()
-        channels = self.entry.options[CONF_CHANNELS].keys()
+        channels = self.entry.options[CONF_CHANNELS]
         channel_request: HttpRequest = service.channels().list(
             part="snippet,statistics", id=",".join(channels), maxResults=50
         )
@@ -43,20 +43,14 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
                 "id": channel["id"],
                 "title": channel["snippet"]["title"],
                 "icon": channel["snippet"]["thumbnails"]["high"]["url"],
-                "upload_playlist_id": self.entry.options[CONF_CHANNELS][channel["id"]][
-                    CONF_UPLOAD_PLAYLIST
-                ],
-                "latest_video": await self._get_latest_video(
-                    self.entry.options[CONF_CHANNELS][channel["id"]][
-                        CONF_UPLOAD_PLAYLIST
-                    ]
-                ),
+                "latest_video": await self._get_latest_video(channel["id"]),
                 "subscriber_count": int(channel["statistics"]["subscriberCount"]),
             }
         return data
 
-    async def _get_latest_video(self, playlist_id: str) -> dict[str, Any]:
+    async def _get_latest_video(self, channel_id: str) -> dict[str, Any]:
         service = await self._auth.get_resource()
+        playlist_id = channel_id.replace("UC", "UU", 1)
         playlist_request: HttpRequest = service.playlistItems().list(
             part="snippet,contentDetails", playlistId=playlist_id
         )

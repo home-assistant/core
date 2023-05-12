@@ -56,16 +56,16 @@ async def async_setup_entry(
     coordinator: YouTubeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         COORDINATOR
     ]
+    sensors = []
     for channel in coordinator.data.values():
-        async_add_entities(
-            [
-                YouTubeSensor(
-                    hass.data[DOMAIN][entry.entry_id][AUTH], sensor_type, channel
-                )
-                for sensor_type in SENSOR_TYPES
-            ],
-            True,
-        )
+        sensors += [
+            YouTubeSensor(hass.data[DOMAIN][entry.entry_id][AUTH], sensor_type, channel)
+            for sensor_type in SENSOR_TYPES
+        ]
+    async_add_entities(
+        sensors,
+        True,
+    )
 
 
 class YouTubeSensor(YouTubeChannelEntity, SensorEntity):

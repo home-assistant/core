@@ -44,7 +44,7 @@ async def test_sensor_reauth_trigger(
     await setup_integration()
 
     with patch(TOKEN, side_effect=RefreshError):
-        next_update = dt_util.utcnow() + timedelta(minutes=14)
+        next_update = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
