@@ -6625,11 +6625,7 @@
     "moehlenhoff_alpha2",
     "moon",
     "nmap_tracker",
-<<<<<<< HEAD
-=======
-    "pid_controller",
     "pid_thermostat",
->>>>>>> d5050d7c7d (Add pid thermostat)
     "plant",
     "proximity",
     "rpi_power",
