@@ -28,7 +28,7 @@ class OAuth2FlowHandler(
 ):
     """Config flow to handle Google OAuth2 authentication."""
 
-    _data: dict[str, Any] | None = None
+    _data: dict[str, Any] = {}
 
     DOMAIN = DOMAIN
 
@@ -66,24 +66,42 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
-        if self.reauth_entry:
+
+        service = build(
+            "youtube",
+            "v3",
+            credentials=Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
+        )
+        # pylint: disable=no-member
+        own_channel_request: HttpRequest = service.channels().list(
+            part="snippet", mine=True
+        )
+        response = await self.hass.async_add_executor_job(own_channel_request.execute)
+        user_id = response["items"][0]["id"]
+        self._data = data
+
+        if not self.reauth_entry:
+            await self.async_set_unique_id(user_id)
+            self._abort_if_unique_id_configured()
+
+            return await self.async_step_channels()
+
+        if self.reauth_entry.unique_id == user_id:
             self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
             await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        if self._async_current_entries():
-            # Config entry already exists, only one allowed.
-            return self.async_abort(reason="single_instance_allowed")
-        self._data = data
-
-        return await self.async_step_channels()
+        return self.async_abort(
+            reason="wrong_account",
+            description_placeholders={
+                "title": response["items"][0]["snippet"]["title"]
+            },
+        )
 
     async def async_step_channels(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select which channels to track."""
-        if not self._data:
-            return self.async_abort(reason="no_data")
         service = build(
             "youtube",
             "v3",
@@ -107,8 +125,14 @@ class OAuth2FlowHandler(
                 }
                 for channel in response["items"]
             }
+            own_channel_request: HttpRequest = service.channels().list(
+                part="snippet", mine=True
+            )
+            response = await self.hass.async_add_executor_job(
+                own_channel_request.execute
+            )
             return self.async_create_entry(
-                title="YouTube",
+                title=response["items"][0]["snippet"]["title"],
                 data=self._data,
                 options={
                     CONF_CHANNELS: channels,

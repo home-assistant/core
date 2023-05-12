@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -17,15 +16,13 @@ from .api import AsyncConfigEntryAuth
 from .const import AUTH, COORDINATOR, DOMAIN
 from .entity import YouTubeChannelEntity
 
-SCAN_INTERVAL = timedelta(minutes=15)
-
 
 @dataclass
 class YouTubeMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Any], StateType]
-    entity_picture_fn: Callable[[Any], str] | None
+    entity_picture_fn: Callable[[Any], str]
 
 
 @dataclass
@@ -94,8 +91,6 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         return self.entity_description.value_fn(self._channel)
 
     @property
-    def entity_picture(self) -> str | None:
+    def entity_picture(self) -> str:
         """Return the value reported by the sensor."""
-        if self.entity_description.entity_picture_fn:
-            return self.entity_description.entity_picture_fn(self._channel)
-        return None
+        return self.entity_description.entity_picture_fn(self._channel)

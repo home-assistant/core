@@ -27,7 +27,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(minutes=15),
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -51,7 +51,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
                         CONF_UPLOAD_PLAYLIST
                     ]
                 ),
-                "subscriber_count": channel["statistics"]["subscriberCount"],
+                "subscriber_count": int(channel["statistics"]["subscriberCount"]),
             }
         return data
 
