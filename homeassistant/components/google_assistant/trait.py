@@ -2439,7 +2439,7 @@ class SensorStateTrait(_Trait):
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
         data = self.sensor_types.get(device_class)
 
-        if data[0] == self.sensor_types.get(sensor.SensorDeviceClass.AQI)[0]:
+        if device_class == sensor.SensorDeviceClass.AQI:
             return {
                 "sensorStatesSupported": [
                     {
@@ -2474,7 +2474,7 @@ class SensorStateTrait(_Trait):
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
         data = self.sensor_types.get(device_class)
 
-        if data[0] == self.sensor_types.get(sensor.SensorDeviceClass.AQI)[0]:
+        if device_class == sensor.SensorDeviceClass.AQI:
             return {
                 "currentSensorStateData": [
                     {
