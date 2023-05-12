@@ -272,6 +272,9 @@ class Entity(ABC):
     # it should be using async_write_ha_state.
     _async_update_ha_state_reported = False
 
+    # If we reported this entity is implicitly using device name
+    _implicit_device_name_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -334,6 +337,24 @@ class Entity(ABC):
 
         Should be True if the entity represents the single main feature of a device.
         """
+
+        def report_implicit_device_name() -> None:
+            """Report entities which use implicit device name."""
+            if self._implicit_device_name_reported:
+                return
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                (
+                    "Entity %s (%s) is implicitly using device name by setting its"
+                    " name to None. Instead, the name should be set to DEVICE_NAME"
+                    ", please %s"
+                ),
+                self.entity_id,
+                type(self),
+                report_issue,
+            )
+            self._implicit_device_name_reported = True
+
         if not self.has_entity_name:
             return False
         if hasattr(self, "_attr_name"):
@@ -343,6 +364,7 @@ class Entity(ABC):
                 # Backwards compatibility with setting _attr_name to None to indicate
                 # device name.
                 # Deprecated in HA Core 2023.6, remove in HA Core 2023.7
+                report_implicit_device_name()
                 return True
             return False
         if hasattr(self, "entity_description"):
@@ -352,12 +374,14 @@ class Entity(ABC):
                 # Backwards compatibility with setting EntityDescription.name to None
                 # for device name.
                 # Deprecated in HA Core 2023.6, remove in HA Core 2023.7
+                report_implicit_device_name()
                 return True
             return False
         if not self.name:
             # Backwards compatibility with setting EntityDescription.name to None
             # for device name.
             # Deprecated in HA Core 2023.6, remove in HA Core 2023.7
+            report_implicit_device_name()
             return True
         return False
 
