@@ -72,7 +72,7 @@ class WebSocketHandler:
         self.request = request
         self.wsock = web.WebSocketResponse(heartbeat=55)
         self._message_queue: deque = deque()
-        self._ready_future: asyncio.Future[bool] | None = None
+        self._ready_future: asyncio.Future[None] | None = None
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
@@ -175,7 +175,7 @@ class WebSocketHandler:
 
         message_queue.append(message)
         if self._ready_future and not self._ready_future.done():
-            self._ready_future.set_result(True)
+            self._ready_future.set_result(None)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
@@ -373,7 +373,7 @@ class WebSocketHandler:
 
             self._message_queue.append(None)
             if self._ready_future and not self._ready_future.done():
-                self._ready_future.set_result(False)
+                self._ready_future.set_result(None)
 
             try:
                 # Make sure all error messages are written before closing
