@@ -71,7 +71,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
                 vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
-                vol.Optional(CONF_REQUIRES_AUTH,default=True): cv.boolean,
+                vol.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
                 vol.Optional(CONF_DEFAULT_METRIC): cv.string,
                 vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
                 vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
@@ -92,7 +92,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
-    hass.http.register_view(PrometheusView(prometheus_client,config))
+    hass.http.register_view(PrometheusView(prometheus_client, config))
 
     conf = config[DOMAIN]
     entity_filter = conf[CONF_FILTER]
