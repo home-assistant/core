@@ -1,5 +1,5 @@
 """Test the config flow for the Insteon integration."""
-import logging
+
 from unittest.mock import patch
 
 import pytest
@@ -59,7 +59,6 @@ from .const import (
 from tests.common import MockConfigEntry
 
 USB_PORTS = {"/dev/ttyUSB0": "/dev/ttyUSB0", MOCK_DEVICE: MOCK_DEVICE}
-_LOGGER = logging.getLogger(__name__)
 
 
 async def mock_successful_connection(*args, **kwargs):
