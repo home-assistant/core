@@ -3324,16 +3324,52 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
         name = sensor_types[sensor_type][0]
         unit = sensor_types[sensor_type][1]
 
-        assert trt.sync_attributes() == {
-            "sensorStatesSupported": {
-                "name": name,
-                "numericCapabilities": {"rawValueUnit": unit},
+        if sensor_type == sensor.SensorDeviceClass.AQI:
+            assert trt.sync_attributes() == {
+                "sensorStatesSupported": [
+                    {
+                        "name": name,
+                        "numericCapabilities": {"rawValueUnit": unit},
+                        "descriptiveCapabilities": {
+                            "availableStates": [
+                                "healthy",
+                                "moderate",
+                                "unhealthy for sensitive groups",
+                                "unhealthy",
+                                "very unhealthy",
+                                "hazardous",
+                                "unknown",
+                            ],
+                        },
+                    }
+                ]
             }
-        }
+        else:
+            assert trt.sync_attributes() == {
+                "sensorStatesSupported": [
+                    {
+                        "name": name,
+                        "numericCapabilities": {"rawValueUnit": unit},
+                    }
+                ]
+            }
 
-        assert trt.query_attributes() == {
-            "currentSensorStateData": [{"name": name, "rawValue": "100.0"}]
-        }
+        if sensor_type == sensor.SensorDeviceClass.AQI:
+            assert trt.query_attributes() == {
+                "currentSensorStateData": [
+                    {
+                        "name": name,
+                        "currentSensorState": trt._air_quality_description_for_aqi(
+                            trt.state.state
+                        ),
+                    },
+                    {"name": unit, "rawValue": trt.state.state},
+                ]
+            }
+        else:
+            assert trt.query_attributes() == {
+                "currentSensorStateData": [{"name": name, "rawValue": trt.state.state}]
+            }
 
     assert helpers.get_google_type(sensor.DOMAIN, None) is not None
     assert (
