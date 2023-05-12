@@ -1,4 +1,4 @@
-"""Constants for Youtube integration."""
+"""Constants for YouTube integration."""
 import logging
 
 DEFAULT_ACCESS = ["https://www.googleapis.com/auth/youtube.readonly"]
@@ -9,7 +9,6 @@ CONF_CHANNELS = "channels"
 CONF_ID = "id"
 CONF_UPLOAD_PLAYLIST = "upload_playlist_id"
 DATA_AUTH = "auth"
-DATA_HASS_CONFIG = "hass_config"
 COORDINATOR = "coordinator"
 AUTH = "auth"
 

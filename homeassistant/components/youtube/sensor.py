@@ -1,4 +1,4 @@
-"""Support for Google Mail Sensors."""
+"""Support for YouTube Sensors."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,15 +9,13 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import YouTubeDataUpdateCoordinator
 from .api import AsyncConfigEntryAuth
-from .const import AUTH, COORDINATOR, DOMAIN, MANUFACTURER
-from .entity import YouTubeEntity
+from .const import AUTH, COORDINATOR, DOMAIN
+from .entity import YouTubeChannelEntity
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -32,7 +30,7 @@ class YouTubeMixin:
 
 @dataclass
 class YouTubeSensorEntityDescription(SensorEntityDescription, YouTubeMixin):
-    """Describes Picnic sensor entity."""
+    """Describes YouTube sensor entity."""
 
 
 SENSOR_TYPES = [
@@ -73,7 +71,7 @@ async def async_setup_entry(
         )
 
 
-class YouTubeSensor(YouTubeEntity, SensorEntity):
+class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     """Representation of a YouTube sensor."""
 
     _attr_has_entity_name = True
@@ -87,18 +85,8 @@ class YouTubeSensor(YouTubeEntity, SensorEntity):
         channel: dict[str, Any],
     ) -> None:
         """Initialize YouTube Sensor."""
-        super().__init__(auth, description)
+        super().__init__(auth, description, channel["title"])
         self._channel = channel
-        channel_id = channel["id"]
-        self._attr_unique_id = (
-            f"{auth.oauth_session.config_entry.entry_id}_{channel_id}_{description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, auth.oauth_session.config_entry.entry_id)},
-            manufacturer=MANUFACTURER,
-            name=self._channel["title"],
-        )
 
     @property
     def native_value(self) -> StateType:

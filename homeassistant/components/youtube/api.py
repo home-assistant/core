@@ -1,4 +1,4 @@
-"""API for Google Mail bound to Home Assistant OAuth."""
+"""API for YouTube bound to Home Assistant OAuth."""
 from aiohttp import ClientSession
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
@@ -10,14 +10,14 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 
 class AsyncConfigEntryAuth(OAuthClientAuthHandler):
-    """Provide Google Mail authentication tied to an OAuth2 based config entry."""
+    """Provide Google authentication tied to an OAuth2 based config entry."""
 
     def __init__(
         self,
         websession: ClientSession,
         oauth2_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
-        """Initialize Google Mail Auth."""
+        """Initialize YouTube Auth."""
         self.oauth_session = oauth2_session
         super().__init__(websession)
 

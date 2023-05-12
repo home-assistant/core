@@ -1,4 +1,4 @@
-"""Config flow for Youtube integration."""
+"""Config flow for YouTube integration."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -90,6 +90,7 @@ class OAuth2FlowHandler(
             credentials=Credentials(self._data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
         )
         if user_input:
+            # pylint: disable=no-member
             channel_request: HttpRequest = service.channels().list(
                 part="contentDetails",
                 id=",".join(user_input[CONF_CHANNELS]),
@@ -113,6 +114,7 @@ class OAuth2FlowHandler(
                     CONF_CHANNELS: channels,
                 },
             )
+        # pylint: disable=no-member
         subscription_request: HttpRequest = service.subscriptions().list(
             part="snippet", mine=True, maxResults=50
         )

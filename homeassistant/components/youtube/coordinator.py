@@ -15,7 +15,7 @@ from .const import CONF_CHANNELS, CONF_UPLOAD_PLAYLIST, DOMAIN, LOGGER
 
 
 class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
-    """A Yale Data Update Coordinator."""
+    """A YouTube Data Update Coordinator."""
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, auth: AsyncConfigEntryAuth
