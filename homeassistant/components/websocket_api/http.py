@@ -119,12 +119,13 @@ class WebSocketHandler:
                         continue
 
                     messages: list[str] = [message]
-                    while len(message_queue):
+                    while messages_remaining:
                         if (process := message_queue.popleft()) is None:
                             return
                         messages.append(
                             process if isinstance(process, str) else process()
                         )
+                        messages_remaining -= 1
 
                     coalesced_messages = "[" + ",".join(messages) + "]"
                     debug("Sending %s", coalesced_messages)
