@@ -145,6 +145,24 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.0
 
+    state = hass.states.get("climate.dkn_plus")
+    assert state.state == HVACMode.HEAT_COOL
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.7
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.COOLING
+    assert state.attributes.get(ATTR_HVAC_MODES) == [
+        HVACMode.FAN_ONLY,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.DRY,
+        HVACMode.HEAT_COOL,
+        HVACMode.OFF,
+    ]
+    assert state.attributes.get(ATTR_MAX_TEMP) == 32.2
+    assert state.attributes.get(ATTR_MIN_TEMP) == 17.8
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TEMPERATURE) == 22.8
+
 
 async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
     """Test turning on."""

@@ -19,11 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -334,50 +330,3 @@ async def _retry_login(hass, modem_data, password):
             await _login(hass, modem_data, password)
         except eternalegypt.Error:
             delay = min(2 * delay, 300)
-
-
-@attr.s
-class LTEEntity(Entity):
-    """Base LTE entity."""
-
-    modem_data = attr.ib()
-    sensor_type = attr.ib()
-
-    _unique_id = attr.ib(init=False)
-
-    @_unique_id.default
-    def _init_unique_id(self):
-        """Register unique_id while we know data is valid."""
-        return f"{self.sensor_type}_{self.modem_data.data.serial_number}"
-
-    async def async_added_to_hass(self):
-        """Register callback."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DISPATCHER_NETGEAR_LTE, self.async_write_ha_state
-            )
-        )
-
-    async def async_update(self):
-        """Force update of state."""
-        await self.modem_data.async_update()
-
-    @property
-    def should_poll(self):
-        """Return that the sensor should not be polled."""
-        return False
-
-    @property
-    def available(self):
-        """Return the availability of the sensor."""
-        return self.modem_data.data is not None
-
-    @property
-    def unique_id(self):
-        """Return a unique ID like 'usage_5TG365AB0078V'."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Netgear LTE {self.sensor_type}"
