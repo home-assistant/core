@@ -14,7 +14,7 @@ from reolink_aio.exceptions import ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -62,6 +62,7 @@ class ReolinkHost:
         self._webhook_url: str = ""
         self._webhook_reachable: asyncio.Event = asyncio.Event()
         self._cancel_poll: CALLBACK_TYPE | None = None
+        self._poll_job = HassJob(self._async_poll_all_motion, cancel_on_shutdown=True)
         self._lost_subscription: bool = False
 
     @property
@@ -395,9 +396,10 @@ class ReolinkHost:
         async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
 
         # schedule next poll
-        self._cancel_poll = async_call_later(
-            self._hass, POLL_INTERVAL_NO_PUSH, self._poll_all_motion
-        )
+        if not self._hass.is_stopping:
+            self._cancel_poll = async_call_later(
+                self._hass, POLL_INTERVAL_NO_PUSH, self._poll_job
+            )
 
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
