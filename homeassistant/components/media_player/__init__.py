@@ -476,6 +476,7 @@ class MediaPlayerEntity(Entity):
     _attr_media_content_type: MediaType | str | None = None
     _attr_media_duration: int | None = None
     _attr_media_episode: str | None = None
+    _attr_media_genre: str | None = None
     _attr_media_image_hash: str | None
     _attr_media_image_remotely_accessible: bool = False
     _attr_media_image_url: str | None = None
@@ -542,6 +543,11 @@ class MediaPlayerEntity(Entity):
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         return self._attr_media_duration
+
+    @property
+    def media_genre(self) -> str | None:
+        """Genre of current playing media."""
+        return self._attr_media_genre
 
     @property
     def media_position(self) -> int | None:

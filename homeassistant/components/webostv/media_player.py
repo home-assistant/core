@@ -4,7 +4,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
-from datetime import timedelta
+import datetime as datetime2
+from datetime import datetime, timedelta
 from functools import wraps
 from http import HTTPStatus
 import logging
@@ -37,6 +38,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
+import homeassistant.util.dt as dt_util
 
 from . import update_client_key
 from .const import (
@@ -115,6 +117,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
+    language_code: str = ""
 
     def __init__(self, entry: ConfigEntry, client: WebOsClient) -> None:
         """Initialize the webos device."""
@@ -186,10 +189,146 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self._update_states()
         self.async_write_ha_state()
 
+    def _update_states_livetv(self) -> None:
+        self._attr_state = MediaPlayerState.PLAYING
+        channel_name: str | None = (
+            cast(str, self._client.current_channel.get("channelName"))
+            if (self._client.current_channel["channelName"] is not None)
+            else None
+        )
+        self._attr_media_channel = channel_name
+        channel_id: str | None = (
+            cast(str, self._client.current_channel.get("channelId"))
+            if (self._client.current_channel["channelId"] is not None)
+            else None
+        )
+        channel_type_name: str | None = (
+            cast(str, self._client.current_channel.get("channelTypeName"))
+            if (self._client.current_channel["channelTypeName"] is not None)
+            else None
+        )
+        if channel_type_name is not None:
+            self._attr_extra_state_attributes.update(
+                {"channel_type_name": channel_type_name}
+            )
+        channel_mode_name: str | None = (
+            cast(str, self._client.current_channel.get("channelModeName"))
+            if (self._client.current_channel["channelModeName"] is not None)
+            else None
+        )
+        if channel_mode_name is not None:
+            self._attr_extra_state_attributes.update(
+                {"channel_mode_name": channel_mode_name}
+            )
+        is_hevc_channel: bool | None = (
+            cast(bool, self._client.current_channel.get("isHEVCChannel"))
+            if (self._client.current_channel["isHEVCChannel"] is not None)
+            else None
+        )
+        if is_hevc_channel is not None:
+            self._attr_extra_state_attributes.update(
+                {"is_hevc_channel": is_hevc_channel}
+            )
+        hybrid_tv_type: str | None = (
+            cast(str, self._client.current_channel.get("hybridtvType"))
+            if (self._client.current_channel["hybridtvType"] is not None)
+            else None
+        )
+        if hybrid_tv_type is not None:
+            self._attr_extra_state_attributes.update({"hybrid_tv_type": hybrid_tv_type})
+        is_tv: bool = True
+        is_radio: bool = False
+        if channel_id is not None:
+            has_adult_flag: bool = False
+            for channel in self._client.channels:
+                if channel_id == channel["channelId"]:
+                    is_tv = cast(bool, channel["TV"])
+                    is_radio = cast(bool, channel["Radio"])
+                    # channel_logo_size = cast(str, channel["channelLogoSize"])         #i.e: "H133x100"
+                    img_url: str = cast(str, channel["imgUrl"])
+                    if (
+                        (img_url is not None)
+                        and (len(img_url) > 3)
+                        and (img_url.startswith("http"))
+                    ):
+                        self._attr_media_image_url = img_url
+                    break
+        self._attr_extra_state_attributes.update({"is_radio": is_radio, "is_tv": is_tv})
+        if is_tv:
+            strtime_pattern: str | None = None  # "%Y,%d,%m,%-I,%M,%S"    <-- for non-Italians? need someone to test it
+            if self.language_code in ["it-IT"]:
+                strtime_pattern = "%Y,%m,%d,%H,%M,%S"
+            channel = (
+                (self._client.channel_info.get("channel"))
+                if (self._client.channel_info["channel"] is not None)
+                else None
+            )
+            if (
+                (channel is not None)
+                and (channel["adultFlag"] is not None)
+                and (channel["adultFlag"] > 0)
+            ):
+                has_adult_flag = cast(str, channel["adultFlag"]) != "0"
+                self._attr_extra_state_attributes.update(
+                    {"has_adult_flag": has_adult_flag}
+                )
+            programs: list = (
+                self._client.channel_info.get("programList")
+                if (self._client.channel_info["programList"] is not None)
+                else None
+            )
+            if (programs is not None) and (strtime_pattern is not None):
+                for program in programs:
+                    # datetime in "2023,05,13,23,50,06" format (<-- this specific sample is for "it-IT")
+                    start_time: str = cast(str, program["startTime"])
+                    end_time: str = cast(str, program["endTime"])
+                    cast(str, program["localStartTime"])
+                    cast(str, program["localEndTime"])
+                    date_start_time = datetime2.datetime.strptime(
+                        start_time, strtime_pattern
+                    )
+                    date_end_time = datetime2.datetime.strptime(
+                        end_time, strtime_pattern
+                    )
+                    current_datetime = datetime.utcnow()
+                    # don't know why but it could be possible that received Datetimes are shifted by 1 or more days,
+                    # so it should be fixed before comparison
+                    diff = current_datetime - date_start_time
+                    current_datetime = current_datetime + timedelta(days=-diff.days)
+
+                    if (current_datetime > date_end_time) or (
+                        current_datetime < date_start_time
+                    ):
+                        continue
+
+                    seconds_start_current_diff: int = (
+                        current_datetime - date_start_time
+                    ).seconds
+                    self._attr_media_position_updated_at = dt_util.utcnow()
+                    self._attr_media_position = seconds_start_current_diff
+
+                    if program["duration"] is not None:
+                        self._attr_media_duration = cast(
+                            int, program["duration"]
+                        )  # in seconds
+                    program_name: str = cast(str, program["programName"])
+                    if (program_name is not None) and (len(program_name) > 0):
+                        self._attr_media_title = program_name
+                    program_id: str = cast(str, program["programId"])
+                    if (program_id is not None) and (len(program_id) > 0):
+                        self._attr_media_content_id = program_id
+
+                    genre = cast(str, program["genre"])
+                    if (genre is not None) and (len(genre) > 0):
+                        self._attr_media_genre = genre
+            if (self._attr_media_title is None) or (len(self._attr_media_title) <= 0):
+                self._attr_media_title = self._attr_media_channel
+
     def _update_states(self) -> None:
         """Update entity state attributes."""
         self._update_sources()
-
+        supported = SUPPORT_WEBOSTV
+        self._attr_extra_state_attributes = {}
         self._attr_state = (
             MediaPlayerState.ON if self._client.is_on else MediaPlayerState.OFF
         )
@@ -202,19 +341,35 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self._attr_source = self._current_source
         self._attr_source_list = sorted(self._source_list)
 
+        if (
+            (self.language_code == "")
+            and (self._client.software_info["language_code"] is not None)
+            and (len(self._client.software_info["language_code"]) > 4)
+        ):
+            self.language_code = cast(str, self._client.software_info["language_code"])
+
         self._attr_media_content_type = None
         if self._client.current_app_id == LIVE_TV_APP_ID:
             self._attr_media_content_type = MediaType.CHANNEL
+        else:
+            self._attr_state = MediaPlayerState.STANDBY
 
         self._attr_media_title = None
+        self._attr_media_channel = None
+        self._attr_media_image_url = None
+        self._attr_media_position = 0
+        self._attr_media_duration = 0
+        self._attr_media_genre = None
         if (self._client.current_app_id == LIVE_TV_APP_ID) and (
             self._client.current_channel is not None
         ):
-            self._attr_media_title = cast(
-                str, self._client.current_channel.get("channelName")
-            )
+            self._update_states_livetv()
+            if self._attr_extra_state_attributes["is_tv"]:
+                supported &= ~MediaPlayerEntityFeature.STOP
+                supported &= ~MediaPlayerEntityFeature.PAUSE
+                supported &= ~MediaPlayerEntityFeature.PLAY
+                supported &= ~MediaPlayerEntityFeature.PLAY_MEDIA
 
-        self._attr_media_image_url = None
         if self._client.current_app_id in self._client.apps:
             icon: str = self._client.apps[self._client.current_app_id]["largeIcon"]
             if not icon.startswith("http"):
@@ -222,14 +377,11 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             self._attr_media_image_url = icon
 
         if self.state != MediaPlayerState.OFF or not self._supported_features:
-            supported = SUPPORT_WEBOSTV
             if self._client.sound_output in ("external_arc", "external_speaker"):
-                supported = supported | SUPPORT_WEBOSTV_VOLUME
+                supported |= SUPPORT_WEBOSTV_VOLUME
             elif self._client.sound_output != "lineout":
-                supported = (
-                    supported
-                    | SUPPORT_WEBOSTV_VOLUME
-                    | MediaPlayerEntityFeature.VOLUME_SET
+                supported |= (
+                    SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET
                 )
 
             self._supported_features = supported
@@ -249,11 +401,10 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             if model := self._client.system_info.get("modelName"):
                 self._attr_device_info["model"] = model
 
-        self._attr_extra_state_attributes = {}
         if self._client.sound_output is not None or self.state != MediaPlayerState.OFF:
-            self._attr_extra_state_attributes = {
-                ATTR_SOUND_OUTPUT: self._client.sound_output
-            }
+            self._attr_extra_state_attributes.update(
+                {ATTR_SOUND_OUTPUT: self._client.sound_output}
+            )
 
     def _update_sources(self) -> None:
         """Update list of sources from current source, apps, inputs and configured list."""
