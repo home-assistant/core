@@ -1329,7 +1329,7 @@ async def test_replaying_payload_same_topic(
     When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
     for it to resend any retained messages for new subscriptions.
     Retained messages must only be replayed for new subscriptions, except
-    when the MQTT client is reconnection.
+    when the MQTT client is reconnecting.
     """
     mqtt_mock = await mqtt_mock_entry()
 
@@ -1358,7 +1358,9 @@ async def test_replaying_payload_same_topic(
     await mqtt.async_subscribe(hass, "test/state", _callback_b)
 
     # Simulate edge case where non retained message was received
-    # after subscription at HA but before the debouncer delay was passed
+    # after subscription at HA but before the debouncer delay was passed.
+    # The message without retain flag directly after a subscription should
+    # be processed by both subscriptions.
     async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
 
     # Simulate a (retained) message played back on new subscriptions
@@ -1369,13 +1371,13 @@ async def test_replaying_payload_same_topic(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
-    # The retained message playback should only be processed by the new subscription
-    # The existing subscription already got the latest update,
-    # The none retained message directly after sunscription will be processed
-    # by both subscription.
-    # hence the existing subscription should not receive the replayed payload.
+    # The current subscription only received the message without retain flag
     assert len(calls_a) == 1
     assert help_assert_message(calls_a[0], "test/state", "online", qos=0, retain=False)
+    # The retained message playback should only be processed by the new subscription.
+    # The existing subscription already got the latest update, hence the existing
+    # subscription should not receive the replayed (retained) message.
+    # Messages without retain flag are received on both subscriptions.
     assert len(calls_b) == 2
     assert help_assert_message(calls_b[0], "test/state", "online", qos=0, retain=False)
     assert help_assert_message(calls_b[1], "test/state", "online", qos=0, retain=True)
@@ -1405,13 +1407,12 @@ async def test_replaying_payload_same_topic(
     mqtt_client_mock.on_connect(None, None, None, 0)
     await hass.async_block_till_done()
     mqtt_client_mock.subscribe.assert_called()
-    async_fire_mqtt_message(
-        hass, "test/state", "online", qos=0, retain=True
-    )  # Simulate a (retained) message played back after reconnecting
+    # Simulate a (retained) message played back after reconnecting
+    async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=True)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
-    # Both subscriptions should replay the retained message
+    # Both subscriptions now should replay the retained message
     assert len(calls_a) == 1
     assert help_assert_message(calls_a[0], "test/state", "online", qos=0, retain=True)
     assert len(calls_b) == 1
