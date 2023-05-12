@@ -213,11 +213,11 @@ class WebSocketHandler:
     def _cancel(self) -> None:
         """Cancel the connection."""
         self._closing = True
+        self._cancel_peak_checker()
         if self._handle_task is not None:
             self._handle_task.cancel()
         if self._writer_task is not None:
             self._writer_task.cancel()
-        self._cancel_peak_checker()
 
     async def async_handle(self) -> web.WebSocketResponse:
         """Handle a websocket response."""

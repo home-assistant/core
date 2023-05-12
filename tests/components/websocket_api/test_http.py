@@ -47,7 +47,6 @@ async def test_pending_msg_overflow(
 
 async def test_pending_msg_peak(
     hass: HomeAssistant,
-    mock_low_queue,
     mock_low_peak,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -69,11 +68,8 @@ async def test_pending_msg_peak(
 
     instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
 
-    # Make sure the call later is started
-    instance._send_message({})
-
-    # Kill writer task and fill queue past peak
-    for _ in range(5):
+    # Fill the queue past the allowed peak
+    for _ in range(10):
         instance._send_message({})
 
     async_fire_time_changed(
@@ -82,8 +78,54 @@ async def test_pending_msg_peak(
 
     msg = await websocket_client.receive()
     assert msg.type == WSMsgType.close
-
     assert "Client unable to keep up with pending messages" in caplog.text
+    assert "Stayed over 5 for 5 seconds"
+
+
+async def test_pending_msg_peak_recovery(
+    hass: HomeAssistant,
+    mock_low_peak,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test pending msg nears the peak but recovers."""
+    orig_handler = http.WebSocketHandler
+    setup_instance: http.WebSocketHandler | None = None
+
+    def instantiate_handler(*args):
+        nonlocal setup_instance
+        setup_instance = orig_handler(*args)
+        return setup_instance
+
+    with patch(
+        "homeassistant.components.websocket_api.http.WebSocketHandler",
+        instantiate_handler,
+    ):
+        websocket_client = await hass_ws_client()
+
+    instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
+
+    # Make sure the call later is started
+    for _ in range(10):
+        instance._send_message({})
+
+    for _ in range(10):
+        msg = await websocket_client.receive()
+        assert msg.type == WSMsgType.TEXT
+
+    instance._send_message({})
+    msg = await websocket_client.receive()
+    assert msg.type == WSMsgType.TEXT
+
+    # Cleanly shutdown
+    instance._send_message({})
+    instance._handle_task.cancel()
+
+    msg = await websocket_client.receive()
+    assert msg.type == WSMsgType.TEXT
+    msg = await websocket_client.receive()
+    assert msg.type == WSMsgType.close
+    assert "Client unable to keep up with pending messages" not in caplog.text
 
 
 async def test_pending_msg_peak_but_does_not_overflow(
