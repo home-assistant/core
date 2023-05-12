@@ -63,6 +63,7 @@ from homeassistant.core import (
     State,
     callback,
     split_entity_id,
+    valid_domain,
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
@@ -796,7 +797,7 @@ class AllStates:
         if name in _RESERVED_NAMES:
             return None
 
-        if not valid_entity_id(f"{name}.entity"):
+        if not valid_domain(name):
             raise TemplateError(f"Invalid domain name '{name}'")
 
         return _domain_states(self._hass, name)
