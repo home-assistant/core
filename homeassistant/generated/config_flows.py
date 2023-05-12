@@ -60,6 +60,7 @@ FLOWS = {
         "azure_event_hub",
         "baf",
         "balboa",
+        "beewi_smartclim",
         "blebox",
         "blink",
         "bluemaestro",
