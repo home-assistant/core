@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_MODEL,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
@@ -365,3 +366,15 @@ class BTHomeBluetoothSensorEntity(
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self.device_info:
+            if self.device_info[ATTR_MODEL] and self.device_info[ATTR_MODEL].endswith(
+                "(trigger based device)"
+            ):
+                # Trigger based devices sleep for an indeterminate amount of time
+                # so there is no way to track their availability.
+                return True
+        return super().available

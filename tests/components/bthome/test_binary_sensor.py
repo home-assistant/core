@@ -123,7 +123,7 @@ async def test_v1_binary_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x11\x00",
+                b"\x44\x11\x00",
             ),
             None,
             [

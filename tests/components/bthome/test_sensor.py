@@ -518,7 +518,7 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x09\x60",
+                b"\x44\x09\x60",
             ),
             None,
             [
@@ -1008,9 +1008,7 @@ async def test_v2_sensors(
     assert len(hass.states.async_all()) == len(result)
 
     for meas in result:
-        _LOGGER.error(meas)
         sensor = hass.states.get(meas["sensor_entity"])
-        _LOGGER.error(hass.states)
         sensor_attr = sensor.attributes
         assert sensor.state == meas["expected_state"]
         assert sensor_attr[ATTR_FRIENDLY_NAME] == meas["friendly_name"]
