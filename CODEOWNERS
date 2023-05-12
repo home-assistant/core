@@ -1410,6 +1410,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
 /homeassistant/components/youtube/ @joostlek
+/tests/components/youtube/ @joostlek
 /homeassistant/components/zamg/ @killer0071234
 /tests/components/zamg/ @killer0071234
 /homeassistant/components/zengge/ @emontnemery
