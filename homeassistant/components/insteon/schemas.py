@@ -285,9 +285,21 @@ def build_x10_schema(
     )
 
 
-def build_plm_schema(device=vol.UNDEFINED):
+def _find_likely_port(ports):
+    """Return the most likely USB port for a PLM."""
+    test_strings = ["FTDI", "0403:6001", "10BF:"]
+    for port, name in ports.items():
+        for test_string in test_strings:
+            if test_string in name:
+                return port
+    return vol.UNDEFINED
+
+
+def build_plm_schema(ports: dict[str, str], device=vol.UNDEFINED):
     """Build the PLM schema for config flow."""
-    return vol.Schema({vol.Required(CONF_DEVICE, default=device): str})
+    if not device or device == vol.UNDEFINED:
+        device = _find_likely_port(ports)
+    return vol.Schema({vol.Required(CONF_DEVICE, default=device): vol.In(ports)})
 
 
 def build_hub_schema(
