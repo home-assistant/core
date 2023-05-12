@@ -242,8 +242,7 @@ def run(runtime_config: RuntimeConfig) -> int:
     _enable_posix_spawn()
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
-    loop = asyncio.get_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = asyncio.new_event_loop()
     try:
         return loop.run_until_complete(setup_and_run_hass(runtime_config))
     finally:
