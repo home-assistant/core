@@ -134,7 +134,6 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         schema_defaults = user_input if user_input is not None else {}
         ports = await async_get_usb_ports(self.hass)
-        _LOGGER.error(ports)
         data_schema = build_plm_schema(ports, **schema_defaults)
         return self.async_show_form(
             step_id=STEP_PLM, data_schema=data_schema, errors=errors

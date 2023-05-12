@@ -423,5 +423,4 @@ def get_usb_ports() -> dict[str, str]:
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     """Return a dict of USB ports and their friendly names."""
-    _LOGGER.error("Running the real function")
     return await hass.async_add_executor_job(get_usb_ports)
