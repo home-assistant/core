@@ -92,8 +92,9 @@ class WebSocketHandler:
         # Exceptions if Socket disconnected or cancelled by connection handler
         message_queue = self._message_queue
         logger = self._logger
-        wsock = self.wsock
+        send_str = self.wsock.send_str
         loop = self.hass.loop
+        debug = logger.debug
         try:
             with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
                 while not self.wsock.closed:
@@ -113,8 +114,8 @@ class WebSocketHandler:
                         or not self.connection
                         or not self.connection.can_coalesce
                     ):
-                        logger.debug("Sending %s", message)
-                        await wsock.send_str(message)
+                        debug("Sending %s", message)
+                        await send_str(message)
                         continue
 
                     messages: list[str] = [message]
@@ -126,8 +127,8 @@ class WebSocketHandler:
                         )
 
                     coalesced_messages = "[" + ",".join(messages) + "]"
-                    logger.debug("Sending %s", coalesced_messages)
-                    await wsock.send_str(coalesced_messages)
+                    debug("Sending %s", coalesced_messages)
+                    await send_str(coalesced_messages)
         finally:
             # Clean up the peaker checker when we shut down the writer
             self._cancel_peak_checker()
