@@ -2462,7 +2462,7 @@ class SensorStateTrait(_Trait):
                     }
                 ]
             }
-        if data is not None:
+        else:
             return {
                 "sensorStatesSupported": [
                     {
@@ -2492,7 +2492,7 @@ class SensorStateTrait(_Trait):
                     {"name": data[1], "rawValue": self.state.state},
                 ]
             }
-        if data is not None:
+        else:
             return {
                 "currentSensorStateData": [
                     {"name": data[0], "rawValue": self.state.state}
