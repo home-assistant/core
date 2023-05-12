@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 import logging
 
 from synology_dsm import SynologyDSM
@@ -11,6 +12,7 @@ from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.dsm.network import SynoDSMNetwork
+from synology_dsm.api.photos import SynoPhotos
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.exceptions import (
@@ -55,6 +57,7 @@ class SynoApi:
         self.network: SynoDSMNetwork = None
         self.security: SynoCoreSecurity = None
         self.storage: SynoStorage = None
+        self.photos: SynoPhotos = None
         self.surveillance_station: SynoSurveillanceStation = None
         self.system: SynoCoreSystem = None
         self.upgrade: SynoCoreUpgrade = None
@@ -65,6 +68,7 @@ class SynoApi:
         self._with_information = True
         self._with_security = True
         self._with_storage = True
+        self._with_photos = True
         self._with_surveillance_station = True
         self._with_system = True
         self._with_upgrade = True
@@ -162,6 +166,7 @@ class SynoApi:
             self._fetching_entities.get(SynoCoreSecurity.API_KEY)
         )
         self._with_storage = bool(self._fetching_entities.get(SynoStorage.API_KEY))
+        self._with_photos = bool(self._fetching_entities.get(SynoStorage.API_KEY))
         self._with_upgrade = bool(self._fetching_entities.get(SynoCoreUpgrade.API_KEY))
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
@@ -178,6 +183,13 @@ class SynoApi:
             )
             self.dsm.reset(self.security)
             self.security = None
+
+        if not self._with_photos:
+            LOGGER.debug(
+                "Disable photos api from being updated or '%s'", self._entry.unique_id
+            )
+            self.dsm.reset(self.photos)
+            self.photos = None
 
         if not self._with_storage:
             LOGGER.debug(
@@ -217,6 +229,10 @@ class SynoApi:
         if self._with_security:
             LOGGER.debug("Enable security api updates for '%s'", self._entry.unique_id)
             self.security = self.dsm.security
+
+        if self._with_photos:
+            LOGGER.debug("Enable photos api updates for '%s'", self._entry.unique_id)
+            self.photos = self.dsm.photos
 
         if self._with_storage:
             LOGGER.debug("Enable storage api updates for '%s'", self._entry.unique_id)
@@ -263,11 +279,9 @@ class SynoApi:
 
     async def async_unload(self) -> None:
         """Stop interacting with the NAS and prepare for removal from hass."""
-        try:
+        # ignore API errors during logout
+        with suppress(SynologyDSMException):
             await self._syno_api_executer(self.dsm.logout)
-        except SynologyDSMException:
-            # ignore API errors during logout
-            pass
 
     async def async_update(self) -> None:
         """Update function for updating API information."""

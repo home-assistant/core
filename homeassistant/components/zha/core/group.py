@@ -89,7 +89,7 @@ class ZHAGroupMember(LogMixin):
                 entity_ref.reference_id,
             )._asdict()
             for entity_ref in zha_device_registry.get(self.device.ieee)
-            if list(entity_ref.cluster_channels.values())[
+            if list(entity_ref.cluster_handlers.values())[
                 0
             ].cluster.endpoint.endpoint_id
             == self.endpoint_id
@@ -154,7 +154,7 @@ class ZHAGroup(LogMixin):
         """Return the ZHA devices that are members of this group."""
         return [
             ZHAGroupMember(self, self._zha_gateway.devices[member_ieee], endpoint_id)
-            for (member_ieee, endpoint_id) in self._zigpy_group.members.keys()
+            for (member_ieee, endpoint_id) in self._zigpy_group.members
             if member_ieee in self._zha_gateway.devices
         ]
 

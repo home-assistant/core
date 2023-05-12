@@ -547,7 +547,7 @@ class TelegramNotificationService:
                         InlineKeyboardButton(text_btn, callback_data=data_btn)
                     )
             else:
-                raise ValueError(str(row_keyboard))
+                raise TypeError(str(row_keyboard))
             return buttons
 
         # Defaults

@@ -1,9 +1,0 @@
-{
-    "state": {
-        "wled__live_override": {
-            "0": "Off",
-            "1": "On",
-            "2": "Until device restarts"
-        }
-    }
-}

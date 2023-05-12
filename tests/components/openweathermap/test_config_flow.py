@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -33,7 +34,7 @@ CONFIG = {
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test that the form is served with valid input."""
     mocked_owm = _create_mocked_owm(True)
 
@@ -46,7 +47,7 @@ async def test_form(hass):
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_init(
@@ -70,7 +71,7 @@ async def test_form(hass):
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
 
-async def test_form_options(hass):
+async def test_form_options(hass: HomeAssistant) -> None:
     """Test that the options form."""
     mocked_owm = _create_mocked_owm(True)
 
@@ -127,7 +128,7 @@ async def test_form_options(hass):
         assert config_entry.state == ConfigEntryState.LOADED
 
 
-async def test_form_invalid_api_key(hass):
+async def test_form_invalid_api_key(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     mocked_owm = _create_mocked_owm(True)
 
@@ -143,7 +144,7 @@ async def test_form_invalid_api_key(hass):
         assert result["errors"] == {"base": "invalid_api_key"}
 
 
-async def test_form_api_call_error(hass):
+async def test_form_api_call_error(hass: HomeAssistant) -> None:
     """Test setting up with api call error."""
     mocked_owm = _create_mocked_owm(True)
 
@@ -159,7 +160,7 @@ async def test_form_api_call_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_api_offline(hass):
+async def test_form_api_offline(hass: HomeAssistant) -> None:
     """Test setting up with api call error."""
     mocked_owm = _create_mocked_owm(False)
 

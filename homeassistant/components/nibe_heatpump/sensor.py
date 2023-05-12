@@ -1,7 +1,7 @@
 """The Nibe Heat Pump sensors."""
 from __future__ import annotations
 
-from nibe.coil import Coil
+from nibe.coil import Coil, CoilData
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -20,7 +21,6 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, CoilEntity, Coordinator
@@ -146,5 +146,5 @@ class Sensor(CoilEntity, SensorEntity):
             self._attr_native_unit_of_measurement = coil.unit
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def _async_read_coil(self, coil: Coil):
-        self._attr_native_value = coil.value
+    def _async_read_coil(self, data: CoilData):
+        self._attr_native_value = data.value

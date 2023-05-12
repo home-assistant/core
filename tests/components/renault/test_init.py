@@ -1,10 +1,11 @@
 """Tests for Renault setup process."""
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import aiohttp
 import pytest
-from renault_api.gigya.exceptions import InvalidCredentialsException
+from renault_api.gigya.exceptions import GigyaException, InvalidCredentialsException
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -58,8 +59,9 @@ async def test_setup_entry_bad_password(
     assert not hass.data.get(DOMAIN)
 
 
+@pytest.mark.parametrize("side_effect", [aiohttp.ClientConnectionError, GigyaException])
 async def test_setup_entry_exception(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, side_effect: Any
 ) -> None:
     """Test ConfigEntryNotReady when API raises an exception during entry setup."""
     # In this case we are testing the condition where async_setup_entry raises

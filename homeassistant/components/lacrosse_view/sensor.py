@@ -17,6 +17,7 @@ from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
     UnitOfPrecipitationDepth,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
@@ -114,6 +115,30 @@ SENSOR_DESCRIPTIONS = {
         key="Flex",
         name="Flex",
         value_fn=get_value,
+    ),
+    "BarometricPressure": LaCrosseSensorEntityDescription(
+        key="BarometricPressure",
+        name="Barometric pressure",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+    ),
+    "FeelsLike": LaCrosseSensorEntityDescription(
+        key="FeelsLike",
+        name="Feels like",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    "WindChill": LaCrosseSensorEntityDescription(
+        key="WindChill",
+        name="Wind chill",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
 }
 

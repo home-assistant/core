@@ -48,6 +48,21 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
+    state = hass.states.get("sensor.energy_production_today_remaining")
+    entry = entity_registry.async_get("sensor.energy_production_today_remaining")
+    assert entry
+    assert state
+    assert entry.unique_id == f"{entry_id}_energy_production_today_remaining"
+    assert state.state == "50.0"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Solar production forecast Estimated energy production - remaining today"
+    )
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert ATTR_ICON not in state.attributes
+
     state = hass.states.get("sensor.energy_production_tomorrow")
     entry = entity_registry.async_get("sensor.energy_production_tomorrow")
     assert entry
@@ -173,7 +188,7 @@ async def test_disabled_by_default(
 
 
 @pytest.mark.parametrize(
-    "key,name,value",
+    ("key", "name", "value"),
     [
         (
             "power_production_next_12hours",

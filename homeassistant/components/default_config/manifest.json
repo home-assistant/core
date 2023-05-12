@@ -1,9 +1,10 @@
 {
   "domain": "default_config",
   "name": "Default Config",
-  "documentation": "https://www.home-assistant.io/integrations/default_config",
+  "codeowners": ["@home-assistant/core"],
   "dependencies": [
     "application_credentials",
+    "assist_pipeline",
     "automation",
     "bluetooth",
     "cloud",
@@ -33,6 +34,7 @@
     "schedule",
     "script",
     "ssdp",
+    "stream",
     "sun",
     "system_health",
     "tag",
@@ -42,7 +44,7 @@
     "zeroconf",
     "zone"
   ],
-  "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "integration_type": "system"
+  "documentation": "https://www.home-assistant.io/integrations/default_config",
+  "integration_type": "system",
+  "quality_scale": "internal"
 }

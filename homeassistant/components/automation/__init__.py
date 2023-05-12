@@ -139,8 +139,7 @@ AutomationTriggerInfo = TriggerInfo
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
-    """
-    Return true if specified automation entity_id is on.
+    """Return true if specified automation entity_id is on.
 
     Async friendly.
     """
@@ -660,7 +659,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class AutomationEntityConfig:
     """Container for prepared automation entity configuration."""
 

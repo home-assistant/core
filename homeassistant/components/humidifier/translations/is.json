@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "condition_type": {
-            "is_off": "{entity_name} er sl\u00f6kkt",
-            "is_on": "{entity_name} er \u00ed gangi"
-        }
-    }
-}

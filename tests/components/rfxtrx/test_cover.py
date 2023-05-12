@@ -4,7 +4,7 @@ from unittest.mock import call
 import pytest
 
 from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import create_rfx_test_cfg
@@ -12,7 +12,7 @@ from .conftest import create_rfx_test_cfg
 from tests.common import MockConfigEntry, mock_restore_cache
 
 
-async def test_one_cover(hass, rfxtrx):
+async def test_one_cover(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 cover."""
     entry_data = create_rfx_test_cfg(devices={"0b1400cd0213c7f20d010f51": {}})
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -54,7 +54,7 @@ async def test_one_cover(hass, rfxtrx):
 
 
 @pytest.mark.parametrize("state", ["open", "closed"])
-async def test_state_restore(hass, rfxtrx, state):
+async def test_state_restore(hass: HomeAssistant, rfxtrx, state) -> None:
     """State restoration."""
 
     entity_id = "cover.lightwaverf_siemens_0213c7_242"
@@ -72,7 +72,7 @@ async def test_state_restore(hass, rfxtrx, state):
     assert hass.states.get(entity_id).state == state
 
 
-async def test_several_covers(hass, rfxtrx):
+async def test_several_covers(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 3 covers."""
     entry_data = create_rfx_test_cfg(
         devices={
@@ -104,7 +104,7 @@ async def test_several_covers(hass, rfxtrx):
     assert state.attributes.get("friendly_name") == "RollerTrol 009ba8:1"
 
 
-async def test_discover_covers(hass, rfxtrx_automatic):
+async def test_discover_covers(hass: HomeAssistant, rfxtrx_automatic) -> None:
     """Test with discovery of covers."""
     rfxtrx = rfxtrx_automatic
 
@@ -119,7 +119,7 @@ async def test_discover_covers(hass, rfxtrx_automatic):
     assert state.state == "open"
 
 
-async def test_duplicate_cover(hass, rfxtrx):
+async def test_duplicate_cover(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 2 duplicate covers."""
     entry_data = create_rfx_test_cfg(
         devices={
@@ -140,7 +140,7 @@ async def test_duplicate_cover(hass, rfxtrx):
     assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens 0213c7:242"
 
 
-async def test_rfy_cover(hass, rfxtrx):
+async def test_rfy_cover(hass: HomeAssistant, rfxtrx) -> None:
     """Test Rfy venetian blind covers."""
     entry_data = create_rfx_test_cfg(
         devices={

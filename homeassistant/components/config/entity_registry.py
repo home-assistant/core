@@ -15,16 +15,18 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.json import json_dumps
 
 
 async def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
 
-    websocket_api.async_register_command(hass, websocket_list_entities)
-    websocket_api.async_register_command(hass, websocket_get_entity)
     websocket_api.async_register_command(hass, websocket_get_entities)
-    websocket_api.async_register_command(hass, websocket_update_entity)
+    websocket_api.async_register_command(hass, websocket_get_entity)
+    websocket_api.async_register_command(hass, websocket_list_entities_for_display)
+    websocket_api.async_register_command(hass, websocket_list_entities)
     websocket_api.async_register_command(hass, websocket_remove_entity)
+    websocket_api.async_register_command(hass, websocket_update_entity)
     return True
 
 
@@ -40,7 +42,7 @@ def websocket_list_entities(
     # Build start of response message
     msg_json_prefix = (
         f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
-        f'"success":true,"result": ['
+        '"success":true,"result": ['
     )
     # Concatenate cached entity registry item JSON serializations
     msg_json = (
@@ -51,6 +53,36 @@ def websocket_list_entities(
             if entry.partial_json_repr is not None
         )
         + "]}"
+    )
+    connection.send_message(msg_json)
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "config/entity_registry/list_for_display"}
+)
+@callback
+def websocket_list_entities_for_display(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle list registry entries command."""
+    registry = er.async_get(hass)
+    # Build start of response message
+    entity_categories = json_dumps(er.ENTITY_CATEGORY_INDEX_TO_VALUE)
+    msg_json_prefix = (
+        f'{{"id":{msg["id"]},"type":"{websocket_api.const.TYPE_RESULT}","success":true,'
+        f'"result":{{"entity_categories":{entity_categories},"entities":['
+    )
+    # Concatenate cached entity registry item JSON serializations
+    msg_json = (
+        msg_json_prefix
+        + ",".join(
+            entry.display_json_repr
+            for entry in registry.entities.values()
+            if entry.disabled_by is None and entry.display_json_repr is not None
+        )
+        + "]}}"
     )
     connection.send_message(msg_json)
 
@@ -266,7 +298,6 @@ def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     data["aliases"] = entry.aliases
     data["capabilities"] = entry.capabilities
     data["device_class"] = entry.device_class
-    data["options"] = entry.options
     data["original_device_class"] = entry.original_device_class
     data["original_icon"] = entry.original_icon
     return data

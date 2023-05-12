@@ -1,7 +1,7 @@
 """Test configuration for Shelly."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.rpc_device import RpcDevice, UpdateType
@@ -70,11 +70,13 @@ MOCK_BLOCKS = [
             "inputEventCnt": 2,
             "overpower": 0,
             "power": 53.4,
+            "energy": 1234567.89,
         },
         channel="0",
         type="relay",
         overpower=0,
         power=53.4,
+        energy=1234567.89,
         description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
@@ -119,6 +121,15 @@ MOCK_BLOCKS = [
         wakeupEvent=["button"],
         description="device_0",
         type="device",
+    ),
+    Mock(
+        sensor_ids={"powerFactor": 0.98},
+        channel="0",
+        powerFactor=0.98,
+        targetTemp=4,
+        temp=22.1,
+        description="emeter_0",
+        type="emeter",
     ),
 ]
 
@@ -185,7 +196,7 @@ MOCK_STATUS_RPC = {
             "stable": {"version": "some_beta_version"},
         }
     },
-    "voltmeter": {"voltage": 4.3},
+    "voltmeter": {"voltage": 4.321},
     "wifi": {"rssi": -63},
 }
 
@@ -245,7 +256,9 @@ async def mock_block_device():
             status=MOCK_STATUS_COAP,
             firmware_version="some fw string",
             initialized=True,
+            model="SHSW-1",
         )
+        type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device
         block_device_mock.return_value.mock_update = Mock(side_effect=update)
 
@@ -254,7 +267,7 @@ async def mock_block_device():
 
 def _mock_rpc_device(version: str | None = None):
     """Mock rpc (Gen2, Websocket) device."""
-    return Mock(
+    device = Mock(
         spec=RpcDevice,
         config=MOCK_CONFIG,
         event={},
@@ -265,6 +278,8 @@ def _mock_rpc_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
     )
+    type(device).name = PropertyMock(return_value="Test name")
+    return device
 
 
 @pytest.fixture

@@ -1,14 +1,12 @@
 """The sensor tests for the Airzone platform."""
 
-from unittest.mock import AsyncMock
-
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
 async def test_airzone_create_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: AsyncMock
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
 ) -> None:
     """Test creation of sensors."""
 
@@ -20,7 +18,7 @@ async def test_airzone_create_sensors(
 
     # Zones
     state = hass.states.get("sensor.despacho_temperature")
-    assert state.state == "21.2"
+    assert state.state == "21.20"
 
     state = hass.states.get("sensor.despacho_humidity")
     assert state.state == "36"
@@ -54,3 +52,9 @@ async def test_airzone_create_sensors(
 
     state = hass.states.get("sensor.airzone_2_1_humidity")
     assert state.state == "62"
+
+    state = hass.states.get("sensor.dkn_plus_temperature")
+    assert state.state == "21.7"
+
+    state = hass.states.get("sensor.dkn_plus_humidity")
+    assert state is None

@@ -51,7 +51,7 @@ In 'box' (item 2 of 2):
 
 
 @pytest.mark.parametrize(
-    "arg, expected",
+    ("arg", "expected"),
     [
         ("message", "message"),
         (Exception("message"), "Exception: message"),

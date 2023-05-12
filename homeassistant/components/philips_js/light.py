@@ -17,6 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -287,11 +288,11 @@ class PhilipsTVLightEntity(
         }
 
         if not await self._tv.setAmbilightCached(data):
-            raise Exception("Failed to set ambilight color")
+            raise HomeAssistantError("Failed to set ambilight color")
 
         if effect.style != self._tv.ambilight_mode:
             if not await self._tv.setAmbilightMode(effect.style):
-                raise Exception("Failed to set ambilight mode")
+                raise HomeAssistantError("Failed to set ambilight mode")
 
     async def _set_ambilight_expert_config(
         self, effect: AmbilightEffect, hs_color: tuple[float, float], brightness: int
@@ -325,7 +326,7 @@ class PhilipsTVLightEntity(
             config["tuning"] = 0
 
         if not await self._tv.setAmbilightCurrentConfiguration(config):
-            raise Exception("Failed to set ambilight mode")
+            raise HomeAssistantError("Failed to set ambilight mode")
 
     async def _set_ambilight_config(self, effect: AmbilightEffect):
         """Set ambilight via current configuration."""
@@ -336,7 +337,7 @@ class PhilipsTVLightEntity(
         }
 
         if await self._tv.setAmbilightCurrentConfiguration(config) is False:
-            raise Exception("Failed to set ambilight mode")
+            raise HomeAssistantError("Failed to set ambilight mode")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the bulb on."""
@@ -345,7 +346,7 @@ class PhilipsTVLightEntity(
         attr_effect = kwargs.get(ATTR_EFFECT, self.effect)
 
         if not self._tv.on:
-            raise Exception("TV is not available")
+            raise HomeAssistantError("TV is not available")
 
         effect = AmbilightEffect.from_str(attr_effect)
 
@@ -383,10 +384,10 @@ class PhilipsTVLightEntity(
         """Turn of ambilight."""
 
         if not self._tv.on:
-            raise Exception("TV is not available")
+            raise HomeAssistantError("TV is not available")
 
         if await self._tv.setAmbilightMode("internal") is False:
-            raise Exception("Failed to set ambilight mode")
+            raise HomeAssistantError("Failed to set ambilight mode")
 
         await self._set_ambilight_config(AmbilightEffect(EFFECT_MODE, "OFF", ""))
 

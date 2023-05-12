@@ -1,5 +1,4 @@
 """Test the Logitech Squeezebox config flow."""
-
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -9,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.squeezebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -35,9 +35,12 @@ async def patch_async_query_unauthorized(self, *args):
     return False
 
 
-async def test_user_form(hass):
+async def test_user_form(hass: HomeAssistant) -> None:
     """Test user-initiated flow, including discovery and the edit step."""
-    with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
+    with patch(
+        "pysqueezebox.Server.async_query",
+        return_value={"uuid": UUID},
+    ), patch(
         "homeassistant.components.squeezebox.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
@@ -71,7 +74,7 @@ async def test_user_form(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_timeout(hass):
+async def test_user_form_timeout(hass: HomeAssistant) -> None:
     """Test we handle server search timeout."""
     with patch(
         "homeassistant.components.squeezebox.config_flow.async_discover",
@@ -95,7 +98,7 @@ async def test_user_form_timeout(hass):
                 assert key.description == {"suggested_value": HOST2}
 
 
-async def test_user_form_duplicate(hass):
+async def test_user_form_duplicate(hass: HomeAssistant) -> None:
     """Test duplicate discovered servers are skipped."""
     with patch(
         "homeassistant.components.squeezebox.config_flow.async_discover",
@@ -113,7 +116,7 @@ async def test_user_form_duplicate(hass):
         assert result["errors"] == {"base": "no_server_found"}
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "edit"}
@@ -138,7 +141,7 @@ async def test_form_invalid_auth(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "edit"}
@@ -162,7 +165,7 @@ async def test_form_cannot_connect(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_discovery(hass):
+async def test_discovery(hass: HomeAssistant) -> None:
     """Test handling of discovered server."""
     with patch(
         "pysqueezebox.Server.async_query",
@@ -177,7 +180,7 @@ async def test_discovery(hass):
         assert result["step_id"] == "edit"
 
 
-async def test_discovery_no_uuid(hass):
+async def test_discovery_no_uuid(hass: HomeAssistant) -> None:
     """Test handling of discovered server with unavailable uuid."""
     with patch("pysqueezebox.Server.async_query", new=patch_async_query_unauthorized):
         result = await hass.config_entries.flow.async_init(
@@ -189,9 +192,12 @@ async def test_discovery_no_uuid(hass):
         assert result["step_id"] == "edit"
 
 
-async def test_dhcp_discovery(hass):
+async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     """Test we can process discovery from dhcp."""
-    with patch("pysqueezebox.Server.async_query", return_value={"uuid": UUID},), patch(
+    with patch(
+        "pysqueezebox.Server.async_query",
+        return_value={"uuid": UUID},
+    ), patch(
         "homeassistant.components.squeezebox.config_flow.async_discover", mock_discover
     ):
         result = await hass.config_entries.flow.async_init(
@@ -207,7 +213,7 @@ async def test_dhcp_discovery(hass):
         assert result["step_id"] == "edit"
 
 
-async def test_dhcp_discovery_no_server_found(hass):
+async def test_dhcp_discovery_no_server_found(hass: HomeAssistant) -> None:
     """Test we can handle dhcp discovery when no server is found."""
     with patch(
         "homeassistant.components.squeezebox.config_flow.async_discover",
@@ -226,7 +232,7 @@ async def test_dhcp_discovery_no_server_found(hass):
         assert result["step_id"] == "user"
 
 
-async def test_dhcp_discovery_existing_player(hass):
+async def test_dhcp_discovery_existing_player(hass: HomeAssistant) -> None:
     """Test that we properly ignore known players during dhcp discover."""
     with patch(
         "homeassistant.helpers.entity_registry.EntityRegistry.async_get_entity_id",

@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "action_type": {
-            "set_value": "{entity_name} i\u00e7in de\u011fer belirleyin"
-        }
-    },
-    "title": "Metin"
-}

@@ -259,7 +259,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
-            for (kind, key) in device_entry.identifiers:
+            for kind, key in device_entry.identifiers:
                 if kind == DOMAIN and key in known_devices:
                     break
             else:

@@ -7,19 +7,18 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, TypeVar, cast
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
-from .renault_coordinator import RenaultDataUpdateCoordinator
+from .coordinator import RenaultDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
 _T = TypeVar("_T")
@@ -151,6 +150,11 @@ class RenaultVehicleProxy:
     async def set_charge_start(self) -> models.KamereonVehicleChargingStartActionData:
         """Start vehicle charge."""
         return await self._vehicle.set_charge_start()
+
+    @with_error_wrapping
+    async def set_charge_stop(self) -> models.KamereonVehicleChargingStartActionData:
+        """Stop vehicle charge."""
+        return await self._vehicle.set_charge_stop()
 
     @with_error_wrapping
     async def set_ac_stop(self) -> models.KamereonVehicleHvacStartActionData:

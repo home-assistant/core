@@ -3,13 +3,16 @@ from __future__ import annotations
 
 from boschshcpy import SHCDevice, SHCIntrusionSystem
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 
 
-async def async_remove_devices(hass, entity, entry_id) -> None:
+async def async_remove_devices(
+    hass: HomeAssistant, entity: SHCBaseEntity, entry_id: str
+) -> None:
     """Get item that is removed from session."""
     dev_registry = get_dev_reg(hass)
     device = dev_registry.async_get_device(
@@ -48,6 +51,11 @@ class SHCBaseEntity(Entity):
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
         self._device.unsubscribe_callback(self.entity_id)
+
+    @property
+    def device_id(self) -> str:
+        """Return the device id."""
+        return self._device.id
 
 
 class SHCEntity(SHCBaseEntity):

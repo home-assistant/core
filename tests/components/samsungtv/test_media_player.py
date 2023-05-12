@@ -292,7 +292,6 @@ async def test_update_off(hass: HomeAssistant, mock_now: datetime) -> None:
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), DEFAULT_MOCK],
     ):
-
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)
@@ -526,7 +525,6 @@ async def test_update_unhandled_response(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[exceptions.UnhandledResponse("Boom"), DEFAULT_MOCK],
     ):
-
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)
@@ -547,7 +545,6 @@ async def test_connection_closed_during_update_can_recover(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[exceptions.ConnectionClosed(), DEFAULT_MOCK],
     ):
-
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)

@@ -52,7 +52,7 @@ async def test_notify_voluptuous_error(
     """Test voluptuous error thrown when drafting email."""
     await setup_integration()
 
-    with pytest.raises(Invalid) as ex:
+    with pytest.raises(ValueError) as ex:
         await hass.services.async_call(
             NOTIFY_DOMAIN,
             "example_gmail_com",

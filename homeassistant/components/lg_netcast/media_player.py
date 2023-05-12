@@ -260,7 +260,9 @@ class LgTVDevice(MediaPlayerEntity):
         """Send the previous track command."""
         self.send_command(LG_COMMAND.REWIND)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Tune to channel."""
         if media_type != MediaType.CHANNEL:
             raise ValueError(f"Invalid media type: {media_type}")

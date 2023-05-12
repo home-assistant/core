@@ -220,7 +220,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         all_presets: dict[str, int | None] = {PRESET_NONE: None}
 
         # Z-Wave uses one list for both modes and presets.
-        # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
+        # Iterate over all Z-Wave ThermostatModes
+        # and extract the hvac modes and presets.
         if self._current_mode is None:
             self._hvac_modes = {
                 ZW_HVAC_MODE_MAP[ThermostatMode.HEAT]: ThermostatMode.HEAT
@@ -242,7 +243,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def _current_mode_setpoint_enums(self) -> list[ThermostatSetpointType]:
         """Return the list of enums that are relevant to the current thermostat mode."""
         if self._current_mode is None or self._current_mode.value is None:
-            # Thermostat(valve) with no support for setting a mode is considered heating-only
+            # Thermostat(valve) with no support for setting a mode
+            # is considered heating-only
             return [ThermostatSetpointType.HEATING]
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])
 
@@ -261,7 +263,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if self._current_mode is None:
-            # Thermostat(valve) with no support for setting a mode is considered heating-only
+            # Thermostat(valve) with no support for setting
+            # a mode is considered heating-only
             return HVACMode.HEAT
         if self._current_mode.value is None:
             # guard missing value

@@ -95,6 +95,7 @@ from .const import (
     TYPE_VALVE,
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
 
@@ -107,7 +108,12 @@ MAX_VERSION_PART = 2**32 - 1
 
 
 MAX_PORT = 65535
-VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
+VALID_VIDEO_CODECS = [
+    VIDEO_CODEC_LIBX264,
+    VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_H264_V4L2M2M,
+    AUDIO_CODEC_COPY,
+]
 VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 
 BASIC_INFO_SCHEMA = vol.Schema(
@@ -447,16 +453,21 @@ def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
 
 
 def density_to_air_quality_voc(density: float) -> int:
-    """Map VOCs µg/m3 to HomeKit AirQuality level."""
-    if density <= 24:
+    """Map VOCs µg/m3 to HomeKit AirQuality level.
+
+    The VOC mappings use the IAQ guidelines for Europe released by the WHO (World Health Organization).
+    Referenced from Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
+    https://github.com/paulvha/svm30/blob/master/extras/Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf
+    """
+    if density <= 250:  # WHO IAQ 1 (HomeKit: Excellent)
         return 1
-    if density <= 48:
+    if density <= 500:  # WHO IAQ 2 (HomeKit: Good)
         return 2
-    if density <= 64:
+    if density <= 1000:  # WHO IAQ 3 (HomeKit: Fair)
         return 3
-    if density <= 96:
+    if density <= 3000:  # WHO IAQ 4 (HomeKit: Inferior)
         return 4
-    return 5
+    return 5  # WHOA IAQ 5 (HomeKit: Poor)
 
 
 def get_persist_filename_for_entry_id(entry_id: str) -> str:

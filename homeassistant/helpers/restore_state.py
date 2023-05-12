@@ -5,7 +5,9 @@ from abc import ABC, abstractmethod
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar, cast
+from typing import Any, cast
+
+from typing_extensions import Self
 
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
@@ -31,8 +33,6 @@ STATE_DUMP_INTERVAL = timedelta(minutes=15)
 
 # How long should a saved state be preserved if the entity no longer exists
 STATE_EXPIRATION = timedelta(days=7)
-
-_StoredStateSelfT = TypeVar("_StoredStateSelfT", bound="StoredState")
 
 
 class ExtraStoredData(ABC):
@@ -82,7 +82,7 @@ class StoredState:
         return result
 
     @classmethod
-    def from_dict(cls: type[_StoredStateSelfT], json_dict: dict) -> _StoredStateSelfT:
+    def from_dict(cls, json_dict: dict) -> Self:
         """Initialize a stored state from a dict."""
         extra_data_dict = json_dict.get("extra_data")
         extra_data = RestoredExtraData(extra_data_dict) if extra_data_dict else None
@@ -212,11 +212,14 @@ class RestoreStateData:
         # Dump the initial states now. This helps minimize the risk of having
         # old states loaded by overwriting the last states once Home Assistant
         # has started and the old states have been read.
-        self.hass.async_create_task(_async_dump_states())
+        self.hass.async_create_task(_async_dump_states(), "RestoreStateData dump")
 
         # Dump states periodically
         cancel_interval = async_track_time_interval(
-            self.hass, _async_dump_states, STATE_DUMP_INTERVAL
+            self.hass,
+            _async_dump_states,
+            STATE_DUMP_INTERVAL,
+            name="RestoreStateData dump states",
         )
 
         async def _async_dump_states_at_stop(*_: Any) -> None:

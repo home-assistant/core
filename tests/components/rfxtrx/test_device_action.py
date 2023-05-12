@@ -9,7 +9,8 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_cfg
@@ -18,21 +19,7 @@ from tests.common import (
     MockConfigEntry,
     assert_lists_same,
     async_get_device_automations,
-    mock_device_registry,
-    mock_registry,
 )
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 class DeviceTestData(NamedTuple):
@@ -54,7 +41,7 @@ DEVICE_TEMPHUM_1 = DeviceTestData(
 
 
 @pytest.mark.parametrize("device", [DEVICE_LIGHTING_1, DEVICE_TEMPHUM_1])
-async def test_device_test_data(rfxtrx, device: DeviceTestData):
+async def test_device_test_data(rfxtrx, device: DeviceTestData) -> None:
     """Verify that our testing data remains correct."""
     pkt: RFXtrx.lowlevel.Packet = RFXtrx.lowlevel.parse(bytearray.fromhex(device.code))
     assert device.device_identifiers == {
@@ -80,7 +67,7 @@ def _get_expected_actions(data):
 
 
 @pytest.mark.parametrize(
-    "device,expected",
+    ("device", "expected"),
     [
         [
             DEVICE_LIGHTING_1,
@@ -93,11 +80,13 @@ def _get_expected_actions(data):
         [DEVICE_TEMPHUM_1, []],
     ],
 )
-async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
+async def test_get_actions(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, device, expected
+) -> None:
     """Test we get the expected actions from a rfxtrx."""
     await setup_entry(hass, {device.code: {}})
 
-    device_entry = device_reg.async_get_device(device.device_identifiers, set())
+    device_entry = device_registry.async_get_device(device.device_identifiers, set())
     assert device_entry
 
     actions = await async_get_device_automations(
@@ -114,7 +103,7 @@ async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
 
 
 @pytest.mark.parametrize(
-    "device,config,expected",
+    ("device", "config", "expected"),
     [
         [
             DEVICE_LIGHTING_1,
@@ -134,13 +123,18 @@ async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
     ],
 )
 async def test_action(
-    hass, device_reg: DeviceRegistry, rfxtrx: RFXtrx.Connect, device, config, expected
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    rfxtrx: RFXtrx.Connect,
+    device,
+    config,
+    expected,
+) -> None:
     """Test for actions."""
 
     await setup_entry(hass, {device.code: {}})
 
-    device_entry = device_reg.async_get_device(device.device_identifiers, set())
+    device_entry = device_registry.async_get_device(device.device_identifiers, set())
     assert device_entry
 
     assert await async_setup_component(
@@ -169,14 +163,18 @@ async def test_action(
     rfxtrx.transport.send.assert_called_once_with(bytearray.fromhex(expected))
 
 
-async def test_invalid_action(hass, device_reg: DeviceRegistry, caplog):
+async def test_invalid_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test for invalid actions."""
     device = DEVICE_LIGHTING_1
 
     await setup_entry(hass, {device.code: {}})
 
     device_identifers: Any = device.device_identifiers
-    device_entry = device_reg.async_get_device(device_identifers, set())
+    device_entry = device_registry.async_get_device(device_identifers, set())
     assert device_entry
 
     assert await async_setup_component(

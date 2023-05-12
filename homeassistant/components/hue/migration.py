@@ -92,7 +92,6 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
 
     # initialize bridge connection just for the migration
     async with HueBridgeV2(host, api_key) as api:
-
         sensor_class_mapping = {
             SensorDeviceClass.BATTERY.value: ResourceTypes.DEVICE_POWER,
             BinarySensorDeviceClass.MOTION.value: ResourceTypes.MOTION,
@@ -130,7 +129,6 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
 
             # loop through all entities for device and find match
             for ent in async_entries_for_device(ent_reg, hass_dev_id, True):
-
                 if ent.entity_id.startswith("light"):
                     # migrate light
                     # should always return one lightid here

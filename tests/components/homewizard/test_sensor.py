@@ -1,5 +1,4 @@
 """Test the update coordinator for HomeWizard."""
-
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -24,6 +23,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -33,8 +33,8 @@ from tests.common import async_fire_time_changed
 
 
 async def test_sensor_entity_smr_version(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads smr version."""
 
     api = get_mock_device()
@@ -71,8 +71,8 @@ async def test_sensor_entity_smr_version(
 
 
 async def test_sensor_entity_meter_model(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads meter model."""
 
     api = get_mock_device()
@@ -110,7 +110,49 @@ async def test_sensor_entity_meter_model(
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
 
 
-async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config_entry):
+async def test_sensor_entity_unique_meter_id(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
+    """Test entity loads unique meter id."""
+
+    api = get_mock_device()
+    api.data = AsyncMock(return_value=Data.from_dict({"unique_id": "4E47475955"}))
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    state = hass.states.get("sensor.product_name_aabbccddeeff_smart_meter_identifier")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_smart_meter_identifier"
+    )
+    assert entry
+    assert state
+    assert entry.unique_id == "aabbccddeeff_unique_meter_id"
+    assert not entry.disabled
+    assert state.state == "NGGYU"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Smart meter identifier"
+    )
+    assert ATTR_STATE_CLASS not in state.attributes
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes.get(ATTR_ICON) == "mdi:alphabetical-variant"
+
+
+async def test_sensor_entity_wifi_ssid(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads wifi ssid."""
 
     api = get_mock_device()
@@ -147,8 +189,8 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
 
 
 async def test_sensor_entity_active_tariff(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active_tariff."""
 
     api = get_mock_device()
@@ -186,8 +228,8 @@ async def test_sensor_entity_active_tariff(
 
 
 async def test_sensor_entity_wifi_strength(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads wifi strength."""
 
     api = get_mock_device()
@@ -213,8 +255,8 @@ async def test_sensor_entity_wifi_strength(
 
 
 async def test_sensor_entity_total_power_import_t1_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total power import t1."""
 
     api = get_mock_device()
@@ -255,8 +297,8 @@ async def test_sensor_entity_total_power_import_t1_kwh(
 
 
 async def test_sensor_entity_total_power_import_t2_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total power import t2."""
 
     api = get_mock_device()
@@ -297,8 +339,8 @@ async def test_sensor_entity_total_power_import_t2_kwh(
 
 
 async def test_sensor_entity_total_power_export_t1_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total power export t1."""
 
     api = get_mock_device()
@@ -339,8 +381,8 @@ async def test_sensor_entity_total_power_export_t1_kwh(
 
 
 async def test_sensor_entity_total_power_export_t2_kwh(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total power export t2."""
 
     api = get_mock_device()
@@ -381,8 +423,8 @@ async def test_sensor_entity_total_power_export_t2_kwh(
 
 
 async def test_sensor_entity_active_power(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power."""
 
     api = get_mock_device()
@@ -419,8 +461,8 @@ async def test_sensor_entity_active_power(
 
 
 async def test_sensor_entity_active_power_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power l1."""
 
     api = get_mock_device()
@@ -459,8 +501,8 @@ async def test_sensor_entity_active_power_l1(
 
 
 async def test_sensor_entity_active_power_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power l2."""
 
     api = get_mock_device()
@@ -499,8 +541,8 @@ async def test_sensor_entity_active_power_l2(
 
 
 async def test_sensor_entity_active_power_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power l3."""
 
     api = get_mock_device()
@@ -538,7 +580,9 @@ async def test_sensor_entity_active_power_l3(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config_entry):
+async def test_sensor_entity_total_gas(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total gas."""
 
     api = get_mock_device()
@@ -574,9 +618,49 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
     assert ATTR_ICON not in state.attributes
 
 
+async def test_sensor_entity_unique_gas_meter_id(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
+    """Test entity loads unique gas meter id."""
+
+    api = get_mock_device()
+    api.data = AsyncMock(return_value=Data.from_dict({"gas_unique_id": "4E47475955"}))
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    state = hass.states.get("sensor.product_name_aabbccddeeff_gas_meter_identifier")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_gas_meter_identifier"
+    )
+    assert entry
+    assert state
+    assert entry.unique_id == "aabbccddeeff_gas_unique_id"
+    assert not entry.disabled
+    assert state.state == "NGGYU"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Gas meter identifier"
+    )
+    assert ATTR_STATE_CLASS not in state.attributes
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes.get(ATTR_ICON) == "mdi:alphabetical-variant"
+
+
 async def test_sensor_entity_active_voltage_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active voltage l1."""
 
     api = get_mock_device()
@@ -634,8 +718,8 @@ async def test_sensor_entity_active_voltage_l1(
 
 
 async def test_sensor_entity_active_voltage_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active voltage l2."""
 
     api = get_mock_device()
@@ -693,8 +777,8 @@ async def test_sensor_entity_active_voltage_l2(
 
 
 async def test_sensor_entity_active_voltage_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active voltage l3."""
 
     api = get_mock_device()
@@ -752,8 +836,8 @@ async def test_sensor_entity_active_voltage_l3(
 
 
 async def test_sensor_entity_active_current_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active current l1."""
 
     api = get_mock_device()
@@ -811,8 +895,8 @@ async def test_sensor_entity_active_current_l1(
 
 
 async def test_sensor_entity_active_current_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active current l2."""
 
     api = get_mock_device()
@@ -870,8 +954,8 @@ async def test_sensor_entity_active_current_l2(
 
 
 async def test_sensor_entity_active_current_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active current l3."""
 
     api = get_mock_device()
@@ -929,8 +1013,8 @@ async def test_sensor_entity_active_current_l3(
 
 
 async def test_sensor_entity_active_frequency(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active frequency."""
 
     api = get_mock_device()
@@ -985,8 +1069,8 @@ async def test_sensor_entity_active_frequency(
 
 
 async def test_sensor_entity_voltage_sag_count_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_sag_count_l1."""
 
     api = get_mock_device()
@@ -1024,8 +1108,8 @@ async def test_sensor_entity_voltage_sag_count_l1(
 
 
 async def test_sensor_entity_voltage_sag_count_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_sag_count_l2."""
 
     api = get_mock_device()
@@ -1063,8 +1147,8 @@ async def test_sensor_entity_voltage_sag_count_l2(
 
 
 async def test_sensor_entity_voltage_sag_count_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_sag_count_l3."""
 
     api = get_mock_device()
@@ -1102,8 +1186,8 @@ async def test_sensor_entity_voltage_sag_count_l3(
 
 
 async def test_sensor_entity_voltage_swell_count_l1(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_swell_count_l1."""
 
     api = get_mock_device()
@@ -1143,8 +1227,8 @@ async def test_sensor_entity_voltage_swell_count_l1(
 
 
 async def test_sensor_entity_voltage_swell_count_l2(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_swell_count_l2."""
 
     api = get_mock_device()
@@ -1184,8 +1268,8 @@ async def test_sensor_entity_voltage_swell_count_l2(
 
 
 async def test_sensor_entity_voltage_swell_count_l3(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads voltage_swell_count_l3."""
 
     api = get_mock_device()
@@ -1225,8 +1309,8 @@ async def test_sensor_entity_voltage_swell_count_l3(
 
 
 async def test_sensor_entity_any_power_fail_count(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads any power fail count."""
 
     api = get_mock_device()
@@ -1264,8 +1348,8 @@ async def test_sensor_entity_any_power_fail_count(
 
 
 async def test_sensor_entity_long_power_fail_count(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads long power fail count."""
 
     api = get_mock_device()
@@ -1305,8 +1389,8 @@ async def test_sensor_entity_long_power_fail_count(
 
 
 async def test_sensor_entity_active_power_average(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active power average."""
 
     api = get_mock_device()
@@ -1347,9 +1431,9 @@ async def test_sensor_entity_active_power_average(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_montly_power_peak(
-    hass, mock_config_entry_data, mock_config_entry
-):
+async def test_sensor_entity_monthly_power_peak(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads monthly power peak."""
 
     api = get_mock_device()
@@ -1376,7 +1460,7 @@ async def test_sensor_entity_montly_power_peak(
     )
     assert entry
     assert state
-    assert entry.unique_id == "aabbccddeeff_montly_power_peak_w"
+    assert entry.unique_id == "aabbccddeeff_monthly_power_peak_w"
     assert not entry.disabled
     assert state.state == "1234.456"
     assert (
@@ -1391,8 +1475,8 @@ async def test_sensor_entity_montly_power_peak(
 
 
 async def test_sensor_entity_active_liters(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads active liters (watermeter)."""
 
     api = get_mock_device()
@@ -1432,8 +1516,8 @@ async def test_sensor_entity_active_liters(
 
 
 async def test_sensor_entity_total_liters(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test entity loads total liters (watermeter)."""
 
     api = get_mock_device()
@@ -1473,8 +1557,8 @@ async def test_sensor_entity_total_liters(
 
 
 async def test_sensor_entity_disabled_when_null(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test sensor disables data with null by default."""
 
     api = get_mock_device()
@@ -1512,8 +1596,8 @@ async def test_sensor_entity_disabled_when_null(
 
 
 async def test_sensor_entity_export_disabled_when_unused(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test sensor disables export if value is 0."""
 
     api = get_mock_device()
@@ -1561,7 +1645,9 @@ async def test_sensor_entity_export_disabled_when_unused(
     assert entry.disabled
 
 
-async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_entry):
+async def test_sensors_unreachable(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test sensor handles api unreachable."""
 
     api = get_mock_device()
@@ -1609,7 +1695,9 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
         )
 
 
-async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
+async def test_api_disabled(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test sensor handles api unreachable."""
 
     api = get_mock_device()

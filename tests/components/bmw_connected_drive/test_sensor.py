@@ -12,7 +12,7 @@ from . import setup_mocked_integration
 
 
 @pytest.mark.parametrize(
-    "entity_id,unit_system,value,unit_of_measurement",
+    ("entity_id", "unit_system", "value", "unit_of_measurement"),
     [
         ("sensor.i3_rex_remaining_range_total", METRIC, "279", "km"),
         ("sensor.i3_rex_remaining_range_total", IMPERIAL, "173.36", "mi"),

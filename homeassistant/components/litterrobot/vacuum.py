@@ -118,7 +118,7 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
         if time_str is None:
             return None
 
-        if (parsed_time := dt_util.parse_time(time_str)) is None:  # pragma: no cover
+        if (parsed_time := dt_util.parse_time(time_str)) is None:
             return None
 
         return (

@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_USE_LEGACY_PROTOCOL, DEFAULT_NAME, DEFAULT_USERNAME, DOMAIN
@@ -72,15 +72,6 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a config entry."""
-        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
-        title = config.pop(CONF_NAME, DEFAULT_NAME)
-        return self.async_create_entry(
-            title=title,
-            data=config,
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -131,6 +122,6 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception: %s", ex)
             return "unknown"
-        if smartplug.authenticated:
-            return None
-        return "cannot_connect"
+        if not smartplug.authenticated and smartplug.use_legacy_protocol:
+            return "cannot_connect"
+        return None

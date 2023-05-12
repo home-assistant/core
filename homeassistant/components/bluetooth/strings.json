@@ -29,7 +29,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "no_adapters": "No unconfigured Bluetooth adapters found"
+      "no_adapters": "No unconfigured Bluetooth adapters found. There are {ignored_adapters} ignored adapters."
     }
   },
   "options": {

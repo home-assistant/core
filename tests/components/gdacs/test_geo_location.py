@@ -31,6 +31,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -43,7 +44,7 @@ from tests.common import async_fire_time_changed
 CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -206,7 +207,7 @@ async def test_setup(hass):
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass):
+async def test_setup_imperial(hass: HomeAssistant) -> None:
     """Test the setup of the integration using imperial unit system."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.

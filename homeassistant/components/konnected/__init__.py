@@ -84,7 +84,7 @@ def ensure_zone(value):
     if value is None:
         raise vol.Invalid("zone value is None")
 
-    if str(value) not in ZONES is None:
+    if str(value) not in ZONES:
         raise vol.Invalid("zone not valid")
 
     return str(value)
@@ -259,7 +259,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # async_connect will handle retries until it establishes a connection
     await client.async_connect()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # config entry specific data to enable unload
     hass.data[DOMAIN][entry.entry_id] = {
@@ -293,7 +293,7 @@ class KonnectedView(HomeAssistantView):
     name = "api:konnected"
     requires_auth = False  # Uses access token from configuration
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the view."""
 
     @staticmethod

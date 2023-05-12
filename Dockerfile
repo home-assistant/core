@@ -5,6 +5,8 @@ FROM ${BUILD_FROM}
 ENV \
     S6_SERVICES_GRACETIME=220000
 
+ARG QEMU_CPU
+
 WORKDIR /usr/src
 
 ## Setup Home Assistant Core dependencies
@@ -16,7 +18,6 @@ RUN \
         --no-index \
         --only-binary=:all: \
         --find-links "${WHEELS_LINKS}" \
-        --use-deprecated=legacy-resolver \
         -r homeassistant/requirements.txt
 
 COPY requirements_all.txt home_assistant_frontend-* home_assistant_intents-* homeassistant/
@@ -41,7 +42,6 @@ RUN \
             --no-index \
             --only-binary=:all: \
             --find-links "${WHEELS_LINKS}" \
-            --use-deprecated=legacy-resolver \
             -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
@@ -52,7 +52,6 @@ RUN \
         --no-index \
         --only-binary=:all: \
         --find-links "${WHEELS_LINKS}" \
-        --use-deprecated=legacy-resolver \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant

@@ -12,6 +12,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zha import DOMAIN
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -101,7 +102,7 @@ async def device_inovelli(hass, zigpy_device_mock, zha_device_joined):
     return zigpy_device, zha_device
 
 
-async def test_get_actions(hass, device_ias):
+async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
     """Test we get the expected actions from a ZHA device."""
 
     ieee_address = str(device_ias[0].ieee)
@@ -121,40 +122,36 @@ async def test_get_actions(hass, device_ias):
             "metadata": {},
         },
         {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id, "metadata": {}},
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_siren_tone",
-            "metadata": {"secondary": True},
-        },
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_siren_level",
-            "metadata": {"secondary": True},
-        },
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_strobe_level",
-            "metadata": {"secondary": True},
-        },
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_strobe",
-            "metadata": {"secondary": True},
-        },
     ]
+    expected_actions.extend(
+        [
+            {
+                "domain": Platform.SELECT,
+                "type": action,
+                "device_id": reg_device.id,
+                "entity_id": entity_id,
+                "metadata": {"secondary": True},
+            }
+            for action in [
+                "select_first",
+                "select_last",
+                "select_next",
+                "select_option",
+                "select_previous",
+            ]
+            for entity_id in [
+                "select.fakemanufacturer_fakemodel_default_siren_level",
+                "select.fakemanufacturer_fakemodel_default_siren_tone",
+                "select.fakemanufacturer_fakemodel_default_strobe_level",
+                "select.fakemanufacturer_fakemodel_default_strobe",
+            ]
+        ]
+    )
 
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_inovelli_actions(hass, device_inovelli):
+async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> None:
     """Test we get the expected actions from a ZHA device."""
 
     inovelli_ieee_address = str(device_inovelli[0].ieee)
@@ -234,7 +231,7 @@ async def test_get_inovelli_actions(hass, device_inovelli):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_action(hass, device_ias, device_inovelli):
+async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
     """Test for executing a ZHA device action."""
     zigpy_device, zha_device = device_ias
     inovelli_zigpy_device, inovelli_zha_device = device_inovelli
@@ -305,8 +302,8 @@ async def test_action(hass, device_ias, device_inovelli):
         await hass.async_block_till_done()
         calls = async_mock_service(hass, DOMAIN, "warning_device_warn")
 
-        channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
-        channel.zha_send_event(COMMAND_SINGLE, [])
+        cluster_handler = zha_device.endpoints[1].client_cluster_handlers["1:0x0006"]
+        cluster_handler.zha_send_event(COMMAND_SINGLE, [])
         await hass.async_block_till_done()
 
         assert len(calls) == 1
@@ -350,11 +347,11 @@ async def test_action(hass, device_ias, device_inovelli):
         )
 
 
-async def test_invalid_zha_event_type(hass, device_ias):
+async def test_invalid_zha_event_type(hass: HomeAssistant, device_ias) -> None:
     """Test that unexpected types are not passed to `zha_send_event`."""
     zigpy_device, zha_device = device_ias
-    channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
+    cluster_handler = zha_device._endpoints[1].client_cluster_handlers["1:0x0006"]
 
     # `zha_send_event` accepts only zigpy responses, lists, and dicts
     with pytest.raises(TypeError):
-        channel.zha_send_event(COMMAND_SINGLE, 123)
+        cluster_handler.zha_send_event(COMMAND_SINGLE, 123)

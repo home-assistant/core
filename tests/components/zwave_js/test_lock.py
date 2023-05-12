@@ -26,11 +26,14 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
+from homeassistant.core import HomeAssistant
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY, replace_value_of_zwave_value
 
 
-async def test_door_lock(hass, client, lock_schlage_be469, integration):
+async def test_door_lock(
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
     """Test a lock entity with door lock command class."""
     node = lock_schlage_be469
     state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
@@ -164,12 +167,16 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
     assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_UNAVAILABLE
 
 
-async def test_only_one_lock(hass, client, lock_home_connect_620, integration):
+async def test_only_one_lock(
+    hass: HomeAssistant, client, lock_home_connect_620, integration
+) -> None:
     """Test node with both Door Lock and Lock CC values only gets one lock entity."""
     assert len(hass.states.async_entity_ids("lock")) == 1
 
 
-async def test_door_lock_no_value(hass, client, lock_schlage_be469_state, integration):
+async def test_door_lock_no_value(
+    hass: HomeAssistant, client, lock_schlage_be469_state, integration
+) -> None:
     """Test a lock entity with door lock command class that has no value for mode."""
     node_state = replace_value_of_zwave_value(
         lock_schlage_be469_state,

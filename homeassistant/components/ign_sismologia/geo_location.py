@@ -141,7 +141,7 @@ class IgnSismologiaFeedEntityManager:
 
 
 class IgnSismologiaLocationEvent(GeolocationEvent):
-    """This represents an external event with IGN Sismologia feed data."""
+    """Represents an external event with IGN Sismologia feed data."""
 
     _attr_icon = "mdi:pulse"
     _attr_should_poll = False

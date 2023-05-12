@@ -1,9 +1,8 @@
 """Test against characteristics captured from a ryse smart bridge platforms."""
-
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -19,7 +18,7 @@ RYSE_SUPPORTED_FEATURES = (
 )
 
 
-async def test_ryse_smart_bridge_setup(hass):
+async def test_ryse_smart_bridge_setup(hass: HomeAssistant) -> None:
     """Test that a Ryse smart bridge can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "ryse_smart_bridge.json")
     await setup_test_accessories(hass, accessories)
@@ -96,7 +95,7 @@ async def test_ryse_smart_bridge_setup(hass):
     )
 
 
-async def test_ryse_smart_bridge_four_shades_setup(hass):
+async def test_ryse_smart_bridge_four_shades_setup(hass: HomeAssistant) -> None:
     """Test that a Ryse smart bridge with four shades can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(
         hass, "ryse_smart_bridge_four_shades.json"

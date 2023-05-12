@@ -1,7 +1,7 @@
 """Support for Brunt Blind Engine covers."""
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
 from brunt import BruntClientAsync, Thing
@@ -53,10 +53,9 @@ async def async_setup_entry(
 
 
 class BruntDevice(
-    CoordinatorEntity[DataUpdateCoordinator[dict[Optional[str], Thing]]], CoverEntity
+    CoordinatorEntity[DataUpdateCoordinator[dict[str | None, Thing]]], CoverEntity
 ):
-    """
-    Representation of a Brunt cover device.
+    """Representation of a Brunt cover device.
 
     Contains the common logic for all Brunt devices.
     """
@@ -89,7 +88,7 @@ class BruntDevice(
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},  # type: ignore[arg-type]
-            name=self._attr_name,
+            name=self._thing.name,
             via_device=(DOMAIN, self._entry_id),
             manufacturer="Brunt",
             sw_version=self._thing.fw_version,
@@ -105,8 +104,7 @@ class BruntDevice(
 
     @property
     def current_cover_position(self) -> int | None:
-        """
-        Return current position of cover.
+        """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
@@ -114,8 +112,7 @@ class BruntDevice(
 
     @property
     def request_cover_position(self) -> int | None:
-        """
-        Return request position of cover.
+        """Return request position of cover.
 
         The request position is the position of the last request
         to Brunt, at times there is a diff of 1 to current
@@ -125,8 +122,7 @@ class BruntDevice(
 
     @property
     def move_state(self) -> int | None:
-        """
-        Return current moving state of cover.
+        """Return current moving state of cover.
 
         None is unknown, 0 when stopped, 1 when opening, 2 when closing
         """

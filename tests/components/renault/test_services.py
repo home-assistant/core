@@ -92,11 +92,10 @@ async def test_service_set_ac_cancel(
     with patch(
         "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
         side_effect=RenaultException("Didn't work"),
-    ) as mock_action:
-        with pytest.raises(HomeAssistantError, match="Didn't work"):
-            await hass.services.async_call(
-                DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
-            )
+    ) as mock_action, pytest.raises(HomeAssistantError, match="Didn't work"):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
+        )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
 

@@ -52,7 +52,7 @@ def mock_client(hass, hass_client_no_auth):
     return hass.loop.run_until_complete(hass_client_no_auth())
 
 
-async def test_handle_valid_message(mock_client):
+async def test_handle_valid_message(mock_client) -> None:
     """Test that we forward messages correctly to OwnTracks."""
     resp = await mock_client.post(
         "/api/webhook/owntracks_test",
@@ -66,7 +66,7 @@ async def test_handle_valid_message(mock_client):
     assert json == []
 
 
-async def test_handle_valid_minimal_message(mock_client):
+async def test_handle_valid_minimal_message(mock_client) -> None:
     """Test that we forward messages correctly to OwnTracks."""
     resp = await mock_client.post(
         "/api/webhook/owntracks_test",
@@ -80,7 +80,7 @@ async def test_handle_valid_minimal_message(mock_client):
     assert json == []
 
 
-async def test_handle_value_error(mock_client):
+async def test_handle_value_error(mock_client) -> None:
     """Test we don't disclose that this is a valid webhook."""
     resp = await mock_client.post(
         "/api/webhook/owntracks_test",
@@ -94,7 +94,9 @@ async def test_handle_value_error(mock_client):
     assert json == ""
 
 
-async def test_returns_error_missing_username(mock_client, caplog):
+async def test_returns_error_missing_username(
+    mock_client, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that an error is returned when username is missing."""
     resp = await mock_client.post(
         "/api/webhook/owntracks_test",
@@ -109,7 +111,9 @@ async def test_returns_error_missing_username(mock_client, caplog):
     assert "No topic or user found" in caplog.text
 
 
-async def test_returns_error_incorrect_json(mock_client, caplog):
+async def test_returns_error_incorrect_json(
+    mock_client, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that an error is returned when username is missing."""
     resp = await mock_client.post(
         "/api/webhook/owntracks_test", data="not json", headers={"X-Limit-d": "Pixel"}
@@ -122,7 +126,7 @@ async def test_returns_error_incorrect_json(mock_client, caplog):
     assert "invalid JSON" in caplog.text
 
 
-async def test_returns_error_missing_device(mock_client):
+async def test_returns_error_missing_device(mock_client) -> None:
     """Test that an error is returned when device name is missing."""
     resp = await mock_client.post(
         "/api/webhook/owntracks_test",
@@ -136,7 +140,7 @@ async def test_returns_error_missing_device(mock_client):
     assert json == []
 
 
-def test_context_delivers_pending_msg():
+def test_context_delivers_pending_msg() -> None:
     """Test that context is able to hold pending messages while being init."""
     context = owntracks.OwnTracksContext(None, None, None, None, None, None, None, None)
     context.async_see(hello="world")

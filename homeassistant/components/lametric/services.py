@@ -1,11 +1,10 @@
 """Support for LaMetric time services."""
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 from demetriek import (
     AlarmSound,
     Chart,
+    Goal,
     LaMetricError,
     Model,
     Notification,
@@ -113,12 +112,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
 async def async_send_notification(
     coordinator: LaMetricDataUpdateCoordinator,
     call: ServiceCall,
-    frames: Sequence[Chart | Simple],
+    frames: list[Chart | Goal | Simple],
 ) -> None:
     """Send a notification to an LaMetric device."""
     sound = None
     if CONF_SOUND in call.data:
-        sound = Sound(id=call.data[CONF_SOUND], category=None)
+        sound = Sound(sound=call.data[CONF_SOUND], category=None)
 
     notification = Notification(
         icon_type=NotificationIconType(call.data[CONF_ICON_TYPE]),

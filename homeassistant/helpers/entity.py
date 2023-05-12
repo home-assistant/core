@@ -12,11 +12,10 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, Literal, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -32,6 +31,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
@@ -40,9 +40,11 @@ from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
-from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
 from .typing import StateType
+
+if TYPE_CHECKING:
+    from .entity_platform import EntityPlatform
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -50,16 +52,33 @@ DATA_ENTITY_SOURCE = "entity_info"
 SOURCE_CONFIG_ENTRY = "config_entry"
 SOURCE_PLATFORM_CONFIG = "platform_config"
 
+
+class DeviceClassName(Enum):
+    """Singleton to use device class name."""
+
+    _singleton = 0
+
+
+DEVICE_CLASS_NAME = DeviceClassName._singleton  # pylint: disable=protected-access
+
+
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
 @callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up entity sources."""
+    hass.data[DATA_ENTITY_SOURCE] = {}
+
+
+@callback
 @bind_hass
 def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
     """Get the entity sources."""
-    return hass.data.get(DATA_ENTITY_SOURCE, {})
+    _entity_sources: dict[str, dict[str, str]] = hass.data[DATA_ENTITY_SOURCE]
+    return _entity_sources
 
 
 def generate_entity_id(
@@ -177,22 +196,6 @@ class DeviceInfo(TypedDict, total=False):
     via_device: tuple[str, str]
 
 
-class EntityCategory(StrEnum):
-    """Category of an entity.
-
-    An entity with a category will:
-    - Not be exposed to cloud, Alexa, or Google Assistant components
-    - Not be included in indirect service calls to devices or areas
-    """
-
-    # Config: An entity which allows changing the configuration of a device.
-    CONFIG = "config"
-
-    # Diagnostic: An entity exposing some configuration parameter,
-    # or diagnostics of a device.
-    DIAGNOSTIC = "diagnostic"
-
-
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 
 
@@ -212,7 +215,7 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-@dataclass
+@dataclass(slots=True)
 class EntityDescription:
     """A class that describes Home Assistant entities."""
 
@@ -226,7 +229,7 @@ class EntityDescription:
     force_update: bool = False
     icon: str | None = None
     has_entity_name: bool = False
-    name: str | None = None
+    name: str | DeviceClassName | None = None
     translation_key: str | None = None
     unit_of_measurement: str | None = None
 
@@ -255,6 +258,10 @@ class Entity(ABC):
 
     # If we reported this entity is updated while disabled
     _disabled_reported = False
+
+    # If we reported this entity is using async_update_ha_state, while
+    # it should be using async_write_ha_state.
+    _async_update_ha_state_reported = False
 
     # Protect for multiple updates
     _update_staged = False
@@ -291,7 +298,7 @@ class Entity(ABC):
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
-    _attr_name: str | None
+    _attr_name: str | DeviceClassName | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
@@ -321,12 +328,37 @@ class Entity(ABC):
             return self.entity_description.has_entity_name
         return False
 
+    def _device_class_name(self) -> str | None:
+        """Return a translated name of the entity based on its device class."""
+        assert self.platform
+        if not self.has_entity_name:
+            return None
+        device_class_key = self.device_class or "_"
+        name_translation_key = (
+            f"component.{self.platform.domain}.entity_component."
+            f"{device_class_key}.name"
+        )
+        return self.platform.component_translations.get(name_translation_key)
+
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
+            if self._attr_name is DEVICE_CLASS_NAME:
+                return self._device_class_name()
             return self._attr_name
+        if self.translation_key is not None and self.has_entity_name:
+            assert self.platform
+            name_translation_key = (
+                f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
+                f".{self.translation_key}.name"
+            )
+            if name_translation_key in self.platform.platform_translations:
+                name: str = self.platform.platform_translations[name_translation_key]
+                return name
         if hasattr(self, "entity_description"):
+            if self.entity_description.name is DEVICE_CLASS_NAME:
+                return self._device_class_name()
             return self.entity_description.name
         return None
 
@@ -549,6 +581,19 @@ class Entity(ABC):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
+        elif not self._async_update_ha_state_reported:
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                (
+                    "Entity %s (%s) is using self.async_update_ha_state(), without"
+                    " enabling force_update. Instead it should use"
+                    " self.async_write_ha_state(), please %s"
+                ),
+                self.entity_id,
+                type(self),
+                report_issue,
+            )
+            self._async_update_ha_state_reported = True
 
         self._async_write_ha_state()
 
@@ -577,6 +622,25 @@ class Entity(ABC):
             return f"{state:.{FLOAT_PRECISION}}"
         return str(state)
 
+    def _friendly_name_internal(self) -> str | None:
+        """Return the friendly name.
+
+        If has_entity_name is False, this returns self.name
+        If has_entity_name is True, this returns device.name + self.name
+        """
+        if not self.has_entity_name or not self.registry_entry:
+            return self.name
+
+        device_registry = dr.async_get(self.hass)
+        if not (device_id := self.registry_entry.device_id) or not (
+            device_entry := device_registry.async_get(device_id)
+        ):
+            return self.name
+
+        if not (name := self.name):
+            return device_entry.name_by_user or device_entry.name
+        return f"{device_entry.name_by_user or device_entry.name} {name}"
+
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
@@ -584,7 +648,11 @@ class Entity(ABC):
             # Polling returned after the entity has already been removed
             return
 
-        if self.registry_entry and self.registry_entry.disabled_by:
+        hass = self.hass
+        entity_id = self.entity_id
+        entry = self.registry_entry
+
+        if entry and entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
                 assert self.platform is not None
@@ -593,7 +661,7 @@ class Entity(ABC):
                         "Entity %s is incorrectly being triggered for updates while it"
                         " is disabled. This is a bug in the %s integration"
                     ),
-                    self.entity_id,
+                    entity_id,
                     self.platform.platform_name,
                 )
             return
@@ -612,8 +680,6 @@ class Entity(ABC):
         if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
-        entry = self.registry_entry
-
         if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
@@ -631,26 +697,9 @@ class Entity(ABC):
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        def friendly_name() -> str | None:
-            """Return the friendly name.
-
-            If has_entity_name is False, this returns self.name
-            If has_entity_name is True, this returns device.name + self.name
-            """
-            if not self.has_entity_name or not self.registry_entry:
-                return self.name
-
-            device_registry = dr.async_get(self.hass)
-            if not (device_id := self.registry_entry.device_id) or not (
-                device_entry := device_registry.async_get(device_id)
-            ):
-                return self.name
-
-            if not self.name:
-                return device_entry.name_by_user or device_entry.name
-            return f"{device_entry.name_by_user or device_entry.name} {self.name}"
-
-        if (name := (entry and entry.name) or friendly_name()) is not None:
+        if (
+            name := (entry and entry.name) or self._friendly_name_internal()
+        ) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
@@ -663,15 +712,15 @@ class Entity(ABC):
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. Please %s",
-                self.entity_id,
+                entity_id,
                 type(self),
                 end - start,
                 report_issue,
             )
 
         # Overwrite properties that have been set in the config file.
-        if DATA_CUSTOMIZE in self.hass.data:
-            attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
+        if customize := hass.data.get(DATA_CUSTOMIZE):
+            attr.update(customize.get(entity_id))
 
         if (
             self._context_set is not None
@@ -680,9 +729,7 @@ class Entity(ABC):
             self._context = None
             self._context_set = None
 
-        self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update, self._context
-        )
+        hass.states.async_set(entity_id, state, attr, self.force_update, self._context)
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
@@ -694,7 +741,13 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.add_job(self.async_update_ha_state(force_refresh))
+        if force_refresh:
+            self.hass.create_task(
+                self.async_update_ha_state(force_refresh),
+                f"Entity {self.entity_id} schedule update ha state",
+            )
+        else:
+            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:
@@ -709,9 +762,21 @@ class Entity(ABC):
         been executed, the intermediate state transitions will be missed.
         """
         if force_refresh:
-            self.hass.async_create_task(self.async_update_ha_state(force_refresh))
+            self.hass.async_create_task(
+                self.async_update_ha_state(force_refresh),
+                f"Entity schedule update ha state {self.entity_id}",
+            )
         else:
             self.async_write_ha_state()
+
+    @callback
+    def _async_slow_update_warning(self) -> None:
+        """Log a warning if update is taking too long."""
+        _LOGGER.warning(
+            "Update of %s is taking over %s seconds",
+            self.entity_id,
+            SLOW_UPDATE_WARNING,
+        )
 
     async def async_device_update(self, warning: bool = True) -> None:
         """Process 'update' or 'async_update' from entity.
@@ -720,40 +785,32 @@ class Entity(ABC):
         """
         if self._update_staged:
             return
+
+        hass = self.hass
+        assert hass is not None
+
         self._update_staged = True
 
         # Process update sequential
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
+        if warning:
+            update_warn = hass.loop.call_later(
+                SLOW_UPDATE_WARNING, self._async_slow_update_warning
+            )
+
         try:
-            task: asyncio.Future[None]
             if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(self.async_update())
+                await self.async_update()
             elif hasattr(self, "update"):
-                task = self.hass.async_add_executor_job(self.update)
+                await hass.async_add_executor_job(self.update)
             else:
                 return
-
-            if not warning:
-                await task
-                return
-
-            finished, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
-
-            for done in finished:
-                if exc := done.exception():
-                    raise exc
-                return
-
-            _LOGGER.warning(
-                "Update of %s is taking over %s seconds",
-                self.entity_id,
-                SLOW_UPDATE_WARNING,
-            )
-            await task
         finally:
             self._update_staged = False
+            if warning:
+                update_warn.cancel()
             if self.parallel_updates:
                 self.parallel_updates.release()
 
@@ -882,7 +939,7 @@ class Entity(ABC):
             else:
                 info["source"] = SOURCE_PLATFORM_CONFIG
 
-            self.hass.data.setdefault(DATA_ENTITY_SOURCE, {})[self.entity_id] = info
+            self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
@@ -936,28 +993,9 @@ class Entity(ABC):
         self.entity_id = self.registry_entry.entity_id
         await self.platform.async_add_entities([self])
 
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        if not isinstance(other, self.__class__):
-            return False
-
-        # Can only decide equality if both have a unique id
-        if self.unique_id is None or other.unique_id is None:
-            return False
-
-        # Ensure they belong to the same platform
-        if self.platform is not None or other.platform is not None:
-            if self.platform is None or other.platform is None:
-                return False
-
-            if self.platform.platform != other.platform.platform:
-                return False
-
-        return self.unique_id == other.unique_id
-
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<Entity {self.name}: {self.state}>"
+        return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
     async def async_request_call(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Process request batched."""
@@ -988,7 +1026,7 @@ class Entity(ABC):
         return report_issue
 
 
-@dataclass
+@dataclass(slots=True)
 class ToggleEntityDescription(EntityDescription):
     """A class that describes toggle entities."""
 

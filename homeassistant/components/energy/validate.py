@@ -23,6 +23,7 @@ ENERGY_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
         UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.WATT_HOUR,
     )
@@ -40,6 +41,7 @@ GAS_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
         UnitOfEnergy.GIGA_JOULE,
         UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.WATT_HOUR,
     ),
@@ -105,7 +107,7 @@ def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | 
     return None
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class ValidationIssue:
     """Error or warning message."""
 
@@ -116,7 +118,7 @@ class ValidationIssue:
     translation_placeholders: dict[str, str] | None = None
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class ValidationIssues:
     """Container for validation issues."""
 
@@ -140,7 +142,7 @@ class ValidationIssues:
         issue.affected_entities.add((affected_entity, detail))
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class EnergyPreferencesValidation:
     """Dictionary holding validation information."""
 
@@ -601,7 +603,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             functools.partial(
                 recorder.statistics.get_metadata,
                 hass,
-                statistic_ids=list(wanted_statistics_metadata),
+                statistic_ids=set(wanted_statistics_metadata),
             )
         )
     )

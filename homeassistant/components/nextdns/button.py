@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -15,7 +15,7 @@ PARALLEL_UPDATES = 1
 
 CLEAR_LOGS_BUTTON = ButtonEntityDescription(
     key="clear_logs",
-    name="Clear logs",
+    translation_key="clear_logs",
     entity_category=EntityCategory.CONFIG,
 )
 

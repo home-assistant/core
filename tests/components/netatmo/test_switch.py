@@ -7,11 +7,14 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 
 from .common import selected_platforms
 
 
-async def test_switch_setup_and_services(hass, config_entry, netatmo_auth):
+async def test_switch_setup_and_services(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test setup and services."""
     with selected_platforms(["switch"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

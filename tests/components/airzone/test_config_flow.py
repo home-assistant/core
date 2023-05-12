@@ -54,7 +54,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
@@ -97,7 +97,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {CONF_ID: "invalid_system_id"}
 
         mock_hvac.return_value = HVAC_MOCK[API_SYSTEMS][0]
@@ -145,7 +145,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(hass: HomeAssistant):
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection to host error."""
 
     with patch(
@@ -221,7 +221,7 @@ async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def test_dhcp_connection_error(hass: HomeAssistant):
+async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
     """Test DHCP connection to host error."""
 
     with patch(

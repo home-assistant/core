@@ -170,7 +170,7 @@ class Throttle:
             else:
                 host = args[0] if args else wrapper
 
-            # pylint: disable=protected-access # to _throttle
+            # pylint: disable=protected-access
             if not hasattr(host, "_throttle"):
                 host._throttle = {}
 

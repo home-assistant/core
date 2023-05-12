@@ -20,7 +20,6 @@ from homeassistant import data_entry_flow
 import homeassistant.components.api as api
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 import homeassistant.components.webhook as webhook
-from homeassistant.components.withings import async_unload_entry
 from homeassistant.components.withings.common import (
     ConfigEntryWithingsApi,
     DataManager,
@@ -198,7 +197,7 @@ class ComponentFactory:
             const.DOMAIN, context={"source": SOURCE_USER}
         )
         assert result
-        # pylint: disable=protected-access
+
         state = config_entry_oauth2_flow._encode_jwt(
             self._hass,
             {
@@ -290,7 +289,7 @@ class ComponentFactory:
         config_entries = get_config_entries_for_user_id(self._hass, profile.user_id)
 
         for config_entry in config_entries:
-            await async_unload_entry(self._hass, config_entry)
+            await config_entry.async_unload(self._hass)
 
         await self._hass.async_block_till_done()
 

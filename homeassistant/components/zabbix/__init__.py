@@ -123,7 +123,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         for key, value in state.attributes.items():
             # For each value we try to cast it as float
-            # But if we can not do it we store the value
+            # But if we cannot do it we store the value
             # as string
             attribute_id = f"{entity_id}/{key}"
             try:

@@ -1,8 +1,6 @@
 """Support for Qingping binary sensors."""
 from __future__ import annotations
 
-from typing import Optional
-
 from qingping_ble import (
     BinarySensorDeviceClass as QingpingBinarySensorDeviceClass,
     SensorUpdate,
@@ -93,7 +91,7 @@ async def async_setup_entry(
 
 
 class QingpingBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[Optional[bool]]],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[bool | None]],
     BinarySensorEntity,
 ):
     """Representation of a Qingping binary sensor."""

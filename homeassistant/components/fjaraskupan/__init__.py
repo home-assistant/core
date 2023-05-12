@@ -36,7 +36,7 @@ from .const import DISPATCH_DETECTION, DOMAIN
 
 
 class UnableToConnect(HomeAssistantError):
-    """Exception to indicate that we can not connect to device."""
+    """Exception to indicate that we cannot connect to device."""
 
 
 PLATFORMS = [
@@ -174,7 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

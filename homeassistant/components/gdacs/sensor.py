@@ -39,7 +39,7 @@ async def async_setup_entry(
 
 
 class GdacsSensor(SensorEntity):
-    """This is a status sensor for the GDACS integration."""
+    """Status sensor for the GDACS integration."""
 
     _attr_should_poll = False
 

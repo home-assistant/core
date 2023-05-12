@@ -23,7 +23,7 @@ from . import configure_integration
 from .mocks import BinarySwitchPropertyMock, HomeControlMock, HomeControlMockLight
 
 
-async def test_light_without_binary_sensor(hass: HomeAssistant):
+async def test_light_without_binary_sensor(hass: HomeAssistant) -> None:
     """Test setup and state change of a light device that does not have an additional binary sensor."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockLight()
@@ -96,7 +96,7 @@ async def test_light_without_binary_sensor(hass: HomeAssistant):
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
-async def test_light_with_binary_sensor(hass: HomeAssistant):
+async def test_light_with_binary_sensor(hass: HomeAssistant) -> None:
     """Test setup and state change of a light device that has an additional binary sensor."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockLight()
@@ -147,7 +147,7 @@ async def test_light_with_binary_sensor(hass: HomeAssistant):
         set_value.assert_called_once_with(False)
 
 
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockLight()
