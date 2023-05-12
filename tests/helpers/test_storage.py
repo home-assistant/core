@@ -2,16 +2,17 @@
 import asyncio
 from datetime import timedelta
 import json
-from typing import NamedTuple
+from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
+import py
 import pytest
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import storage
 from homeassistant.util import dt
 from homeassistant.util.color import RGBColor
@@ -57,14 +58,14 @@ def store_v_2_1(hass):
     )
 
 
-async def test_loading(hass, store):
+async def test_loading(hass: HomeAssistant, store) -> None:
     """Test we can save and load data."""
     await store.async_save(MOCK_DATA)
     data = await store.async_load()
     assert data == MOCK_DATA
 
 
-async def test_custom_encoder(hass):
+async def test_custom_encoder(hass: HomeAssistant) -> None:
     """Test we can save and load data."""
 
     class JSONEncoder(json.JSONEncoder):
@@ -75,21 +76,26 @@ async def test_custom_encoder(hass):
             return "9"
 
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY, encoder=JSONEncoder)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         await store.async_save(Mock())
     await store.async_save(object())
     data = await store.async_load()
     assert data == "9"
 
 
-async def test_loading_non_existing(hass, store):
+async def test_loading_non_existing(hass: HomeAssistant, store) -> None:
     """Test we can save and load data."""
     with patch("homeassistant.util.json.open", side_effect=FileNotFoundError):
         data = await store.async_load()
     assert data is None
 
 
-async def test_loading_parallel(hass, store, hass_storage, caplog):
+async def test_loading_parallel(
+    hass: HomeAssistant,
+    store,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test we can save and load data."""
     hass_storage[store.key] = {"version": MOCK_VERSION, "data": MOCK_DATA}
 
@@ -100,7 +106,9 @@ async def test_loading_parallel(hass, store, hass_storage, caplog):
     assert caplog.text.count(f"Loading data for {store.key}")
 
 
-async def test_saving_with_delay(hass, store, hass_storage):
+async def test_saving_with_delay(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test saving data after a delay."""
     store.async_delay_save(lambda: MOCK_DATA, 1)
     assert store.key not in hass_storage
@@ -115,7 +123,9 @@ async def test_saving_with_delay(hass, store, hass_storage):
     }
 
 
-async def test_saving_on_final_write(hass, hass_storage):
+async def test_saving_on_final_write(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test delayed saves trigger when we quit Home Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     store.async_delay_save(lambda: MOCK_DATA, 5)
@@ -139,7 +149,9 @@ async def test_saving_on_final_write(hass, hass_storage):
     }
 
 
-async def test_not_delayed_saving_while_stopping(hass, hass_storage):
+async def test_not_delayed_saving_while_stopping(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test delayed saves don't write after the stop event has fired."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -152,7 +164,9 @@ async def test_not_delayed_saving_while_stopping(hass, hass_storage):
     assert store.key not in hass_storage
 
 
-async def test_not_delayed_saving_after_stopping(hass, hass_storage):
+async def test_not_delayed_saving_after_stopping(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test delayed saves don't write after stop if issued before stopping Home Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     store.async_delay_save(lambda: MOCK_DATA, 10)
@@ -168,7 +182,9 @@ async def test_not_delayed_saving_after_stopping(hass, hass_storage):
     assert store.key not in hass_storage
 
 
-async def test_not_saving_while_stopping(hass, hass_storage):
+async def test_not_saving_while_stopping(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test saves don't write when stopping Home Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     hass.state = CoreState.stopping
@@ -176,7 +192,9 @@ async def test_not_saving_while_stopping(hass, hass_storage):
     assert store.key not in hass_storage
 
 
-async def test_loading_while_delay(hass, store, hass_storage):
+async def test_loading_while_delay(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test we load new data even if not written yet."""
     await store.async_save({"delay": "no"})
     assert hass_storage[store.key] == {
@@ -198,7 +216,9 @@ async def test_loading_while_delay(hass, store, hass_storage):
     assert data == {"delay": "yes"}
 
 
-async def test_writing_while_writing_delay(hass, store, hass_storage):
+async def test_writing_while_writing_delay(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test a write while a write with delay is active."""
     store.async_delay_save(lambda: {"delay": "yes"}, 1)
     assert store.key not in hass_storage
@@ -223,7 +243,9 @@ async def test_writing_while_writing_delay(hass, store, hass_storage):
     assert data == {"delay": "no"}
 
 
-async def test_multiple_delay_save_calls(hass, store, hass_storage):
+async def test_multiple_delay_save_calls(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test a write while a write with changing delays."""
     store.async_delay_save(lambda: {"delay": "yes"}, 1)
     store.async_delay_save(lambda: {"delay": "yes"}, 2)
@@ -251,7 +273,9 @@ async def test_multiple_delay_save_calls(hass, store, hass_storage):
     assert data == {"delay": "no"}
 
 
-async def test_multiple_save_calls(hass, store, hass_storage):
+async def test_multiple_save_calls(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test multiple write tasks."""
 
     assert store.key not in hass_storage
@@ -269,7 +293,9 @@ async def test_multiple_save_calls(hass, store, hass_storage):
     assert data == {"savecount": 5}
 
 
-async def test_migrator_no_existing_config(hass, store, hass_storage):
+async def test_migrator_no_existing_config(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test migrator with no existing config."""
     with patch("os.path.isfile", return_value=False), patch.object(
         store, "async_load", return_value={"cur": "config"}
@@ -280,7 +306,9 @@ async def test_migrator_no_existing_config(hass, store, hass_storage):
     assert store.key not in hass_storage
 
 
-async def test_migrator_existing_config(hass, store, hass_storage):
+async def test_migrator_existing_config(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test migrating existing config."""
     with patch("os.path.isfile", return_value=True), patch("os.remove") as mock_remove:
         data = await storage.async_migrator(
@@ -297,7 +325,9 @@ async def test_migrator_existing_config(hass, store, hass_storage):
     }
 
 
-async def test_migrator_transforming_config(hass, store, hass_storage):
+async def test_migrator_transforming_config(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test migrating config to new format."""
 
     async def old_conf_migrate_func(old_config):
@@ -323,21 +353,27 @@ async def test_migrator_transforming_config(hass, store, hass_storage):
     }
 
 
-async def test_minor_version_default(hass, store, hass_storage):
+async def test_minor_version_default(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test minor version default."""
 
     await store.async_save(MOCK_DATA)
     assert hass_storage[store.key]["minor_version"] == 1
 
 
-async def test_minor_version(hass, store_v_1_2, hass_storage):
+async def test_minor_version(
+    hass: HomeAssistant, store_v_1_2, hass_storage: dict[str, Any]
+) -> None:
     """Test minor version."""
 
     await store_v_1_2.async_save(MOCK_DATA)
     assert hass_storage[store_v_1_2.key]["minor_version"] == MOCK_MINOR_VERSION_2
 
 
-async def test_migrate_major_not_implemented_raises(hass, store, store_v_2_1):
+async def test_migrate_major_not_implemented_raises(
+    hass: HomeAssistant, store, store_v_2_1
+) -> None:
     """Test migrating between major versions fails if not implemented."""
 
     await store_v_2_1.async_save(MOCK_DATA)
@@ -346,8 +382,8 @@ async def test_migrate_major_not_implemented_raises(hass, store, store_v_2_1):
 
 
 async def test_migrate_minor_not_implemented(
-    hass, hass_storage, store_v_1_1, store_v_1_2
-):
+    hass: HomeAssistant, hass_storage: dict[str, Any], store_v_1_1, store_v_1_2
+) -> None:
     """Test migrating between minor versions does not fail if not implemented."""
 
     assert store_v_1_1.key == store_v_1_2.key
@@ -371,7 +407,9 @@ async def test_migrate_minor_not_implemented(
     }
 
 
-async def test_migration(hass, hass_storage, store_v_1_2):
+async def test_migration(
+    hass: HomeAssistant, hass_storage: dict[str, Any], store_v_1_2
+) -> None:
     """Test migration."""
     calls = 0
 
@@ -408,7 +446,9 @@ async def test_migration(hass, hass_storage, store_v_1_2):
     }
 
 
-async def test_legacy_migration(hass, hass_storage, store_v_1_2):
+async def test_legacy_migration(
+    hass: HomeAssistant, hass_storage: dict[str, Any], store_v_1_2
+) -> None:
     """Test legacy migration method signature."""
     calls = 0
 
@@ -442,7 +482,9 @@ async def test_legacy_migration(hass, hass_storage, store_v_1_2):
     }
 
 
-async def test_changing_delayed_written_data(hass, store, hass_storage):
+async def test_changing_delayed_written_data(
+    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+) -> None:
     """Test changing data that is written with delay."""
     data_to_store = {"hello": "world"}
     store.async_delay_save(lambda: data_to_store, 1)
@@ -464,7 +506,7 @@ async def test_changing_delayed_written_data(hass, store, hass_storage):
     }
 
 
-async def test_saving_load_round_trip(tmpdir):
+async def test_saving_load_round_trip(tmpdir: py.path.local) -> None:
     """Test saving and loading round trip."""
     loop = asyncio.get_running_loop()
     hass = await async_test_home_assistant(loop)

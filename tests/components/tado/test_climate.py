@@ -1,9 +1,10 @@
 """The sensor tests for the tado platform."""
+from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_air_con(hass):
+async def test_air_con(hass: HomeAssistant) -> None:
     """Test creation of aircon climate."""
 
     await async_init_integration(hass)
@@ -32,7 +33,7 @@ async def test_air_con(hass):
     assert all(item in state.attributes.items() for item in expected_attributes.items())
 
 
-async def test_heater(hass):
+async def test_heater(hass: HomeAssistant) -> None:
     """Test creation of heater climate."""
 
     await async_init_integration(hass)
@@ -59,7 +60,7 @@ async def test_heater(hass):
     assert all(item in state.attributes.items() for item in expected_attributes.items())
 
 
-async def test_smartac_with_swing(hass):
+async def test_smartac_with_swing(hass: HomeAssistant) -> None:
     """Test creation of smart ac with swing climate."""
 
     await async_init_integration(hass)
@@ -79,7 +80,7 @@ async def test_smartac_with_swing(hass):
         "min_temp": 16.0,
         "preset_mode": "home",
         "preset_modes": ["away", "home"],
-        "swing_modes": ["ON", "OFF"],
+        "swing_modes": ["on", "off"],
         "supported_features": 57,
         "target_temp_step": 1.0,
         "temperature": 20.0,

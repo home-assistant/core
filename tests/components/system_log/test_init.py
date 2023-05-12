@@ -4,14 +4,16 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 import logging
+import traceback
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from tests.common import async_capture_events
+from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}
@@ -103,7 +105,9 @@ async def async_setup_system_log(hass, config) -> WatchLogErrorHandler:
     return WatchLogErrorHandler.instances.pop()
 
 
-async def test_normal_logs(hass, hass_ws_client):
+async def test_normal_logs(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that debug and info are not logged."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -115,7 +119,9 @@ async def test_normal_logs(hass, hass_ws_client):
     assert len([msg for msg in logs if msg["level"] in ("DEBUG", "INFO")]) == 0
 
 
-async def test_exception(hass, hass_ws_client):
+async def test_exception(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that exceptions are logged and retrieved correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -126,7 +132,7 @@ async def test_exception(hass, hass_ws_client):
     assert_log(log, "exception message", "log message", "ERROR")
 
 
-async def test_warning(hass, hass_ws_client):
+async def test_warning(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> None:
     """Test that warning are logged and retrieved correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -136,7 +142,9 @@ async def test_warning(hass, hass_ws_client):
     assert_log(log, "", "warning message", "WARNING")
 
 
-async def test_warning_good_format(hass, hass_ws_client):
+async def test_warning_good_format(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that warning with good format arguments are logged and retrieved correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -147,7 +155,9 @@ async def test_warning_good_format(hass, hass_ws_client):
     assert_log(log, "", "warning message: test", "WARNING")
 
 
-async def test_warning_missing_format_args(hass, hass_ws_client):
+async def test_warning_missing_format_args(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that warning with missing format arguments are logged and retrieved correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -158,7 +168,7 @@ async def test_warning_missing_format_args(hass, hass_ws_client):
     assert_log(log, "", ["warning message missing a format arg %s"], "WARNING")
 
 
-async def test_error(hass, hass_ws_client):
+async def test_error(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> None:
     """Test that errors are logged and retrieved correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -169,7 +179,7 @@ async def test_error(hass, hass_ws_client):
     assert_log(log, "", "error message", "ERROR")
 
 
-async def test_config_not_fire_event(hass):
+async def test_config_not_fire_event(hass: HomeAssistant) -> None:
     """Test that errors are not posted as events with default config."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -188,7 +198,7 @@ async def test_config_not_fire_event(hass):
     assert len(events) == 0
 
 
-async def test_error_posted_as_event(hass):
+async def test_error_posted_as_event(hass: HomeAssistant) -> None:
     """Test that error are posted as events."""
     watcher = await async_setup_system_log(
         hass, {"system_log": {"max_entries": 2, "fire_event": True}}
@@ -206,7 +216,9 @@ async def test_error_posted_as_event(hass):
     assert_log(events[0].data, "", "error message", "ERROR")
 
 
-async def test_critical(hass, hass_ws_client):
+async def test_critical(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that critical are logged and retrieved correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -217,7 +229,9 @@ async def test_critical(hass, hass_ws_client):
     assert_log(log, "", "critical message", "CRITICAL")
 
 
-async def test_remove_older_logs(hass, hass_ws_client):
+async def test_remove_older_logs(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that older logs are rotated out."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -235,7 +249,9 @@ def log_msg(nr=2):
     _LOGGER.error("error message %s", nr)
 
 
-async def test_dedupe_logs(hass, hass_ws_client):
+async def test_dedupe_logs(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that duplicate log entries are dedupe."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -274,7 +290,9 @@ async def test_dedupe_logs(hass, hass_ws_client):
     )
 
 
-async def test_clear_logs(hass, hass_ws_client):
+async def test_clear_logs(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that the log can be cleared via a service call."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -286,7 +304,7 @@ async def test_clear_logs(hass, hass_ws_client):
     await get_error_log(hass_ws_client)
 
 
-async def test_write_log(hass):
+async def test_write_log(hass: HomeAssistant) -> None:
     """Test that error propagates to logger."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -301,7 +319,7 @@ async def test_write_log(hass):
     assert logger.method_calls[0] == ("error", ("test_message",))
 
 
-async def test_write_choose_logger(hass):
+async def test_write_choose_logger(hass: HomeAssistant) -> None:
     """Test that correct logger is chosen."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -316,7 +334,7 @@ async def test_write_choose_logger(hass):
     mock_logging.assert_called_once_with("myLogger")
 
 
-async def test_write_choose_level(hass):
+async def test_write_choose_level(hass: HomeAssistant) -> None:
     """Test that correct logger is chosen."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -332,7 +350,9 @@ async def test_write_choose_level(hass):
     assert logger.method_calls[0] == ("debug", ("test_message",))
 
 
-async def test_unknown_path(hass, hass_ws_client):
+async def test_unknown_path(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test error logged from unknown path."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -363,7 +383,9 @@ async def async_log_error_from_test_path(hass, path, watcher):
         await wait_empty
 
 
-async def test_homeassistant_path(hass, hass_ws_client):
+async def test_homeassistant_path(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test error logged from Home Assistant path."""
 
     with patch(
@@ -378,7 +400,9 @@ async def test_homeassistant_path(hass, hass_ws_client):
     assert log["source"] == ["component/component.py", 5]
 
 
-async def test_config_path(hass, hass_ws_client):
+async def test_config_path(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test error logged from config path."""
 
     with patch.object(hass.config, "config_dir", new="config"):
@@ -389,3 +413,31 @@ async def test_config_path(hass, hass_ws_client):
         )
         log = (await get_error_log(hass_ws_client))[0]
     assert log["source"] == ["custom_component/test.py", 5]
+
+
+async def test_raise_during_log_capture(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that exceptions are logged and retrieved correctly."""
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
+
+    class RaisesDuringRepr:
+        """Class that raises during repr."""
+
+        def __repr__(self):
+            in_system_log = False
+            for stack in traceback.extract_stack():
+                if "homeassistant/components/system_log" in stack.filename:
+                    in_system_log = True
+                    break
+            if in_system_log:
+                raise ValueError("repr error")
+            return "repr message"
+
+    raise_during_repr = RaisesDuringRepr()
+
+    _LOGGER.error("raise during repr: %s", raise_during_repr)
+    log = find_log(await get_error_log(hass_ws_client), "ERROR")
+    assert log is not None
+    assert_log(log, "", "Bad logger message: repr error", "ERROR")

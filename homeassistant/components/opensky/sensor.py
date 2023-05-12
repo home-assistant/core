@@ -38,7 +38,8 @@ DEFAULT_ALTITUDE = 0
 
 EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
 EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
-SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
+# OpenSky free user has 400 credits, with 4 credits per API call. 100/24 = ~4 requests per hour
+SCAN_INTERVAL = timedelta(minutes=15)
 
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [

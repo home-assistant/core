@@ -18,7 +18,7 @@ def platforms() -> list[Platform]:
 
 
 @pytest.mark.parametrize(
-    "rain_response,expected_state",
+    ("rain_response", "expected_state"),
     [(RAIN_SENSOR_OFF, "off"), (RAIN_SENSOR_ON, "on")],
 )
 async def test_rainsensor(

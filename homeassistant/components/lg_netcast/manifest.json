@@ -1,9 +1,9 @@
 {
   "domain": "lg_netcast",
   "name": "LG Netcast",
-  "documentation": "https://www.home-assistant.io/integrations/lg_netcast",
-  "requirements": ["pylgnetcast==0.3.7"],
   "codeowners": ["@Drafteed"],
+  "documentation": "https://www.home-assistant.io/integrations/lg_netcast",
   "iot_class": "local_polling",
-  "loggers": ["pylgnetcast"]
+  "loggers": ["pylgnetcast"],
+  "requirements": ["pylgnetcast==0.3.7"]
 }

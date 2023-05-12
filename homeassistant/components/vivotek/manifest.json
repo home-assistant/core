@@ -1,9 +1,9 @@
 {
   "domain": "vivotek",
   "name": "VIVOTEK",
-  "documentation": "https://www.home-assistant.io/integrations/vivotek",
-  "requirements": ["libpyvivotek==0.4.0"],
   "codeowners": ["@HarlemSquirrel"],
+  "documentation": "https://www.home-assistant.io/integrations/vivotek",
   "iot_class": "local_polling",
-  "loggers": ["libpyvivotek"]
+  "loggers": ["libpyvivotek"],
+  "requirements": ["libpyvivotek==0.4.0"]
 }

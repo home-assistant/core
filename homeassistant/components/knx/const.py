@@ -1,8 +1,11 @@
 """Constants for the KNX integration."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from enum import Enum
 from typing import Final, TypedDict
+
+from xknx.telegram import Telegram
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -39,6 +42,7 @@ CONF_KNX_TUNNELING_TCP_SECURE: Final = "tunneling_tcp_secure"
 CONF_KNX_LOCAL_IP: Final = "local_ip"
 CONF_KNX_MCAST_GRP: Final = "multicast_group"
 CONF_KNX_MCAST_PORT: Final = "multicast_port"
+CONF_KNX_TUNNEL_ENDPOINT_IA: Final = "tunnel_endpoint_ia"
 
 CONF_KNX_RATE_LIMIT: Final = "rate_limit"
 CONF_KNX_ROUTE_BACK: Final = "route_back"
@@ -75,6 +79,9 @@ DATA_HASS_CONFIG: Final = "knx_hass_config"
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
 
+AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
+MessageCallbackType = Callable[[Telegram], None]
+
 
 class KNXConfigEntryData(TypedDict, total=False):
     """Config entry for the KNX integration."""
@@ -89,6 +96,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     rate_limit: int
     host: str
     port: int
+    tunnel_endpoint_ia: str | None
 
     user_id: int | None
     user_password: str | None
@@ -97,6 +105,20 @@ class KNXConfigEntryData(TypedDict, total=False):
     knxkeys_password: str
     backbone_key: str | None
     sync_latency_tolerance: int | None
+
+
+class KNXBusMonitorMessage(TypedDict):
+    """KNX bus monitor message."""
+
+    destination_address: str
+    destination_text: str | None
+    payload: str
+    type: str
+    value: str | None
+    source_address: str
+    source_text: str | None
+    direction: str
+    timestamp: str
 
 
 class ColorTempModes(Enum):

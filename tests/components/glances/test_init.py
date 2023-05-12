@@ -29,7 +29,7 @@ async def test_conn_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
-    mock_api.return_value.get_data.side_effect = GlancesApiConnectionError
+    mock_api.return_value.get_ha_sensor_data.side_effect = GlancesApiConnectionError
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 

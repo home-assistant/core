@@ -16,7 +16,7 @@ from .const import DOMAIN
 from .coordinator import LD2410BLECoordinator
 from .models import LD2410BLEData
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

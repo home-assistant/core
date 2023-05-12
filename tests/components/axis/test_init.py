@@ -1,34 +1,20 @@
 """Test Axis component setup process."""
 from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+
 from homeassistant.components import axis
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.const import CONF_MAC
-from homeassistant.setup import async_setup_component
-
-from .test_device import setup_axis_integration
-
-from tests.common import MockConfigEntry
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 
-async def test_setup_no_config(hass):
-    """Test setup without configuration."""
-    assert await async_setup_component(hass, AXIS_DOMAIN, {})
-    assert AXIS_DOMAIN not in hass.data
-
-
-async def test_setup_entry(hass):
+async def test_setup_entry(hass: HomeAssistant, setup_config_entry) -> None:
     """Test successful setup of entry."""
-    config_entry = await setup_axis_integration(hass)
-    assert len(hass.data[AXIS_DOMAIN]) == 1
-    assert config_entry.entry_id in hass.data[AXIS_DOMAIN]
+    assert setup_config_entry.state == ConfigEntryState.LOADED
 
 
-async def test_setup_entry_fails(hass):
+async def test_setup_entry_fails(hass: HomeAssistant, config_entry) -> None:
     """Test successful setup of entry."""
-    config_entry = MockConfigEntry(domain=AXIS_DOMAIN, data={CONF_MAC: "0123"})
-    config_entry.add_to_hass(hass)
-
     mock_device = Mock()
     mock_device.async_setup = AsyncMock(return_value=False)
 
@@ -37,23 +23,20 @@ async def test_setup_entry_fails(hass):
 
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert not hass.data[AXIS_DOMAIN]
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant, setup_config_entry) -> None:
     """Test successful unload of entry."""
-    config_entry = await setup_axis_integration(hass)
-    assert hass.data[AXIS_DOMAIN]
+    assert setup_config_entry.state == ConfigEntryState.LOADED
 
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert not hass.data[AXIS_DOMAIN]
+    assert await hass.config_entries.async_unload(setup_config_entry.entry_id)
+    assert setup_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_migrate_entry(hass):
+@pytest.mark.parametrize("config_entry_version", [1])
+async def test_migrate_entry(hass: HomeAssistant, config_entry) -> None:
     """Test successful migration of entry data."""
-    config_entry = MockConfigEntry(domain=AXIS_DOMAIN, version=1)
-    config_entry.add_to_hass(hass)
-
     assert config_entry.version == 1
 
     mock_device = Mock()
@@ -62,12 +45,8 @@ async def test_migrate_entry(hass):
     mock_device.api.vapix.light_control = None
     mock_device.api.vapix.params.image_format = None
 
-    with patch.object(axis, "get_axis_device"), patch.object(
-        axis, "AxisNetworkDevice"
-    ) as mock_device_class:
-        mock_device_class.return_value = mock_device
-
+    with patch("homeassistant.components.axis.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert hass.data[AXIS_DOMAIN]
+    assert config_entry.state == ConfigEntryState.LOADED
     assert config_entry.version == 3

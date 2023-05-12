@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
@@ -60,7 +60,7 @@ from homeassistant.util import dt
 from tests.common import async_fire_time_changed
 
 
-async def test_climate_find_valid_targets():
+async def test_climate_find_valid_targets() -> None:
     """Test function to return temperature from valid targets."""
 
     valid_targets = [10, 16, 17, 18, 19, 20]
@@ -168,14 +168,13 @@ async def test_climate_fan(
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-    ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_FAN_MODE,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_FAN_MODE: "low"},
-                blocking=True,
-            )
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_FAN_MODE: "low"},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state3 = hass.states.get("climate.hallway")
@@ -235,14 +234,13 @@ async def test_climate_swing(
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-    ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_SWING_MODE,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "fixedtop"},
-                blocking=True,
-            )
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_MODE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "fixedtop"},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state3 = hass.states.get("climate.hallway")
@@ -353,14 +351,13 @@ async def test_climate_temperatures(
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Success"}},
-    ):
-        with pytest.raises(MultipleInvalid):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: state1.entity_id},
-                blocking=True,
-            )
+    ), pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: state1.entity_id},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
@@ -391,14 +388,13 @@ async def test_climate_temperatures(
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Success"}},
-    ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 20},
-                blocking=True,
-            )
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 20},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
@@ -447,18 +443,17 @@ async def test_climate_temperature_is_none(
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-    ):
-        with pytest.raises(ValueError):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_TEMPERATURE,
-                {
-                    ATTR_ENTITY_ID: state1.entity_id,
-                    ATTR_TARGET_TEMP_HIGH: 30,
-                    ATTR_TARGET_TEMP_LOW: 20,
-                },
-                blocking=True,
-            )
+    ), pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_TARGET_TEMP_HIGH: 30,
+                ATTR_TARGET_TEMP_LOW: 20,
+            },
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
@@ -634,14 +629,13 @@ async def test_climate_service_failed(
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Error", "failureReason": "Did not work"}},
-    ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_TURN_OFF,
-                {ATTR_ENTITY_ID: state1.entity_id},
-                blocking=True,
-            )
+    ), pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: state1.entity_id},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
@@ -726,7 +720,7 @@ async def test_climate_no_fan_no_swing(
 
 async def test_climate_set_timer(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -752,16 +746,17 @@ async def test_climate_set_timer(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
+    ), pytest.raises(
+        MultipleInvalid
     ):
-        with pytest.raises(MultipleInvalid):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_ENABLE_TIMER,
-                {
-                    ATTR_ENTITY_ID: state_climate.entity_id,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ENABLE_TIMER,
+            {
+                ATTR_ENTITY_ID: state_climate.entity_id,
+            },
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     with patch(
@@ -770,17 +765,18 @@ async def test_climate_set_timer(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
+    ), pytest.raises(
+        HomeAssistantError
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_ENABLE_TIMER,
-                {
-                    ATTR_ENTITY_ID: state_climate.entity_id,
-                    ATTR_MINUTES: 30,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ENABLE_TIMER,
+            {
+                ATTR_ENTITY_ID: state_climate.entity_id,
+                ATTR_MINUTES: 30,
+            },
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     with patch(
@@ -828,7 +824,7 @@ async def test_climate_set_timer(
 
 async def test_climate_pure_boost(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -853,19 +849,20 @@ async def test_climate_pure_boost(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
+    ), pytest.raises(
+        MultipleInvalid
     ):
-        with pytest.raises(MultipleInvalid):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_ENABLE_PURE_BOOST,
-                {
-                    ATTR_ENTITY_ID: state_climate.entity_id,
-                    ATTR_INDOOR_INTEGRATION: True,
-                    ATTR_OUTDOOR_INTEGRATION: True,
-                    ATTR_SENSITIVITY: "Sensitive",
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ENABLE_PURE_BOOST,
+            {
+                ATTR_ENTITY_ID: state_climate.entity_id,
+                ATTR_INDOOR_INTEGRATION: True,
+                ATTR_OUTDOOR_INTEGRATION: True,
+                ATTR_SENSITIVITY: "Sensitive",
+            },
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     with patch(
@@ -931,7 +928,7 @@ async def test_climate_pure_boost(
 
 async def test_climate_climate_react(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -954,19 +951,20 @@ async def test_climate_climate_react(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_climate_react",
+    ), pytest.raises(
+        MultipleInvalid
     ):
-        with pytest.raises(MultipleInvalid):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_ENABLE_PURE_BOOST,
-                {
-                    ATTR_ENTITY_ID: state_climate.entity_id,
-                    ATTR_LOW_TEMPERATURE_THRESHOLD: 0.2,
-                    ATTR_HIGH_TEMPERATURE_THRESHOLD: 30.3,
-                    ATTR_SMART_TYPE: "temperature",
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ENABLE_PURE_BOOST,
+            {
+                ATTR_ENTITY_ID: state_climate.entity_id,
+                ATTR_LOW_TEMPERATURE_THRESHOLD: 0.2,
+                ATTR_HIGH_TEMPERATURE_THRESHOLD: 30.3,
+                ATTR_SMART_TYPE: "temperature",
+            },
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     with patch(
@@ -1093,7 +1091,7 @@ async def test_climate_climate_react(
 
 async def test_climate_climate_react_fahrenheit(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -1236,7 +1234,7 @@ async def test_climate_climate_react_fahrenheit(
 
 async def test_climate_full_ac_state(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -1260,17 +1258,18 @@ async def test_climate_full_ac_state(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_states",
+    ), pytest.raises(
+        MultipleInvalid
     ):
-        with pytest.raises(MultipleInvalid):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_FULL_STATE,
-                {
-                    ATTR_ENTITY_ID: state_climate.entity_id,
-                    ATTR_TARGET_TEMPERATURE: 22,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_FULL_STATE,
+            {
+                ATTR_ENTITY_ID: state_climate.entity_id,
+                ATTR_TARGET_TEMPERATURE: 22,
+            },
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     with patch(

@@ -1,5 +1,4 @@
-"""
-Support for the Withings API.
+"""Support for the Withings API.
 
 For more details about this platform, please refer to the documentation at
 """

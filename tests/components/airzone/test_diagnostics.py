@@ -17,7 +17,6 @@ from aioairzone.const import (
     RAW_HVAC,
     RAW_WEBSERVER,
 )
-from aiohttp import ClientSession
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.components.diagnostics import REDACTED
@@ -27,10 +26,11 @@ from homeassistant.core import HomeAssistant
 from .util import CONFIG, HVAC_MOCK, HVAC_WEBSERVER_MOCK, async_init_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
     await async_init_integration(hass)

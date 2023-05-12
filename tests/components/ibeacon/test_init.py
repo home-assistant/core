@@ -1,8 +1,8 @@
 """Test the ibeacon init."""
-
 import pytest
 
 from homeassistant.components.ibeacon.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -10,6 +10,7 @@ from . import BLUECHARM_BEACON_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -31,7 +32,9 @@ async def remove_device(ws_client, device_id, config_entry_id):
     return response["success"]
 
 
-async def test_device_remove_devices(hass, hass_ws_client):
+async def test_device_remove_devices(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can only remove a device that no longer exists."""
     entry = MockConfigEntry(
         domain=DOMAIN,

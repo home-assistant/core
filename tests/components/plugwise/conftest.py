@@ -54,7 +54,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_smile_config_flow() -> Generator[None, MagicMock, None]:
     """Return a mocked Smile client."""
     with patch(

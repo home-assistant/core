@@ -1,0 +1,313 @@
+{
+  "capabilities": {
+    "a4aType": "NOT_SUPPORTED",
+    "checkSustainabilityDPP": false,
+    "climateFunction": "AIR_CONDITIONING",
+    "climateNow": true,
+    "digitalKey": {
+      "bookedServicePackage": "SMACC_1_5",
+      "readerGraphics": "readerGraphics",
+      "state": "ACTIVATED"
+    },
+    "horn": true,
+    "isBmwChargingSupported": true,
+    "isCarSharingSupported": false,
+    "isChargeNowForBusinessSupported": true,
+    "isChargingHistorySupported": true,
+    "isChargingHospitalityEnabled": true,
+    "isChargingLoudnessEnabled": true,
+    "isChargingPlanSupported": true,
+    "isChargingPowerLimitEnabled": true,
+    "isChargingSettingsEnabled": true,
+    "isChargingTargetSocEnabled": true,
+    "isClimateTimerWeeklyActive": false,
+    "isCustomerEsimSupported": true,
+    "isDCSContractManagementSupported": true,
+    "isDataPrivacyEnabled": false,
+    "isEasyChargeEnabled": true,
+    "isEvGoChargingSupported": false,
+    "isMiniChargingSupported": false,
+    "isNonLscFeatureEnabled": false,
+    "isPersonalPictureUploadSupported": false,
+    "isRemoteEngineStartSupported": false,
+    "isRemoteHistoryDeletionSupported": false,
+    "isRemoteHistorySupported": true,
+    "isRemoteParkingSupported": false,
+    "isRemoteServicesActivationRequired": false,
+    "isRemoteServicesBookingRequired": false,
+    "isScanAndChargeSupported": true,
+    "isSustainabilityAccumulatedViewEnabled": false,
+    "isSustainabilitySupported": false,
+    "isWifiHotspotServiceSupported": false,
+    "lastStateCallState": "ACTIVATED",
+    "lights": true,
+    "lock": true,
+    "remote360": true,
+    "remoteChargingCommands": {},
+    "remoteSoftwareUpgrade": true,
+    "sendPoi": true,
+    "specialThemeSupport": [],
+    "speechThirdPartyAlexa": false,
+    "speechThirdPartyAlexaSDK": false,
+    "unlock": true,
+    "vehicleFinder": true,
+    "vehicleStateSource": "LAST_STATE_CALL"
+  },
+  "state": {
+    "chargingProfile": {
+      "chargingControlType": "WEEKLY_PLANNER",
+      "chargingMode": "IMMEDIATE_CHARGING",
+      "chargingPreference": "NO_PRESELECTION",
+      "chargingSettings": {
+        "acCurrentLimit": 16,
+        "hospitality": "NO_ACTION",
+        "idcc": "UNLIMITED_LOUD",
+        "targetSoc": 80
+      },
+      "departureTimes": [
+        {
+          "action": "DEACTIVATE",
+          "id": 1,
+          "timeStamp": {
+            "hour": 0,
+            "minute": 0
+          },
+          "timerWeekDays": []
+        },
+        {
+          "action": "DEACTIVATE",
+          "id": 2,
+          "timeStamp": {
+            "hour": 0,
+            "minute": 0
+          },
+          "timerWeekDays": []
+        },
+        {
+          "action": "DEACTIVATE",
+          "id": 3,
+          "timeStamp": {
+            "hour": 0,
+            "minute": 0
+          },
+          "timerWeekDays": []
+        },
+        {
+          "action": "DEACTIVATE",
+          "id": 4,
+          "timeStamp": {
+            "hour": 0,
+            "minute": 0
+          },
+          "timerWeekDays": []
+        }
+      ]
+    },
+    "checkControlMessages": [
+      {
+        "severity": "LOW",
+        "type": "TIRE_PRESSURE"
+      }
+    ],
+    "climateControlState": {
+      "activity": "STANDBY"
+    },
+    "climateTimers": [
+      {
+        "departureTime": {
+          "hour": 0,
+          "minute": 0
+        },
+        "isWeeklyTimer": false,
+        "timerAction": "DEACTIVATE",
+        "timerWeekDays": []
+      },
+      {
+        "departureTime": {
+          "hour": 0,
+          "minute": 0
+        },
+        "isWeeklyTimer": true,
+        "timerAction": "DEACTIVATE",
+        "timerWeekDays": []
+      },
+      {
+        "departureTime": {
+          "hour": 0,
+          "minute": 0
+        },
+        "isWeeklyTimer": true,
+        "timerAction": "DEACTIVATE",
+        "timerWeekDays": []
+      }
+    ],
+    "combustionFuelLevel": {},
+    "currentMileage": 1121,
+    "doorsState": {
+      "combinedSecurityState": "LOCKED",
+      "combinedState": "CLOSED",
+      "hood": "CLOSED",
+      "leftFront": "CLOSED",
+      "leftRear": "CLOSED",
+      "rightFront": "CLOSED",
+      "rightRear": "CLOSED",
+      "trunk": "CLOSED"
+    },
+    "driverPreferences": {
+      "lscPrivacyMode": "OFF"
+    },
+    "electricChargingState": {
+      "chargingConnectionType": "UNKNOWN",
+      "chargingLevelPercent": 80,
+      "chargingStatus": "INVALID",
+      "chargingTarget": 80,
+      "isChargerConnected": false,
+      "range": 472,
+      "remainingChargingMinutes": 10
+    },
+    "isLeftSteering": true,
+    "isLscSupported": true,
+    "lastFetched": "2023-01-04T14:57:06.386Z",
+    "lastUpdatedAt": "2023-01-04T14:57:06.407Z",
+    "location": {
+      "address": {
+        "formatted": "Am Olympiapark 1, 80809 München"
+      },
+      "coordinates": {
+        "latitude": 48.177334,
+        "longitude": 11.556274
+      },
+      "heading": 180
+    },
+    "range": 472,
+    "requiredServices": [
+      {
+        "dateTime": "2024-12-01T00:00:00.000Z",
+        "description": "",
+        "mileage": 50000,
+        "status": "OK",
+        "type": "BRAKE_FLUID"
+      },
+      {
+        "dateTime": "2024-12-01T00:00:00.000Z",
+        "description": "",
+        "mileage": 50000,
+        "status": "OK",
+        "type": "VEHICLE_TUV"
+      },
+      {
+        "dateTime": "2024-12-01T00:00:00.000Z",
+        "description": "",
+        "mileage": 50000,
+        "status": "OK",
+        "type": "VEHICLE_CHECK"
+      },
+      {
+        "status": "OK",
+        "type": "TIRE_WEAR_REAR"
+      },
+      {
+        "status": "OK",
+        "type": "TIRE_WEAR_FRONT"
+      }
+    ],
+    "tireState": {
+      "frontLeft": {
+        "details": {
+          "dimension": "225/35 R20 90Y XL",
+          "isOptimizedForOemBmw": true,
+          "manufacturer": "Pirelli",
+          "manufacturingWeek": 4021,
+          "mountingDate": "2022-03-07T00:00:00.000Z",
+          "partNumber": "2461756",
+          "season": 2,
+          "speedClassification": {
+            "atLeast": false,
+            "speedRating": 300
+          },
+          "treadDesign": "P-ZERO"
+        },
+        "status": {
+          "currentPressure": 241,
+          "pressureStatus": 0,
+          "targetPressure": 269,
+          "wearStatus": 0
+        }
+      },
+      "frontRight": {
+        "details": {
+          "dimension": "225/35 R20 90Y XL",
+          "isOptimizedForOemBmw": true,
+          "manufacturer": "Pirelli",
+          "manufacturingWeek": 2419,
+          "mountingDate": "2022-03-07T00:00:00.000Z",
+          "partNumber": "2461756",
+          "season": 2,
+          "speedClassification": {
+            "atLeast": false,
+            "speedRating": 300
+          },
+          "treadDesign": "P-ZERO"
+        },
+        "status": {
+          "currentPressure": 255,
+          "pressureStatus": 0,
+          "targetPressure": 269,
+          "wearStatus": 0
+        }
+      },
+      "rearLeft": {
+        "details": {
+          "dimension": "255/30 R20 92Y XL",
+          "isOptimizedForOemBmw": true,
+          "manufacturer": "Pirelli",
+          "manufacturingWeek": 1219,
+          "mountingDate": "2022-03-07T00:00:00.000Z",
+          "partNumber": "2461757",
+          "season": 2,
+          "speedClassification": {
+            "atLeast": false,
+            "speedRating": 300
+          },
+          "treadDesign": "P-ZERO"
+        },
+        "status": {
+          "currentPressure": 324,
+          "pressureStatus": 0,
+          "targetPressure": 303,
+          "wearStatus": 0
+        }
+      },
+      "rearRight": {
+        "details": {
+          "dimension": "255/30 R20 92Y XL",
+          "isOptimizedForOemBmw": true,
+          "manufacturer": "Pirelli",
+          "manufacturingWeek": 1219,
+          "mountingDate": "2022-03-07T00:00:00.000Z",
+          "partNumber": "2461757",
+          "season": 2,
+          "speedClassification": {
+            "atLeast": false,
+            "speedRating": 300
+          },
+          "treadDesign": "P-ZERO"
+        },
+        "status": {
+          "currentPressure": 331,
+          "pressureStatus": 0,
+          "targetPressure": 303,
+          "wearStatus": 0
+        }
+      }
+    },
+    "windowsState": {
+      "combinedState": "CLOSED",
+      "leftFront": "CLOSED",
+      "leftRear": "CLOSED",
+      "rear": "CLOSED",
+      "rightFront": "CLOSED",
+      "rightRear": "CLOSED"
+    }
+  }
+}

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from whirlpool.washerdryer import MachineState
 
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import as_timestamp, utc_from_timestamp
 
 from . import init_integration
@@ -17,7 +17,7 @@ async def update_sensor_state(
     hass: HomeAssistant,
     entity_id: str,
     mock_sensor_api_instance: MagicMock,
-):
+) -> None:
     """Simulate an update trigger from the API."""
 
     for call in mock_sensor_api_instance.register_attr_callback.call_args_list:
@@ -44,7 +44,8 @@ async def test_dryer_sensor_values(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
     mock_sensor2_api: MagicMock,
-):
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the sensor value callbacks."""
     hass.state = CoreState.not_running
     thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, timezone.utc)
@@ -69,8 +70,7 @@ async def test_dryer_sensor_values(
 
     entity_id = "sensor.dryer_state"
     mock_instance = mock_sensor2_api
-    registry = entity_registry.async_get(hass)
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     state = hass.states.get(entity_id)
     assert state is not None
@@ -108,7 +108,8 @@ async def test_washer_sensor_values(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
     mock_sensor1_api: MagicMock,
-):
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the sensor value callbacks."""
     hass.state = CoreState.not_running
     thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, timezone.utc)
@@ -133,8 +134,7 @@ async def test_washer_sensor_values(
 
     entity_id = "sensor.washer_state"
     mock_instance = mock_sensor1_api
-    registry = entity_registry.async_get(hass)
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     state = hass.states.get(entity_id)
     assert state is not None
@@ -147,9 +147,25 @@ async def test_washer_sensor_values(
     assert state.state == thetimestamp.isoformat()
 
     state_id = f"{entity_id.split('_')[0]}_detergent_level"
+    entry = entity_registry.async_get(state_id)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    update_entry = entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=None
+    )
+    await hass.async_block_till_done()
+
+    assert update_entry != entry
+    assert update_entry.disabled is False
+    state = hass.states.get(state_id)
+    assert state is None
+
+    await hass.config_entries.async_reload(entry.config_entry_id)
     state = hass.states.get(state_id)
     assert state is not None
-    assert state.state == "50%"
+    assert state.state == "50"
 
     # Test the washer cycle states
     mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
@@ -253,7 +269,7 @@ async def test_washer_sensor_values(
 async def test_restore_state(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
-):
+) -> None:
     """Test sensor restore state."""
     # Home assistant is not running yet
     hass.state = CoreState.not_running
@@ -288,7 +304,7 @@ async def test_callback(
     hass: HomeAssistant,
     mock_sensor_api_instances: MagicMock,
     mock_sensor1_api: MagicMock,
-):
+) -> None:
     """Test callback timestamp callback function."""
     hass.state = CoreState.not_running
     thetimestamp: datetime = datetime(2022, 11, 29, 00, 00, 00, 00, timezone.utc)
@@ -314,9 +330,9 @@ async def test_callback(
     # restore from cache
     state = hass.states.get("sensor.washer_end_time")
     assert state.state == thetimestamp.isoformat()
-    callback = mock_sensor1_api.register_attr_callback.call_args_list[2][0][0]
+    callback = mock_sensor1_api.register_attr_callback.call_args_list[1][0][0]
     callback()
-    # await hass.async_block_till_done()
+
     state = hass.states.get("sensor.washer_end_time")
     assert state.state == thetimestamp.isoformat()
     mock_sensor1_api.get_machine_state.return_value = MachineState.RunningMainCycle

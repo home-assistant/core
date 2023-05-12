@@ -6,7 +6,7 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant import config as hass_config, setup
 from homeassistant.components.cover import DOMAIN, SCAN_INTERVAL
@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, get_fixture_path
@@ -38,11 +38,11 @@ async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) ->
     await hass.async_block_till_done()
 
 
-async def test_no_covers(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_no_covers(caplog: pytest.LogCaptureFixture, hass: HomeAssistant) -> None:
     """Test that the cover does not polls when there's no state command."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"50\n",
     ):
         await setup_test_entity(hass, {})
@@ -53,7 +53,7 @@ async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> N
     """Test that the cover does not polls when there's no state command."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"50\n",
     ) as check_output:
         await setup_test_entity(hass, {"test": {}})
@@ -66,14 +66,17 @@ async def test_poll_when_cover_has_command_state(hass: HomeAssistant) -> None:
     """Test that the cover polls when there's a state  command."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"50\n",
     ) as check_output:
         await setup_test_entity(hass, {"test": {"command_state": "echo state"}})
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         check_output.assert_called_once_with(
-            "echo state", shell=True, timeout=15  # nosec # shell by design
+            "echo state",
+            shell=True,  # nosec # shell by design
+            timeout=15,
+            close_fds=False,
         )
 
 
@@ -153,7 +156,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 async def test_move_cover_failure(
-    caplog: LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
 ) -> None:
     """Test command failure."""
 
@@ -168,7 +171,9 @@ async def test_move_cover_failure(
     assert "return code 1" in caplog.text
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id option and if it only creates one cover per id."""
     await setup_test_entity(
         hass,
@@ -196,11 +201,8 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 2
 
-    ent_reg = entity_registry.async_get(hass)
-
-    assert len(ent_reg.entities) == 2
-    assert ent_reg.async_get_entity_id("cover", "command_line", "unique") is not None
-    assert (
-        ent_reg.async_get_entity_id("cover", "command_line", "not-so-unique-anymore")
-        is not None
+    assert len(entity_registry.entities) == 2
+    assert entity_registry.async_get_entity_id("cover", "command_line", "unique")
+    assert entity_registry.async_get_entity_id(
+        "cover", "command_line", "not-so-unique-anymore"
     )

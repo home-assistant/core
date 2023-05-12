@@ -9,14 +9,10 @@ import logging
 from typing import Any, TypeVar, cast
 
 from aiohttp.client_exceptions import ClientError
-from kostal.plenticore import (
-    PlenticoreApiClient,
-    PlenticoreApiException,
-    PlenticoreAuthenticationException,
-)
+from pykoplenti import ApiClient, ApiException, AuthenticationException
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -48,18 +44,16 @@ class Plenticore:
         return self.config_entry.data[CONF_HOST]
 
     @property
-    def client(self) -> PlenticoreApiClient:
+    def client(self) -> ApiClient:
         """Return the Plenticore API client."""
         return self._client
 
     async def async_setup(self) -> bool:
         """Set up Plenticore API client."""
-        self._client = PlenticoreApiClient(
-            async_get_clientsession(self.hass), host=self.host
-        )
+        self._client = ApiClient(async_get_clientsession(self.hass), host=self.host)
         try:
             await self._client.login(self.config_entry.data[CONF_PASSWORD])
-        except PlenticoreAuthenticationException as err:
+        except AuthenticationException as err:
             _LOGGER.error(
                 "Authentication exception connecting to %s: %s", self.host, err
             )
@@ -135,7 +129,7 @@ class DataUpdateCoordinatorMixin:
 
         try:
             return await client.get_setting_values(module_id, data_id)
-        except PlenticoreApiException:
+        except ApiException:
             return None
 
     async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
@@ -149,10 +143,10 @@ class DataUpdateCoordinatorMixin:
 
         try:
             await client.set_setting_values(module_id, value)
-        except PlenticoreApiException:
+        except ApiException:
             return False
-        else:
-            return True
+
+        return True
 
 
 class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
@@ -177,7 +171,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._fetch: dict[str, list[str]] = defaultdict(list)
         self._plenticore = plenticore
 
-    def start_fetch_data(self, module_id: str, data_id: str) -> None:
+    def start_fetch_data(self, module_id: str, data_id: str) -> CALLBACK_TYPE:
         """Start fetching the given data (module-id and data-id)."""
         self._fetch[module_id].append(data_id)
 
@@ -186,7 +180,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         async def force_refresh(event_time: datetime) -> None:
             await self.async_request_refresh()
 
-        async_call_later(self.hass, 2, force_refresh)
+        return async_call_later(self.hass, 2, force_refresh)
 
     def stop_fetch_data(self, module_id: str, data_id: str) -> None:
         """Stop fetching the given data (module-id and data-id)."""
@@ -257,7 +251,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
     def start_fetch_data(
         self, module_id: str, data_id: str, all_options: list[str]
-    ) -> None:
+    ) -> CALLBACK_TYPE:
         """Start fetching the given data (module-id and entry-id)."""
         self._fetch[module_id].append(data_id)
         self._fetch[module_id].append(all_options)
@@ -267,7 +261,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         async def force_refresh(event_time: datetime) -> None:
             await self.async_request_refresh()
 
-        async_call_later(self.hass, 2, force_refresh)
+        return async_call_later(self.hass, 2, force_refresh)
 
     def stop_fetch_data(
         self, module_id: str, data_id: str, all_options: list[str]

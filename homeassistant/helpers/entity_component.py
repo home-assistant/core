@@ -109,12 +109,22 @@ class EntityComponent(Generic[_EntityT]):
                 return entity_obj  # type: ignore[return-value]
         return None
 
+    def register_shutdown(self) -> None:
+        """Register shutdown on Home Assistant STOP event.
+
+        Note: this is only required if the integration never calls
+        `setup` or `async_setup`.
+        """
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+
     def setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
 
         This doesn't block the executor to protect from deadlocks.
         """
-        self.hass.add_job(self.async_setup(config))
+        self.hass.create_task(
+            self.async_setup(config), f"EntityComponent setup {self.domain}"
+        )
 
     async def async_setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
@@ -124,14 +134,17 @@ class EntityComponent(Generic[_EntityT]):
 
         This method must be run in the event loop.
         """
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.register_shutdown()
 
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in config_per_platform(config, self.domain):
             if p_type is not None:
-                self.hass.async_create_task(self.async_setup_platform(p_type, p_config))
+                self.hass.async_create_task(
+                    self.async_setup_platform(p_type, p_config),
+                    f"EntityComponent setup platform {p_type} {self.domain}",
+                )
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
@@ -200,7 +213,7 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str, Any] | vol.Schema,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
     ) -> None:

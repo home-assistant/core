@@ -1,19 +1,19 @@
-"""Test the SFR Box sensors."""
+"""Test the SFR Box binary sensors."""
 from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from sfrbox_api.models import SystemInfo
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import check_device_registry, check_entities
-from .const import EXPECTED_ENTITIES
-
-from tests.common import mock_device_registry, mock_registry
-
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info")
+pytestmark = pytest.mark.usefixtures(
+    "system_get_info", "dsl_get_info", "ftth_get_info", "wan_get_info"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -23,17 +23,33 @@ def override_platforms() -> Generator[None, None, None]:
         yield
 
 
-async def test_binary_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+@pytest.mark.parametrize("net_infra", ["adsl", "ftth"])
+async def test_binary_sensors(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    system_get_info: SystemInfo,
+    net_infra: str,
+) -> None:
     """Test for SFR Box binary sensors."""
-    entity_registry = mock_registry(hass)
-    device_registry = mock_device_registry(hass)
-
+    system_get_info.net_infra = net_infra
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    check_device_registry(device_registry, EXPECTED_ENTITIES["expected_device"])
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
 
-    expected_entities = EXPECTED_ENTITIES[Platform.BINARY_SENSOR]
-    assert len(entity_registry.entities) == len(expected_entities)
+    # Ensure entities are correctly registered
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert entity_entries == snapshot
 
-    check_entities(hass, entity_registry, expected_entities)
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot

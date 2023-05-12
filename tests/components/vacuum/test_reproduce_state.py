@@ -1,4 +1,6 @@
 """Test reproduce state for Vacuum."""
+import pytest
+
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     SERVICE_PAUSE,
@@ -18,7 +20,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
@@ -27,7 +29,9 @@ FAN_SPEED_LOW = "low"
 FAN_SPEED_HIGH = "high"
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Vacuum states."""
     hass.states.async_set("vacuum.entity_off", STATE_OFF, {})
     hass.states.async_set("vacuum.entity_on", STATE_ON, {})

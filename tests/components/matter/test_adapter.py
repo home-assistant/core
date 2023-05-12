@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
-from matter_server.common.models.events import EventType
-from matter_server.common.models.node import MatterNode
+from matter_server.common.models import EventType, MatterNodeData
 import pytest
 
 from homeassistant.components.matter.const import DOMAIN
@@ -15,6 +15,8 @@ from homeassistant.helpers import device_registry as dr
 from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -27,15 +29,45 @@ async def test_device_registry_single_node_device(
     )
 
     dev_reg = dr.async_get(hass)
-
-    entry = dev_reg.async_get_device({(DOMAIN, "mock-onoff-light")})
+    entry = dev_reg.async_get_device(
+        {(DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")}
+    )
     assert entry is not None
+
+    # test serial id present as additional identifier
+    assert (DOMAIN, "serial_12345678") in entry.identifiers
 
     assert entry.name == "Mock OnOff Light"
     assert entry.manufacturer == "Nabu Casa"
     assert entry.model == "Mock Light"
     assert entry.hw_version == "v1.0"
     assert entry.sw_version == "v1.0"
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_device_registry_single_node_device_alt(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test additional device with different attribute values."""
+    await setup_integration_with_node_fixture(
+        hass,
+        "on-off-plugin-unit",
+        matter_client,
+    )
+
+    dev_reg = dr.async_get(hass)
+    entry = dev_reg.async_get_device(
+        {(DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")}
+    )
+    assert entry is not None
+
+    # test name is derived from productName (because nodeLabel is absent)
+    assert entry.name == "Mock OnOffPluginUnit (powerplug/switch)"
+
+    # test serial id NOT present as additional identifier
+    assert (DOMAIN, "serial_TEST_SN") not in entry.identifiers
 
 
 @pytest.mark.skip("Waiting for a new test fixture")
@@ -85,6 +117,8 @@ async def test_device_registry_bridge(
     assert device2_entry.sw_version == "1.49.1"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_node_added_subscription(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -96,9 +130,11 @@ async def test_node_added_subscription(
 
     node_added_callback = matter_client.subscribe.call_args[0][0]
     node_data = load_and_parse_node_fixture("onoff-light")
-    node = dataclass_from_dict(
-        MatterNode,
-        node_data,
+    node = MatterNode(
+        dataclass_from_dict(
+            MatterNodeData,
+            node_data,
+        )
     )
 
     entity_state = hass.states.get("light.mock_onoff_light")

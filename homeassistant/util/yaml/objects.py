@@ -14,7 +14,11 @@ class NodeStrClass(str):
     """Wrapper class to be able to add attributes on a string."""
 
 
-@dataclass(frozen=True)
+class NodeDictClass(dict):
+    """Wrapper class to be able to add attributes on a dict."""
+
+
+@dataclass(slots=True, frozen=True)
 class Input:
     """Input that should be substituted."""
 

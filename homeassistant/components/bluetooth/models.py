@@ -12,7 +12,6 @@ from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from homeassistant.util.dt import monotonic_time_coarse
 
 if TYPE_CHECKING:
-
     from .manager import BluetoothManager
 
 
@@ -21,7 +20,7 @@ MANAGER: BluetoothManager | None = None
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
-@dataclass
+@dataclass(slots=True)
 class HaBluetoothConnector:
     """Data for how to connect a BLEDevice from a given scanner."""
 

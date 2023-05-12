@@ -1,6 +1,4 @@
 """Test Dynalite bridge."""
-
-
 from unittest.mock import AsyncMock, Mock, patch
 
 from dynalite_devices_lib.dynalite_devices import (
@@ -18,12 +16,13 @@ from homeassistant.components.dynalite.const import (
     ATTR_PACKET,
     ATTR_PRESET,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import MockConfigEntry
 
 
-async def test_update_device(hass):
+async def test_update_device(hass: HomeAssistant) -> None:
     """Test that update works."""
     host = "1.2.3.4"
     entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
@@ -53,7 +52,7 @@ async def test_update_device(hass):
     specific_func.assert_called_once()
 
 
-async def test_add_devices_then_register(hass):
+async def test_add_devices_then_register(hass: HomeAssistant) -> None:
     """Test that add_devices work."""
     host = "1.2.3.4"
     entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
@@ -88,7 +87,7 @@ async def test_add_devices_then_register(hass):
     assert hass.states.get("switch.name3")
 
 
-async def test_register_then_add_devices(hass):
+async def test_register_then_add_devices(hass: HomeAssistant) -> None:
     """Test that add_devices work after register_add_entities."""
     host = "1.2.3.4"
     entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
@@ -117,7 +116,7 @@ async def test_register_then_add_devices(hass):
     assert hass.states.get("switch.name2")
 
 
-async def test_notifications(hass):
+async def test_notifications(hass: HomeAssistant) -> None:
     """Test that update works."""
     host = "1.2.3.4"
     entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})

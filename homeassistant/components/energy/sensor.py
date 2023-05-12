@@ -43,6 +43,7 @@ SUPPORTED_STATE_CLASSES = {
 VALID_ENERGY_UNITS: set[str] = {
     UnitOfEnergy.GIGA_JOULE,
     UnitOfEnergy.KILO_WATT_HOUR,
+    UnitOfEnergy.MEGA_JOULE,
     UnitOfEnergy.MEGA_WATT_HOUR,
     UnitOfEnergy.WATT_HOUR,
 }
@@ -73,7 +74,7 @@ async def async_setup_platform(
     await sensor_manager.async_start()
 
 
-@dataclass
+@dataclass(slots=True)
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 

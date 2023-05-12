@@ -32,7 +32,7 @@ class TemplateError(HomeAssistantError):
             super().__init__(f"{exception.__class__.__name__}: {exception}")
 
 
-@dataclass
+@dataclass(slots=True)
 class ConditionError(HomeAssistantError):
     """Error during condition evaluation."""
 
@@ -52,7 +52,7 @@ class ConditionError(HomeAssistantError):
         return "\n".join(list(self.output(indent=0)))
 
 
-@dataclass
+@dataclass(slots=True)
 class ConditionErrorMessage(ConditionError):
     """Condition error message."""
 
@@ -64,7 +64,7 @@ class ConditionErrorMessage(ConditionError):
         yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
 
 
-@dataclass
+@dataclass(slots=True)
 class ConditionErrorIndex(ConditionError):
     """Condition error with index."""
 
@@ -87,7 +87,7 @@ class ConditionErrorIndex(ConditionError):
         yield from self.error.output(indent + 1)
 
 
-@dataclass
+@dataclass(slots=True)
 class ConditionErrorContainer(ConditionError):
     """Condition error with subconditions."""
 
@@ -207,7 +207,7 @@ class RequiredParameterMissing(HomeAssistantError):
 
 
 class DependencyError(HomeAssistantError):
-    """Raised when dependencies can not be setup."""
+    """Raised when dependencies cannot be setup."""
 
     def __init__(self, failed_dependencies: list[str]) -> None:
         """Initialize error."""

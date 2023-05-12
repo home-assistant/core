@@ -1,10 +1,14 @@
 """Test the Z-Wave JS diagnostics."""
+import copy
 from unittest.mock import patch
 
 import pytest
+from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js.diagnostics import (
+    REDACTED,
     ZwaveValueMatcher,
     async_get_device_diagnostics,
 )
@@ -13,6 +17,7 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
     get_value_id_from_unique_id,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
@@ -22,15 +27,16 @@ from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
+from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
-    hass,
-    hass_client,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     integration,
     config_entry_diagnostics,
     config_entry_diagnostics_redacted,
-):
+) -> None:
     """Test the config entry level diagnostics data dump."""
     with patch(
         "homeassistant.components.zwave_js.diagnostics.dump_msgs",
@@ -43,13 +49,13 @@ async def test_config_entry_diagnostics(
 
 
 async def test_device_diagnostics(
-    hass,
+    hass: HomeAssistant,
     client,
     multisensor_6,
     integration,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     version_state,
-):
+) -> None:
     """Test the device level diagnostics data dump."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
@@ -90,19 +96,10 @@ async def test_device_diagnostics(
     assert len(diagnostics_data["entities"]) == len(
         list(async_discover_node_values(multisensor_6, device, {device.id: set()}))
     )
-    assert diagnostics_data["state"] == {
-        **multisensor_6.data,
-        "statistics": {
-            "commandsDroppedRX": 0,
-            "commandsDroppedTX": 0,
-            "commandsRX": 0,
-            "commandsTX": 0,
-            "timeoutResponse": 0,
-        },
-    }
+    assert diagnostics_data["state"] == multisensor_6.data
 
 
-async def test_device_diagnostics_error(hass, integration):
+async def test_device_diagnostics_error(hass: HomeAssistant, integration) -> None:
     """Test the device diagnostics raises exception when an invalid device is used."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_or_create(
@@ -112,19 +109,19 @@ async def test_device_diagnostics_error(hass, integration):
         await async_get_device_diagnostics(hass, integration, device)
 
 
-async def test_empty_zwave_value_matcher():
+async def test_empty_zwave_value_matcher() -> None:
     """Test empty ZwaveValueMatcher is invalid."""
     with pytest.raises(ValueError):
         ZwaveValueMatcher()
 
 
 async def test_device_diagnostics_missing_primary_value(
-    hass,
+    hass: HomeAssistant,
     client,
     multisensor_6,
     integration,
-    hass_client,
-):
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test that the device diagnostics handles an entity with a missing primary value."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
@@ -186,3 +183,41 @@ async def test_device_diagnostics_missing_primary_value(
 
     assert air_entity["value_id"] == value.value_id
     assert air_entity["primary_value"] is None
+
+
+async def test_device_diagnostics_secret_value(
+    hass: HomeAssistant,
+    client,
+    multisensor_6_state,
+    integration,
+    hass_client: ClientSessionGenerator,
+    version_state,
+) -> None:
+    """Test that secret value in device level diagnostics gets redacted."""
+
+    def _find_ultraviolet_val(data: dict) -> dict:
+        """Find ultraviolet property value in data."""
+        return next(
+            val
+            for val in data["values"]
+            if val["commandClass"] == CommandClass.SENSOR_MULTILEVEL
+            and val["property"] == PROPERTY_ULTRAVIOLET
+        )
+
+    node_state = copy.deepcopy(multisensor_6_state)
+    # Force a value to be secret so we can check if it gets redacted
+    secret_value = _find_ultraviolet_val(node_state)
+    secret_value["metadata"]["secret"] = True
+    node = Node(client, node_state)
+    client.driver.controller.nodes[node.node_id] = node
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device({get_device_id(client.driver, node)})
+    assert device
+
+    diagnostics_data = await get_diagnostics_for_device(
+        hass, hass_client, integration, device
+    )
+    test_value = _find_ultraviolet_val(diagnostics_data["state"])
+    assert test_value["value"] == REDACTED

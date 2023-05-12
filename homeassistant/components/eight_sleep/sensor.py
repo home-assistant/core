@@ -15,7 +15,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform as ep
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import EightSleepBaseEntity, EightSleepConfigEntryData
@@ -68,7 +71,7 @@ SERVICE_EIGHT_SCHEMA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: ep.AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the eight sleep sensors."""
     config_entry_data: EightSleepConfigEntryData = hass.data[DOMAIN][entry.entry_id]
@@ -95,7 +98,7 @@ async def async_setup_entry(
 
     async_add_entities(all_sensors)
 
-    platform = ep.async_get_current_platform()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_HEAT_SET,
         SERVICE_EIGHT_SCHEMA,

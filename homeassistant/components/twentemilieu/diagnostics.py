@@ -22,6 +22,8 @@ async def async_get_config_entry_diagnostics(
         entry.data[CONF_ID]
     ]
     return {
-        str(waste_type): [waste_date.isoformat() for waste_date in waste_dates]
+        f"WasteType.{waste_type.name}": [
+            waste_date.isoformat() for waste_date in waste_dates
+        ]
         for waste_type, waste_dates in coordinator.data.items()
     }

@@ -1,7 +1,10 @@
 """Tests for Broadlink heartbeats."""
 from unittest.mock import call, patch
 
+import pytest
+
 from homeassistant.components.broadlink.heartbeat import BroadlinkHeartbeat
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
 from . import get_device
@@ -11,7 +14,7 @@ from tests.common import async_fire_time_changed
 DEVICE_PING = "homeassistant.components.broadlink.heartbeat.blk.ping"
 
 
-async def test_heartbeat_trigger_startup(hass):
+async def test_heartbeat_trigger_startup(hass: HomeAssistant) -> None:
     """Test that the heartbeat is initialized with the first config entry."""
     device = get_device("Office")
 
@@ -23,7 +26,9 @@ async def test_heartbeat_trigger_startup(hass):
     assert mock_ping.call_args == call(device.host)
 
 
-async def test_heartbeat_ignore_oserror(hass, caplog):
+async def test_heartbeat_ignore_oserror(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that an OSError is ignored."""
     device = get_device("Office")
 
@@ -34,7 +39,7 @@ async def test_heartbeat_ignore_oserror(hass, caplog):
     assert "Failed to send heartbeat to" in caplog.text
 
 
-async def test_heartbeat_trigger_right_time(hass):
+async def test_heartbeat_trigger_right_time(hass: HomeAssistant) -> None:
     """Test that the heartbeat is triggered at the right time."""
     device = get_device("Office")
 
@@ -51,7 +56,7 @@ async def test_heartbeat_trigger_right_time(hass):
     assert mock_ping.call_args == call(device.host)
 
 
-async def test_heartbeat_do_not_trigger_before_time(hass):
+async def test_heartbeat_do_not_trigger_before_time(hass: HomeAssistant) -> None:
     """Test that the heartbeat is not triggered before the time."""
     device = get_device("Office")
 
@@ -68,7 +73,7 @@ async def test_heartbeat_do_not_trigger_before_time(hass):
     assert mock_ping.call_count == 0
 
 
-async def test_heartbeat_unload(hass):
+async def test_heartbeat_unload(hass: HomeAssistant) -> None:
     """Test that the heartbeat is deactivated when the last config entry is removed."""
     device = get_device("Office")
 
@@ -86,7 +91,7 @@ async def test_heartbeat_unload(hass):
     assert mock_ping.call_count == 0
 
 
-async def test_heartbeat_do_not_unload(hass):
+async def test_heartbeat_do_not_unload(hass: HomeAssistant) -> None:
     """Test that the heartbeat is not deactivated until the last config entry is removed."""
     device_a = get_device("Office")
     device_b = get_device("Bedroom")

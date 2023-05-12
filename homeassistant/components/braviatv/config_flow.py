@@ -13,20 +13,16 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util.network import is_host_valid
 
-from . import BraviaTVCoordinator
 from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
     CONF_CLIENT_ID,
-    CONF_IGNORED_SOURCES,
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
@@ -44,12 +40,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.client: BraviaClient | None = None
         self.device_config: dict[str, Any] = {}
         self.entry: ConfigEntry | None = None
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> BraviaTVOptionsFlowHandler:
-        """Bravia TV options callback."""
-        return BraviaTVOptionsFlowHandler(config_entry)
 
     def create_client(self) -> None:
         """Create Bravia TV client from config."""
@@ -257,51 +247,3 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self.device_config = {**entry_data}
         return await self.async_step_authorize()
-
-
-class BraviaTVOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
-    """Config flow options for Bravia TV."""
-
-    data_schema: vol.Schema
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        coordinator: BraviaTVCoordinator
-        coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-
-        try:
-            await coordinator.async_update_sources()
-        except BraviaError:
-            return self.async_abort(reason="failed_update")
-
-        sources = coordinator.source_map.values()
-        source_list = [item["title"] for item in sources]
-        ignored_sources = self.options.get(CONF_IGNORED_SOURCES, [])
-
-        for item in ignored_sources:
-            if item not in source_list:
-                source_list.append(item)
-
-        self.data_schema = vol.Schema(
-            {
-                vol.Optional(CONF_IGNORED_SOURCES): cv.multi_select(source_list),
-            }
-        )
-
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initialized by the user."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                self.data_schema, self.options
-            ),
-        )

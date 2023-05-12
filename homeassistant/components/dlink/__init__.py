@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_USERNAME],
         entry.data[CONF_USE_LEGACY_PROTOCOL],
     )
-    if not smartplug.authenticated and entry.data[CONF_USE_LEGACY_PROTOCOL]:
+    if not smartplug.authenticated and smartplug.use_legacy_protocol:
         raise ConfigEntryNotReady("Cannot connect/authenticate")
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SmartPlugData(smartplug)

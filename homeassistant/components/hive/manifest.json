@@ -1,13 +1,13 @@
 {
   "domain": "hive",
   "name": "Hive",
+  "codeowners": ["@Rendili", "@KJonline"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hive",
   "homekit": {
     "models": ["HHKBridge*"]
   },
-  "documentation": "https://www.home-assistant.io/integrations/hive",
-  "requirements": ["pyhiveapi==0.5.14"],
-  "codeowners": ["@Rendili", "@KJonline"],
   "iot_class": "cloud_polling",
-  "loggers": ["apyhiveapi"]
+  "loggers": ["apyhiveapi"],
+  "requirements": ["pyhiveapi==0.5.14"]
 }

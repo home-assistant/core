@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     UnitOfDataRate,
@@ -176,12 +178,14 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.WATT_HOUR: 1 * 1000,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
+        UnitOfEnergy.MEGA_JOULE: 3.6,
         UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
     }
     VALID_UNITS = {
         UnitOfEnergy.WATT_HOUR,
         UnitOfEnergy.KILO_WATT_HOUR,
         UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.GIGA_JOULE,
     }
 
@@ -419,6 +423,8 @@ class UnitlessRatioConverter(BaseUnitConverter):
     NORMALIZED_UNIT = None
     _UNIT_CONVERSION: dict[str | None, float] = {
         None: 1,
+        CONCENTRATION_PARTS_PER_BILLION: 1000000000,
+        CONCENTRATION_PARTS_PER_MILLION: 1000000,
         PERCENTAGE: 100,
     }
     VALID_UNITS = {

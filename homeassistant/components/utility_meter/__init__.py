@@ -21,6 +21,7 @@ from .const import (
     CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
+    CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
@@ -83,6 +84,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
             ),
             vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
+            vol.Optional(CONF_METER_PERIODICALLY_RESETTING, default=True): cv.boolean,
             vol.Optional(CONF_TARIFFS, default=[]): vol.All(
                 cv.ensure_list, vol.Unique(), [cv.string]
             ),
@@ -221,13 +223,29 @@ async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    platforms_to_unload = [Platform.SENSOR]
+    if entry.options.get(CONF_TARIFFS):
+        platforms_to_unload.append(Platform.SELECT)
+
     if unload_ok := await hass.config_entries.async_unload_platforms(
         entry,
-        (
-            Platform.SELECT,
-            Platform.SENSOR,
-        ),
+        platforms_to_unload,
     ):
         hass.data[DATA_UTILITY].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new = {**config_entry.options}
+        new[CONF_METER_PERIODICALLY_RESETTING] = True
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, options=new)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True

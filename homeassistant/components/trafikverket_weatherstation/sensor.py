@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,9 +15,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
-    UnitOfPrecipitationDepth,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -114,8 +115,8 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="precipitation_amount",
         api_key="precipitation_amount",
         name="Precipitation amount",
-        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
@@ -190,7 +191,9 @@ class TrafikverketWeatherStation(
     def native_value(self) -> StateType | datetime:
         """Return state of sensor."""
         if self.entity_description.api_key == "measure_time":
-            return _to_datetime(self.coordinator.data.measure_time)
+            if TYPE_CHECKING:
+                assert self.coordinator.data.measure_time
+            return self.coordinator.data.measure_time
 
         state: StateType = getattr(
             self.coordinator.data, self.entity_description.api_key
@@ -204,4 +207,6 @@ class TrafikverketWeatherStation(
     @property
     def available(self) -> bool:
         """Return if entity is available."""
+        if TYPE_CHECKING:
+            assert self.coordinator.data.active
         return self.coordinator.data.active and super().available

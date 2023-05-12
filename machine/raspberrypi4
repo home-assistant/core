@@ -3,13 +3,7 @@ FROM homeassistant/armv7-homeassistant:$BUILD_VERSION
 
 RUN apk --no-cache add \
         raspberrypi \
-        raspberrypi-libs \
-        usbutils \
-    && pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
-        pybluez \
-        pygatt[GATTTOOL] \
-        -c /usr/src/homeassistant/requirements_all.txt \
-        --use-deprecated=legacy-resolver
+        raspberrypi-libs
 
 ##
 # Set symlinks for raspberry pi binaries.

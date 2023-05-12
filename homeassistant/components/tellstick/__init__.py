@@ -40,10 +40,6 @@ SIGNAL_TELLCORE_CALLBACK = "tellstick_callback"
 # calling concurrently.
 TELLSTICK_LOCK = threading.RLock()
 
-# A TellstickRegistry that keeps a map from tellcore_id to the corresponding
-# tellcore_device and HA device (entity).
-TELLCORE_REGISTRY = None
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(

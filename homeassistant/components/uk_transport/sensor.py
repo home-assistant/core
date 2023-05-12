@@ -97,8 +97,7 @@ def setup_platform(
 
 
 class UkTransportSensor(SensorEntity):
-    """
-    Sensor that reads the UK transport web API.
+    """Sensor that reads the UK transport web API.
 
     transportapi.com provides comprehensive transport data for UK train, tube
     and bus travel across the UK via simple JSON API. Subclasses of this
@@ -173,7 +172,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         if self._data != {}:
             self._next_buses = []
 
-            for (route, departures) in self._data["departures"].items():
+            for route, departures in self._data["departures"].items():
                 for departure in departures:
                     if self._destination_re.search(departure["direction"]):
                         self._next_buses.append(

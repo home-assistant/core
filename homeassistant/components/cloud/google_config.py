@@ -2,42 +2,135 @@
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from hass_nabucasa import Cloud, cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
+from homeassistant.components.homeassistant.exposed_entities import (
+    async_expose_entity,
+    async_get_assistant_settings,
+    async_get_entity_settings,
+    async_listen_entity_updates,
+    async_set_assistant_option,
+    async_should_expose,
+)
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import CoreState, Event, callback, split_entity_id
+from homeassistant.core import (
+    CoreState,
+    Event,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, start
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.setup import async_setup_component
 
 from .const import (
     CONF_ENTITY_CONFIG,
+    CONF_FILTER,
     DEFAULT_DISABLE_2FA,
+    DOMAIN as CLOUD_DOMAIN,
     PREF_DISABLE_2FA,
     PREF_SHOULD_EXPOSE,
 )
-from .prefs import CloudPreferences
+from .prefs import GOOGLE_SETTINGS_VERSION, CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
+
+CLOUD_GOOGLE = f"{CLOUD_DOMAIN}.{GOOGLE_DOMAIN}"
+
+
+SUPPORTED_DOMAINS = {
+    "alarm_control_panel",
+    "button",
+    "camera",
+    "climate",
+    "cover",
+    "fan",
+    "group",
+    "humidifier",
+    "input_boolean",
+    "input_button",
+    "input_select",
+    "light",
+    "lock",
+    "media_player",
+    "scene",
+    "script",
+    "select",
+    "switch",
+    "vacuum",
+}
+
+SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES = {
+    BinarySensorDeviceClass.DOOR,
+    BinarySensorDeviceClass.GARAGE_DOOR,
+    BinarySensorDeviceClass.LOCK,
+    BinarySensorDeviceClass.MOTION,
+    BinarySensorDeviceClass.OPENING,
+    BinarySensorDeviceClass.PRESENCE,
+    BinarySensorDeviceClass.WINDOW,
+}
+
+SUPPORTED_SENSOR_DEVICE_CLASSES = {
+    SensorDeviceClass.AQI,
+    SensorDeviceClass.CO,
+    SensorDeviceClass.CO2,
+    SensorDeviceClass.HUMIDITY,
+    SensorDeviceClass.PM10,
+    SensorDeviceClass.PM25,
+    SensorDeviceClass.TEMPERATURE,
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+}
+
+
+def _supported_legacy(hass: HomeAssistant, entity_id: str) -> bool:
+    """Return if the entity is supported.
+
+    This is called when migrating from legacy config format to avoid exposing
+    all binary sensors and sensors.
+    """
+    domain = split_entity_id(entity_id)[0]
+    if domain in SUPPORTED_DOMAINS:
+        return True
+
+    device_class = get_device_class(hass, entity_id)
+    if (
+        domain == "binary_sensor"
+        and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
+    ):
+        return True
+
+    if domain == "sensor" and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
+        return True
+
+    return False
 
 
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
     def __init__(
-        self, hass, config, cloud_user: str, prefs: CloudPreferences, cloud: Cloud
-    ):
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        cloud_user: str,
+        prefs: CloudPreferences,
+        cloud: Cloud,
+    ) -> None:
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
         self._user = cloud_user
         self._prefs = prefs
         self._cloud = cloud
-        self._cur_entity_prefs = self._prefs.google_entity_configs
-        self._cur_default_expose = self._prefs.google_default_expose
         self._sync_entities_lock = asyncio.Lock()
 
     @property
@@ -77,15 +170,62 @@ class CloudGoogleConfig(AbstractConfig):
         """Return Cloud User account."""
         return self._user
 
+    def _migrate_google_entity_settings_v1(self):
+        """Migrate Google entity settings to entity registry options."""
+        if not self._config[CONF_FILTER].empty_filter:
+            # Don't migrate if there's a YAML config
+            return
+
+        for entity_id in {
+            *self.hass.states.async_entity_ids(),
+            *self._prefs.google_entity_configs,
+        }:
+            async_expose_entity(
+                self.hass,
+                CLOUD_GOOGLE,
+                entity_id,
+                self._should_expose_legacy(entity_id),
+            )
+            if _2fa_disabled := (self._2fa_disabled_legacy(entity_id) is not None):
+                async_set_assistant_option(
+                    self.hass,
+                    CLOUD_GOOGLE,
+                    entity_id,
+                    PREF_DISABLE_2FA,
+                    _2fa_disabled,
+                )
+
     async def async_initialize(self):
         """Perform async initialization of config."""
         await super().async_initialize()
 
-        async def hass_started(hass):
+        async def on_hass_started(hass: HomeAssistant) -> None:
+            if self._prefs.google_settings_version != GOOGLE_SETTINGS_VERSION:
+                if self._prefs.google_settings_version < 2 or (
+                    # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
+                    self._prefs.google_settings_version < 3
+                    and not any(
+                        settings.get("should_expose", False)
+                        for settings in async_get_assistant_settings(
+                            hass, CLOUD_GOOGLE
+                        ).values()
+                    )
+                ):
+                    self._migrate_google_entity_settings_v1()
+
+                await self._prefs.async_update(
+                    google_settings_version=GOOGLE_SETTINGS_VERSION
+                )
+            async_listen_entity_updates(
+                self.hass, CLOUD_GOOGLE, self._async_exposed_entities_updated
+            )
+
+        async def on_hass_start(hass: HomeAssistant) -> None:
             if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
                 await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
-        start.async_at_start(self.hass, hass_started)
+        start.async_at_start(self.hass, on_hass_start)
+        start.async_at_started(self.hass, on_hass_started)
 
         # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
@@ -97,7 +237,6 @@ class CloudGoogleConfig(AbstractConfig):
             await self.async_disconnect_agent_user(agent_user_id)
 
         self._prefs.async_listen_updates(self._async_prefs_updated)
-
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._handle_entity_registry_updated,
@@ -111,13 +250,10 @@ class CloudGoogleConfig(AbstractConfig):
         """If a state object should be exposed."""
         return self._should_expose_entity_id(state.entity_id)
 
-    def _should_expose_entity_id(self, entity_id):
+    def _should_expose_legacy(self, entity_id):
         """If an entity ID should be exposed."""
         if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
-
-        if not self._config["filter"].empty_filter:
-            return self._config["filter"](entity_id)
 
         entity_configs = self._prefs.google_entity_configs
         entity_config = entity_configs.get(entity_id, {})
@@ -138,9 +274,22 @@ class CloudGoogleConfig(AbstractConfig):
 
         # Backwards compat
         if default_expose is None:
-            return not auxiliary_entity
+            return not auxiliary_entity and _supported_legacy(self.hass, entity_id)
 
-        return not auxiliary_entity and split_entity_id(entity_id)[0] in default_expose
+        return (
+            not auxiliary_entity
+            and split_entity_id(entity_id)[0] in default_expose
+            and _supported_legacy(self.hass, entity_id)
+        )
+
+    def _should_expose_entity_id(self, entity_id):
+        """If an entity should be exposed."""
+        if not self._config[CONF_FILTER].empty_filter:
+            if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+                return False
+            return self._config[CONF_FILTER](entity_id)
+
+        return async_should_expose(self.hass, CLOUD_GOOGLE, entity_id)
 
     @property
     def agent_user_id(self):
@@ -156,11 +305,22 @@ class CloudGoogleConfig(AbstractConfig):
         """Get agent user ID making request."""
         return self.agent_user_id
 
-    def should_2fa(self, state):
+    def _2fa_disabled_legacy(self, entity_id):
         """If an entity should be checked for 2FA."""
         entity_configs = self._prefs.google_entity_configs
-        entity_config = entity_configs.get(state.entity_id, {})
-        return not entity_config.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
+        entity_config = entity_configs.get(entity_id, {})
+        return entity_config.get(PREF_DISABLE_2FA)
+
+    def should_2fa(self, state):
+        """If an entity should be checked for 2FA."""
+        try:
+            settings = async_get_entity_settings(self.hass, state.entity_id)
+        except HomeAssistantError:
+            # Handle the entity has been removed
+            return False
+
+        assistant_options = settings.get(CLOUD_GOOGLE, {})
+        return not assistant_options.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
     async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
@@ -206,14 +366,6 @@ class CloudGoogleConfig(AbstractConfig):
             # So when we change it, we need to sync all entities.
             sync_entities = True
 
-        # If entity prefs are the same or we have filter in config.yaml,
-        # don't sync.
-        elif (
-            self._cur_entity_prefs is not prefs.google_entity_configs
-            or self._cur_default_expose is not prefs.google_default_expose
-        ) and self._config["filter"].empty_filter:
-            self.async_schedule_google_sync_all()
-
         if self.enabled and not self.is_local_sdk_active:
             self.async_enable_local_sdk()
             sync_entities = True
@@ -221,11 +373,13 @@ class CloudGoogleConfig(AbstractConfig):
             self.async_disable_local_sdk()
             sync_entities = True
 
-        self._cur_entity_prefs = prefs.google_entity_configs
-        self._cur_default_expose = prefs.google_default_expose
-
         if sync_entities and self.hass.is_running:
             await self.async_sync_entities_all()
+
+    @callback
+    def _async_exposed_entities_updated(self) -> None:
+        """Handle updated preferences."""
+        self.async_schedule_google_sync_all()
 
     @callback
     def _handle_entity_registry_updated(self, event: Event) -> None:
@@ -251,7 +405,7 @@ class CloudGoogleConfig(AbstractConfig):
         self.async_schedule_google_sync_all()
 
     @callback
-    def _handle_device_registry_updated(self, event: Event) -> None:
+    async def _handle_device_registry_updated(self, event: Event) -> None:
         """Handle when device registry updated."""
         if (
             not self.enabled

@@ -1,4 +1,4 @@
-"""Methods and classes related to executing Z-Wave commands and publishing these to hass."""
+"""Methods and classes related to executing Z-Wave commands."""
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, CommandStatus
-from zwave_js_server.exceptions import SetValueFailed
+from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ValueDataType, get_value_id_str
@@ -100,7 +100,10 @@ def raise_exceptions_from_results(
 
 
 class ZWaveServices:
-    """Class that holds our services (Zwave Commands) that should be published to hass."""
+    """Class that holds our services (Zwave Commands).
+
+    Services that should be published to hass.
+    """
 
     def __init__(
         self,
@@ -157,8 +160,8 @@ class ZWaveServices:
             if first_node and not all(node.client.driver is not None for node in nodes):
                 raise vol.Invalid(f"Driver not ready for all nodes: {nodes}")
 
-            # If any nodes don't have matching home IDs, we can't run the command because
-            # we can't multicast across multiple networks
+            # If any nodes don't have matching home IDs, we can't run the command
+            # because we can't multicast across multiple networks
             if (
                 first_node
                 and first_node.client.driver  # We checked the driver was ready above.
@@ -601,13 +604,16 @@ class ZWaveServices:
         ):
             new_value = str(new_value)
 
-        success = await async_multicast_set_value(
-            client=client,
-            new_value=new_value,
-            value_data=value,
-            nodes=None if broadcast else list(nodes),
-            options=options,
-        )
+        try:
+            success = await async_multicast_set_value(
+                client=client,
+                new_value=new_value,
+                value_data=value,
+                nodes=None if broadcast else list(nodes),
+                options=options,
+            )
+        except FailedZWaveCommand as err:
+            raise HomeAssistantError("Unable to set value via multicast") from err
 
         if success is False:
             raise HomeAssistantError(

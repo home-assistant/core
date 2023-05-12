@@ -1,6 +1,9 @@
 """The tests for recorder filters."""
 
+import pytest
+
 from homeassistant.components.recorder.filters import (
+    Filters,
     extract_include_exclude_filter_conf,
     merge_include_exclude_filters,
 )
@@ -43,7 +46,7 @@ SIMPLE_EXCLUDE_FILTER = {
 SIMPLE_INCLUDE_EXCLUDE_FILTER = {**SIMPLE_INCLUDE_FILTER, **SIMPLE_EXCLUDE_FILTER}
 
 
-def test_extract_include_exclude_filter_conf():
+def test_extract_include_exclude_filter_conf() -> None:
     """Test we can extract a filter from configuration without altering it."""
     include_filter = extract_include_exclude_filter_conf(SIMPLE_INCLUDE_FILTER)
     assert include_filter == {
@@ -109,7 +112,7 @@ def test_extract_include_exclude_filter_conf():
     }
 
 
-def test_merge_include_exclude_filters():
+def test_merge_include_exclude_filters() -> None:
     """Test we can merge two filters together."""
     include_exclude_filter_base = extract_include_exclude_filter_conf(
         SIMPLE_INCLUDE_EXCLUDE_FILTER
@@ -132,3 +135,24 @@ def test_merge_include_exclude_filters():
             CONF_ENTITY_GLOBS: {"climate.*", "not_climate.*"},
         },
     }
+
+
+async def test_an_empty_filter_raises() -> None:
+    """Test empty filter raises when not guarding with has_config."""
+    filters = Filters()
+    assert not filters.has_config
+    with pytest.raises(
+        RuntimeError,
+        match="No filter configuration provided, check has_config before calling this method",
+    ):
+        filters.states_metadata_entity_filter()
+    with pytest.raises(
+        RuntimeError,
+        match="No filter configuration provided, check has_config before calling this method",
+    ):
+        filters.states_entity_filter()
+    with pytest.raises(
+        RuntimeError,
+        match="No filter configuration provided, check has_config before calling this method",
+    ):
+        filters.events_entity_filter()

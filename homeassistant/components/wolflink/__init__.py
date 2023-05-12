@@ -121,8 +121,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
-    """
-    Fetch all available parameters with usage of WolfClient.
+    """Fetch all available parameters with usage of WolfClient.
 
     By default Reglertyp entity is removed because API will not provide value for this parameter.
     """

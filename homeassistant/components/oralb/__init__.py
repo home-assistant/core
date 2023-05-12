@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_poll(service_info: BluetoothServiceInfoBleak):
         # BluetoothServiceInfoBleak is defined in HA, otherwise would just pass it
-        # directly to the Xiaomi code
+        # directly to the oralb code
         # Make sure the device we have is one that we can connect with
         # in case its coming from a passive scanner
         if service_info.connectable:

@@ -1,5 +1,5 @@
 """Make sure that Schlage Sense is enumerated properly."""
-
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -11,7 +11,7 @@ from ..common import (
 )
 
 
-async def test_schlage_sense_setup(hass):
+async def test_schlage_sense_setup(hass: HomeAssistant) -> None:
     """Test that the accessory can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "schlage_sense.json")
     await setup_test_accessories(hass, accessories)

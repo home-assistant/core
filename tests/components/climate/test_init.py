@@ -11,11 +11,14 @@ from homeassistant.components.climate import (
     ClimateEntity,
     HVACMode,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_set_temp_schema_no_req(hass, caplog):
+async def test_set_temp_schema_no_req(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the set temperature schema with missing required data."""
     domain = "climate"
     service = "test_set_temperature"
@@ -30,7 +33,9 @@ async def test_set_temp_schema_no_req(hass, caplog):
     assert len(calls) == 0
 
 
-async def test_set_temp_schema(hass, caplog):
+async def test_set_temp_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the set temperature schema with ok required data."""
     domain = "climate"
     service = "test_set_temperature"
@@ -71,7 +76,7 @@ class MockClimateEntity(ClimateEntity):
         """Turn off."""
 
 
-async def test_sync_turn_on(hass):
+async def test_sync_turn_on(hass: HomeAssistant) -> None:
     """Test if async turn_on calls sync turn_on."""
     climate = MockClimateEntity()
     climate.hass = hass
@@ -82,7 +87,7 @@ async def test_sync_turn_on(hass):
     assert climate.turn_on.called
 
 
-async def test_sync_turn_off(hass):
+async def test_sync_turn_off(hass: HomeAssistant) -> None:
     """Test if async turn_off calls sync turn_off."""
     climate = MockClimateEntity()
     climate.hass = hass

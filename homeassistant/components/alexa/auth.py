@@ -103,7 +103,6 @@ class Auth:
         return dt.utcnow() < preemptive_expire_time
 
     async def _async_request_new_token(self, lwa_params):
-
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)
             async with async_timeout.timeout(10):

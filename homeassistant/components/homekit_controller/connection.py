@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Any
 
 from aiohomekit import Controller
+from aiohomekit.controller import TransportType
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
@@ -16,17 +17,20 @@ from aiohomekit.exceptions import (
 )
 from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic
-from aiohomekit.model.services import Service
+from aiohomekit.model.services import Service, ServicesTypes
 
+from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
+from .config_flow import normalize_hkid
 from .const import (
     CHARACTERISTIC_PLATFORMS,
     CONTROLLER,
@@ -268,6 +272,8 @@ class HKDevice:
                     self.hass,
                     self.async_update_available_state,
                     timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
+                    name=f"HomeKit Controller {self.unique_id} BLE availability "
+                    "check poll",
                 )
             )
             # BLE devices always get an RSSI sensor as well
@@ -282,7 +288,10 @@ class HKDevice:
         # in the log about concurrent polling.
         self.config_entry.async_on_unload(
             async_track_time_interval(
-                self.hass, self.async_request_update, self.pairing.poll_interval
+                self.hass,
+                self.async_request_update,
+                self.pairing.poll_interval,
+                name=f"HomeKit Controller {self.unique_id} availability check poll",
             )
         )
 
@@ -464,9 +473,22 @@ class HKDevice:
             device_registry.async_update_device(device.id, new_identifiers=identifiers)
 
     @callback
+    def async_migrate_ble_unique_id(self) -> None:
+        """Config entries from step_bluetooth used incorrect identifier for unique_id."""
+        unique_id = normalize_hkid(self.unique_id)
+        if unique_id != self.config_entry.unique_id:
+            _LOGGER.debug(
+                "Fixing incorrect unique_id: %s -> %s",
+                self.config_entry.unique_id,
+                unique_id,
+            )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, unique_id=unique_id
+            )
+
+    @callback
     def async_create_devices(self) -> None:
-        """
-        Build device registry entries for all accessories paired with the bridge.
+        """Build device registry entries for all accessories paired with the bridge.
 
         This is done as well as by the entities for 2 reasons. First, the bridge
         might not have any entities attached to it. Secondly there are stateless
@@ -536,8 +558,7 @@ class HKDevice:
         self.unreliable_serial_numbers = unreliable_serial_numbers
 
     async def async_process_entity_map(self) -> None:
-        """
-        Process the entity map and load any platforms or entities that need adding.
+        """Process the entity map and load any platforms or entities that need adding.
 
         This is idempotent and will be called at startup and when we detect metadata changes
         via the c# counter on the zeroconf record.
@@ -552,6 +573,8 @@ class HKDevice:
 
         # Remove any of the legacy serial numbers from the device registry
         self.async_remove_legacy_device_serial_numbers()
+
+        self.async_migrate_ble_unique_id()
 
         self.async_create_devices()
 
@@ -758,9 +781,61 @@ class HKDevice:
         await self.pairing.put_characteristics(characteristics)
 
     @property
+    def is_unprovisioned_thread_device(self) -> bool:
+        """Is this a thread capable device not connected by CoAP."""
+        if self.pairing.controller.transport_type != TransportType.BLE:
+            return False
+
+        if not self.entity_map.aid(1).services.first(
+            service_type=ServicesTypes.THREAD_TRANSPORT
+        ):
+            return False
+
+        return True
+
+    async def async_thread_provision(self) -> None:
+        """Migrate a HomeKit pairing to CoAP (Thread)."""
+        if self.pairing.controller.transport_type == TransportType.COAP:
+            raise HomeAssistantError("Already connected to a thread network")
+
+        if not (dataset := await async_get_preferred_dataset(self.hass)):
+            raise HomeAssistantError("No thread network credentials available")
+
+        await self.pairing.thread_provision(dataset)
+
+        try:
+            discovery = (
+                await self.hass.data[CONTROLLER]
+                .transports[TransportType.COAP]
+                .async_find(self.unique_id, timeout=30)
+            )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    "Connection": "CoAP",
+                    "AccessoryIP": discovery.description.address,
+                    "AccessoryPort": discovery.description.port,
+                },
+            )
+            _LOGGER.debug(
+                "%s: Found device on local network, migrating integration to Thread",
+                self.unique_id,
+            )
+
+        except AccessoryNotFoundError as exc:
+            _LOGGER.debug(
+                "%s: Failed to appear on local network as a Thread device, reverting to BLE",
+                self.unique_id,
+            )
+            raise HomeAssistantError("Could not migrate device to Thread") from exc
+
+        finally:
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
+    @property
     def unique_id(self) -> str:
-        """
-        Return a unique id for this accessory or bridge.
+        """Return a unique id for this accessory or bridge.
 
         This id is random and will change if a device undergoes a hard reset.
         """

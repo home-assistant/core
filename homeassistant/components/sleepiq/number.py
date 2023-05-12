@@ -56,7 +56,7 @@ def _get_actuator_name(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
 
 def _get_actuator_unique_id(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
     if actuator.side:
-        return f"{bed.id}_{actuator.side}_{actuator.actuator}"
+        return f"{bed.id}_{actuator.side.value}_{actuator.actuator}"
 
     return f"{bed.id}_{actuator.actuator}"
 
