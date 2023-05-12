@@ -116,9 +116,7 @@ class OAuth2FlowHandler(
         subscription_request: HttpRequest = service.subscriptions().list(
             part="snippet", mine=True, maxResults=50
         )
-        response = await self.hass.async_add_executor_job(
-            subscription_request.execute
-        )
+        response = await self.hass.async_add_executor_job(subscription_request.execute)
         selectable_channels = [
             SelectOptionDict(
                 value=subscription["snippet"]["resourceId"]["channelId"],

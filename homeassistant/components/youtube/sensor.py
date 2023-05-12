@@ -74,7 +74,7 @@ async def async_setup_entry(
 
 
 class YouTubeSensor(YouTubeEntity, SensorEntity):
-    """Representation of a Google Mail sensor."""
+    """Representation of a YouTube sensor."""
 
     _attr_has_entity_name = True
 
@@ -86,6 +86,7 @@ class YouTubeSensor(YouTubeEntity, SensorEntity):
         description: YouTubeSensorEntityDescription,
         channel: dict[str, Any],
     ) -> None:
+        """Initialize YouTube Sensor."""
         super().__init__(auth, description)
         self._channel = channel
         channel_id = channel["id"]
