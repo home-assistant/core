@@ -172,7 +172,7 @@ class ReolinkHost:
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
-            await self._poll_all_motion()
+            await self._async_poll_all_motion()
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
@@ -366,7 +366,7 @@ class ReolinkHost:
         webhook.async_unregister(self._hass, self.webhook_id)
         self.webhook_id = None
 
-    async def _poll_all_motion(self, *_) -> None:
+    async def _async_poll_all_motion(self, *_) -> None:
         """Poll motion and AI states until the first ONVIF push is received."""
         if self._webhook_reachable.is_set():
             # ONVIF push is working, stop polling
