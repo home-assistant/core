@@ -72,7 +72,7 @@ class WebSocketHandler:
         self.request = request
         self.wsock = web.WebSocketResponse(heartbeat=55)
         self._message_queue: deque = deque()
-        self._queue_ready: asyncio.Event = asyncio.Event()
+        self._ready_future: asyncio.Future[bool] | None = None
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
@@ -91,13 +91,16 @@ class WebSocketHandler:
         """Write outgoing messages."""
         # Exceptions if Socket disconnected or cancelled by connection handler
         message_queue = self._message_queue
-        queue_ready = self._queue_ready
         logger = self._logger
         wsock = self.wsock
+        loop = self.hass.loop
         try:
             with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
                 while not self.wsock.closed:
-                    await queue_ready.wait()
+                    if len(message_queue) == 0:
+                        self._ready_future = loop.create_future()
+                        await self._ready_future
+
                     if (process := message_queue.popleft()) is None:
                         return
 
@@ -109,8 +112,6 @@ class WebSocketHandler:
                         or not self.connection
                         or not self.connection.can_coalesce
                     ):
-                        if no_remaining_messages:
-                            queue_ready.clear()
                         logger.debug("Sending %s", message)
                         await wsock.send_str(message)
                         continue
@@ -123,7 +124,6 @@ class WebSocketHandler:
                             process if isinstance(process, str) else process()
                         )
 
-                    queue_ready.clear()
                     coalesced_messages = "[" + ",".join(messages) + "]"
                     logger.debug("Sending %s", coalesced_messages)
                     await wsock.send_str(coalesced_messages)
@@ -170,7 +170,8 @@ class WebSocketHandler:
             self._cancel()
 
         message_queue.append(message)
-        self._queue_ready.set()
+        if self._ready_future and not self._ready_future.done():
+            self._ready_future.set_result(True)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
@@ -367,7 +368,8 @@ class WebSocketHandler:
 
             try:
                 self._message_queue.append(None)
-                self._queue_ready.set()
+                if self._ready_future and not self._ready_future.done():
+                    self._ready_future.set_result(True)
                 # Make sure all error messages are written before closing
                 await self._writer_task
                 await wsock.close()
