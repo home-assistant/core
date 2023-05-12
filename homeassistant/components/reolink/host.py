@@ -393,16 +393,16 @@ class ReolinkHost:
                 self._api.port,
             )
         finally:
-            # After receiving the new motion states in the upstream lib,
-            # update the binary sensors with async_write_ha_state
-            # The same dispatch as for the webhook can be used
-            async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
-
             # schedule next poll
             if not self._hass.is_stopping:
                 self._cancel_poll = async_call_later(
                     self._hass, POLL_INTERVAL_NO_PUSH, self._poll_job
                 )
+
+        # After receiving the new motion states in the upstream lib,
+        # update the binary sensors with async_write_ha_state
+        # The same dispatch as for the webhook can be used
+        async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
 
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
