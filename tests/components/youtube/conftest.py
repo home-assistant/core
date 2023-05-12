@@ -73,13 +73,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
                 "scope": " ".join(scopes),
             },
         },
-        options={
-            "channels": {
-                "UC_x5XG1OV2P6uZZ5FSM9Ttw": {
-                    "upload_playlist_id": "UU_x5XG1OV2P6uZZ5FSM9Ttw"
-                }
-            }
-        },
+        options={"channels": ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]},
     )
 
 

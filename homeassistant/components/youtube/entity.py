@@ -16,14 +16,19 @@ class YouTubeChannelEntity(Entity):
         auth: AsyncConfigEntryAuth,
         description: EntityDescription,
         channel_name: str,
+        channel_id: str,
     ) -> None:
         """Initialize a Google Mail entity."""
         self.auth = auth
         self.entity_description = description
-        self._attr_unique_id = f"{auth.oauth_session.config_entry.entry_id}_{channel_name}_{description.key}"
+        self._attr_unique_id = (
+            f"{auth.oauth_session.config_entry.entry_id}_{channel_id}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, auth.oauth_session.config_entry.entry_id)},
+            identifiers={
+                (DOMAIN, f"{auth.oauth_session.config_entry.entry_id}_{channel_id}")
+            },
             manufacturer=MANUFACTURER,
             name=channel_name,
         )

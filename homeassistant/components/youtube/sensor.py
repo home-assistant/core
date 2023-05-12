@@ -82,7 +82,7 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         channel: dict[str, Any],
     ) -> None:
         """Initialize YouTube Sensor."""
-        super().__init__(auth, description, channel["title"])
+        super().__init__(auth, description, channel["title"], channel["id"])
         self._channel = channel
 
     @property
