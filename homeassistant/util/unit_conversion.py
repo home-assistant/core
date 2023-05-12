@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     UnitOfDataRate,
@@ -421,6 +423,8 @@ class UnitlessRatioConverter(BaseUnitConverter):
     NORMALIZED_UNIT = None
     _UNIT_CONVERSION: dict[str | None, float] = {
         None: 1,
+        CONCENTRATION_PARTS_PER_BILLION: 1000000000,
+        CONCENTRATION_PARTS_PER_MILLION: 1000000,
         PERCENTAGE: 100,
     }
     VALID_UNITS = {
