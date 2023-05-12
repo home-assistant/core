@@ -344,6 +344,11 @@ class EDL21:
         self._name = config.get(CONF_NAME)
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
+        LOGGER.debug(
+            "Initialized EDL21 for %s on %s",
+            config.get(CONF_NAME),
+            config[CONF_SERIAL_PORT],
+        )
 
     async def connect(self) -> None:
         """Connect to an EDL21 reader."""
@@ -352,6 +357,7 @@ class EDL21:
     def event(self, message_body) -> None:
         """Handle events from pysml."""
         assert isinstance(message_body, SmlGetListResponse)
+        LOGGER.debug("Received sml message for %s: %s", self._name, message_body)
 
         electricity_id = None
         for telegram in message_body.get("valList", []):
@@ -360,6 +366,7 @@ class EDL21:
                 break
 
         if electricity_id is None:
+            LOGGER.debug("No electricity id found in sml message for %s", self._name)
             return
         electricity_id = electricity_id.replace(" ", "")
 
