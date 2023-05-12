@@ -18,11 +18,14 @@ async def test_sensor(hass: HomeAssistant, setup_integration: ComponentSetup) ->
     """Test sensor."""
     await setup_integration()
 
-    # state = hass.states.get("sensor.google_for_developers_latest_upload")
-    # assert state
-    # assert state.name == "Google for Developers Latest upload"
-    # assert state.state == "What's new in Google Home in less than 1 minute"
-    # assert state.attributes["entity_picture"] == "https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg"
+    state = hass.states.get("sensor.google_for_developers_latest_upload")
+    assert state
+    assert state.name == "Google for Developers Latest upload"
+    assert state.state == "What's new in Google Home in less than 1 minute"
+    assert (
+        state.attributes["entity_picture"]
+        == "https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg"
+    )
 
     state = hass.states.get("sensor.google_for_developers_subscribers")
     assert state
