@@ -109,25 +109,25 @@ class HassEventLoop(uvloop.Loop):
     def __init__(self) -> None:
         """Initialize the event loop."""
         super().__init__()
-        self._cancellable_timers: set[asyncio.TimerHandle] = set()
+        self._scheduled: set[asyncio.TimerHandle] = set()
 
     def _prune_cancellable_timers(self) -> None:
-        temp_timers = self._cancellable_timers.copy()
+        temp_timers = self._scheduled.copy()
         for handle in temp_timers:
             if handle.cancelled() or handle.when() > self.time():
-                self._cancellable_timers.remove(handle)
+                self._scheduled.remove(handle)
 
     def _handle_cancellable_timer(
         self, timer: asyncio.TimerHandle, *args: ParamSpecArgs
     ) -> None:
         if (
-            timer not in self._cancellable_timers
+            timer not in self._scheduled
             and args is not None
             and len(args) > 0
             and isinstance(args[0], HassJob)
             and args[0].cancel_on_shutdown
         ):
-            self._cancellable_timers.add(timer)
+            self._scheduled.add(timer)
 
     def call_at(
         self,
@@ -183,12 +183,6 @@ class HassEventLoop(uvloop.Loop):
         """
         self._prune_cancellable_timers()
         return super().create_task(coro, *args, name=name)
-
-    def cancel_cancellable_timers(self) -> None:
-        """Cancel cancellable timers."""
-        for handle in self._cancellable_timers:
-            if not handle.cancelled():
-                handle.cancel()
 
 
 @callback

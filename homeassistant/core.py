@@ -843,13 +843,7 @@ class HomeAssistant:
         # pylint: disable-next=protected-access
         handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined]
         for handle in handles:
-            if (
-                not handle.cancelled()
-                and (args := handle._args)  # pylint: disable=protected-access
-                # pylint: disable-next=unidiomatic-typecheck
-                and type(job := args[0]) is HassJob
-                and job.cancel_on_shutdown
-            ):
+            if not handle.cancelled():
                 handle.cancel()
 
     def _async_log_running_tasks(self, stage: int) -> None:
