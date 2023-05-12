@@ -131,7 +131,7 @@ class WebSocketHandler:
                     debug("Sending %s", coalesced_messages)
                     await send_str(coalesced_messages)
         finally:
-            # Clean up the peaker checker when we shut down the writer
+            # Clean up the peak checker when we shut down the writer
             self._cancel_peak_checker()
 
     @callback
@@ -171,6 +171,7 @@ class WebSocketHandler:
                 message,
             )
             self._cancel()
+            return
 
         message_queue.append(message)
         if self._ready_future and not self._ready_future.done():
@@ -216,6 +217,7 @@ class WebSocketHandler:
             self._handle_task.cancel()
         if self._writer_task is not None:
             self._writer_task.cancel()
+        self._cancel_peak_checker()
 
     async def async_handle(self) -> web.WebSocketResponse:
         """Handle a websocket response."""
@@ -369,16 +371,14 @@ class WebSocketHandler:
 
             self._closing = True
 
+            self._message_queue.append(None)
+            if self._ready_future and not self._ready_future.done():
+                self._ready_future.set_result(False)
+
             try:
-                self._message_queue.append(None)
-                if self._ready_future and not self._ready_future.done():
-                    self._ready_future.set_result(True)
                 # Make sure all error messages are written before closing
                 await self._writer_task
                 await wsock.close()
-            except asyncio.QueueFull:  # can be raised by put_nowait
-                self._writer_task.cancel()
-
             finally:
                 if disconnect_warn is None:
                     self._logger.debug("Disconnected")

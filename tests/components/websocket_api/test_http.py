@@ -1,7 +1,7 @@
 """Test Websocket API http module."""
 import asyncio
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 from unittest.mock import patch
 
 from aiohttp import ServerDisconnectedError, WSMsgType, web
@@ -47,18 +47,19 @@ async def test_pending_msg_overflow(
 
 async def test_pending_msg_peak(
     hass: HomeAssistant,
+    mock_low_queue,
     mock_low_peak,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test pending msg overflow command."""
     orig_handler = http.WebSocketHandler
-    instance = None
+    setup_instance: http.WebSocketHandler | None = None
 
     def instantiate_handler(*args):
-        nonlocal instance
-        instance = orig_handler(*args)
-        return instance
+        nonlocal setup_instance
+        setup_instance = orig_handler(*args)
+        return setup_instance
 
     with patch(
         "homeassistant.components.websocket_api.http.WebSocketHandler",
@@ -66,12 +67,14 @@ async def test_pending_msg_peak(
     ):
         websocket_client = await hass_ws_client()
 
+    instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
+
+    # Make sure the call later is started
+    instance._send_message({})
+
     # Kill writer task and fill queue past peak
     for _ in range(5):
-        instance._to_write.put_nowait(None)
-
-    # Trigger the peak check
-    instance._send_message({})
+        instance._send_message({})
 
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=const.PENDING_MSG_PEAK_TIME + 1)
@@ -91,12 +94,12 @@ async def test_pending_msg_peak_but_does_not_overflow(
 ) -> None:
     """Test pending msg hits the low peak but recovers and does not overflow."""
     orig_handler = http.WebSocketHandler
-    instance: http.WebSocketHandler | None = None
+    setup_instance: http.WebSocketHandler | None = None
 
     def instantiate_handler(*args):
-        nonlocal instance
-        instance = orig_handler(*args)
-        return instance
+        nonlocal setup_instance
+        setup_instance = orig_handler(*args)
+        return setup_instance
 
     with patch(
         "homeassistant.components.websocket_api.http.WebSocketHandler",
@@ -104,18 +107,17 @@ async def test_pending_msg_peak_but_does_not_overflow(
     ):
         websocket_client = await hass_ws_client()
 
-    assert instance is not None
+    instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
 
     # Kill writer task and fill queue past peak
     for _ in range(5):
-        instance._to_write.put_nowait(None)
+        instance._message_queue.append(None)
 
     # Trigger the peak check
     instance._send_message({})
 
     # Clear the queue
-    while instance._to_write.qsize() > 0:
-        instance._to_write.get_nowait()
+    instance._message_queue.clear()
 
     # Trigger the peak clear
     instance._send_message({})
