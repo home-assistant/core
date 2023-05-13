@@ -307,15 +307,8 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._apply_coordinator_update()
-        super()._handle_coordinator_update()
-
-    def _apply_coordinator_update(self) -> None:
         self.data.update()
-        # Set Todoist-specific data that can't easily be grabbed
-        self._cal_data["all_tasks"] = [
-            task[SUMMARY] for task in self.data.all_project_tasks
-        ]
+        super()._handle_coordinator_update()
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -330,7 +323,7 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
     async def async_update(self) -> None:
         """Update all Todoist Calendars."""
         await super().async_update()
-        self._apply_coordinator_update()
+        self.data.update()
 
     async def async_get_events(
         self,
@@ -351,7 +344,7 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
         return {
             DUE_TODAY: self.data.event[DUE_TODAY],
             OVERDUE: self.data.event[OVERDUE],
-            ALL_TASKS: self._cal_data[ALL_TASKS],
+            ALL_TASKS: [task[SUMMARY] for task in self.data.all_project_tasks],
             PRIORITY: self.data.event[PRIORITY],
             LABELS: self.data.event[LABELS],
         }
