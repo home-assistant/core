@@ -36,9 +36,6 @@
     }
   },
   "options": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
-    },
     "step": {
       "init": {
         "data": {
@@ -61,7 +58,8 @@
     },
     "error": {
       "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
-      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found"
+      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
+      "already_configured": "Service with this configuration already exist"
     }
   },
   "issues": {
