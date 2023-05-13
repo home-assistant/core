@@ -4,5 +4,5 @@ bandit==1.7.4
 black==23.3.0
 codespell==2.2.2
 isort==5.12.0
-ruff==0.0.260
+ruff==0.0.262
 yamllint==1.28.0

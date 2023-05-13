@@ -5,7 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable
+from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -41,6 +41,8 @@ from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
+from lru import LRU  # pylint: disable=no-name-in-module
+import orjson
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -49,6 +51,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfLength,
@@ -59,6 +63,7 @@ from homeassistant.core import (
     State,
     callback,
     split_entity_id,
+    valid_domain,
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
@@ -121,10 +126,80 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
 )
 
+#
+# CACHED_TEMPLATE_STATES is a rough estimate of the number of entities
+# on a typical system. It is used as the initial size of the LRU cache
+# for TemplateState objects.
+#
+# If the cache is too small we will end up creating and destroying
+# TemplateState objects too often which will cause a lot of GC activity
+# and slow down the system. For systems with a lot of entities and
+# templates, this can reach 100000s of object creations and destructions
+# per minute.
+#
+# Since entity counts may grow over time, we will increase
+# the size if the number of entities grows via _async_adjust_lru_sizes
+# at the start of the system and every 10 minutes if needed.
+#
 CACHED_TEMPLATE_STATES = 512
 EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
+
+CACHED_TEMPLATE_LRU: MutableMapping[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
+CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
+    CACHED_TEMPLATE_STATES
+)
+ENTITY_COUNT_GROWTH_FACTOR = 1.2
+
+ORJSON_PASSTHROUGH_OPTIONS = (
+    orjson.OPT_PASSTHROUGH_DATACLASS | orjson.OPT_PASSTHROUGH_DATETIME
+)
+
+
+def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
+    """Return a TemplateState for a state without collecting."""
+    if template_state := CACHED_TEMPLATE_NO_COLLECT_LRU.get(state):
+        return template_state
+    template_state = _create_template_state_no_collect(hass, state)
+    CACHED_TEMPLATE_NO_COLLECT_LRU[state] = template_state
+    return template_state
+
+
+def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
+    """Return a TemplateState for a state that collects."""
+    if template_state := CACHED_TEMPLATE_LRU.get(state):
+        return template_state
+    template_state = TemplateState(hass, state)
+    CACHED_TEMPLATE_LRU[state] = template_state
+    return template_state
+
+
+def async_setup(hass: HomeAssistant) -> bool:
+    """Set up tracking the template LRUs."""
+
+    @callback
+    def _async_adjust_lru_sizes(_: Any) -> None:
+        """Adjust the lru cache sizes."""
+        new_size = int(
+            round(hass.states.async_entity_ids_count() * ENTITY_COUNT_GROWTH_FACTOR)
+        )
+        for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
+            # There is no typing for LRU
+            current_size = lru.get_size()  # type: ignore[attr-defined]
+            if new_size > current_size:
+                lru.set_size(new_size)  # type: ignore[attr-defined]
+
+    from .event import (  # pylint: disable=import-outside-toplevel
+        async_track_time_interval,
+    )
+
+    cancel = async_track_time_interval(
+        hass, _async_adjust_lru_sizes, timedelta(minutes=10)
+    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
+    return True
 
 
 @bind_hass
@@ -367,6 +442,7 @@ class Template:
         "_limited",
         "_strict",
         "_hash_cache",
+        "_renders",
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
@@ -383,6 +459,7 @@ class Template:
         self._limited: bool | None = None
         self._strict: bool | None = None
         self._hash_cache: int = hash(self.template)
+        self._renders: int = 0
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -452,6 +529,8 @@ class Template:
         If limited is True, the template is not allowed to access any function
         or filter depending on hass or the state machine.
         """
+        self._renders += 1
+
         if self.is_static:
             if not parse_result or self.hass and self.hass.config.legacy_templates:
                 return self.template
@@ -527,6 +606,8 @@ class Template:
 
         This method must be run in the event loop.
         """
+        self._renders += 1
+
         if self.is_static:
             return False
 
@@ -569,6 +650,7 @@ class Template:
         self, variables: TemplateVarsType = None, strict: bool = False, **kwargs: Any
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        self._renders += 1
         assert self.hass and _RENDER_INFO not in self.hass.data
 
         render_info = RenderInfo(self)
@@ -618,6 +700,8 @@ class Template:
 
         This method must be run in the event loop.
         """
+        self._renders += 1
+
         if self.is_static:
             return self.template
 
@@ -681,7 +765,7 @@ class Template:
 
     def __repr__(self) -> str:
         """Representation of Template."""
-        return 'Template("' + self.template + '")'
+        return f"Template<template=({self.template}) renders={self._renders}>"
 
 
 @cache
@@ -713,7 +797,7 @@ class AllStates:
         if name in _RESERVED_NAMES:
             return None
 
-        if not valid_entity_id(f"{name}.entity"):
+        if not valid_domain(name):
             raise TemplateError(f"Invalid domain name '{name}'")
 
         return _domain_states(self._hass, name)
@@ -969,21 +1053,33 @@ class TemplateStateFromEntityId(TemplateStateBase):
         return f"<template TemplateStateFromEntityId({self._entity_id})>"
 
 
+_create_template_state_no_collect = partial(TemplateState, collect=False)
+
+
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
     if (entity_collect := hass.data.get(_RENDER_INFO)) is not None:
         entity_collect.entities.add(entity_id)
-
-
-_template_state_no_collect = lru_cache(maxsize=CACHED_TEMPLATE_STATES)(
-    partial(TemplateState, collect=False)
-)
 
 
 def _state_generator(
     hass: HomeAssistant, domain: str | None
 ) -> Generator[TemplateState, None, None]:
     """State generator for a domain or all states."""
-    for state in hass.states.async_all(domain):
+    states = hass.states
+    # If domain is None, we want to iterate over all states, but making
+    # a copy of the dict is expensive. So we iterate over the protected
+    # _states dict instead. This is safe because we're not modifying it
+    # and everything is happening in the same thread (MainThread).
+    #
+    # We do not want to expose this method in the public API though to
+    # ensure it does not get misused.
+    #
+    container: Iterable[State]
+    if domain is None:
+        container = states._states.values()  # pylint: disable=protected-access
+    else:
+        container = states.async_all(domain)
+    for state in container:
         yield _template_state_no_collect(hass, state)
 
 
@@ -996,9 +1092,6 @@ def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
-
-
-_template_state = lru_cache(maxsize=CACHED_TEMPLATE_STATES)(TemplateState)
 
 
 def _get_template_state_from_state(
@@ -1942,9 +2035,38 @@ def from_json(value):
     return json_loads(value)
 
 
-def to_json(value, ensure_ascii=True):
+def _to_json_default(obj: Any) -> None:
+    """Disable custom types in json serialization."""
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
+def to_json(
+    value: Any,
+    ensure_ascii: bool = False,
+    pretty_print: bool = False,
+    sort_keys: bool = False,
+) -> str:
     """Convert an object to a JSON string."""
-    return json.dumps(value, ensure_ascii=ensure_ascii)
+    if ensure_ascii:
+        # For those who need ascii, we can't use orjson, so we fall back to the json library.
+        return json.dumps(
+            value,
+            ensure_ascii=ensure_ascii,
+            indent=2 if pretty_print else None,
+            sort_keys=sort_keys,
+        )
+
+    option = (
+        ORJSON_PASSTHROUGH_OPTIONS
+        | (orjson.OPT_INDENT_2 if pretty_print else 0)
+        | (orjson.OPT_SORT_KEYS if sort_keys else 0)
+    )
+
+    return orjson.dumps(
+        value,
+        option=option,
+        default=_to_json_default,
+    ).decode("utf-8")
 
 
 @pass_context
@@ -2086,10 +2208,11 @@ class LoggingUndefined(jinja2.Undefined):
 
 async def async_load_custom_templates(hass: HomeAssistant) -> None:
     """Load all custom jinja files under 5MiB into memory."""
-    return await hass.async_add_executor_job(_load_custom_templates, hass)
+    custom_templates = await hass.async_add_executor_job(_load_custom_templates, hass)
+    _get_hass_loader(hass).sources = custom_templates
 
 
-def _load_custom_templates(hass: HomeAssistant) -> None:
+def _load_custom_templates(hass: HomeAssistant) -> dict[str, str]:
     result = {}
     jinja_path = hass.config.path("custom_templates")
     all_files = [
@@ -2101,8 +2224,7 @@ def _load_custom_templates(hass: HomeAssistant) -> None:
         content = file.read_text()
         path = str(file.relative_to(jinja_path))
         result[path] = content
-
-    _get_hass_loader(hass).sources = result
+    return result
 
 
 @singleton(_HASS_LOADER)

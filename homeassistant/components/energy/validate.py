@@ -107,7 +107,7 @@ def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | 
     return None
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class ValidationIssue:
     """Error or warning message."""
 
@@ -118,7 +118,7 @@ class ValidationIssue:
     translation_placeholders: dict[str, str] | None = None
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class ValidationIssues:
     """Container for validation issues."""
 
@@ -142,7 +142,7 @@ class ValidationIssues:
         issue.affected_entities.add((affected_entity, detail))
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class EnergyPreferencesValidation:
     """Dictionary holding validation information."""
 

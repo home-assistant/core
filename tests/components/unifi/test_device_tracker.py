@@ -144,6 +144,9 @@ async def test_tracked_clients(
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 4
     assert hass.states.get("device_tracker.client_1").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.client_2").state == STATE_NOT_HOME
+    assert (
+        hass.states.get("device_tracker.client_5").attributes["host_name"] == "client_5"
+    )
 
     # Client on SSID not in SSID filter
     assert not hass.states.get("device_tracker.client_3")

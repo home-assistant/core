@@ -1,5 +1,6 @@
 """Test the imap config flow."""
 import asyncio
+import ssl
 from unittest.mock import AsyncMock, patch
 
 from aioimaplib import AioImapException
@@ -113,10 +114,16 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exc",
-    [asyncio.TimeoutError, AioImapException("")],
+    ("exc", "error"),
+    [
+        (asyncio.TimeoutError, "cannot_connect"),
+        (AioImapException(""), "cannot_connect"),
+        (ssl.SSLError, "ssl_error"),
+    ],
 )
-async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, exc: Exception, error: str
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -131,7 +138,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": error}
 
     # make sure we do not lose the user input if somethings gets wrong
     assert {
@@ -388,3 +395,102 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "already_configured"}
+
+
+async def test_import_flow_success(hass: HomeAssistant) -> None:
+    """Test a successful import of yaml."""
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client, patch(
+        "homeassistant.components.imap.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        mock_client.return_value.search.return_value = (
+            "OK",
+            [b""],
+        )
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "name": "IMAP",
+                "username": "email@email.com",
+                "password": "password",
+                "server": "imap.server.com",
+                "port": 993,
+                "folder": "INBOX",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "IMAP"
+    assert result2["data"] == {
+        "username": "email@email.com",
+        "password": "password",
+        "server": "imap.server.com",
+        "port": 993,
+        "charset": "utf-8",
+        "folder": "INBOX",
+        "search": "UnSeen UnDeleted",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_flow_connection_error(hass: HomeAssistant) -> None:
+    """Test a successful import of yaml."""
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server",
+        side_effect=AioImapException("Unexpected error"),
+    ), patch(
+        "homeassistant.components.imap.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "name": "IMAP",
+                "username": "email@email.com",
+                "password": "password",
+                "server": "imap.server.com",
+                "port": 993,
+                "folder": "INBOX",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.parametrize("cipher_list", ["python_default", "modern", "intermediate"])
+async def test_config_flow_with_cipherlist(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, cipher_list: str
+) -> None:
+    """Test with alternate cipherlist."""
+    config = MOCK_CONFIG.copy()
+    config["ssl_cipher_list"] = cipher_list
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = (
+            "OK",
+            [b""],
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "email@email.com"
+    assert result2["data"] == config
+    assert len(mock_setup_entry.mock_calls) == 1

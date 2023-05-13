@@ -71,7 +71,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_trigger_discovery(hass, discovered)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    async_track_time_interval(
+        hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
+    )
 
     return True
 

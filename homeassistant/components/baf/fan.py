@@ -39,7 +39,11 @@ async def async_setup_entry(
 class BAFFan(BAFEntity, FanEntity):
     """BAF ceiling fan component."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.DIRECTION
+        | FanEntityFeature.PRESET_MODE
+    )
     _attr_preset_modes = [PRESET_MODE_AUTO]
     _attr_speed_count = SPEED_COUNT
 
