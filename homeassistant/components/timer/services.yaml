@@ -45,6 +45,6 @@ change:
       description: Duration to add or subtract to the running timer
       default: 0
       required: true
-      example: "00:01:00 or 60"
+      example: "00:01:00, 60 or -60"
       selector:
         text:
