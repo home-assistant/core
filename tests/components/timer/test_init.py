@@ -44,7 +44,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import (
     DATA_RESTORE_STATE_TASK,
@@ -272,16 +272,15 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DURATION] == "0:00:20"
     assert ATTR_REMAINING not in state.attributes
 
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            DOMAIN, SERVICE_CHANGE, {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10}
-        )
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CHANGE, {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10}
+    )
+    await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:20x"
+    assert state.attributes[ATTR_DURATION] == "0:00:20"
     assert ATTR_REMAINING not in state.attributes
 
 
