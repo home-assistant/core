@@ -58,11 +58,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 ATTR_SYSTEM_MODE = "system_mode"
 ATTR_SYSTEM_NAME = "system_name"
 
-DATA_KIND_BRIDGE = "bridge"
-DATA_KIND_LISTENER = "listener"
-DATA_KIND_SENSOR = "sensor"
-DATA_KIND_USER_PREFERENCES = "user_preferences"
-
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
@@ -162,10 +157,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Get the latest data from the Notion API."""
         data = NotionData(hass=hass, entry=entry)
         tasks = {
-            DATA_KIND_BRIDGE: client.bridge.async_all(),
-            DATA_KIND_LISTENER: client.sensor.async_listeners(),
-            DATA_KIND_SENSOR: client.sensor.async_all(),
-            DATA_KIND_USER_PREFERENCES: client.user.async_preferences(),
+            "bridge": client.bridge.async_all(),
+            "listener": client.sensor.async_listeners(),
+            "sensor": client.sensor.async_all(),
+            "user_preferences": client.user.async_preferences(),
         }
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
