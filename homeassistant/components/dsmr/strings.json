@@ -42,15 +42,6 @@
   },
   "entity": {
     "sensor": {
-      "belgium_5min_gas_meter_reading": {
-        "name": "Gas consumption"
-      },
-      "belgium_max_current_per_phase": {
-        "name": "Max current per phase"
-      },
-      "belgium_max_power_per_phase": {
-        "name": "Max power per phase"
-      },
       "current_electricity_delivery": {
         "name": "Power production"
       },
@@ -83,9 +74,6 @@
         "name": "Energy consumption (tarif 2)"
       },
       "gas_meter_reading": {
-        "name": "Gas consumption"
-      },
-      "hourly_gas_meter_reading": {
         "name": "Gas consumption"
       },
       "instantaneous_active_power_l1_negative": {
@@ -126,6 +114,12 @@
       },
       "long_power_failure_count": {
         "name": "Long power failure count"
+      },
+      "max_current_per_phase": {
+        "name": "Max current per phase"
+      },
+      "max_power_per_phase": {
+        "name": "Max power per phase"
       },
       "short_power_failure_count": {
         "name": "Short power failure count"

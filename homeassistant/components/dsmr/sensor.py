@@ -312,7 +312,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="belgium_max_power_per_phase",
-        translation_key="belgium_max_power_per_phase",
+        translation_key="max_power_per_phase",
         obis_reference=obis_references.BELGIUM_MAX_POWER_PER_PHASE,
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
@@ -322,7 +322,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="belgium_max_current_per_phase",
-        translation_key="belgium_max_current_per_phase",
+        translation_key="max_current_per_phase",
         obis_reference=obis_references.BELGIUM_MAX_CURRENT_PER_PHASE,
         dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
@@ -350,7 +350,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="hourly_gas_meter_reading",
-        translation_key="hourly_gas_meter_reading",
+        translation_key="gas_meter_reading",
         obis_reference=obis_references.HOURLY_GAS_METER_READING,
         dsmr_versions={"4", "5", "5L"},
         is_gas=True,
@@ -360,7 +360,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="belgium_5min_gas_meter_reading",
-        translation_key="belgium_5min_gas_meter_reading",
+        translation_key="gas_meter_reading",
         obis_reference=obis_references.BELGIUM_5MIN_GAS_METER_READING,
         dsmr_versions={"5B"},
         is_gas=True,
