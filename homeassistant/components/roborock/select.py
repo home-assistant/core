@@ -20,10 +20,14 @@ from .device import RoborockCoordinatedEntity
 class RoborockSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
+    # The command that the select entity will send to the api.
     api_command: RoborockCommand
+    # Gets the current value of the select entity.
     value_fn: Callable[[Status], str]
+    # Gets all options of the select entity.
     options_lambda: Callable[[Status], list[str]]
-    option_lambda: Callable[[tuple[str, Status]], list[int]]
+    # Takes the value from the select entiy and converts it for the api.
+    parameter_lambda: Callable[[tuple[str, Status]], list[int]]
 
 
 @dataclass
@@ -42,7 +46,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         options_lambda=lambda data: data.water_box_mode.keys()
         if data.water_box_mode
         else None,
-        option_lambda=lambda data: [
+        parameter_lambda=lambda data: [
             v for k, v in data[1].water_box_mode.items() if k == data[0]
         ],
     ),
@@ -52,7 +56,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         api_command=RoborockCommand.SET_MOP_MODE,
         value_fn=lambda data: data.mop_mode.name,
         options_lambda=lambda data: data.mop_mode.keys() if data.mop_mode else None,
-        option_lambda=lambda data: [
+        parameter_lambda=lambda data: [
             v for k, v in data[1].mop_mode.items() if k == data[0]
         ],
     ),
@@ -101,7 +105,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         """Set the option."""
         await self.send(
             self.entity_description.api_command,
-            self.entity_description.option_lambda((option, self._device_status)),
+            self.entity_description.parameter_lambda((option, self._device_status)),
         )
 
     @property

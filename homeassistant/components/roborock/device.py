@@ -27,10 +27,6 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
         """Initialize the coordinated Roborock Device."""
         super().__init__(coordinator)
         self._attr_unique_id = unique_id
-        self._device_name = coordinator.device_info.device.name
-        self._device_id = coordinator.device_info.device.duid
-        self._device_model = coordinator.device_info.product.model
-        self._fw_version = coordinator.device_info.device.fv
 
     @property
     def _device_status(self) -> Status:
@@ -46,11 +42,11 @@ class RoborockCoordinatedEntity(CoordinatorEntity[RoborockDataUpdateCoordinator]
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            name=self._device_name,
-            identifiers={(DOMAIN, self._device_id)},
+            name=self.coordinator.device_info.device.name,
+            identifiers={(DOMAIN, self.coordinator.device_info.device.duid)},
             manufacturer="Roborock",
-            model=self._device_model,
-            sw_version=self._fw_version,
+            model=self.coordinator.device_info.product.model,
+            sw_version=self.coordinator.device_info.device.fv,
         )
 
     async def send(

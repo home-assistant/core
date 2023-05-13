@@ -89,8 +89,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        for coord in hass.data[DOMAIN][entry.entry_id].values():
-            await coord.release()
+        await asyncio.gather(
+            *(
+                coordinator.release()
+                for coordinator in hass.data[DOMAIN][entry.entry_id].values()
+            )
+        )
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
