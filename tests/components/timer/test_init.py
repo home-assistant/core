@@ -298,6 +298,15 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DURATION] == "0:00:10"
     assert ATTR_REMAINING not in state.attributes
 
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CHANGE,
+            {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_START,
@@ -383,9 +392,10 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     hass.bus.async_listen(EVENT_TIMER_PAUSED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_FINISHED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_CHANGED, fake_event_listener)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -396,7 +406,29 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     assert results[-1].event_type == EVENT_TIMER_STARTED
     assert len(results) == 1
 
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE,
+        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+
+    assert results[-1].event_type == EVENT_TIMER_CHANGED
+    assert len(results) == 2
+
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
@@ -404,7 +436,7 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     assert state.state == STATUS_IDLE
 
     assert results[-1].event_type == EVENT_TIMER_FINISHED
-    assert len(results) == 2
+    assert len(results) == 3
 
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:

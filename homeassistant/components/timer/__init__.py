@@ -337,14 +337,16 @@ class Timer(collection.CollectionEntity, RestoreEntity):
                 f"Timer {self.entity_id} is not running, only active timers can be changed"
             )
 
-        if self._end and self._duration:
-            self._end += duration
-            self._duration += duration
-            self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
-            self.hass.bus.async_fire(
-                EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id}
-            )
-            self.async_write_ha_state()
+        self._listener()
+        self._listener = None
+        self._end += duration
+        self._duration += duration
+        self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
+        self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
+        self._listener = async_track_point_in_utc_time(
+            self.hass, self._async_finished, self._end
+        )
+        self.async_write_ha_state()
 
     @callback
     def async_pause(self):
