@@ -1384,6 +1384,32 @@ def test_valid_entity_id() -> None:
         assert ha.valid_entity_id(valid), valid
 
 
+def test_valid_domain() -> None:
+    """Test valid domain."""
+    for invalid in [
+        "_light",
+        ".kitchen",
+        ".light.kitchen",
+        "light_.kitchen",
+        "._kitchen",
+        "light.",
+        "light.kitchen__ceiling",
+        "light.kitchen_yo_",
+        "light.kitchen.",
+        "Light",
+    ]:
+        assert not ha.valid_domain(invalid), invalid
+
+    for valid in [
+        "1",
+        "1light",
+        "a",
+        "input_boolean",
+        "light",
+    ]:
+        assert ha.valid_domain(valid), valid
+
+
 async def test_additional_data_in_core_config(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
