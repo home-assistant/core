@@ -507,7 +507,10 @@ class ZWaveListSensor(ZwaveSensorBase):
         )
 
         # Entity class attributes
-        self._attr_name = self.generate_name(include_value_name=True)
+        self._attr_name = self.generate_name(
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
+        )
 
     @property
     def device_class(self) -> SensorDeviceClass | None:

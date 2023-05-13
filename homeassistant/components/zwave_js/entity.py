@@ -126,7 +126,7 @@ class ZWaveBaseEntity(Entity):
         self,
         include_value_name: bool = False,
         alternate_value_name: str | None = None,
-        additional_info: list[str] | None = None,
+        additional_info: list[str | None] | None = None,
         name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
@@ -155,8 +155,11 @@ class ZWaveBaseEntity(Entity):
                 or self.info.primary_value.property_name
                 or ""
             )
+
         name = f"{name} {value_name}".strip()
-        name = f"{name} {' '.join(additional_info or [])}".strip()
+        # Only include non empty additional info
+        if additional_info := [item for item in (additional_info or []) if item]:
+            name = f"{name} {' '.join(additional_info)}"
         # append endpoint if > 1
         if (
             self.info.primary_value.endpoint is not None

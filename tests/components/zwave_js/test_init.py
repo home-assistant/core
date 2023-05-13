@@ -1362,8 +1362,10 @@ async def test_disabled_entity_on_value_removed(
     er_reg = er.async_get(hass)
 
     # re-enable this default-disabled entity
-    sensor_cover_entity = "sensor.4_in_1_sensor_cover_status"
-    idle_cover_status_button_entity = "button.4_in_1_sensor_idle_cover_status"
+    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
+    idle_cover_status_button_entity = (
+        "button.4_in_1_sensor_idle_home_security_cover_status"
+    )
     er_reg.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
     await hass.async_block_till_done()
 

@@ -122,7 +122,9 @@ class ZWaveNotificationIdleButton(ZWaveBaseEntity, ButtonEntity):
         """Initialize a ZWaveNotificationIdleButton entity."""
         super().__init__(config_entry, driver, info)
         self._attr_name = self.generate_name(
-            include_value_name=True, name_prefix="Idle"
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
+            name_prefix="Idle",
         )
         self._attr_unique_id = f"{self._attr_unique_id}.notification_idle"
 
