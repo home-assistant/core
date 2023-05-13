@@ -78,9 +78,9 @@ class NotionSensor(NotionEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the value reported by the sensor.
 
-        The Notion API only returns a localized string for temperature (like "70°" or
-        "70°F"); in this case, we extract just the digits.
+        The Notion API only returns a localized string for temperature (e.g. "70°"); we
+        simply remove the degree symbol:
         """
         if not self.listener.status_localized:
             return None
-        return "".join(c for c in self.listener.status_localized.state if c.isdigit())
+        return self.listener.status_localized.state[:-1]
