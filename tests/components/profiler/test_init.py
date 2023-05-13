@@ -15,6 +15,7 @@ from homeassistant.components.profiler import (
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
+    SERVICE_LOG_SSL,
     SERVICE_LOG_THREAD_FRAMES,
     SERVICE_LRU_STATS,
     SERVICE_MEMORY,
@@ -387,3 +388,56 @@ async def test_log_object_sources(
         await hass.services.async_call(
             DOMAIN, SERVICE_STOP_LOG_OBJECT_SOURCES, {}, blocking=True
         )
+
+
+async def test_log_ssl(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test logging ssl objects."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    class SSLProtocol:
+        def __init__(self):
+            """Mock an SSLProtocol."""
+            self._transport = None
+
+    class SSLObject:
+        def __init__(self):
+            """Mock an SSLObject."""
+            self._transport = None
+
+        def getpeercert(self, binary_form=False):
+            """Mock getpeercert."""
+            return {"subject": (("commonName", "test"),)}
+
+        def server_hostname(self):
+            """Mock server_hostname."""
+            return "test"
+
+    class _SSLProtocolTransport:
+        def __init__(self):
+            """Mock an _SSLProtocolTransport."""
+
+    ssl_protocol = SSLProtocol()
+    ssl_object = SSLObject()
+    ssl_protocol_transport = _SSLProtocolTransport()
+    assert hass.services.has_service(DOMAIN, SERVICE_LOG_SSL)
+
+    def _mock_by_type(type_):
+        if type_ == "SSLProtocol":
+            return [ssl_protocol]
+        if type_ == "SSLObject":
+            return [ssl_object]
+        if type_ == "_SSLProtocolTransport":
+            return [ssl_protocol_transport]
+        raise ValueError("Unknown type")
+
+    with patch("objgraph.by_type", side_effect=_mock_by_type):
+        await hass.services.async_call(DOMAIN, SERVICE_LOG_SSL, blocking=True)
+
+    assert "SSLProtocol" in caplog.text
+    assert "SSLObject" in caplog.text
+    assert "_SSLProtocolTransport" in caplog.text
