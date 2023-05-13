@@ -146,11 +146,11 @@ class ElectraClimateEntity(ClimateEntity):
         )
 
         # This attribute will be used to mark the time we communicated
-	# a command to the API
-	self._last_state_update = 0  
-        
-	# count the consecutive update failures, used to print error log
-	self._consecutive_failures = 0  
+        # a command to the API
+        self._last_state_update = 0
+
+        # count the consecutive update failures, used to print error log
+        self._consecutive_failures = 0
         self._skip_update = True
         self._was_available = True
 
@@ -167,8 +167,9 @@ class ElectraClimateEntity(ClimateEntity):
     async def async_update(self) -> None:
         """Update Electra device."""
 
-        # if we communicated a change to the API in the last API_DELAY seconds, don't receive any updates-
-        # as the API takes few seconds until it start sending it last recent change
+        # if we communicated a change to the API in the last API_DELAY seconds,
+        # then don't receive any updates as the API takes few seconds
+        # until it start sending it last recent change
         if self._last_state_update and int(time.time()) < (
             self._last_state_update + API_DELAY
         ):
