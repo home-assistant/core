@@ -190,7 +190,8 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     def _update_states_livetv(self) -> None:
-        self._attr_state = MediaPlayerState.PLAYING
+        if (self.state == MediaPlayerState.OFF) or (not self._client.is_on):
+            return
         channel_name: str | None = (
             cast(str, self._client.current_channel.get("channelName"))
             if (self._client.current_channel["channelName"] is not None)
@@ -204,7 +205,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         )
         channel_type_name: str | None = (
             cast(str, self._client.current_channel.get("channelTypeName"))
-            if (self._client.current_channel["channelTypeName"] is not None)
+            if (self._client.current_channel.get("channelTypeName") is not None)
             else None
         )
         if channel_type_name is not None:
@@ -213,7 +214,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             )
         channel_mode_name: str | None = (
             cast(str, self._client.current_channel.get("channelModeName"))
-            if (self._client.current_channel["channelModeName"] is not None)
+            if (self._client.current_channel.get("channelModeName") is not None)
             else None
         )
         if channel_mode_name is not None:
@@ -222,7 +223,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             )
         is_hevc_channel: bool | None = (
             cast(bool, self._client.current_channel.get("isHEVCChannel"))
-            if (self._client.current_channel["isHEVCChannel"] is not None)
+            if (self._client.current_channel.get("isHEVCChannel") is not None)
             else None
         )
         if is_hevc_channel is not None:
@@ -231,7 +232,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             )
         hybrid_tv_type: str | None = (
             cast(str, self._client.current_channel.get("hybridtvType"))
-            if (self._client.current_channel["hybridtvType"] is not None)
+            if (self._client.current_channel.get("hybridtvType") is not None)
             else None
         )
         if hybrid_tv_type is not None:
@@ -242,10 +243,10 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             has_adult_flag: bool = False
             for channel in self._client.channels:
                 if channel_id == channel["channelId"]:
-                    is_tv = cast(bool, channel["TV"])
-                    is_radio = cast(bool, channel["Radio"])
+                    is_tv = cast(bool, channel.get("TV"))
+                    is_radio = cast(bool, channel.get("Radio"))
                     # channel_logo_size = cast(str, channel["channelLogoSize"])         #i.e: "H133x100"
-                    img_url: str = cast(str, channel["imgUrl"])
+                    img_url: str = cast(str, channel.get("imgUrl"))
                     if (
                         (img_url is not None)
                         and (len(img_url) > 3)
@@ -260,7 +261,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 strtime_pattern = "%Y,%m,%d,%H,%M,%S"
             channel = (
                 (self._client.channel_info.get("channel"))
-                if (self._client.channel_info["channel"] is not None)
+                if (self._client.channel_info.get("channel") is not None)
                 else None
             )
             if (
@@ -268,13 +269,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 and (channel["adultFlag"] is not None)
                 and (channel["adultFlag"] > 0)
             ):
-                has_adult_flag = cast(str, channel["adultFlag"]) != "0"
+                has_adult_flag = cast(str, channel.get("adultFlag")) != "0"
                 self._attr_extra_state_attributes.update(
                     {"has_adult_flag": has_adult_flag}
                 )
             programs: list = (
                 self._client.channel_info.get("programList")
-                if (self._client.channel_info["programList"] is not None)
+                if (self._client.channel_info.get("programList") is not None)
                 else None
             )
             if (programs is not None) and (strtime_pattern is not None):
@@ -321,6 +322,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                     genre = cast(str, program["genre"])
                     if (genre is not None) and (len(genre) > 0):
                         self._attr_media_genre = genre
+
+                    self._attr_state = MediaPlayerState.PLAYING
+
             if (self._attr_media_title is None) or (len(self._attr_media_title) <= 0):
                 self._attr_media_title = self._attr_media_channel
 
@@ -343,10 +347,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         if (
             (self.language_code == "")
-            and (self._client.software_info["language_code"] is not None)
-            and (len(self._client.software_info["language_code"]) > 4)
+            and (self._client.software_info is not None)
+            and (self._client.software_info.get("language_code") is not None)
+            and (len(self._client.software_info.get("language_code")) > 4)
         ):
-            self.language_code = cast(str, self._client.software_info["language_code"])
+            self.language_code = cast(
+                str, self._client.software_info.get("language_code")
+            )
 
         self._attr_media_content_type = None
         if self._client.current_app_id == LIVE_TV_APP_ID:
@@ -363,13 +370,17 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         if (self._client.current_app_id == LIVE_TV_APP_ID) and (
             self._client.current_channel is not None
         ):
+            self._attr_media_title = cast(
+                str, self._client.current_channel.get("channelName")
+            )
             self._update_states_livetv()
-            if self._attr_extra_state_attributes["is_tv"]:
+            if self._attr_extra_state_attributes.get("is_tv"):
                 supported &= ~MediaPlayerEntityFeature.STOP
                 supported &= ~MediaPlayerEntityFeature.PAUSE
                 supported &= ~MediaPlayerEntityFeature.PLAY
                 supported &= ~MediaPlayerEntityFeature.PLAY_MEDIA
 
+        self._attr_media_image_url = None
         if self._client.current_app_id in self._client.apps:
             icon: str = self._client.apps[self._client.current_app_id]["largeIcon"]
             if not icon.startswith("http"):
@@ -392,7 +403,11 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             name=self.name,
         )
 
-        if self._client.system_info is not None or self.state != MediaPlayerState.OFF:
+        if (
+            (self._client.system_info is not None)
+            and (self._client.software_info is not None)
+            and (self.state != MediaPlayerState.OFF)
+        ):
             maj_v = self._client.software_info.get("major_ver")
             min_v = self._client.software_info.get("minor_ver")
             if maj_v and min_v:
@@ -401,7 +416,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             if model := self._client.system_info.get("modelName"):
                 self._attr_device_info["model"] = model
 
-        if self._client.sound_output is not None or self.state != MediaPlayerState.OFF:
+        if (self._client.sound_output is not None) and (
+            self.state != MediaPlayerState.OFF
+        ):
             self._attr_extra_state_attributes.update(
                 {ATTR_SOUND_OUTPUT: self._client.sound_output}
             )
