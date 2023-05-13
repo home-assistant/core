@@ -17,6 +17,7 @@ from homeassistant.components.timer import (
     DEFAULT_DURATION,
     DOMAIN,
     EVENT_TIMER_CANCELLED,
+    EVENT_TIMER_CHANGED,
     EVENT_TIMER_FINISHED,
     EVENT_TIMER_PAUSED,
     EVENT_TIMER_RESTARTED,
@@ -169,26 +170,88 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
     hass.bus.async_listen(EVENT_TIMER_PAUSED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_FINISHED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_CHANGED, fake_event_listener)
 
     steps = [
-        {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_STARTED},
-        {"call": SERVICE_PAUSE, "state": STATUS_PAUSED, "event": EVENT_TIMER_PAUSED},
-        {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_RESTARTED},
-        {"call": SERVICE_CANCEL, "state": STATUS_IDLE, "event": EVENT_TIMER_CANCELLED},
-        {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_STARTED},
-        {"call": SERVICE_FINISH, "state": STATUS_IDLE, "event": EVENT_TIMER_FINISHED},
-        {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_STARTED},
-        {"call": SERVICE_PAUSE, "state": STATUS_PAUSED, "event": EVENT_TIMER_PAUSED},
-        {"call": SERVICE_CANCEL, "state": STATUS_IDLE, "event": EVENT_TIMER_CANCELLED},
-        {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_STARTED},
-        {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_RESTARTED},
+        {
+            "call": SERVICE_START,
+            "state": STATUS_ACTIVE,
+            "event": EVENT_TIMER_STARTED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_PAUSE,
+            "state": STATUS_PAUSED,
+            "event": EVENT_TIMER_PAUSED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_START,
+            "state": STATUS_ACTIVE,
+            "event": EVENT_TIMER_RESTARTED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_CANCEL,
+            "state": STATUS_IDLE,
+            "event": EVENT_TIMER_CANCELLED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_START,
+            "state": STATUS_ACTIVE,
+            "event": EVENT_TIMER_STARTED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_FINISH,
+            "state": STATUS_IDLE,
+            "event": EVENT_TIMER_FINISHED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_START,
+            "state": STATUS_ACTIVE,
+            "event": EVENT_TIMER_STARTED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_PAUSE,
+            "state": STATUS_PAUSED,
+            "event": EVENT_TIMER_PAUSED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_CANCEL,
+            "state": STATUS_IDLE,
+            "event": EVENT_TIMER_CANCELLED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_START,
+            "state": STATUS_ACTIVE,
+            "event": EVENT_TIMER_STARTED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_CHANGE,
+            "state": STATUS_ACTIVE,
+            "event": EVENT_TIMER_CHANGED,
+            "data": {CONF_DURATION: 15},
+        },
+        {
+            "call": SERVICE_START,
+            "state": STATUS_ACTIVE,
+            "event": EVENT_TIMER_RESTARTED,
+            "data": {},
+        },
     ]
 
     expectedEvents = 0
     for step in steps:
         if step["call"] is not None:
             await hass.services.async_call(
-                DOMAIN, step["call"], {CONF_ENTITY_ID: "timer.test1"}
+                DOMAIN, step["call"], {CONF_ENTITY_ID: "timer.test1", **step["data"]}
             )
             await hass.async_block_till_done()
 
