@@ -45,7 +45,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.restore_state import (
     DATA_RESTORE_STATE_TASK,
@@ -62,7 +62,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -247,11 +247,14 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
         },
     ]
 
-    expectedEvents = 0
+    expected_events = 0
     for step in steps:
         if step["call"] is not None:
             await hass.services.async_call(
-                DOMAIN, step["call"], {CONF_ENTITY_ID: "timer.test1", **step["data"]}
+                DOMAIN,
+                step["call"],
+                {CONF_ENTITY_ID: "timer.test1", **step["data"]},
+                blocking=True,
             )
             await hass.async_block_till_done()
 
@@ -261,9 +264,9 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             assert state.state == step["state"]
 
         if step["event"] is not None:
-            expectedEvents += 1
+            expected_events += 1
             assert results[-1].event_type == step["event"]
-            assert len(results) == expectedEvents
+            assert len(results) == expected_events
 
 
 async def test_start_service(hass: HomeAssistant) -> None:
@@ -276,7 +279,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DURATION] == "0:00:10"
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -286,7 +289,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_REMAINING] == "0:00:10"
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -296,7 +299,10 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert ATTR_REMAINING not in state.attributes
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 15}
+        DOMAIN,
+        SERVICE_START,
+        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 15},
+        blocking=True,
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -306,7 +312,10 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_REMAINING] == "0:00:15"
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CHANGE, {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 15}
+        DOMAIN,
+        SERVICE_CHANGE,
+        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 15},
+        blocking=True,
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -316,7 +325,10 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_REMAINING] == "0:00:30"
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CHANGE, {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -10}
+        DOMAIN,
+        SERVICE_CHANGE,
+        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -10},
+        blocking=True,
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -326,7 +338,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_REMAINING] == "0:00:20"
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}
+        DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
@@ -335,10 +347,14 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DURATION] == "0:00:20"
     assert ATTR_REMAINING not in state.attributes
 
-    await hass.services.async_call(
-        DOMAIN, SERVICE_CHANGE, {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10}
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CHANGE,
+            {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 10},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
     assert state
