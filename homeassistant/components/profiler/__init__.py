@@ -1,10 +1,13 @@
 """The profiler integration."""
 import asyncio
+from asyncio.sslproto import SSLProtocol, _SSLProtocolTransport
 from contextlib import suppress
 from datetime import timedelta
 from functools import _lru_cache_wrapper
+import json
 import logging
 import reprlib
+import ssl
 import sys
 import threading
 import time
@@ -19,8 +22,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN
@@ -35,6 +40,7 @@ SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
 SERVICE_LRU_STATS = "lru_stats"
 SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
 SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
+SERVICE_LOG_SSL = "log_ssl"
 
 _LRU_CACHE_WRAPPER_OBJECT = _lru_cache_wrapper.__name__
 _SQLALCHEMY_LRU_OBJECT = "LRUCache"
@@ -58,6 +64,7 @@ SERVICES = (
     SERVICE_LRU_STATS,
     SERVICE_LOG_THREAD_FRAMES,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
+    SERVICE_LOG_SSL,
 )
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
@@ -81,6 +88,9 @@ async def async_setup_entry(  # noqa: C901
     domain_data = hass.data[DOMAIN] = {}
 
     async def _async_run_profile(call: ServiceCall) -> None:
+        _LOGGER.warning(
+            "Modules: %s", json.dumps(sys.modules, indent=2, cls=ExtendedJSONEncoder)
+        )
         async with lock:
             await _async_generate_profile(hass, call)
 
@@ -208,6 +218,15 @@ async def async_setup_entry(  # noqa: C901
                             maybe_lru.get_stats(),
                         )
 
+        _LOGGER.critical(
+            "Cache stats for LRU template_states: %s",
+            template.CACHED_TEMPLATE_LRU.get_stats(),  # type: ignore[attr-defined]
+        )
+        _LOGGER.critical(
+            "Cache stats for LRU template_states_no_collect: %s",
+            template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_stats(),  # type: ignore[attr-defined]
+        )
+
         for lru in objgraph.by_type(_SQLALCHEMY_LRU_OBJECT):
             if (data := getattr(lru, "_data", None)) and isinstance(data, dict):
                 for key, value in dict(data).items():
@@ -254,6 +273,64 @@ async def async_setup_entry(  # noqa: C901
         finally:
             arepr.maxstring = original_maxstring
             arepr.maxother = original_maxother
+
+    async def _async_dump_ssl(call: ServiceCall) -> None:
+        """Log all ssl objects in memory."""
+        # Imports deferred to avoid loading modules
+        # in memory since usually only one part of this
+        # integration is used at a time
+        import objgraph  # pylint: disable=import-outside-toplevel
+
+        for obj in objgraph.by_type("SSLObject"):
+            obj = cast(ssl.SSLObject, obj)
+            try:
+                cert = obj.getpeercert()
+            except ValueError as ex:
+                cert = str(ex)
+            _LOGGER.critical(
+                "SSLObject %s server_hostname=%s peercert=%s",
+                obj,
+                obj.server_hostname,
+                cert,
+            )
+
+        for obj in objgraph.by_type("SSLProtocol"):
+            obj = cast(SSLProtocol, obj)
+            sock = None
+            if transport := obj._transport:  # pylint: disable=protected-access
+                sock = transport.get_extra_info("socket")
+            _LOGGER.critical(
+                "SSLProtocol %s socket=%s",
+                obj,
+                sock,
+            )
+
+        for obj in objgraph.by_type("_SSLProtocolTransport"):
+            obj = cast(_SSLProtocolTransport, obj)
+            try:
+                ssl_proto = obj.get_protocol()
+            except AttributeError:
+                ssl_proto = None
+            try:
+                sock = obj.get_extra_info("socket")
+            except AttributeError:
+                sock = None
+            try:
+                ssl_object = obj.get_extra_info("ssl_object")
+            except AttributeError:
+                ssl_object = None
+            try:
+                peercert = obj.get_extra_info("peercert")
+            except (AttributeError, ValueError) as ex:
+                peercert = str(ex)
+            _LOGGER.critical(
+                "_SSLProtocolTransport %s ssl_proto=%s ssl_object=%s peercert=%s sock=%s",
+                obj,
+                ssl_proto,
+                ssl_object,
+                peercert,
+                sock,
+            )
 
     async_register_admin_service(
         hass,
@@ -347,6 +424,13 @@ async def async_setup_entry(  # noqa: C901
         DOMAIN,
         SERVICE_LOG_EVENT_LOOP_SCHEDULED,
         _async_dump_scheduled,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_LOG_SSL,
+        _async_dump_ssl,
     )
 
     return True

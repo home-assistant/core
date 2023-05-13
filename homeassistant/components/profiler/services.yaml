@@ -85,3 +85,6 @@ log_thread_frames:
 log_event_loop_scheduled:
   name: Log event loop scheduled
   description: Log what is scheduled in the event loop.
+log_ssl:
+  name: Log SSL objects in memory
+  description: Log SSL objects to look for leaks.
