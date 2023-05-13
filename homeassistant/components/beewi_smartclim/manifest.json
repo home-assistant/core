@@ -7,11 +7,11 @@
       "connectable": false
     }
   ],
-  "codeowners": ["@DavTechNet"],
+  "codeowners": ["@f-davin"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/beewi_smartclim",
   "iot_class": "local_push",
   "loggers": ["beewi_smartclim"],
-  "requirements": ["beewi-smartcli-ble==0.0.4"]
+  "requirements": ["beewi-smartcli-ble==0.1.0"]
 }
