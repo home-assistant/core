@@ -141,7 +141,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         """Set vacuum fan speed."""
         await self.send(
             RoborockCommand.SET_CUSTOM_MODE,
-            [v for k, v in self._device_status.fan_power.items() if k == fan_speed],
+            [self._device_status.fan_power.as_dict().get(fan_speed)],
         )
         await self.coordinator.async_request_refresh()
 
