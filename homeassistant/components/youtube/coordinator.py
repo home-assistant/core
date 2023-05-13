@@ -14,13 +14,21 @@ from . import AsyncConfigEntryAuth
 from .const import CONF_CHANNELS, DOMAIN, LOGGER
 
 
+def get_upload_playlist_id(channel_id: str) -> str:
+    """Return the playlist id with the uploads of the channel.
+
+    Replacing the UC in the channel id (UCxxxxxxxxxxxx) with UU is the way to do it without extra request (UUxxxxxxxxxxxx).
+    """
+    return channel_id.replace("UC", "UU", 1)
+
+
 class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
     """A YouTube Data Update Coordinator."""
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, auth: AsyncConfigEntryAuth
     ) -> None:
-        """Initialize the Yale hub."""
+        """Initialize the YouTube data coordinator."""
         self.entry = entry
         self._auth = auth
         super().__init__(
@@ -50,9 +58,9 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _get_latest_video(self, channel_id: str) -> dict[str, Any]:
         service = await self._auth.get_resource()
-        playlist_id = channel_id.replace("UC", "UU", 1)
+        playlist_id = get_upload_playlist_id(channel_id)
         playlist_request: HttpRequest = service.playlistItems().list(
-            part="snippet,contentDetails", playlistId=playlist_id
+            part="snippet,contentDetails", playlistId=playlist_id, maxResults=1
         )
         response: dict = await self.hass.async_add_executor_job(
             playlist_request.execute

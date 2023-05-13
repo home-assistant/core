@@ -1,10 +1,10 @@
 """Entity representing a YouTube account."""
 from __future__ import annotations
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, MANUFACTURER
 
 
@@ -13,22 +13,17 @@ class YouTubeChannelEntity(Entity):
 
     def __init__(
         self,
-        auth: AsyncConfigEntryAuth,
+        entry: ConfigEntry,
         description: EntityDescription,
         channel_name: str,
         channel_id: str,
     ) -> None:
         """Initialize a Google Mail entity."""
-        self.auth = auth
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{auth.oauth_session.config_entry.entry_id}_{channel_id}_{description.key}"
-        )
+        self._attr_unique_id = f"{entry.entry_id}_{channel_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (DOMAIN, f"{auth.oauth_session.config_entry.entry_id}_{channel_id}")
-            },
+            identifiers={(DOMAIN, f"{entry.entry_id}_{channel_id}")},
             manufacturer=MANUFACTURER,
             name=channel_name,
         )

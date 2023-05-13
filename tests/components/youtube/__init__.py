@@ -26,7 +26,7 @@ class MockChannels:
         id: str | None = None,
         mine: bool | None = None,
         maxResults: int | None = None,
-    ):
+    ) -> MockRequest:
         """Return a fixture."""
         return MockRequest(fixture="youtube/get_channel.json")
 
@@ -34,7 +34,12 @@ class MockChannels:
 class MockPlaylistItems:
     """Mock object for playlist items."""
 
-    def list(self, part: str, playlistId: str):
+    def list(
+        self,
+        part: str,
+        playlistId: str,
+        maxResults: int | None = None,
+    ) -> MockRequest:
         """Return a fixture."""
         return MockRequest(fixture="youtube/get_playlist_items.json")
 
@@ -42,7 +47,7 @@ class MockPlaylistItems:
 class MockSubscriptions:
     """Mock object for subscriptions."""
 
-    def list(self, part: str, mine: bool, maxResults: int | None = None):
+    def list(self, part: str, mine: bool, maxResults: int | None = None) -> MockRequest:
         """Return a fixture."""
         return MockRequest(fixture="youtube/get_subscriptions.json")
 

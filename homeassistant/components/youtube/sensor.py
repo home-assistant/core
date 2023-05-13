@@ -12,8 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import YouTubeDataUpdateCoordinator
-from .api import AsyncConfigEntryAuth
-from .const import AUTH, COORDINATOR, DOMAIN
+from .const import COORDINATOR, DOMAIN
 from .entity import YouTubeChannelEntity
 
 
@@ -52,18 +51,16 @@ SENSOR_TYPES = [
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Google Mail sensor."""
+    """Set up the YouTube sensor."""
     coordinator: YouTubeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         COORDINATOR
     ]
-    sensors = []
-    for channel in coordinator.data.values():
-        sensors += [
-            YouTubeSensor(hass.data[DOMAIN][entry.entry_id][AUTH], sensor_type, channel)
-            for sensor_type in SENSOR_TYPES
-        ]
     async_add_entities(
-        sensors,
+        [
+            YouTubeSensor(entry, sensor_type, channel)
+            for channel in coordinator.data.values()
+            for sensor_type in SENSOR_TYPES
+        ],
         True,
     )
 
@@ -77,12 +74,12 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
 
     def __init__(
         self,
-        auth: AsyncConfigEntryAuth,
+        entry: ConfigEntry,
         description: YouTubeSensorEntityDescription,
         channel: dict[str, Any],
     ) -> None:
         """Initialize YouTube Sensor."""
-        super().__init__(auth, description, channel["title"], channel["id"])
+        super().__init__(entry, description, channel["title"], channel["id"])
         self._channel = channel
 
     @property

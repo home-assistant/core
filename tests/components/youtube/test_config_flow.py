@@ -72,15 +72,13 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
-    assert result.get("type") == "create_entry"
-    assert result.get("title") == TITLE
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
     assert "result" in result
-    assert result.get("result").unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
-    assert "token" in result.get("result").data
-    assert result.get("result").data["token"].get("access_token") == "mock-access-token"
-    assert (
-        result.get("result").data["token"].get("refresh_token") == "mock-refresh-token"
-    )
+    assert result["result"].unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
+    assert "token" in result["result"].data
+    assert result["result"].data["token"]["access_token"] == "mock-access-token"
+    assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
     assert result["options"] == {CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}
 
 
@@ -167,7 +165,7 @@ async def test_reauth(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result.get("type") == "abort"
+    assert result["type"] == "abort"
     assert result["reason"] == abort_reason
     assert result["description_placeholders"] == placeholders
     assert len(mock_setup.mock_calls) == calls
@@ -175,8 +173,8 @@ async def test_reauth(
     assert config_entry.unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
     assert "token" in config_entry.data
     # Verify access token is refreshed
-    assert config_entry.data["token"].get("access_token") == access_token
-    assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
+    assert config_entry.data["token"]["access_token"] == access_token
+    assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
 
 
 async def test_already_configured(
@@ -219,8 +217,8 @@ async def test_already_configured(
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result.get("type") == "abort"
-    assert result.get("reason") == "already_configured"
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_options_flow(
