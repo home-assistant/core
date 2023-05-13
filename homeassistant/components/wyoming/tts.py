@@ -67,12 +67,6 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self._attr_unique_id = f"{config_entry.entry_id}-tts"
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the provider entity."""
-        # Only one entity is allowed per platform for now.
-        return self._tts_service.name
-
-    @property
     def default_language(self):
         """Return default language."""
         if not self._supported_languages:

@@ -5,7 +5,7 @@ from pylast import Track
 import pytest
 
 from homeassistant.components import sensor
-from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING
+from homeassistant.components.lastfm.const import STATE_NOT_SCROBBLING
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

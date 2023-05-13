@@ -2,6 +2,8 @@
 import json
 from unittest.mock import ANY, patch
 
+import pytest
+
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.core import HomeAssistant, State, callback
@@ -34,6 +36,14 @@ async def add_eventstream(hass, sub_topic=None, pub_topic=None, ignore_event=Non
 async def test_setup_succeeds(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test the success of the setup."""
     assert await add_eventstream(hass)
+
+
+async def test_setup_no_mqtt(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the failure of the setup if mqtt is not set up."""
+    assert not await add_eventstream(hass)
+    assert "MQTT integration is not available" in caplog.text
 
 
 async def test_setup_with_pub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:

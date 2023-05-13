@@ -13,10 +13,10 @@ from . import MockAsyncTcpClient
 
 async def test_support(hass: HomeAssistant, init_wyoming_stt) -> None:
     """Test supported properties."""
-    state = hass.states.get("stt.wyoming")
+    state = hass.states.get("stt.test_asr")
     assert state is not None
 
-    entity = stt.async_get_speech_to_text_entity(hass, "stt.wyoming")
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
     assert entity is not None
 
     assert entity.supported_languages == ["en-US"]
@@ -29,7 +29,7 @@ async def test_support(hass: HomeAssistant, init_wyoming_stt) -> None:
 
 async def test_streaming_audio(hass: HomeAssistant, init_wyoming_stt, snapshot) -> None:
     """Test streaming audio."""
-    entity = stt.async_get_speech_to_text_entity(hass, "stt.wyoming")
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
     assert entity is not None
 
     async def audio_stream():
@@ -51,7 +51,7 @@ async def test_streaming_audio_connection_lost(
     hass: HomeAssistant, init_wyoming_stt
 ) -> None:
     """Test streaming audio and losing connection."""
-    entity = stt.async_get_speech_to_text_entity(hass, "stt.wyoming")
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
     assert entity is not None
 
     async def audio_stream():
@@ -69,7 +69,7 @@ async def test_streaming_audio_connection_lost(
 
 async def test_streaming_audio_oserror(hass: HomeAssistant, init_wyoming_stt) -> None:
     """Test streaming audio and error raising."""
-    entity = stt.async_get_speech_to_text_entity(hass, "stt.wyoming")
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
     assert entity is not None
 
     async def audio_stream():

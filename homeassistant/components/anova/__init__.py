@@ -3,13 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from anova_wifi import (
-    AnovaApi,
-    AnovaPrecisionCooker,
-    AnovaPrecisionCookerSensor,
-    InvalidLogin,
-    NoDevicesFound,
-)
+from anova_wifi import AnovaApi, AnovaPrecisionCooker, InvalidLogin, NoDevicesFound
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -67,9 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinators = [AnovaCoordinator(hass, device) for device in devices]
     for coordinator in coordinators:
         await coordinator.async_config_entry_first_refresh()
-        firmware_version = coordinator.data["sensors"][
-            AnovaPrecisionCookerSensor.FIRMWARE_VERSION
-        ]
+        firmware_version = coordinator.data.sensor.firmware_version
         coordinator.async_setup(str(firmware_version))
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AnovaData(
         api_jwt=api.jwt, precision_cookers=devices, coordinators=coordinators

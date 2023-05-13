@@ -7,7 +7,13 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
@@ -110,7 +116,7 @@ def async_track_time_interval_backoff(
     """Add a listener that fires repetitively at every timedelta interval."""
     if not isinstance(intervals, (list, tuple)):
         intervals = (intervals,)
-    remove = None
+    remove: CALLBACK_TYPE | None = None
     failed = 0
 
     async def interval_listener(now: datetime) -> None:
@@ -122,8 +128,11 @@ def async_track_time_interval_backoff(
                 failed = 0
         finally:
             delay = intervals[failed] if failed < len(intervals) else intervals[-1]
-            remove = async_call_later(hass, delay.total_seconds(), interval_listener)
+            remove = async_call_later(
+                hass, delay.total_seconds(), interval_listener_job
+            )
 
+    interval_listener_job = HassJob(interval_listener, cancel_on_shutdown=True)
     hass.async_run_job(interval_listener, dt_util.utcnow())
 
     def remove_listener() -> None:
