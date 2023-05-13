@@ -17,6 +17,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -162,7 +163,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
     component.async_register_entity_service(
         SERVICE_CHANGE,
-        {vol.Required(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
+        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
         "async_change",
     )
 
@@ -331,8 +332,10 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_change(self, duration: timedelta) -> None:
         """Change duration of a running timer."""
-        if self._listener is None:
-            return
+        if self._listener is None or self._end is None:
+            raise HomeAssistantError(
+                f"Timer {self.entity_id} is not running, only active timers can be changed"
+            )
 
         if self._end and self._duration:
             self._end += duration
