@@ -37,8 +37,8 @@ SERVER_SOFTWARE = "{0}/{1} aiohttp/{2} Python/{3[0]}.{3[1]}".format(
     APPLICATION_NAME, __version__, aiohttp.__version__, sys.version_info
 )
 
-ENABLE_CLEANUP_CLOSED = sys.version_info < (3, 11, 2)
-# Enabling cleanup closed on python 3.11.2+ leaks memory relatively quickly
+ENABLE_CLEANUP_CLOSED = sys.version_info < (3, 11, 1)
+# Enabling cleanup closed on python 3.11.1+ leaks memory relatively quickly
 # see https://github.com/aio-libs/aiohttp/issues/7252
 # aiohttp interacts poorly with https://github.com/python/cpython/pull/98540
 
