@@ -145,10 +145,12 @@ class ElectraClimateEntity(ClimateEntity):
             manufacturer=self._electra_ac_device.manufactor,
         )
 
-        self._last_state_update = 0  # This attribute will be used to mark the time we communicated a command to the API
-        self._consecutive_failures = (
-            0  # count the consecutive update failures, used to print error log
-        )
+        # This attribute will be used to mark the time we communicated
+	# a command to the API
+	self._last_state_update = 0  
+        
+	# count the consecutive update failures, used to print error log
+	self._consecutive_failures = 0  
         self._skip_update = True
         self._was_available = True
 
