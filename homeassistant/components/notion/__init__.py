@@ -157,9 +157,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Get the latest data from the Notion API."""
         data = NotionData(hass=hass, entry=entry)
         tasks = {
-            "bridge": client.bridge.async_all(),
-            "listener": client.sensor.async_listeners(),
-            "sensor": client.sensor.async_all(),
+            "bridges": client.bridge.async_all(),
+            "listeners": client.sensor.async_listeners(),
+            "sensors": client.sensor.async_all(),
             "user_preferences": client.user.async_preferences(),
         }
 
