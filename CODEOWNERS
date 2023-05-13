@@ -464,6 +464,7 @@ build.json @home-assistant/supervisor
 /tests/components/guardian/ @bachya
 /homeassistant/components/habitica/ @ASMfreaK @leikoilja
 /tests/components/habitica/ @ASMfreaK @leikoilja
+/homeassistant/components/habitron/ @dneprojects
 /homeassistant/components/hardkernel/ @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core
