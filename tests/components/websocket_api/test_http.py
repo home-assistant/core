@@ -70,7 +70,7 @@ async def test_pending_msg_peak(
 
     # Fill the queue past the allowed peak
     for _ in range(10):
-        instance._send_message({})
+        instance._send_message({"overload": "message"})
 
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=const.PENDING_MSG_PEAK_TIME + 1)
@@ -79,7 +79,8 @@ async def test_pending_msg_peak(
     msg = await websocket_client.receive()
     assert msg.type == WSMsgType.close
     assert "Client unable to keep up with pending messages" in caplog.text
-    assert "Stayed over 5 for 5 seconds"
+    assert "Stayed over 5 for 5 seconds" in caplog.text
+    assert "overload" in caplog.text
 
 
 async def test_pending_msg_peak_recovery(
