@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # User has configured bridges
     if CONF_BRIDGES not in conf:
-        return True
+        conf[CONF_BRIDGES] = []
 
     bridges = conf[CONF_BRIDGES]
 
