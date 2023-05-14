@@ -14,7 +14,8 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
     """Test load and unload entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
+        data={},
+        options={
             CONF_API_KEY: "12345678",
             CONF_MAIN_USER: [USERNAME_1],
             CONF_USERS: [USERNAME_1, USERNAME_2],
@@ -25,11 +26,11 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.lastfm_testaccount1")
+    state = hass.states.get("sensor.testaccount1")
     assert state
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.lastfm_testaccount1")
+    state = hass.states.get("sensor.testaccount1")
     assert not state

@@ -73,11 +73,11 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
 
-    lastfm_api = LastFMNetwork(api_key=entry.data[CONF_API_KEY])
+    lastfm_api = LastFMNetwork(api_key=entry.options[CONF_API_KEY])
     async_add_entities(
         (
             LastFmSensor(lastfm_api.get_user(user), entry.entry_id)
-            for user in entry.data[CONF_USERS]
+            for user in entry.options[CONF_USERS]
         ),
         True,
     )
@@ -93,23 +93,23 @@ class LastFmSensor(SensorEntity):
         """Initialize the sensor."""
         self._user = user
         self._attr_unique_id = hashlib.sha256(user.name.encode("utf-8")).hexdigest()
-        self._attr_name = f"lastfm_{user.name}"
-        try:
-            user.get_playcount()
-        except WSError as exc:
-            self._attr_available = False
-            LOGGER.error("Failed to load LastFM user `%s`: %r", user.name, exc)
-            return
+        self._attr_name = user.name
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.last.fm",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
+            identifiers={(DOMAIN, f"{entry_id}_{self._attr_unique_id}")},
             manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
+            name=f"{DEFAULT_NAME} {user.name}",
         )
 
     def update(self) -> None:
         """Update device state."""
+        try:
+            self._user.get_playcount()
+        except WSError as exc:
+            self._attr_available = False
+            LOGGER.error("Failed to load LastFM user `%s`: %r", self._user.name, exc)
+            return
         self._attr_entity_picture = self._user.get_image()
         if now_playing := self._user.get_now_playing():
             self._attr_native_value = format_track(now_playing)

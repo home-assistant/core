@@ -187,7 +187,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         options={
             CONF_API_KEY: API_KEY,
             CONF_MAIN_USER: USERNAME_1,
-            CONF_USERS: [USERNAME_1],
+            CONF_USERS: [USERNAME_1, USERNAME_2],
         },
     )
     entry.add_to_hass(hass)

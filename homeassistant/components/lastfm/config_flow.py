@@ -33,13 +33,9 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 )
 
 
-def get_lastfm_user(api_key: str, username: str) -> User:
-    """Get lastFM User."""
-    return LastFMNetwork(api_key=api_key).get_user(username)
-
-
-def validate_lastfm_user(user: User) -> dict[str, str]:
-    """Return error if the user is not correct. None if it is correct."""
+def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
+    """Get and validate lastFM User."""
+    user = LastFMNetwork(api_key=api_key).get_user(username)
     errors = {}
     try:
         user.get_playcount()
@@ -55,7 +51,7 @@ def validate_lastfm_user(user: User) -> dict[str, str]:
             errors["base"] = "unknown"
     except Exception:  # pylint:disable=broad-except
         errors["base"] = "unknown"
-    return errors
+    return user, errors
 
 
 def validate_lastfm_users(
@@ -65,8 +61,7 @@ def validate_lastfm_users(
     valid_users = []
     errors = {}
     for username in usernames:
-        lastfm_user = get_lastfm_user(api_key, username)
-        lastfm_errors = validate_lastfm_user(lastfm_user)
+        _, lastfm_errors = get_lastfm_user(api_key, username)
         if lastfm_errors:
             errors = lastfm_errors
         else:
@@ -94,10 +89,9 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self.data = user_input.copy()
-            main_user = get_lastfm_user(
+            _, errors = get_lastfm_user(
                 self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
-            errors = validate_lastfm_user(main_user)
             if not errors:
                 return await self.async_step_friends()
         return self.async_show_form(
@@ -131,7 +125,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     },
                 )
         try:
-            main_user = get_lastfm_user(
+            main_user, _ = get_lastfm_user(
                 self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
             friends = [
@@ -199,7 +193,7 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 )
         if self.options[CONF_MAIN_USER]:
             try:
-                main_user = get_lastfm_user(
+                main_user, _ = get_lastfm_user(
                     self.options[CONF_API_KEY],
                     self.options[CONF_MAIN_USER],
                 )
