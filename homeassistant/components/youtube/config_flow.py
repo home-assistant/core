@@ -51,18 +51,22 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
-
-        service = build(
-            "youtube",
-            "v3",
-            credentials=Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
-        )
-        # pylint: disable=no-member
-        own_channel_request: HttpRequest = service.channels().list(
-            part="snippet", mine=True
-        )
-        response = await self.hass.async_add_executor_job(own_channel_request.execute)
-        own_channel = response["items"][0]
+        try:
+            service = build(
+                "youtube",
+                "v3",
+                credentials=Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
+            )
+            # pylint: disable=no-member
+            own_channel_request: HttpRequest = service.channels().list(
+                part="snippet", mine=True
+            )
+            response = await self.hass.async_add_executor_job(
+                own_channel_request.execute
+            )
+            own_channel = response["items"][0]
+        except Exception:  # pylint: disable=broad-except
+            return self.async_abort(reason="unknown")
         self._own_channel = own_channel
         self._data = data
 
