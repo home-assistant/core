@@ -44,7 +44,7 @@ ENTITY_EVENT_REMOVE = "r"
 ENTITY_EVENT_CHANGE = "c"
 
 
-def result_message(iden: int, result: Any = None) -> dict[str, Any]:
+def result_message(iden: JSON_TYPE | int, result: Any = None) -> dict[str, Any]:
     """Return a success result message."""
     return {"id": iden, "type": const.TYPE_RESULT, "success": True, "result": result}
 
