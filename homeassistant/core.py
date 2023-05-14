@@ -1300,13 +1300,7 @@ class State:
         return self._as_dict
 
     def as_dict_json(self) -> str:
-        """Return a JSON string of the State.
-
-        Async friendly.
-
-        To be used for JSON serialization.
-        Ensures: state == State.from_dict(state.as_dict())
-        """
+        """Return a JSON string of the State."""
         if not self._as_dict_json:
             self._as_dict_json = json_dumps(self.as_dict())
         return self._as_dict_json
@@ -1339,18 +1333,16 @@ class State:
         return compressed_state
 
     def as_compressed_state_json(self) -> str:
-        """Build a compressed dict of a state for adds.
+        """Build a compressed JSON key value pair of a state for adds.
 
-        Omits the lu (last_updated) if it matches (lc) last_changed.
+        The JSON string is a key value pair of the entity_id and the compressed state.
 
-        Sends c (context) as a string if it only contains an id.
+        It is used for sending multiple states in a single message.
         """
         if not self._as_compressed_state_json:
-            self._as_compressed_state_json = (
-                json_dumps(self.entity_id)
-                + ":"
-                + json_dumps(self.as_compressed_state())
-            )
+            self._as_compressed_state_json = json_dumps(
+                {self.entity_id: self.as_compressed_state()}
+            )[1:-1]
         return self._as_compressed_state_json
 
     @classmethod
