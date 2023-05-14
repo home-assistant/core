@@ -905,7 +905,7 @@ async def async_get_integrations(
             needed[domain] = cache[domain] = hass.loop.create_future()
 
     if in_progress:
-        await asyncio.gather(*list(in_progress.values()))
+        await asyncio.gather(*in_progress.values())
         for domain in in_progress:
             # When we have waited and it's _UNDEF, it doesn't exist
             # We don't cache that it doesn't exist, or else people can't fix it
