@@ -360,7 +360,7 @@ class PullPointManager:
                 )
             else:
                 LOGGER.debug(
-                    "%s: PullPoint skipped because Home Assistant is not shutting down",
+                    "%s: PullPoint skipped because Home Assistant is not running yet",
                     self._name,
                 )
         except RemoteProtocolError as err:
