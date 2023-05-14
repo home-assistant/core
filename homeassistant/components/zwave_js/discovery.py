@@ -347,7 +347,7 @@ DISCOVERY_SCHEMAS = [
     # Fibaro Shutter Fibaro FGR222
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_shutter_tilt",
+        hint="shutter_tilt",
         manufacturer_id={0x010F},
         product_id={0x1000, 0x1001},
         product_type={0x0301, 0x0302},
@@ -371,7 +371,7 @@ DISCOVERY_SCHEMAS = [
     # Qubino flush shutter
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_shutter",
+        hint="shutter",
         manufacturer_id={0x0159},
         product_id={0x0052, 0x0053},
         product_type={0x0003},
@@ -380,7 +380,7 @@ DISCOVERY_SCHEMAS = [
     # Graber/Bali/Spring Fashion Covers
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_blind",
+        hint="blind",
         manufacturer_id={0x026E},
         product_id={0x5A31},
         product_type={0x4353},
@@ -389,7 +389,7 @@ DISCOVERY_SCHEMAS = [
     # iBlinds v2 window blind motor
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_blind",
+        hint="blind",
         manufacturer_id={0x0287},
         product_id={0x000D},
         product_type={0x0003},
@@ -398,7 +398,7 @@ DISCOVERY_SCHEMAS = [
     # Merten 507801 Connect Roller Shutter
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_shutter",
+        hint="shutter",
         manufacturer_id={0x007A},
         product_id={0x0001},
         product_type={0x8003},
@@ -414,7 +414,7 @@ DISCOVERY_SCHEMAS = [
     # Disable endpoint 2, as it has no practical function. CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_shutter",
+        hint="shutter",
         manufacturer_id={0x007A},
         product_id={0x0001},
         product_type={0x8003},
@@ -807,7 +807,7 @@ DISCOVERY_SCHEMAS = [
     # window coverings
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="window_cover",
+        hint="cover",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={
             "Motor Control Class A",
