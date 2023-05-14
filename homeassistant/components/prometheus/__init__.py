@@ -654,7 +654,7 @@ class PrometheusView(HomeAssistantView):
 
     def __init__(self, prometheus_cli, config:ConfigType):
         """Initialize Prometheus view."""
-        self.requires_auth = config[CONF_REQUIRES_AUTH]
+        self.requires_auth = config[DOMAIN][CONF_REQUIRES_AUTH]
         self.prometheus_cli = prometheus_cli
 
     async def get(self, request):
