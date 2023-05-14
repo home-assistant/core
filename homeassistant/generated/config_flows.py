@@ -153,6 +153,7 @@ FLOWS = {
         "garages_amsterdam",
         "gdacs",
         "generic",
+        "geo_json_events",
         "geocaching",
         "geofency",
         "geonetnz_quakes",

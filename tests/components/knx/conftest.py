@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
@@ -11,7 +12,13 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
-from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram.apci import (
+    APCI,
+    GroupValueRead,
+    GroupValueResponse,
+    GroupValueWrite,
+    IndividualAddressRead,
+)
 
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -26,10 +33,13 @@ from homeassistant.components.knx.const import (
     DEFAULT_ROUTING_IA,
     DOMAIN as KNX_DOMAIN,
 )
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
+
+FIXTURE_PROJECT_DATA = json.loads(load_fixture("project.json", KNX_DOMAIN))
 
 
 class KNXTestKit:
@@ -181,39 +191,72 @@ class KNXTestKit:
             return DPTBinary(payload)
         return DPTArray(payload)
 
-    async def _receive_telegram(self, group_address: str, payload: APCI) -> None:
+    async def _receive_telegram(
+        self,
+        group_address: str,
+        payload: APCI,
+        source: str | None = None,
+    ) -> None:
         """Inject incoming KNX telegram."""
         self.xknx.telegrams.put_nowait(
             Telegram(
                 destination_address=GroupAddress(group_address),
                 direction=TelegramDirection.INCOMING,
                 payload=payload,
-                source_address=IndividualAddress(self.INDIVIDUAL_ADDRESS),
+                source_address=IndividualAddress(source or self.INDIVIDUAL_ADDRESS),
             )
         )
         await self.xknx.telegrams.join()
         await self.hass.async_block_till_done()
 
-    async def receive_read(
-        self,
-        group_address: str,
-    ) -> None:
+    async def receive_individual_address_read(self, source: str | None = None):
+        """Inject incoming IndividualAddressRead telegram."""
+        self.xknx.telegrams.put_nowait(
+            Telegram(
+                destination_address=IndividualAddress(self.INDIVIDUAL_ADDRESS),
+                direction=TelegramDirection.INCOMING,
+                payload=IndividualAddressRead(),
+                source_address=IndividualAddress(source or "1.3.5"),
+            )
+        )
+        await self.xknx.telegrams.join()
+        await self.hass.async_block_till_done()
+
+    async def receive_read(self, group_address: str, source: str | None = None) -> None:
         """Inject incoming GroupValueRead telegram."""
-        await self._receive_telegram(group_address, GroupValueRead())
+        await self._receive_telegram(
+            group_address,
+            GroupValueRead(),
+            source=source,
+        )
 
     async def receive_response(
-        self, group_address: str, payload: int | tuple[int, ...]
+        self,
+        group_address: str,
+        payload: int | tuple[int, ...],
+        source: str | None = None,
     ) -> None:
         """Inject incoming GroupValueResponse telegram."""
         payload_value = self._payload_value(payload)
-        await self._receive_telegram(group_address, GroupValueResponse(payload_value))
+        await self._receive_telegram(
+            group_address,
+            GroupValueResponse(payload_value),
+            source=source,
+        )
 
     async def receive_write(
-        self, group_address: str, payload: int | tuple[int, ...]
+        self,
+        group_address: str,
+        payload: int | tuple[int, ...],
+        source: str | None = None,
     ) -> None:
         """Inject incoming GroupValueWrite telegram."""
         payload_value = self._payload_value(payload)
-        await self._receive_telegram(group_address, GroupValueWrite(payload_value))
+        await self._receive_telegram(
+            group_address,
+            GroupValueWrite(payload_value),
+            source=source,
+        )
 
 
 @pytest.fixture
@@ -239,3 +282,13 @@ async def knx(request, hass, mock_config_entry: MockConfigEntry):
     knx_test_kit = KNXTestKit(hass, mock_config_entry)
     yield knx_test_kit
     await knx_test_kit.assert_no_telegram()
+
+
+@pytest.fixture
+def load_knxproj(hass_storage):
+    """Mock KNX project data."""
+    hass_storage[KNX_PROJECT_STORAGE_KEY] = {
+        "version": 1,
+        "data": FIXTURE_PROJECT_DATA,
+    }
+    return
