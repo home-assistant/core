@@ -20,6 +20,7 @@ from zeep.exceptions import Fault, ValidationError, XMLParseError
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
@@ -490,7 +491,7 @@ class WebHookManager:
         # so we use a shorter unique ID for the webhook.
         unique_id = config_entry.unique_id
         assert unique_id is not None
-        webhook_id = unique_id.replace(":", "").lower()
+        webhook_id = format_mac(unique_id).replace(":", "").lower()
         self._webhook_unique_id = f"{DOMAIN}{webhook_id}"
         self._name = event_manager.name
 
