@@ -1,26 +1,22 @@
 """Support for interacting with Spotify Connect."""
 from __future__ import annotations
 
-from asyncio import run_coroutine_threadsafe
 import datetime as dt
-from datetime import timedelta
 import logging
+from asyncio import run_coroutine_threadsafe
+from datetime import timedelta
 from typing import Any
 
 import requests
-from spotipy import SpotifyException
 from yarl import URL
 
-from homeassistant.components.media_player import (
-    BrowseMedia,
-    MediaPlayerEntity,
-    MediaPlayerEntityFeature,
-    MediaPlayerState,
-    MediaType,
-    RepeatMode,
-    ATTR_MEDIA_ENQUEUE,
-    MediaPlayerEnqueue,
-)
+from homeassistant.components.media_player import (ATTR_MEDIA_ENQUEUE,
+                                                   BrowseMedia,
+                                                   MediaPlayerEnqueue,
+                                                   MediaPlayerEntity,
+                                                   MediaPlayerEntityFeature,
+                                                   MediaPlayerState, MediaType,
+                                                   RepeatMode)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
@@ -29,10 +25,12 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
+from spotipy import SpotifyException
 
 from . import HomeAssistantSpotifyData
 from .browse_media import async_browse_media_internal
-from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES, SPOTIFY_SCOPES
+from .const import (DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES,
+                    SPOTIFY_SCOPES)
 from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)
@@ -363,11 +361,16 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         ):
             kwargs["device_id"] = self.data.devices.data[0].get("id")
 
-        if enqueue == MediaPlayerEnqueue.ADD and media_type in {
-            MediaType.TRACK,
-            MediaType.EPISODE,
-            MediaType.MUSIC,
-        }:
+        if enqueue == MediaPlayerEnqueue.ADD:
+            if media_type not in {
+                MediaType.TRACK,
+                MediaType.EPISODE,
+                MediaType.MUSIC,
+            }:
+                _LOGGER.error(
+                    "Media type %s is not supported when enqueue is ADD", media_type
+                )
+                return
             return self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
 
         self.data.client.start_playback(**kwargs)
