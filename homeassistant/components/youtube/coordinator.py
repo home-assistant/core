@@ -1,9 +1,11 @@
 """DataUpdateCoordinator for the YouTube integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 
+from googleapiclient.discovery import Resource
 from googleapiclient.http import HttpRequest
 
 from homeassistant.config_entries import ConfigEntry
@@ -46,24 +48,27 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
             part="snippet,statistics", id=",".join(channels), maxResults=50
         )
         response: dict = await self.hass.async_add_executor_job(channel_request.execute)
-        for channel in response["items"]:
+
+        async def _compile_data(channel: dict[str, Any]) -> None:
             data[channel["id"]] = {
                 "id": channel["id"],
                 "title": channel["snippet"]["title"],
                 "icon": channel["snippet"]["thumbnails"]["high"]["url"],
-                "latest_video": await self._get_latest_video(channel["id"]),
+                "latest_video": await self._get_latest_video(service, channel["id"]),
                 "subscriber_count": int(channel["statistics"]["subscriberCount"]),
             }
+
+        await asyncio.gather(*[_compile_data(channel) for channel in response["items"]])
         return data
 
-    async def _get_latest_video(self, channel_id: str) -> dict[str, Any]:
-        service = await self._auth.get_resource()
+    async def _get_latest_video(
+        self, service: Resource, channel_id: str
+    ) -> dict[str, Any]:
         playlist_id = get_upload_playlist_id(channel_id)
-        playlist_request: HttpRequest = service.playlistItems().list(
-            part="snippet,contentDetails", playlistId=playlist_id, maxResults=1
-        )
-        response: dict = await self.hass.async_add_executor_job(
-            playlist_request.execute
+        response: dict = (
+            service.playlistItems()
+            .list(part="snippet,contentDetails", playlistId=playlist_id, maxResults=1)
+            .execute()
         )
         video = response["items"][0]
         return {
