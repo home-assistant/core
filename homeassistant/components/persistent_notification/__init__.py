@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, singleton
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -110,13 +110,10 @@ def async_create(
 
 
 @callback
+@singleton.singleton(DOMAIN)
 def _async_get_or_create_notifications(hass: HomeAssistant) -> dict[str, Notification]:
     """Get or create notifications data."""
-    if (_notifications := hass.data.get(DOMAIN)) is not None:
-        notifications: dict[str, Any] = _notifications
-    else:
-        notifications = hass.data[DOMAIN] = {}
-    return notifications
+    return {}
 
 
 @callback
