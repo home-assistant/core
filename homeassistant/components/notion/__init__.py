@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 import traceback
@@ -57,6 +57,11 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 ATTR_SYSTEM_MODE = "system_mode"
 ATTR_SYSTEM_NAME = "system_name"
+
+DATA_BRIDGES = "bridges"
+DATA_LISTENERS = "listeners"
+DATA_SENSORS = "sensors"
+DATA_USER_PREFERENCES = "user_preferences"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -129,10 +134,14 @@ class NotionData:
 
     def asdict(self) -> dict[str, Any]:
         """Represent this dataclass (and its Pydantic contents) as a dict."""
-        return {
-            field.name: [obj.dict() for obj in getattr(self, field.name).values()]
-            for field in fields(self)
+        data: dict[str, Any] = {
+            DATA_BRIDGES: [bridge.dict() for bridge in self.bridges.values()],
+            DATA_LISTENERS: [listener.dict() for listener in self.listeners.values()],
+            DATA_SENSORS: [sensor.dict() for sensor in self.sensors.values()],
         }
+        if self.user_preferences:
+            data[DATA_USER_PREFERENCES] = self.user_preferences.dict()
+        return data
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -157,10 +166,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Get the latest data from the Notion API."""
         data = NotionData(hass=hass, entry=entry)
         tasks = {
-            "bridges": client.bridge.async_all(),
-            "listeners": client.sensor.async_listeners(),
-            "sensors": client.sensor.async_all(),
-            "user_preferences": client.user.async_preferences(),
+            DATA_BRIDGES: client.bridge.async_all(),
+            DATA_LISTENERS: client.sensor.async_listeners(),
+            DATA_SENSORS: client.sensor.async_all(),
+            DATA_USER_PREFERENCES: client.user.async_preferences(),
         }
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
