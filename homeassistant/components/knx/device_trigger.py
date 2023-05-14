@@ -4,20 +4,19 @@ from __future__ import annotations
 from typing import Any, Final
 
 import voluptuous as vol
-from xknx.telegram import GroupAddress, Telegram
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
 from .const import DOMAIN, KNX_ADDRESS
-from .helpers import telegram_to_dict
 from .project import KNXProject
 from .schema import ga_list_validator
+from .telegrams import TelegramDict
 
 TRIGGER_TELEGRAM: Final = "telegram"
 
@@ -88,21 +87,16 @@ async def async_attach_trigger(
     job = HassJob(action, f"KNX device trigger {trigger_info}")
     knx: KNXModule = hass.data[DOMAIN]
 
-    async def async_call_trigger_action(telegram: Telegram) -> None:
-        """Call trigger action."""
+    @callback
+    def async_call_trigger_action(telegram: TelegramDict) -> None:
+        """Filter Telegram and call trigger action."""
+        if addresses and telegram["destination"] not in addresses:
+            return
         hass.async_run_hass_job(
             job,
-            {"trigger": telegram_to_dict(telegram=telegram, project=knx.project)},
+            {"trigger": telegram},
         )
 
-    callback = knx.xknx.telegram_queue.register_telegram_received_cb(
-        telegram_received_cb=async_call_trigger_action,
-        group_addresses=[GroupAddress(addr) for addr in addresses],
-        match_for_outgoing=True,
+    return knx.telegrams.async_listen_telegram(
+        async_call_trigger_action, name="KNX device trigger call"
     )
-
-    def detatch_trigger() -> None:
-        """Detach the trigger."""
-        knx.xknx.telegram_queue.unregister_telegram_received_cb(callback)
-
-    return detatch_trigger
