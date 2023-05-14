@@ -483,7 +483,15 @@ class WebHookManager:
         self._event_manager = event_manager
         self._device = event_manager.device
         self._hass = event_manager.hass
-        self._webhook_unique_id = f"{DOMAIN}_{event_manager.config_entry.entry_id}"
+        config_entry = event_manager.config_entry
+
+        self._old_webhook_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
+        # Some cameras have a limit on the length of the webhook URL
+        # so we use a shorter unique ID for the webhook.
+        unique_id = config_entry.unique_id
+        assert unique_id is not None
+        webhook_id = unique_id.replace(":", "").lower()
+        self._webhook_unique_id = f"{DOMAIN}{webhook_id}"
         self._name = event_manager.name
 
         self._webhook_url: str | None = None
@@ -582,6 +590,7 @@ class WebHookManager:
         LOGGER.debug(
             "%s: Unregistering webhook %s", self._name, self._webhook_unique_id
         )
+        webhook.async_unregister(self._hass, self._old_webhook_unique_id)
         webhook.async_unregister(self._hass, self._webhook_unique_id)
         self._webhook_url = None
 
