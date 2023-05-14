@@ -28,6 +28,7 @@ class OAuth2FlowHandler(
     """Config flow to handle Google OAuth2 authentication."""
 
     _data: dict[str, Any] = {}
+    _own_channel: dict[str, Any] = {}
 
     DOMAIN = DOMAIN
 
@@ -61,10 +62,11 @@ class OAuth2FlowHandler(
             part="snippet", mine=True
         )
         response = await self.hass.async_add_executor_job(own_channel_request.execute)
-        user_id = response["items"][0]["id"]
+        own_channel = response["items"][0]
+        self._own_channel = own_channel
         self._data = data
 
-        await self.async_set_unique_id(user_id)
+        await self.async_set_unique_id(own_channel["id"])
         self._abort_if_unique_id_configured()
 
         return await self.async_step_channels()
@@ -79,15 +81,8 @@ class OAuth2FlowHandler(
             credentials=Credentials(self._data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
         )
         if user_input:
-            # pylint: disable=no-member
-            own_channel_request: HttpRequest = service.channels().list(
-                part="snippet", mine=True
-            )
-            response = await self.hass.async_add_executor_job(
-                own_channel_request.execute
-            )
             return self.async_create_entry(
-                title=response["items"][0]["snippet"]["title"],
+                title=self._own_channel["snippet"]["title"],
                 data=self._data,
                 options=user_input,
             )
