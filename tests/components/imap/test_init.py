@@ -370,7 +370,7 @@ async def test_reset_last_message(
         """
         nonlocal event
         await event.wait()
-        event = asyncio.Event()
+        event.clear()
         mock_imap_protocol.idle_start.return_value = AsyncMock()()
 
     # Make sure we make another cycle (needed for pushed coordinator)
