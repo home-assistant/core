@@ -56,12 +56,9 @@ async def async_setup_entry(
         COORDINATOR
     ]
     async_add_entities(
-        [
-            YouTubeSensor(entry, sensor_type, channel)
-            for channel in coordinator.data.values()
-            for sensor_type in SENSOR_TYPES
-        ],
-        True,
+        YouTubeSensor(entry, sensor_type, channel)
+        for channel in coordinator.data.values()
+        for sensor_type in SENSOR_TYPES
     )
 
 

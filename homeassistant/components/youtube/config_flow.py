@@ -6,7 +6,9 @@ from typing import Any
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
+import orjson
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +21,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_CHANNELS, DEFAULT_ACCESS, DOMAIN
+from .const import CONF_CHANNELS, DEFAULT_ACCESS, DOMAIN, LOGGER
 
 
 class OAuth2FlowHandler(
@@ -65,7 +67,15 @@ class OAuth2FlowHandler(
                 own_channel_request.execute
             )
             own_channel = response["items"][0]
-        except Exception:  # pylint: disable=broad-except
+        except HttpError as ex:
+            exc: bytes = ex.args[1]
+            error = orjson.loads(exc.decode(errors="ignore"))["error"]
+            return self.async_abort(
+                reason="access_not_configured",
+                description_placeholders={"message": error["message"]},
+            )
+        except Exception as ex:  # pylint: disable=broad-except
+            LOGGER.error("Unknown error occurred: %s", ex.args)
             return self.async_abort(reason="unknown")
         self._own_channel = own_channel
         self._data = data
