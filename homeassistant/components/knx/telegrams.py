@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import datetime as dt
 from typing import TypedDict
 
 from xknx import XKNX
@@ -10,6 +11,7 @@ from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+import homeassistant.util.dt as dt_util
 
 from .project import KNXProject
 
@@ -24,6 +26,8 @@ class TelegramDict(TypedDict):
     source: str
     source_name: str
     telegramtype: str
+    timestamp: dt.datetime
+    unit: str | None
     value: str | int | float | bool | None
 
 
@@ -70,6 +74,7 @@ class Telegrams:
         payload_data: int | tuple[int, ...] | None = None
         src_name = ""
         transcoder = None
+        unit = None
         value: str | int | float | bool | None = None
 
         if (
@@ -83,15 +88,16 @@ class Telegrams:
         if (
             device := self.project.devices.get(f"{telegram.source_address}")
         ) is not None:
-            src_name = device["name"]
+            src_name = f"{device['manufacturer_name']} {device['name']}"
 
         if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
             payload_data = telegram.payload.value.value
             if transcoder is not None:
                 try:
                     value = transcoder.from_knx(telegram.payload.value)
+                    unit = transcoder.unit
                 except XKNXException:
-                    value = None
+                    value = "Error decoding value"
 
         return TelegramDict(
             destination=f"{telegram.destination_address}",
@@ -101,5 +107,7 @@ class Telegrams:
             source=f"{telegram.source_address}",
             source_name=src_name,
             telegramtype=telegram.payload.__class__.__name__,
+            timestamp=dt_util.as_local(dt_util.utcnow()),
+            unit=unit,
             value=value,
         )
