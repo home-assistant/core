@@ -223,7 +223,7 @@ aionanoleaf==0.2.1
 aionotify==0.2.0
 
 # homeassistant.components.notion
-aionotion==2023.05.1
+aionotion==2023.05.4
 
 # homeassistant.components.oncue
 aiooncue==0.3.4
@@ -428,7 +428,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.3
+bellows==0.35.5
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.13.3
@@ -1264,7 +1264,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==2.1.1
+onvif-zeep-async==3.1.7
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1981,7 +1981,7 @@ pysmartapp==0.3.3
 pysmartthings==0.7.6
 
 # homeassistant.components.edl21
-pysml==0.0.10
+pysml==0.0.11
 
 # homeassistant.components.snmp
 pysnmplib==5.0.21
