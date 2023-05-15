@@ -596,7 +596,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             # os info not yet fetched from supervisor, retry later
             async_track_point_in_utc_time(
                 hass,
-                _async_setup_hardware_integration,
+                async_setup_hardware_integration_job,
                 utcnow() + HASSIO_UPDATE_INTERVAL,
             )
             return
@@ -609,6 +609,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hw_integration, context={"source": "system"}
             )
         )
+
+    async_setup_hardware_integration_job = HassJob(
+        _async_setup_hardware_integration, cancel_on_shutdown=True
+    )
 
     await _async_setup_hardware_integration()
 

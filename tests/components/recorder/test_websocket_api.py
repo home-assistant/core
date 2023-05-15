@@ -1037,6 +1037,7 @@ async def test_sum_statistics_during_period_unit_conversion(
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
+                "change": pytest.approx(value),
                 "last_reset": None,
                 "state": pytest.approx(value),
                 "sum": pytest.approx(value),
@@ -1062,6 +1063,7 @@ async def test_sum_statistics_during_period_unit_conversion(
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
+                "change": pytest.approx(converted_value),
                 "last_reset": None,
                 "state": pytest.approx(converted_value),
                 "sum": pytest.approx(converted_value),

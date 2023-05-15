@@ -86,14 +86,6 @@ async def test_entry_diagnostics(
                     "device_type": "sensor",
                     "model_version": "3.1",
                     "sensor_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    "status": {
-                        "trigger_value": "no_alarm",
-                        "data_received_at": "2019-06-28T22:12:49.516000+00:00",
-                    },
-                    "status_localized": {
-                        "state": "No Sound",
-                        "description": "Jun 28 at 4:12pm",
-                    },
                     "insights": {
                         "primary": {
                             "origin": {"type": None, "id": None},
@@ -103,6 +95,14 @@ async def test_entry_diagnostics(
                     },
                     "configuration": {},
                     "pro_monitoring_status": "eligible",
+                    "status": {
+                        "trigger_value": "no_alarm",
+                        "data_received_at": "2019-06-28T22:12:49.516000+00:00",
+                    },
+                    "status_localized": {
+                        "state": "No Sound",
+                        "description": "Jun 28 at 4:12pm",
+                    },
                 }
             ],
             "sensors": [
@@ -131,5 +131,13 @@ async def test_entry_diagnostics(
                     "surface_type": None,
                 }
             ],
+            "user_preferences": {
+                "user_id": REDACTED,
+                "military_time_enabled": False,
+                "celsius_enabled": False,
+                "disconnect_alerts_enabled": True,
+                "home_away_alerts_enabled": False,
+                "battery_alerts_enabled": True,
+            },
         },
     }
