@@ -8,6 +8,7 @@ from aioairzone.const import (
     API_MODE,
     API_ON,
     API_SET_POINT,
+    API_SPEED,
     AZD_ACTION,
     AZD_HUMIDITY,
     AZD_MASTER,
@@ -15,6 +16,8 @@ from aioairzone.const import (
     AZD_MODES,
     AZD_NAME,
     AZD_ON,
+    AZD_SPEED,
+    AZD_SPEEDS,
     AZD_TEMP,
     AZD_TEMP_MAX,
     AZD_TEMP_MIN,
@@ -24,6 +27,10 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -38,6 +45,22 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import API_TEMPERATURE_STEP, DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneZoneEntity
+
+BASE_FAN_SPEEDS: Final[dict[int, str]] = {
+    0: FAN_AUTO,
+    1: FAN_LOW,
+}
+FAN_SPEED_MAPS: Final[dict[int, dict[int, str]]] = {
+    2: BASE_FAN_SPEEDS
+    | {
+        2: FAN_HIGH,
+    },
+    3: BASE_FAN_SPEEDS
+    | {
+        2: FAN_MEDIUM,
+        3: FAN_HIGH,
+    },
+}
 
 HVAC_ACTION_LIB_TO_HASS: Final[dict[OperationAction, HVACAction]] = {
     OperationAction.COOLING: HVACAction.COOLING,
@@ -84,6 +107,9 @@ async def async_setup_entry(
 class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     """Define an Airzone sensor."""
 
+    _speeds: dict[int, str] = {}
+    _speeds_reverse: dict[str, int] = {}
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -106,7 +132,34 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._attr_hvac_modes = [
             HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
         ]
+        if (
+            self.get_airzone_value(AZD_SPEED) is not None
+            and self.get_airzone_value(AZD_SPEEDS) is not None
+        ):
+            self._set_fan_speeds()
+
         self._async_update_attrs()
+
+    def _set_fan_speeds(self) -> None:
+        self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+
+        speeds = self.get_airzone_value(AZD_SPEEDS)
+        max_speed = max(speeds)
+        if _speeds := FAN_SPEED_MAPS.get(max_speed):
+            self._speeds = _speeds
+        else:
+            for speed in speeds:
+                if speed == 0:
+                    self._speeds[speed] = FAN_AUTO
+                else:
+                    self._speeds[speed] = f"{int(round((speed * 100) / max_speed, 0))}%"
+
+            self._speeds[1] = FAN_LOW
+            self._speeds[int(round((max_speed + 1) / 2, 0))] = FAN_MEDIUM
+            self._speeds[max_speed] = FAN_HIGH
+
+        self._speeds_reverse = {v: k for k, v in self._speeds.items()}
+        self._attr_fan_modes = list(self._speeds_reverse)
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -119,6 +172,13 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         """Turn the entity off."""
         params = {
             API_ON: 0,
+        }
+        await self._async_update_hvac_params(params)
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set fan mode."""
+        params = {
+            API_SPEED: self._speeds_reverse.get(fan_mode),
         }
         await self._async_update_hvac_params(params)
 
@@ -167,3 +227,5 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         else:
             self._attr_hvac_mode = HVACMode.OFF
         self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
+        if self.supported_features & ClimateEntityFeature.FAN_MODE:
+            self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))

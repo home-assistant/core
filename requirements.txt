@@ -18,7 +18,7 @@ lru-dict==1.1.8
 PyJWT==2.6.0
 cryptography==40.0.2
 pyOpenSSL==23.1.0
-orjson==3.8.11
+orjson==3.8.12
 pip>=21.0,<23.2
 python-slugify==4.0.1
 pyyaml==6.0
