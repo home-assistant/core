@@ -67,19 +67,19 @@ async def async_setup_entry(
     """Set up the Synology NAS binary sensor."""
     data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     api = data.api
+    storage = api.storage
     coordinator = data.coordinator_central
 
     entities: list[SynoDSMSecurityBinarySensor | SynoDSMStorageBinarySensor] = [
-        SynoDSMSecurityBinarySensor(api, coordinator, description)
-        for description in SECURITY_BINARY_SENSORS
+        SynoDSMSecurityBinarySensor(api, coordinator)
     ]
 
     # Handle all disks
-    if api.storage.disks_ids:
+    if storage is not None and storage.disks_ids:
         entities.extend(
             [
                 SynoDSMStorageBinarySensor(api, coordinator, description, disk)
-                for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids)
+                for disk in entry.data.get(CONF_DISKS, storage.disks_ids)
                 for description in STORAGE_DISK_BINARY_SENSORS
             ]
         )
@@ -107,20 +107,36 @@ class SynoDSMBinarySensor(
 class SynoDSMSecurityBinarySensor(SynoDSMBinarySensor):
     """Representation a Synology Security binary sensor."""
 
+    def __init__(
+        self,
+        api: SynoApi,
+        coordinator: SynologyDSMCentralUpdateCoordinator,
+    ) -> None:
+        """Initialize the Synology DSM security binary_sensor entity."""
+        description = SynologyDSMBinarySensorEntityDescription(
+            api_key=SynoCoreSecurity.API_KEY,
+            key="status",
+            translation_key="status",
+            device_class=BinarySensorDeviceClass.SAFETY,
+        )
+        super().__init__(api, coordinator, description)
+
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.security, self.entity_description.key) != "safe"  # type: ignore[no-any-return]
+        assert self._api.security is not None
+        return self._api.security.status != "safe"
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.security)
+        return self._api.security is not None
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return security checks details."""
-        return self._api.security.status_by_check  # type: ignore[no-any-return]
+        assert self._api.security is not None
+        return self._api.security.status_by_check
 
 
 class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):
@@ -133,7 +149,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):
         api: SynoApi,
         coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMBinarySensorEntityDescription,
-        device_id: str | None = None,
+        device_id: str,
     ) -> None:
         """Initialize the Synology DSM storage binary_sensor entity."""
         super().__init__(api, coordinator, description, device_id)

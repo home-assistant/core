@@ -311,6 +311,7 @@ async def async_setup_entry(
     """Set up the Synology NAS Sensor."""
     data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     api = data.api
+    storage = api.storage
     coordinator = data.coordinator_central
 
     entities: list[SynoDSMUtilSensor | SynoDSMStorageSensor | SynoDSMInfoSensor] = [
@@ -319,21 +320,21 @@ async def async_setup_entry(
     ]
 
     # Handle all volumes
-    if api.storage.volumes_ids:
+    if storage is not None and storage.volumes_ids:
         entities.extend(
             [
                 SynoDSMStorageSensor(api, coordinator, description, volume)
-                for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes_ids)
+                for volume in entry.data.get(CONF_VOLUMES, storage.volumes_ids)
                 for description in STORAGE_VOL_SENSORS
             ]
         )
 
     # Handle all disks
-    if api.storage.disks_ids:
+    if storage is not None and storage.disks_ids:
         entities.extend(
             [
                 SynoDSMStorageSensor(api, coordinator, description, disk)
-                for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids)
+                for disk in entry.data.get(CONF_DISKS, storage.disks_ids)
                 for description in STORAGE_DISK_SENSORS
             ]
         )
@@ -400,7 +401,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
         api: SynoApi,
         coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMSensorEntityDescription,
-        device_id: str | None = None,
+        device_id: str,
     ) -> None:
         """Initialize the Synology DSM storage sensor entity."""
         super().__init__(api, coordinator, description, device_id)

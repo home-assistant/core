@@ -34,13 +34,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_DEVICE_TOKEN, SYNOLOGY_CONNECTION_EXCEPTIONS
+from .const import CONF_DEVICE_TOKEN, DEFAULT_TIMEOUT, SYNOLOGY_CONNECTION_EXCEPTIONS
 
 LOGGER = logging.getLogger(__name__)
 
 
 class SynoApi:
     """Class to interface with Synology DSM API."""
+
+    information: SynoDSMInformation
+    network: SynoDSMNetwork
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the API wrapper class."""
@@ -52,16 +55,24 @@ class SynoApi:
             self.config_url = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
 
         # DSM APIs
-        self.dsm: SynologyDSM = None
-        self.information: SynoDSMInformation = None
-        self.network: SynoDSMNetwork = None
-        self.security: SynoCoreSecurity = None
-        self.storage: SynoStorage = None
-        self.photos: SynoPhotos = None
-        self.surveillance_station: SynoSurveillanceStation = None
-        self.system: SynoCoreSystem = None
-        self.upgrade: SynoCoreUpgrade = None
-        self.utilisation: SynoCoreUtilization = None
+        session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
+        self.dsm = SynologyDSM(
+            session,
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.data[CONF_SSL],
+            timeout=entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            device_token=entry.data.get(CONF_DEVICE_TOKEN),
+        )
+        self.security: SynoCoreSecurity | None = None
+        self.storage: SynoStorage | None = None
+        self.photos: SynoPhotos | None = None
+        self.surveillance_station: SynoSurveillanceStation | None = None
+        self.system: SynoCoreSystem | None = None
+        self.upgrade: SynoCoreUpgrade | None = None
+        self.utilisation: SynoCoreUtilization | None = None
 
         # Should we fetch them
         self._fetching_entities: dict[str, set[str]] = {}
@@ -76,17 +87,6 @@ class SynoApi:
 
     async def async_setup(self) -> None:
         """Start interacting with the NAS."""
-        session = async_get_clientsession(self._hass, self._entry.data[CONF_VERIFY_SSL])
-        self.dsm = SynologyDSM(
-            session,
-            self._entry.data[CONF_HOST],
-            self._entry.data[CONF_PORT],
-            self._entry.data[CONF_USERNAME],
-            self._entry.data[CONF_PASSWORD],
-            self._entry.data[CONF_SSL],
-            timeout=self._entry.options.get(CONF_TIMEOUT),
-            device_token=self._entry.data.get(CONF_DEVICE_TOKEN),
-        )
         await self.dsm.login()
 
         # check if surveillance station is used
@@ -158,7 +158,8 @@ class SynoApi:
             return
 
         # surveillance_station is updated by own coordinator
-        self.dsm.reset(self.surveillance_station)
+        if self.surveillance_station is not None:
+            self.dsm.reset(self.surveillance_station)
 
         # Determine if we should fetch an API
         self._with_system = bool(self.dsm.apis.get(SynoCoreSystem.API_KEY))
@@ -176,7 +177,7 @@ class SynoApi:
         )
 
         # Reset not used API, information is not reset since it's used in device_info
-        if not self._with_security:
+        if not self._with_security and self.security is not None:
             LOGGER.debug(
                 "Disable security api from being updated for '%s'",
                 self._entry.unique_id,
@@ -184,35 +185,35 @@ class SynoApi:
             self.dsm.reset(self.security)
             self.security = None
 
-        if not self._with_photos:
+        if not self._with_photos and self.photos is not None:
             LOGGER.debug(
                 "Disable photos api from being updated or '%s'", self._entry.unique_id
             )
             self.dsm.reset(self.photos)
             self.photos = None
 
-        if not self._with_storage:
+        if not self._with_storage and self.storage is not None:
             LOGGER.debug(
                 "Disable storage api from being updatedf or '%s'", self._entry.unique_id
             )
             self.dsm.reset(self.storage)
             self.storage = None
 
-        if not self._with_system:
+        if not self._with_system and self.system is not None:
             LOGGER.debug(
                 "Disable system api from being updated for '%s'", self._entry.unique_id
             )
             self.dsm.reset(self.system)
             self.system = None
 
-        if not self._with_upgrade:
+        if not self._with_upgrade and self.upgrade is not None:
             LOGGER.debug(
                 "Disable upgrade api from being updated for '%s'", self._entry.unique_id
             )
             self.dsm.reset(self.upgrade)
             self.upgrade = None
 
-        if not self._with_utilisation:
+        if not self._with_utilisation and self.utilisation is not None:
             LOGGER.debug(
                 "Disable utilisation api from being updated for '%s'",
                 self._entry.unique_id,
@@ -271,11 +272,13 @@ class SynoApi:
 
     async def async_reboot(self) -> None:
         """Reboot NAS."""
-        await self._syno_api_executer(self.system.reboot)
+        if self.system is not None:
+            await self._syno_api_executer(self.system.reboot)
 
     async def async_shutdown(self) -> None:
         """Shutdown NAS."""
-        await self._syno_api_executer(self.system.shutdown)
+        if self.system is not None:
+            await self._syno_api_executer(self.system.shutdown)
 
     async def async_unload(self) -> None:
         """Stop interacting with the NAS and prepare for removal from hass."""
@@ -302,4 +305,5 @@ class SynoApi:
         """Update function for updating API information."""
         LOGGER.debug("Start data update for '%s'", self._entry.unique_id)
         self._setup_api_requests()
+
         await self.dsm.update(self._with_information)

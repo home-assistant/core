@@ -1,7 +1,6 @@
 """The Synology DSM component."""
 from __future__ import annotations
 
-from itertools import chain
 import logging
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
@@ -151,13 +150,16 @@ async def async_remove_config_entry_device(
     if api.surveillance_station is not None:
         # get_all_cameras does not do I/O
         all_cameras = api.surveillance_station.get_all_cameras()
-    device_ids = chain(
-        (camera.id for camera in all_cameras),
-        storage.volumes_ids,
-        storage.disks_ids,
-        storage.volumes_ids,
-        (SynoSurveillanceStation.INFO_API_KEY,),  # Camera home/away
-    )
+
+    device_ids = [camera.id for camera in all_cameras] + [
+        SynoSurveillanceStation.INFO_API_KEY
+    ]
+
+    if storage is not None:
+        device_ids += storage.volumes_ids
+        device_ids += storage.disks_ids
+        device_ids += storage.volumes_ids
+
     return not device_entry.identifiers.intersection(
         (
             (DOMAIN, serial),  # Base device

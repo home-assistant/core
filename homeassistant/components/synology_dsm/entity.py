@@ -52,12 +52,12 @@ class SynologyDSMBaseEntity(CoordinatorEntity[_CoordinatorT]):
             f"{api.information.serial}_{description.api_key}:{description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._api.information.serial)},
-            name=self._api.network.hostname,
+            identifiers={(DOMAIN, api.information.serial)},
+            name=api.network.hostname,
             manufacturer="Synology",
-            model=self._api.information.model,
-            sw_version=self._api.information.version_string,
-            configuration_url=self._api.config_url,
+            model=api.information.model,
+            sw_version=api.information.version_string,
+            configuration_url=api.config_url,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -78,7 +78,7 @@ class SynologyDSMDeviceEntity(
         api: SynoApi,
         coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMEntityDescription,
-        device_id: str | None = None,
+        device_id: str,
     ) -> None:
         """Initialize the Synology DSM disk or volume entity."""
         super().__init__(api, coordinator, description)
@@ -89,8 +89,12 @@ class SynologyDSMDeviceEntity(
         self._device_firmware: str | None = None
         self._device_type = None
 
+        assert self._api.storage is not None
+
         if "volume" in description.key:
             volume = self._api.storage.get_volume(self._device_id)
+            assert volume is not None
+
             # Volume does not have a name
             self._device_name = volume["id"].replace("_", " ").capitalize()
             self._device_manufacturer = "Synology"
@@ -104,11 +108,13 @@ class SynologyDSMDeviceEntity(
             )
         elif "disk" in description.key:
             disk = self._api.storage.get_disk(self._device_id)
+            assert disk is not None
+
             self._device_name = disk["name"]
-            self._device_manufacturer = disk["vendor"]
-            self._device_model = disk["model"].strip()
-            self._device_firmware = disk["firm"]
-            self._device_type = disk["diskType"]
+            self._device_manufacturer = disk["vendor"]  # type: ignore[typeddict-item]
+            self._device_model = disk["model"].strip()  # type: ignore[typeddict-item]
+            self._device_firmware = disk["firm"]  # type: ignore[typeddict-item]
+            self._device_type = disk["diskType"]  # type: ignore[typeddict-item]
 
         self._attr_unique_id += f"_{self._device_id}"
         self._attr_device_info = DeviceInfo(

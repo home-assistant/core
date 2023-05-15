@@ -63,24 +63,28 @@ class SynoDSMUpdateEntity(
     @property
     def installed_version(self) -> str | None:
         """Version installed and in use."""
-        return self._api.information.version_string  # type: ignore[no-any-return]
+        return self._api.information.version_string
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        if not self._api.upgrade.update_available:
+        if (upgrade := self._api.upgrade) is None:
+            return None
+        if not upgrade.update_available:
             return self.installed_version
-        return self._api.upgrade.available_version  # type: ignore[no-any-return]
+        return upgrade.available_version
 
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        if (details := self._api.upgrade.available_version_details) is None:
+        if (upgrade := self._api.upgrade) is None or (
+            details := upgrade.available_version_details
+        ) is None:
             return None
 
         url = URL("http://update.synology.com/autoupdate/whatsnew.php")
         query = {"model": self._api.information.model}
-        if details.get("nano") > 0:
+        if details.get("nano", 0) > 0:
             query["update_version"] = f"{details['buildnumber']}-{details['nano']}"
         else:
             query["update_version"] = details["buildnumber"]

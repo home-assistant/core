@@ -63,11 +63,16 @@ class SynologyDSMSwitchUpdateCoordinator(
 
     async def async_setup(self) -> None:
         """Set up the coordinator initial data."""
-        info = await self.api.dsm.surveillance_station.get_info()
-        self.version = info["data"]["CMSMinVersion"]
+        # at this point it is ensured that surveillance_station existst
+        assert self.api.surveillance_station is not None
+        info = await self.api.surveillance_station.get_info()
+        if info is not None:
+            self.version = info["data"]["CMSMinVersion"]
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch all data from api."""
+        # at this point it is ensured that surveillance_station existst
+        assert self.api.surveillance_station is not None
         surveillance_station = self.api.surveillance_station
         return {
             "switches": {"home_mode": await surveillance_station.get_home_mode_status()}
@@ -103,7 +108,7 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
 
 
 class SynologyDSMCameraUpdateCoordinator(
-    SynologyDSMUpdateCoordinator[dict[str, dict[str, SynoCamera]]]
+    SynologyDSMUpdateCoordinator[dict[str, dict[int, SynoCamera]]]
 ):
     """DataUpdateCoordinator to gather data for a synology_dsm cameras."""
 
@@ -116,10 +121,12 @@ class SynologyDSMCameraUpdateCoordinator(
         """Initialize DataUpdateCoordinator for cameras."""
         super().__init__(hass, entry, api, timedelta(seconds=30))
 
-    async def _async_update_data(self) -> dict[str, dict[str, SynoCamera]]:
+    async def _async_update_data(self) -> dict[str, dict[int, SynoCamera]]:
         """Fetch all camera data from api."""
+        # at this point it is ensured that surveillance_station existst
+        assert self.api.surveillance_station is not None
         surveillance_station = self.api.surveillance_station
-        current_data: dict[str, SynoCamera] = {
+        current_data: dict[int, SynoCamera] = {
             camera.id: camera for camera in surveillance_station.get_all_cameras()
         }
 
@@ -128,7 +135,7 @@ class SynologyDSMCameraUpdateCoordinator(
         except SynologyDSMAPIErrorException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        new_data: dict[str, SynoCamera] = {
+        new_data: dict[int, SynoCamera] = {
             camera.id: camera for camera in surveillance_station.get_all_cameras()
         }
 
