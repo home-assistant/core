@@ -14,11 +14,11 @@ from pyinsteon.groups import (
 )
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,13 +54,13 @@ async def async_setup_entry(
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
             hass,
-            BINARY_SENSOR_DOMAIN,
+            Platform.BINARY_SENSOR,
             InsteonBinarySensorEntity,
             async_add_entities,
             discovery_info,
         )
 
-    signal = f"{SIGNAL_ADD_ENTITIES}_{BINARY_SENSOR_DOMAIN}"
+    signal = f"{SIGNAL_ADD_ENTITIES}_{Platform.BINARY_SENSOR}"
     async_dispatcher_connect(hass, signal, async_add_insteon_binary_sensor_entities)
     async_add_insteon_binary_sensor_entities()
 

@@ -1,7 +1,7 @@
 """Test the Frontier Silicon config flow."""
 from unittest.mock import AsyncMock, patch
 
-from afsapi import ConnectionError, InvalidPinException
+from afsapi import ConnectionError, InvalidPinException, NotImplementedException
 import pytest
 
 from homeassistant import config_entries
@@ -37,19 +37,31 @@ INVALID_MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
 )
 
 
-async def test_import_success(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("radio_id_return_value", "radio_id_side_effect"),
+    [("mock_radio_id", None), (None, NotImplementedException)],
+)
+async def test_import_success(
+    hass: HomeAssistant,
+    radio_id_return_value: str | None,
+    radio_id_side_effect: Exception | None,
+) -> None:
     """Test successful import."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 80,
-            CONF_PIN: "1234",
-            CONF_NAME: "Test name",
-        },
-    )
+    with patch(
+        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
+        return_value=radio_id_return_value,
+        side_effect=radio_id_side_effect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_PIN: "1234",
+                CONF_NAME: "Test name",
+            },
+        )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
@@ -141,8 +153,15 @@ async def test_import_already_exists(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("radio_id_return_value", "radio_id_side_effect"),
+    [("mock_radio_id", None), (None, NotImplementedException)],
+)
 async def test_form_default_pin(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    radio_id_return_value: str | None,
+    radio_id_side_effect: Exception | None,
 ) -> None:
     """Test manual device add with default pin."""
     result = await hass.config_entries.flow.async_init(
@@ -152,10 +171,15 @@ async def test_form_default_pin(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
-    )
+    with patch(
+        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
+        return_value=radio_id_return_value,
+        side_effect=radio_id_side_effect,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+        )
     await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
@@ -167,8 +191,15 @@ async def test_form_default_pin(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("radio_id_return_value", "radio_id_side_effect"),
+    [("mock_radio_id", None), (None, NotImplementedException)],
+)
 async def test_form_nondefault_pin(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    radio_id_return_value: str | None,
+    radio_id_side_effect: Exception | None,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -192,10 +223,15 @@ async def test_form_nondefault_pin(
     assert result2["step_id"] == "device_config"
     assert result2["errors"] is None
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {CONF_PIN: "4321"},
-    )
+    with patch(
+        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
+        return_value=radio_id_return_value,
+        side_effect=radio_id_side_effect,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_PIN: "4321"},
+        )
     await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
@@ -322,14 +358,27 @@ async def test_invalid_device_url(
     mock_setup_entry.assert_called_once()
 
 
-async def test_ssdp(hass: HomeAssistant, mock_setup_entry: MockConfigEntry) -> None:
+@pytest.mark.parametrize(
+    ("radio_id_return_value", "radio_id_side_effect"),
+    [("mock_radio_id", None), (None, NotImplementedException)],
+)
+async def test_ssdp(
+    hass: HomeAssistant,
+    mock_setup_entry: MockConfigEntry,
+    radio_id_return_value: str | None,
+    radio_id_side_effect: Exception | None,
+) -> None:
     """Test a device being discovered."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=MOCK_DISCOVERY,
-    )
+    with patch(
+        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
+        return_value=radio_id_return_value,
+        side_effect=radio_id_side_effect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=MOCK_DISCOVERY,
+        )
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -404,7 +453,7 @@ async def test_ssdp_nondefault_pin(hass: HomeAssistant) -> None:
     """Test a device being discovered."""
 
     with patch(
-        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
+        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_friendly_name",
         side_effect=InvalidPinException,
     ):
         result = await hass.config_entries.flow.async_init(

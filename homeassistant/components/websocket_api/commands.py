@@ -715,7 +715,7 @@ def handle_supported_features(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle setting supported features."""
-    connection.supported_features = msg["features"]
+    connection.set_supported_features(msg["features"])
     connection.send_result(msg["id"])
 
 

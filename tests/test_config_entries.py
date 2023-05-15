@@ -2657,7 +2657,7 @@ async def test_async_setup_update_entry(hass: HomeAssistant) -> None:
         (config_entries.SOURCE_ZEROCONF, BaseServiceInfo()),
         (
             config_entries.SOURCE_HASSIO,
-            HassioServiceInfo(config={}, name="Test", slug="test"),
+            HassioServiceInfo(config={}, name="Test", slug="test", uuid="1234"),
         ),
     ),
 )

@@ -109,7 +109,7 @@ async def test_legacy_resolving(hass: HomeAssistant, mock_provider: MSProvider) 
     mock_get_tts_audio.reset_mock()
     media = await media_source.async_resolve_media(
         hass,
-        "media-source://tts/test?message=Bye%20World&language=de&voice=Paulus",
+        "media-source://tts/test?message=Bye%20World&language=de_DE&voice=Paulus",
         None,
     )
     assert media.url.startswith("/api/tts_proxy/")
@@ -144,7 +144,7 @@ async def test_resolving(hass: HomeAssistant, mock_tts_entity: MSEntity) -> None
     mock_get_tts_audio.reset_mock()
     media = await media_source.async_resolve_media(
         hass,
-        "media-source://tts/tts.test?message=Bye%20World&language=de&voice=Paulus",
+        "media-source://tts/tts.test?message=Bye%20World&language=de_DE&voice=Paulus",
         None,
     )
     assert media.url.startswith("/api/tts_proxy/")

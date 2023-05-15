@@ -8,6 +8,7 @@ import logging
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
 from roborock.containers import HomeDataDevice, RoborockDeviceInfo, UserData
+from roborock.exceptions import RoborockException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -44,7 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device, result in zip(devices, network_results)
         if result is not None
     }
-    await mqtt_client.async_disconnect()
+    try:
+        await mqtt_client.async_disconnect()
+    except RoborockException as err:
+        _LOGGER.warning("Failed disconnecting from the mqtt server %s", err)
     if not network_info:
         raise ConfigEntryNotReady(
             "Could not get network information about your devices"

@@ -72,6 +72,8 @@ async def test_setup_legacy_service(hass: HomeAssistant) -> None:
         },
     }
 
+    await async_setup_component(hass, "homeassistant", {})
+
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 
@@ -104,7 +106,7 @@ async def test_setup_service(
             "name": "tts_test",
             "entity_id": "tts.test",
             "media_player": "media_player.demo",
-            "language": "en",
+            "language": "en_US",
         },
     }
 

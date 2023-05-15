@@ -53,9 +53,7 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
     ) as mock_client:
         extension, data = await tts.async_get_media_source_audio(
             hass,
-            tts.generate_media_source_id(
-                hass, "Hello world", "tts.test_tts", hass.config.language
-            ),
+            tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
         )
 
     assert extension == "wav"
@@ -89,7 +87,7 @@ async def test_get_tts_audio_raw(
                 hass,
                 "Hello world",
                 "tts.test_tts",
-                hass.config.language,
+                "en-US",
                 options={tts.ATTR_AUDIO_OUTPUT: "raw"},
             ),
         )
@@ -109,9 +107,7 @@ async def test_get_tts_audio_connection_lost(
     ), pytest.raises(HomeAssistantError):
         await tts.async_get_media_source_audio(
             hass,
-            tts.generate_media_source_id(
-                hass, "Hello world", "tts.test_tts", hass.config.language
-            ),
+            tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
         )
 
 

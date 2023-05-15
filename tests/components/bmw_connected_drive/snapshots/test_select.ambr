@@ -4,38 +4,6 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Target SoC',
-        'icon': 'mdi:battery-charging-medium',
-        'options': list([
-          '20',
-          '25',
-          '30',
-          '35',
-          '40',
-          '45',
-          '50',
-          '55',
-          '60',
-          '65',
-          '70',
-          '75',
-          '80',
-          '85',
-          '90',
-          '95',
-          '100',
-        ]),
-        'unit_of_measurement': '%',
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.i4_edrive40_target_soc',
-      'last_changed': <ANY>,
-      'last_updated': <ANY>,
-      'state': '80',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i4 eDrive40 AC Charging Limit',
         'icon': 'mdi:current-ac',
         'options': list([

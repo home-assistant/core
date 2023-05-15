@@ -64,6 +64,8 @@ async def async_setup_entry(
 class Switch(ZhaEntity, SwitchEntity):
     """ZHA switch."""
 
+    _attr_name: str = "Switch"
+
     def __init__(
         self,
         unique_id: str,
@@ -286,6 +288,7 @@ class OnOffWindowDetectionFunctionConfigurationEntity(
 
     _zcl_attribute: str = "window_detection_function"
     _zcl_inverter_attribute: str = "window_detection_function_inverter"
+    _attr_name: str = "Invert window detection"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
