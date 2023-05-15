@@ -1,6 +1,6 @@
 """Test the config flow for the Insteon integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from voluptuous_serialize import convert
@@ -54,6 +54,8 @@ from .const import (
     PATCH_ASYNC_SETUP,
     PATCH_ASYNC_SETUP_ENTRY,
     PATCH_CONNECTION,
+    PATCH_CONNECTION_CLOSE,
+    PATCH_DEVICES,
     PATCH_USB_LIST,
 )
 from .mock_devices import MockDevices
@@ -356,13 +358,10 @@ async def _options_form(
     mock_devices = MockDevices(connected=True)
     await mock_devices.async_load()
     mock_devices.modem = mock_devices["AA.AA.AA"]
-    mock_devices.modem.async_close = AsyncMock()
     with patch(PATCH_CONNECTION, new=connection), patch(
         PATCH_ASYNC_SETUP_ENTRY, return_value=True
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.insteon.config_flow.devices", mock_devices
-    ), patch(
-        "homeassistant.components.insteon.config_flow.async_close", AsyncMock()
+    ) as mock_setup_entry, patch(PATCH_DEVICES, mock_devices), patch(
+        PATCH_CONNECTION_CLOSE
     ):
         result = await hass.config_entries.options.async_configure(flow_id, user_input)
         return result, mock_setup_entry
@@ -727,9 +726,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm_usb"
 
-    with patch("homeassistant.components.insteon.config_flow.async_connect"), patch(
-        "homeassistant.components.insteon.async_setup_entry", return_value=True
-    ):
+    with patch(PATCH_CONNECTION), patch(PATCH_ASYNC_SETUP, return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
