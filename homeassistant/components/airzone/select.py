@@ -110,10 +110,9 @@ class AirzoneBaseSelect(AirzoneEntity, SelectEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update select attributes."""
-        value = self.get_airzone_value(self.entity_description.key)
-        if value is not None:
-            value = str(value.value)
-        self._attr_current_option = value
+        self._attr_current_option = str(
+            self.get_airzone_value(self.entity_description.key)
+        )
 
 
 class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
