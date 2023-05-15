@@ -137,8 +137,8 @@ async def test_step_user(hass: HomeAssistant, config, setup_rainmachine) -> None
     assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
-        CONF_PORT: 8081,
-        CONF_SSL: False,
+        CONF_PORT: 8080,
+        CONF_SSL: True,
         CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
 
@@ -237,7 +237,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
             {
                 CONF_IP_ADDRESS: "192.168.1.100",
                 CONF_PASSWORD: "password",
-                CONF_PORT: 8081,
+                CONF_PORT: 8080,
             },
         )
         await hass.async_block_till_done()
@@ -247,8 +247,8 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
     assert result2["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
-        CONF_PORT: 8081,
-        CONF_SSL: False,
+        CONF_PORT: 8080,
+        CONF_SSL: True,
         CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
 

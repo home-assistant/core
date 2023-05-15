@@ -23,8 +23,8 @@ def config_fixture(hass):
     return {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
-        CONF_PORT: 8081,
-        CONF_SSL: False,
+        CONF_PORT: 8080,
+        CONF_SSL: True,
     }
 
 

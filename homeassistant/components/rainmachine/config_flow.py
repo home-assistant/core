@@ -89,7 +89,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ip_address,
                 entry.data[CONF_PASSWORD],
                 entry.data[CONF_PORT],
-                entry.data.get(CONF_SSL, False),
+                entry.data.get(CONF_SSL, True),
             ):
                 await self.async_set_unique_id(controller.mac)
                 self._abort_if_unique_id_configured(
@@ -113,7 +113,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_IP_ADDRESS, default=self.discovered_ip_address): str,
                 vol.Required(CONF_PASSWORD): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                vol.Optional(CONF_SSL, default=False): bool,
+                vol.Optional(CONF_SSL, default=True): bool,
             }
         )
 
@@ -131,7 +131,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_IP_ADDRESS],
                 user_input[CONF_PASSWORD],
                 user_input[CONF_PORT],
-                user_input.get(CONF_SSL, False),
+                user_input.get(CONF_SSL, True),
             )
             if controller:
                 await self.async_set_unique_id(controller.mac)

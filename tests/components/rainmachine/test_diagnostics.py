@@ -24,8 +24,8 @@ async def test_entry_diagnostics(
             "data": {
                 "ip_address": "192.168.1.100",
                 "password": REDACTED,
-                "port": 8081,
-                "ssl": False,
+                "port": 8080,
+                "ssl": True,
             },
             "options": {"use_app_run_times": False},
             "pref_disable_new_entities": False,
@@ -650,8 +650,8 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
             "data": {
                 "ip_address": "192.168.1.100",
                 "password": REDACTED,
-                "port": 8081,
-                "ssl": False,
+                "port": 8080,
+                "ssl": True,
             },
             "options": {"use_app_run_times": False},
             "pref_disable_new_entities": False,
