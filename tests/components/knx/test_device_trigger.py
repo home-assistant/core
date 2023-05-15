@@ -81,7 +81,7 @@ async def test_if_fires_on_telegram(
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "type": "telegram",
-                        "Addresses": ["1/2/3", "1/2/4"],
+                        "destination": ["1/2/3", "1/2/4"],
                     },
                     "action": {
                         "service": "test.automation",
@@ -183,7 +183,7 @@ async def test_get_trigger_capabilities_node_status(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "name": "Addresses",
+            "name": "destination",
             "optional": True,
             "selector": {
                 "select": {
