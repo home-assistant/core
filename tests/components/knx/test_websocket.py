@@ -173,7 +173,6 @@ async def test_knx_subscribe_telegrams_command_no_project(
     await knx.receive_read("1/2/3")
     await knx.receive_write("1/3/4", True)
     await knx.receive_write("1/3/4", False)
-    await knx.receive_individual_address_read()
     await knx.receive_write("1/3/8", (0x34, 0x45))
     # send outgoing events
     await hass.services.async_call(
