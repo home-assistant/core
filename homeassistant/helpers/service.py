@@ -562,27 +562,25 @@ async def async_get_all_descriptions(
     descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
     services = hass.services.async_services()
 
-    # The dict preserves insertion order, so we can use it to determine if
-    # the domains are the same as before (this is only used for caching)
-    domains = tuple(services.keys())
-
-    # If we have a complete cache, check if it is still valid
-    if ALL_SERVICE_DESCRIPTIONS_CACHE in hass.data:
-        previous_domains, previous_descriptions_cache = hass.data[
-            ALL_SERVICE_DESCRIPTIONS_CACHE
-        ]
-        # If the domains are the same, we can return the cache
-        if previous_domains == domains:
-            return cast(dict[str, dict[str, Any]], previous_descriptions_cache)
-
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
     missing = set()
+    all_services = []
     for domain in services:
         for service in services[domain]:
-            if (domain, service) not in descriptions_cache:
+            cache_key = (domain, service)
+            all_services.append(cache_key)
+            if cache_key not in descriptions_cache:
                 missing.add(domain)
-                break
+
+    # If we have a complete cache, check if it is still valid
+    if ALL_SERVICE_DESCRIPTIONS_CACHE in hass.data:
+        previous_all_services, previous_descriptions_cache = hass.data[
+            ALL_SERVICE_DESCRIPTIONS_CACHE
+        ]
+        # If the domains are the same, we can return the cache
+        if previous_all_services == all_services:
+            return cast(dict[str, dict[str, Any]], previous_descriptions_cache)
 
     # Files we loaded for missing descriptions
     loaded = {}
@@ -635,7 +633,7 @@ async def async_get_all_descriptions(
 
             descriptions[domain][service] = description
 
-    hass.data[ALL_SERVICE_DESCRIPTIONS_CACHE] = (domains, descriptions)
+    hass.data[ALL_SERVICE_DESCRIPTIONS_CACHE] = (all_services, descriptions)
     return descriptions
 
 
