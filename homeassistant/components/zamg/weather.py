@@ -64,10 +64,14 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         try:
-            if self.coordinator.data[self.station_id]["TLAM"]["data"] is not None:
-                return float(self.coordinator.data[self.station_id]["TLAM"]["data"])
-            if self.coordinator.data[self.station_id]["TL"]["data"] is not None:
-                return float(self.coordinator.data[self.station_id]["TL"]["data"])
+            if (
+                value := self.coordinator.data[self.station_id]["TLAM"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["TL"]["data"]
+            ) is not None:
+                return float(value)
             return None
         except (KeyError, ValueError, TypeError):
             return None
@@ -92,10 +96,14 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         try:
-            if self.coordinator.data[self.station_id]["FFAM"]["data"] is not None:
-                return float(self.coordinator.data[self.station_id]["FFAM"]["data"])
-            if self.coordinator.data[self.station_id]["FFX"]["data"] is not None:
-                return float(self.coordinator.data[self.station_id]["FFX"]["data"])
+            if (
+                value := self.coordinator.data[self.station_id]["FFAM"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["FFX"]["data"]
+            ) is not None:
+                return float(value)
             return None
         except (KeyError, ValueError, TypeError):
             return None
@@ -104,10 +112,14 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         try:
-            if self.coordinator.data[self.station_id]["DD"]["data"] is not None:
-                return float(self.coordinator.data[self.station_id]["DD"]["data"])
-            if self.coordinator.data[self.station_id]["DDX"]["data"] is not None:
-                return float(self.coordinator.data[self.station_id]["DDX"]["data"])
+            if (
+                value := self.coordinator.data[self.station_id]["DD"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["DDX"]["data"]
+            ) is not None:
+                return float(value)
             return None
         except (KeyError, ValueError, TypeError):
             return None
