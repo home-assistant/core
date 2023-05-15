@@ -104,7 +104,7 @@ async def async_setup_platform(
 class SlowPWMEntity(RestoreNumber):
     """Representation of a Slow PWM number."""
 
-    def __init__(self, hass, config, unique_id: str | None):
+    def __init__(self, hass: HomeAssistant, config, unique_id: str | None) -> None:
         """Initialize the Slow PWM number."""
         self._config = config
         self._hass = hass
