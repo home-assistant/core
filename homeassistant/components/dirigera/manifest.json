@@ -1,0 +1,13 @@
+{
+  "domain": "dirigera",
+  "name": "IKEA DIRIGERA",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dirigera",
+  "homekit": {
+    "models": ["DIRIGERA"]
+  },
+  "iot_class": "local_polling",
+  "loggers": [],
+  "requirements": []
+}
