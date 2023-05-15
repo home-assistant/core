@@ -37,7 +37,7 @@ class _PyJWSWithLoadCache(PyJWS):
         return super()._load(jwt)
 
 
-jws = _PyJWSWithLoadCache()
+_jws = _PyJWSWithLoadCache()
 
 
 @lru_cache(maxsize=JWT_TOKEN_CACHE_SIZE)
@@ -63,7 +63,7 @@ class _PyJWTWithVerify(PyJWT):
             # Avoid caching impossible tokens
             raise DecodeError("Token too large")
         return _decode_payload(
-            jws.decode_complete(
+            _jws.decode_complete(
                 jwt=jwt,
                 key=key,
                 algorithms=algorithms,
