@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     wemo_dispatcher = WemoDispatcher(entry)
     wemo_discovery = WemoDiscovery(hass, wemo_dispatcher, static_conf)
 
-    async def async_stop_wemo(event: Event) -> None:
+    async def async_stop_wemo(_: Event | None = None) -> None:
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
         await hass.async_add_executor_job(registry.stop)
@@ -123,6 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
     )
+    entry.async_on_unload(async_stop_wemo)
 
     # Need to do this at least once in case statistics are defined and discovery is disabled
     await wemo_discovery.discover_statics()
