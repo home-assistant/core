@@ -14,6 +14,7 @@ from homeassistant.components.hassio import (
     DOMAIN,
     STORAGE_KEY,
     async_get_addon_store_info,
+    hostname_from_addon_slug,
 )
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -871,3 +872,12 @@ async def test_get_store_addon_info(
     data = await async_get_addon_store_info(hass, "test")
     assert data["name"] == "bla"
     assert aioclient_mock.call_count == 1
+
+
+def test_hostname_from_addon_slug() -> None:
+    """Test hostname_from_addon_slug."""
+    assert hostname_from_addon_slug("mqtt") == "mqtt"
+    assert (
+        hostname_from_addon_slug("core_silabs_multiprotocol")
+        == "core-silabs-multiprotocol"
+    )

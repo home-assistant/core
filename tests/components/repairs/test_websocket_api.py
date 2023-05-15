@@ -5,7 +5,6 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock
 
-from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -430,7 +429,7 @@ async def test_step_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-@freeze_time("2022-07-19 07:53:05")
+@pytest.mark.freeze_time("2022-07-19 07:53:05")
 async def test_list_issues(
     hass: HomeAssistant, hass_storage: dict[str, Any], hass_ws_client
 ) -> None:

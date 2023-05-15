@@ -793,6 +793,8 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
 
             return OptionsFlowHandler()
 
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
     MockConfigEntry(
         domain="test",
         entry_id="test1",
@@ -824,6 +826,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
+    mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
@@ -889,6 +892,7 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
+    mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod

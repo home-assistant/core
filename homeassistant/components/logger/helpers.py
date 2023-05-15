@@ -66,17 +66,18 @@ def _chattiest_log_level(level1: int, level2: int) -> int:
     return min(level1, level2)
 
 
-async def get_integration_loggers(hass: HomeAssistant, domain: str) -> list[str]:
+async def get_integration_loggers(hass: HomeAssistant, domain: str) -> set[str]:
     """Get loggers for an integration."""
-    loggers = [f"homeassistant.components.{domain}"]
+    loggers: set[str] = {f"homeassistant.components.{domain}"}
     with contextlib.suppress(IntegrationNotFound):
         integration = await async_get_integration(hass, domain)
+        loggers.add(integration.pkg_path)
         if integration.loggers:
-            loggers.extend(integration.loggers)
+            loggers.update(integration.loggers)
     return loggers
 
 
-@dataclass
+@dataclass(slots=True)
 class LoggerSetting:
     """Settings for a single module or integration."""
 
@@ -85,7 +86,7 @@ class LoggerSetting:
     type: str
 
 
-@dataclass
+@dataclass(slots=True)
 class LoggerDomainConfig:
     """Logger domain config."""
 
@@ -188,7 +189,7 @@ class LoggerSettings:
         if settings.type == LogSettingsType.INTEGRATION:
             loggers = await get_integration_loggers(hass, domain)
         else:
-            loggers = [domain]
+            loggers = {domain}
 
         combined_logs = {logger: LOGSEVERITY[settings.level] for logger in loggers}
         # Don't override the log levels with the ones from YAML
@@ -203,7 +204,7 @@ class LoggerSettings:
             if settings.type == LogSettingsType.INTEGRATION:
                 loggers = await get_integration_loggers(hass, domain)
             else:
-                loggers = [domain]
+                loggers = {domain}
 
             for logger in loggers:
                 combined_logs[logger] = LOGSEVERITY[settings.level]

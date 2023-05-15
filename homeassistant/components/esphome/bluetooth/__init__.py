@@ -78,15 +78,18 @@ async def async_connect_scanner(
     scanner = ESPHomeScanner(
         hass, source, entry.title, new_info_callback, connector, connectable
     )
+    if connectable:
+        # If its connectable be sure not to register the scanner
+        # until we know the connection is fully setup since otherwise
+        # there is a race condition where the connection can fail
+        await cli.subscribe_bluetooth_connections_free(
+            entry_data.async_update_ble_connection_limits
+        )
     unload_callbacks = [
         async_register_scanner(hass, scanner, connectable),
         scanner.async_setup(),
     ]
     await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
-    if connectable:
-        await cli.subscribe_bluetooth_connections_free(
-            entry_data.async_update_ble_connection_limits
-        )
 
     @hass_callback
     def _async_unload() -> None:

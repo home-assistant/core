@@ -531,12 +531,47 @@ async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
         test_lock.release()
 
 
+async def test_async_parallel_updates_with_one_using_executor(
+    hass: HomeAssistant,
+) -> None:
+    """Test parallel updates with 1 (sequential) using the executor."""
+    test_semaphore = asyncio.Semaphore(1)
+    locked = []
+
+    class SyncEntity(entity.Entity):
+        """Test entity."""
+
+        def __init__(self, entity_id):
+            """Initialize sync test entity."""
+            self.entity_id = entity_id
+            self.hass = hass
+            self.parallel_updates = test_semaphore
+
+        def update(self):
+            """Test update."""
+            locked.append(self.parallel_updates.locked())
+
+    entities = [SyncEntity(f"sensor.test_{i}") for i in range(3)]
+
+    await asyncio.gather(
+        *[
+            hass.async_create_task(
+                ent.async_update_ha_state(True),
+                f"Entity schedule update ha state {ent.entity_id}",
+            )
+            for ent in entities
+        ]
+    )
+
+    assert locked == [True, True, True]
+
+
 async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
     """Test async_remove method when no platform set."""
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
-    await ent.async_update_ha_state()
+    ent.async_write_ha_state()
     assert len(hass.states.async_entity_ids()) == 1
     await ent.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
@@ -577,7 +612,7 @@ async def test_set_context(hass: HomeAssistant) -> None:
     ent.hass = hass
     ent.entity_id = "hello.world"
     ent.async_set_context(context)
-    await ent.async_update_ha_state()
+    ent.async_write_ha_state()
     assert hass.states.get("hello.world").context == context
 
 
@@ -593,7 +628,7 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
         ent.hass = hass
         ent.entity_id = "hello.world"
         ent.async_set_context(context)
-        await ent.async_update_ha_state()
+        ent.async_write_ha_state()
 
     assert hass.states.get("hello.world").context != context
     assert ent._context is None
@@ -986,3 +1021,27 @@ async def test_repr_using_stringify_state() -> None:
 
     entity = MyEntity(entity_id="test.test", available=False)
     assert str(entity) == "<entity test.test=unavailable>"
+
+
+async def test_warn_using_async_update_ha_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we warn once when using async_update_ha_state without force_update."""
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "hello.world"
+
+    # When forcing, it should not trigger the warning
+    caplog.clear()
+    await ent.async_update_ha_state(force_refresh=True)
+    assert "is using self.async_update_ha_state()" not in caplog.text
+
+    # When not forcing, it should trigger the warning
+    caplog.clear()
+    await ent.async_update_ha_state()
+    assert "is using self.async_update_ha_state()" in caplog.text
+
+    # When not forcing, it should not trigger the warning again
+    caplog.clear()
+    await ent.async_update_ha_state()
+    assert "is using self.async_update_ha_state()" not in caplog.text

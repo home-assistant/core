@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from plugwise import Smile
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
@@ -11,7 +12,6 @@ from plugwise.exceptions import (
     ResponseError,
     UnsupportedDeviceError,
 )
-from plugwise.smile import Smile
 import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo

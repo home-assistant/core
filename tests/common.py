@@ -34,6 +34,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -1242,6 +1243,16 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
     return await hass.data["system_health"][domain].info_callback(hass)
 
 
+@contextmanager
+def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
+    """Mock a config flow handler."""
+    assert domain not in config_entries.HANDLERS
+    config_entries.HANDLERS[domain] = config_flow
+    _LOGGER.info("Adding mock config flow: %s", domain)
+    yield
+    config_entries.HANDLERS.pop(domain)
+
+
 def mock_integration(
     hass: HomeAssistant, module: MockModule, built_in: bool = True
 ) -> loader.Integration:
@@ -1257,7 +1268,7 @@ def mock_integration(
 
     def mock_import_platform(platform_name: str) -> NoReturn:
         raise ImportError(
-            f"Mocked unable to import platform '{platform_name}'",
+            f"Mocked unable to import platform '{integration.pkg_path}.{platform_name}'",
             name=f"{integration.pkg_path}.{platform_name}",
         )
 

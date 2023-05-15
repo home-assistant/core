@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, RestoreSensor, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -22,7 +22,6 @@ from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -126,7 +125,7 @@ async def async_setup_platform(
     async_add_entities([derivative])
 
 
-class DerivativeSensor(RestoreEntity, SensorEntity):
+class DerivativeSensor(RestoreSensor, SensorEntity):
     """Representation of an derivative sensor."""
 
     _attr_icon = ICON
@@ -170,9 +169,13 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if (state := await self.async_get_last_state()) is not None:
+        restored_data = await self.async_get_last_sensor_data()
+        if restored_data:
+            self._attr_native_unit_of_measurement = (
+                restored_data.native_unit_of_measurement
+            )
             try:
-                self._state = Decimal(state.state)
+                self._state = Decimal(restored_data.native_value)  # type: ignore[arg-type]
             except SyntaxError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 

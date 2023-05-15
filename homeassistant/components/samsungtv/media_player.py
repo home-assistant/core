@@ -33,10 +33,12 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_component
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_component,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -144,7 +146,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             self._attr_device_info["identifiers"] = {(DOMAIN, self.unique_id)}
         if self._mac:
             self._attr_device_info["connections"] = {
-                (CONNECTION_NETWORK_MAC, self._mac)
+                (dr.CONNECTION_NETWORK_MAC, self._mac)
             }
 
         # Mark the end of a shutdown command (need to wait 15 seconds before
@@ -442,7 +444,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         await self._async_send_keys(["KEY_CHDOWN"])
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
         if media_type == MediaType.APP:
@@ -475,8 +477,8 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Turn the media player on."""
         if self._turn_on:
             await self._turn_on.async_run(self.hass, self._context)
-        # on_script is deprecated - replaced by turn_on trigger
-        if self._on_script:
+        elif self._on_script:
+            # YAML on_script is deprecated - replaced by turn_on trigger
             await self._on_script.async_run(context=self._context)
         elif self._mac:
             await self.hass.async_add_executor_job(self._wake_on_lan)

@@ -34,7 +34,9 @@ async def async_setup_entry(
         "async_request_image",
     )
 
-    _installation = await Installation.retrieve(hass.data[DOMAIN][entry.entry_id])
+    _installation = await Installation.retrieve(
+        hass.data[DOMAIN][entry.entry_id], entry.data["contract"]
+    )
 
     async_add_entities(
         [

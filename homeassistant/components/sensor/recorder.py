@@ -119,7 +119,16 @@ def _time_weighted_average(
         duration = end - old_start_time
         accumulated += old_fstate * duration.total_seconds()
 
-    return accumulated / (end - start).total_seconds()
+    period_seconds = (end - start).total_seconds()
+    if period_seconds == 0:
+        # If the only state changed that happened was at the exact moment
+        # at the end of the period, we can't calculate a meaningful average
+        # so we return 0.0 since it represents a time duration smaller than
+        # we can measure. This probably means the precision of statistics
+        # column schema in the database is incorrect but it is actually possible
+        # to happen if the state change event fired at the exact microsecond
+        return 0.0
+    return accumulated / period_seconds
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
@@ -453,10 +462,10 @@ def _compile_statistics(  # noqa: C901
     # that are not in the metadata table and we are not working
     # with them anyway.
     old_metadatas = statistics.get_metadata_with_session(
-        get_instance(hass), session, statistic_ids=list(entities_with_float_states)
+        get_instance(hass), session, statistic_ids=set(entities_with_float_states)
     )
     to_process: list[tuple[str, str | None, str, list[tuple[float, State]]]] = []
-    to_query: list[str] = []
+    to_query: set[str] = set()
     for _state in sensor_states:
         entity_id = _state.entity_id
         if not (maybe_float_states := entities_with_float_states.get(entity_id)):
@@ -472,7 +481,7 @@ def _compile_statistics(  # noqa: C901
         state_class: str = _state.attributes[ATTR_STATE_CLASS]
         to_process.append((entity_id, statistics_unit, state_class, valid_float_states))
         if "sum" in wanted_statistics[entity_id]:
-            to_query.append(entity_id)
+            to_query.add(entity_id)
 
     last_stats = statistics.get_latest_short_term_statistics(
         hass, to_query, {"last_reset", "state", "sum"}, metadata=old_metadatas
@@ -548,8 +557,11 @@ def _compile_statistics(  # noqa: C901
                 last_stat = last_stats[entity_id][0]
                 last_reset = _timestamp_to_isoformat_or_none(last_stat["last_reset"])
                 old_last_reset = last_reset
-                new_state = old_state = last_stat["state"]
-                _sum = last_stat["sum"] or 0.0
+                # If there are no previous values and has_sum
+                # was previously false there will be no last_stat
+                # for state or sum
+                new_state = old_state = last_stat.get("state")
+                _sum = last_stat.get("sum") or 0.0
 
             for fstate, state in valid_float_states:
                 reset = False

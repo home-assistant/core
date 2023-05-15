@@ -390,12 +390,12 @@ class ModbusHub:
 
     def _pymodbus_call(
         self, unit: int | None, address: int, value: int | list[int], use_call: str
-    ) -> ModbusResponse:
+    ) -> ModbusResponse | None:
         """Call sync. pymodbus."""
         kwargs = {"slave": unit} if unit else {}
         entry = self._pb_call[use_call]
         try:
-            result = entry.func(address, value, **kwargs)
+            result: ModbusResponse = entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
             return None

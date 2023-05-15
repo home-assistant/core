@@ -34,7 +34,7 @@ ALPINE_RELEASE_FILE = "/etc/alpine-release"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class RuntimeConfig:
     """Class to hold the information for running Home Assistant."""
 

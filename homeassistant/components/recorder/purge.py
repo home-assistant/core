@@ -8,7 +8,6 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
-from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
 
 import homeassistant.util.dt as dt_util
@@ -35,6 +34,7 @@ from .queries import (
     find_event_types_to_purge,
     find_events_to_purge,
     find_latest_statistics_runs_run_id,
+    find_legacy_detached_states_and_attributes_to_purge,
     find_legacy_event_state_and_attributes_and_data_ids_to_purge,
     find_legacy_row,
     find_short_term_statistics_to_purge,
@@ -74,7 +74,7 @@ def purge_old_data(
     with session_scope(session=instance.get_session()) as session:
         # Purge a max of SQLITE_MAX_BIND_VARS, based on the oldest states or events record
         has_more_to_purge = False
-        if _purging_legacy_format(session):
+        if instance.use_legacy_events_index and _purging_legacy_format(session):
             _LOGGER.debug(
                 "Purge running in legacy format as there are states with event_id"
                 " remaining"
@@ -147,7 +147,28 @@ def _purge_legacy_format(
     _purge_unused_attributes_ids(instance, session, attributes_ids)
     _purge_event_ids(session, event_ids)
     _purge_unused_data_ids(instance, session, data_ids)
-    return bool(event_ids or state_ids or attributes_ids or data_ids)
+
+    # The database may still have some rows that have an event_id but are not
+    # linked to any event. These rows are not linked to any event because the
+    # event was deleted. We need to purge these rows as well or we will never
+    # switch to the new format which will prevent us from purging any events
+    # that happened after the detached states.
+    (
+        detached_state_ids,
+        detached_attributes_ids,
+    ) = _select_legacy_detached_state_and_attributes_and_data_ids_to_purge(
+        session, purge_before
+    )
+    _purge_state_ids(instance, session, detached_state_ids)
+    _purge_unused_attributes_ids(instance, session, detached_attributes_ids)
+    return bool(
+        event_ids
+        or state_ids
+        or attributes_ids
+        or data_ids
+        or detached_state_ids
+        or detached_attributes_ids
+    )
 
 
 def _purge_states_and_attributes_ids(
@@ -224,12 +245,12 @@ def _select_state_attributes_ids_to_purge(
     """Return sets of state and attribute ids to purge."""
     state_ids = set()
     attributes_ids = set()
-    for state in session.execute(
+    for state_id, attributes_id in session.execute(
         find_states_to_purge(dt_util.utc_to_timestamp(purge_before))
     ).all():
-        state_ids.add(state.state_id)
-        if state.attributes_id:
-            attributes_ids.add(state.attributes_id)
+        state_ids.add(state_id)
+        if attributes_id:
+            attributes_ids.add(attributes_id)
     _LOGGER.debug(
         "Selected %s state ids and %s attributes_ids to remove",
         len(state_ids),
@@ -244,12 +265,12 @@ def _select_event_data_ids_to_purge(
     """Return sets of event and data ids to purge."""
     event_ids = set()
     data_ids = set()
-    for event in session.execute(
+    for event_id, data_id in session.execute(
         find_events_to_purge(dt_util.utc_to_timestamp(purge_before))
     ).all():
-        event_ids.add(event.event_id)
-        if event.data_id:
-            data_ids.add(event.data_id)
+        event_ids.add(event_id)
+        if data_id:
+            data_ids.add(data_id)
     _LOGGER.debug(
         "Selected %s event ids and %s data_ids to remove", len(event_ids), len(data_ids)
     )
@@ -391,7 +412,7 @@ def _select_statistics_runs_to_purge(
     Takes care to keep the newest run.
     """
     statistic_runs = session.execute(find_statistics_runs_to_purge(purge_before)).all()
-    statistic_runs_list = [run.run_id for run in statistic_runs]
+    statistic_runs_list = [run_id for (run_id,) in statistic_runs]
     # Exclude the newest statistics run
     if (
         last_run := session.execute(find_latest_statistics_runs_run_id()).scalar()
@@ -410,7 +431,32 @@ def _select_short_term_statistics_to_purge(
         find_short_term_statistics_to_purge(purge_before)
     ).all()
     _LOGGER.debug("Selected %s short term statistics to remove", len(statistics))
-    return [statistic.id for statistic in statistics]
+    return [statistic_id for (statistic_id,) in statistics]
+
+
+def _select_legacy_detached_state_and_attributes_and_data_ids_to_purge(
+    session: Session, purge_before: datetime
+) -> tuple[set[int], set[int]]:
+    """Return a list of state, and attribute ids to purge.
+
+    We do not link these anymore since state_change events
+    do not exist in the events table anymore, however we
+    still need to be able to purge them.
+    """
+    states = session.execute(
+        find_legacy_detached_states_and_attributes_to_purge(
+            dt_util.utc_to_timestamp(purge_before)
+        )
+    ).all()
+    _LOGGER.debug("Selected %s state ids to remove", len(states))
+    state_ids = set()
+    attributes_ids = set()
+    for state_id, attributes_id in states:
+        if state_id:
+            state_ids.add(state_id)
+        if attributes_id:
+            attributes_ids.add(attributes_id)
+    return state_ids, attributes_ids
 
 
 def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
@@ -432,14 +478,14 @@ def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
     state_ids = set()
     attributes_ids = set()
     data_ids = set()
-    for event in events:
-        event_ids.add(event.event_id)
-        if event.state_id:
-            state_ids.add(event.state_id)
-        if event.attributes_id:
-            attributes_ids.add(event.attributes_id)
-        if event.data_id:
-            data_ids.add(event.data_id)
+    for event_id, data_id, state_id, attributes_id in events:
+        event_ids.add(event_id)
+        if state_id:
+            state_ids.add(state_id)
+        if attributes_id:
+            attributes_ids.add(attributes_id)
+        if data_id:
+            data_ids.add(data_id)
     return event_ids, state_ids, attributes_ids, data_ids
 
 
@@ -518,7 +564,9 @@ def _purge_old_recorder_runs(
     """Purge all old recorder runs."""
     # Recorder runs is small, no need to batch run it
     deleted_rows = session.execute(
-        delete_recorder_runs_rows(purge_before, instance.run_history.current.run_id)
+        delete_recorder_runs_rows(
+            purge_before, instance.recorder_runs_manager.current.run_id
+        )
     )
     _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
 
@@ -671,14 +719,18 @@ def _purge_filtered_events(
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids_set)
     )
-    states: list[Row[tuple[int]]] = (
-        session.query(States.state_id).filter(States.event_id.in_(event_ids_set)).all()
-    )
-    if states:
+    if (
+        instance.use_legacy_events_index
+        and (
+            states := session.query(States.state_id)
+            .filter(States.event_id.in_(event_ids_set))
+            .all()
+        )
+        and (state_ids := {state_id for (state_id,) in states})
+    ):
         # These are legacy states that are linked to an event that are no longer
         # created but since we did not remove them when we stopped adding new ones
         # we will need to purge them here.
-        state_ids: set[int] = {state.state_id for state in states}
         _purge_state_ids(instance, session, state_ids)
     _purge_event_ids(session, event_ids_set)
     if unused_data_ids_set := _select_unused_event_data_ids(
