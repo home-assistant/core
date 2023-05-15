@@ -3,9 +3,10 @@
 from unittest.mock import patch
 
 import pytest
+from voluptuous_serialize import convert
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import usb
+from homeassistant.components import dhcp, usb
 from homeassistant.components.insteon.config_flow import (
     STEP_ADD_OVERRIDE,
     STEP_ADD_X10,
@@ -193,6 +194,28 @@ async def test_form_select_hub_v2(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_discovery_dhcp(hass: HomeAssistant) -> None:
+    """Test the discovery of the Hub via DHCP."""
+    discovery_info = dhcp.DhcpServiceInfo("1.2.3.4", "", "aa:bb:cc:dd:ee:ff")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery_info
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": STEP_HUB_V2},
+    )
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    schema = convert(result2["data_schema"])
+    found_host = False
+    for field in schema:
+        if field["name"] == CONF_HOST:
+            assert field["default"] == "1.2.3.4"
+            found_host = True
+    assert found_host
+
+
 async def test_failed_connection_plm(hass: HomeAssistant) -> None:
     """Test a failed connection with the PLM."""
 
@@ -364,6 +387,34 @@ async def test_options_change_hub_config(hass: HomeAssistant) -> None:
     assert config_entry.data == {**user_input, CONF_HUB_VERSION: 2}
 
 
+async def test_options_change_hub_bad_config(hass: HomeAssistant) -> None:
+    """Test changing Hub v2 with bad config."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="abcde12345",
+        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
+        options={},
+    )
+
+    config_entry.add_to_hass(hass)
+    result = await _options_init_form(
+        hass, config_entry.entry_id, STEP_CHANGE_HUB_CONFIG
+    )
+
+    user_input = {
+        CONF_HOST: "2.3.4.5",
+        CONF_PORT: 9999,
+        CONF_USERNAME: "new username",
+        CONF_PASSWORD: "new password",
+    }
+    result, _ = await _options_form(
+        hass, result["flow_id"], user_input, mock_failed_connection
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
+
+
 async def test_options_change_plm_config(hass: HomeAssistant) -> None:
     """Test changing PLM config."""
     config_entry = MockConfigEntry(
@@ -384,6 +435,31 @@ async def test_options_change_plm_config(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {}
     assert config_entry.data == user_input
+
+
+async def test_options_change_plm_bad_config(hass: HomeAssistant) -> None:
+    """Test changing PLM config."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="abcde12345",
+        data=MOCK_USER_INPUT_PLM,
+        options={},
+    )
+
+    config_entry.add_to_hass(hass)
+    result = await _options_init_form(
+        hass, config_entry.entry_id, STEP_CHANGE_PLM_CONFIG
+    )
+
+    user_input = {CONF_DEVICE: "/dev/ttyUSB0"}
+    result, _ = await _options_form(
+        hass, result["flow_id"], user_input, mock_failed_connection
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_options_add_device_override(hass: HomeAssistant) -> None:
