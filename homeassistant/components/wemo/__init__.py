@@ -133,6 +133,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a wemo config entry."""
+    # This makes sure that `entry.async_on_unload` routines run correctly on unload
+    return True
+
+
 class WemoDispatcher:
     """Dispatch WeMo devices to the correct platform."""
 
