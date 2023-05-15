@@ -782,6 +782,34 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         return media
 
 
+class StorageLocationSelectorConfig(TypedDict, total=False):
+    """Class to represent an storage location selector config."""
+
+    usage: str
+
+
+@SELECTORS.register("storage_location")
+class StorageLocationSelector(Selector[StorageLocationSelectorConfig]):
+    """Selector of a storage location."""
+
+    selector_type = "storage_location"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("usage"): vol.In(["backup", "media"]),
+        }
+    )
+
+    def __init__(self, config: StorageLocationSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        name: str = vol.Match(r"^\w*$")(data)
+        return name
+
+
 class NumberSelectorConfig(TypedDict, total=False):
     """Class to represent a number selector config."""
 

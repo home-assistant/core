@@ -17,6 +17,23 @@
     }
   },
   "issues": {
+    "issue_mount_mount_failed": {
+      "title": "Network storage device failed",
+      "fix_flow": {
+        "step": {
+          "fix_menu": {
+            "description": "Could not connect to '{reference}'. Check host logs for errors from the mount service for more details.\n\nUse reload to try to connect again. If you need to update '{reference}', go to [storage]({storage_url}).",
+            "menu_options": {
+              "mount_execute_reload": "Reload",
+              "mount_execute_remove": "Remove"
+            }
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not apply the fix. Check the supervisor logs for more details."
+        }
+      }
+    },
     "issue_system_multiple_data_disks": {
       "title": "Multiple data disks detected",
       "fix_flow": {

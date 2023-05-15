@@ -417,6 +417,20 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> 
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
+    (
+        ({}, ("abc123",), (None, "abc@123", "abc 123")),
+        ({"usage": "backup"}, ("abc123",), (None, "abc@123", "abc 123")),
+    ),
+)
+def test_storage_location_selector_schema(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test storage location selector."""
+    _test_selector("storage_location", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
     (({}, (1, "one", None), ()),),  # Everything can be coerced to bool
 )
 def test_boolean_selector_schema(schema, valid_selections, invalid_selections) -> None:

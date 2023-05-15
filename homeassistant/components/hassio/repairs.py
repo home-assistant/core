@@ -16,6 +16,12 @@ from .issues import Issue, Suggestion, SupervisorIssues
 
 SUGGESTION_CONFIRMATION_REQUIRED = {"system_execute_reboot"}
 
+EXTRA_PLACEHOLDERS = {
+    "issue_mount_mount_failed": {
+        "storage_url": "/config/storage",
+    }
+}
+
 
 class SupervisorIssueRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
@@ -42,11 +48,14 @@ class SupervisorIssueRepairFlow(RepairsFlow):
     @property
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
-        return (
-            {PLACEHOLDER_KEY_REFERENCE: self.issue.reference}
-            if self.issue and self.issue.reference
-            else None
-        )
+        if not self.issue:
+            return None
+
+        placeholders = EXTRA_PLACEHOLDERS.get(self.issue.key, {})
+        if self.issue.reference:
+            placeholders |= {PLACEHOLDER_KEY_REFERENCE: self.issue.reference}
+
+        return placeholders or None
 
     def _async_form_for_suggestion(self, suggestion: Suggestion) -> FlowResult:
         """Return form for suggestion."""
