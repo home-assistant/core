@@ -6,6 +6,7 @@ from datetime import timedelta
 from ipaddress import ip_address
 import logging
 import secrets
+import time
 from typing import Any, Final
 
 from aiohttp import hdrs
@@ -21,7 +22,6 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt as dt_util
 from homeassistant.util.network import is_local
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
@@ -62,8 +62,7 @@ def async_sign_path(
             refresh_token_id = hass.data[STORAGE_KEY]
 
     url = URL(path)
-    now = dt_util.utcnow()
-    now_timestamp = int(now.timestamp())
+    now_timestamp = int(time.time())
     expiration_timestamp = now_timestamp + int(expiration.total_seconds())
     params = [itm for itm in url.query.items() if itm[0] not in SAFE_QUERY_PARAMS]
     json_payload = json_bytes(
