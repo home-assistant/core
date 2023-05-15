@@ -240,6 +240,15 @@ def zigpy_device_mock(zigpy_app_controller):
                 ):
                     common.patch_cluster(cluster)
 
+        if attributes is not None:
+            for ep_id, clusters in attributes.items():
+                for cluster_name, attrs in clusters.items():
+                    cluster = getattr(device.endpoints[ep_id], cluster_name)
+
+                    for name, value in attrs.items():
+                        attr_id = cluster.find_attribute(name).id
+                        cluster._attr_cache[attr_id] = value
+
         return device
 
     return _mock_dev

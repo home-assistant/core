@@ -32,6 +32,12 @@ LIGHT_ENTITY = "light.kitchen_lights"
 CLOSE_THRESHOLD = 10
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 def _close_enough(actual_rgb, testing_rgb):
     """Validate the given RGB value is in acceptable tolerance."""
     # Convert the given RGB values to hue / saturation and then back again
