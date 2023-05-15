@@ -47,6 +47,7 @@
       },
       "reauth_confirm": {
         "title": "Reauthenticate the ONVIF device",
+        "description": "Some devices will reject authentication if the time is out of sync by more than 5 seconds. If authentication is unsuccessful, verify the time on the device is correct and try again.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"

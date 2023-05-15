@@ -1,9 +1,11 @@
 """The ONVIF integration."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 from httpx import RequestError
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
+from onvif.util import is_auth_error, stringify_onvif_error
 from zeep.exceptions import Fault, TransportError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
@@ -20,7 +22,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
 from .device import ONVIFDevice
-from .util import is_auth_error, stringify_onvif_error
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +57,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ONVIFError as err:
         await device.device.close()
         raise ConfigEntryNotReady(
-            f"Could not setup camera {device.device.host}:{device.device.port}: {err}"
+            f"Could not setup camera {device.device.host}:{device.device.port}: {stringify_onvif_error(err)}"
+        ) from err
+    except TransportError as err:
+        await device.device.close()
+        stringified_onvif_error = stringify_onvif_error(err)
+        if err.status_code in (
+            HTTPStatus.UNAUTHORIZED.value,
+            HTTPStatus.FORBIDDEN.value,
+        ):
+            raise ConfigEntryAuthFailed(
+                f"Auth Failed: {stringified_onvif_error}"
+            ) from err
+        raise ConfigEntryNotReady(
+            f"Could not setup camera {device.device.host}:{device.device.port}: {stringified_onvif_error}"
         ) from err
     except asyncio.CancelledError as err:
         # After https://github.com/agronholm/anyio/issues/374 is resolved

@@ -18,6 +18,7 @@ from bluetooth_adapters import (
 )
 
 from homeassistant import config_entries
+from homeassistant.components.logger import EVENT_LOGGING_CHANGED
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -113,6 +114,7 @@ class BluetoothManager:
         self.hass = hass
         self._integration_matcher = integration_matcher
         self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
+        self._cancel_logging_listener: CALLBACK_TYPE | None = None
 
         self._advertisement_tracker = AdvertisementTracker()
 
@@ -136,6 +138,7 @@ class BluetoothManager:
         self._bluetooth_adapters = bluetooth_adapters
         self.storage = storage
         self.slot_manager = slot_manager
+        self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -201,12 +204,20 @@ class BluetoothManager:
         self._adapters = self._bluetooth_adapters.adapters
         return self._find_adapter_by_address(address)
 
+    @hass_callback
+    def _async_logging_changed(self, event: Event) -> None:
+        """Handle logging change."""
+        self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
+
     async def async_setup(self) -> None:
         """Set up the bluetooth manager."""
         await self._bluetooth_adapters.refresh()
         install_multiple_bleak_catcher()
         self._all_history, self._connectable_history = async_load_history_from_system(
             self._bluetooth_adapters, self.storage
+        )
+        self._cancel_logging_listener = self.hass.bus.async_listen(
+            EVENT_LOGGING_CHANGED, self._async_logging_changed
         )
         self.async_setup_unavailable_tracking()
         seen: set[str] = set()
@@ -225,6 +236,9 @@ class BluetoothManager:
         if self._cancel_unavailable_tracking:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None
+        if self._cancel_logging_listener:
+            self._cancel_logging_listener()
+            self._cancel_logging_listener = None
         uninstall_multiple_bleak_catcher()
 
     @hass_callback
@@ -342,7 +356,6 @@ class BluetoothManager:
         self,
         old: BluetoothServiceInfoBleak,
         new: BluetoothServiceInfoBleak,
-        debug: bool,
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
@@ -351,7 +364,7 @@ class BluetoothManager:
             )
         ):
             # If the old advertisement is stale, any new advertisement is preferred
-            if debug:
+            if self._debug:
                 _LOGGER.debug(
                     (
                         "%s (%s): Switching from %s to %s (time elapsed:%s > stale"
@@ -370,7 +383,7 @@ class BluetoothManager:
         ):
             # If new advertisement is RSSI_SWITCH_THRESHOLD more,
             # the new one is preferred.
-            if debug:
+            if self._debug:
                 _LOGGER.debug(
                     (
                         "%s (%s): Switching from %s to %s (new rssi:%s - threshold:%s >"
@@ -414,7 +427,6 @@ class BluetoothManager:
         old_connectable_service_info = connectable and connectable_history.get(address)
 
         source = service_info.source
-        debug = _LOGGER.isEnabledFor(logging.DEBUG)
         # This logic is complex due to the many combinations of scanners
         # that are supported.
         #
@@ -437,7 +449,7 @@ class BluetoothManager:
             and (scanner := self._sources.get(old_service_info.source))
             and scanner.scanning
             and self._prefer_previous_adv_from_different_source(
-                old_service_info, service_info, debug
+                old_service_info, service_info
             )
         ):
             # If we are rejecting the new advertisement and the device is connectable
@@ -461,7 +473,7 @@ class BluetoothManager:
                         )
                         and connectable_scanner.scanning
                         and self._prefer_previous_adv_from_different_source(
-                            old_connectable_service_info, service_info, debug
+                            old_connectable_service_info, service_info
                         )
                     )
                 ):
@@ -523,7 +535,7 @@ class BluetoothManager:
             )
 
         matched_domains = self._integration_matcher.match_domains(service_info)
-        if debug:
+        if self._debug:
             _LOGGER.debug(
                 "%s: %s %s match: %s",
                 self._async_describe_source(service_info),

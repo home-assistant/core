@@ -199,14 +199,10 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
             # Don't migrate if there's a YAML config
             return
 
-        for state in self.hass.states.async_all():
-            async_expose_entity(
-                self.hass,
-                CLOUD_ALEXA,
-                state.entity_id,
-                self._should_expose_legacy(state.entity_id),
-            )
-        for entity_id in self._prefs.alexa_entity_configs:
+        for entity_id in {
+            *self.hass.states.async_entity_ids(),
+            *self._prefs.alexa_entity_configs,
+        }:
             async_expose_entity(
                 self.hass,
                 CLOUD_ALEXA,
@@ -220,8 +216,18 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
 
         async def on_hass_started(hass):
             if self._prefs.alexa_settings_version != ALEXA_SETTINGS_VERSION:
-                if self._prefs.alexa_settings_version < 2:
+                if self._prefs.alexa_settings_version < 2 or (
+                    # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
+                    self._prefs.alexa_settings_version < 3
+                    and not any(
+                        settings.get("should_expose", False)
+                        for settings in async_get_assistant_settings(
+                            hass, CLOUD_ALEXA
+                        ).values()
+                    )
+                ):
                     self._migrate_alexa_entity_settings_v1()
+
                 await self._prefs.async_update(
                     alexa_settings_version=ALEXA_SETTINGS_VERSION
                 )
