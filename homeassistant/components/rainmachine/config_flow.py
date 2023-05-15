@@ -22,6 +22,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_ZONE_RUN,
     DOMAIN,
+    LOGGER,
 )
 
 
@@ -39,7 +40,8 @@ async def async_get_controller(
     client = Client(session=websession)
     try:
         await client.load_local(ip_address, password, port=port, use_ssl=ssl)
-    except RainMachineError:
+    except RainMachineError as err:
+        LOGGER.error("Error while loading controller: %s", err)
         return None
 
     return get_client_controller(client)
@@ -87,7 +89,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ip_address,
                 entry.data[CONF_PASSWORD],
                 entry.data[CONF_PORT],
-                entry.data.get(CONF_SSL, True),
+                entry.data.get(CONF_SSL, False),
             ):
                 await self.async_set_unique_id(controller.mac)
                 self._abort_if_unique_id_configured(
@@ -111,6 +113,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_IP_ADDRESS, default=self.discovered_ip_address): str,
                 vol.Required(CONF_PASSWORD): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                vol.Optional(CONF_SSL, default=False): bool,
             }
         )
 
@@ -128,7 +131,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_IP_ADDRESS],
                 user_input[CONF_PASSWORD],
                 user_input[CONF_PORT],
-                user_input.get(CONF_SSL, True),
+                user_input.get(CONF_SSL, False),
             )
             if controller:
                 await self.async_set_unique_id(controller.mac)
@@ -150,7 +153,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-            errors = {CONF_PASSWORD: "invalid_auth"}
+            errors = {"base": "cannot_connect"}
 
         if self.discovered_ip_address:
             self.context["title_placeholders"] = {"ip": self.discovered_ip_address}

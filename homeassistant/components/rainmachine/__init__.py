@@ -54,7 +54,7 @@ from .const import (
 from .model import RainMachineEntityDescription
 from .util import RainMachineDataUpdateCoordinator
 
-DEFAULT_SSL = True
+DEFAULT_SSL = False
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 

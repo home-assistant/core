@@ -16,6 +16,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
+async def test_cannot_connect(hass: HomeAssistant, config) -> None:
+    """Test that any connection issue throws an error."""
+    with patch("regenmaschine.client.Client.load_local", side_effect=RainMachineError):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config
+        )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
@@ -23,15 +32,6 @@ async def test_duplicate_error(hass: HomeAssistant, config, config_entry) -> Non
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_invalid_password(hass: HomeAssistant, config) -> None:
-    """Test that an invalid password throws an error."""
-    with patch("regenmaschine.client.Client.load_local", side_effect=RainMachineError):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config
-        )
-    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 @pytest.mark.parametrize(
@@ -137,8 +137,8 @@ async def test_step_user(hass: HomeAssistant, config, setup_rainmachine) -> None
     assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
-        CONF_PORT: 8080,
-        CONF_SSL: True,
+        CONF_PORT: 8081,
+        CONF_SSL: False,
         CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
 
@@ -237,7 +237,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
             {
                 CONF_IP_ADDRESS: "192.168.1.100",
                 CONF_PASSWORD: "password",
-                CONF_PORT: 8080,
+                CONF_PORT: 8081,
             },
         )
         await hass.async_block_till_done()
@@ -247,8 +247,8 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
     assert result2["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
-        CONF_PORT: 8080,
-        CONF_SSL: True,
+        CONF_PORT: 8081,
+        CONF_SSL: False,
         CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
 

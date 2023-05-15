@@ -4,15 +4,17 @@
     "step": {
       "user": {
         "title": "Fill in your information",
+        "description": "Gen1 controllers should use port 80 without SSL; all others should either use port 8080 with SSL or port 8081 without SSL.",
         "data": {
           "ip_address": "Hostname or IP Address",
           "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
         }
       }
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

@@ -2236,7 +2236,7 @@ rapt-ble==0.1.0
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.11.0
+regenmaschine==2023.05.0
 
 # homeassistant.components.renault
 renault-api==0.1.13
