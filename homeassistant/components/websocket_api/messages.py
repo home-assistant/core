@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import voluptuous as vol
 
@@ -121,14 +121,16 @@ def _state_diff_event(event: Event) -> dict:
     """
     if (event_new_state := event.data["new_state"]) is None:
         return {ENTITY_EVENT_REMOVE: [event.data["entity_id"]]}
-    assert isinstance(event_new_state, State)
+    if TYPE_CHECKING:
+        event_new_state = cast(State, event_new_state)
     if (event_old_state := event.data["old_state"]) is None:
         return {
             ENTITY_EVENT_ADD: {
                 event_new_state.entity_id: event_new_state.as_compressed_state()
             }
         }
-    assert isinstance(event_old_state, State)
+    if TYPE_CHECKING:
+        event_old_state = cast(State, event_old_state)
     return _state_diff(event_old_state, event_new_state)
 
 
@@ -136,27 +138,28 @@ def _state_diff(
     old_state: State, new_state: State
 ) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
     """Create a diff dict that can be used to overlay changes."""
-    diff: dict = {STATE_DIFF_ADDITIONS: {}}
-    additions = diff[STATE_DIFF_ADDITIONS]
+    additions: dict[str, Any] = {}
+    diff: dict[str, dict[str, Any]] = {STATE_DIFF_ADDITIONS: additions}
+    new_state_context = new_state.context
+    old_state_context = old_state.context
     if old_state.state != new_state.state:
         additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
         additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed.timestamp()
     elif old_state.last_updated != new_state.last_updated:
         additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated.timestamp()
-    if old_state.context.parent_id != new_state.context.parent_id:
-        additions.setdefault(COMPRESSED_STATE_CONTEXT, {})[
-            "parent_id"
-        ] = new_state.context.parent_id
-    if old_state.context.user_id != new_state.context.user_id:
-        additions.setdefault(COMPRESSED_STATE_CONTEXT, {})[
-            "user_id"
-        ] = new_state.context.user_id
-    if old_state.context.id != new_state.context.id:
+    if old_state_context.parent_id != new_state_context.parent_id:
+        additions[COMPRESSED_STATE_CONTEXT] = {"parent_id": new_state_context.parent_id}
+    if old_state_context.user_id != new_state_context.user_id:
         if COMPRESSED_STATE_CONTEXT in additions:
-            additions[COMPRESSED_STATE_CONTEXT]["id"] = new_state.context.id
+            additions[COMPRESSED_STATE_CONTEXT]["user_id"] = new_state_context.user_id
         else:
-            additions[COMPRESSED_STATE_CONTEXT] = new_state.context.id
+            additions[COMPRESSED_STATE_CONTEXT] = {"user_id": new_state_context.user_id}
+    if old_state_context.id != new_state_context.id:
+        if COMPRESSED_STATE_CONTEXT in additions:
+            additions[COMPRESSED_STATE_CONTEXT]["id"] = new_state_context.id
+        else:
+            additions[COMPRESSED_STATE_CONTEXT] = new_state_context.id
     if (old_attributes := old_state.attributes) != (
         new_attributes := new_state.attributes
     ):

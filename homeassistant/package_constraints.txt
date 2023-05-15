@@ -14,7 +14,7 @@ bcrypt==4.0.1
 bleak-retry-connector==3.0.2
 bleak==0.20.2
 bluetooth-adapters==0.15.3
-bluetooth-auto-recovery==1.1.2
+bluetooth-auto-recovery==1.2.0
 bluetooth-data-tools==0.4.0
 certifi>=2021.5.30
 ciso8601==2.3.0
@@ -22,7 +22,7 @@ cryptography==40.0.2
 dbus-fast==1.86.0
 fnv-hash-fast==0.3.1
 ha-av==10.0.0
-hass-nabucasa==0.66.2
+hass-nabucasa==0.67.1
 hassil==1.0.6
 home-assistant-bluetooth==1.10.0
 home-assistant-frontend==20230503.3
@@ -33,7 +33,7 @@ janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
 mutagen==1.46.0
-orjson==3.8.11
+orjson==3.8.12
 paho-mqtt==1.6.1
 pillow==9.5.0
 pip>=21.0,<23.2
@@ -45,7 +45,7 @@ pyudev==0.23.2
 pyyaml==6.0
 requests==2.29.0
 scapy==2.5.0
-sqlalchemy==2.0.12
+sqlalchemy==2.0.13
 typing-extensions>=4.5.0,<5.0
 ulid-transform==0.7.2
 voluptuous-serialize==2.6.0
@@ -151,10 +151,6 @@ matplotlib==3.6.1
 # pyOpenSSL 23.1.0 or later required to avoid import errors when
 # cryptography 40.0.1 is installed with botocore
 pyOpenSSL>=23.1.0
-
-# uamqp newer versions we currently can't build for armv7/armhf
-# Limit this to Python 3.10, to not block Python 3.11 dev for now
-uamqp==1.6.0;python_version<'3.11'
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
