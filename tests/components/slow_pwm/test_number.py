@@ -216,7 +216,7 @@ async def test_change_during_cycle(hass: HomeAssistant, setup_comp) -> None:
     """Test if we change value during the cycle."""
     output_switch = "input_boolean.test"
     slow_pwm = f"{Platform.NUMBER}.test"
-    cycle_time = 10  # Cycle time in seconds
+    cycle_time = 5  # Cycle time in seconds
 
     assert await async_setup_component(
         hass, input_boolean.DOMAIN, {"input_boolean": {"test": None}}
@@ -287,8 +287,8 @@ async def test_minimal_switch_time(hass: HomeAssistant, setup_comp) -> None:
     """Test minimal switching time parameter."""
     output_switch = "input_boolean.test"
     slow_pwm = f"{Platform.NUMBER}.test"
-    cycle_time = 10
-    minimal_switch_time = 3
+    cycle_time = 5
+    minimal_switch_time = 1.5
     assert await async_setup_component(
         hass, input_boolean.DOMAIN, {"input_boolean": {"test": None}}
     )
