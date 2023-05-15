@@ -19,11 +19,11 @@ from .schema import ga_list_validator
 from .telegrams import TelegramDict
 
 TRIGGER_TELEGRAM: Final = "telegram"
-EXTRA_FIELD_DESTINATIN: Final = "destination"  # no translation support
+EXTRA_FIELD_DESTINATION: Final = "destination"  # no translation support
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Optional(EXTRA_FIELD_DESTINATIN): ga_list_validator,
+        vol.Optional(EXTRA_FIELD_DESTINATION): ga_list_validator,
         vol.Required(CONF_TYPE): TRIGGER_TELEGRAM,
     }
 )
@@ -64,7 +64,7 @@ async def async_get_trigger_capabilities(
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional(EXTRA_FIELD_DESTINATIN): selector.SelectSelector(
+                vol.Optional(EXTRA_FIELD_DESTINATION): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         mode=selector.SelectSelectorMode.DROPDOWN,
                         multiple=True,
@@ -84,7 +84,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    dst_addresses: list[str] = config.get(EXTRA_FIELD_DESTINATIN, [])
+    dst_addresses: list[str] = config.get(EXTRA_FIELD_DESTINATION, [])
     job = HassJob(action, f"KNX device trigger {trigger_info}")
     knx: KNXModule = hass.data[DOMAIN]
 
