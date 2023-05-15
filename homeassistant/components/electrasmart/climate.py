@@ -27,7 +27,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -246,7 +246,11 @@ class ElectraClimateEntity(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        self._electra_ac_device.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
+
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            raise ValueError("No target temperature provided")
+
+        self._electra_ac_device.set_temperature(temperature)
         await self._async_operate_electra_ac()
 
     def _update_device_attrs(self) -> None:
@@ -314,27 +318,17 @@ class ElectraClimateEntity(ClimateEntity):
         try:
             resp = await self._api.set_state(self._electra_ac_device)
         except ElectraApiError as exp:
-            err_message = f"Error communicating with API: {exp}"
-            if "client error" in err_message:
-                err_message += ", Check your internet connection."
-                raise HomeAssistantError(err_message) from ElectraApiError
+            raise HomeAssistantError(
+                f"Error communicating with Electra API: {exp}"
+            ) from exp
 
-            if Attributes.INTRUDER_LOCKOUT in err_message:
-                err_message += (
-                    ", You must re-authenticate by adding the integration again"
-                )
-                raise ConfigEntryAuthFailed(err_message) from ElectraApiError
-
+        if not (
+            resp[Attributes.STATUS] == STATUS_SUCCESS
+            and resp[Attributes.DATA][Attributes.RES] == STATUS_SUCCESS
+        ):
             self._async_write_ha_state()
+            raise HomeAssistantError(f"Failed to update {self.name}, error: {resp}")
 
-        else:
-            if not (
-                resp[Attributes.STATUS] == STATUS_SUCCESS
-                and resp[Attributes.DATA][Attributes.RES] == STATUS_SUCCESS
-            ):
-                self._async_write_ha_state()
-                raise HomeAssistantError(f"Failed to update {self.name}, error: {resp}")
-
-            self._update_device_attrs()
-            self._last_state_update = int(time.time())
-            self._async_write_ha_state()
+        self._update_device_attrs()
+        self._last_state_update = int(time.time())
+        self._async_write_ha_state()
