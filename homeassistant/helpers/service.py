@@ -59,6 +59,7 @@ CONF_SERVICE_ENTITY_ID = "entity_id"
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+ALL_SERVICE_DESCRIPTIONS_CACHE = "all_service_descriptions_cache"
 
 
 @cache
@@ -559,15 +560,27 @@ async def async_get_all_descriptions(
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
     descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
-    format_cache_key = "{}.{}".format
     services = hass.services.async_services()
+
+    # The dict preserves insertion order, so we can use it to determine if
+    # the domains are the same as before (this is only used for caching)
+    domains = tuple(services.keys())
+
+    # If we have a complete cache, check if it is still valid
+    if ALL_SERVICE_DESCRIPTIONS_CACHE in hass.data:
+        previous_domains, previous_descriptions_cache = hass.data[
+            ALL_SERVICE_DESCRIPTIONS_CACHE
+        ]
+        # If the domains are the same, we can return the cache
+        if previous_domains == domains:
+            return cast(dict[str, dict[str, Any]], previous_descriptions_cache)
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
     missing = set()
     for domain in services:
         for service in services[domain]:
-            if format_cache_key(domain, service) not in descriptions_cache:
+            if (domain, service) not in descriptions_cache:
                 missing.add(domain)
                 break
 
@@ -595,7 +608,7 @@ async def async_get_all_descriptions(
         descriptions[domain] = {}
 
         for service in services[domain]:
-            cache_key = format_cache_key(domain, service)
+            cache_key = (domain, service)
             description = descriptions_cache.get(cache_key)
 
             # Cache missing descriptions
@@ -622,6 +635,7 @@ async def async_get_all_descriptions(
 
             descriptions[domain][service] = description
 
+    hass.data[ALL_SERVICE_DESCRIPTIONS_CACHE] = (domains, descriptions)
     return descriptions
 
 
@@ -652,7 +666,8 @@ def async_set_service_schema(
     if "target" in schema:
         description["target"] = schema["target"]
 
-    hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
+    hass.data.pop(ALL_SERVICE_DESCRIPTIONS_CACHE, None)
+    hass.data[SERVICE_DESCRIPTION_CACHE][(domain, service)] = description
 
 
 @bind_hass
