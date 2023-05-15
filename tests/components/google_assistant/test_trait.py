@@ -3305,14 +3305,16 @@ async def test_air_quality_description_for_aqi(hass: HomeAssistant) -> None:
         BASIC_CONFIG,
     )
 
-    assert trt._air_quality_description_for_aqi(0) == "healthy"
-    assert trt._air_quality_description_for_aqi(75) == "moderate"
-    assert trt._air_quality_description_for_aqi(125) == "unhealthy for sensitive groups"
-    assert trt._air_quality_description_for_aqi(175) == "unhealthy"
-    assert trt._air_quality_description_for_aqi(250) == "very unhealthy"
-    assert trt._air_quality_description_for_aqi(350) == "hazardous"
-    assert trt._air_quality_description_for_aqi(-1) == "unknown"
-    assert trt._air_quality_description_for_aqi("string") == "unknown"
+    assert trt._air_quality_description_for_aqi("0") == "healthy"
+    assert trt._air_quality_description_for_aqi("75") == "moderate"
+    assert (
+        trt._air_quality_description_for_aqi("125") == "unhealthy for sensitive groups"
+    )
+    assert trt._air_quality_description_for_aqi("175") == "unhealthy"
+    assert trt._air_quality_description_for_aqi("250") == "very unhealthy"
+    assert trt._air_quality_description_for_aqi("350") == "hazardous"
+    assert trt._air_quality_description_for_aqi("-1") == "unknown"
+    assert trt._air_quality_description_for_aqi("non-numeric") == "unknown"
 
 
 async def test_null_device_class(hass: HomeAssistant) -> None:
