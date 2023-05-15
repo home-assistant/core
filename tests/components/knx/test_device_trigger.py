@@ -5,6 +5,7 @@ import voluptuous_serialize
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.knx import DOMAIN, device_trigger
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -101,6 +102,59 @@ async def test_if_fires_on_telegram(
     assert len(calls) == 2
     assert calls.pop().data["specific"] == "telegram - 1/2/4"
     assert calls.pop().data["catch_all"] == "telegram - 1/2/4"
+
+
+async def test_remove_device_trigger(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    knx: KNXTestKit,
+) -> None:
+    """Test for removed callback when device trigger not used."""
+    automation_name = "telegram_trigger_automation"
+    await knx.setup_integration({})
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "alias": automation_name,
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "type": "telegram",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "catch_all": ("telegram - {{ trigger.destination }}")
+                        },
+                    },
+                }
+            ]
+        },
+    )
+
+    assert len(hass.data[DOMAIN].telegrams._jobs) == 1
+    await knx.receive_write("0/0/1", (0x03, 0x2F))
+    assert len(calls) == 1
+    assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: f"automation.{automation_name}"},
+        blocking=True,
+    )
+
+    assert len(hass.data[DOMAIN].telegrams._jobs) == 0
+    await knx.receive_write("0/0/1", (0x03, 0x2F))
+    assert len(calls) == 0
 
 
 async def test_get_trigger_capabilities_node_status(
