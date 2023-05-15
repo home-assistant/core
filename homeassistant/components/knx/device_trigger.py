@@ -13,16 +13,17 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import DOMAIN, KNX_ADDRESS
+from .const import DOMAIN
 from .project import KNXProject
 from .schema import ga_list_validator
 from .telegrams import TelegramDict
 
 TRIGGER_TELEGRAM: Final = "telegram"
+EXTRA_FIELD_ADDRESSES: Final = "Addresses"  # no translation support
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Optional(KNX_ADDRESS): ga_list_validator,
+        vol.Optional(EXTRA_FIELD_ADDRESSES): ga_list_validator,
         vol.Required(CONF_TYPE): TRIGGER_TELEGRAM,
     }
 )
@@ -63,7 +64,7 @@ async def async_get_trigger_capabilities(
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional(KNX_ADDRESS): selector.SelectSelector(
+                vol.Optional(EXTRA_FIELD_ADDRESSES): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         mode=selector.SelectSelectorMode.DROPDOWN,
                         multiple=True,
@@ -83,7 +84,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    addresses: list[str] = config.get(KNX_ADDRESS, [])
+    addresses: list[str] = config.get(EXTRA_FIELD_ADDRESSES, [])
     job = HassJob(action, f"KNX device trigger {trigger_info}")
     knx: KNXModule = hass.data[DOMAIN]
 
