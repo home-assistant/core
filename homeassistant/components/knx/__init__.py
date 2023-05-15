@@ -92,6 +92,7 @@ from .schema import (
     ga_validator,
     sensor_type_validator,
 )
+from .telegrams import Telegrams
 from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
@@ -383,6 +384,7 @@ class KNXModule:
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
+        self.telegrams = Telegrams(hass, self.xknx, self.project)
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx
         )
