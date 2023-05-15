@@ -11,6 +11,7 @@ from typing import Any, Final
 from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
+from jwt import api_jws
 from yarl import URL
 
 from homeassistant.auth import jwt_wrapper
@@ -18,6 +19,7 @@ from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.network import is_local
@@ -61,19 +63,19 @@ def async_sign_path(
 
     url = URL(path)
     now = dt_util.utcnow()
+    now_timestamp = int(now.timestamp())
+    expiration_timestamp = now_timestamp + int(expiration.total_seconds())
     params = [itm for itm in url.query.items() if itm[0] not in SAFE_QUERY_PARAMS]
-    encoded = jwt.encode(
+    json_payload = json_bytes(
         {
             "iss": refresh_token_id,
             "path": url.path,
             "params": params,
-            "iat": now,
-            "exp": now + expiration,
-        },
-        secret,
-        algorithm="HS256",
+            "iat": now_timestamp,
+            "exp": expiration_timestamp,
+        }
     )
-
+    encoded = api_jws.encode(json_payload, secret, "HS256")
     params.append((SIGN_QUERY_PARAM, encoded))
     url = url.with_query(params)
     return f"{url.path}?{url.query_string}"
