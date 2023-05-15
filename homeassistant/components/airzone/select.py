@@ -39,19 +39,9 @@ class AirzoneSelectDescription(SelectEntityDescription, AirzoneSelectDescription
     """Class to describe an Airzone select entity."""
 
 
-GRILLE_ANGLE_OPTIONS: Final[list[str]] = [
-    str(GrilleAngle.DEG_90.value),
-    str(GrilleAngle.DEG_50.value),
-    str(GrilleAngle.DEG_45.value),
-    str(GrilleAngle.DEG_40.value),
-]
+GRILLE_ANGLE_OPTIONS: Final[list[str]] = [str(opt.value) for opt in GrilleAngle]
 
-SLEEP_OPTIONS: Final[list[str]] = [
-    str(SleepTimeout.SLEEP_OFF.value),
-    str(SleepTimeout.SLEEP_30.value),
-    str(SleepTimeout.SLEEP_60.value),
-    str(SleepTimeout.SLEEP_90.value),
-]
+SLEEP_OPTIONS: Final[list[str]] = [str(opt.value) for opt in SleepTimeout]
 
 
 ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
