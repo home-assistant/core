@@ -198,7 +198,6 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
         if (
             not (observation := self._nws.observation)
             or (value := observation.get(self.entity_description.key)) is None
-            or value is None
         ):
             return None
 
