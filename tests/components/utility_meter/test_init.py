@@ -27,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, mock_restore_cache
+from tests.common import MockConfigEntry, async_remove_entity, mock_restore_cache
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -173,6 +173,12 @@ async def test_services(hass: HomeAssistant, meter) -> None:
     # meanwhile energy_bill2_peak accumulated all kWh
     state = hass.states.get("sensor.energy_bill2_peak")
     assert state.state == "4"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.energy_bill_peak")
+    await async_remove_entity(hass, "sensor.energy_bill_offpeak")
+    await async_remove_entity(hass, "sensor.energy_bill2_peak")
+    await async_remove_entity(hass, "sensor.energy_bill2_offpeak")
 
 
 async def test_services_config_entry(hass: HomeAssistant) -> None:

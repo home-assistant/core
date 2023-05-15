@@ -48,6 +48,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_remove_entity,
     mock_restore_cache_with_extra_data,
 )
 
@@ -1300,6 +1301,9 @@ async def _test_self_reset(
     else:
         assert state.attributes.get("last_period") == "0"
         assert state.state == "9"
+
+    # Cleanup lingering timers (no config-entry)
+    await async_remove_entity(hass, "sensor.energy_bill")
 
 
 async def test_self_reset_cron_pattern(hass: HomeAssistant) -> None:
