@@ -130,7 +130,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             return HVACAction.IDLE
 
         hc_data = self.coordinator.data.devices[
-            self.coordinator.data.gateway["heater_id"]
+            self.coordinator.data.gateway["heater_id"]  # type: ignore [index]  # typing through #92253
         ]
         if hc_data["binary_sensors"]["heating_state"]:
             return HVACAction.HEATING

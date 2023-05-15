@@ -70,7 +70,7 @@ async def async_setup_entry(
     entities: list[PlugwiseNumberEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in NUMBER_TYPES:
-            if description.key in device and "setpoint" in device[description.key]:
+            if description.key in device and "setpoint" in device[description.key]:  # type: ignore [literal-required]  # typing through #92253
                 entities.append(
                     PlugwiseNumberEntity(coordinator, device_id, description)
                 )
@@ -99,7 +99,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     def native_step(self) -> float:
         """Return the setpoint step value."""
         return max(
-            self.device[self.entity_description.key][
+            self.device[self.entity_description.key][  # type: ignore [literal-required]  # typing through #92253
                 self.entity_description.native_step_key
             ],
             1,
@@ -108,21 +108,21 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     @property
     def native_value(self) -> float:
         """Return the present setpoint value."""
-        return self.device[self.entity_description.key][
+        return self.device[self.entity_description.key][  # type: ignore [literal-required]  # typing through #92253
             self.entity_description.native_value_key
         ]
 
     @property
     def native_min_value(self) -> float:
         """Return the setpoint min. value."""
-        return self.device[self.entity_description.key][
+        return self.device[self.entity_description.key][  # type: ignore [literal-required]  # typing through #92253
             self.entity_description.native_min_value_key
         ]
 
     @property
     def native_max_value(self) -> float:
         """Return the setpoint max. value."""
-        return self.device[self.entity_description.key][
+        return self.device[self.entity_description.key][  # type: ignore [literal-required]  # typing through #92253
             self.entity_description.native_max_value_key
         ]
 

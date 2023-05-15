@@ -137,8 +137,8 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self.entity_description.key in self.device:
-            return self.device[self.entity_description.key]
-        return self.device["binary_sensors"].get(self.entity_description.key)
+            return self.device[self.entity_description.key]  # type: ignore [literal-required]  # typing through #92253
+        return self.device["binary_sensors"].get(self.entity_description.key)  # type: ignore [return-value]  # typing through #92253
 
     @property
     def icon(self) -> str | None:

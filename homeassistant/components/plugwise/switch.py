@@ -78,7 +78,7 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        return self.device["switches"].get(self.entity_description.key)
+        return self.device["switches"].get(self.entity_description.key)  # type: ignore [return-value]  # typing through #92253
 
     @plugwise_command
     async def async_turn_on(self, **kwargs: Any) -> None:
