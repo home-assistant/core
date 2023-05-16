@@ -273,9 +273,8 @@ def _send_handle_get_states_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle get states response."""
-    connection.send_message(
-        construct_result_message(msg_id, "[" + ",".join(serialized_states) + "]")
-    )
+    joined_states = ",".join(serialized_states)
+    connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
 
 
 @callback
@@ -346,8 +345,9 @@ def _send_handle_entities_init_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle entities init response."""
+    joined_states = ",".join(serialized_states)
     connection.send_message(
-        construct_event_message(msg_id, '{"a":{' + ",".join(serialized_states) + "}}")
+        construct_event_message(msg_id, f'{{"a":{{{joined_states}}}}}')
     )
 
 
