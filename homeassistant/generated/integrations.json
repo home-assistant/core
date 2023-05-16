@@ -2023,6 +2023,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Domains"
         },
+        "google_generative_ai_conversation": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Generative AI Conversation"
+        },
         "google_mail": {
           "integration_type": "service",
           "config_flow": true,
@@ -2089,12 +2095,6 @@
           "name": "Dialogflow"
         }
       }
-    },
-    "google_generative_ai_conversation": {
-      "name": "Google Generative AI Conversation",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "govee_ble": {
       "name": "Govee Bluetooth",
