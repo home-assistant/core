@@ -80,6 +80,7 @@ from .exceptions import (
     Unauthorized,
 )
 from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
+from .helpers.json import json_dumps
 from .util import dt as dt_util, location, ulid as ulid_util
 from .util.async_ import run_callback_threadsafe, shutdown_run_callback_threadsafe
 from .util.read_only_dict import ReadOnlyDict
@@ -1224,6 +1225,8 @@ class State:
         "object_id",
         "_as_dict",
         "_as_compressed_state",
+        "_as_dict_json",
+        "_as_compressed_state_json",
     )
 
     def __init__(
@@ -1260,6 +1263,8 @@ class State:
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
         self._as_compressed_state: dict[str, Any] | None = None
+        self._as_dict_json: str | None = None
+        self._as_compressed_state_json: str | None = None
 
     @property
     def name(self) -> str:
@@ -1294,6 +1299,12 @@ class State:
             )
         return self._as_dict
 
+    def as_dict_json(self) -> str:
+        """Return a JSON string of the State."""
+        if not self._as_dict_json:
+            self._as_dict_json = json_dumps(self.as_dict())
+        return self._as_dict_json
+
     def as_compressed_state(self) -> dict[str, Any]:
         """Build a compressed dict of a state for adds.
 
@@ -1320,6 +1331,19 @@ class State:
             )
         self._as_compressed_state = compressed_state
         return compressed_state
+
+    def as_compressed_state_json(self) -> str:
+        """Build a compressed JSON key value pair of a state for adds.
+
+        The JSON string is a key value pair of the entity_id and the compressed state.
+
+        It is used for sending multiple states in a single message.
+        """
+        if not self._as_compressed_state_json:
+            self._as_compressed_state_json = json_dumps(
+                {self.entity_id: self.as_compressed_state()}
+            )[1:-1]
+        return self._as_compressed_state_json
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
