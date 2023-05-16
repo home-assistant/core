@@ -1,7 +1,7 @@
-"""Tests for the OpenAI integration."""
+"""Tests for the Google Generative AI Conversation integration."""
 from unittest.mock import patch
 
-from openai import error
+from google.api_core.exceptions import ClientError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -88,30 +88,16 @@ async def test_default_prompt(
         model=3,
         suggested_area="Test Area 2",
     )
-    with patch(
-        "openai.ChatCompletion.acreate",
-        return_value={
-            "choices": [
-                {
-                    "message": {
-                        "role": "assistant",
-                        "content": "Hello, how can I help you?",
-                    }
-                }
-            ]
-        },
-    ) as mock_create:
+    with patch("google.generativeai.chat_async") as mock_chat:
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert mock_create.mock_calls[0][2]["messages"] == snapshot
+    assert mock_chat.mock_calls[0][2] == snapshot
 
 
 async def test_error_handling(hass: HomeAssistant, mock_init_component) -> None:
     """Test that the default prompt works."""
-    with patch(
-        "openai.ChatCompletion.acreate", side_effect=error.ServiceUnavailableError
-    ):
+    with patch("google.generativeai.chat_async", side_effect=ClientError("")):
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -129,8 +115,8 @@ async def test_template_error(
         },
     )
     with patch(
-        "openai.Engine.list",
-    ), patch("openai.ChatCompletion.acreate"):
+        "google.generativeai.get_model",
+    ), patch("google.generativeai.chat_async"):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(hass, "hello", None, Context())

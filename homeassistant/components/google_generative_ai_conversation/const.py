@@ -24,10 +24,10 @@ Answer the user's questions about the world truthfully.
 If the user wants to control a device, reject the request and suggest using the Home Assistant app.
 """
 CONF_CHAT_MODEL = "chat_model"
-DEFAULT_CHAT_MODEL = "gpt-3.5-turbo"
-CONF_MAX_TOKENS = "max_tokens"
-DEFAULT_MAX_TOKENS = 150
-CONF_TOP_P = "top_p"
-DEFAULT_TOP_P = 1
+DEFAULT_CHAT_MODEL = "models/chat-bison-001"
 CONF_TEMPERATURE = "temperature"
-DEFAULT_TEMPERATURE = 0.5
+DEFAULT_TEMPERATURE = 0.25
+CONF_TOP_P = "top_p"
+DEFAULT_TOP_P = 0.95
+CONF_TOP_K = "top_k"
+DEFAULT_TOP_K = 40

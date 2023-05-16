@@ -7,8 +7,8 @@ import types
 from types import MappingProxyType
 from typing import Any
 
-import openai
-from openai import error
+from google.api_core.exceptions import ClientError
+import google.generativeai as palm
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -23,14 +23,14 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_CHAT_MODEL,
-    CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
+    CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_CHAT_MODEL,
-    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
+    DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DOMAIN,
 )
@@ -47,9 +47,9 @@ DEFAULT_OPTIONS = types.MappingProxyType(
     {
         CONF_PROMPT: DEFAULT_PROMPT,
         CONF_CHAT_MODEL: DEFAULT_CHAT_MODEL,
-        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
-        CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+        CONF_TOP_P: DEFAULT_TOP_P,
+        CONF_TOP_K: DEFAULT_TOP_K,
     }
 )
 
@@ -59,8 +59,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    openai.api_key = data[CONF_API_KEY]
-    await hass.async_add_executor_job(partial(openai.Engine.list, request_timeout=10))
+    palm.configure(api_key=data[CONF_API_KEY])
+    await hass.async_add_executor_job(partial(palm.list_models))
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -84,10 +84,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, user_input)
-        except error.APIConnectionError:
-            errors["base"] = "cannot_connect"
-        except error.AuthenticationError:
-            errors["base"] = "invalid_auth"
+        except ClientError as err:
+            if err.reason == "API_KEY_INVALID":
+                errors["base"] = "invalid_auth"
+            else:
+                errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -109,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlow(config_entries.OptionsFlow):
-    """OpenAI config flow options handler."""
+    """Google Generative AI config flow options handler."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
@@ -123,15 +124,17 @@ class OptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(
                 title="Google Generative AI Conversation", data=user_input
             )
-        schema = openai_config_option_schema(self.config_entry.options)
+        schema = google_generative_ai_config_option_schema(self.config_entry.options)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
         )
 
 
-def openai_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
-    """Return a schema for OpenAI completion options."""
+def google_generative_ai_config_option_schema(
+    options: MappingProxyType[str, Any]
+) -> dict:
+    """Return a schema for Google Generative AI completion options."""
     if not options:
         options = DEFAULT_OPTIONS
     return {
@@ -143,24 +146,23 @@ def openai_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
         vol.Optional(
             CONF_CHAT_MODEL,
             description={
-                # New key in HA 2023.4
                 "suggested_value": options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
             },
             default=DEFAULT_CHAT_MODEL,
         ): str,
         vol.Optional(
-            CONF_MAX_TOKENS,
-            description={"suggested_value": options[CONF_MAX_TOKENS]},
-            default=DEFAULT_MAX_TOKENS,
-        ): int,
+            CONF_TEMPERATURE,
+            description={"suggested_value": options[CONF_TEMPERATURE]},
+            default=DEFAULT_TEMPERATURE,
+        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         vol.Optional(
             CONF_TOP_P,
             description={"suggested_value": options[CONF_TOP_P]},
             default=DEFAULT_TOP_P,
         ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         vol.Optional(
-            CONF_TEMPERATURE,
-            description={"suggested_value": options[CONF_TEMPERATURE]},
-            default=DEFAULT_TEMPERATURE,
-        ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            CONF_TOP_K,
+            description={"suggested_value": options[CONF_TOP_K]},
+            default=DEFAULT_TOP_K,
+        ): int,
     }

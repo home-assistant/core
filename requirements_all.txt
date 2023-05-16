@@ -812,6 +812,9 @@ google-cloud-pubsub==2.13.11
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==2.12.3
 
+# homeassistant.components.google_generative_ai_conversation
+google-generativeai==0.1.0rc2
+
 # homeassistant.components.nest
 google-nest-sdm==2.2.4
 
@@ -1271,7 +1274,6 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.2.1
 
-# homeassistant.components.google_generative_ai_conversation
 # homeassistant.components.openai_conversation
 openai==0.27.2
 

@@ -24,9 +24,7 @@ def mock_config_entry(hass):
 @pytest.fixture
 async def mock_init_component(hass, mock_config_entry):
     """Initialize integration."""
-    with patch(
-        "openai.Engine.list",
-    ):
+    with patch("google.generativeai.get_model"):
         assert await async_setup_component(
             hass, "google_generative_ai_conversation", {}
         )
