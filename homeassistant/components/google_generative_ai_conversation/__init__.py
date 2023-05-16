@@ -136,7 +136,10 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
             )
 
         _LOGGER.debug("Response %s", chat_response)
-        self.history[conversation_id] = chat_response.messages
+        # For some queries the response is empty. In that case don't update history to avoid
+        # "google.generativeai.types.discuss_types.AuthorError: Authors are not strictly alternating"
+        if chat_response.last:
+            self.history[conversation_id] = chat_response.messages
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(chat_response.last)
