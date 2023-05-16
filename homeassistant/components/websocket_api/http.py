@@ -172,7 +172,7 @@ class WebSocketHandler:
                 (
                     "%s: Client unable to keep up with pending messages. Reached %s pending"
                     " messages. The system's load is too high or an integration is"
-                    " misbehaving. Last message was: %s"
+                    " misbehaving; Last message was: %s"
                 ),
                 self.description,
                 MAX_PENDING_MSG,
@@ -209,11 +209,12 @@ class WebSocketHandler:
             (
                 "%s: Client unable to keep up with pending messages. Stayed over %s for %s"
                 " seconds. The system's load is too high or an integration is"
-                " misbehaving"
+                " misbehaving; Last message was: %s"
             ),
             self.description,
             PENDING_MSG_PEAK,
             PENDING_MSG_PEAK_TIME,
+            self._message_queue[-1],
         )
         self._cancel()
 
