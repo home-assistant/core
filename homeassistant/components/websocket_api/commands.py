@@ -49,18 +49,9 @@ from homeassistant.util.json import format_unserializable_data
 from . import const, decorators, messages
 from .connection import ActiveConnection
 from .const import ERR_NOT_FOUND
+from .messages import construct_event_message, construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
-_STATES_TEMPLATE = "__STATES__"
-_STATES_JSON_TEMPLATE = '"__STATES__"'
-_HANDLE_SUBSCRIBE_ENTITIES_TEMPLATE = JSON_DUMP(
-    messages.event_message(
-        messages.IDEN_TEMPLATE, {messages.ENTITY_EVENT_ADD: _STATES_TEMPLATE}
-    )
-)
-_HANDLE_GET_STATES_TEMPLATE = JSON_DUMP(
-    messages.result_message(messages.IDEN_TEMPLATE, _STATES_TEMPLATE)
-)
 
 
 @callback
@@ -283,13 +274,7 @@ def _send_handle_get_states_response(
 ) -> None:
     """Send handle get states response."""
     connection.send_message(
-        _HANDLE_GET_STATES_TEMPLATE.replace(
-            messages.IDEN_JSON_TEMPLATE, str(msg_id), 1
-        ).replace(
-            _STATES_JSON_TEMPLATE,
-            "[" + ",".join(serialized_states) + "]",
-            1,
-        )
+        construct_result_message(msg_id, "[" + ",".join(serialized_states) + "]")
     )
 
 
@@ -362,13 +347,7 @@ def _send_handle_entities_init_response(
 ) -> None:
     """Send handle entities init response."""
     connection.send_message(
-        _HANDLE_SUBSCRIBE_ENTITIES_TEMPLATE.replace(
-            messages.IDEN_JSON_TEMPLATE, str(msg_id), 1
-        ).replace(
-            _STATES_JSON_TEMPLATE,
-            "{" + ",".join(serialized_states) + "}",
-            1,
-        )
+        construct_event_message(msg_id, '{"a":{' + ",".join(serialized_states) + "}}")
     )
 
 
@@ -394,11 +373,7 @@ async def handle_get_services(
 ) -> None:
     """Handle get services command."""
     payload = await _async_get_all_descriptions_json(hass)
-    connection.send_message(
-        JSON_DUMP(messages.result_message(msg["id"], "__PAYLOAD__")).replace(
-            '"__PAYLOAD__"', payload
-        )
-    )
+    connection.send_message(construct_result_message(msg["id"], payload))
 
 
 @callback
