@@ -483,7 +483,7 @@ async def test_event_skipped_message_too_large(
 async def test_message_is_truncated(
     hass: HomeAssistant, mock_imap_protocol: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test skipping event when message is to large."""
+    """Test truncating message text in event data."""
     event_called = async_capture_events(hass, "imap_content")
 
     config = MOCK_CONFIG.copy()
