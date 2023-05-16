@@ -128,14 +128,13 @@ async def test_sensor(
 
 
 async def test_update_plc_phyrates(
-    hass: HomeAssistant, mock_device: MockDevice
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
 ) -> None:
     """Test state change of plc_downlink_phyrate and plc_uplink_phyrate sensor devices."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key_downlink = f"{DOMAIN}.{device_name}_plc_downlink_phyrate_{PLCNET.devices[1].user_device_name}"
     state_key_uplink = f"{DOMAIN}.{device_name}_plc_uplink_phyrate_{PLCNET.devices[1].user_device_name}"
-    er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -146,7 +145,10 @@ async def test_update_plc_phyrates(
         state.attributes[ATTR_FRIENDLY_NAME]
         == f"{entry.title} PLC downlink phyrate ({PLCNET.devices[1].user_device_name})"
     )
-    assert er.async_get(state_key_downlink).entity_category is EntityCategory.DIAGNOSTIC
+    assert (
+        entity_registry.async_get(state_key_downlink).entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
 
     state = hass.states.get(state_key_uplink)
     assert state is not None
@@ -155,7 +157,10 @@ async def test_update_plc_phyrates(
         state.attributes[ATTR_FRIENDLY_NAME]
         == f"{entry.title} PLC uplink phyrate ({PLCNET.devices[1].user_device_name})"
     )
-    assert er.async_get(state_key_uplink).entity_category is EntityCategory.DIAGNOSTIC
+    assert (
+        entity_registry.async_get(state_key_uplink).entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
 
     # Emulate device failure
     mock_device.plcnet.async_get_network_overview = AsyncMock(
