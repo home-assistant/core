@@ -50,13 +50,8 @@ def result_message(iden: int, result: Any = None) -> dict[str, Any]:
 
 def construct_result_message(iden: int, payload: str) -> str:
     """Construct a success result message JSON."""
-    return (
-        '{"id":'
-        + str(iden)
-        + ',"type":"result","success":true,"result":'
-        + payload
-        + "}"
-    )
+    iden_str = str(iden)
+    return f'{{"id":{iden_str},"type":"result","success":true,"result":{payload}}}'
 
 
 def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
@@ -71,7 +66,8 @@ def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
 
 def construct_event_message(iden: int, payload: str) -> str:
     """Construct an event message JSON."""
-    return '{"id":' + str(iden) + ',"type":"event","event":' + payload + "}"
+    iden_str = str(iden)
+    return f'{{"id":{iden_str},"type":"event","event":{payload}}}'
 
 
 def event_message(iden: int, event: Any) -> dict[str, Any]:
