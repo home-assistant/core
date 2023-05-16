@@ -76,11 +76,8 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
         self, service: Resource, channel_id: str
     ) -> dict[str, Any]:
         playlist_id = get_upload_playlist_id(channel_id)
-        response: dict = (
-            service.playlistItems()
-            .list(part="snippet,contentDetails", playlistId=playlist_id, maxResults=1)
-            .execute()
-        )
+        job: HttpRequest = service.playlistItems().list(part="snippet,contentDetails", playlistId=playlist_id, maxResults=1)
+        response: dict = await self.hass.async_add_executor_job(job.execute)
         video = response["items"][0]
         return {
             ATTR_PUBLISHED_AT: video["snippet"]["publishedAt"],
