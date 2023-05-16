@@ -142,9 +142,16 @@ def ws_group_monitor_info(
 ) -> None:
     """Handle get info command of group monitor."""
     knx: KNXModule = hass.data[DOMAIN]
+    recent_telegrams = [
+        _telegram_dict_to_group_monitor(telegram)
+        for telegram in knx.telegrams.recent_telegrams
+    ]
     connection.send_result(
         msg["id"],
-        {"project_loaded": knx.project.loaded},
+        {
+            "project_loaded": knx.project.loaded,
+            "recent_telegrams": recent_telegrams,
+        },
     )
 
 
@@ -170,14 +177,11 @@ def ws_subscribe_telegram(
             _telegram_dict_to_group_monitor(telegram),
         )
 
-    connection.send_result(msg["id"])
-
-    for telegram in knx.telegrams.recent_telegrams:
-        forward_telegram(telegram)
     connection.subscriptions[msg["id"]] = knx.telegrams.async_listen_telegram(
         action=forward_telegram,
         name="KNX GroupMonitor subscription",
     )
+    connection.send_result(msg["id"])
 
 
 def _telegram_dict_to_group_monitor(telegram: TelegramDict) -> KNXBusMonitorMessage:

@@ -51,7 +51,7 @@ class Telegrams:
     async def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
-        self.recent_telegrams.append(telegram_dict)
+        self.recent_telegrams.appendleft(telegram_dict)
         for job in self._jobs:
             self.hass.async_run_hass_job(job, telegram_dict)
 
