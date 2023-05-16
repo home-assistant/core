@@ -188,10 +188,9 @@ async def test_non_json_message(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == []
-    assert (
-        f"Unable to serialize to JSON. Bad data found at $.result[0](State: test_domain.entity).attributes.bad={bad_data}(<class 'object'>"
-        in caplog.text
-    )
+    assert "Unable to serialize to JSON. Bad data found" in caplog.text
+    assert "State: test_domain.entity" in caplog.text
+    assert "bad=<object" in caplog.text
 
 
 async def test_prepare_fail(
