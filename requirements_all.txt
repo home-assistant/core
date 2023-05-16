@@ -71,7 +71,7 @@ WSDiscovery==2.0.0
 WazeRouteCalculator==0.14
 
 # homeassistant.components.accuweather
-accuweather==0.5.1
+accuweather==0.5.2
 
 # homeassistant.components.adax
 adax==0.2.0
