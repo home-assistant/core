@@ -1,6 +1,8 @@
 """The tests for calendar recorder."""
 from datetime import timedelta
 
+import pytest
+
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import ATTR_FRIENDLY_NAME
@@ -12,9 +14,15 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant():
+    """Override the fixture in calendar.conftest."""
+
+
 async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test sensor attributes to be excluded."""
     now = dt_util.utcnow()
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
 

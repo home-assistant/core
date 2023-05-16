@@ -29,6 +29,14 @@ ENTRY_CONFIG = {
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
 
+ENTRY_CONFIG_WITH_VALUE_TEMPLATE = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "SELECT 5 as value",
+    CONF_COLUMN_NAME: "value",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+    CONF_VALUE_TEMPLATE: "{{ value }}",
+}
+
 ENTRY_CONFIG_INVALID_QUERY = {
     CONF_NAME: "Get Value",
     CONF_QUERY: "UPDATE 5 as value",
