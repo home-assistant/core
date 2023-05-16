@@ -46,6 +46,7 @@ CONF_IS_ENERGY = "is_energy"
 CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
+CONF_IS_IAQ = "is_iaq"
 CONF_IS_ILLUMINANCE = "is_illuminance"
 CONF_IS_IRRADIANCE = "is_irradiance"
 CONF_IS_MOISTURE = "is_moisture"
@@ -94,6 +95,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
+    SensorDeviceClass.IAQ: [{CONF_TYPE: CONF_IS_IAQ}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_IS_ILLUMINANCE}],
     SensorDeviceClass.IRRADIANCE: [{CONF_TYPE: CONF_IS_IRRADIANCE}],
     SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_IS_MOISTURE}],
@@ -154,6 +156,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_FREQUENCY,
                     CONF_IS_GAS,
                     CONF_IS_HUMIDITY,
+                    CONF_IS_IAQ,
                     CONF_IS_ILLUMINANCE,
                     CONF_IS_IRRADIANCE,
                     CONF_IS_MOISTURE,

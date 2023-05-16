@@ -45,6 +45,7 @@ CONF_ENERGY = "energy"
 CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
+CONF_IAQ = "iaq"
 CONF_ILLUMINANCE = "illuminance"
 CONF_IRRADIANCE = "irradiance"
 CONF_MOISTURE = "moisture"
@@ -93,6 +94,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
+    SensorDeviceClass.IAQ: [{CONF_TYPE: CONF_IAQ}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
     SensorDeviceClass.IRRADIANCE: [{CONF_TYPE: CONF_IRRADIANCE}],
     SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_MOISTURE}],
@@ -154,6 +156,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_FREQUENCY,
                     CONF_GAS,
                     CONF_HUMIDITY,
+                    CONF_IAQ,
                     CONF_ILLUMINANCE,
                     CONF_IRRADIANCE,
                     CONF_MOISTURE,

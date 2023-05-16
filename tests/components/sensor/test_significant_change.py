@@ -20,6 +20,10 @@ HUMIDITY_ATTRS = {
     ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
 }
 
+IAQ_ATTRS = {
+    ATTR_DEVICE_CLASS: SensorDeviceClass.IAQ,
+}
+
 TEMP_CELSIUS_ATTRS = {
     ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
@@ -46,6 +50,14 @@ TEMP_FREEDOM_ATTRS = {
         ("100", "99", BATTERY_ATTRS, True),
         ("100", "100", HUMIDITY_ATTRS, False),
         ("100", "99", HUMIDITY_ATTRS, True),
+        ("0", "1", IAQ_ATTRS, True),
+        ("1", "0", IAQ_ATTRS, True),
+        ("0.1", "0.5", IAQ_ATTRS, False),
+        ("0.5", "0.1", IAQ_ATTRS, False),
+        ("99", "100", IAQ_ATTRS, False),
+        ("100", "99", IAQ_ATTRS, False),
+        ("101", "99", IAQ_ATTRS, False),
+        ("99", "101", IAQ_ATTRS, True),
         ("12", "12", TEMP_CELSIUS_ATTRS, False),
         ("12", "13", TEMP_CELSIUS_ATTRS, True),
         ("12.1", "12.2", TEMP_CELSIUS_ATTRS, False),

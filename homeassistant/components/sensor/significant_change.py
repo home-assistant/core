@@ -58,6 +58,7 @@ def async_check_significant_change(
         SensorDeviceClass.CO2,
         SensorDeviceClass.PM25,
         SensorDeviceClass.PM10,
+        SensorDeviceClass.IAQ,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
     ):
         absolute_change = 1.0

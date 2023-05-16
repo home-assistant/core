@@ -17,6 +17,7 @@
       "is_frequency": "Current {entity_name} frequency",
       "is_gas": "Current {entity_name} gas",
       "is_humidity": "Current {entity_name} humidity",
+      "is_iaq": "Current {entity_name} indoor air quality index",
       "is_illuminance": "Current {entity_name} illuminance",
       "is_irradiance": "Current {entity_name} irradiance",
       "is_moisture": "Current {entity_name} moisture",

@@ -195,6 +195,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `%`
     """
 
+    IAQ = "iaq"
+    """Indoor Air Quality index.
+
+    Unit of measurement: `None`
+    """
+
     ILLUMINANCE = "illuminance"
     """Illuminance.
 
@@ -502,6 +508,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CUBIC_METERS,
     },
     SensorDeviceClass.HUMIDITY: {PERCENTAGE},
+    SensorDeviceClass.IAQ: {None},
     SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
     SensorDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
@@ -568,6 +575,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.FREQUENCY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.GAS: {SensorStateClass.TOTAL, SensorStateClass.TOTAL_INCREASING},
     SensorDeviceClass.HUMIDITY: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.IAQ: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ILLUMINANCE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.IRRADIANCE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.MOISTURE: {SensorStateClass.MEASUREMENT},

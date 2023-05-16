@@ -1736,6 +1736,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.FREQUENCY,
         SensorDeviceClass.GAS,
         SensorDeviceClass.HUMIDITY,
+        SensorDeviceClass.IAQ,
         SensorDeviceClass.ILLUMINANCE,
         SensorDeviceClass.IRRADIANCE,
         SensorDeviceClass.MOISTURE,
@@ -1799,6 +1800,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     ("device_class", "state_class", "unit"),
     [
         (SensorDeviceClass.AQI, None, None),
+        (SensorDeviceClass.IAQ, None, None),
         (None, SensorStateClass.MEASUREMENT, None),
         (None, None, UnitOfTemperature.CELSIUS),
     ],
@@ -1895,6 +1897,7 @@ async def test_non_numeric_validation_raise(
     ("device_class", "state_class", "unit"),
     [
         (SensorDeviceClass.AQI, None, None),
+        (SensorDeviceClass.IAQ, None, None),
         (None, SensorStateClass.MEASUREMENT, None),
         (None, None, UnitOfTemperature.CELSIUS),
     ],

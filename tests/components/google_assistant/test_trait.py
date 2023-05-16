@@ -3220,6 +3220,7 @@ async def test_sensorstate(hass: HomeAssistant) -> None:
         sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
         sensor.SensorDeviceClass.CO: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
         sensor.SensorDeviceClass.CO2: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.IAQ: ("IndoorAirQuality", "IAQ"),
         sensor.SensorDeviceClass.PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
         sensor.SensorDeviceClass.PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
         sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: (
