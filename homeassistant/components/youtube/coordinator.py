@@ -8,6 +8,7 @@ from typing import Any
 from googleapiclient.discovery import Resource
 from googleapiclient.http import HttpRequest
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -37,6 +38,8 @@ def get_upload_playlist_id(channel_id: str) -> str:
 
 class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
     """A YouTube Data Update Coordinator."""
+
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, auth: AsyncConfigEntryAuth) -> None:
         """Initialize the YouTube data coordinator."""
