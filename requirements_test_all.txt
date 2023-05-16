@@ -949,6 +949,7 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.2.1
 
+# homeassistant.components.google_generative_ai_conversation
 # homeassistant.components.openai_conversation
 openai==0.27.2
 
