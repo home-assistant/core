@@ -123,3 +123,15 @@ async def test_template_error(
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
+
+
+async def test_conversation_agent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test GoogleGenerativeAIAgent."""
+    agent = await conversation._get_agent_manager(hass).async_get_agent(
+        mock_config_entry.entry_id
+    )
+    assert agent.supported_languages == "*"

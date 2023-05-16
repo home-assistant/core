@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import Literal
 
 from google.api_core.exceptions import ClientError
 import google.generativeai as palm
@@ -10,7 +11,7 @@ from google.generativeai.types.discuss_types import ChatResponse
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
 from homeassistant.helpers import intent, template
@@ -75,6 +76,11 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
             "name": "Powered by Google Generative AI",
             "url": "https://developers.generativeai.google/",
         }
+
+    @property
+    def supported_languages(self) -> list[str] | Literal["*"]:
+        """Return a list of supported languages."""
+        return MATCH_ALL
 
     async def async_process(
         self, user_input: conversation.ConversationInput
