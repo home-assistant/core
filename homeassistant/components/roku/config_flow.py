@@ -34,8 +34,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     roku = Roku(data[CONF_HOST], session=session)
     device = await roku.update()
 
+    friendly_title = device.info.model_name
+    if device.info.brand:
+        friendly_title = f"{device.info.brand} {friendly_title}"
+
     return {
-        "title": device.info.name,
+        "title": friendly_title,
         "serial_number": device.info.serial_number,
     }
 

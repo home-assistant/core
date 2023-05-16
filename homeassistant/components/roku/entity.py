@@ -23,11 +23,15 @@ class RokuEntity(CoordinatorEntity[RokuDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._device_id = device_id
 
+        friendly_title = coordinator.data.info.model_name
+        if self.coordinator.data.info.brand:
+            friendly_title = f"{coordinator.data.info.brand} {friendly_title}"
+
         if description is not None:
             self.entity_description = description
 
             if device_id is None:
-                self._attr_name = f"{coordinator.data.info.name} {description.name}"
+                self._attr_name = f"{friendly_title} {description.name}"
 
         if device_id is not None:
             self._attr_has_entity_name = True
@@ -47,7 +51,7 @@ class RokuEntity(CoordinatorEntity[RokuDataUpdateCoordinator]):
                     )
                     if mac_address is not None
                 },
-                name=self.coordinator.data.info.name,
+                name=friendly_title,
                 manufacturer=self.coordinator.data.info.brand,
                 model=self.coordinator.data.info.model_name,
                 hw_version=self.coordinator.data.info.model_number,
