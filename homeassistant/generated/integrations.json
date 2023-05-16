@@ -4150,6 +4150,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "piper": {
+      "name": "Piper",
+      "integration_type": "virtual",
+      "supported_by": "wyoming"
+    },
     "pjlink": {
       "name": "PJLink",
       "integration_type": "hub",
