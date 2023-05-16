@@ -169,12 +169,12 @@ async def test_knx_subscribe_telegrams_command_no_project(
     res = await client.receive_json()
     assert res["success"], res
 
-    # send incoming events
+    # send incoming telegrams
     await knx.receive_read("1/2/3")
     await knx.receive_write("1/3/4", True)
     await knx.receive_write("1/3/4", False)
     await knx.receive_write("1/3/8", (0x34, 0x45))
-    # send outgoing events
+    # send outgoing telegrams
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
     )
@@ -214,6 +214,51 @@ async def test_knx_subscribe_telegrams_command_no_project(
     assert res["event"]["timestamp"] is not None
 
     res = await client.receive_json()
+    assert res["event"]["destination_address"] == "1/2/4"
+    assert res["event"]["payload"] == "1"
+    assert res["event"]["type"] == "GroupValueWrite"
+    assert (
+        res["event"]["source_address"] == "0.0.0"
+    )  # needs to be the IA currently connected to
+    assert res["event"]["direction"] == "group_monitor_outgoing"
+    assert res["event"]["timestamp"] is not None
+
+
+async def test_knx_subscribe_telegrams_command_recent_telegrams(
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
+):
+    """Test knx/subscribe_telegrams command sending recent telegrams."""
+    await knx.setup_integration(
+        {
+            SwitchSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: "1/2/4",
+            }
+        }
+    )
+
+    # send incoming telegram
+    await knx.receive_write("1/3/4", True)
+    # send outgoing telegram
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
+    )
+    await knx.assert_write("1/2/4", 1)
+    # connect websocket after telegrams have been sent
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 6, "type": "knx/subscribe_telegrams"})
+    res = await client.receive_json(timeout=1)
+    assert res["success"], res
+    # receive events
+    res = await client.receive_json(timeout=1)
+    assert res["event"]["destination_address"] == "1/3/4"
+    assert res["event"]["payload"] == "1"
+    assert res["event"]["type"] == "GroupValueWrite"
+    assert res["event"]["source_address"] == "1.2.3"
+    assert res["event"]["direction"] == "group_monitor_incoming"
+    assert res["event"]["timestamp"] is not None
+
+    res = await client.receive_json(timeout=1)
     assert res["event"]["destination_address"] == "1/2/4"
     assert res["event"]["payload"] == "1"
     assert res["event"]["type"] == "GroupValueWrite"

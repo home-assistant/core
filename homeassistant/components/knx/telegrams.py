@@ -1,6 +1,7 @@
 """KNX Telegram handler."""
 from __future__ import annotations
 
+from collections import deque
 from collections.abc import Callable
 import datetime as dt
 from typing import TypedDict
@@ -45,10 +46,12 @@ class Telegrams:
                 match_for_outgoing=True,
             )
         )
+        self.recent_telegrams: deque[TelegramDict] = deque(maxlen=50)
 
     async def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
+        self.recent_telegrams.append(telegram_dict)
         for job in self._jobs:
             self.hass.async_run_hass_job(job, telegram_dict)
 

@@ -163,19 +163,21 @@ def ws_subscribe_telegram(
     knx: KNXModule = hass.data[DOMAIN]
 
     @callback
-    def forward_telegrams(telegram: TelegramDict) -> None:
-        """Forward telegrams to websocket."""
+    def forward_telegram(telegram: TelegramDict) -> None:
+        """Forward telegram to websocket subscription."""
         connection.send_event(
             msg["id"],
             _telegram_dict_to_group_monitor(telegram),
         )
 
+    connection.send_result(msg["id"])
+
+    for telegram in knx.telegrams.recent_telegrams:
+        forward_telegram(telegram)
     connection.subscriptions[msg["id"]] = knx.telegrams.async_listen_telegram(
-        action=forward_telegrams,
+        action=forward_telegram,
         name="KNX GroupMonitor subscription",
     )
-
-    connection.send_result(msg["id"])
 
 
 def _telegram_dict_to_group_monitor(telegram: TelegramDict) -> KNXBusMonitorMessage:
