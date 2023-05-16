@@ -87,7 +87,7 @@ async def async_setup_entry(
         for description in SELECT_TYPES:
             if (
                 description.options_key in device
-                and len(device[description.options_key]) > 1  # type: ignore [literal-required]
+                and len(device[description.options_key]) > 1
             ):
                 entities.append(
                     PlugwiseSelectEntity(coordinator, device_id, description)
