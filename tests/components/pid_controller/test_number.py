@@ -115,6 +115,8 @@ async def test_pid_controller_kp(hass: HomeAssistant, setup_comp) -> None:
         None,
         blocking=True,
     )
+    # Sleep some cyles.
+    await asyncio.sleep(cycle_time * 10)
 
 
 async def test_pid_controller_kp_reverse(hass: HomeAssistant, setup_comp) -> None:
@@ -200,6 +202,8 @@ async def test_pid_controller_kp_reverse(hass: HomeAssistant, setup_comp) -> Non
         None,
         blocking=True,
     )
+    # Sleep some cyles.
+    await asyncio.sleep(cycle_time * 10)
 
 
 async def test_pid_controller_kp_differential(hass: HomeAssistant, setup_comp) -> None:
@@ -264,6 +268,8 @@ async def test_pid_controller_kp_differential(hass: HomeAssistant, setup_comp) -
         None,
         blocking=True,
     )
+    # Sleep some cyles.
+    await asyncio.sleep(cycle_time * 10)
 
 
 async def test_pid_controller_ki(hass: HomeAssistant, setup_comp) -> None:
@@ -324,6 +330,8 @@ async def test_pid_controller_ki(hass: HomeAssistant, setup_comp) -> None:
         None,
         blocking=True,
     )
+    # Sleep some cyles.
+    await asyncio.sleep(cycle_time * 10)
 
 
 async def test_pid_controller_kd(hass: HomeAssistant, setup_comp) -> None:
@@ -416,6 +424,8 @@ async def test_output_does_not_exist(hass: HomeAssistant, setup_comp, caplog) ->
         None,
         blocking=True,
     )
+    # Sleep some cyles.
+    await asyncio.sleep(cycle_time * 10)
 
 
 async def test_outside_range(hass: HomeAssistant, setup_comp) -> None:
@@ -520,6 +530,8 @@ async def test_outside_range(hass: HomeAssistant, setup_comp) -> None:
         None,
         blocking=True,
     )
+    # Sleep some cyles.
+    await asyncio.sleep(cycle_time * 10)
 
 
 async def test_bad_value(hass: HomeAssistant, setup_comp, caplog) -> None:
@@ -606,6 +618,8 @@ async def test_bad_value(hass: HomeAssistant, setup_comp, caplog) -> None:
         None,
         blocking=True,
     )
+    # Sleep some cyles.
+    await asyncio.sleep(cycle_time * 10)
 
 
 async def test_reload(hass: HomeAssistant, setup_comp) -> None:
