@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.const import ATTR_ID, ATTR_NAME
+from homeassistant.const import ATTR_ID
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, ATTR_TITLE
 from .coordinator import YouTubeDataUpdateCoordinator
 
 
@@ -33,6 +33,6 @@ class YouTubeChannelEntity(Entity):
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_{channel[ATTR_ID]}")
             },
             manufacturer=MANUFACTURER,
-            name=channel[ATTR_NAME],
+            name=channel[ATTR_TITLE],
         )
         self._channel = channel
