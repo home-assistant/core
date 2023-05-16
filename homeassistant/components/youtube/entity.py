@@ -1,29 +1,38 @@
 """Entity representing a YouTube account."""
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
+from typing import Any
+
+from homeassistant.const import ATTR_ID, ATTR_NAME
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DOMAIN, MANUFACTURER
+from .coordinator import YouTubeDataUpdateCoordinator
 
 
 class YouTubeChannelEntity(Entity):
     """An HA implementation for YouTube entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
-        entry: ConfigEntry,
+        coordinator: YouTubeDataUpdateCoordinator,
         description: EntityDescription,
-        channel_name: str,
-        channel_id: str,
+        channel: dict[str, Any],
     ) -> None:
         """Initialize a Google Mail entity."""
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{channel_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{channel[ATTR_ID]}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{entry.entry_id}_{channel_id}")},
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_{channel[ATTR_ID]}")
+            },
             manufacturer=MANUFACTURER,
-            name=channel_name,
+            name=channel[ATTR_NAME],
         )
+        self._channel = channel

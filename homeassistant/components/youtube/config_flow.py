@@ -11,7 +11,6 @@ from googleapiclient.http import HttpRequest
 import orjson
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -33,8 +32,6 @@ class OAuth2FlowHandler(
     _own_channel: dict[str, Any] = {}
 
     DOMAIN = DOMAIN
-
-    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
