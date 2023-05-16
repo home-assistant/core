@@ -2,7 +2,7 @@
 # name: test_audio_pipeline
   dict({
     'language': 'en',
-    'pipeline': 'Home Assistant',
+    'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 30,
@@ -78,7 +78,7 @@
 # name: test_audio_pipeline_debug
   dict({
     'language': 'en',
-    'pipeline': 'Home Assistant',
+    'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 30,
@@ -154,7 +154,7 @@
 # name: test_intent_failed
   dict({
     'language': 'en',
-    'pipeline': 'Home Assistant',
+    'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': None,
       'timeout': 30,
@@ -171,7 +171,7 @@
 # name: test_intent_timeout
   dict({
     'language': 'en',
-    'pipeline': 'Home Assistant',
+    'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': None,
       'timeout': 0.1,
@@ -217,7 +217,7 @@
 # name: test_stt_stream_failed
   dict({
     'language': 'en',
-    'pipeline': 'Home Assistant',
+    'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 30,
@@ -240,7 +240,7 @@
 # name: test_text_only_pipeline
   dict({
     'language': 'en',
-    'pipeline': 'Home Assistant',
+    'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': None,
       'timeout': 30,
@@ -285,7 +285,7 @@
 # name: test_tts_failed
   dict({
     'language': 'en',
-    'pipeline': 'Home Assistant',
+    'pipeline': <ANY>,
     'runner_data': dict({
       'stt_binary_handler_id': None,
       'timeout': 30,

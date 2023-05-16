@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -190,7 +191,9 @@ class TrafikverketWeatherStation(
     def native_value(self) -> StateType | datetime:
         """Return state of sensor."""
         if self.entity_description.api_key == "measure_time":
-            return _to_datetime(self.coordinator.data.measure_time)
+            if TYPE_CHECKING:
+                assert self.coordinator.data.measure_time
+            return self.coordinator.data.measure_time
 
         state: StateType = getattr(
             self.coordinator.data, self.entity_description.api_key
@@ -204,4 +207,6 @@ class TrafikverketWeatherStation(
     @property
     def available(self) -> bool:
         """Return if entity is available."""
+        if TYPE_CHECKING:
+            assert self.coordinator.data.active
         return self.coordinator.data.active and super().available

@@ -13,7 +13,7 @@ from roborock.containers import (
 )
 from roborock.exceptions import RoborockException
 from roborock.local_api import RoborockLocalClient
-from roborock.typing import RoborockDeviceProp
+from roborock.typing import DeviceProp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -26,9 +26,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
-class RoborockDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, RoborockDeviceProp]]
-):
+class RoborockDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DeviceProp]]):
     """Class to manage fetching data from the API."""
 
     def __init__(
@@ -50,7 +48,7 @@ class RoborockDataUpdateCoordinator(
                 device,
                 networking,
                 product_info[device.product_id],
-                RoborockDeviceProp(),
+                DeviceProp(),
             )
             local_devices_info[device.duid] = RoborockLocalDeviceInfo(
                 device, networking
@@ -71,7 +69,7 @@ class RoborockDataUpdateCoordinator(
             else:
                 device_info.props = device_prop
 
-    async def _async_update_data(self) -> dict[str, RoborockDeviceProp]:
+    async def _async_update_data(self) -> dict[str, DeviceProp]:
         """Update data via library."""
         try:
             await asyncio.gather(

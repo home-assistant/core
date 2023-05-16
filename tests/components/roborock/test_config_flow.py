@@ -2,7 +2,13 @@
 from unittest.mock import patch
 
 import pytest
-from roborock.exceptions import RoborockException
+from roborock.exceptions import (
+    RoborockAccountDoesNotExist,
+    RoborockException,
+    RoborockInvalidCode,
+    RoborockInvalidEmail,
+    RoborockUrlException,
+)
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.roborock.const import CONF_ENTRY_CODE, DOMAIN
@@ -55,7 +61,10 @@ async def test_config_flow_success(
         "request_code_errors",
     ),
     [
-        (RoborockException(), {"base": "invalid_email"}),
+        (RoborockException(), {"base": "unknown_roborock"}),
+        (RoborockAccountDoesNotExist(), {"base": "invalid_email"}),
+        (RoborockInvalidEmail(), {"base": "invalid_email_format"}),
+        (RoborockUrlException(), {"base": "unknown_url"}),
         (Exception(), {"base": "unknown"}),
     ],
 )
@@ -115,7 +124,8 @@ async def test_config_flow_failures_request_code(
         "code_login_errors",
     ),
     [
-        (RoborockException(), {"base": "invalid_code"}),
+        (RoborockException(), {"base": "unknown_roborock"}),
+        (RoborockInvalidCode(), {"base": "invalid_code"}),
         (Exception(), {"base": "unknown"}),
     ],
 )

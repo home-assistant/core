@@ -105,11 +105,11 @@ def async_user_not_allowed_do_auth(
             return "User is local only"
 
     try:
-        remote = ip_address(request.remote)  # type: ignore[arg-type]
+        remote_address = ip_address(request.remote)  # type: ignore[arg-type]
     except ValueError:
         return "Invalid remote IP"
 
-    if is_local(remote):
+    if is_local(remote_address):
         return None
 
     return "User cannot authenticate remotely"
