@@ -271,8 +271,8 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     _LOGGER.debug(
                         "Could not apply method %s to %s -> %s",
                         self._method,
-                        new_state.state,
                         old_state.state,
+                        new_state.state,
                     )
                     return
 
