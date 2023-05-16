@@ -80,6 +80,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if coordinator.last_update_success
     }  # Only add coordinators that succeeded
 
+    if not hass.data[DOMAIN][entry.entry_id]:
+        # Don't start if no coordinators succeeded.
+        raise ConfigEntryNotReady("There are no devices that can currently be reached.")
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
