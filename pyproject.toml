@@ -51,6 +51,7 @@ dependencies    = [
     "requests==2.29.0",
     "typing-extensions>=4.5.0,<5.0",
     "ulid-transform==0.7.2",
+    "uvloop==0.17",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.9.2",
