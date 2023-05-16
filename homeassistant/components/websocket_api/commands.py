@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import suppress
 import datetime as dt
 from functools import lru_cache
 import json
@@ -49,6 +48,17 @@ from homeassistant.util.json import format_unserializable_data
 from . import const, decorators, messages
 from .connection import ActiveConnection
 from .const import ERR_NOT_FOUND
+
+_STATES_TEMPLATE = "__STATES__"
+_STATES_JSON_TEMPLATE = '"__STATES__"'
+_HANDLE_SUBSCRIBE_ENTITIES_TEMPLATE = JSON_DUMP(
+    messages.event_message(
+        messages.IDEN_TEMPLATE, {messages.ENTITY_EVENT_ADD: _STATES_TEMPLATE}
+    )
+)
+_HANDLE_GET_STATES_TEMPLATE = JSON_DUMP(
+    messages.result_message(messages.IDEN_TEMPLATE, _STATES_TEMPLATE)
+)
 
 
 @callback
@@ -242,33 +252,43 @@ def handle_get_states(
     """Handle get states command."""
     states = _async_get_allowed_states(hass, connection)
 
-    # JSON serialize here so we can recover if it blows up due to the
-    # state machine containing unserializable data. This command is required
-    # to succeed for the UI to show.
-    response = messages.result_message(msg["id"], states)
     try:
-        connection.send_message(JSON_DUMP(response))
-        return
+        serialized_states = [state.as_dict_json() for state in states]
     except (ValueError, TypeError):
-        connection.logger.error(
-            "Unable to serialize to JSON. Bad data found at %s",
-            format_unserializable_data(
-                find_paths_unserializable_data(response, dump=JSON_DUMP)
-            ),
-        )
-    del response
+        pass
+    else:
+        _send_handle_get_states_response(connection, msg["id"], serialized_states)
+        return
 
     # If we can't serialize, we'll filter out unserializable states
-    serialized = []
+    serialized_states = []
     for state in states:
-        # Error is already logged above
-        with suppress(ValueError, TypeError):
-            serialized.append(JSON_DUMP(state))
+        try:
+            serialized_states.append(state.as_dict_json())
+        except (ValueError, TypeError):
+            connection.logger.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(state, dump=JSON_DUMP)
+                ),
+            )
 
-    # We now have partially serialized states. Craft some JSON.
-    response2 = JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
-    response2 = response2.replace('"TO_REPLACE"', ", ".join(serialized))
-    connection.send_message(response2)
+    _send_handle_get_states_response(connection, msg["id"], serialized_states)
+
+
+def _send_handle_get_states_response(
+    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+) -> None:
+    """Send handle get states response."""
+    connection.send_message(
+        _HANDLE_GET_STATES_TEMPLATE.replace(
+            messages.IDEN_JSON_TEMPLATE, str(msg_id), 1
+        ).replace(
+            _STATES_JSON_TEMPLATE,
+            "[" + ",".join(serialized_states) + "]",
+            1,
+        )
+    )
 
 
 @callback
@@ -304,42 +324,50 @@ def handle_subscribe_entities(
         EVENT_STATE_CHANGED, forward_entity_changes, run_immediately=True
     )
     connection.send_result(msg["id"])
-    data: dict[str, dict[str, dict]] = {
-        messages.ENTITY_EVENT_ADD: {
-            state.entity_id: state.as_compressed_state()
-            for state in states
-            if not entity_ids or state.entity_id in entity_ids
-        }
-    }
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
     # to succeed for the UI to show.
-    response = messages.event_message(msg["id"], data)
     try:
-        connection.send_message(JSON_DUMP(response))
-        return
+        serialized_states = [
+            state.as_compressed_state_json()
+            for state in states
+            if not entity_ids or state.entity_id in entity_ids
+        ]
     except (ValueError, TypeError):
-        connection.logger.error(
-            "Unable to serialize to JSON. Bad data found at %s",
-            format_unserializable_data(
-                find_paths_unserializable_data(response, dump=JSON_DUMP)
-            ),
-        )
-    del response
+        pass
+    else:
+        _send_handle_entities_init_response(connection, msg["id"], serialized_states)
+        return
 
-    add_entities = data[messages.ENTITY_EVENT_ADD]
-    cannot_serialize: list[str] = []
-    for entity_id, state_dict in add_entities.items():
+    serialized_states = []
+    for state in states:
         try:
-            JSON_DUMP(state_dict)
+            serialized_states.append(state.as_compressed_state_json())
         except (ValueError, TypeError):
-            cannot_serialize.append(entity_id)
+            connection.logger.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(state, dump=JSON_DUMP)
+                ),
+            )
 
-    for entity_id in cannot_serialize:
-        del add_entities[entity_id]
+    _send_handle_entities_init_response(connection, msg["id"], serialized_states)
 
-    connection.send_message(JSON_DUMP(messages.event_message(msg["id"], data)))
+
+def _send_handle_entities_init_response(
+    connection: ActiveConnection, msg_id: int, serialized_states: list[str]
+) -> None:
+    """Send handle entities init response."""
+    connection.send_message(
+        _HANDLE_SUBSCRIBE_ENTITIES_TEMPLATE.replace(
+            messages.IDEN_JSON_TEMPLATE, str(msg_id), 1
+        ).replace(
+            _STATES_JSON_TEMPLATE,
+            "{" + ",".join(serialized_states) + "}",
+            1,
+        )
+    )
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
