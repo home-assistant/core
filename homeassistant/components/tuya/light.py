@@ -176,7 +176,8 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "kj": (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
-            name="Light",
+            name="Backlight",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Air conditioner
