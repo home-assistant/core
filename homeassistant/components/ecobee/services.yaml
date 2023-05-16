@@ -196,3 +196,18 @@ set_occupancy_modes:
       description: Enable Follow Me mode.
       selector:
         boolean:
+
+set_dehumidifier_mode:
+  name: Set dehumidifier mode
+  description: Enable/disable dehumidifier.
+  target:
+    entity:
+      integration: ecobee
+      domain: climate
+  fields:
+    dehumidifer_enabled:
+      name: Dehumidifier enabled
+      description: Enable dehumidifier
+      required: true
+      selector:
+        boolean:
