@@ -53,6 +53,7 @@ ATTR_DST_ENABLED = "dst_enabled"
 ATTR_MIC_ENABLED = "mic_enabled"
 ATTR_AUTO_AWAY = "auto_away"
 ATTR_FOLLOW_ME = "follow_me"
+ATTR_DEHUMIDIFIER_ENABLED = "dehumidifier_enabled"
 
 DEFAULT_RESUME_ALL = False
 PRESET_TEMPERATURE = "temp"
@@ -69,6 +70,7 @@ DEFAULT_MAX_HUMIDITY = 50
 HUMIDIFIER_MANUAL_MODE = "manual"
 
 ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
+ECOBEE_DEHUMIDIFIER_MODE = "dehumidifierMode"
 
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
@@ -113,6 +115,7 @@ SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
 SERVICE_SET_DST_MODE = "set_dst_mode"
 SERVICE_SET_MIC_MODE = "set_mic_mode"
 SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
+SERVICE_SET_DEHUMIDIFIER_MODE = "set_dehumidifier_mode"
 
 DTGROUP_INCLUSIVE_MSG = (
     f"{ATTR_START_DATE}, {ATTR_START_TIME}, {ATTR_END_DATE}, "
@@ -304,6 +307,12 @@ async def async_setup_entry(
         "set_occupancy_modes",
     )
 
+    platform.async_register_entity_service(
+        SERVICE_SET_DEHUMIDIFIER_MODE,
+        {vol.Required(ATTR_DEHUMIDIFIER_ENABLED): cv.boolean},
+        "set_dehumidifier_mode",
+    )
+
 
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
@@ -358,7 +367,7 @@ class Thermostat(ClimateEntity):
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         supported = SUPPORT_FLAGS
-        if self.has_humidifier_control:
+        if self.has_humidifier_control or self.has_dehumidifier_control:
             supported = supported | ClimateEntityFeature.TARGET_HUMIDITY
         if self.has_aux_heat:
             supported = supported | ClimateEntityFeature.AUX_HEAT
@@ -429,6 +438,11 @@ class Thermostat(ClimateEntity):
         )
 
     @property
+    def has_dehumidifier_control(self) -> bool:
+        """Return true if humidifier connected to thermostat and set to manual/on mode."""
+        return bool(self.settings.get("hasDehumidifier"))
+
+    @property
     def has_aux_heat(self) -> bool:
         """Return true if the ecobee has a heat pump."""
         return bool(self.settings.get(HAS_HEAT_PUMP))
@@ -438,6 +452,13 @@ class Thermostat(ClimateEntity):
         """Return the desired humidity set point."""
         if self.has_humidifier_control:
             return self.thermostat["runtime"]["desiredHumidity"]
+        return None
+
+    @property
+    def target_dehumidifier_level(self) -> int | None:
+        """Return the dehumidification set point in percentage."""
+        if self.has_dehumidifier_control:
+            return self.thermostat["runtime"]["desiredDehumidity"]
         return None
 
     @property
@@ -563,6 +584,11 @@ class Thermostat(ClimateEntity):
     def is_aux_heat(self) -> bool:
         """Return true if aux heater."""
         return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
+
+    @property
+    def dehumidifier_mode(self):
+        """Return dehumidifier mode."""
+        return self.settings["dehumidifierMode"]
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
@@ -727,6 +753,16 @@ class Thermostat(ClimateEntity):
         self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
         self.update_without_throttle = True
 
+    def dehumidifier_level(self, humidity: int) -> None:
+        """Set the desired dehumidity level."""
+        if humidity not in range(0, 101):
+            raise ValueError(
+                f"Invalid set_humidity value (must be in range 0-100): {humidity}"
+            )
+
+        self.data.ecobee.dehumidifier_level(self.thermostat_index, int(humidity))
+        self.update_without_throttle = True
+
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         ecobee_value = next(
@@ -857,4 +893,10 @@ class Thermostat(ClimateEntity):
         """Enable/disable Smart Home/Away and Follow Me modes."""
         self.data.ecobee.set_occupancy_modes(
             self.thermostat_index, auto_away, follow_me
+        )
+
+    def set_dehumidifier_mode(self, dehumidifier_enabled):
+        """Enable/disable dehumidifier."""
+        self.data.ecobee.settings.dehumidifier_mode(
+            self.thermostat_index, dehumidifier_enabled
         )
