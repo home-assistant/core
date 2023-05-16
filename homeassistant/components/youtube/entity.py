@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_ID
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import DOMAIN, MANUFACTURER, ATTR_TITLE
+from .const import ATTR_TITLE, DOMAIN, MANUFACTURER
 from .coordinator import YouTubeDataUpdateCoordinator
 
 
