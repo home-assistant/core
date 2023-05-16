@@ -91,6 +91,14 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_max_temp = 32
     _attr_min_temp = 16
 
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.DRY,
+    ]
+
     def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
@@ -103,31 +111,16 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 | ClimateEntityFeature.TARGET_TEMPERATURE
                 | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
-            self._attr_hvac_modes = [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.FAN_ONLY,
-                HVACMode.DRY,
-                HVACMode.HEAT_COOL,
-            ]
+            self._attr_hvac_modes += [HVACMode.HEAT_COOL]
         elif self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
             # MyTemp
             self._attr_supported_features = ClimateEntityFeature.FAN_MODE
-            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
 
         else:
             # MyZone
             self._attr_supported_features = (
                 ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
             )
-            self._attr_hvac_modes = [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.FAN_ONLY,
-                HVACMode.DRY,
-            ]
 
         # Add "ezfan" mode if supported
         if self._ac.get(ADVANTAGE_AIR_AUTOFAN):
