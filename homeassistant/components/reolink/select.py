@@ -5,7 +5,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import DayNightEnum, Host, SpotlightModeEnum, TrackMethodEnum
+from reolink_aio.api import (
+    DayNightEnum,
+    Host,
+    SpotlightModeEnum,
+    StatusLedEnum,
+    TrackMethodEnum,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -89,6 +95,17 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "auto_track_method"),
         value=lambda api, ch: TrackMethodEnum(api.auto_track_method(ch)).name,
         method=lambda api, ch, name: api.set_auto_tracking(ch, method=name),
+    ),
+    ReolinkSelectEntityDescription(
+        key="status_led",
+        name="Status LED",
+        icon="mdi:lightning-bolt-circle",
+        translation_key="status_led",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[state.name for state in StatusLedEnum],
+        supported=lambda api, ch: api.supported(ch, "doorbell_led"),
+        value=lambda api, ch: StatusLedEnum(api.doorbell_led(ch)).name,
+        method=lambda api, ch, name: api.set_status_led(ch, StatusLedEnum[name].value),
     ),
 )
 

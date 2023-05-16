@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["accuweather"],
   "quality_scale": "platinum",
-  "requirements": ["accuweather==0.5.0"]
+  "requirements": ["accuweather==0.5.1"]
 }

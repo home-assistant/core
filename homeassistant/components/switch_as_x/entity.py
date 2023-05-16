@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,13 +24,15 @@ class BaseEntity(Entity):
     """Represents a Switch as an X."""
 
     _attr_should_poll = False
+    _is_new_entity: bool
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry_title: str,
+        domain: str,
         switch_entity_id: str,
-        unique_id: str | None,
+        unique_id: str,
     ) -> None:
         """Initialize Switch as an X."""
         registry = er.async_get(hass)
@@ -41,7 +44,7 @@ class BaseEntity(Entity):
 
         name: str | None = config_entry_title
         if wrapped_switch:
-            name = wrapped_switch.name or wrapped_switch.original_name
+            name = wrapped_switch.original_name
 
         self._device_id = device_id
         if device_id and (device := device_registry.async_get(device_id)):
@@ -55,6 +58,10 @@ class BaseEntity(Entity):
         self._attr_unique_id = unique_id
         self._switch_entity_id = switch_entity_id
 
+        self._is_new_entity = (
+            registry.async_get_entity_id(domain, SWITCH_AS_X_DOMAIN, unique_id) is None
+        )
+
     @callback
     def async_state_changed_listener(self, event: Event | None = None) -> None:
         """Handle child updates."""
@@ -67,7 +74,7 @@ class BaseEntity(Entity):
         self._attr_available = True
 
     async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+        """Register callbacks and copy the wrapped entity's custom name if set."""
 
         @callback
         def _async_state_changed_listener(event: Event | None = None) -> None:
@@ -92,6 +99,38 @@ class BaseEntity(Entity):
                 SWITCH_AS_X_DOMAIN,
                 {"entity_id": self._switch_entity_id},
             )
+
+        if not self._is_new_entity or not (
+            wrapped_switch := registry.async_get(self._switch_entity_id)
+        ):
+            return
+
+        def copy_custom_name(wrapped_switch: er.RegistryEntry) -> None:
+            """Copy the name set by user from the wrapped entity."""
+            if wrapped_switch.name is None:
+                return
+            registry.async_update_entity(self.entity_id, name=wrapped_switch.name)
+
+        def copy_expose_settings() -> None:
+            """Copy assistant expose settings from the wrapped entity.
+
+            Also unexpose the wrapped entity if exposed.
+            """
+            expose_settings = exposed_entities.async_get_entity_settings(
+                self.hass, self._switch_entity_id
+            )
+            for assistant, settings in expose_settings.items():
+                if (should_expose := settings.get("should_expose")) is None:
+                    continue
+                exposed_entities.async_expose_entity(
+                    self.hass, assistant, self.entity_id, should_expose
+                )
+                exposed_entities.async_expose_entity(
+                    self.hass, assistant, self._switch_entity_id, False
+                )
+
+        copy_custom_name(wrapped_switch)
+        copy_expose_settings()
 
 
 class BaseToggleEntity(BaseEntity, ToggleEntity):

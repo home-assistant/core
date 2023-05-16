@@ -16,7 +16,7 @@ from typing_extensions import Self
 
 from homeassistant import config_entries
 from homeassistant.components import network, ssdp
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
@@ -180,7 +180,9 @@ class YeelightScanner:
 
         # Delay starting the flow in case the discovery is the result
         # of another discovery
-        async_call_later(self._hass, 1, _async_start_flow)
+        async_call_later(
+            self._hass, 1, HassJob(_async_start_flow, cancel_on_shutdown=True)
+        )
 
     @callback
     def _async_process_entry(self, headers: CaseInsensitiveDict) -> None:

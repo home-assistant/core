@@ -1,4 +1,6 @@
 """Test ONVIF diagnostics."""
+from unittest.mock import ANY
+
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -55,7 +57,7 @@ async def test_diagnostics(
             "capabilities": {
                 "snapshot": False,
                 "events": False,
-                "ptz": False,
+                "ptz": True,
                 "imaging": True,
             },
             "profiles": [
@@ -63,10 +65,25 @@ async def test_diagnostics(
                     "index": 0,
                     "token": "dummy",
                     "name": "profile1",
-                    "video": None,
+                    "video": {
+                        "encoding": "any",
+                        "resolution": {"width": 640, "height": 480},
+                    },
                     "ptz": None,
                     "video_source_token": None,
                 }
             ],
+            "services": ANY,
+            "xaddrs": ANY,
+        },
+        "events": {
+            "pullpoint_manager_state": {
+                "__type": "<enum " "'PullPointManagerState'>",
+                "repr": "<PullPointManagerState.PAUSED: " "2>",
+            },
+            "webhook_manager_state": {
+                "__type": "<enum 'WebHookManagerState'>",
+                "repr": "<WebHookManagerState.STARTED: " "1>",
+            },
         },
     }

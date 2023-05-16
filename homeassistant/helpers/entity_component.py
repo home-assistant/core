@@ -109,6 +109,14 @@ class EntityComponent(Generic[_EntityT]):
                 return entity_obj  # type: ignore[return-value]
         return None
 
+    def register_shutdown(self) -> None:
+        """Register shutdown on Home Assistant STOP event.
+
+        Note: this is only required if the integration never calls
+        `setup` or `async_setup`.
+        """
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+
     def setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
 
@@ -126,7 +134,7 @@ class EntityComponent(Generic[_EntityT]):
 
         This method must be run in the event loop.
         """
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
+        self.register_shutdown()
 
         self.config = config
 

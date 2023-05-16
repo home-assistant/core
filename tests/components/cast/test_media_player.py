@@ -1888,6 +1888,7 @@ async def test_failed_cast_other_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test warning when casting from internal_url fails."""
+    await async_setup_component(hass, "homeassistant", {})
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(
             hass,
@@ -1911,6 +1912,7 @@ async def test_failed_cast_internal_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test warning when casting from internal_url fails."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_process_ha_core_config(
         hass,
         {"internal_url": "http://example.local:8123"},
@@ -1939,6 +1941,7 @@ async def test_failed_cast_external_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test warning when casting from external_url fails."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_process_ha_core_config(
         hass,
         {"external_url": "http://example.com:8123"},
@@ -1969,6 +1972,7 @@ async def test_failed_cast_tts_base_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test warning when casting from tts.base_url fails."""
+    await async_setup_component(hass, "homeassistant", {})
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(
             hass,
