@@ -2,5 +2,31 @@
   "data": {
     "station_id": "11240",
     "station_name": "Graz/Flughafen"
+  },
+  "11240": {
+    "TLAM": {
+      "data": 22.6
+    },
+    "TL": {
+      "data": 22.6
+    },
+    "RFAM": {
+      "data": 67
+    },
+    "P": {
+      "data": 1012.0
+    },
+    "FFAM": {
+      "data": 4.03
+    },
+    "FFX": {
+      "data": 4.03
+    },
+    "DD": {
+      "data": 180
+    },
+    "DDX": {
+      "data": 180
+    }
   }
 }

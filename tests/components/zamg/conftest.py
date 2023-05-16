@@ -9,7 +9,7 @@ from zamg import ZamgData as ZamgDevice
 from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 TEST_STATION_ID = "11240"
 TEST_STATION_NAME = "Graz/Flughafen"
@@ -76,11 +76,74 @@ def mock_zamg_coordinator(
 ) -> Generator[None, MagicMock, None]:
     """Return a mocked Zamg client."""
 
+    update = load_json_object_fixture("zamg/data.json")
+
     with patch(
         "homeassistant.components.zamg.coordinator.ZamgDevice", autospec=True
     ) as zamg_mock:
         zamg = zamg_mock.return_value
-        zamg.update.return_value = {TEST_STATION_ID: {"Name": TEST_STATION_NAME}}
+        zamg.update.return_value = (
+            update  # {TEST_STATION_ID: {"Name": TEST_STATION_NAME}}
+        )
+        zamg.zamg_stations.return_value = {
+            TEST_STATION_ID: (46.99305556, 15.43916667, TEST_STATION_NAME),
+            "11244": (46.8722229, 15.90361118, "BAD GLEICHENBERG"),
+        }
+        zamg.closest_station.return_value = TEST_STATION_ID
+        zamg.get_data.return_value = TEST_STATION_ID
+        zamg.get_station_name = TEST_STATION_NAME
+        yield zamg
+
+
+@pytest.fixture
+def mock_zamg_coordinator2(
+    request: pytest.FixtureRequest,
+) -> Generator[None, MagicMock, None]:
+    """Return a mocked Zamg client."""
+
+    update = load_json_object_fixture("zamg/data.json")
+    update["11240"]["TLAM"]["data"] = None
+    update["11240"]["FFAM"]["data"] = None
+    update["11240"]["DD"]["data"] = None
+
+    with patch(
+        "homeassistant.components.zamg.coordinator.ZamgDevice", autospec=True
+    ) as zamg_mock:
+        zamg = zamg_mock.return_value
+        zamg.update.return_value = (
+            update  # {TEST_STATION_ID: {"Name": TEST_STATION_NAME}}
+        )
+        zamg.zamg_stations.return_value = {
+            TEST_STATION_ID: (46.99305556, 15.43916667, TEST_STATION_NAME),
+            "11244": (46.8722229, 15.90361118, "BAD GLEICHENBERG"),
+        }
+        zamg.closest_station.return_value = TEST_STATION_ID
+        zamg.get_data.return_value = TEST_STATION_ID
+        zamg.get_station_name = TEST_STATION_NAME
+        yield zamg
+
+
+@pytest.fixture
+def mock_zamg_coordinator3(
+    request: pytest.FixtureRequest,
+) -> Generator[None, MagicMock, None]:
+    """Return a mocked Zamg client."""
+
+    update = load_json_object_fixture("zamg/data.json")
+    update["11240"]["TLAM"]["data"] = None
+    update["11240"]["TL"]["data"] = None
+    update["11240"]["FFAM"]["data"] = None
+    update["11240"]["FFX"]["data"] = None
+    update["11240"]["DD"]["data"] = None
+    update["11240"]["DDX"]["data"] = None
+
+    with patch(
+        "homeassistant.components.zamg.coordinator.ZamgDevice", autospec=True
+    ) as zamg_mock:
+        zamg = zamg_mock.return_value
+        zamg.update.return_value = (
+            update  # {TEST_STATION_ID: {"Name": TEST_STATION_NAME}}
+        )
         zamg.zamg_stations.return_value = {
             TEST_STATION_ID: (46.99305556, 15.43916667, TEST_STATION_NAME),
             "11244": (46.8722229, 15.90361118, "BAD GLEICHENBERG"),
