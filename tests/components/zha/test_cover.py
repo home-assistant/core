@@ -11,11 +11,17 @@ import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
+    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
+    SERVICE_TOGGLE_COVER_TILT,
 )
 from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import (
@@ -128,9 +134,11 @@ async def test_cover(
     # load up cover domain
     cluster = zigpy_cover_device.endpoints.get(1).window_covering
     cluster.PLUGGED_ATTR_READS = {"current_position_lift_percentage": 100}
+    cluster.PLUGGED_ATTR_READS = {"current_position_tilt_percentage": 100}
     zha_device = await zha_device_joined_restored(zigpy_cover_device)
     assert cluster.read_attributes.call_count == 1
     assert "current_position_lift_percentage" in cluster.read_attributes.call_args[0][0]
+    assert "current_position_tilt_percentage" in cluster.read_attributes.call_args[0][0]
 
     entity_id = await find_entity_id(Platform.COVER, zha_device, hass)
     assert entity_id is not None
@@ -151,6 +159,14 @@ async def test_cover(
     await send_attributes_report(hass, cluster, {0: 1, 8: 0, 1: 100})
     assert hass.states.get(entity_id).state == STATE_OPEN
 
+    # test that the state remains
+    await send_attributes_report(hass, cluster, {0: 0, 9: 100, 1: 1})
+    assert hass.states.get(entity_id).state == STATE_OPEN
+
+    # test to see the state remains
+    await send_attributes_report(hass, cluster, {0: 1, 9: 0, 1: 100})
+    assert hass.states.get(entity_id).state == STATE_OPEN
+
     # close from UI
     with patch(
         "zigpy.zcl.Cluster.request", return_value=mock_coro([0x1, zcl_f.Status.SUCCESS])
@@ -164,6 +180,22 @@ async def test_cover(
         assert cluster.request.call_args[0][2].command.name == "down_close"
         assert cluster.request.call_args[1]["expect_reply"] is True
 
+    with patch(
+        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x1, zcl_f.Status.SUCCESS])
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER_TILT,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+        assert cluster.request.call_count == 1
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == 0x08
+        assert cluster.request.call_args[0][2].command.name == "go_to_tilt_percentage"
+        assert cluster.request.call_args[0][3] == 100
+        assert cluster.request.call_args[1]["expect_reply"] is True
+
     # open from UI
     with patch(
         "zigpy.zcl.Cluster.request", return_value=mock_coro([0x0, zcl_f.Status.SUCCESS])
@@ -175,6 +207,22 @@ async def test_cover(
         assert cluster.request.call_args[0][0] is False
         assert cluster.request.call_args[0][1] == 0x00
         assert cluster.request.call_args[0][2].command.name == "up_open"
+        assert cluster.request.call_args[1]["expect_reply"] is True
+
+    with patch(
+        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x0, zcl_f.Status.SUCCESS])
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER_TILT,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+        assert cluster.request.call_count == 1
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == 0x08
+        assert cluster.request.call_args[0][2].command.name == "go_to_tilt_percentage"
+        assert cluster.request.call_args[0][3] == 0
         assert cluster.request.call_args[1]["expect_reply"] is True
 
     # set position UI
@@ -194,6 +242,22 @@ async def test_cover(
         assert cluster.request.call_args[0][3] == 53
         assert cluster.request.call_args[1]["expect_reply"] is True
 
+    with patch(
+        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x5, zcl_f.Status.SUCCESS])
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_TILT_POSITION,
+            {"entity_id": entity_id, ATTR_TILT_POSITION: 47},
+            blocking=True,
+        )
+        assert cluster.request.call_count == 1
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == 0x08
+        assert cluster.request.call_args[0][2].command.name == "go_to_tilt_percentage"
+        assert cluster.request.call_args[0][3] == 53
+        assert cluster.request.call_args[1]["expect_reply"] is True
+
     # stop from UI
     with patch(
         "zigpy.zcl.Cluster.request", return_value=mock_coro([0x2, zcl_f.Status.SUCCESS])
@@ -207,10 +271,42 @@ async def test_cover(
         assert cluster.request.call_args[0][2].command.name == "stop"
         assert cluster.request.call_args[1]["expect_reply"] is True
 
+    with patch(
+        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x2, zcl_f.Status.SUCCESS])
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_STOP_COVER_TILT,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+        assert cluster.request.call_count == 1
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == 0x02
+        assert cluster.request.call_args[0][2].command.name == "stop"
+        assert cluster.request.call_args[1]["expect_reply"] is True
+
     # test rejoin
     cluster.PLUGGED_ATTR_READS = {"current_position_lift_percentage": 0}
     await async_test_rejoin(hass, zigpy_cover_device, [cluster], (1,))
     assert hass.states.get(entity_id).state == STATE_OPEN
+
+    # test toggle
+    with patch(
+        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x2, zcl_f.Status.SUCCESS])
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_TOGGLE_COVER_TILT,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+        assert cluster.request.call_count == 1
+        assert cluster.request.call_args[0][0] is False
+        assert cluster.request.call_args[0][1] == 0x08
+        assert cluster.request.call_args[0][2].command.name == "go_to_tilt_percentage"
+        assert cluster.request.call_args[0][3] == 100
+        assert cluster.request.call_args[1]["expect_reply"] is True
 
 
 async def test_shade(
