@@ -18,17 +18,19 @@
         "description": "Please check your {login_method} ({username}) and enter the verification code below"
       },
       "user_validate": {
-        "description": "If the Login Method is 'email', Username is the email address. If the Login Method is 'phone', Username is the phone number in the format '+NNNNNNNNN'.",
+        "description": "It is recommended to use the 'email' login method as some brands may not work with the 'phone' method. If the Login Method is 'email', Username is the email address. If the Login Method is 'phone', Username is the phone number in the format '+NNNNNNNNN'.",
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
+          "brand": "Brand",
+          "login_method": "Login Method",
           "username": "[%key:common::config_flow::data::username%]",
-          "login_method": "Login Method"
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "title": "Set up an August account"
       },
       "reauth_validate": {
         "description": "Enter the password for {username}.",
         "data": {
+          "brand": "[%key:component::august::config::step::user_validate::data::brand%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "title": "Reauthenticate an August account"

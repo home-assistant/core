@@ -1,32 +1,44 @@
 """Config flow for August integration."""
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 from yalexs.authenticator import ValidationResult
+from yalexs.const import BRANDS, DEFAULT_BRAND
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_LOGIN_METHOD, DOMAIN, LOGIN_METHODS, VERIFICATION_CODE_KEY
+from .const import (
+    CONF_BRAND,
+    CONF_LOGIN_METHOD,
+    DEFAULT_LOGIN_METHOD,
+    DOMAIN,
+    LOGIN_METHODS,
+    VERIFICATION_CODE_KEY,
+)
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_validate_input(data, august_gateway):
+async def async_validate_input(
+    data: dict[str, Any], august_gateway: AugustGateway
+) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
 
     Request configuration steps from the user.
     """
+    assert august_gateway.authenticator is not None
     if (code := data.get(VERIFICATION_CODE_KEY)) is not None:
-        result = await august_gateway.authenticator.async_validate_verification_code(
-            code
+        result = cast(
+            ValidationResult,
+            await august_gateway.authenticator.async_validate_verification_code(code),
         )
         _LOGGER.debug("Verification code validation: %s", result)
         if result != ValidationResult.VALIDATED:
@@ -57,8 +69,8 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Store an AugustGateway()."""
-        self._august_gateway = None
-        self._user_auth_details = {}
+        self._august_gateway: AugustGateway | None = None
+        self._user_auth_details: dict[str, Any] = {}
         self._needs_reset = False
         self._mode = None
         super().__init__()
@@ -81,8 +93,14 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
+                        CONF_BRAND,
+                        default=self._user_auth_details.get(CONF_BRAND, DEFAULT_BRAND),
+                    ): vol.In(BRANDS),
+                    vol.Required(
                         CONF_LOGIN_METHOD,
-                        default=self._user_auth_details.get(CONF_LOGIN_METHOD, "phone"),
+                        default=self._user_auth_details.get(
+                            CONF_LOGIN_METHOD, DEFAULT_LOGIN_METHOD
+                        ),
                     ): vol.In(LOGIN_METHODS),
                     vol.Required(
                         CONF_USERNAME,
@@ -107,6 +125,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {vol.Required(VERIFICATION_CODE_KEY): vol.All(str, vol.Strip)}
             ),
             description_placeholders={
+                CONF_BRAND: self._user_auth_details[CONF_BRAND],
                 CONF_USERNAME: self._user_auth_details[CONF_USERNAME],
                 CONF_LOGIN_METHOD: self._user_auth_details[CONF_LOGIN_METHOD],
             },
@@ -132,6 +151,10 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_validate",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_BRAND,
+                        default=self._user_auth_details.get(CONF_BRAND, DEFAULT_BRAND),
+                    ): vol.In(BRANDS),
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
@@ -142,6 +165,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_auth_or_validate(self, user_input, errors):
+        """Authenticate or validate."""
         self._user_auth_details.update(user_input)
         await self._august_gateway.async_setup(self._user_auth_details)
         if self._needs_reset:
