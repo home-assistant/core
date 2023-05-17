@@ -54,6 +54,7 @@ ATTR_MIC_ENABLED = "mic_enabled"
 ATTR_AUTO_AWAY = "auto_away"
 ATTR_FOLLOW_ME = "follow_me"
 ATTR_DEHUMIDIFIER_ENABLED = "dehumidifier_enabled"
+ATTR_DEHUMIDIFIER_LEVEL = "dehumidifier_level"
 
 DEFAULT_RESUME_ALL = False
 PRESET_TEMPERATURE = "temp"
@@ -309,7 +310,10 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SET_DEHUMIDIFIER_MODE,
-        {vol.Required(ATTR_DEHUMIDIFIER_ENABLED): cv.boolean},
+        {
+            vol.Required(ATTR_DEHUMIDIFIER_ENABLED): cv.boolean,
+            vol.Optional(ATTR_DEHUMIDIFIER_LEVEL): vol.Coerce(int),
+        },
         "set_dehumidifier_mode",
     )
 
@@ -586,7 +590,7 @@ class Thermostat(ClimateEntity):
         return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
 
     @property
-    def dehumidifier_mode(self):
+    def get_dehumidifier_mode(self):
         """Return dehumidifier mode."""
         return self.settings["dehumidifierMode"]
 
@@ -753,16 +757,6 @@ class Thermostat(ClimateEntity):
         self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
         self.update_without_throttle = True
 
-    def dehumidifier_level(self, humidity: int) -> None:
-        """Set the desired dehumidity level."""
-        if humidity not in range(0, 101):
-            raise ValueError(
-                f"Invalid set_humidity value (must be in range 0-100): {humidity}"
-            )
-
-        self.data.ecobee.dehumidifier_level(self.thermostat_index, int(humidity))
-        self.update_without_throttle = True
-
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         ecobee_value = next(
@@ -895,8 +889,19 @@ class Thermostat(ClimateEntity):
             self.thermostat_index, auto_away, follow_me
         )
 
-    def set_dehumidifier_mode(self, dehumidifier_enabled):
+    def set_dehumidifier_mode(
+        self, dehumidifier_level=None, dehumidifier_enabled=False
+    ):
         """Enable/disable dehumidifier."""
-        self.data.ecobee.settings.dehumidifier_mode(
-            self.thermostat_index, dehumidifier_enabled
-        )
+        if dehumidifier_enabled:
+            dehumidifier_mode = "on"
+        else:
+            dehumidifier_mode = "off"
+
+        self.data.ecobee.set_dehumidifier_mode(self.thermostat_index, dehumidifier_mode)
+
+        if dehumidifier_level:
+            self.data.ecobee.set_dehumidifier_level(
+                self.thermostat_index, dehumidifier_level
+            )
+        self.update_without_throttle = False
