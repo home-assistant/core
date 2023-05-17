@@ -6197,6 +6197,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "whisper": {
+      "name": "Whisper",
+      "integration_type": "virtual",
+      "supported_by": "wyoming"
+    },
     "whois": {
       "name": "Whois",
       "integration_type": "service",
