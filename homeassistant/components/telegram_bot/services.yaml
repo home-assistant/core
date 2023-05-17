@@ -251,6 +251,24 @@ send_video:
       example: "/path/to/the/video.mp4"
       selector:
         text:
+    thumb_url:
+      name: Thumb URL
+      description: >-
+        Remote path to a thumb image.
+        (Videos bigger than ~15mb won't auto-generate a thumb image,
+        so you may want to explicitly upload one)
+      example: "http://example.org/path/to/the/thumb.jpg"
+      selector:
+        text:
+    thumb_file:
+      name: Thumb File
+      description: >-
+        Local path to a thumb image.
+        (Videos bigger than ~15mb won't auto-generate a thumb image,
+        so you may want to explicitly upload one)
+      example: "/path/to/the/thumb.jpg"
+      selector:
+        text:
     caption:
       example: "My video"
       selector:
@@ -287,6 +305,49 @@ send_video:
     verify_ssl:
       selector:
         boolean:
+    supports_streaming:
+      name: Supports Streaming
+      description: >-
+        Pass `true` if the uploaded video is suitable for streaming.
+        Default is false/none.
+        Videos with more than ~15mb won't auto-download or autoplay.
+        So this feature is very useful for bigger videos.
+      example: true
+      selector:
+        boolean:
+    duration:
+      name: Duration
+      description: Duration of the video clip (Required if using 'Supports Streaming')
+      example: 60
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    width:
+      name: Width
+      description: >-
+        Width of the video clip
+        (Required if using 'Supports Streaming',
+        if the width is unknown, you can use any number, like `1`)
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: pixels
+    height:
+      name: Height
+      description: >-
+        Height of the video clip
+        (Required if using 'Supports Streaming',
+        if the height is unknown, you can use any number, like `1`)
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: pixels
     timeout:
       selector:
         number:

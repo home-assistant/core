@@ -69,6 +69,10 @@ ATTR_MESSAGEID = "message_id"
 ATTR_MSG = "message"
 ATTR_MSGID = "id"
 ATTR_PARSER = "parse_mode"
+ATTR_SUPPORTS_STREAMING = "supports_streaming"
+ATTR_DURATION = "duration"
+ATTR_WIDTH = "width"
+ATTR_HEIGHT = "height"
 ATTR_PASSWORD = "password"
 ATTR_REPLY_TO_MSGID = "reply_to_message_id"
 ATTR_REPLYMARKUP = "reply_markup"
@@ -77,6 +81,8 @@ ATTR_STICKER_ID = "sticker_id"
 ATTR_TARGET = "target"
 ATTR_TEXT = "text"
 ATTR_URL = "url"
+ATTR_THUMB_URL = "thumb_url"
+ATTR_THUMB_FILE = "thumb_file"
 ATTR_USER_ID = "user_id"
 ATTR_USERNAME = "username"
 ATTR_VERIFY_SSL = "verify_ssl"
@@ -176,12 +182,18 @@ SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend(
 SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     {
         vol.Optional(ATTR_URL): cv.template,
+        vol.Optional(ATTR_THUMB_URL): cv.template,
+        vol.Optional(ATTR_THUMB_FILE): cv.template,
         vol.Optional(ATTR_FILE): cv.template,
         vol.Optional(ATTR_CAPTION): cv.template,
         vol.Optional(ATTR_USERNAME): cv.string,
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_AUTHENTICATION): cv.string,
         vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+        vol.Optional(ATTR_SUPPORTS_STREAMING): cv.boolean,
+        vol.Optional(ATTR_DURATION): cv.positive_int,
+        vol.Optional(ATTR_WIDTH): cv.positive_int,
+        vol.Optional(ATTR_HEIGHT): cv.positive_int,
     }
 )
 
@@ -395,6 +407,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ATTR_MESSAGE,
             ATTR_TITLE,
             ATTR_URL,
+            ATTR_THUMB_URL,
+            ATTR_THUMB_FILE,
             ATTR_FILE,
             ATTR_CAPTION,
             ATTR_LONGITUDE,
@@ -573,6 +587,12 @@ class TelegramNotificationService:
             ATTR_REPLYMARKUP: None,
             ATTR_TIMEOUT: None,
             ATTR_MESSAGE_TAG: None,
+            ATTR_SUPPORTS_STREAMING: None,
+            ATTR_DURATION: None,
+            ATTR_WIDTH: None,
+            ATTR_HEIGHT: None,
+            ATTR_THUMB_URL: None,
+            ATTR_THUMB_FILE: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
@@ -589,6 +609,18 @@ class TelegramNotificationService:
                 params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
             if ATTR_MESSAGE_TAG in data:
                 params[ATTR_MESSAGE_TAG] = data[ATTR_MESSAGE_TAG]
+            if ATTR_SUPPORTS_STREAMING in data:
+                params[ATTR_SUPPORTS_STREAMING] = data[ATTR_SUPPORTS_STREAMING]
+            if ATTR_DURATION in data:
+                params[ATTR_DURATION] = data[ATTR_DURATION]
+            if ATTR_WIDTH in data:
+                params[ATTR_WIDTH] = data[ATTR_WIDTH]
+            if ATTR_HEIGHT in data:
+                params[ATTR_HEIGHT] = data[ATTR_HEIGHT]
+            if ATTR_THUMB_URL in data:
+                params[ATTR_THUMB_URL] = data[ATTR_THUMB_URL]
+            if ATTR_THUMB_FILE in data:
+                params[ATTR_THUMB_FILE] = data[ATTR_THUMB_FILE]
             # Keyboards:
             if ATTR_KEYBOARD in data:
                 keys = data.get(ATTR_KEYBOARD)
@@ -768,6 +800,18 @@ class TelegramNotificationService:
             verify_ssl=kwargs.get(ATTR_VERIFY_SSL),
         )
 
+        thumbfile_content = None
+        if params[ATTR_THUMB_URL] is not None or params[ATTR_THUMB_FILE] is not None:
+            thumbfile_content = load_data(
+                self.hass,
+                url=kwargs.get(ATTR_THUMB_URL),
+                filepath=kwargs.get(ATTR_THUMB_FILE),
+                username=kwargs.get(ATTR_USERNAME),
+                password=kwargs.get(ATTR_PASSWORD),
+                authentication=kwargs.get(ATTR_AUTHENTICATION),
+                verify_ssl=kwargs.get(ATTR_VERIFY_SSL),
+            )
+
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
                 _LOGGER.debug("Sending file to chat ID %s", chat_id)
@@ -810,6 +854,11 @@ class TelegramNotificationService:
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
+                        supports_streaming=kwargs.get(ATTR_SUPPORTS_STREAMING),
+                        duration=kwargs.get(ATTR_DURATION),
+                        width=kwargs.get(ATTR_WIDTH),
+                        height=kwargs.get(ATTR_HEIGHT),
+                        thumb=thumbfile_content,
                     )
                 elif file_type == SERVICE_SEND_DOCUMENT:
                     self._send_msg(
