@@ -22,7 +22,7 @@
       "fix_flow": {
         "step": {
           "system_rename_data_disk": {
-            "description": "'{reference}' is a filesystem with the name 'hassos-data' and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the fix option to rename the filesystem to prevent this. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system."
+            "description": "{reference} is a filesystem with the name hassos-data and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the fix option to rename the filesystem to prevent this. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system."
           }
         },
         "abort": {
