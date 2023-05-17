@@ -28,7 +28,7 @@
         "title": "Set up an August account"
       },
       "reauth_validate": {
-        "description": "Enter the password for {username}.",
+        "description": "Choose the correct brand for your device, and enter the password for {username}. If you choose the wrong brand, you may be able to authenticate initially; however, authentication will fail shortly after, and you can try again..",
         "data": {
           "brand": "[%key:component::august::config::step::user_validate::data::brand%]",
           "password": "[%key:common::config_flow::data::password%]"
