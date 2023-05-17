@@ -97,11 +97,8 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            assert self._august_gateway is not None
-            await self._async_reset_access_token_cache_if_needed(
-                self._august_gateway, user_input[CONF_USERNAME], None
-            )
-            validate_result = await self._async_auth_or_validate(user_input)
+            self._user_auth_details.update(user_input)
+            validate_result = await self._async_auth_or_validate()
             description_placeholders = validate_result.description_placeholders
             if validate_result.validation_required:
                 return await self.async_step_validation()
@@ -165,7 +162,8 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            validate_result = await self._async_auth_or_validate(user_input)
+            self._user_auth_details.update(user_input)
+            validate_result = await self._async_auth_or_validate()
             description_placeholders = validate_result.description_placeholders
             if validate_result.validation_required:
                 return await self.async_step_validation()
@@ -203,11 +201,8 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._needs_reset = False
             await gateway.async_reset_authentication()
 
-    async def _async_auth_or_validate(
-        self, user_input: dict[str, Any]
-    ) -> ValidateResult:
+    async def _async_auth_or_validate(self) -> ValidateResult:
         """Authenticate or validate."""
-        self._user_auth_details.update(user_input)
         user_auth_details = self._user_auth_details
         gateway = self._august_gateway
         assert gateway is not None
