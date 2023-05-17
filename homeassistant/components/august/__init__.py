@@ -134,7 +134,7 @@ class AugustData(AugustSubscriberMixin):
         self._config_entry = config_entry
         self._hass = hass
         self._august_gateway = august_gateway
-        self.activity_stream = None
+        self.activity_stream: ActivityStream | None = None
         self._api = august_gateway.api
         self._device_detail_by_id: dict[str, LockDetail | DoorbellDetail] = {}
         self._doorbells_by_id: dict[str, Doorbell] = {}
