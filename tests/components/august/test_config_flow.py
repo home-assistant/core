@@ -6,6 +6,7 @@ from yalexs.authenticator import ValidationResult
 from homeassistant import config_entries
 from homeassistant.components.august.const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
+    CONF_BRAND,
     CONF_INSTALL_ID,
     CONF_LOGIN_METHOD,
     DOMAIN,
@@ -41,6 +42,7 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_BRAND: "august",
                 CONF_LOGIN_METHOD: "email",
                 CONF_USERNAME: "my@email.tld",
                 CONF_PASSWORD: "test-password",
@@ -51,6 +53,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == "create_entry"
     assert result2["title"] == "my@email.tld"
     assert result2["data"] == {
+        CONF_BRAND: "august",
         CONF_LOGIN_METHOD: "email",
         CONF_USERNAME: "my@email.tld",
         CONF_INSTALL_ID: None,
@@ -72,6 +75,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_BRAND: "august",
                 CONF_LOGIN_METHOD: "email",
                 CONF_USERNAME: "my@email.tld",
                 CONF_PASSWORD: "test-password",
@@ -90,11 +94,12 @@ async def test_user_unexpected_exception(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-        side_effect=ValueError,
+        side_effect=ValueError("something exploded"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_BRAND: "august",
                 CONF_LOGIN_METHOD: "email",
                 CONF_USERNAME: "my@email.tld",
                 CONF_PASSWORD: "test-password",
@@ -102,7 +107,8 @@ async def test_user_unexpected_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "unhandled"}
+    assert result2["description_placeholders"] == {"error": "something exploded"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -205,6 +211,7 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
     assert result4["type"] == "create_entry"
     assert result4["title"] == "my@email.tld"
     assert result4["data"] == {
+        CONF_BRAND: "august",
         CONF_LOGIN_METHOD: "email",
         CONF_USERNAME: "my@email.tld",
         CONF_INSTALL_ID: None,

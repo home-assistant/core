@@ -68,6 +68,7 @@ async def async_validate_input(
 class ValidateResult:
     """Result from validation."""
 
+    validation_required: bool
     info: dict[str, Any]
     errors: dict[str, str]
     description_placeholders: dict[str, str]
@@ -97,6 +98,8 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             validate_result = await self._async_auth_or_validate(user_input)
+            if validate_result.validation_required:
+                return await self.async_step_validation()
             if not (errors := validate_result.errors):
                 return await self._async_update_or_create_entry(validate_result.info)
             description_placeholders = validate_result.description_placeholders
@@ -159,6 +162,8 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             validate_result = await self._async_auth_or_validate(user_input)
+            if validate_result.validation_required:
+                return await self.async_step_validation()
             if not (errors := validate_result.errors):
                 return await self._async_update_or_create_entry(validate_result.info)
             description_placeholders = validate_result.description_placeholders
@@ -191,9 +196,12 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._needs_reset:
             self._needs_reset = False
             await self._august_gateway.async_reset_authentication()
+
         errors: dict[str, str] = {}
         info: dict[str, Any] = {}
         description_placeholders: dict[str, str] = {}
+        validation_required = False
+
         try:
             info = await async_validate_input(
                 self._user_auth_details,
@@ -204,7 +212,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except RequireValidation:
-            return await self.async_step_validation()
+            validation_required = True
         except AugustApiAIOHTTPError as ex:
             if ex.auth_failed:
                 errors["base"] = "invalid_auth"
@@ -216,7 +224,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unhandled"
             description_placeholders = {"error": str(ex)}
 
-        return ValidateResult(info, errors, description_placeholders)
+        return ValidateResult(
+            validation_required, info, errors, description_placeholders
+        )
 
     async def _async_update_or_create_entry(self, info: dict[str, Any]) -> FlowResult:
         """Update existing entry or create a new one."""
