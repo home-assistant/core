@@ -71,7 +71,7 @@ WSDiscovery==2.0.0
 WazeRouteCalculator==0.14
 
 # homeassistant.components.accuweather
-accuweather==0.5.1
+accuweather==0.5.2
 
 # homeassistant.components.adax
 adax==0.2.0
@@ -431,7 +431,7 @@ beautifulsoup4==4.11.1
 bellows==0.35.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.13.3
+bimmer_connected==0.13.5
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -816,6 +816,9 @@ google-cloud-pubsub==2.13.11
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==2.12.3
 
+# homeassistant.components.google_generative_ai_conversation
+google-generativeai==0.1.0rc2
+
 # homeassistant.components.nest
 google-nest-sdm==2.2.4
 
@@ -1025,7 +1028,7 @@ kegtron-ble==0.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.knx
-knx_frontend==2023.5.2.143855
+knx_frontend==2023.5.16.204359
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1512,7 +1515,7 @@ pyatmo==7.5.0
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.10.3
+pyatv==0.11.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -2236,7 +2239,7 @@ rapt-ble==0.1.0
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.11.0
+regenmaschine==2023.05.1
 
 # homeassistant.components.renault
 renault-api==0.1.13
