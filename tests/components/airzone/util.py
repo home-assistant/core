@@ -93,6 +93,8 @@ HVAC_MOCK = {
                     API_FLOOR_DEMAND: 0,
                     API_HEAT_ANGLE: 0,
                     API_COLD_ANGLE: 0,
+                    API_SPEED: 0,
+                    API_SPEEDS: 3,
                 },
                 {
                     API_SYSTEM_ID: 1,
@@ -119,6 +121,8 @@ HVAC_MOCK = {
                     API_FLOOR_DEMAND: 1,
                     API_HEAT_ANGLE: 1,
                     API_COLD_ANGLE: 2,
+                    API_SPEED: 0,
+                    API_SPEEDS: 2,
                 },
                 {
                     API_SYSTEM_ID: 1,
@@ -221,6 +225,8 @@ HVAC_MOCK = {
                     API_HUMIDITY: 62,
                     API_UNITS: 0,
                     API_ERRORS: [],
+                    API_SPEED: 0,
+                    API_SPEEDS: 4,
                 },
             ]
         },
@@ -300,6 +306,9 @@ async def async_init_integration(
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         return_value=HVAC_SYSTEMS_MOCK,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         return_value=HVAC_WEBSERVER_MOCK,
