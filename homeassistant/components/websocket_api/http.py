@@ -135,7 +135,8 @@ class WebSocketHandler:
                         )
                         messages_remaining -= 1
 
-                    coalesced_messages = "[" + ",".join(messages) + "]"
+                    joined_messages = ",".join(messages)
+                    coalesced_messages = f"[{joined_messages}]"
                     debug("Sending %s", coalesced_messages)
                     await send_str(coalesced_messages)
         finally:
