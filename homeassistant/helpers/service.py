@@ -578,7 +578,7 @@ async def async_get_all_descriptions(
         previous_all_services, previous_descriptions_cache = hass.data[
             ALL_SERVICE_DESCRIPTIONS_CACHE
         ]
-        # If the domains are the same, we can return the cache
+        # If the services are the same, we can return the cache
         if previous_all_services == all_services:
             return cast(dict[str, dict[str, Any]], previous_descriptions_cache)
 
