@@ -7,7 +7,6 @@ from typing import Any, cast
 import voluptuous as vol
 from yalexs.authenticator import ValidationResult
 from yalexs.const import BRANDS, DEFAULT_BRAND
-from yalexs.exceptions import AugustApiAIOHTTPError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -99,11 +98,11 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             validate_result = await self._async_auth_or_validate(user_input)
+            description_placeholders = validate_result.description_placeholders
             if validate_result.validation_required:
                 return await self.async_step_validation()
             if not (errors := validate_result.errors):
                 return await self._async_update_or_create_entry(validate_result.info)
-            description_placeholders = validate_result.description_placeholders
 
         return self.async_show_form(
             step_id="user_validate",
@@ -163,11 +162,11 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             validate_result = await self._async_auth_or_validate(user_input)
+            description_placeholders = validate_result.description_placeholders
             if validate_result.validation_required:
                 return await self.async_step_validation()
             if not (errors := validate_result.errors):
                 return await self._async_update_or_create_entry(validate_result.info)
-            description_placeholders = validate_result.description_placeholders
 
         return self.async_show_form(
             step_id="reauth_validate",
@@ -219,12 +218,6 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except RequireValidation:
             validation_required = True
-        except AugustApiAIOHTTPError as ex:
-            if ex.auth_failed:
-                errors["base"] = "invalid_auth"
-            else:
-                errors["base"] = "unhandled"
-                description_placeholders = {"error": str(ex)}
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unhandled"

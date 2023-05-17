@@ -12,6 +12,7 @@ from yalexs.api_async import ApiAsync
 from yalexs.authenticator_async import AuthenticationState, AuthenticatorAsync
 from yalexs.authenticator_common import Authentication
 from yalexs.const import DEFAULT_BRAND
+from yalexs.exceptions import AugustApiAIOHTTPError
 
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -110,6 +111,10 @@ class AugustGateway:
                 # authenticated because we can be authenticated
                 # by have no access
                 await self.api.async_get_operable_locks(self.access_token)
+        except AugustApiAIOHTTPError as ex:
+            if ex.auth_failed:
+                raise InvalidAuth from ex
+            raise CannotConnect from ex
         except ClientResponseError as ex:
             if ex.status == HTTPStatus.UNAUTHORIZED:
                 raise InvalidAuth from ex

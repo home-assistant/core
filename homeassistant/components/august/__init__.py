@@ -53,13 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed from err
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
-    except AugustApiAIOHTTPError as err:
-        # If they choose the wrong brand, authentication may succeed but
-        # the api will return an error when we try to get locks
-        if err.auth_failed:
-            raise ConfigEntryAuthFailed from err
-        raise ConfigEntryNotReady from err
-    except (ClientResponseError, CannotConnect) as err:
+    except (AugustApiAIOHTTPError, ClientResponseError, CannotConnect) as err:
         raise ConfigEntryNotReady from err
 
 
