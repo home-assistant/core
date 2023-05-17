@@ -11,6 +11,7 @@ from zigpy.zcl.foundation import Status
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
 )
@@ -80,6 +81,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._cover_cluster_handler = self.cluster_handlers.get(CLUSTER_HANDLER_COVER)
         self._current_position = None
+        self._tilt_position = None
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -94,6 +96,10 @@ class ZhaCover(ZhaEntity, CoverEntity):
         self._state = last_state.state
         if "current_position" in last_state.attributes:
             self._current_position = last_state.attributes["current_position"]
+        if "current_tilt_position" in last_state.attributes:
+            self._tilt_position = last_state.attributes[
+                "current_tilt_position"
+            ]  # first allocation activate tilt
 
     @property
     def is_closed(self) -> bool | None:
@@ -120,15 +126,26 @@ class ZhaCover(ZhaEntity, CoverEntity):
         """
         return self._current_position
 
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return the current tilt position of the cover."""
+        return self._tilt_position
+
     @callback
     def async_set_position(self, attr_id, attr_name, value):
         """Handle position update from cluster handler."""
-        _LOGGER.debug("setting position: %s", value)
-        self._current_position = 100 - value
+        _LOGGER.debug("setting position: %s %s %s", attr_id, attr_name, value)
+        if attr_name == "current_position_lift_percentage":
+            self._current_position = 100 - value
+        elif attr_name == "current_position_tilt_percentage":
+            self._tilt_position = 100 - value
+
         if self._current_position == 0:
             self._state = STATE_CLOSED
         elif self._current_position == 100:
             self._state = STATE_OPEN
+        else:
+            self._state = None
         self.async_write_ha_state()
 
     @callback
@@ -145,12 +162,22 @@ class ZhaCover(ZhaEntity, CoverEntity):
             raise HomeAssistantError(f"Failed to open cover: {res[1]}")
         self.async_update_state(STATE_OPENING)
 
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        await self._cover_cluster_handler.go_to_tilt_percentage(0)
+
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the window cover."""
         res = await self._cover_cluster_handler.down_close()
         if res[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to close cover: {res[1]}")
         self.async_update_state(STATE_CLOSING)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        res = await self._cover_cluster_handler.go_to_tilt_percentage(100)
+        if not isinstance(res, Exception) and res[1] is Status.SUCCESS:
+            self.async_update_state(STATE_CLOSING)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the roller shutter to a specific position."""
@@ -162,6 +189,11 @@ class ZhaCover(ZhaEntity, CoverEntity):
             STATE_CLOSING if new_pos < self._current_position else STATE_OPENING
         )
 
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover til to a specific position."""
+        new_pos = kwargs[ATTR_TILT_POSITION]
+        await self._cover_cluster_handler.go_to_tilt_percentage(100 - new_pos)
+
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the window cover."""
         res = await self._cover_cluster_handler.stop()
@@ -169,6 +201,10 @@ class ZhaCover(ZhaEntity, CoverEntity):
             raise HomeAssistantError(f"Failed to stop cover: {res[1]}")
         self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
         self.async_write_ha_state()
+
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt."""
+        await self._cover_cluster_handler.stop()
 
     async def async_update(self) -> None:
         """Attempt to retrieve the open/close state of the cover."""
@@ -192,6 +228,13 @@ class ZhaCover(ZhaEntity, CoverEntity):
             else:
                 self._current_position = None
                 self._state = None
+            pos = await self._cover_cluster_handler.get_attribute_value(
+                "current_position_tilt_percentage", from_cache=from_cache
+            )
+            _LOGGER.debug("read tilt pos=%s", pos)
+
+            if pos is not None:
+                self._tilt_position = 100 - pos
 
 
 @MULTI_MATCH(
