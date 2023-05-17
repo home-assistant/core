@@ -172,9 +172,7 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
     ) as mock_validate_verification_code, patch(
         "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
         return_value=True,
-    ) as mock_send_verification_code, patch(
-        "homeassistant.components.august.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    ) as mock_send_verification_code:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {VERIFICATION_CODE_KEY: "incorrect"},
@@ -185,7 +183,7 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
     assert len(mock_send_verification_code.mock_calls) == 0
     assert len(mock_validate_verification_code.mock_calls) == 1
     assert result3["type"] is FlowResultType.FORM
-    assert result3["errors"] is None
+    assert result3["errors"] == {"base": "invalid_verification_code"}
     assert result3["step_id"] == "validation"
 
     # Try with the CORRECT verification code and we setup

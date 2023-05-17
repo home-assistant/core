@@ -2,6 +2,7 @@
   "config": {
     "error": {
       "unhandled": "Unhandled error: {error}",
+      "invalid_verification_code": "Invalid verification code",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },

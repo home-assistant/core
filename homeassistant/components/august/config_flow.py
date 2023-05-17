@@ -128,18 +128,22 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
-    async def async_step_validation(self, user_input=None):
+    async def async_step_validation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle validation (2fa) step."""
         if user_input:
             if self._mode == "reauth":
                 return await self.async_step_reauth_validate(user_input)
             return await self.async_step_user_validate(user_input)
 
+        previously_failed = VERIFICATION_CODE_KEY in self._user_auth_details
         return self.async_show_form(
             step_id="validation",
             data_schema=vol.Schema(
                 {vol.Required(VERIFICATION_CODE_KEY): vol.All(str, vol.Strip)}
             ),
+            errors={"base": "invalid_verification_code"} if previously_failed else None,
             description_placeholders={
                 CONF_BRAND: self._user_auth_details[CONF_BRAND],
                 CONF_USERNAME: self._user_auth_details[CONF_USERNAME],
