@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with async_timeout.timeout(host.api.timeout):
             try:
                 return await host.api.check_new_firmware()
-            except ReolinkError as err:
+            except (ReolinkError, asyncio.exceptions.CancelledError) as err:
                 if starting:
                     _LOGGER.debug(
                         "Error checking Reolink firmware update at startup "
