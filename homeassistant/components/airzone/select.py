@@ -1,7 +1,7 @@
 """Support for the Airzone sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any, Final
 
 from aioairzone.common import GrilleAngle, SleepTimeout
@@ -61,6 +61,7 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         key=AZD_COLD_ANGLE,
         name="Cold Angle",
+        options=list(GRILLE_ANGLE_DICT),
         options_dict=GRILLE_ANGLE_DICT,
         translation_key="grille_angles",
     ),
@@ -69,6 +70,7 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         key=AZD_HEAT_ANGLE,
         name="Heat Angle",
+        options=list(GRILLE_ANGLE_DICT),
         options_dict=GRILLE_ANGLE_DICT,
         translation_key="grille_angles",
     ),
@@ -77,6 +79,7 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         entity_category=EntityCategory.CONFIG,
         key=AZD_SLEEP,
         name="Sleep",
+        options=list(SLEEP_DICT),
         options_dict=SLEEP_DICT,
         translation_key="sleep_times",
     ),
@@ -94,14 +97,10 @@ async def async_setup_entry(
     for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
         for description in ZONE_SELECT_TYPES:
             if description.key in zone_data:
-                _desc = replace(
-                    description,
-                    options=list(description.options_dict),
-                )
                 entities.append(
                     AirzoneZoneSelect(
                         coordinator,
-                        _desc,
+                        description,
                         entry,
                         system_zone_id,
                         zone_data,
