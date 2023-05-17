@@ -174,7 +174,7 @@ def valid_domain(domain: str) -> bool:
     return VALID_DOMAIN.match(domain) is not None
 
 
-@functools.lru_cache(64)
+@functools.lru_cache(512)
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format.
 
