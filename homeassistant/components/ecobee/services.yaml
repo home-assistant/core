@@ -205,9 +205,17 @@ set_dehumidifier_mode:
       integration: ecobee
       domain: climate
   fields:
-    dehumidifer_enabled:
+    dehumidifier_enabled:
       name: Dehumidifier enabled
       description: Enable dehumidifier
       required: true
       selector:
         boolean:
+    dehumidifier_level:
+      name: Dehumidifier level
+      description: Target relative humidity for dehumidification (in %)
+      selector:
+        number:
+          min: 30
+          max: 80
+          unit_of_measurement: relative humidity
