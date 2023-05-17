@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Callable
 import dataclasses
 import logging
 import os
@@ -10,6 +10,7 @@ import subprocess
 import threading
 import traceback
 from typing import Any, ParamSpecArgs, TypeVar
+from weakref import WeakSet
 
 import uvloop
 
@@ -109,13 +110,7 @@ class HassEventLoop(uvloop.Loop):
     def __init__(self) -> None:
         """Initialize the event loop."""
         super().__init__()
-        self._scheduled: set[asyncio.TimerHandle] = set()
-
-    def _prune_cancellable_timers(self) -> None:
-        temp_timers = self._scheduled.copy()
-        for handle in temp_timers:
-            if handle.cancelled() or handle.when() < self.time():
-                self._scheduled.remove(handle)
+        self._scheduled: WeakSet[asyncio.TimerHandle] = WeakSet()
 
     def _handle_cancellable_timer(
         self, timer: asyncio.TimerHandle, *args: ParamSpecArgs
@@ -141,7 +136,6 @@ class HassEventLoop(uvloop.Loop):
 
         Overridden from base class to track cancellable timers
         """
-        self._prune_cancellable_timers()
         timer = super().call_at(when, cb, *args, context=context)
         self._handle_cancellable_timer(timer, *args)
         return timer
@@ -158,31 +152,9 @@ class HassEventLoop(uvloop.Loop):
 
         Overridden from base class to track cancellable timers
         """
-        self._prune_cancellable_timers()
         timer = super().call_later(delay, cb, *args, context=context)
         self._handle_cancellable_timer(timer, *args)
         return timer
-
-    def create_future(self) -> asyncio.Future[Any]:
-        """Create future.
-
-        Overridden from base class to call _prune_cancellable_timers()
-        """
-        self._prune_cancellable_timers()
-        return super().create_future()
-
-    def create_task(
-        self,
-        coro: Awaitable[_T] | Generator[Any, None, _T],
-        *args: ParamSpecArgs,
-        name: str | None = None,
-    ) -> asyncio.Task[Any]:
-        """Create task.
-
-        Overridden from base class to call _prune_cancellable_timers()
-        """
-        self._prune_cancellable_timers()
-        return super().create_task(coro, *args, name=name)
 
 
 @callback
