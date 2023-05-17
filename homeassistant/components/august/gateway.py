@@ -1,6 +1,7 @@
 """Handle August connection setup and authentication."""
 
 import asyncio
+from collections.abc import Mapping
 from http import HTTPStatus
 import logging
 import os
@@ -42,7 +43,7 @@ class AugustGateway:
         self._token_refresh_lock = asyncio.Lock()
         self._access_token_cache_file: str | None = None
         self._hass: HomeAssistant = hass
-        self._config: dict[str, Any] | None = None
+        self._config: Mapping[str, Any] | None = None
         self.api: ApiAsync | None = None
         self.authenticator: AuthenticatorAsync | None = None
         self.authentication: Authentication | None = None
@@ -63,7 +64,7 @@ class AugustGateway:
             CONF_ACCESS_TOKEN_CACHE_FILE: self._access_token_cache_file,
         }
 
-    async def async_setup(self, conf: dict[str, Any]) -> None:
+    async def async_setup(self, conf: Mapping[str, Any]) -> None:
         """Create the api and authenticator objects."""
         if conf.get(VERIFICATION_CODE_KEY):
             return

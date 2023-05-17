@@ -1,11 +1,13 @@
 """Config flow for August integration."""
 from collections.abc import Mapping
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
 import voluptuous as vol
 from yalexs.authenticator import ValidationResult
 from yalexs.const import BRANDS, DEFAULT_BRAND
+from yalexs.exceptions import AugustApiAIOHTTPError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -62,6 +64,15 @@ async def async_validate_input(
     }
 
 
+@dataclass
+class ValidateResult:
+    """Result from validation."""
+
+    info: dict[str, Any]
+    errors: dict[str, str]
+    description_placeholders: dict[str, str]
+
+
 class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for August."""
 
@@ -82,11 +93,13 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user_validate(self, user_input=None):
         """Handle authentication."""
-        errors = {}
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            result = await self._async_auth_or_validate(user_input, errors)
-            if result is not None:
-                return result
+            validate_result = await self._async_auth_or_validate(user_input)
+            if not (errors := validate_result.errors):
+                return await self._async_update_or_create_entry(validate_result.info)
+            description_placeholders = validate_result.description_placeholders
 
         return self.async_show_form(
             step_id="user_validate",
@@ -110,6 +123,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_validation(self, user_input=None):
@@ -141,11 +155,13 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_validate(self, user_input=None):
         """Handle reauth and validation."""
-        errors = {}
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            result = await self._async_auth_or_validate(user_input, errors)
-            if result is not None:
-                return result
+            validate_result = await self._async_auth_or_validate(user_input)
+            if not (errors := validate_result.errors):
+                return await self._async_update_or_create_entry(validate_result.info)
+            description_placeholders = validate_result.description_placeholders
 
         return self.async_show_form(
             step_id="reauth_validate",
@@ -159,18 +175,25 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            description_placeholders={
+            description_placeholders=description_placeholders
+            | {
                 CONF_USERNAME: self._user_auth_details[CONF_USERNAME],
             },
         )
 
-    async def _async_auth_or_validate(self, user_input, errors):
+    async def _async_auth_or_validate(
+        self, user_input: dict[str, Any]
+    ) -> ValidateResult:
         """Authenticate or validate."""
         self._user_auth_details.update(user_input)
+        assert self._august_gateway is not None
         await self._august_gateway.async_setup(self._user_auth_details)
         if self._needs_reset:
             self._needs_reset = False
             await self._august_gateway.async_reset_authentication()
+        errors: dict[str, str] = {}
+        info: dict[str, Any] = {}
+        description_placeholders: dict[str, str] = {}
         try:
             info = await async_validate_input(
                 self._user_auth_details,
@@ -182,13 +205,21 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except RequireValidation:
             return await self.async_step_validation()
-        except Exception:  # pylint: disable=broad-except
+        except AugustApiAIOHTTPError as ex:
+            if ex.auth_failed:
+                errors["base"] = "invalid_auth"
+            else:
+                errors["base"] = "unhandled"
+                description_placeholders = {"error": str(ex)}
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            errors["base"] = "unhandled"
+            description_placeholders = {"error": str(ex)}
 
-        if errors:
-            return None
+        return ValidateResult(info, errors, description_placeholders)
 
+    async def _async_update_or_create_entry(self, info: dict[str, Any]) -> FlowResult:
+        """Update existing entry or create a new one."""
         existing_entry = await self.async_set_unique_id(
             self._user_auth_details[CONF_USERNAME]
         )
