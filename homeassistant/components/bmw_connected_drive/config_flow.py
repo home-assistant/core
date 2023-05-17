@@ -16,7 +16,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_REFRESH_TOKEN
+from .const import CONF_ALLOWED_REGIONS, CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -51,6 +51,8 @@ async def validate_input(
     retval = {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}
     if auth.refresh_token:
         retval[CONF_REFRESH_TOKEN] = auth.refresh_token
+    if auth.gcid:
+        retval[CONF_GCID] = auth.gcid
     return retval
 
 
@@ -80,6 +82,7 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 entry_data = {
                     **user_input,
                     CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
+                    CONF_GCID: info.get(CONF_GCID),
                 }
             except CannotConnect:
                 errors["base"] = "cannot_connect"
