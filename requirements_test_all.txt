@@ -364,7 +364,7 @@ beautifulsoup4==4.11.1
 bellows==0.35.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.13.3
+bimmer_connected==0.13.5
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.0.2
@@ -634,6 +634,9 @@ google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.13.11
+
+# homeassistant.components.google_generative_ai_conversation
+google-generativeai==0.1.0rc2
 
 # homeassistant.components.nest
 google-nest-sdm==2.2.4
@@ -1124,7 +1127,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.10.3
+pyatv==0.11.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15

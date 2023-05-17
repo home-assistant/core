@@ -33,6 +33,7 @@ from homeassistant.helpers.json import (
     JSON_DUMP,
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
+    json_dumps,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import (
@@ -48,17 +49,9 @@ from homeassistant.util.json import format_unserializable_data
 from . import const, decorators, messages
 from .connection import ActiveConnection
 from .const import ERR_NOT_FOUND
+from .messages import construct_event_message, construct_result_message
 
-_STATES_TEMPLATE = "__STATES__"
-_STATES_JSON_TEMPLATE = '"__STATES__"'
-_HANDLE_SUBSCRIBE_ENTITIES_TEMPLATE = JSON_DUMP(
-    messages.event_message(
-        messages.IDEN_TEMPLATE, {messages.ENTITY_EVENT_ADD: _STATES_TEMPLATE}
-    )
-)
-_HANDLE_GET_STATES_TEMPLATE = JSON_DUMP(
-    messages.result_message(messages.IDEN_TEMPLATE, _STATES_TEMPLATE)
-)
+ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
 
 
 @callback
@@ -280,15 +273,8 @@ def _send_handle_get_states_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle get states response."""
-    connection.send_message(
-        _HANDLE_GET_STATES_TEMPLATE.replace(
-            messages.IDEN_JSON_TEMPLATE, str(msg_id), 1
-        ).replace(
-            _STATES_JSON_TEMPLATE,
-            "[" + ",".join(serialized_states) + "]",
-            1,
-        )
-    )
+    joined_states = ",".join(serialized_states)
+    connection.send_message(construct_result_message(msg_id, f"[{joined_states}]"))
 
 
 @callback
@@ -359,15 +345,25 @@ def _send_handle_entities_init_response(
     connection: ActiveConnection, msg_id: int, serialized_states: list[str]
 ) -> None:
     """Send handle entities init response."""
+    joined_states = ",".join(serialized_states)
     connection.send_message(
-        _HANDLE_SUBSCRIBE_ENTITIES_TEMPLATE.replace(
-            messages.IDEN_JSON_TEMPLATE, str(msg_id), 1
-        ).replace(
-            _STATES_JSON_TEMPLATE,
-            "{" + ",".join(serialized_states) + "}",
-            1,
-        )
+        construct_event_message(msg_id, f'{{"a":{{{joined_states}}}}}')
     )
+
+
+async def _async_get_all_descriptions_json(hass: HomeAssistant) -> str:
+    """Return JSON of descriptions (i.e. user documentation) for all service calls."""
+    descriptions = await async_get_all_descriptions(hass)
+    if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
+        cached_descriptions, cached_json_payload = hass.data[
+            ALL_SERVICE_DESCRIPTIONS_JSON_CACHE
+        ]
+        # If the descriptions are the same, return the cached JSON payload
+        if cached_descriptions is descriptions:
+            return cast(str, cached_json_payload)
+    json_payload = json_dumps(descriptions)
+    hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
+    return json_payload
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
@@ -376,8 +372,8 @@ async def handle_get_services(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get services command."""
-    descriptions = await async_get_all_descriptions(hass)
-    connection.send_result(msg["id"], descriptions)
+    payload = await _async_get_all_descriptions_json(hass)
+    connection.send_message(construct_result_message(msg["id"], payload))
 
 
 @callback
