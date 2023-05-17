@@ -2,7 +2,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 from yalexs.authenticator import ValidationResult
@@ -37,11 +37,9 @@ async def async_validate_input(
     Request configuration steps from the user.
     """
     assert august_gateway.authenticator is not None
+    authenticator = august_gateway.authenticator
     if (code := data.get(VERIFICATION_CODE_KEY)) is not None:
-        result = cast(
-            ValidationResult,
-            await august_gateway.authenticator.async_validate_verification_code(code),
-        )
+        result = await authenticator.async_validate_verification_code(code)
         _LOGGER.debug("Verification code validation: %s", result)
         if result != ValidationResult.VALIDATED:
             raise RequireValidation
