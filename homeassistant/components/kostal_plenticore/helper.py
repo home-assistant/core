@@ -12,7 +12,7 @@ from aiohttp.client_exceptions import ClientError
 from pykoplenti import ApiClient, ApiException, AuthenticationException
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -171,7 +171,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._fetch: dict[str, list[str]] = defaultdict(list)
         self._plenticore = plenticore
 
-    def start_fetch_data(self, module_id: str, data_id: str) -> None:
+    def start_fetch_data(self, module_id: str, data_id: str) -> CALLBACK_TYPE:
         """Start fetching the given data (module-id and data-id)."""
         self._fetch[module_id].append(data_id)
 
@@ -180,7 +180,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         async def force_refresh(event_time: datetime) -> None:
             await self.async_request_refresh()
 
-        async_call_later(self.hass, 2, force_refresh)
+        return async_call_later(self.hass, 2, force_refresh)
 
     def stop_fetch_data(self, module_id: str, data_id: str) -> None:
         """Stop fetching the given data (module-id and data-id)."""
@@ -251,7 +251,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
     def start_fetch_data(
         self, module_id: str, data_id: str, all_options: list[str]
-    ) -> None:
+    ) -> CALLBACK_TYPE:
         """Start fetching the given data (module-id and entry-id)."""
         self._fetch[module_id].append(data_id)
         self._fetch[module_id].append(all_options)
@@ -261,7 +261,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         async def force_refresh(event_time: datetime) -> None:
             await self.async_request_refresh()
 
-        async_call_later(self.hass, 2, force_refresh)
+        return async_call_later(self.hass, 2, force_refresh)
 
     def stop_fetch_data(
         self, module_id: str, data_id: str, all_options: list[str]

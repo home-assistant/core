@@ -22,7 +22,7 @@
       }
     },
     "error": {
-      "no_longer_in_range": "The lock is no longer in Bluetooth range. Move the lock or adapter and again.",
+      "no_longer_in_range": "The lock is no longer in Bluetooth range. Move the lock or adapter and try again.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",

@@ -1,4 +1,5 @@
 """The test for the threshold sensor platform."""
+
 import pytest
 
 from homeassistant.const import (
@@ -28,8 +29,8 @@ async def test_sensor_upper(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.test_monitored", 15)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "below"
+    assert state.state == "off"
 
     hass.states.async_set(
         "sensor.test_monitored",
@@ -62,12 +63,12 @@ async def test_sensor_upper(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.attributes["position"] == "unknown"
-    assert state.state == "off"
+    assert state.state == "unknown"
 
     hass.states.async_set("sensor.test_monitored", 15)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
+    assert state.attributes["position"] == "below"
     assert state.state == "off"
 
 
@@ -88,8 +89,8 @@ async def test_sensor_lower(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.test_monitored", 15)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "above"
+    assert state.state == "off"
 
     hass.states.async_set("sensor.test_monitored", 16)
     await hass.async_block_till_done()
@@ -116,12 +117,12 @@ async def test_sensor_lower(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.attributes["position"] == "unknown"
-    assert state.state == "off"
+    assert state.state == "unknown"
 
     hass.states.async_set("sensor.test_monitored", 15)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
+    assert state.attributes["position"] == "above"
     assert state.state == "off"
 
 
@@ -143,15 +144,15 @@ async def test_sensor_upper_hysteresis(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.test_monitored", 17.5)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "below"
+    assert state.state == "off"
 
     # Set the monitored sensor's state to the threshold - hysteresis
     hass.states.async_set("sensor.test_monitored", 12.5)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "below"
+    assert state.state == "off"
 
     hass.states.async_set("sensor.test_monitored", 20)
     await hass.async_block_till_done()
@@ -191,7 +192,7 @@ async def test_sensor_upper_hysteresis(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.attributes["position"] == "unknown"
-    assert state.state == "off"
+    assert state.state == "unknown"
 
     hass.states.async_set("sensor.test_monitored", 18)
     await hass.async_block_till_done()
@@ -218,15 +219,15 @@ async def test_sensor_lower_hysteresis(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.test_monitored", 17.5)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "above"
+    assert state.state == "off"
 
     # Set the monitored sensor's state to the threshold - hysteresis
     hass.states.async_set("sensor.test_monitored", 12.5)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "above"
+    assert state.state == "off"
 
     hass.states.async_set("sensor.test_monitored", 20)
     await hass.async_block_till_done()
@@ -266,7 +267,7 @@ async def test_sensor_lower_hysteresis(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.attributes["position"] == "unknown"
-    assert state.state == "off"
+    assert state.state == "unknown"
 
     hass.states.async_set("sensor.test_monitored", 18)
     await hass.async_block_till_done()
@@ -293,15 +294,15 @@ async def test_sensor_in_range_no_hysteresis(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.test_monitored", 10)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "in_range"
+    assert state.state == "on"
 
     # Set the monitored sensor's state to the upper threshold
     hass.states.async_set("sensor.test_monitored", 20)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "in_range"
+    assert state.state == "on"
 
     hass.states.async_set(
         "sensor.test_monitored",
@@ -335,7 +336,7 @@ async def test_sensor_in_range_no_hysteresis(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.attributes["position"] == "unknown"
-    assert state.state == "off"
+    assert state.state == "unknown"
 
     hass.states.async_set("sensor.test_monitored", 21)
     await hass.async_block_till_done()
@@ -363,29 +364,29 @@ async def test_sensor_in_range_with_hysteresis(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.test_monitored", 8)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "in_range"
+    assert state.state == "on"
 
     # Set the monitored sensor's state to the lower threshold + hysteresis
     hass.states.async_set("sensor.test_monitored", 12)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "in_range"
+    assert state.state == "on"
 
     # Set the monitored sensor's state to the upper threshold + hysteresis
     hass.states.async_set("sensor.test_monitored", 22)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "in_range"
+    assert state.state == "on"
 
     # Set the monitored sensor's state to the upper threshold - hysteresis
     hass.states.async_set("sensor.test_monitored", 18)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
-    assert state.attributes["position"] == "unknown"
-    assert state.state == "unknown"
+    assert state.attributes["position"] == "in_range"
+    assert state.state == "on"
 
     hass.states.async_set(
         "sensor.test_monitored",
@@ -459,7 +460,7 @@ async def test_sensor_in_range_with_hysteresis(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.attributes["position"] == "unknown"
-    assert state.state == "off"
+    assert state.state == "unknown"
 
     hass.states.async_set("sensor.test_monitored", 17)
     await hass.async_block_till_done()
@@ -506,13 +507,13 @@ async def test_sensor_in_range_unknown_state(
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.attributes["position"] == "unknown"
-    assert state.state == "off"
+    assert state.state == "unknown"
 
     hass.states.async_set("sensor.test_monitored", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.attributes["position"] == "unknown"
-    assert state.state == "off"
+    assert state.state == "unknown"
 
     assert "State is not numerical" not in caplog.text
 
@@ -567,3 +568,20 @@ async def test_sensor_upper_zero_threshold(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.threshold")
     assert state.state == "on"
+
+
+async def test_sensor_no_lower_upper(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if no lower or upper has been provided."""
+    config = {
+        "binary_sensor": {
+            "platform": "threshold",
+            "entity_id": "sensor.test_monitored",
+        }
+    }
+
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    assert "Lower or Upper thresholds not provided" in caplog.text

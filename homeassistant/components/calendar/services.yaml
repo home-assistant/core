@@ -46,3 +46,9 @@ create_event:
       name: In
       description: Days or weeks that you want to create the event in.
       example: '{"days": 2} or {"weeks": 2}'
+    location:
+      name: Location
+      description: The location of the event.
+      example: "Conference Room - F123, Bldg. 002"
+      selector:
+        text:

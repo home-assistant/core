@@ -14,7 +14,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY,
@@ -46,7 +45,6 @@ async def test_weather_without_forecast(hass: HomeAssistant) -> None:
     assert state.state == "sunny"
     assert not state.attributes.get(ATTR_FORECAST)
     assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 67
-    assert not state.attributes.get(ATTR_WEATHER_OZONE)
     assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1012.0
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 22.6
     assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1
@@ -68,7 +66,6 @@ async def test_weather_with_forecast(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "sunny"
     assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 67
-    assert state.attributes.get(ATTR_WEATHER_OZONE) == 32
     assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1012.0
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 22.6
     assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1

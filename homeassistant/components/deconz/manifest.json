@@ -8,7 +8,7 @@
   "iot_class": "local_push",
   "loggers": ["pydeconz"],
   "quality_scale": "platinum",
-  "requirements": ["pydeconz==108"],
+  "requirements": ["pydeconz==111"],
   "ssdp": [
     {
       "manufacturer": "Royal Philips Electronics",

@@ -38,14 +38,14 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
 
     dev = [
-        TransmissionSpeedSensor(tm_client, name, "Down speed", "download"),
-        TransmissionSpeedSensor(tm_client, name, "Up speed", "upload"),
+        TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
+        TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
         TransmissionStatusSensor(tm_client, name, "Status"),
-        TransmissionTorrentsSensor(tm_client, name, "Active torrents", "active"),
-        TransmissionTorrentsSensor(tm_client, name, "Paused torrents", "paused"),
-        TransmissionTorrentsSensor(tm_client, name, "Total torrents", "total"),
-        TransmissionTorrentsSensor(tm_client, name, "Completed torrents", "completed"),
-        TransmissionTorrentsSensor(tm_client, name, "Started torrents", "started"),
+        TransmissionTorrentsSensor(tm_client, name, "Active Torrents", "active"),
+        TransmissionTorrentsSensor(tm_client, name, "Paused Torrents", "paused"),
+        TransmissionTorrentsSensor(tm_client, name, "Total Torrents", "total"),
+        TransmissionTorrentsSensor(tm_client, name, "Completed Torrents", "completed"),
+        TransmissionTorrentsSensor(tm_client, name, "Started Torrents", "started"),
     ]
 
     async_add_entities(dev, True)
@@ -109,18 +109,19 @@ class TransmissionSpeedSensor(TransmissionSensor):
     """Representation of a Transmission speed sensor."""
 
     _attr_device_class = SensorDeviceClass.DATA_RATE
-    _attr_native_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
+    _attr_native_unit_of_measurement = UnitOfDataRate.BYTES_PER_SECOND
+    _attr_suggested_display_precision = 2
+    _attr_suggested_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
 
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
-            mb_spd = (
-                float(data.downloadSpeed)
+            b_spd = (
+                float(data.download_speed)
                 if self._sub_type == "download"
-                else float(data.uploadSpeed)
+                else float(data.upload_speed)
             )
-            mb_spd = mb_spd / 1024 / 1024
-            self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
+            self._state = b_spd
 
 
 class TransmissionStatusSensor(TransmissionSensor):
@@ -133,8 +134,8 @@ class TransmissionStatusSensor(TransmissionSensor):
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
-            upload = data.uploadSpeed
-            download = data.downloadSpeed
+            upload = data.upload_speed
+            download = data.download_speed
             if upload > 0 and download > 0:
                 self._state = STATE_UP_DOWN
             elif upload > 0 and download == 0:
@@ -198,8 +199,8 @@ def _torrents_info(torrents, order, limit, statuses=None):
     torrents = SUPPORTED_ORDER_MODES[order](torrents)
     for torrent in torrents[:limit]:
         info = infos[torrent.name] = {
-            "added_date": torrent.addedDate,
-            "percent_done": f"{torrent.percentDone * 100:.2f}",
+            "added_date": torrent.date_added,
+            "percent_done": f"{torrent.percent_done * 100:.2f}",
             "status": torrent.status,
             "id": torrent.id,
         }

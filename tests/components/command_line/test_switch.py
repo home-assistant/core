@@ -323,7 +323,7 @@ async def test_switch_command_state_code_exceptions(
     """Test that switch state code exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -356,7 +356,7 @@ async def test_switch_command_state_value_exceptions(
     """Test that switch state value exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -440,3 +440,57 @@ async def test_command_failure(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}, blocking=True
     )
     assert "return code 33" in caplog.text
+
+
+async def test_templating(hass: HomeAssistant) -> None:
+    """Test with templating."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "switch_status")
+        await setup_test_entity(
+            hass,
+            {
+                "test": {
+                    "command_state": f"cat {path}",
+                    "command_on": f"echo 1 > {path}",
+                    "command_off": f"echo 0 > {path}",
+                    "value_template": '{{ value=="1" }}',
+                    "icon_template": (
+                        '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                    ),
+                },
+                "test2": {
+                    "command_state": f"cat {path}",
+                    "command_on": f"echo 1 > {path}",
+                    "command_off": f"echo 0 > {path}",
+                    "value_template": '{{ value=="1" }}',
+                    "icon_template": (
+                        '{% if states("switch.test2")=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                    ),
+                },
+            },
+        )
+
+        entity_state = hass.states.get("switch.test")
+        entity_state2 = hass.states.get("switch.test2")
+        assert entity_state.state == STATE_OFF
+        assert entity_state2.state == STATE_OFF
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test2"},
+            blocking=True,
+        )
+
+        entity_state = hass.states.get("switch.test")
+        entity_state2 = hass.states.get("switch.test2")
+        assert entity_state.state == STATE_ON
+        assert entity_state.attributes.get("icon") == "mdi:on"
+        assert entity_state2.state == STATE_ON
+        assert entity_state2.attributes.get("icon") == "mdi:on"

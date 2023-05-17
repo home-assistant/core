@@ -247,7 +247,7 @@ def warn_for_legacy_schema(domain: str) -> Callable[[ConfigType], ConfigType]:
             (
                 "Manually configured MQTT %s(s) found under platform key '%s', "
                 "please move to the mqtt integration key, see "
-                "https://www.home-assistant.io/integrations/%s.mqtt/#new_format"
+                "https://www.home-assistant.io/integrations/%s.mqtt/"
             ),
             domain,
             domain,
@@ -562,7 +562,6 @@ class MqttAvailability(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         mqtt_data = get_mqtt_data(self.hass)
-        assert mqtt_data.client is not None
         client = mqtt_data.client
         if not client.connected and not self.hass.is_stopping:
             return False
@@ -833,8 +832,37 @@ class MqttDiscoveryUpdate(Entity):
             else:
                 await self.async_remove(force_remove=True)
 
-        async def discovery_callback(payload: MQTTDiscoveryPayload) -> None:
-            """Handle discovery update."""
+        async def _async_process_discovery_update(
+            payload: MQTTDiscoveryPayload,
+            discovery_update: Callable[
+                [MQTTDiscoveryPayload], Coroutine[Any, Any, None]
+            ],
+            discovery_data: DiscoveryInfoType,
+        ) -> None:
+            """Process discovery update."""
+            try:
+                await discovery_update(payload)
+            finally:
+                send_discovery_done(self.hass, discovery_data)
+
+        async def _async_process_discovery_update_and_remove(
+            payload: MQTTDiscoveryPayload, discovery_data: DiscoveryInfoType
+        ) -> None:
+            """Process discovery update and remove entity."""
+            self._cleanup_discovery_on_remove()
+            await _async_remove_state_and_registry_entry(self)
+            send_discovery_done(self.hass, discovery_data)
+
+        @callback
+        def discovery_callback(payload: MQTTDiscoveryPayload) -> None:
+            """Handle discovery update.
+
+            If the payload has changed we will create a task to
+            do the discovery update.
+
+            As this callback can fire when nothing has changed, this
+            is a normal function to avoid task creation until it is needed.
+            """
             _LOGGER.debug(
                 "Got update for entity with hash: %s '%s'",
                 discovery_hash,
@@ -847,17 +875,20 @@ class MqttDiscoveryUpdate(Entity):
             if not payload:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
-                self._cleanup_discovery_on_remove()
-                await _async_remove_state_and_registry_entry(self)
-                send_discovery_done(self.hass, self._discovery_data)
+                self.hass.async_create_task(
+                    _async_process_discovery_update_and_remove(
+                        payload, self._discovery_data
+                    )
+                )
             elif self._discovery_update:
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
                     # Non-empty, changed payload: Notify component
                     _LOGGER.info("Updating component: %s", self.entity_id)
-                    try:
-                        await self._discovery_update(payload)
-                    finally:
-                        send_discovery_done(self.hass, self._discovery_data)
+                    self.hass.async_create_task(
+                        _async_process_discovery_update(
+                            payload, self._discovery_update, self._discovery_data
+                        )
+                    )
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
@@ -1162,10 +1193,9 @@ def async_removed_from_device(
         if "config_entries" not in event.data["changes"]:
             return False
         device_registry = dr.async_get(hass)
-        if not (device_entry := device_registry.async_get(device_id)):
-            # The device is already removed, do cleanup when we get "remove" event
-            return False
-        if config_entry_id in device_entry.config_entries:
+        if (
+            device_entry := device_registry.async_get(device_id)
+        ) and config_entry_id in device_entry.config_entries:
             # Not removed from device
             return False
 

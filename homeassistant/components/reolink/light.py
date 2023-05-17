@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity
 
 
 @dataclass
@@ -57,6 +57,7 @@ LIGHT_ENTITIES = (
         key="ir_lights",
         name="Infra red lights in night mode",
         icon="mdi:led-off",
+        entity_category=EntityCategory.CONFIG,
         supported_fn=lambda api, ch: api.supported(ch, "ir_lights"),
         is_on_fn=lambda api, ch: api.ir_enabled(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_ir_lights(ch, value),
@@ -66,7 +67,7 @@ LIGHT_ENTITIES = (
         name="Status LED",
         icon="mdi:lightning-bolt-circle",
         entity_category=EntityCategory.CONFIG,
-        supported_fn=lambda api, ch: api.supported(ch, "status_led"),
+        supported_fn=lambda api, ch: api.supported(ch, "power_led"),
         is_on_fn=lambda api, ch: api.status_led_enabled(ch),
         turn_on_off_fn=lambda api, ch, value: api.set_status_led(ch, value),
     ),
@@ -89,7 +90,7 @@ async def async_setup_entry(
     )
 
 
-class ReolinkLightEntity(ReolinkCoordinatorEntity, LightEntity):
+class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
     """Base light entity class for Reolink IP cameras."""
 
     entity_description: ReolinkLightEntityDescription

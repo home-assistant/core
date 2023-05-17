@@ -819,7 +819,15 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             return MediaType.MOVIE
         if media_status.media_is_musictrack:
             return MediaType.MUSIC
-        return None
+
+        chromecast = self._get_chromecast()
+        if chromecast.cast_type in (
+            pychromecast.const.CAST_TYPE_AUDIO,
+            pychromecast.const.CAST_TYPE_GROUP,
+        ):
+            return MediaType.MUSIC
+
+        return MediaType.VIDEO
 
     @property
     def media_duration(self):

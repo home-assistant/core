@@ -1,12 +1,20 @@
 """Test ZHA registries."""
+from __future__ import annotations
+
+import importlib
 import inspect
+import typing
 from unittest import mock
 
 import pytest
 import zhaquirks
 
+from homeassistant.components.zha.binary_sensor import IASZone
 import homeassistant.components.zha.core.registries as registries
 from homeassistant.helpers import entity_registry as er
+
+if typing.TYPE_CHECKING:
+    from homeassistant.components.zha.core.entity import ZhaEntity
 
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
@@ -24,36 +32,48 @@ def zha_device():
 
 
 @pytest.fixture
-def channels(channel):
-    """Return a mock of channels."""
+def cluster_handlers(cluster_handler):
+    """Return a mock of cluster_handlers."""
 
-    return [channel("level", 8), channel("on_off", 6)]
+    return [cluster_handler("level", 8), cluster_handler("on_off", 6)]
 
 
 @pytest.mark.parametrize(
     ("rule", "matched"),
     [
         (registries.MatchRule(), False),
-        (registries.MatchRule(channel_names={"level"}), True),
-        (registries.MatchRule(channel_names={"level", "no match"}), False),
-        (registries.MatchRule(channel_names={"on_off"}), True),
-        (registries.MatchRule(channel_names={"on_off", "no match"}), False),
-        (registries.MatchRule(channel_names={"on_off", "level"}), True),
-        (registries.MatchRule(channel_names={"on_off", "level", "no match"}), False),
+        (registries.MatchRule(cluster_handler_names={"level"}), True),
+        (registries.MatchRule(cluster_handler_names={"level", "no match"}), False),
+        (registries.MatchRule(cluster_handler_names={"on_off"}), True),
+        (registries.MatchRule(cluster_handler_names={"on_off", "no match"}), False),
+        (registries.MatchRule(cluster_handler_names={"on_off", "level"}), True),
+        (
+            registries.MatchRule(cluster_handler_names={"on_off", "level", "no match"}),
+            False,
+        ),
         # test generic_id matching
-        (registries.MatchRule(generic_ids={"channel_0x0006"}), True),
-        (registries.MatchRule(generic_ids={"channel_0x0008"}), True),
-        (registries.MatchRule(generic_ids={"channel_0x0006", "channel_0x0008"}), True),
+        (registries.MatchRule(generic_ids={"cluster_handler_0x0006"}), True),
+        (registries.MatchRule(generic_ids={"cluster_handler_0x0008"}), True),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008", "channel_0x0009"}
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"}
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                generic_ids={
+                    "cluster_handler_0x0006",
+                    "cluster_handler_0x0008",
+                    "cluster_handler_0x0009",
+                }
             ),
             False,
         ),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008"},
-                channel_names={"on_off", "level"},
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"},
+                cluster_handler_names={"on_off", "level"},
             ),
             True,
         ),
@@ -61,34 +81,50 @@ def channels(channel):
         (registries.MatchRule(manufacturers="no match"), False),
         (registries.MatchRule(manufacturers=MANUFACTURER), True),
         (
-            registries.MatchRule(manufacturers="no match", aux_channels="aux_channel"),
+            registries.MatchRule(
+                manufacturers="no match", aux_cluster_handlers="aux_cluster_handler"
+            ),
             False,
         ),
         (
             registries.MatchRule(
-                manufacturers=MANUFACTURER, aux_channels="aux_channel"
+                manufacturers=MANUFACTURER, aux_cluster_handlers="aux_cluster_handler"
             ),
             True,
         ),
         (registries.MatchRule(models=MODEL), True),
         (registries.MatchRule(models="no match"), False),
-        (registries.MatchRule(models=MODEL, aux_channels="aux_channel"), True),
-        (registries.MatchRule(models="no match", aux_channels="aux_channel"), False),
-        (registries.MatchRule(quirk_classes=QUIRK_CLASS), True),
-        (registries.MatchRule(quirk_classes="no match"), False),
         (
-            registries.MatchRule(quirk_classes=QUIRK_CLASS, aux_channels="aux_channel"),
+            registries.MatchRule(
+                models=MODEL, aux_cluster_handlers="aux_cluster_handler"
+            ),
             True,
         ),
         (
-            registries.MatchRule(quirk_classes="no match", aux_channels="aux_channel"),
+            registries.MatchRule(
+                models="no match", aux_cluster_handlers="aux_cluster_handler"
+            ),
+            False,
+        ),
+        (registries.MatchRule(quirk_classes=QUIRK_CLASS), True),
+        (registries.MatchRule(quirk_classes="no match"), False),
+        (
+            registries.MatchRule(
+                quirk_classes=QUIRK_CLASS, aux_cluster_handlers="aux_cluster_handler"
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                quirk_classes="no match", aux_cluster_handlers="aux_cluster_handler"
+            ),
             False,
         ),
         # match everything
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008"},
-                channel_names={"on_off", "level"},
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"},
+                cluster_handler_names={"on_off", "level"},
                 manufacturers=MANUFACTURER,
                 models=MODEL,
                 quirk_classes=QUIRK_CLASS,
@@ -97,96 +133,114 @@ def channels(channel):
         ),
         (
             registries.MatchRule(
-                channel_names="on_off", manufacturers={"random manuf", MANUFACTURER}
+                cluster_handler_names="on_off",
+                manufacturers={"random manuf", MANUFACTURER},
             ),
             True,
         ),
         (
             registries.MatchRule(
-                channel_names="on_off", manufacturers={"random manuf", "Another manuf"}
+                cluster_handler_names="on_off",
+                manufacturers={"random manuf", "Another manuf"},
             ),
             False,
         ),
         (
             registries.MatchRule(
-                channel_names="on_off", manufacturers=lambda x: x == MANUFACTURER
+                cluster_handler_names="on_off",
+                manufacturers=lambda x: x == MANUFACTURER,
             ),
             True,
         ),
         (
             registries.MatchRule(
-                channel_names="on_off", manufacturers=lambda x: x != MANUFACTURER
+                cluster_handler_names="on_off",
+                manufacturers=lambda x: x != MANUFACTURER,
             ),
             False,
         ),
         (
             registries.MatchRule(
-                channel_names="on_off", models={"random model", MODEL}
+                cluster_handler_names="on_off", models={"random model", MODEL}
             ),
             True,
         ),
         (
             registries.MatchRule(
-                channel_names="on_off", models={"random model", "Another model"}
-            ),
-            False,
-        ),
-        (
-            registries.MatchRule(channel_names="on_off", models=lambda x: x == MODEL),
-            True,
-        ),
-        (
-            registries.MatchRule(channel_names="on_off", models=lambda x: x != MODEL),
-            False,
-        ),
-        (
-            registries.MatchRule(
-                channel_names="on_off", quirk_classes={"random quirk", QUIRK_CLASS}
-            ),
-            True,
-        ),
-        (
-            registries.MatchRule(
-                channel_names="on_off", quirk_classes={"random quirk", "another quirk"}
+                cluster_handler_names="on_off", models={"random model", "Another model"}
             ),
             False,
         ),
         (
             registries.MatchRule(
-                channel_names="on_off", quirk_classes=lambda x: x == QUIRK_CLASS
+                cluster_handler_names="on_off", models=lambda x: x == MODEL
             ),
             True,
         ),
         (
             registries.MatchRule(
-                channel_names="on_off", quirk_classes=lambda x: x != QUIRK_CLASS
+                cluster_handler_names="on_off", models=lambda x: x != MODEL
+            ),
+            False,
+        ),
+        (
+            registries.MatchRule(
+                cluster_handler_names="on_off",
+                quirk_classes={"random quirk", QUIRK_CLASS},
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                cluster_handler_names="on_off",
+                quirk_classes={"random quirk", "another quirk"},
+            ),
+            False,
+        ),
+        (
+            registries.MatchRule(
+                cluster_handler_names="on_off", quirk_classes=lambda x: x == QUIRK_CLASS
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                cluster_handler_names="on_off", quirk_classes=lambda x: x != QUIRK_CLASS
             ),
             False,
         ),
     ],
 )
-def test_registry_matching(rule, matched, channels) -> None:
+def test_registry_matching(rule, matched, cluster_handlers) -> None:
     """Test strict rule matching."""
-    assert rule.strict_matched(MANUFACTURER, MODEL, channels, QUIRK_CLASS) is matched
+    assert (
+        rule.strict_matched(MANUFACTURER, MODEL, cluster_handlers, QUIRK_CLASS)
+        is matched
+    )
 
 
 @pytest.mark.parametrize(
     ("rule", "matched"),
     [
         (registries.MatchRule(), False),
-        (registries.MatchRule(channel_names={"level"}), True),
-        (registries.MatchRule(channel_names={"level", "no match"}), False),
-        (registries.MatchRule(channel_names={"on_off"}), True),
-        (registries.MatchRule(channel_names={"on_off", "no match"}), False),
-        (registries.MatchRule(channel_names={"on_off", "level"}), True),
-        (registries.MatchRule(channel_names={"on_off", "level", "no match"}), False),
+        (registries.MatchRule(cluster_handler_names={"level"}), True),
+        (registries.MatchRule(cluster_handler_names={"level", "no match"}), False),
+        (registries.MatchRule(cluster_handler_names={"on_off"}), True),
+        (registries.MatchRule(cluster_handler_names={"on_off", "no match"}), False),
+        (registries.MatchRule(cluster_handler_names={"on_off", "level"}), True),
         (
-            registries.MatchRule(channel_names={"on_off", "level"}, models="no match"),
+            registries.MatchRule(cluster_handler_names={"on_off", "level", "no match"}),
+            False,
+        ),
+        (
+            registries.MatchRule(
+                cluster_handler_names={"on_off", "level"}, models="no match"
+            ),
             True,
         ),
         (
             registries.MatchRule(
-                channel_names={"on_off", "level"},
+                cluster_handler_names={"on_off", "level"},
                 models="no match",
                 manufacturers="no match",
             ),
@@ -194,40 +248,57 @@ def test_registry_matching(rule, matched, channels) -> None:
         ),
         (
             registries.MatchRule(
-                channel_names={"on_off", "level"},
+                cluster_handler_names={"on_off", "level"},
                 models="no match",
                 manufacturers=MANUFACTURER,
             ),
             True,
         ),
         # test generic_id matching
-        (registries.MatchRule(generic_ids={"channel_0x0006"}), True),
-        (registries.MatchRule(generic_ids={"channel_0x0008"}), True),
-        (registries.MatchRule(generic_ids={"channel_0x0006", "channel_0x0008"}), True),
+        (registries.MatchRule(generic_ids={"cluster_handler_0x0006"}), True),
+        (registries.MatchRule(generic_ids={"cluster_handler_0x0008"}), True),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008", "channel_0x0009"}
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"}
+            ),
+            True,
+        ),
+        (
+            registries.MatchRule(
+                generic_ids={
+                    "cluster_handler_0x0006",
+                    "cluster_handler_0x0008",
+                    "cluster_handler_0x0009",
+                }
             ),
             False,
         ),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008", "channel_0x0009"},
+                generic_ids={
+                    "cluster_handler_0x0006",
+                    "cluster_handler_0x0008",
+                    "cluster_handler_0x0009",
+                },
                 models="mo match",
             ),
             False,
         ),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008", "channel_0x0009"},
+                generic_ids={
+                    "cluster_handler_0x0006",
+                    "cluster_handler_0x0008",
+                    "cluster_handler_0x0009",
+                },
                 models=MODEL,
             ),
             True,
         ),
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008"},
-                channel_names={"on_off", "level"},
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"},
+                cluster_handler_names={"on_off", "level"},
             ),
             True,
         ),
@@ -241,8 +312,8 @@ def test_registry_matching(rule, matched, channels) -> None:
         # match everything
         (
             registries.MatchRule(
-                generic_ids={"channel_0x0006", "channel_0x0008"},
-                channel_names={"on_off", "level"},
+                generic_ids={"cluster_handler_0x0006", "cluster_handler_0x0008"},
+                cluster_handler_names={"on_off", "level"},
                 manufacturers=MANUFACTURER,
                 models=MODEL,
                 quirk_classes=QUIRK_CLASS,
@@ -251,51 +322,64 @@ def test_registry_matching(rule, matched, channels) -> None:
         ),
     ],
 )
-def test_registry_loose_matching(rule, matched, channels) -> None:
+def test_registry_loose_matching(rule, matched, cluster_handlers) -> None:
     """Test loose rule matching."""
-    assert rule.loose_matched(MANUFACTURER, MODEL, channels, QUIRK_CLASS) is matched
+    assert (
+        rule.loose_matched(MANUFACTURER, MODEL, cluster_handlers, QUIRK_CLASS)
+        is matched
+    )
 
 
-def test_match_rule_claim_channels_color(channel) -> None:
-    """Test channel claiming."""
-    ch_color = channel("color", 0x300)
-    ch_level = channel("level", 8)
-    ch_onoff = channel("on_off", 6)
+def test_match_rule_claim_cluster_handlers_color(cluster_handler) -> None:
+    """Test cluster handler claiming."""
+    ch_color = cluster_handler("color", 0x300)
+    ch_level = cluster_handler("level", 8)
+    ch_onoff = cluster_handler("on_off", 6)
 
-    rule = registries.MatchRule(channel_names="on_off", aux_channels={"color", "level"})
-    claimed = rule.claim_channels([ch_color, ch_level, ch_onoff])
+    rule = registries.MatchRule(
+        cluster_handler_names="on_off", aux_cluster_handlers={"color", "level"}
+    )
+    claimed = rule.claim_cluster_handlers([ch_color, ch_level, ch_onoff])
     assert {"color", "level", "on_off"} == {ch.name for ch in claimed}
 
 
 @pytest.mark.parametrize(
     ("rule", "match"),
     [
-        (registries.MatchRule(channel_names={"level"}), {"level"}),
-        (registries.MatchRule(channel_names={"level", "no match"}), {"level"}),
-        (registries.MatchRule(channel_names={"on_off"}), {"on_off"}),
-        (registries.MatchRule(generic_ids="channel_0x0000"), {"basic"}),
-        (
-            registries.MatchRule(channel_names="level", generic_ids="channel_0x0000"),
-            {"basic", "level"},
-        ),
-        (registries.MatchRule(channel_names={"level", "power"}), {"level", "power"}),
+        (registries.MatchRule(cluster_handler_names={"level"}), {"level"}),
+        (registries.MatchRule(cluster_handler_names={"level", "no match"}), {"level"}),
+        (registries.MatchRule(cluster_handler_names={"on_off"}), {"on_off"}),
+        (registries.MatchRule(generic_ids="cluster_handler_0x0000"), {"basic"}),
         (
             registries.MatchRule(
-                channel_names={"level", "on_off"}, aux_channels={"basic", "power"}
+                cluster_handler_names="level", generic_ids="cluster_handler_0x0000"
+            ),
+            {"basic", "level"},
+        ),
+        (
+            registries.MatchRule(cluster_handler_names={"level", "power"}),
+            {"level", "power"},
+        ),
+        (
+            registries.MatchRule(
+                cluster_handler_names={"level", "on_off"},
+                aux_cluster_handlers={"basic", "power"},
             ),
             {"basic", "level", "on_off", "power"},
         ),
-        (registries.MatchRule(channel_names={"color"}), set()),
+        (registries.MatchRule(cluster_handler_names={"color"}), set()),
     ],
 )
-def test_match_rule_claim_channels(rule, match, channel, channels) -> None:
-    """Test channel claiming."""
-    ch_basic = channel("basic", 0)
-    channels.append(ch_basic)
-    ch_power = channel("power", 1)
-    channels.append(ch_power)
+def test_match_rule_claim_cluster_handlers(
+    rule, match, cluster_handler, cluster_handlers
+) -> None:
+    """Test cluster handler claiming."""
+    ch_basic = cluster_handler("basic", 0)
+    cluster_handlers.append(ch_basic)
+    ch_power = cluster_handler("power", 1)
+    cluster_handlers.append(ch_power)
 
-    claimed = rule.claim_channels(channels)
+    claimed = rule.claim_cluster_handlers(cluster_handlers)
     assert match == {ch.name for ch in claimed}
 
 
@@ -317,53 +401,58 @@ def entity_registry():
     ),
 )
 def test_weighted_match(
-    channel,
+    cluster_handler,
     entity_registry: er.EntityRegistry,
     manufacturer,
     model,
     quirk_class,
     match_name,
-):
+) -> None:
     """Test weightedd match."""
 
     s = mock.sentinel
 
     @entity_registry.strict_match(
         s.component,
-        channel_names="on_off",
+        cluster_handler_names="on_off",
         models={MODEL, "another model", "some model"},
     )
     class OnOffMultimodel:
         pass
 
-    @entity_registry.strict_match(s.component, channel_names="on_off")
+    @entity_registry.strict_match(s.component, cluster_handler_names="on_off")
     class OnOff:
         pass
 
     @entity_registry.strict_match(
-        s.component, channel_names="on_off", manufacturers=MANUFACTURER
+        s.component, cluster_handler_names="on_off", manufacturers=MANUFACTURER
     )
     class OnOffManufacturer:
         pass
 
-    @entity_registry.strict_match(s.component, channel_names="on_off", models=MODEL)
+    @entity_registry.strict_match(
+        s.component, cluster_handler_names="on_off", models=MODEL
+    )
     class OnOffModel:
         pass
 
     @entity_registry.strict_match(
-        s.component, channel_names="on_off", models=MODEL, manufacturers=MANUFACTURER
+        s.component,
+        cluster_handler_names="on_off",
+        models=MODEL,
+        manufacturers=MANUFACTURER,
     )
     class OnOffModelManufacturer:
         pass
 
     @entity_registry.strict_match(
-        s.component, channel_names="on_off", quirk_classes=QUIRK_CLASS
+        s.component, cluster_handler_names="on_off", quirk_classes=QUIRK_CLASS
     )
     class OnOffQuirk:
         pass
 
-    ch_on_off = channel("on_off", 6)
-    ch_level = channel("level", 8)
+    ch_on_off = cluster_handler("on_off", 6)
+    ch_level = cluster_handler("level", 8)
 
     match, claimed = entity_registry.get_entity(
         s.component, manufacturer, model, [ch_on_off, ch_level], quirk_class
@@ -373,25 +462,27 @@ def test_weighted_match(
     assert claimed == [ch_on_off]
 
 
-def test_multi_sensor_match(channel, entity_registry: er.EntityRegistry) -> None:
+def test_multi_sensor_match(
+    cluster_handler, entity_registry: er.EntityRegistry
+) -> None:
     """Test multi-entity match."""
 
     s = mock.sentinel
 
     @entity_registry.multipass_match(
         s.binary_sensor,
-        channel_names="smartenergy_metering",
+        cluster_handler_names="smartenergy_metering",
     )
     class SmartEnergySensor2:
         pass
 
-    ch_se = channel("smartenergy_metering", 0x0702)
-    ch_illuminati = channel("illuminance", 0x0401)
+    ch_se = cluster_handler("smartenergy_metering", 0x0702)
+    ch_illuminati = cluster_handler("illuminance", 0x0401)
 
     match, claimed = entity_registry.get_multi_entity(
         "manufacturer",
         "model",
-        channels=[ch_se, ch_illuminati],
+        cluster_handlers=[ch_se, ch_illuminati],
         quirk_class="quirk_class",
     )
 
@@ -403,15 +494,17 @@ def test_multi_sensor_match(channel, entity_registry: er.EntityRegistry) -> None
     }
 
     @entity_registry.multipass_match(
-        s.component, channel_names="smartenergy_metering", aux_channels="illuminance"
+        s.component,
+        cluster_handler_names="smartenergy_metering",
+        aux_cluster_handlers="illuminance",
     )
     class SmartEnergySensor1:
         pass
 
     @entity_registry.multipass_match(
         s.binary_sensor,
-        channel_names="smartenergy_metering",
-        aux_channels="illuminance",
+        cluster_handler_names="smartenergy_metering",
+        aux_cluster_handlers="illuminance",
     )
     class SmartEnergySensor3:
         pass
@@ -419,7 +512,7 @@ def test_multi_sensor_match(channel, entity_registry: er.EntityRegistry) -> None
     match, claimed = entity_registry.get_multi_entity(
         "manufacturer",
         "model",
-        channels={ch_se, ch_illuminati},
+        cluster_handlers={ch_se, ch_illuminati},
         quirk_class="quirk_class",
     )
 
@@ -435,29 +528,34 @@ def test_multi_sensor_match(channel, entity_registry: er.EntityRegistry) -> None
     }
 
 
-def test_quirk_classes():
+def iter_all_rules() -> typing.Iterable[registries.MatchRule, list[type[ZhaEntity]]]:
+    """Iterate over all match rules and their corresponding entities."""
+
+    for rules in registries.ZHA_ENTITIES._strict_registry.values():
+        for rule, entity in rules.items():
+            yield rule, [entity]
+
+    for rules in registries.ZHA_ENTITIES._multi_entity_registry.values():
+        for multi in rules.values():
+            for rule, entities in multi.items():
+                yield rule, entities
+
+    for rules in registries.ZHA_ENTITIES._config_diagnostic_entity_registry.values():
+        for multi in rules.values():
+            for rule, entities in multi.items():
+                yield rule, entities
+
+
+def test_quirk_classes() -> None:
     """Make sure that quirk_classes in components matches are valid."""
 
     def find_quirk_class(base_obj, quirk_mod, quirk_cls):
         """Find a specific quirk class."""
-        mods = dict(inspect.getmembers(base_obj, inspect.ismodule))
 
-        # Check if we have found the right module
-        if quirk_mod in mods:
-            # If so, look for the class
-            clss = dict(inspect.getmembers(mods[quirk_mod], inspect.isclass))
-            if quirk_cls in clss:
-                # Quirk class found
-                return True
-
-        else:
-            # Recurse into other modules
-            for mod in mods:
-                if not mods[mod].__name__.startswith("zhaquirks."):
-                    continue
-                if find_quirk_class(mods[mod], quirk_mod, quirk_cls):
-                    return True
-        return False
+        module = importlib.import_module(quirk_mod)
+        clss = dict(inspect.getmembers(module, inspect.isclass))
+        # Check quirk_cls in module classes
+        return quirk_cls in clss
 
     def quirk_class_validator(value):
         """Validate quirk classes during self test."""
@@ -471,24 +569,26 @@ def test_quirk_classes():
                 quirk_class_validator(v)
             return
 
-        quirk_tok = value.split(".")
+        quirk_tok = value.rsplit(".", 1)
         if len(quirk_tok) != 2:
-            # quirk_class is always __module__.__class__
+            # quirk_class is at least __module__.__class__
             raise ValueError(f"Invalid quirk class : '{value}'")
 
         if not find_quirk_class(zhaquirks, quirk_tok[0], quirk_tok[1]):
             raise ValueError(f"Quirk class '{value}' does not exists.")
 
-    for component in registries.ZHA_ENTITIES._strict_registry.items():
-        for rule in component[1].items():
-            quirk_class_validator(rule[0].quirk_classes)
+    for rule, _ in iter_all_rules():
+        quirk_class_validator(rule.quirk_classes)
 
-    for component in registries.ZHA_ENTITIES._multi_entity_registry.items():
-        for item in component[1].items():
-            for rule in item[1].items():
-                quirk_class_validator(rule[0].quirk_classes)
 
-    for component in registries.ZHA_ENTITIES._config_diagnostic_entity_registry.items():
-        for item in component[1].items():
-            for rule in item[1].items():
-                quirk_class_validator(rule[0].quirk_classes)
+def test_entity_names() -> None:
+    """Make sure that all handlers expose entities with valid names."""
+
+    for _, entities in iter_all_rules():
+        for entity in entities:
+            if hasattr(entity, "_attr_name"):
+                # The entity has a name
+                assert isinstance(entity._attr_name, str) and entity._attr_name
+            else:
+                # The only exception (for now) is IASZone
+                assert entity is IASZone

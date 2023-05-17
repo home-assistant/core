@@ -10,10 +10,10 @@ from astral import LocationInfo
 import astral.sun
 import async_timeout
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import jinja2
 import pytest
 
-from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, callback
@@ -935,7 +935,7 @@ async def test_track_template_time_change(
     with patch(
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
-        async_track_template(hass, template_error, error_callback)
+        unsub = async_track_template(hass, template_error, error_callback)
         await hass.async_block_till_done()
         assert not calls
 
@@ -946,6 +946,8 @@ async def test_track_template_time_change(
 
     assert len(calls) == 1
     assert calls[0] == (None, None, None)
+
+    unsub()
 
 
 async def test_track_template_result(hass: HomeAssistant) -> None:
@@ -1406,7 +1408,7 @@ async def test_track_template_result_super_template_initially_false(
     ],
 )
 async def test_track_template_result_super_template_2(
-    hass: HomeAssistant, availability_template
+    hass: HomeAssistant, availability_template: str
 ) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
@@ -1437,7 +1439,7 @@ async def test_track_template_result_super_template_2(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1459,7 +1461,7 @@ async def test_track_template_result_super_template_2(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info2 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1480,7 +1482,7 @@ async def test_track_template_result_super_template_2(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info3 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1530,6 +1532,10 @@ async def test_track_template_result_super_template_2(
     assert wildcard_runs == [(0, 5), (5, 30)]
     assert wildercard_runs == [(0, 10), (10, 35)]
 
+    info.async_remove()
+    info2.async_remove()
+    info3.async_remove()
+
 
 @pytest.mark.parametrize(
     "availability_template",
@@ -1545,7 +1551,7 @@ async def test_track_template_result_super_template_2(
     ],
 )
 async def test_track_template_result_super_template_2_initially_false(
-    hass: HomeAssistant, availability_template
+    hass: HomeAssistant, availability_template: str
 ) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
@@ -1579,7 +1585,7 @@ async def test_track_template_result_super_template_2_initially_false(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1601,7 +1607,7 @@ async def test_track_template_result_super_template_2_initially_false(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info2 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1622,7 +1628,7 @@ async def test_track_template_result_super_template_2_initially_false(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info3 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1668,6 +1674,10 @@ async def test_track_template_result_super_template_2_initially_false(
     assert specific_runs == [5, 30]
     assert wildcard_runs == [(0, 5), (5, 30)]
     assert wildercard_runs == [(0, 10), (10, 35)]
+
+    info.async_remove()
+    info2.async_remove()
+    info3.async_remove()
 
 
 async def test_track_template_result_complex(hass: HomeAssistant) -> None:
@@ -2209,7 +2219,7 @@ async def test_track_template_result_errors(
     hass.states.async_set("switch.not_exist", "on")
     await hass.async_block_till_done()
 
-    assert len(syntax_error_runs) == 1
+    assert len(syntax_error_runs) == 0
     assert len(not_exist_runs) == 2
     assert not_exist_runs[1][0].data.get("entity_id") == "switch.not_exist"
     assert not_exist_runs[1][1] == template_not_exist
@@ -2227,6 +2237,56 @@ async def test_track_template_result_errors(
         assert not_exist_runs[2][1] == template_not_exist
         assert not_exist_runs[2][2] == "on"
         assert isinstance(not_exist_runs[2][3], TemplateError)
+
+
+async def test_track_template_result_transient_errors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test tracking template with transient errors in the template."""
+    hass.states.async_set("sensor.error", "unknown")
+    template_that_raises_sometimes = Template(
+        "{{ states('sensor.error') | float }}", hass
+    )
+
+    sometimes_error_runs = []
+
+    @ha.callback
+    def sometimes_error_listener(event, updates):
+        track_result = updates.pop()
+        sometimes_error_runs.append(
+            (
+                event,
+                track_result.template,
+                track_result.last_result,
+                track_result.result,
+            )
+        )
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_that_raises_sometimes, None)],
+        sometimes_error_listener,
+    )
+    await hass.async_block_till_done()
+
+    assert sometimes_error_runs == []
+    assert "ValueError" in caplog.text
+    assert "ValueError" in repr(info)
+    caplog.clear()
+
+    hass.states.async_set("sensor.error", "unavailable")
+    await hass.async_block_till_done()
+    assert len(sometimes_error_runs) == 1
+    assert isinstance(sometimes_error_runs[0][3], TemplateError)
+    sometimes_error_runs.clear()
+    assert "ValueError" in repr(info)
+
+    hass.states.async_set("sensor.error", "4")
+    await hass.async_block_till_done()
+    assert len(sometimes_error_runs) == 1
+    assert sometimes_error_runs[0][3] == 4.0
+    sometimes_error_runs.clear()
+    assert "ValueError" not in repr(info)
 
 
 async def test_static_string(hass: HomeAssistant) -> None:
@@ -2301,6 +2361,8 @@ async def test_track_template_rate_limit(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2, 4]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     """Test template rate limit with super template."""
@@ -2373,6 +2435,8 @@ async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 4]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     """Test template rate limit with rate limited super template."""
@@ -2439,6 +2503,8 @@ async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.six", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [1, 5]
+
+    info.async_remove()
 
 
 async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
@@ -2511,6 +2577,8 @@ async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.seven", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [1, 2, 5, 6, 7]
+
+    info.async_remove()
 
 
 async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) -> None:
@@ -2607,6 +2675,8 @@ async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) 
     }
     assert refresh_runs == [0, 1, 2, 4]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_five(hass: HomeAssistant) -> None:
     """Test template rate limit of 5 seconds."""
@@ -2639,6 +2709,8 @@ async def test_track_template_rate_limit_five(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1]
+
+    info.async_remove()
 
 
 async def test_track_template_has_default_rate_limit(hass: HomeAssistant) -> None:
@@ -2673,6 +2745,8 @@ async def test_track_template_has_default_rate_limit(hass: HomeAssistant) -> Non
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
     assert refresh_runs == [1, 2]
+
+    info.async_remove()
 
 
 async def test_track_template_unavailable_states_has_default_rate_limit(
@@ -2969,7 +3043,9 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
     template_1 = Template("{{ states.switch.test.state == 'on' }}")
     template_2 = Template("{{ states.switch.test.state == 'on' }}")
     template_3 = Template("{{ states.switch.test.state == 'off' }}")
-    template_4 = Template("{{ states.switch | map(attribute='entity_id') | list }}")
+    template_4 = Template(
+        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}"
+    )
 
     refresh_runs = []
 
@@ -3261,6 +3337,8 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(
         ]
     ]
 
+    info.async_remove()
+
 
 async def test_track_same_state_simple_no_trigger(hass: HomeAssistant) -> None:
     """Test track_same_change with no trigger."""
@@ -3362,6 +3440,28 @@ async def test_track_time_interval(hass: HomeAssistant) -> None:
     assert len(specific_runs) == 2
 
 
+async def test_track_time_interval_name(hass: HomeAssistant) -> None:
+    """Test tracking time interval name.
+
+    This test is to ensure that when a name is passed to async_track_time_interval,
+    that the name can be found in the TimerHandle when stringified.
+    """
+    specific_runs = []
+    unique_string = "xZ13"
+    unsub = async_track_time_interval(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        timedelta(seconds=10),
+        name=unique_string,
+    )
+    scheduled = getattr(hass.loop, "_scheduled")
+    assert any(handle for handle in scheduled if unique_string in str(handle))
+    unsub()
+
+    assert all(handle for handle in scheduled if unique_string not in str(handle))
+    await hass.async_block_till_done()
+
+
 async def test_track_sunrise(hass: HomeAssistant) -> None:
     """Test track the sunrise."""
     latitude = 32.87336
@@ -3370,7 +3470,6 @@ async def test_track_sunrise(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3435,7 +3534,6 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = 32.87336
     hass.config.longitude = 117.22743
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3457,7 +3555,7 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
     # Track sunrise
     runs = []
     with freeze_time(utc_now):
-        async_track_sunrise(hass, callback(lambda: runs.append(1)))
+        unsub = async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     # Mimic sunrise
     with freeze_time(next_rising):
@@ -3498,6 +3596,8 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert len(runs) == 2
 
+    unsub()
+
 
 async def test_track_sunset(hass: HomeAssistant) -> None:
     """Test track the sunset."""
@@ -3509,7 +3609,6 @@ async def test_track_sunset(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     # Get next sunrise/sunset
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -3567,6 +3666,7 @@ async def test_track_sunset(hass: HomeAssistant) -> None:
 
 async def test_async_track_time_change(hass: HomeAssistant) -> None:
     """Test tracking time change."""
+    none_runs = []
     wildcard_runs = []
     specific_runs = []
 
@@ -3579,11 +3679,16 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
-        unsub = async_track_time_change(
-            hass, callback(lambda x: wildcard_runs.append(x))
-        )
+        unsub = async_track_time_change(hass, callback(lambda x: none_runs.append(x)))
         unsub_utc = async_track_utc_time_change(
             hass, callback(lambda x: specific_runs.append(x)), second=[0, 30]
+        )
+        unsub_wildcard = async_track_time_change(
+            hass,
+            callback(lambda x: wildcard_runs.append(x)),
+            second="*",
+            minute="*",
+            hour="*",
         )
 
     async_fire_time_changed(
@@ -3592,6 +3697,7 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
+    assert len(none_runs) == 1
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 15, 999999, tzinfo=dt_util.UTC)
@@ -3599,6 +3705,7 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 2
+    assert len(none_runs) == 2
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
@@ -3606,9 +3713,11 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
+    assert len(none_runs) == 3
 
     unsub()
     unsub_utc()
+    unsub_wildcard()
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
@@ -3616,6 +3725,7 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
+    assert len(none_runs) == 3
 
 
 async def test_periodic_task_minute(hass: HomeAssistant) -> None:
@@ -3848,7 +3958,9 @@ async def test_periodic_task_duplicate_time(hass: HomeAssistant) -> None:
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
-async def test_periodic_task_entering_dst(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_entering_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when entering dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -3894,7 +4006,9 @@ async def test_periodic_task_entering_dst(hass: HomeAssistant, freezer) -> None:
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:59:59+01:00")
-async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_entering_dst_2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when entering dst.
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
@@ -3945,7 +4059,9 @@ async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> Non
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_leaving_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -4019,7 +4135,9 @@ async def test_periodic_task_leaving_dst(hass: HomeAssistant, freezer) -> None:
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst_2(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_leaving_dst_2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []

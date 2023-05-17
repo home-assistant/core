@@ -41,9 +41,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean light platform."""
-    sender_id = config.get(CONF_SENDER_ID)
-    dev_name = config.get(CONF_NAME)
-    dev_id = config.get(CONF_ID)
+    sender_id: list[int] = config[CONF_SENDER_ID]
+    dev_name: str = config[CONF_NAME]
+    dev_id: list[int] = config[CONF_ID]
 
     add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
 
@@ -54,7 +54,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, sender_id, dev_id, dev_name):
+    def __init__(self, sender_id: list[int], dev_id: list[int], dev_name: str) -> None:
         """Initialize the EnOcean light source."""
         super().__init__(dev_id, dev_name)
         self._on_state = False

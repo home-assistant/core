@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity
 
 
 @dataclass
@@ -46,28 +46,28 @@ BUTTON_ENTITIES = (
         key="ptz_left",
         name="PTZ left",
         icon="mdi:pan",
-        supported=lambda api, ch: api.supported(ch, "pan_tilt"),
+        supported=lambda api, ch: api.supported(ch, "pan"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.left.value),
     ),
     ReolinkButtonEntityDescription(
         key="ptz_right",
         name="PTZ right",
         icon="mdi:pan",
-        supported=lambda api, ch: api.supported(ch, "pan_tilt"),
+        supported=lambda api, ch: api.supported(ch, "pan"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.right.value),
     ),
     ReolinkButtonEntityDescription(
         key="ptz_up",
         name="PTZ up",
         icon="mdi:pan",
-        supported=lambda api, ch: api.supported(ch, "pan_tilt"),
+        supported=lambda api, ch: api.supported(ch, "tilt"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.up.value),
     ),
     ReolinkButtonEntityDescription(
         key="ptz_down",
         name="PTZ down",
         icon="mdi:pan",
-        supported=lambda api, ch: api.supported(ch, "pan_tilt"),
+        supported=lambda api, ch: api.supported(ch, "tilt"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.down.value),
     ),
     ReolinkButtonEntityDescription(
@@ -112,7 +112,7 @@ async def async_setup_entry(
     )
 
 
-class ReolinkButtonEntity(ReolinkCoordinatorEntity, ButtonEntity):
+class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
     """Base button entity class for Reolink IP cameras."""
 
     entity_description: ReolinkButtonEntityDescription

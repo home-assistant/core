@@ -2,7 +2,7 @@
 import datetime
 import json
 
-from freezegun import freeze_time
+import pytest
 import requests_mock
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
@@ -24,7 +24,9 @@ from .const import (
 from tests.common import MockConfigEntry, load_fixture
 
 
-@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(
+    datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc)
+)
 async def test_one_sensor_site_running(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
@@ -72,7 +74,9 @@ async def test_one_sensor_site_running(
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(
+    datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc)
+)
 async def test_two_sensor_sites_running(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:

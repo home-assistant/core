@@ -95,6 +95,7 @@ def spotify_exception_handler(func):
             self._attr_available = False
             if exc.reason == "NO_ACTIVE_DEVICE":
                 raise HomeAssistantError("No active playback device found") from None
+            raise HomeAssistantError(f"Spotify error: {exc.reason}") from exc
 
     return wrapper
 
@@ -281,7 +282,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return self._currently_playing.get("shuffle_state")
 
     @property
-    def repeat(self) -> str | None:
+    def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         if (
             not self._currently_playing
@@ -321,7 +322,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self.data.client.seek_track(int(position * 1000))
 
     @spotify_exception_handler
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media."""
         media_type = media_type.removeprefix(MEDIA_PLAYER_PREFIX)
 
@@ -396,7 +399,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
                 self._playlist = self.data.client.playlist(current["context"]["uri"])
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
 

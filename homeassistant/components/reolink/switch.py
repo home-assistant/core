@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkBaseCoordinatorEntity, ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
 
 
 @dataclass
@@ -98,6 +98,15 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.ptz_guard_enabled(ch),
         method=lambda api, ch, value: api.set_ptz_guard(ch, enable=value),
     ),
+    ReolinkSwitchEntityDescription(
+        key="doorbell_button_sound",
+        name="Doorbell button sound",
+        icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "doorbell_button_sound"),
+        value=lambda api, ch: api.doorbell_button_sound(ch),
+        method=lambda api, ch, value: api.set_volume(ch, doorbell_button_sound=value),
+    ),
 )
 
 NVR_SWITCH_ENTITIES = (
@@ -172,7 +181,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ReolinkSwitchEntity(ReolinkCoordinatorEntity, SwitchEntity):
+class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
     """Base switch entity class for Reolink IP cameras."""
 
     entity_description: ReolinkSwitchEntityDescription
@@ -207,7 +216,7 @@ class ReolinkSwitchEntity(ReolinkCoordinatorEntity, SwitchEntity):
         self.async_write_ha_state()
 
 
-class ReolinkNVRSwitchEntity(ReolinkBaseCoordinatorEntity, SwitchEntity):
+class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
     """Switch entity class for Reolink NVR features."""
 
     entity_description: ReolinkNVRSwitchEntityDescription

@@ -3,6 +3,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock, patch
 
+from freezegun import freeze_time
 import jwt
 import pytest
 import voluptuous as vol
@@ -1127,3 +1128,175 @@ async def test_event_user_updated_fires(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
     assert len(events) == 1
+
+
+async def test_access_token_with_invalid_signature(mock_hass) -> None:
+    """Test rejecting access tokens with an invalid signature."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Good Client",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        access_token_expiration=timedelta(days=3000),
+    )
+    assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    access_token = manager.async_create_access_token(refresh_token)
+
+    rt = await manager.async_validate_access_token(access_token)
+    assert rt.id == refresh_token.id
+
+    # Now we corrupt the signature
+    header, payload, signature = access_token.split(".")
+    invalid_signature = "a" * len(signature)
+    invalid_token = f"{header}.{payload}.{invalid_signature}"
+
+    assert access_token != invalid_token
+
+    result = await manager.async_validate_access_token(invalid_token)
+    assert result is None
+
+
+async def test_access_token_with_null_signature(mock_hass) -> None:
+    """Test rejecting access tokens with a null signature."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Good Client",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        access_token_expiration=timedelta(days=3000),
+    )
+    assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    access_token = manager.async_create_access_token(refresh_token)
+
+    rt = await manager.async_validate_access_token(access_token)
+    assert rt.id == refresh_token.id
+
+    # Now we make the signature all nulls
+    header, payload, signature = access_token.split(".")
+    invalid_signature = "\0" * len(signature)
+    invalid_token = f"{header}.{payload}.{invalid_signature}"
+
+    assert access_token != invalid_token
+
+    result = await manager.async_validate_access_token(invalid_token)
+    assert result is None
+
+
+async def test_access_token_with_empty_signature(mock_hass) -> None:
+    """Test rejecting access tokens with an empty signature."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Good Client",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        access_token_expiration=timedelta(days=3000),
+    )
+    assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    access_token = manager.async_create_access_token(refresh_token)
+
+    rt = await manager.async_validate_access_token(access_token)
+    assert rt.id == refresh_token.id
+
+    # Now we make the signature all nulls
+    header, payload, _ = access_token.split(".")
+    invalid_token = f"{header}.{payload}."
+
+    assert access_token != invalid_token
+
+    result = await manager.async_validate_access_token(invalid_token)
+    assert result is None
+
+
+async def test_access_token_with_empty_key(mock_hass) -> None:
+    """Test rejecting access tokens with an empty key."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Good Client",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        access_token_expiration=timedelta(days=3000),
+    )
+    assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+
+    access_token = manager.async_create_access_token(refresh_token)
+
+    await manager.async_remove_refresh_token(refresh_token)
+    # Now remove the token from the keyring
+    # so we will get an empty key
+
+    assert await manager.async_validate_access_token(access_token) is None
+
+
+async def test_reject_access_token_with_impossible_large_size(mock_hass) -> None:
+    """Test rejecting access tokens with impossible sizes."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    assert await manager.async_validate_access_token("a" * 10000) is None
+
+
+async def test_reject_token_with_invalid_json_payload(mock_hass) -> None:
+    """Test rejecting access tokens with invalid json payload."""
+    jws = jwt.PyJWS()
+    token_with_invalid_json = jws.encode(
+        b"invalid", b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+    )
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    assert await manager.async_validate_access_token(token_with_invalid_json) is None
+
+
+async def test_reject_token_with_not_dict_json_payload(mock_hass) -> None:
+    """Test rejecting access tokens with not a dict json payload."""
+    jws = jwt.PyJWS()
+    token_not_a_dict_json = jws.encode(
+        b'["invalid"]', b"invalid", "HS256", {"alg": "HS256", "typ": "JWT"}
+    )
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    assert await manager.async_validate_access_token(token_not_a_dict_json) is None
+
+
+async def test_access_token_that_expires_soon(mock_hass) -> None:
+    """Test access token from refresh token that expires very soon."""
+    now = dt_util.utcnow()
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Token that expires very soon",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        access_token_expiration=timedelta(seconds=1),
+    )
+    assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    access_token = manager.async_create_access_token(refresh_token)
+
+    rt = await manager.async_validate_access_token(access_token)
+    assert rt.id == refresh_token.id
+
+    with freeze_time(now + timedelta(minutes=1)):
+        assert await manager.async_validate_access_token(access_token) is None
+
+
+async def test_access_token_from_the_future(mock_hass) -> None:
+    """Test we reject an access token from the future."""
+    now = dt_util.utcnow()
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    with freeze_time(now + timedelta(days=365)):
+        refresh_token = await manager.async_create_refresh_token(
+            user,
+            client_name="Token that expires very soon",
+            token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+            access_token_expiration=timedelta(days=10),
+        )
+        assert (
+            refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+        )
+        access_token = manager.async_create_access_token(refresh_token)
+
+    assert await manager.async_validate_access_token(access_token) is None
+
+    with freeze_time(now + timedelta(days=365)):
+        rt = await manager.async_validate_access_token(access_token)
+        assert rt.id == refresh_token.id

@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity
 
 
 @dataclass
@@ -35,7 +35,7 @@ SIREN_ENTITIES = (
         key="siren",
         name="Siren",
         icon="mdi:alarm-light",
-        supported=lambda api, ch: api.supported(ch, "siren"),
+        supported=lambda api, ch: api.supported(ch, "siren_play"),
     ),
 )
 
@@ -56,7 +56,7 @@ async def async_setup_entry(
     )
 
 
-class ReolinkSirenEntity(ReolinkCoordinatorEntity, SirenEntity):
+class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
     """Base siren entity class for Reolink IP cameras."""
 
     _attr_supported_features = (
