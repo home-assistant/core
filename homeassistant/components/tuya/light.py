@@ -171,6 +171,15 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            name="Backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
     "kt": (
