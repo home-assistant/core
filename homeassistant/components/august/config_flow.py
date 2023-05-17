@@ -97,6 +97,10 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
+            assert self._august_gateway is not None
+            await self._async_reset_access_token_cache_if_needed(
+                self._august_gateway, user_input[CONF_USERNAME], None
+            )
             validate_result = await self._async_auth_or_validate(user_input)
             description_placeholders = validate_result.description_placeholders
             if validate_result.validation_required:
@@ -186,6 +190,19 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def _async_reset_access_token_cache_if_needed(
+        self, gateway: AugustGateway, username: str, access_token_cache_file: str | None
+    ) -> None:
+        """Reset the access token cache if needed."""
+        # We need to configure the access token cache file before we setup the gateway
+        # since we need to reset it if the brand changes BEFORE we setup the gateway
+        gateway.async_configure_access_token_cache_file(
+            username, access_token_cache_file
+        )
+        if self._needs_reset:
+            self._needs_reset = False
+            await gateway.async_reset_authentication()
+
     async def _async_auth_or_validate(
         self, user_input: dict[str, Any]
     ) -> ValidateResult:
@@ -194,15 +211,11 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_auth_details = self._user_auth_details
         gateway = self._august_gateway
         assert gateway is not None
-        # We need to configure the access token cache file before we setup the gateway
-        # since we need to reset it if the brand changes BEFORE we setup the gateway
-        gateway.async_configure_access_token_cache_file(
+        await self._async_reset_access_token_cache_if_needed(
+            gateway,
             user_auth_details[CONF_USERNAME],
             user_auth_details.get(CONF_ACCESS_TOKEN_CACHE_FILE),
         )
-        if self._needs_reset:
-            self._needs_reset = False
-            await gateway.async_reset_authentication()
         await gateway.async_setup(user_auth_details)
 
         errors: dict[str, str] = {}
