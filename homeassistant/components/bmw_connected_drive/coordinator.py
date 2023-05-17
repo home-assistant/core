@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN
+from .const import CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN
 
 DEFAULT_SCAN_INTERVAL_SECONDS = 300
 SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS)
@@ -41,7 +41,10 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self._entry = entry
 
         if CONF_REFRESH_TOKEN in entry.data:
-            self.account.set_refresh_token(entry.data[CONF_REFRESH_TOKEN])
+            self.account.set_refresh_token(
+                refresh_token=entry.data[CONF_REFRESH_TOKEN],
+                gcid=entry.data.get(CONF_GCID),
+            )
 
         super().__init__(
             hass,
