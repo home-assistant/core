@@ -14,6 +14,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONF_ACCESS_TOKEN_CACHE_FILE,
     CONF_BRAND,
     CONF_LOGIN_METHOD,
     DEFAULT_LOGIN_METHOD,
@@ -191,11 +192,19 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ValidateResult:
         """Authenticate or validate."""
         self._user_auth_details.update(user_input)
-        assert self._august_gateway is not None
-        await self._august_gateway.async_setup(self._user_auth_details)
+        user_auth_details = self._user_auth_details
+        gateway = self._august_gateway
+        assert gateway is not None
+        # We need to configure the access token cache file before we setup the gateway
+        # since we need to reset it if the brand changes BEFORE we setup the gateway
+        gateway.async_configure_access_token_cache_file(
+            user_auth_details[CONF_USERNAME],
+            user_auth_details.get(CONF_ACCESS_TOKEN_CACHE_FILE),
+        )
         if self._needs_reset:
             self._needs_reset = False
-            await self._august_gateway.async_reset_authentication()
+            await gateway.async_reset_authentication()
+        await gateway.async_setup(user_auth_details)
 
         errors: dict[str, str] = {}
         info: dict[str, Any] = {}
@@ -203,10 +212,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         validation_required = False
 
         try:
-            info = await async_validate_input(
-                self._user_auth_details,
-                self._august_gateway,
-            )
+            info = await async_validate_input(user_auth_details, gateway)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:

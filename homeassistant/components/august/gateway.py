@@ -14,7 +14,7 @@ from yalexs.authenticator_common import Authentication
 from yalexs.const import DEFAULT_BRAND
 
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
@@ -64,16 +64,22 @@ class AugustGateway:
             CONF_ACCESS_TOKEN_CACHE_FILE: self._access_token_cache_file,
         }
 
+    @callback
+    def async_configure_access_token_cache_file(
+        self, username: str, access_token_cache_file: str | None
+    ) -> str:
+        """Configure the access token cache file."""
+        file = access_token_cache_file or f".{username}{DEFAULT_AUGUST_CONFIG_FILE}"
+        self._access_token_cache_file = file
+        return self._hass.config.path(file)
+
     async def async_setup(self, conf: Mapping[str, Any]) -> None:
         """Create the api and authenticator objects."""
         if conf.get(VERIFICATION_CODE_KEY):
             return
 
-        self._access_token_cache_file = (
-            conf.get(
-                CONF_ACCESS_TOKEN_CACHE_FILE,
-            )
-            or f".{conf[CONF_USERNAME]}{DEFAULT_AUGUST_CONFIG_FILE}"
+        access_token_cache_file_path = self.async_configure_access_token_cache_file(
+            conf[CONF_USERNAME], conf.get(CONF_ACCESS_TOKEN_CACHE_FILE)
         )
         self._config = conf
 
@@ -89,9 +95,7 @@ class AugustGateway:
             self._config[CONF_USERNAME],
             self._config.get(CONF_PASSWORD, ""),
             install_id=self._config.get(CONF_INSTALL_ID),
-            access_token_cache_file=self._hass.config.path(
-                self._access_token_cache_file
-            ),
+            access_token_cache_file=access_token_cache_file_path,
         )
 
         await self.authenticator.async_setup_authentication()
@@ -133,8 +137,9 @@ class AugustGateway:
 
     def _reset_authentication(self):
         """Remove the cache file."""
-        if os.path.exists(self._access_token_cache_file):
-            os.unlink(self._access_token_cache_file)
+        path = self._hass.config.path(self._access_token_cache_file)
+        if os.path.exists(path):
+            os.unlink(path)
 
     async def async_refresh_access_token_if_needed(self):
         """Refresh the august access token if needed."""
