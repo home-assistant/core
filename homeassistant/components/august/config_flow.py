@@ -83,7 +83,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Store an AugustGateway()."""
         self._august_gateway: AugustGateway | None = None
         self._user_auth_details: dict[str, Any] = {}
-        self._needs_reset = False
+        self._needs_reset = True
         self._mode = None
         super().__init__()
 
