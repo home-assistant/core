@@ -578,6 +578,9 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     descriptions = await service.async_get_all_descriptions(hass)
     assert "another_new_service" in descriptions[logger.DOMAIN]
 
+    # Verify the cache returns the same object
+    assert await service.async_get_all_descriptions(hass) is descriptions
+
 
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
     """Test service calls invoked only if entity has required features."""
