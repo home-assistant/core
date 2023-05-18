@@ -1,7 +1,7 @@
 """Test the OralB sensors."""
 
 from homeassistant.components.oralb.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -44,6 +44,7 @@ async def test_sensors(
         toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME]
         == "Smart Series 7000 48BE Toothbrush State"
     )
+    assert ATTR_ASSUMED_STATE not in toothbrush_sensor_attrs
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -71,6 +72,7 @@ async def test_sensors_io_series_4(
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
     assert toothbrush_sensor.state == "gum care"
     assert toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "IO Series 4 48BE Mode"
+    assert ATTR_ASSUMED_STATE not in toothbrush_sensor_attrs
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
