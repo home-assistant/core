@@ -136,3 +136,8 @@ class OralBBluetoothSensorEntity(
         so once we have seen the device we always return True.
         """
         return True
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if the device is no longer broadcasting."""
+        return not self.processor.available
