@@ -34,7 +34,9 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_DEVICE_ID,
+    CONF_ENABLE_WEBHOOKS,
     DEFAULT_ARGUMENTS,
+    DEFAULT_ENABLE_WEBHOOKS,
     DEFAULT_PORT,
     DOMAIN,
     GET_CAPABILITIES_EXCEPTIONS,
@@ -387,6 +389,12 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
                 self.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
             )
+            self.options[CONF_ENABLE_WEBHOOKS] = user_input.get(
+                CONF_ENABLE_WEBHOOKS,
+                self.config_entry.options.get(
+                    CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
+                ),
+            )
             return self.async_create_entry(title="", data=self.options)
 
         advanced_options = {}
@@ -415,6 +423,12 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
                     ): vol.In(RTSP_TRANSPORTS),
+                    vol.Optional(
+                        CONF_ENABLE_WEBHOOKS,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
+                        ),
+                    ): bool,
                     **advanced_options,
                 }
             ),
