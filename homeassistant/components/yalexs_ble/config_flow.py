@@ -327,7 +327,6 @@ class YaleXSBLEOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the YaleXSBLE devices options."""
         if user_input is not None:
             return self.async_create_entry(
-                title="",
                 data={CONF_ALWAYS_CONNECTED: user_input[CONF_ALWAYS_CONNECTED]},
             )
 
