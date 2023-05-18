@@ -858,4 +858,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             step_id="communication_settings",
             data_schema=vol.Schema(data_schema),
             last_step=True,
+            description_placeholders={
+                "telegram_log_size_max": f"{TELEGRAM_LOG_MAX}",
+            },
         )
