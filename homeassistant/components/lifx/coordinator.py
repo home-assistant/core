@@ -221,9 +221,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         """Build a color zones update request."""
         device = self.device
         calls: list[Callable] = []
-        for zone in range(
-            0, self.get_number_of_zones(), ZONES_PER_COLOR_UPDATE_REQUEST
-        ):
+        zone_count = self.get_number_of_zones()
+        zone_end_index = zone_count - 1
+        for zone in range(0, zone_count, ZONES_PER_COLOR_UPDATE_REQUEST):
 
             def _wrap_get_color_zones(
                 callb: Callable[[Message, dict[str, Any] | None], None],
@@ -238,6 +238,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                 ) -> None:
                     # We need to call resp_set_multizonemultizone to populate
                     # the color_zones attribute before calling the callback
+                    _LOGGER.warning(
+                        "Calling resp_set_multizonemultizone with %s", response
+                    )
                     device.resp_set_multizonemultizone(response)
                     # Now call the original callback
                     callb(bulb, response, **kwargs)
@@ -249,7 +252,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                     _wrap_get_color_zones,
                     get_color_zones_args={
                         "start_index": zone,
-                        "end_index": zone + ZONES_PER_COLOR_UPDATE_REQUEST - 1,
+                        "end_index": min(
+                            zone_end_index, zone + ZONES_PER_COLOR_UPDATE_REQUEST - 1
+                        ),
                     },
                 )
             )
