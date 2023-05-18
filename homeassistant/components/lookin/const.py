@@ -24,7 +24,7 @@ TYPE_TO_PLATFORM = {
     "EF": Platform.CLIMATE,
 }
 
-ACTIVE_UPDATES_INTERVAL = 4  # Consider active for 3x the update interval
+ACTIVE_UPDATES_INTERVAL = 4  # Consider active for 4x the update interval
 METEO_UPDATE_INTERVAL = timedelta(minutes=5)
 REMOTE_UPDATE_INTERVAL = timedelta(seconds=60)
 POLLING_FALLBACK_SECONDS = (
