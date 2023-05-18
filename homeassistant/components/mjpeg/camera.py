@@ -157,7 +157,8 @@ class MjpegCamera(Camera):
     async def _async_digest_camera_image(self) -> bytes | None:
         """Return a still image response from the camera using digest authentication."""
         client = get_async_client(self.hass, verify_ssl=self._verify_ssl)
-        auth = httpx.DigestAuth(self._username or "", self._password)
+        username = "" if self._username is None else self._username
+        auth = httpx.DigestAuth(username, self._password)
         try:
             async with client.stream(
                 "get", self._mjpeg_url, auth=auth, timeout=10
