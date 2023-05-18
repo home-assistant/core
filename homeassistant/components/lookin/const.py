@@ -1,6 +1,7 @@
 """The lookin integration constants."""
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Final
 
 from homeassistant.const import Platform
@@ -22,3 +23,11 @@ TYPE_TO_PLATFORM = {
     "03": Platform.LIGHT,
     "EF": Platform.CLIMATE,
 }
+
+ACTIVE_UPDATES_INTERVAL = 4  # Consider active for 3x the update interval
+METEO_UPDATE_INTERVAL = timedelta(minutes=5)
+REMOTE_UPDATE_INTERVAL = timedelta(seconds=60)
+POLLING_FALLBACK_SECONDS = (
+    max(REMOTE_UPDATE_INTERVAL, METEO_UPDATE_INTERVAL).total_seconds()
+    * ACTIVE_UPDATES_INTERVAL
+)
