@@ -1768,9 +1768,13 @@ async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
     assert len(bulb.get_color_zones.calls) == 3
     # Once to populate the number of zones
     assert bulb.get_color_zones.calls[0][1]["start_index"] == 0
+    assert bulb.get_color_zones.calls[0][1]["end_index"] == 0
+
     # Again once we know the number of zones
     assert bulb.get_color_zones.calls[1][1]["start_index"] == 0
+    assert bulb.get_color_zones.calls[1][1]["end_index"] == 7
     assert bulb.get_color_zones.calls[2][1]["start_index"] == 8
+    assert bulb.get_color_zones.calls[2][1]["end_index"] == 8
 
     state = hass.states.get(entity_id)
     assert state.state == "on"

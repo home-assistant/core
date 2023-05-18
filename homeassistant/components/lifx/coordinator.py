@@ -238,9 +238,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
                 ) -> None:
                     # We need to call resp_set_multizonemultizone to populate
                     # the color_zones attribute before calling the callback
-                    _LOGGER.warning(
-                        "Calling resp_set_multizonemultizone with %s", response
-                    )
                     device.resp_set_multizonemultizone(response)
                     # Now call the original callback
                     callb(bulb, response, **kwargs)
