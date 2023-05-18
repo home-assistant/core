@@ -36,11 +36,11 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         async with async_timeout.timeout(AIOAIRZONE_CLOUD_TIMEOUT_SEC):
             try:
-                await self.airzone.update_webservers()
+                await self.airzone.update_webservers(False)
                 await self.airzone.update_systems()
                 await self.airzone.update_zones()
-            except TooManyRequests as error:
-                _LOGGER.error(error)
+            except TooManyRequests:
+                _LOGGER.error("Too many API requests")
             except AirzoneCloudError as error:
                 raise UpdateFailed(error) from error
             return self.airzone.data()

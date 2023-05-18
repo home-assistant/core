@@ -29,6 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if inst.get_id() == entry.data[CONF_ID]:
             airzone.select_installation(inst)
 
+    await airzone.update_webservers(True)
+
     coordinator = AirzoneUpdateCoordinator(hass, airzone)
     await coordinator.async_config_entry_first_refresh()
 

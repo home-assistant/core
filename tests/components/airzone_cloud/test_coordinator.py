@@ -48,7 +48,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
 
         mock_device_status.assert_called()
         mock_installations.assert_called_once()
-        mock_webserver.assert_called_once()
+        mock_webserver.assert_called()
 
         mock_device_status.reset_mock()
         mock_installations.reset_mock()

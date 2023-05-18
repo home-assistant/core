@@ -5,4 +5,4 @@ from typing import Final
 DOMAIN: Final[str] = "airzone_cloud"
 MANUFACTURER: Final[str] = "Airzone"
 
-AIOAIRZONE_CLOUD_TIMEOUT_SEC: Final[int] = 10
+AIOAIRZONE_CLOUD_TIMEOUT_SEC: Final[int] = 20
