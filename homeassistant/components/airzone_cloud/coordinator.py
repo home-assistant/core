@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
-from aioairzone_cloud.exceptions import AirzoneCloudError
+from aioairzone_cloud.exceptions import AirzoneCloudError, TooManyRequests
 import async_timeout
 
 from homeassistant.core import HomeAssistant
@@ -39,6 +39,8 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator):
                 await self.airzone.update_webservers()
                 await self.airzone.update_systems()
                 await self.airzone.update_zones()
+            except TooManyRequests as error:
+                _LOGGER.error(error)
             except AirzoneCloudError as error:
                 raise UpdateFailed(error) from error
             return self.airzone.data()
