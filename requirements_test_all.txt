@@ -972,7 +972,7 @@ openai==0.27.2
 openerz-api==0.2.0
 
 # homeassistant.components.opower
-opower==0.0.6
+opower==0.0.7
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
