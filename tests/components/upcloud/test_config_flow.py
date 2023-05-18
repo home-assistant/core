@@ -129,8 +129,5 @@ async def test_already_configured(hass, requests_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-
-    stored_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
-    assert stored_entry
-    assert stored_entry.data[CONF_USERNAME] == new_user_input[CONF_USERNAME]
-    assert stored_entry.data[CONF_PASSWORD] == new_user_input[CONF_PASSWORD]
+    assert config_entry.data[CONF_USERNAME] == new_user_input[CONF_USERNAME]
+    assert config_entry.data[CONF_PASSWORD] == new_user_input[CONF_PASSWORD]
