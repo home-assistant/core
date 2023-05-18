@@ -466,6 +466,29 @@ def test_state_as_dict() -> None:
     assert state.as_dict() is as_dict_1
 
 
+def test_state_as_dict_json() -> None:
+    """Test a State as JSON."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+        context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
+    )
+    expected = (
+        '{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
+        '"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
+        '"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
+    )
+    as_dict_json_1 = state.as_dict_json()
+    assert as_dict_json_1 == expected
+    # 2nd time to verify cache
+    assert state.as_dict_json() == expected
+    assert state.as_dict_json() is as_dict_json_1
+
+
 def test_state_as_compressed_state() -> None:
     """Test a State as compressed state."""
     last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -488,7 +511,6 @@ def test_state_as_compressed_state() -> None:
     assert as_compressed_state == expected
     # 2nd time to verify cache
     assert state.as_compressed_state() == expected
-    assert state.as_compressed_state() is as_compressed_state
 
 
 def test_state_as_compressed_state_unique_last_updated() -> None:
@@ -515,7 +537,27 @@ def test_state_as_compressed_state_unique_last_updated() -> None:
     assert as_compressed_state == expected
     # 2nd time to verify cache
     assert state.as_compressed_state() == expected
-    assert state.as_compressed_state() is as_compressed_state
+
+
+def test_state_as_compressed_state_json() -> None:
+    """Test a State as a JSON compressed state."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+        context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
+    )
+    expected = '"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    as_compressed_state = state.as_compressed_state_json()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state_json() == expected
+    assert state.as_compressed_state_json() is as_compressed_state
 
 
 async def test_eventbus_add_remove_listener(hass: HomeAssistant) -> None:
@@ -1382,6 +1424,32 @@ def test_valid_entity_id() -> None:
         "light.something_yoo",
     ]:
         assert ha.valid_entity_id(valid), valid
+
+
+def test_valid_domain() -> None:
+    """Test valid domain."""
+    for invalid in [
+        "_light",
+        ".kitchen",
+        ".light.kitchen",
+        "light_.kitchen",
+        "._kitchen",
+        "light.",
+        "light.kitchen__ceiling",
+        "light.kitchen_yo_",
+        "light.kitchen.",
+        "Light",
+    ]:
+        assert not ha.valid_domain(invalid), invalid
+
+    for valid in [
+        "1",
+        "1light",
+        "a",
+        "input_boolean",
+        "light",
+    ]:
+        assert ha.valid_domain(valid), valid
 
 
 async def test_additional_data_in_core_config(

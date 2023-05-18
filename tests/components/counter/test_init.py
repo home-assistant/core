@@ -11,14 +11,18 @@ from homeassistant.components.counter import (
     ATTR_STEP,
     CONF_ICON,
     CONF_INITIAL,
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
     CONF_NAME,
     CONF_RESTORE,
     CONF_STEP,
     DEFAULT_INITIAL,
     DEFAULT_STEP,
     DOMAIN,
+    SERVICE_SET_VALUE,
+    VALUE,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -124,7 +128,7 @@ async def test_config_options(hass: HomeAssistant) -> None:
 
 
 async def test_methods(hass: HomeAssistant) -> None:
-    """Test increment, decrement, and reset methods."""
+    """Test increment, decrement, set value, and reset methods."""
     config = {DOMAIN: {"test_1": {}}}
 
     assert await async_setup_component(hass, "counter", config)
@@ -158,11 +162,31 @@ async def test_methods(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert int(state.state) == 0
 
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            VALUE: 5,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
+
 
 async def test_methods_with_config(hass: HomeAssistant) -> None:
     """Test increment, decrement, and reset methods with configuration."""
     config = {
-        DOMAIN: {"test": {CONF_NAME: "Hello World", CONF_INITIAL: 10, CONF_STEP: 5}}
+        DOMAIN: {
+            "test": {
+                CONF_NAME: "Hello World",
+                CONF_INITIAL: 10,
+                CONF_STEP: 5,
+                CONF_MINIMUM: 5,
+                CONF_MAXIMUM: 20,
+            }
+        }
     }
 
     assert await async_setup_component(hass, "counter", config)
@@ -189,6 +213,67 @@ async def test_methods_with_config(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert int(state.state) == 15
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            VALUE: 5,
+        },
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
+
+    with pytest.raises(
+        ValueError, match=r"Value 25 for counter.test exceeding the maximum value of 20"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                VALUE: 25,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
+
+    with pytest.raises(
+        ValueError, match=r"Value 0 for counter.test exceeding the minimum value of 5"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                VALUE: 0,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
+
+    with pytest.raises(
+        ValueError,
+        match=r"Value 6 for counter.test is not a multiple of the step size 5",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                VALUE: 6,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
 
 
 async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
