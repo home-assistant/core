@@ -1617,7 +1617,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rapt_ble
-rapt-ble==0.1.0
+rapt-ble==0.1.1
 
 # homeassistant.components.rainmachine
 regenmaschine==2023.05.1
