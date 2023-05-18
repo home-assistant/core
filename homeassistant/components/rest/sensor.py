@@ -71,7 +71,7 @@ async def async_setup_platform(
             if isinstance(rest.last_exception, ssl.SSLError):
                 _LOGGER.error(
                     "Error connecting %s failed with %s",
-                    conf[CONF_RESOURCE],
+                    rest.url,
                     rest.last_exception,
                 )
                 return

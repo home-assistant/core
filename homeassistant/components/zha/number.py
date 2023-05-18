@@ -279,6 +279,8 @@ async def async_setup_entry(
 class ZhaNumber(ZhaEntity, NumberEntity):
     """Representation of a ZHA Number entity."""
 
+    _attr_name: str = "Number"
+
     def __init__(
         self,
         unique_id: str,
@@ -331,7 +333,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().native_step
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the number entity."""
         description = self._analog_output_cluster_handler.description
         if description is not None and len(description) > 0:

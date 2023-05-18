@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+import ssl
 from typing import Any
 
 from aioimaplib import AioImapException
@@ -13,17 +14,32 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
+from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
     CONF_CHARSET,
     CONF_FOLDER,
     CONF_SEARCH,
     CONF_SERVER,
+    CONF_SSL_CIPHER_LIST,
     DEFAULT_PORT,
     DOMAIN,
 )
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
+
+CIPHER_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=list(SSLCipherList),
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_SSL_CIPHER_LIST,
+    )
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -36,6 +52,11 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
     }
 )
+CONFIG_SCHEMA_ADVANCED = {
+    vol.Optional(
+        CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
+    ): CIPHER_SELECTOR
+}
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -60,6 +81,11 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
         errors[CONF_USERNAME] = errors[CONF_PASSWORD] = "invalid_auth"
     except InvalidFolder:
         errors[CONF_FOLDER] = "invalid_folder"
+    except ssl.SSLError:
+        # The aioimaplib library 1.0.1 does not raise an ssl.SSLError correctly, but is logged
+        # See https://github.com/bamthomas/aioimaplib/issues/91
+        # This handler is added to be able to supply a better error message
+        errors["base"] = "ssl_error"
     except (asyncio.TimeoutError, AioImapException, ConnectionRefusedError):
         errors["base"] = "cannot_connect"
     else:
@@ -103,8 +129,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+
+        schema = CONFIG_SCHEMA
+        if self.show_advanced_options:
+            schema = schema.extend(CONFIG_SCHEMA_ADVANCED)
+
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
+            return self.async_show_form(step_id="user", data_schema=schema)
 
         self._async_abort_entries_match(
             {

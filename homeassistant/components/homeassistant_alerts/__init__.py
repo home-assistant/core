@@ -48,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             try:
                 response = await async_get_clientsession(hass).get(
                     f"https://alerts.home-assistant.io/alerts/{alert.alert_id}.json",
-                    timeout=aiohttp.ClientTimeout(total=10),
+                    timeout=aiohttp.ClientTimeout(total=30),
                 )
             except asyncio.TimeoutError:
                 _LOGGER.warning("Error fetching %s: timeout", alert.filename)

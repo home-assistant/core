@@ -32,7 +32,6 @@ from tests.common import (
 DEFAULT_LANG = "en_US"
 SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
-TEST_LANGUAGES = ["de", "en"]
 
 
 async def get_media_source_url(hass: HomeAssistant, media_content_id: str) -> str:
@@ -105,11 +104,7 @@ class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
     PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(
-                SUPPORT_LANGUAGES + TEST_LANGUAGES
-            )
-        }
+        {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
     )
 
     def __init__(self, provider: MockProvider, **kwargs: Any) -> None:

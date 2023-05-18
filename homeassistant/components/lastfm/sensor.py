@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import hashlib
-import logging
 
 from pylast import LastFMNetwork, Track, User, WSError
 import voluptuous as vol
@@ -14,15 +13,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-LOGGER = logging.getLogger(__name__)
-
-CONF_USERS = "users"
-
-ATTR_LAST_PLAYED = "last_played"
-ATTR_PLAY_COUNT = "play_count"
-ATTR_TOP_PLAYED = "top_played"
-
-STATE_NOT_SCROBBLING = "Not Scrobbling"
+from .const import (
+    ATTR_LAST_PLAYED,
+    ATTR_PLAY_COUNT,
+    ATTR_TOP_PLAYED,
+    CONF_USERS,
+    LOGGER,
+    STATE_NOT_SCROBBLING,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

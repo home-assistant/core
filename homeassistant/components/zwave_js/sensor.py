@@ -491,7 +491,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
 
 
 class ZWaveListSensor(ZwaveSensorBase):
-    """Representation of a Z-Wave Numeric sensor with multiple states."""
+    """Representation of a Z-Wave List sensor with multiple states."""
 
     def __init__(
         self,
@@ -510,18 +510,30 @@ class ZWaveListSensor(ZwaveSensorBase):
         self._attr_name = self.generate_name(include_value_name=True)
 
     @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return sensor device class."""
+        if super().device_class is not None:
+            return super().device_class
+        if self.info.primary_value.metadata.states:
+            return SensorDeviceClass.ENUM
+        return None
+
+    @property
+    def options(self) -> list[str] | None:
+        """Return options for enum sensor."""
+        if self.device_class == SensorDeviceClass.ENUM:
+            return list(self.info.primary_value.metadata.states.values())
+        return None
+
+    @property
     def native_value(self) -> str | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return None
-        if (
-            str(self.info.primary_value.value)
-            not in self.info.primary_value.metadata.states
-        ):
-            return str(self.info.primary_value.value)
-        return str(
-            self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
-        )
+        key = str(self.info.primary_value.value)
+        if key not in self.info.primary_value.metadata.states:
+            return key
+        return str(self.info.primary_value.metadata.states[key])
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -558,21 +570,36 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
         )
 
     @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return sensor device class."""
+        if super().device_class is not None:
+            return super().device_class
+        if (
+            self._primary_value.configuration_value_type
+            == ConfigurationValueType.ENUMERATED
+        ):
+            return SensorDeviceClass.ENUM
+        return None
+
+    @property
+    def options(self) -> list[str] | None:
+        """Return options for enum sensor."""
+        if self.device_class == SensorDeviceClass.ENUM:
+            return list(self.info.primary_value.metadata.states.values())
+        return None
+
+    @property
     def native_value(self) -> str | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return None
+        key = str(self.info.primary_value.value)
         if (
             self._primary_value.configuration_value_type == ConfigurationValueType.RANGE
-            or (
-                str(self.info.primary_value.value)
-                not in self.info.primary_value.metadata.states
-            )
+            or (key not in self.info.primary_value.metadata.states)
         ):
-            return str(self.info.primary_value.value)
-        return str(
-            self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
-        )
+            return key
+        return str(self.info.primary_value.metadata.states[key])
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
