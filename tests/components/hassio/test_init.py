@@ -589,7 +589,7 @@ async def test_service_calls(
         "hassio",
         "backup_full",
         {
-            "location": "",
+            "location": "/backup",
         },
     )
     await hass.async_block_till_done()

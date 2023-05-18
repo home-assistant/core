@@ -162,7 +162,9 @@ SCHEMA_BACKUP_FULL = vol.Schema(
         vol.Optional(ATTR_NAME): cv.string,
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_COMPRESSED): cv.boolean,
-        vol.Optional(ATTR_LOCATION): vol.All(cv.string, lambda v: v if v else None),
+        vol.Optional(ATTR_LOCATION): vol.All(
+            cv.string, lambda v: None if v == "/backup" else v
+        ),
     }
 )
 

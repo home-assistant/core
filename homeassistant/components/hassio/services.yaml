@@ -90,11 +90,10 @@ backup_full:
         boolean:
     location:
       name: Location
-      description: Name of a backup mount to put backup (or empty string for /backup)
+      description: Name of a backup network storage to put backup (or /backup)
       example: my_backup_mount
       selector:
-        storage_location:
-          usage: backup
+        backup_location:
 
 backup_partial:
   name: Create a partial backup.
@@ -137,11 +136,10 @@ backup_partial:
         boolean:
     location:
       name: Location
-      description: Name of a backup mount to put backup (or empty string for /backup)
+      description: Name of a backup network storage to put backup (or /backup)
       example: my_backup_mount
       selector:
-        storage_location:
-          usage: backup
+        backup_location:
 
 restore_full:
   name: Restore from full backup.
