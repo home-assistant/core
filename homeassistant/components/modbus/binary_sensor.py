@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DEVICE_CLASS_NAME
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -73,6 +74,11 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         # this ensures that idx = bit position of value in result
         # polling is done with the base class
         name = self._attr_name if self._attr_name else "modbus_sensor"
+
+        # DataUpdateCoordinator does not support DEVICE_CLASS_NAME
+        # the assert satisfies the type checker and will catch attempts
+        # to use DEVICE_CLASS_NAME in _attr_name.
+        assert name is not DEVICE_CLASS_NAME
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,

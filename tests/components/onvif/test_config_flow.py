@@ -5,7 +5,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.onvif import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DHCP
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -710,6 +710,14 @@ async def test_discovered_by_dhcp_does_not_update_if_no_matching_entry(
     assert result["reason"] == "no_devices_found"
 
 
+def _get_schema_default(schema, key_name):
+    """Iterate schema to find a key."""
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")
+
+
 async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test reauthenticate."""
     entry, _, _ = await setup_onvif_integration(hass)
@@ -721,6 +729,10 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert (
+        _get_schema_default(result["data_schema"].schema, CONF_USERNAME)
+        == entry.data[CONF_USERNAME]
+    )
 
     with patch(
         "homeassistant.components.onvif.config_flow.get_device"
@@ -829,3 +841,82 @@ async def test_flow_manual_entry_updates_existing_user_password(
         assert entry.data[config_flow.CONF_USERNAME] == USERNAME
         assert entry.data[config_flow.CONF_PASSWORD] == "new_password"
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_flow_manual_entry_wrong_port(hass: HomeAssistant) -> None:
+    """Test that we get a useful error with the wrong port."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera, patch(
+        "homeassistant.components.onvif.config_flow.wsdiscovery"
+    ) as mock_discovery, patch(
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device:
+        setup_mock_onvif_camera(mock_onvif_camera, wrong_port=True)
+        # no discovery
+        mock_discovery.return_value = []
+        setup_mock_device(mock_device)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"auto": False},
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "configure"
+
+        with patch(
+            "homeassistant.components.onvif.async_setup_entry", return_value=True
+        ) as mock_setup_entry:
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    config_flow.CONF_NAME: NAME,
+                    config_flow.CONF_HOST: HOST,
+                    config_flow.CONF_PORT: PORT,
+                    config_flow.CONF_USERNAME: USERNAME,
+                    config_flow.CONF_PASSWORD: PASSWORD,
+                },
+            )
+
+            await hass.async_block_till_done()
+            assert len(mock_setup_entry.mock_calls) == 0
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "configure"
+        assert result["errors"] == {"port": "no_onvif_service"}
+        assert result["description_placeholders"] == {}
+        setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
+
+        with patch(
+            "homeassistant.components.onvif.async_setup_entry", return_value=True
+        ) as mock_setup_entry:
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    config_flow.CONF_NAME: NAME,
+                    config_flow.CONF_HOST: HOST,
+                    config_flow.CONF_PORT: PORT,
+                    config_flow.CONF_USERNAME: USERNAME,
+                    config_flow.CONF_PASSWORD: PASSWORD,
+                },
+            )
+
+            await hass.async_block_till_done()
+            assert len(mock_setup_entry.mock_calls) == 1
+
+        assert result["title"] == f"{NAME} - {MAC}"
+        assert result["data"] == {
+            config_flow.CONF_NAME: NAME,
+            config_flow.CONF_HOST: HOST,
+            config_flow.CONF_PORT: PORT,
+            config_flow.CONF_USERNAME: USERNAME,
+            config_flow.CONF_PASSWORD: PASSWORD,
+        }

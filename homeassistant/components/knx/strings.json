@@ -281,5 +281,10 @@
         "name": "Telegrams"
       }
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "telegram": "Telegram sent or received"
+    }
   }
 }
