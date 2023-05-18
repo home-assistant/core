@@ -1381,7 +1381,7 @@ pyowm==3.2.0
 pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
-pypck==0.7.16
+pypck==0.7.17
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
