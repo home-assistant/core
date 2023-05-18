@@ -144,6 +144,11 @@ def login_requests_mock(requests_mock):
             f"<password_type>{PasswordTypeEnum.SHA256}</password_type></response>"
         ),
     )
+    requests_mock.request(
+        ANY,
+        f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/logout",
+        text="<response>OK</response>",
+    )
     return requests_mock
 
 
