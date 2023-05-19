@@ -307,6 +307,17 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             icon="mdi:thermometer-lines",
         ),
     ),
+    # Smart Water Timer
+    # UNDOCUMENTED
+    "sfkzq": (
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            icon="mdi:timer-settings-outline",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 
