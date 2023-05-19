@@ -20,7 +20,7 @@ from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneEntity, AirzoneZoneEntity
 
-SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key=AZD_TEMP,
@@ -45,15 +45,15 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = []
-    for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
-        for description in SENSOR_TYPES:
+    for zone_id, zone_data in coordinator.data[AZD_ZONES].items():
+        for description in ZONE_SENSOR_TYPES:
             if description.key in zone_data:
                 sensors.append(
                     AirzoneZoneSensor(
                         coordinator,
                         description,
                         entry,
-                        system_zone_id,
+                        zone_id,
                         zone_data,
                     )
                 )
@@ -84,14 +84,14 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
         entry: ConfigEntry,
-        system_zone_id: str,
+        zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, system_zone_id, zone_data)
+        super().__init__(coordinator, entry, zone_id, zone_data)
 
         self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
-        self._attr_unique_id = f"{entry.entry_id}_{system_zone_id}_{description.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{zone_id}_{description.key}"
         self.entity_description = description
 
         self._async_update_attrs()

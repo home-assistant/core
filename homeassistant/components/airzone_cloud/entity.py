@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioairzone_cloud.const import AZD_ID, AZD_NAME, AZD_SYSTEM, AZD_ZONES
+from aioairzone_cloud.const import AZD_NAME, AZD_SYSTEM_ID, AZD_ZONES
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo
@@ -28,18 +28,17 @@ class AirzoneZoneEntity(AirzoneEntity):
         self,
         coordinator: AirzoneUpdateCoordinator,
         entry: ConfigEntry,
-        system_zone_id: str,
+        zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
-        self.system_id = zone_data[AZD_SYSTEM]
-        self.system_zone_id = system_zone_id
-        self.zone_id = zone_data[AZD_ID]
+        self.system_id = zone_data[AZD_SYSTEM_ID]
+        self.zone_id = zone_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{system_zone_id}")},
+            identifiers={(DOMAIN, f"{entry.entry_id}_{zone_id}")},
             manufacturer=MANUFACTURER,
             name=zone_data[AZD_NAME],
             via_device=(DOMAIN, f"{entry.entry_id}_{self.system_id}"),
@@ -49,7 +48,7 @@ class AirzoneZoneEntity(AirzoneEntity):
     def get_airzone_value(self, key: str) -> Any:
         """Return zone value by key."""
         value = None
-        if zone := self.coordinator.data[AZD_ZONES].get(self.system_zone_id):
+        if zone := self.coordinator.data[AZD_ZONES].get(self.zone_id):
             if key in zone:
                 value = zone[key]
         return value

@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import patch
 
 from aioairzone_cloud.const import (
+    API_AZ_SYSTEM,
+    API_AZ_ZONE,
     API_CELSIUS,
     API_CONFIG,
     API_CONNECTION_DATE,
@@ -45,15 +47,6 @@ CONFIG = {
     CONF_PASSWORD: "pass",
 }
 
-GET_DEVICE_STATUS_MOCK = {
-    API_HUMIDITY: 24,
-    API_IS_CONNECTED: True,
-    API_LOCAL_TEMP: {
-        API_FAH: 68,
-        API_CELSIUS: 25,
-    },
-}
-
 GET_INSTALLATIONS_MOCK = {
     API_INSTALLATIONS: [
         {
@@ -82,22 +75,32 @@ GET_WEBSERVER_MOCK = {
     },
     API_DEVICES: [
         {
+            API_DEVICE_ID: "system1",
+            API_DEVICE_TYPE: API_AZ_SYSTEM,
+            API_CONFIG: {
+                API_SYSTEM_NUMBER: 1,
+            },
+            API_IS_CONNECTED: True,
+        },
+        {
             API_DEVICE_ID: "zone1",
             API_NAME: "Salon",
-            API_DEVICE_TYPE: "az_zone",
+            API_DEVICE_TYPE: API_AZ_ZONE,
             API_CONFIG: {
                 API_SYSTEM_NUMBER: 1,
                 API_ZONE_NUMBER: 1,
             },
+            API_IS_CONNECTED: True,
         },
         {
             API_DEVICE_ID: "zone2",
             API_NAME: "Dormitorio",
-            API_DEVICE_TYPE: "az_zone",
+            API_DEVICE_TYPE: API_AZ_ZONE,
             API_CONFIG: {
                 API_SYSTEM_NUMBER: 1,
                 API_ZONE_NUMBER: 2,
             },
+            API_IS_CONNECTED: True,
         },
     ],
 }
@@ -106,6 +109,10 @@ GET_WEBSERVER_MOCK = {
 def mock_get_device_status(device: Device) -> dict[str, Any]:
     """Mock API device status."""
 
+    if device.get_id() == "system1":
+        return {
+            API_IS_CONNECTED: True,
+        }
     if device.get_id() == "zone2":
         return {
             API_HUMIDITY: 24,
