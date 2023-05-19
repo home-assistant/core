@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass
 import datetime
 from ipaddress import IPv4Network, IPv6Network, ip_network
@@ -123,16 +125,41 @@ SERVERS_EXCLUSIVE_MESSAGE = (
 )
 
 
+def _relocated_with_message(key: str, new_location: str) -> Callable[[dict], dict]:
+    """Log key as relocated with a message."""
+
+    def validator(config: dict) -> dict:
+        """Check if key is in config and log the new location."""
+        near = ""
+        with contextlib.suppress(AttributeError):
+            near = (
+                f"near {config.__config_file__}"  # type: ignore[attr-defined]
+                f":{config.__line__}"
+            )
+        if key in config:
+            _LOGGER.warning(
+                "The '%s' option %s has moved to '%s', please update your configuration.",
+                key,
+                near,
+                new_location,
+            )
+        return config
+
+    return validator
+
+
 HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
-    cv.deprecated(CONF_SERVER_HOST, replacement_key="servers[0].server_host"),
-    cv.deprecated(CONF_SERVER_PORT, replacement_key="servers[0].server_port"),
-    cv.deprecated(CONF_SSL_CERTIFICATE, replacement_key="servers[0].ssl_certificate"),
-    cv.deprecated(
-        CONF_SSL_PEER_CERTIFICATE, replacement_key="servers[0].ssl_peer_certificate"
+    _relocated_with_message(CONF_SERVER_HOST, new_location="servers[0].server_host"),
+    _relocated_with_message(CONF_SERVER_PORT, new_location="servers[0].server_port"),
+    _relocated_with_message(
+        CONF_SSL_CERTIFICATE, new_location="servers[0].ssl_certificate"
     ),
-    cv.deprecated(CONF_SSL_KEY, replacement_key="servers[0].ssl_key"),
-    cv.deprecated(CONF_SSL_PROFILE, replacement_key="servers[0].ssl_profile"),
+    _relocated_with_message(
+        CONF_SSL_PEER_CERTIFICATE, new_location="servers[0].ssl_peer_certificate"
+    ),
+    _relocated_with_message(CONF_SSL_KEY, new_location="servers[0].ssl_key"),
+    _relocated_with_message(CONF_SSL_PROFILE, new_location="servers[0].ssl_profile"),
     vol.Schema(
         {
             **SERVER_SCHEMA_WITHOUT_PORT,
