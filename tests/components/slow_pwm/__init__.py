@@ -1,1 +1,1 @@
-"""Tests for the slow+_pwm component."""
+"""Tests for the slow_pwm component."""

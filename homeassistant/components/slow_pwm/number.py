@@ -307,7 +307,7 @@ class SlowPWMEntity(RestoreNumber):
             action = SERVICE_TURN_ON if switch_on else SERVICE_TURN_OFF
             service_data = {ATTR_ENTITY_ID: output}
             await self._hass.services.async_call(
-                "homeassistant", action, service_data, False
+                "homeassistant", action, service_data, True
             )
 
     async def _async_pwm_start(self):

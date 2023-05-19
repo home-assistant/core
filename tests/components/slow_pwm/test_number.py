@@ -76,8 +76,6 @@ async def test_single_output_boolean(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 100, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "100.0"
     assert hass.states.get(output_switch).state == STATE_ON
@@ -90,8 +88,6 @@ async def test_single_output_boolean(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 49, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # Now set value to 50%. Direct after, output should be on.
@@ -102,8 +98,6 @@ async def test_single_output_boolean(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 50, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "50.0"
     assert hass.states.get(output_switch).state == STATE_ON
@@ -154,8 +148,6 @@ async def test_cycle_in_past(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 50, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "50.0"
     assert hass.states.get(output_switch).state == STATE_ON
@@ -167,8 +159,6 @@ async def test_cycle_in_past(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 0, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     await asyncio.sleep(cycle_time * 1.1)
     # Now set value to 50%. Output should be on.
@@ -178,8 +168,6 @@ async def test_cycle_in_past(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 50, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "50.0"
     assert hass.states.get(output_switch).state == STATE_ON
@@ -234,8 +222,6 @@ async def test_single_switch(
         {ATTR_VALUE: 100, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "100.0"
     assert hass.states.get(output_switch).state == STATE_ON
@@ -274,8 +260,6 @@ async def test_multi_output(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 50, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "50.0"
     assert hass.states.get(output_switches[0]).state == STATE_ON
@@ -288,8 +272,6 @@ async def test_multi_output(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 100, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "100.0"
     assert hass.states.get(output_switches[0]).state == STATE_ON
@@ -331,8 +313,6 @@ async def test_change_during_cycle(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 90, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "90.0"
     assert hass.states.get(output_switch).state == STATE_ON
@@ -345,8 +325,6 @@ async def test_change_during_cycle(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 1, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert hass.states.get(slow_pwm).state == "1.0"
@@ -359,8 +337,6 @@ async def test_change_during_cycle(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 80, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "80.0"
     assert hass.states.get(output_switch).state == STATE_ON
@@ -378,7 +354,7 @@ async def test_minimal_switch_time(hass: HomeAssistant, setup_comp) -> None:
     output_switch = "input_boolean.test"
     slow_pwm = f"{Platform.NUMBER}.test"
     cycle_time = 2.0
-    minimal_switch_time = 0.25
+    minimal_switch_time = 0.2 * cycle_time
     assert await async_setup_component(
         hass, input_boolean.DOMAIN, {"input_boolean": {"test": None}}
     )
@@ -409,8 +385,6 @@ async def test_minimal_switch_time(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 5, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "5.0"
     assert hass.states.get(output_switch).state == STATE_OFF
@@ -422,21 +396,17 @@ async def test_minimal_switch_time(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 40, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "40.0"
     assert hass.states.get(output_switch).state == STATE_ON
 
-    # Set value to 90%, output should stay continuously
+    # Set value to 90%, output should stay on continuously
     assert await hass.services.async_call(
         Platform.NUMBER,
         SERVICE_SET_VALUE,
         {ATTR_VALUE: 90, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
-    # Block twice to enable setting of the output
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert hass.states.get(slow_pwm).state == "90.0"
     await asyncio.sleep(cycle_time * 0.9)
