@@ -697,6 +697,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Water Timer
+    # UNDOCUMENTED
+    "sfkzq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Water Valve (Set Countdown Required)",
+            icon="mdi:water-pump",
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)
