@@ -4,7 +4,7 @@ import asyncio
 
 from ihcsdk.ihccontroller import IHCController
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 
 async def async_pulse(

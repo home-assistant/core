@@ -6,13 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (
-    CONF_ID,
-    CONF_NAME,
-    CONF_TYPE,
-    CONF_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-)
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 

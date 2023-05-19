@@ -5,7 +5,6 @@ from __future__ import annotations
 from ihcsdk.ihccontroller import IHCController
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -13,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from .const import CONF_INVERTING, DOMAIN, IHC_CONTROLLER
 from .ihcdevice import IHCDevice
@@ -65,20 +65,6 @@ class IHCBinarySensor(IHCDevice, BinarySensorEntity):
         super().__init__(ihc_controller, controller_id, name, ihc_id, product)
         self._attr_device_class = try_parse_enum(BinarySensorDeviceClass, sensor_type)
         self.inverting = inverting
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the class of this sensor."""
-        return (
-            BinarySensorDeviceClass(self._sensor_type)
-            if self._sensor_type in DEVICE_CLASSES
-            else None
-        )
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on/open."""
-        return self._state
 
     def on_ihc_change(self, ihc_id, value):
         """IHC resource has changed."""

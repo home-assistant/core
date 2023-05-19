@@ -8,6 +8,7 @@ import yaml
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, IHC_PLATFORMS, MANUAL_SETUP_YAML
 
@@ -74,9 +75,9 @@ def get_controller_serial(controllerconf):
     controller = IHCController(url, username, password)
     try:
         if not IHCController.is_ihc_controller(url):
-            raise Exception("IHC controller not available at specified url")
+            raise HomeAssistantError("IHC controller not available at specified url")
         if not controller.authenticate():
-            raise Exception("unable to authencitate on IHC controller")
+            raise HomeAssistantError("unable to authencitate on IHC controller")
         system_info = controller.client.get_system_info()
         _LOGGER.debug("IHC system info %s", system_info)
         serial = system_info["serial_number"]
