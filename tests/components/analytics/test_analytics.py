@@ -199,7 +199,7 @@ async def test_send_usage(
     """Test send usage preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    hass.http = Mock(ssl_certificate=None)
+    hass.config.api = Mock(use_ssl=False)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
     assert analytics.preferences[ATTR_BASE]
@@ -222,7 +222,7 @@ async def test_send_usage_with_supervisor(
     """Test send usage with supervisor preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    hass.http = Mock(ssl_certificate=None)
+    hass.config.api = Mock(use_ssl=False)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
     assert analytics.preferences[ATTR_BASE]
     assert analytics.preferences[ATTR_USAGE]
@@ -417,7 +417,7 @@ async def test_custom_integrations(
     """Test sending custom integrations."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    hass.http = Mock(ssl_certificate=None)
+    hass.config.api = Mock(use_ssl=False)
     assert await async_setup_component(hass, "test_package", {"test_package": {}})
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
@@ -491,7 +491,7 @@ async def test_send_with_no_energy(
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    hass.http = Mock(ssl_certificate=None)
+    hass.config.api = Mock(use_ssl=False)
 
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
@@ -565,7 +565,8 @@ async def test_send_usage_with_certificate(
     """Test send usage preferences with certificate."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    hass.http = Mock(ssl_certificate="/some/path/to/cert.pem")
+
+    hass.config.api = Mock(use_ssl=True)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
     assert analytics.preferences[ATTR_BASE]
@@ -586,7 +587,7 @@ async def test_send_with_recorder(
     """Test recorder information."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    hass.http = Mock(ssl_certificate="/some/path/to/cert.pem")
+    hass.config.api = Mock(use_ssl=True)
 
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
