@@ -791,5 +791,4 @@ async def test_update_entity_unload_asleep_node(
     assert len(wallmote_central_scene._listeners["wake up"]) == 2
 
     await hass.config_entries.async_unload(integration.entry_id)
-    # await hass.async_block_till_done()
     assert len(wallmote_central_scene._listeners["wake up"]) == 0
