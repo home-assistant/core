@@ -80,7 +80,7 @@ async def webhook_client(
 
 @pytest.fixture
 async def authed_api_client(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, setup_ws: None, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Provide an authenticated client for mobile_app to use."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -88,7 +88,7 @@ async def authed_api_client(
     return await hass_client()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 async def setup_ws(hass: HomeAssistant) -> None:
     """Configure the websocket_api component."""
     assert await async_setup_component(hass, "repairs", {})

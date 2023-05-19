@@ -17,6 +17,7 @@ from tests.components.recorder.common import async_wait_recording_done
 
 async def test_exclude_attributes(
     recorder_mock: Recorder,
+    setup_ws: None,
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
@@ -69,9 +70,13 @@ async def test_exclude_attributes(
             "data": [
                 {
                     "icon": "mdi:battery-unknown",
-                    "state": 123,
+                    "state": 456,
                     "type": "sensor",
                     "unique_id": "battery_state",
+                    "attributes": {
+                        "keep": "me",
+                        "Available": "not me",
+                    },
                 },
             ],
         },
@@ -86,14 +91,16 @@ async def test_exclude_attributes(
 
     state = hass.states.get("sensor.test_1_battery_state")
     assert state
-    assert state.state == "123"
+    assert state.state == "456"
+    assert state.attributes["Available"] == "not me"
+    assert state.attributes["keep"] == "me"
     await async_wait_recording_done(hass)
 
     states = await hass.async_add_executor_job(
         get_significant_states, hass, now, None, hass.states.async_entity_ids()
     )
     assert len(states) >= 1
-    for entity_states in states.values():
-        for state in entity_states:
-            assert "Available" not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
+    state = states["sensor.test_1_battery_state"][-1]
+    assert "Available" not in state.attributes
+    assert "keep" in state.attributes
+    assert ATTR_FRIENDLY_NAME in state.attributes
