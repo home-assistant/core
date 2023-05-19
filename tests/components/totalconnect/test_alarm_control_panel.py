@@ -580,11 +580,17 @@ async def test_other_update_failures(hass: HomeAssistant) -> None:
 
 async def test_bypass_zone(hass: HomeAssistant) -> None:
     """Test bypass_zone service."""
-    responses = [RESPONSE_DISARMED, RESPONSE_SUCCESS, RESPONSE_BYPASS_FAILED]
+    responses = [
+        RESPONSE_DISARMED,
+        RESPONSE_SUCCESS,
+        RESPONSE_BYPASS_FAILED,
+        RESPONSE_USER_CODE_INVALID,
+    ]
     # ZONE_ENTITY = "binary_sensor.security"
     SERVICE_DATA_1 = {ATTR_ENTITY_ID: ENTITY_ID, "zone_id": 1}
     SERVICE_DATA_2 = {ATTR_ENTITY_ID: ENTITY_ID, "zone_id": 2}
     SERVICE_DATA_4 = {ATTR_ENTITY_ID: ENTITY_ID, "zone_id": 4}
+    SERVICE_DATA_88 = {ATTR_ENTITY_ID: ENTITY_ID, "zone_id": 88}
 
     mock_entry = await setup_platform(hass, ALARM_DOMAIN)
     location = hass.data[DOMAIN][mock_entry.entry_id].client.locations[LOCATION_ID]
@@ -633,3 +639,24 @@ async def test_bypass_zone(hass: HomeAssistant) -> None:
             assert f"{err.value}" == "TotalConnect failed to bypass zone 4."
         assert location.zones[4].is_bypassed() is False
         assert mock_request.call_count == 3
+
+        # attempt to bypass zone 4 motion, but usercode is invalid
+        assert location.zones[4].is_bypassed() is False
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN, SERVICE_BYPASS_ZONE, SERVICE_DATA_4, blocking=True
+            )
+            await hass.async_block_till_done()
+            assert (
+                f"{err.value}"
+                == "TotalConnect usercode is invalid. Did not bypass zone."
+            )
+        assert location.zones[4].is_bypassed() is False
+        assert mock_request.call_count == 4
+
+        # attempt to bypass zone 88 motion which does not exist, do nothing
+        await hass.services.async_call(
+            DOMAIN, SERVICE_BYPASS_ZONE, SERVICE_DATA_88, blocking=True
+        )
+        await hass.async_block_till_done()
+        assert mock_request.call_count == 4
