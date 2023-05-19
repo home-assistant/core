@@ -17,7 +17,7 @@
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_devices_found": "No devices were found. Make sure you have at least one Anova device online"
+      "no_devices_found": "No devices were found. Make sure you have at least one Anova device online."
     }
   },
   "entity": {

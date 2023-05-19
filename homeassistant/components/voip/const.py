@@ -11,3 +11,5 @@ RTP_AUDIO_SETTINGS = {
     "channels": CHANNELS,
     "sleep_ratio": 0.99,
 }
+
+CONF_SIP_PORT = "sip_port"

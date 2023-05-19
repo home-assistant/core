@@ -202,11 +202,7 @@ async def test_http_processing_intent_entity_added_removed(
 
     # Add an entity
     entity_registry.async_get_or_create(
-        "light",
-        "demo",
-        "5678",
-        suggested_object_id="late",
-        original_name="friendly light",
+        "light", "demo", "5678", suggested_object_id="late"
     )
     hass.states.async_set("light.late", "off", {"friendly_name": "friendly light"})
 
@@ -274,7 +270,7 @@ async def test_http_processing_intent_entity_added_removed(
     }
 
     # Now delete the entity
-    entity_registry.async_remove("light.late")
+    hass.states.async_remove("light.late")
 
     client = await hass_client()
     resp = await client.post(
@@ -313,11 +309,7 @@ async def test_http_processing_intent_alias_added_removed(
     so that the new alias is available.
     """
     entity_registry.async_get_or_create(
-        "light",
-        "demo",
-        "1234",
-        suggested_object_id="kitchen",
-        original_name="kitchen light",
+        "light", "demo", "1234", suggested_object_id="kitchen"
     )
     hass.states.async_set("light.kitchen", "off", {"friendly_name": "kitchen light"})
 
@@ -438,7 +430,6 @@ async def test_http_processing_intent_entity_renamed(
         LIGHT_DOMAIN,
         {LIGHT_DOMAIN: [{"platform": "test"}]},
     )
-    await hass.async_block_till_done()
 
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
     client = await hass_client()
@@ -882,20 +873,9 @@ async def test_http_processing_intent_conversion_not_expose_new(
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
 async def test_turn_on_intent(
-    hass: HomeAssistant,
-    init_components,
-    entity_registry: er.EntityRegistry,
-    sentence,
-    agent_id,
+    hass: HomeAssistant, init_components, sentence, agent_id
 ) -> None:
     """Test calling the turn on intent."""
-    entity_registry.async_get_or_create(
-        "light",
-        "demo",
-        "1234",
-        suggested_object_id="kitchen",
-        original_name="kitchen",
-    )
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
@@ -913,17 +893,8 @@ async def test_turn_on_intent(
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
-async def test_turn_off_intent(
-    hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry, sentence
-) -> None:
+async def test_turn_off_intent(hass: HomeAssistant, init_components, sentence) -> None:
     """Test calling the turn on intent."""
-    entity_registry.async_get_or_create(
-        "light",
-        "demo",
-        "1234",
-        suggested_object_id="kitchen",
-        original_name="kitchen",
-    )
     hass.states.async_set("light.kitchen", "on")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
 
@@ -969,21 +940,11 @@ async def test_http_api_no_match(
 
 
 async def test_http_api_handle_failure(
-    hass: HomeAssistant,
-    init_components,
-    entity_registry: er.EntityRegistry,
-    hass_client: ClientSessionGenerator,
+    hass: HomeAssistant, init_components, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the HTTP conversation API with an error during handling."""
     client = await hass_client()
 
-    entity_registry.async_get_or_create(
-        "light",
-        "demo",
-        "1234",
-        suggested_object_id="kitchen",
-        original_name="kitchen",
-    )
     hass.states.async_set("light.kitchen", "off")
 
     # Raise an error during intent handling
@@ -1020,19 +981,11 @@ async def test_http_api_handle_failure(
 async def test_http_api_unexpected_failure(
     hass: HomeAssistant,
     init_components,
-    entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the HTTP conversation API with an unexpected error during handling."""
     client = await hass_client()
 
-    entity_registry.async_get_or_create(
-        "light",
-        "demo",
-        "1234",
-        suggested_object_id="kitchen",
-        original_name="kitchen",
-    )
     hass.states.async_set("light.kitchen", "off")
 
     # Raise an "unexpected" error during intent handling
@@ -1162,6 +1115,7 @@ async def test_ws_api(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, payload
 ) -> None:
     """Test the Websocket conversation API."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
     client = await hass_ws_client(hass)
 
@@ -1192,6 +1146,7 @@ async def test_ws_prepare(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, agent_id
 ) -> None:
     """Test the Websocket prepare conversation API."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
     agent = await conversation._get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
@@ -1320,6 +1275,7 @@ async def test_custom_sentences_config(
 async def test_prepare_reload(hass: HomeAssistant) -> None:
     """Test calling the reload service."""
     language = hass.config.language
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
@@ -1340,6 +1296,7 @@ async def test_prepare_reload(hass: HomeAssistant) -> None:
 
 async def test_prepare_fail(hass: HomeAssistant) -> None:
     """Test calling prepare with a non-existent language."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
@@ -1351,17 +1308,8 @@ async def test_prepare_fail(hass: HomeAssistant) -> None:
     assert not agent._lang_intents.get("not-a-language")
 
 
-async def test_language_region(
-    hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry
-) -> None:
+async def test_language_region(hass: HomeAssistant, init_components) -> None:
     """Test calling the turn on intent."""
-    entity_registry.async_get_or_create(
-        "light",
-        "demo",
-        "1234",
-        suggested_object_id="kitchen",
-        original_name="kitchen",
-    )
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
@@ -1387,6 +1335,7 @@ async def test_language_region(
 async def test_reload_on_new_component(hass: HomeAssistant) -> None:
     """Test intents being reloaded when a new component is loaded."""
     language = hass.config.language
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
@@ -1409,17 +1358,8 @@ async def test_reload_on_new_component(hass: HomeAssistant) -> None:
     assert {"light"} == (lang_intents.loaded_components - loaded_components)
 
 
-async def test_non_default_response(
-    hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry
-) -> None:
+async def test_non_default_response(hass: HomeAssistant, init_components) -> None:
     """Test intent response that is not the default."""
-    entity_registry.async_get_or_create(
-        "cover",
-        "demo",
-        "1234",
-        suggested_object_id="front_door",
-        original_name="front door",
-    )
     hass.states.async_set("cover.front_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
