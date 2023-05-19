@@ -25,8 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .config_validation import VALUE_SCHEMA
@@ -145,7 +144,7 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device actions for Z-Wave JS devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     actions: list[dict] = []
 
     node = async_get_node_from_device_id(hass, device_id)
@@ -179,7 +178,7 @@ async def async_get_actions(
 
     meter_endpoints: dict[int, dict[str, Any]] = defaultdict(dict)
 
-    for entry in entity_registry.async_entries_for_device(
+    for entry in er.async_entries_for_device(
         registry, device_id, include_disabled_entities=False
     ):
         # If an entry is unavailable, it is possible that the underlying value

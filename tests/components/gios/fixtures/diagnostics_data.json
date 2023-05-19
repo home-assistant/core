@@ -3,48 +3,48 @@
     "name": "AQI",
     "id": null,
     "index": null,
-    "value": "dobry"
+    "value": "good"
   },
   "c6h6": {
-    "name": "benzen",
+    "name": "benzene",
     "id": 658,
-    "index": "bardzo dobry",
+    "index": "very_good",
     "value": 0.23789
   },
   "co": {
-    "name": "tlenek węgla",
+    "name": "carbon monoxide",
     "id": 660,
-    "index": "dobry",
+    "index": "good",
     "value": 251.874
   },
   "no2": {
-    "name": "dwutlenek azotu",
+    "name": "nitrogen dioxide",
     "id": 665,
-    "index": "dobry",
+    "index": "good",
     "value": 7.13411
   },
   "o3": {
-    "name": "ozon",
+    "name": "ozone",
     "id": 667,
-    "index": "dobry",
+    "index": "good",
     "value": 95.7768
   },
   "pm10": {
-    "name": "py\u0142 zawieszony PM10",
+    "name": "particulate matter 10",
     "id": 14395,
-    "index": "dobry",
+    "index": "good",
     "value": 16.8344
   },
   "pm25": {
-    "name": "py\u0142 zawieszony PM2.5",
+    "name": "particulate matter 2.5",
     "id": 670,
-    "index": "dobry",
+    "index": "good",
     "value": 4
   },
   "so2": {
-    "name": "dwutlenek siarki",
+    "name": "sulfur dioxide",
     "id": 672,
-    "index": "bardzo dobry",
+    "index": "very_good",
     "value": 4.35478
   }
 }

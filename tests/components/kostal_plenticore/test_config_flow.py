@@ -47,6 +47,7 @@ async def test_formx(hass: HomeAssistant) -> None:
                 "password": "test-password",
             },
         )
+        await hass.async_block_till_done()
 
         mock_api_class.assert_called_once_with(ANY, "1.1.1.1")
         mock_api.__aenter__.assert_called_once()
@@ -60,7 +61,6 @@ async def test_formx(hass: HomeAssistant) -> None:
         "host": "1.1.1.1",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 

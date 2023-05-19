@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -323,7 +323,7 @@ async def test_switch_command_state_code_exceptions(
     """Test that switch state code exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -356,7 +356,7 @@ async def test_switch_command_state_value_exceptions(
     """Test that switch state value exceptions are handled correctly."""
 
     with patch(
-        "homeassistant.components.command_line.subprocess.check_output",
+        "homeassistant.components.command_line.utils.subprocess.check_output",
         side_effect=[
             subprocess.TimeoutExpired("cmd", 10),
             subprocess.SubprocessError(),
@@ -393,7 +393,9 @@ async def test_no_switches(
     assert "No switches" in caplog.text
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id option and if it only creates one switch per id."""
     await setup_test_entity(
         hass,
@@ -418,13 +420,10 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 2
 
-    ent_reg = entity_registry.async_get(hass)
-
-    assert len(ent_reg.entities) == 2
-    assert ent_reg.async_get_entity_id("switch", "command_line", "unique") is not None
-    assert (
-        ent_reg.async_get_entity_id("switch", "command_line", "not-so-unique-anymore")
-        is not None
+    assert len(entity_registry.entities) == 2
+    assert entity_registry.async_get_entity_id("switch", "command_line", "unique")
+    assert entity_registry.async_get_entity_id(
+        "switch", "command_line", "not-so-unique-anymore"
     )
 
 
@@ -441,3 +440,57 @@ async def test_command_failure(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}, blocking=True
     )
     assert "return code 33" in caplog.text
+
+
+async def test_templating(hass: HomeAssistant) -> None:
+    """Test with templating."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "switch_status")
+        await setup_test_entity(
+            hass,
+            {
+                "test": {
+                    "command_state": f"cat {path}",
+                    "command_on": f"echo 1 > {path}",
+                    "command_off": f"echo 0 > {path}",
+                    "value_template": '{{ value=="1" }}',
+                    "icon_template": (
+                        '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                    ),
+                },
+                "test2": {
+                    "command_state": f"cat {path}",
+                    "command_on": f"echo 1 > {path}",
+                    "command_off": f"echo 0 > {path}",
+                    "value_template": '{{ value=="1" }}',
+                    "icon_template": (
+                        '{% if states("switch.test2")=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                    ),
+                },
+            },
+        )
+
+        entity_state = hass.states.get("switch.test")
+        entity_state2 = hass.states.get("switch.test2")
+        assert entity_state.state == STATE_OFF
+        assert entity_state2.state == STATE_OFF
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test"},
+            blocking=True,
+        )
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test2"},
+            blocking=True,
+        )
+
+        entity_state = hass.states.get("switch.test")
+        entity_state2 = hass.states.get("switch.test2")
+        assert entity_state.state == STATE_ON
+        assert entity_state.attributes.get("icon") == "mdi:on"
+        assert entity_state2.state == STATE_ON
+        assert entity_state2.attributes.get("icon") == "mdi:on"

@@ -1,4 +1,4 @@
-"""This platform allows several locks to be grouped into one lock."""
+"""Platform allowing several locks to be grouped into one lock."""
 from __future__ import annotations
 
 import logging

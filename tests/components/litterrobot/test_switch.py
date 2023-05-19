@@ -11,7 +11,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
 
@@ -19,7 +19,9 @@ NIGHT_LIGHT_MODE_ENTITY_ID = "switch.test_night_light_mode"
 PANEL_LOCKOUT_ENTITY_ID = "switch.test_panel_lockout"
 
 
-async def test_switch(hass: HomeAssistant, mock_account: MagicMock) -> None:
+async def test_switch(
+    hass: HomeAssistant, mock_account: MagicMock, entity_registry: er.EntityRegistry
+) -> None:
     """Tests the switch entity was set up."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
@@ -27,8 +29,7 @@ async def test_switch(hass: HomeAssistant, mock_account: MagicMock) -> None:
     assert state
     assert state.state == STATE_ON
 
-    ent_reg = entity_registry.async_get(hass)
-    entity_entry = ent_reg.async_get(NIGHT_LIGHT_MODE_ENTITY_ID)
+    entity_entry = entity_registry.async_get(NIGHT_LIGHT_MODE_ENTITY_ID)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.CONFIG
 

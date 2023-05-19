@@ -39,7 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
+    device_registry as dr,
     entity_platform,
 )
 from homeassistant.helpers.entity import DeviceInfo
@@ -407,7 +407,7 @@ class KodiEntity(MediaPlayerEntity):
 
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
-        dev_reg = device_registry.async_get(self.hass)
+        dev_reg = dr.async_get(self.hass)
         device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
 
@@ -884,7 +884,9 @@ class KodiEntity(MediaPlayerEntity):
         return sorted(out, key=lambda out: out[1], reverse=True)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         is_internal = is_internal_request(self.hass)
@@ -926,7 +928,7 @@ class KodiEntity(MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:

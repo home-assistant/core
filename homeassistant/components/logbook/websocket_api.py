@@ -20,13 +20,13 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import JSON_DUMP
 import homeassistant.util.dt as dt_util
 
-from .const import LOGBOOK_ENTITIES_FILTER
+from .const import DOMAIN
 from .helpers import (
     async_determine_event_types,
     async_filter_entities,
     async_subscribe_events,
 )
-from .models import async_event_to_row
+from .models import LogbookConfig, async_event_to_row
 from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
@@ -39,7 +39,7 @@ BIG_QUERY_RECENT_HOURS = 24
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class LogbookLiveStream:
     """Track a logbook live stream."""
 
@@ -221,8 +221,6 @@ async def _async_events_consumer(
     event_processor: EventProcessor,
 ) -> None:
     """Stream events from the queue."""
-    event_processor.switch_to_live()
-
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
@@ -361,7 +359,8 @@ async def ws_event_stream(
 
     entities_filter: EntityFilter | None = None
     if not event_processor.limited_select:
-        entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
+        logbook_config: LogbookConfig = hass.data[DOMAIN]
+        entities_filter = logbook_config.entity_filter
 
     async_subscribe_events(
         hass,
@@ -429,6 +428,7 @@ async def ws_event_stream(
         event_processor,
         partial=False,
     )
+    event_processor.switch_to_live()
 
 
 def _ws_formatted_get_events(

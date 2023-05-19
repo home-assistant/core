@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import dataclasses
+from enum import IntFlag
 from pathlib import Path
 from typing import Any
 
@@ -110,6 +111,10 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_config_entry(data)
         elif dataclasses.is_dataclass(data):
             serializable_data = dataclasses.asdict(data)
+        elif isinstance(data, IntFlag):
+            # The repr of an enum.IntFlag has changed between Python 3.10 and 3.11
+            # so we normalize it here.
+            serializable_data = _IntFlagWrapper(data)
         else:
             serializable_data = data
             with suppress(TypeError):
@@ -165,9 +170,11 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
                 "config_entry_id": ANY,
                 "device_id": ANY,
                 "id": ANY,
+                "options": data.options.as_dict(),
             }
         )
-        serialized.pop("_json_repr")
+        serialized.pop("_partial_repr")
+        serialized.pop("_display_repr")
         return serialized
 
     @classmethod
@@ -193,6 +200,17 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
                 "last_updated": ANY,
             }
         )
+
+
+class _IntFlagWrapper:
+    def __init__(self, flag: IntFlag) -> None:
+        self._flag = flag
+
+    def __repr__(self) -> str:
+        # 3.10: <ClimateEntityFeature.SWING_MODE|PRESET_MODE|FAN_MODE|TARGET_TEMPERATURE: 57>
+        # 3.11: <ClimateEntityFeature.TARGET_TEMPERATURE|FAN_MODE|PRESET_MODE|SWING_MODE: 57>
+        # Syrupy: <ClimateEntityFeature: 57>
+        return f"<{self._flag.__class__.__name__}: {self._flag.value}>"
 
 
 class HomeAssistantSnapshotExtension(AmberSnapshotExtension):

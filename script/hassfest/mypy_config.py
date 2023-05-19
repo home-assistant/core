@@ -12,12 +12,6 @@ from homeassistant.const import REQUIRED_PYTHON_VER
 
 from .model import Config, Integration
 
-# Modules which have type hints which known to be broken.
-# If you are an author of component listed here, please fix these errors and
-# remove your component from this list to enable type checks.
-# Do your best to not add anything new here.
-IGNORED_MODULES: Final[list[str]] = []
-
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
     "homeassistant.components",
@@ -98,19 +92,6 @@ PLUGIN_CONFIG: Final[dict[str, dict[str, str]]] = {
 }
 
 
-def _strict_module_in_ignore_list(
-    module: str, ignored_modules_set: set[str]
-) -> str | None:
-    if module in ignored_modules_set:
-        return module
-    if module.endswith("*"):
-        module = module[:-1]
-        for ignored_module in ignored_modules_set:
-            if ignored_module.startswith(module):
-                return ignored_module
-    return None
-
-
 def _sort_within_sections(line_iter: Iterable[str]) -> Iterable[str]:
     """Sort lines within sections.
 
@@ -145,7 +126,7 @@ def _generate_and_validate_strict_typing(config: Config) -> str:
     return "\n".join(_sort_within_sections(lines)) + "\n"
 
 
-def _generate_and_validate_mypy_config(config: Config) -> str:  # noqa: C901
+def _generate_and_validate_mypy_config(config: Config) -> str:
     """Validate and generate mypy config."""
 
     # Filter empty and commented lines.
@@ -163,27 +144,9 @@ def _generate_and_validate_mypy_config(config: Config) -> str:  # noqa: C901
         else:
             strict_core_modules.append(module)
 
-    ignored_modules_set: set[str] = set(IGNORED_MODULES)
-    for module in strict_modules:
-        if (
-            not module.startswith("homeassistant.components.")
-            and module != "homeassistant.components"
-        ):
-            config.add_error(
-                "mypy_config", f"Only components should be added: {module}"
-            )
-        if ignored_module := _strict_module_in_ignore_list(module, ignored_modules_set):
-            config.add_error(
-                "mypy_config",
-                f"Module '{ignored_module}' is in ignored list in mypy_config.py",
-            )
-
     # Validate that all modules exist.
     all_modules = (
-        strict_modules
-        + strict_core_modules
-        + IGNORED_MODULES
-        + list(NO_IMPLICIT_REEXPORT_MODULES)
+        strict_modules + strict_core_modules + list(NO_IMPLICIT_REEXPORT_MODULES)
     )
     for module in all_modules:
         if module.endswith(".*"):
@@ -258,11 +221,6 @@ def _generate_and_validate_mypy_config(config: Config) -> str:  # noqa: C901
     mypy_config.add_section(tests_section)
     for key in STRICT_SETTINGS:
         mypy_config.set(tests_section, key, "false")
-
-    for ignored_module in IGNORED_MODULES:
-        ignored_section = f"mypy-{ignored_module}"
-        mypy_config.add_section(ignored_section)
-        mypy_config.set(ignored_section, "ignore_errors", "true")
 
     with io.StringIO() as fp:
         mypy_config.write(fp)

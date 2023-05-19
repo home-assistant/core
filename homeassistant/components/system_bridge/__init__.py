@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DEVICE_CLASS_NAME, DeviceClassName, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODULES
@@ -53,7 +53,10 @@ SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
     """Set up System Bridge from a config entry."""
 
     # Check version before initialising
@@ -64,11 +67,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass),
     )
     try:
-        if not await version.check_supported():
-            raise ConfigEntryNotReady(
-                "You are not running a supported version of System Bridge. Please"
-                f" update to {SUPPORTED_VERSION} or higher."
-            )
+        async with async_timeout.timeout(10):
+            if not await version.check_supported():
+                raise ConfigEntryNotReady(
+                    "You are not running a supported version of System Bridge. Please"
+                    f" update to {SUPPORTED_VERSION} or higher."
+                )
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed from exception
@@ -87,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry=entry,
     )
     try:
-        async with async_timeout.timeout(30):
+        async with async_timeout.timeout(10):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
@@ -105,8 +109,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         # Wait for initial data
-        async with async_timeout.timeout(30):
-            while not coordinator.is_ready():
+        async with async_timeout.timeout(10):
+            while not coordinator.is_ready:
                 _LOGGER.debug(
                     "Waiting for initial data from %s (%s)",
                     entry.title,
@@ -275,13 +279,17 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         coordinator: SystemBridgeDataUpdateCoordinator,
         api_port: int,
         key: str,
-        name: str | None,
+        name: str | DeviceClassName | None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
 
         self._hostname = coordinator.data.system.hostname
         self._key = f"{self._hostname}_{key}"
+        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
+        # the assert satisfies the type checker and will catch attempts
+        # to use DEVICE_CLASS_NAME as name.
+        assert name is not DEVICE_CLASS_NAME
         self._name = f"{self._hostname} {name}"
         self._configuration_url = (
             f"http://{self._hostname}:{api_port}/app/settings.html"

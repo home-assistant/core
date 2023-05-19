@@ -17,6 +17,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -120,6 +121,13 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         entry.data["tokens"]["AuthenticationResult"]["AccessToken"],
         entry.data["device_data"][1],
     )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return True
 
 
 def refresh_system(

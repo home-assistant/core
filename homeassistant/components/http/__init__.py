@@ -1,6 +1,7 @@
 """Support to serve the Home Assistant API as WSGI application."""
 from __future__ import annotations
 
+import asyncio
 import datetime
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
@@ -10,8 +11,13 @@ from tempfile import NamedTemporaryFile
 from typing import Any, Final, TypedDict, cast
 
 from aiohttp import web
-from aiohttp.typedefs import StrOrURL
+from aiohttp.abc import AbstractStreamWriter
+from aiohttp.http_parser import RawRequestMessage
+from aiohttp.streams import StreamReader
+from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
+from aiohttp.web_log import AccessLogger
+from aiohttp.web_protocol import RequestHandler
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -30,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
 from homeassistant.util import ssl as ssl_util
+from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
@@ -220,6 +227,59 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class HomeAssistantAccessLogger(AccessLogger):
+    """Access logger for Home Assistant that does not log when disabled."""
+
+    def log(
+        self, request: web.BaseRequest, response: web.StreamResponse, time: float
+    ) -> None:
+        """Log the request.
+
+        The default implementation logs the request to the logger
+        with the INFO level and than throws it away if the logger
+        is not enabled for the INFO level. This implementation
+        does not log the request if the logger is not enabled for
+        the INFO level.
+        """
+        if not self.logger.isEnabledFor(logging.INFO):
+            return
+        super().log(request, response, time)
+
+
+class HomeAssistantRequest(web.Request):
+    """Home Assistant request object."""
+
+    async def json(self, *, loads: JSONDecoder = json_loads) -> Any:
+        """Return body as JSON."""
+        # json_loads is a wrapper around orjson.loads that handles
+        # bytes and str. We can pass the bytes directly to json_loads.
+        return json_loads(await self.read())
+
+
+class HomeAssistantApplication(web.Application):
+    """Home Assistant application."""
+
+    def _make_request(
+        self,
+        message: RawRequestMessage,
+        payload: StreamReader,
+        protocol: RequestHandler,
+        writer: AbstractStreamWriter,
+        task: asyncio.Task[None],
+        _cls: type[web.Request] = HomeAssistantRequest,
+    ) -> web.Request:
+        """Create request instance."""
+        return _cls(
+            message,
+            payload,
+            protocol,
+            writer,
+            task,
+            loop=self._loop,
+            client_max_size=self._client_max_size,
+        )
+
+
 class HomeAssistantHTTP:
     """HTTP server for Home Assistant."""
 
@@ -235,7 +295,7 @@ class HomeAssistantHTTP:
         ssl_profile: str,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
-        self.app = web.Application(
+        self.app = HomeAssistantApplication(
             middlewares=[],
             client_max_size=MAX_CLIENT_SIZE,
             handler_args={
@@ -460,9 +520,11 @@ class HomeAssistantHTTP:
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
         # pylint: disable-next=protected-access
-        self.app._router.freeze = lambda: None  # type: ignore[assignment]
+        self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
-        self.runner = web.AppRunner(self.app)
+        self.runner = web.AppRunner(
+            self.app, access_log_class=HomeAssistantAccessLogger
+        )
         await self.runner.setup()
 
         self.site = HomeAssistantTCPSite(

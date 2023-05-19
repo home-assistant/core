@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import (
-    area_registry,
+    area_registry as ar,
     config_validation as cv,
     integration_platform,
     intent,
@@ -109,9 +109,9 @@ class GetStateIntentHandler(intent.IntentHandler):
 
         # Look up area first to fail early
         area_name = slots.get("area", {}).get("value")
-        area: area_registry.AreaEntry | None = None
+        area: ar.AreaEntry | None = None
         if area_name is not None:
-            areas = area_registry.async_get(hass)
+            areas = ar.async_get(hass)
             area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
                 area_name
             )
@@ -140,16 +140,18 @@ class GetStateIntentHandler(intent.IntentHandler):
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
+                assistant=intent_obj.assistant,
             )
         )
 
         _LOGGER.debug(
-            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s",
+            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
             len(states),
             name,
             area,
             domains,
             device_classes,
+            intent_obj.assistant,
         )
 
         # Create response

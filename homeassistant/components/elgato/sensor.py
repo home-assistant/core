@@ -45,7 +45,7 @@ class ElgatoSensorEntityDescription(
 SENSORS = [
     ElgatoSensorEntityDescription(
         key="battery",
-        name="Battery",
+        translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
@@ -56,7 +56,7 @@ SENSORS = [
     ),
     ElgatoSensorEntityDescription(
         key="voltage",
-        name="Battery voltage",
+        translation_key="voltage",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -69,7 +69,7 @@ SENSORS = [
     ),
     ElgatoSensorEntityDescription(
         key="input_charge_current",
-        name="Charging current",
+        translation_key="input_charge_current",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -82,7 +82,7 @@ SENSORS = [
     ),
     ElgatoSensorEntityDescription(
         key="charge_power",
-        name="Charging power",
+        translation_key="charge_power",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -94,7 +94,7 @@ SENSORS = [
     ),
     ElgatoSensorEntityDescription(
         key="input_charge_voltage",
-        name="Charging voltage",
+        translation_key="input_charge_voltage",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,

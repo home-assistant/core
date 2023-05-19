@@ -9,6 +9,7 @@ import gc
 import logging
 import os
 from tempfile import TemporaryDirectory
+import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
@@ -32,7 +33,7 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HassJob, HomeAssistant, State
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
     InvalidStateError,
@@ -64,7 +65,7 @@ def test_split_entity_id() -> None:
 
 
 def test_async_add_hass_job_schedule_callback() -> None:
-    """Test that we schedule coroutines and add jobs to the job pool."""
+    """Test that we schedule callbacks and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
 
@@ -72,6 +73,19 @@ def test_async_add_hass_job_schedule_callback() -> None:
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
+
+
+def test_async_add_hass_job_coro_named(hass: HomeAssistant) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool with a name."""
+
+    async def mycoro():
+        pass
+
+    job = ha.HassJob(mycoro, "named coro")
+    assert "named coro" in str(job)
+    assert job.name == "named coro"
+    task = ha.HomeAssistant.async_add_hass_job(hass, job)
+    assert "named coro" in str(task)
 
 
 def test_async_add_hass_job_schedule_partial_callback() -> None:
@@ -86,7 +100,7 @@ def test_async_add_hass_job_schedule_partial_callback() -> None:
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_hass_job_schedule_coroutinefunction(event_loop):
+def test_async_add_hass_job_schedule_coroutinefunction(event_loop) -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
@@ -99,7 +113,7 @@ def test_async_add_hass_job_schedule_coroutinefunction(event_loop):
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_hass_job_schedule_partial_coroutinefunction(event_loop):
+def test_async_add_hass_job_schedule_partial_coroutinefunction(event_loop) -> None:
     """Test that we schedule partial coros and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
@@ -127,7 +141,7 @@ def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
     assert len(hass.loop.run_in_executor.mock_calls) == 2
 
 
-def test_async_create_task_schedule_coroutine(event_loop):
+def test_async_create_task_schedule_coroutine(event_loop) -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
@@ -138,6 +152,20 @@ def test_async_create_task_schedule_coroutine(event_loop):
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
+
+
+def test_async_create_task_schedule_coroutine_with_name(event_loop) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool with a name."""
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
+
+    async def job():
+        pass
+
+    task = ha.HomeAssistant.async_create_task(hass, job(), "named task")
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+    assert "named task" in str(task)
 
 
 def test_async_run_hass_job_calls_callback() -> None:
@@ -181,7 +209,7 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
     assert len(test_all) == 2
 
 
-async def test_stage_shutdown_with_exit_code(hass):
+async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff with exit code checks."""
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
     test_final_write = async_capture_events(hass, EVENT_HOMEASSISTANT_FINAL_WRITE)
@@ -222,8 +250,8 @@ async def test_stage_shutdown_with_exit_code(hass):
 
 
 async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
     stop_calls = []
 
@@ -438,6 +466,29 @@ def test_state_as_dict() -> None:
     assert state.as_dict() is as_dict_1
 
 
+def test_state_as_dict_json() -> None:
+    """Test a State as JSON."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+        context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
+    )
+    expected = (
+        '{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
+        '"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
+        '"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
+    )
+    as_dict_json_1 = state.as_dict_json()
+    assert as_dict_json_1 == expected
+    # 2nd time to verify cache
+    assert state.as_dict_json() == expected
+    assert state.as_dict_json() is as_dict_json_1
+
+
 def test_state_as_compressed_state() -> None:
     """Test a State as compressed state."""
     last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -460,7 +511,6 @@ def test_state_as_compressed_state() -> None:
     assert as_compressed_state == expected
     # 2nd time to verify cache
     assert state.as_compressed_state() == expected
-    assert state.as_compressed_state() is as_compressed_state
 
 
 def test_state_as_compressed_state_unique_last_updated() -> None:
@@ -487,7 +537,27 @@ def test_state_as_compressed_state_unique_last_updated() -> None:
     assert as_compressed_state == expected
     # 2nd time to verify cache
     assert state.as_compressed_state() == expected
-    assert state.as_compressed_state() is as_compressed_state
+
+
+def test_state_as_compressed_state_json() -> None:
+    """Test a State as a JSON compressed state."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+        context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
+    )
+    expected = '"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    as_compressed_state = state.as_compressed_state_json()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state_json() == expected
+    assert state.as_compressed_state_json() is as_compressed_state
 
 
 async def test_eventbus_add_remove_listener(hass: HomeAssistant) -> None:
@@ -1179,7 +1249,9 @@ async def test_bad_timezone_raises_value_error(hass: HomeAssistant) -> None:
         await hass.config.async_update(time_zone="not_a_timezone")
 
 
-async def test_start_taking_too_long(event_loop, caplog):
+async def test_start_taking_too_long(
+    event_loop, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant()
     caplog.set_level(logging.WARNING)
@@ -1288,7 +1360,7 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("cancel_call", [True, False])
-async def test_cancel_service_task(hass, cancel_call):
+async def test_cancel_service_task(hass: HomeAssistant, cancel_call) -> None:
     """Test cancellation."""
     service_called = asyncio.Event()
     service_cancelled = False
@@ -1354,7 +1426,35 @@ def test_valid_entity_id() -> None:
         assert ha.valid_entity_id(valid), valid
 
 
-async def test_additional_data_in_core_config(hass, hass_storage):
+def test_valid_domain() -> None:
+    """Test valid domain."""
+    for invalid in [
+        "_light",
+        ".kitchen",
+        ".light.kitchen",
+        "light_.kitchen",
+        "._kitchen",
+        "light.",
+        "light.kitchen__ceiling",
+        "light.kitchen_yo_",
+        "light.kitchen.",
+        "Light",
+    ]:
+        assert not ha.valid_domain(invalid), invalid
+
+    for valid in [
+        "1",
+        "1light",
+        "a",
+        "input_boolean",
+        "light",
+    ]:
+        assert ha.valid_domain(valid), valid
+
+
+async def test_additional_data_in_core_config(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test that we can handle additional data in core configuration."""
     config = ha.Config(hass)
     hass_storage[ha.CORE_STORAGE_KEY] = {
@@ -1365,7 +1465,9 @@ async def test_additional_data_in_core_config(hass, hass_storage):
     assert config.location_name == "Test Name"
 
 
-async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
+async def test_incorrect_internal_external_url(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that we warn when detecting invalid internal/external url."""
     config = ha.Config(hass)
 
@@ -1426,7 +1528,9 @@ async def test_start_events(hass: HomeAssistant) -> None:
     assert core_states == [ha.CoreState.starting, ha.CoreState.running]
 
 
-async def test_log_blocking_events(hass, caplog):
+async def test_log_blocking_events(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Ensure we log which task is blocking startup when debug logging is on."""
     caplog.set_level(logging.DEBUG)
 
@@ -1447,7 +1551,9 @@ async def test_log_blocking_events(hass, caplog):
     assert "_wait_a_bit_1" not in caplog.text
 
 
-async def test_chained_logging_hits_log_timeout(hass, caplog):
+async def test_chained_logging_hits_log_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Ensure we log which task is blocking startup when there is a task chain and debug logging is on."""
     caplog.set_level(logging.DEBUG)
 
@@ -1474,7 +1580,9 @@ async def test_chained_logging_hits_log_timeout(hass, caplog):
     assert "_task_chain_" in caplog.text
 
 
-async def test_chained_logging_misses_log_timeout(hass, caplog):
+async def test_chained_logging_misses_log_timeout(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Ensure we do not log which task is blocking startup if we do not hit the timeout."""
     caplog.set_level(logging.DEBUG)
 
@@ -1975,7 +2083,7 @@ async def test_state_changed_events_to_not_leak_contexts(hass: HomeAssistant) ->
     assert len(_get_by_type("homeassistant.core.Context")) == init_count
 
 
-async def test_background_task(hass):
+async def test_background_task(hass: HomeAssistant) -> None:
     """Test background tasks being quit."""
     result = asyncio.Future()
 
@@ -1991,3 +2099,76 @@ async def test_background_task(hass):
     await asyncio.sleep(0)
     await hass.async_stop()
     assert result.result() == ha.CoreState.stopping
+
+
+async def test_shutdown_does_not_block_on_normal_tasks(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure shutdown does not block on normal tasks."""
+    result = asyncio.Future()
+    unshielded_task = asyncio.sleep(10)
+
+    async def test_task():
+        try:
+            await unshielded_task
+        except asyncio.CancelledError:
+            result.set_result(hass.state)
+
+    start = time.monotonic()
+    task = hass.async_create_task(test_task())
+    await asyncio.sleep(0)
+    await hass.async_stop()
+    await asyncio.sleep(0)
+    assert result.done()
+    assert task.done()
+    assert time.monotonic() - start < 0.5
+
+
+async def test_shutdown_does_not_block_on_shielded_tasks(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure shutdown does not block on shielded tasks."""
+    result = asyncio.Future()
+    sleep_task = asyncio.ensure_future(asyncio.sleep(10))
+    shielded_task = asyncio.shield(sleep_task)
+
+    async def test_task():
+        try:
+            await shielded_task
+        except asyncio.CancelledError:
+            result.set_result(hass.state)
+
+    start = time.monotonic()
+    task = hass.async_create_task(test_task())
+    await asyncio.sleep(0)
+    await hass.async_stop()
+    await asyncio.sleep(0)
+    assert result.done()
+    assert task.done()
+    assert time.monotonic() - start < 0.5
+
+    # Cleanup lingering task after test is done
+    sleep_task.cancel()
+
+
+async def test_cancellable_hassjob(hass: HomeAssistant) -> None:
+    """Simulate a shutdown, ensure cancellable jobs are cancelled."""
+    job = MagicMock()
+
+    @ha.callback
+    def run_job(job: HassJob) -> None:
+        """Call the action."""
+        hass.async_run_hass_job(job)
+
+    timer1 = hass.loop.call_later(
+        60, run_job, HassJob(ha.callback(job), cancel_on_shutdown=True)
+    )
+    timer2 = hass.loop.call_later(60, run_job, HassJob(ha.callback(job)))
+
+    await hass.async_stop()
+
+    assert timer1.cancelled()
+    assert not timer2.cancelled()
+
+    # Cleanup
+    timer2.cancel()

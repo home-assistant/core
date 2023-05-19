@@ -8,10 +8,10 @@ from nibe.connection.nibegw import NibeGW
 from nibe.exceptions import (
     AddressInUseException,
     CoilNotFoundException,
-    CoilReadException,
-    CoilReadSendException,
-    CoilWriteException,
     CoilWriteSendException,
+    ReadException,
+    ReadSendException,
+    WriteException,
 )
 from nibe.heatpump import HeatPump, Model
 import voluptuous as vol
@@ -89,6 +89,7 @@ async def validate_nibegw_input(
     """Validate the user input allows us to connect."""
 
     heatpump = HeatPump(Model[data[CONF_MODEL]])
+    heatpump.word_swap = True
     await heatpump.initialize()
 
     connection = NibeGW(
@@ -108,13 +109,13 @@ async def validate_nibegw_input(
 
     try:
         await connection.verify_connectivity()
-    except (CoilReadSendException, CoilWriteSendException) as exception:
+    except (ReadSendException, CoilWriteSendException) as exception:
         raise FieldError(str(exception), CONF_IP_ADDRESS, "address") from exception
     except CoilNotFoundException as exception:
         raise FieldError("Coils not found", "base", "model") from exception
-    except CoilReadException as exception:
+    except ReadException as exception:
         raise FieldError("Timeout on read from pump", "base", "read") from exception
-    except CoilWriteException as exception:
+    except WriteException as exception:
         raise FieldError("Timeout on writing to pump", "base", "write") from exception
     finally:
         await connection.stop()
@@ -147,13 +148,13 @@ async def validate_modbus_input(
 
     try:
         await connection.verify_connectivity()
-    except (CoilReadSendException, CoilWriteSendException) as exception:
+    except (ReadSendException, CoilWriteSendException) as exception:
         raise FieldError(str(exception), CONF_MODBUS_URL, "address") from exception
     except CoilNotFoundException as exception:
         raise FieldError("Coils not found", "base", "model") from exception
-    except CoilReadException as exception:
+    except ReadException as exception:
         raise FieldError("Timeout on read from pump", "base", "read") from exception
-    except CoilWriteException as exception:
+    except WriteException as exception:
         raise FieldError("Timeout on writing to pump", "base", "write") from exception
     finally:
         await connection.stop()

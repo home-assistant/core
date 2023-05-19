@@ -8,7 +8,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,7 +44,7 @@ async def async_setup_entry(
     ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
 
     # Restore previously loaded devices
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
         for device in dev_reg.devices.values()

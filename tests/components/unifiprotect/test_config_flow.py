@@ -71,7 +71,10 @@ async def test_form(hass: HomeAssistant, nvr: NVR) -> None:
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.unifiprotect.async_setup",
+        return_value=True,
+    ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -93,6 +96,7 @@ async def test_form(hass: HomeAssistant, nvr: NVR) -> None:
         "verify_ssl": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_form_version_too_old(hass: HomeAssistant, old_nvr: NVR) -> None:
@@ -214,7 +218,10 @@ async def test_form_reauth_auth(hass: HomeAssistant, nvr: NVR) -> None:
     with patch(
         "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr",
         return_value=nvr,
-    ):
+    ), patch(
+        "homeassistant.components.unifiprotect.async_setup",
+        return_value=True,
+    ) as mock_setup:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -225,6 +232,7 @@ async def test_form_reauth_auth(hass: HomeAssistant, nvr: NVR) -> None:
 
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -> None:
@@ -332,7 +340,10 @@ async def test_discovered_by_unifi_discovery_direct_connect(
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.unifiprotect.async_setup",
+        return_value=True,
+    ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -353,6 +364,7 @@ async def test_discovered_by_unifi_discovery_direct_connect(
         "verify_ssl": True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_updated(
@@ -515,7 +527,10 @@ async def test_discovered_by_unifi_discovery(hass: HomeAssistant, nvr: NVR) -> N
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.unifiprotect.async_setup",
+        return_value=True,
+    ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -536,6 +551,7 @@ async def test_discovered_by_unifi_discovery(hass: HomeAssistant, nvr: NVR) -> N
         "verify_ssl": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_discovered_by_unifi_discovery_partial(
@@ -567,7 +583,10 @@ async def test_discovered_by_unifi_discovery_partial(
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.unifiprotect.async_setup",
+        return_value=True,
+    ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -588,6 +607,7 @@ async def test_discovered_by_unifi_discovery_partial(
         "verify_ssl": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface(
@@ -736,7 +756,10 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     ), patch(
         "homeassistant.components.unifiprotect.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.unifiprotect.async_setup",
+        return_value=True,
+    ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -757,6 +780,7 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         "verify_ssl": True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_resolver_no_result(

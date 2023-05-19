@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Coroutine
+from contextlib import suppress
 from typing import Any
 
 from async_timeout import timeout
@@ -32,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.issue_registry import (
@@ -161,8 +162,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
     LOGGER.info("Connected to Zwave JS Server")
 
-    dev_reg = device_registry.async_get(hass)
-    ent_reg = entity_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
     services = ZWaveServices(hass, ent_reg, dev_reg)
     services.async_register()
 
@@ -220,7 +221,7 @@ class DriverEvents:
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Set up the driver events instance."""
         self.config_entry = entry
-        self.dev_reg = device_registry.async_get(hass)
+        self.dev_reg = dr.async_get(hass)
         self.hass = hass
         self.platform_setup_tasks: dict[str, asyncio.Task] = {}
         self.ready = asyncio.Event()
@@ -240,7 +241,7 @@ class DriverEvents:
             await driver.async_disable_statistics()
 
         # Check for nodes that no longer exist and remove them
-        stored_devices = device_registry.async_entries_for_config_entry(
+        stored_devices = dr.async_entries_for_config_entry(
             self.dev_reg, self.config_entry.entry_id
         )
         known_devices = [
@@ -311,7 +312,7 @@ class ControllerEvents:
         self.node_events = NodeEvents(hass, self)
 
     @callback
-    def remove_device(self, device: device_registry.DeviceEntry) -> None:
+    def remove_device(self, device: dr.DeviceEntry) -> None:
         """Remove device from registry."""
         # note: removal of entity registry entry is handled by core
         self.dev_reg.async_remove_device(device.id)
@@ -385,7 +386,7 @@ class ControllerEvents:
             self.remove_device(device)
 
     @callback
-    def register_node_in_dev_reg(self, node: ZwaveNode) -> device_registry.DeviceEntry:
+    def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
         """Register node in dev reg."""
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
@@ -448,7 +449,7 @@ class NodeEvents:
         self.config_entry = controller_events.config_entry
         self.controller_events = controller_events
         self.dev_reg = controller_events.dev_reg
-        self.ent_reg = entity_registry.async_get(hass)
+        self.ent_reg = er.async_get(hass)
         self.hass = hass
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
@@ -532,7 +533,7 @@ class NodeEvents:
 
     async def async_handle_discovery_info(
         self,
-        device: device_registry.DeviceEntry,
+        device: dr.DeviceEntry,
         disc_info: ZwaveDiscoveryInfo,
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
     ) -> None:
@@ -792,7 +793,11 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     for task in platform_setup_tasks:
         task.cancel()
 
-    await asyncio.gather(listen_task, start_client_task, *platform_setup_tasks)
+    tasks = (listen_task, start_client_task, *platform_setup_tasks)
+    await asyncio.gather(*tasks, return_exceptions=True)
+    for task in tasks:
+        with suppress(asyncio.CancelledError):
+            await task
 
     if client.connected:
         await client.disconnect()

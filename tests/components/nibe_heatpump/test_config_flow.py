@@ -1,13 +1,13 @@
 """Test the Nibe Heat Pump config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from nibe.coil import Coil
 from nibe.exceptions import (
     AddressInUseException,
     CoilNotFoundException,
-    CoilReadException,
-    CoilReadSendException,
-    CoilWriteException,
+    ReadException,
+    ReadSendException,
+    WriteException,
 )
 import pytest
 
@@ -32,13 +32,7 @@ MOCK_FLOW_MODBUS_USERDATA = {
 }
 
 
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-async def fixture_mock_setup():
-    """Make sure we never actually run setup."""
-    with patch(
-        "homeassistant.components.nibe_heatpump.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def _get_connection_form(
@@ -169,7 +163,7 @@ async def test_read_timeout(
     """Test we handle cannot connect error."""
     result = await _get_connection_form(hass, connection_type)
 
-    mock_connection.verify_connectivity.side_effect = CoilReadException()
+    mock_connection.verify_connectivity.side_effect = ReadException()
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
@@ -190,7 +184,7 @@ async def test_write_timeout(
     """Test we handle cannot connect error."""
     result = await _get_connection_form(hass, connection_type)
 
-    mock_connection.verify_connectivity.side_effect = CoilWriteException()
+    mock_connection.verify_connectivity.side_effect = WriteException()
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
@@ -232,7 +226,7 @@ async def test_nibegw_invalid_host(
     """Test we handle cannot connect error."""
     result = await _get_connection_form(hass, connection_type)
 
-    mock_connection.verify_connectivity.side_effect = CoilReadSendException()
+    mock_connection.verify_connectivity.side_effect = ReadSendException()
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 

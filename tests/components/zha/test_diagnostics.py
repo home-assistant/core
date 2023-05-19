@@ -6,6 +6,7 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.zha.core.const import DATA_ZHA, DATA_ZHA_GATEWAY
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
 from homeassistant.const import Platform
@@ -62,13 +63,24 @@ async def test_diagnostics_for_config_entry(
 ) -> None:
     """Test diagnostics for config entry."""
     await zha_device_joined(zigpy_device)
-    diagnostics_data = await get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry
-    )
-    assert diagnostics_data
+
+    gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    scan = {c: c for c in range(11, 26 + 1)}
+
+    with patch.object(gateway.application_controller, "energy_scan", return_value=scan):
+        diagnostics_data = await get_diagnostics_for_config_entry(
+            hass, hass_client, config_entry
+        )
+
     for key in CONFIG_ENTRY_DIAGNOSTICS_KEYS:
         assert key in diagnostics_data
         assert diagnostics_data[key] is not None
+
+    # Energy scan results are presented as a percentage. JSON object keys also must be
+    # strings, not integers.
+    assert diagnostics_data["energy_scan"] == {
+        str(k): 100 * v / 255 for k, v in scan.items()
+    }
 
 
 async def test_diagnostics_for_device(

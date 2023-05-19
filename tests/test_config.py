@@ -1,9 +1,9 @@
 """Test config utils."""
-
 from collections import OrderedDict
 import contextlib
 import copy
 import os
+from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -40,7 +40,7 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.util.yaml import SECRET_YAML
 
-from .common import MockUser, get_test_config_dir, patch_yaml_files
+from .common import MockUser, get_test_config_dir
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -238,7 +238,9 @@ def test_core_config_schema() -> None:
     )
 
 
-def test_core_config_schema_internal_external_warning(caplog):
+def test_core_config_schema_internal_external_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that we warn for internal/external URL with path."""
     config_util.CORE_CONFIG_SCHEMA(
         {
@@ -300,7 +302,9 @@ async def test_entity_customization(hass: HomeAssistant) -> None:
 @patch("homeassistant.config.shutil")
 @patch("homeassistant.config.os")
 @patch("homeassistant.config.is_docker_env", return_value=False)
-def test_remove_lib_on_upgrade(mock_docker, mock_os, mock_shutil, hass):
+def test_remove_lib_on_upgrade(
+    mock_docker, mock_os, mock_shutil, hass: HomeAssistant
+) -> None:
     """Test removal of library on upgrade from before 0.50."""
     ha_version = "0.49.0"
     mock_os.path.isdir = mock.Mock(return_value=True)
@@ -322,7 +326,9 @@ def test_remove_lib_on_upgrade(mock_docker, mock_os, mock_shutil, hass):
 @patch("homeassistant.config.shutil")
 @patch("homeassistant.config.os")
 @patch("homeassistant.config.is_docker_env", return_value=True)
-def test_remove_lib_on_upgrade_94(mock_docker, mock_os, mock_shutil, hass):
+def test_remove_lib_on_upgrade_94(
+    mock_docker, mock_os, mock_shutil, hass: HomeAssistant
+) -> None:
     """Test removal of library on upgrade from before 0.94 and in Docker."""
     ha_version = "0.93.0.dev0"
     mock_os.path.isdir = mock.Mock(return_value=True)
@@ -386,7 +392,9 @@ def test_config_upgrade_no_file(hass: HomeAssistant) -> None:
         assert opened_file.write.call_args == mock.call(__version__)
 
 
-async def test_loading_configuration_from_storage(hass, hass_storage):
+async def test_loading_configuration_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading core config onto hass object."""
     hass_storage["core.config"] = {
         "data": {
@@ -426,7 +434,9 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.config_source is ConfigSource.STORAGE
 
 
-async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_storage):
+async def test_loading_configuration_from_storage_with_yaml_only(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading core and YAML config onto hass object."""
     hass_storage["core.config"] = {
         "data": {
@@ -456,7 +466,9 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert hass.config.config_source is ConfigSource.STORAGE
 
 
-async def test_migration_and_updating_configuration(hass, hass_storage):
+async def test_migration_and_updating_configuration(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test updating configuration stores the new configuration."""
     core_data = {
         "data": {
@@ -497,7 +509,9 @@ async def test_migration_and_updating_configuration(hass, hass_storage):
     assert hass.config.language == "en"
 
 
-async def test_override_stored_configuration(hass, hass_storage):
+async def test_override_stored_configuration(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading core and YAML config onto hass object."""
     hass_storage["core.config"] = {
         "data": {
@@ -601,8 +615,13 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     ),
 )
 async def test_language_default(
-    hass, hass_storage, minor_version, users, user_data, default_language
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    minor_version,
+    users,
+    user_data,
+    default_language,
+) -> None:
     """Test language config default to owner user's language during migration.
 
     This should only happen if the core store version < 1.3
@@ -721,14 +740,14 @@ async def test_loading_configuration_unit_system(
 
 
 @patch("homeassistant.helpers.check_config.async_check_ha_config_file")
-async def test_check_ha_config_file_correct(mock_check, hass):
+async def test_check_ha_config_file_correct(mock_check, hass: HomeAssistant) -> None:
     """Check that restart propagates to stop."""
     mock_check.return_value = check_config.HomeAssistantConfig()
     assert await config_util.async_check_ha_config_file(hass) is None
 
 
 @patch("homeassistant.helpers.check_config.async_check_ha_config_file")
-async def test_check_ha_config_file_wrong(mock_check, hass):
+async def test_check_ha_config_file_wrong(mock_check, hass: HomeAssistant) -> None:
     """Check that restart with a bad config doesn't propagate to stop."""
     mock_check.return_value = check_config.HomeAssistantConfig()
     mock_check.return_value.add_error("bad")
@@ -736,20 +755,25 @@ async def test_check_ha_config_file_wrong(mock_check, hass):
     assert await config_util.async_check_ha_config_file(hass) == "bad"
 
 
-@patch("homeassistant.config.os.path.isfile", mock.Mock(return_value=True))
-async def test_async_hass_config_yaml_merge(merge_log_err, hass):
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            config_util.CONF_CORE: {
+                config_util.CONF_PACKAGES: {
+                    "pack_dict": {"input_boolean": {"ib1": None}}
+                }
+            },
+            "input_boolean": {"ib2": None},
+            "light": {"platform": "test"},
+        }
+    ],
+)
+async def test_async_hass_config_yaml_merge(
+    merge_log_err, hass: HomeAssistant, mock_hass_config: None
+) -> None:
     """Test merge during async config reload."""
-    config = {
-        config_util.CONF_CORE: {
-            config_util.CONF_PACKAGES: {"pack_dict": {"input_boolean": {"ib1": None}}}
-        },
-        "input_boolean": {"ib2": None},
-        "light": {"platform": "test"},
-    }
-
-    files = {config_util.YAML_CONFIG_FILE: yaml.dump(config)}
-    with patch_yaml_files(files, True):
-        conf = await config_util.async_hass_config_yaml(hass)
+    conf = await config_util.async_hass_config_yaml(hass)
 
     assert merge_log_err.call_count == 0
     assert conf[config_util.CONF_CORE].get(config_util.CONF_PACKAGES) is not None
@@ -765,7 +789,7 @@ def merge_log_err(hass):
         yield logerr
 
 
-async def test_merge(merge_log_err, hass):
+async def test_merge(merge_log_err, hass: HomeAssistant) -> None:
     """Test if we can merge packages."""
     packages = {
         "pack_dict": {"input_boolean": {"ib1": None}},
@@ -800,7 +824,7 @@ async def test_merge(merge_log_err, hass):
     assert isinstance(config["wake_on_lan"], OrderedDict)
 
 
-async def test_merge_try_falsy(merge_log_err, hass):
+async def test_merge_try_falsy(merge_log_err, hass: HomeAssistant) -> None:
     """Ensure we don't add falsy items like empty OrderedDict() to list."""
     packages = {
         "pack_falsy_to_lst": {"automation": OrderedDict()},
@@ -819,7 +843,7 @@ async def test_merge_try_falsy(merge_log_err, hass):
     assert len(config["light"]) == 1
 
 
-async def test_merge_new(merge_log_err, hass):
+async def test_merge_new(merge_log_err, hass: HomeAssistant) -> None:
     """Test adding new components to outer scope."""
     packages = {
         "pack_1": {"light": [{"platform": "one"}]},
@@ -840,7 +864,7 @@ async def test_merge_new(merge_log_err, hass):
     assert len(config["panel_custom"]) == 1
 
 
-async def test_merge_type_mismatch(merge_log_err, hass):
+async def test_merge_type_mismatch(merge_log_err, hass: HomeAssistant) -> None:
     """Test if we have a type mismatch for packages."""
     packages = {
         "pack_1": {"input_boolean": [{"ib1": None}]},
@@ -861,7 +885,7 @@ async def test_merge_type_mismatch(merge_log_err, hass):
     assert len(config["light"]) == 2
 
 
-async def test_merge_once_only_keys(merge_log_err, hass):
+async def test_merge_once_only_keys(merge_log_err, hass: HomeAssistant) -> None:
     """Test if we have a merge for a comp that may occur only once. Keys."""
     packages = {"pack_2": {"api": None}}
     config = {config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages}, "api": None}
@@ -947,7 +971,7 @@ async def test_merge_id_schema(hass: HomeAssistant) -> None:
         assert typ == expected_type, f"{domain} expected {expected_type}, got {typ}"
 
 
-async def test_merge_duplicate_keys(merge_log_err, hass):
+async def test_merge_duplicate_keys(merge_log_err, hass: HomeAssistant) -> None:
     """Test if keys in dicts are duplicates."""
     packages = {"pack_1": {"input_select": {"ib1": None}}}
     config = {
@@ -1120,7 +1144,9 @@ async def test_merge_split_component_definition(hass: HomeAssistant) -> None:
     assert len(config["light three"]) == 1
 
 
-async def test_component_config_exceptions(hass, caplog):
+async def test_component_config_exceptions(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test unexpected exceptions validating component config."""
     # Config validator
     assert (
@@ -1291,7 +1317,7 @@ async def test_component_config_exceptions(hass, caplog):
         ("openuv", cv.deprecated("openuv"), None),
     ],
 )
-def test_identify_config_schema(domain, schema, expected):
+def test_identify_config_schema(domain, schema, expected) -> None:
     """Test identify config schema."""
     assert (
         config_util._identify_config_schema(Mock(DOMAIN=domain, CONFIG_SCHEMA=schema))
@@ -1309,7 +1335,9 @@ async def test_core_config_schema_historic_currency(hass: HomeAssistant) -> None
     assert issue.translation_placeholders == {"currency": "LTT"}
 
 
-async def test_core_store_historic_currency(hass, hass_storage):
+async def test_core_store_historic_currency(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test core config store."""
     core_data = {
         "data": {
@@ -1342,7 +1370,9 @@ async def test_core_config_schema_no_country(hass: HomeAssistant) -> None:
     assert issue
 
 
-async def test_core_store_no_country(hass, hass_storage):
+async def test_core_store_no_country(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test core config store."""
     core_data = {
         "data": {},
