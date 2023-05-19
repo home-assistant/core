@@ -1,0 +1,9 @@
+{
+  "domain": "ovos",
+  "name": "OVOS",
+  "codeowners": ["@mikejgray"],
+  "documentation": "https://www.home-assistant.io/integrations/ovos",
+  "iot_class": "local_push",
+  "loggers": ["ovos-bus-client"],
+  "requirements": ["ovos-bus-client==0.0.4a10", "ovos-utils[extras]==0.0.32"]
+}
