@@ -306,10 +306,6 @@ class TotalConnectAlarm(
             raise HomeAssistantError(
                 "TotalConnect usercode is invalid. Did not bypass zone."
             ) from error
-        except BadResultCodeError as error:
-            raise HomeAssistantError(
-                f"TotalConnect failed to bypass zone {self.name}."
-            ) from error
         await self.coordinator.async_request_refresh()
 
     def _bypass_zone(self, zone_id: int | None = None) -> None:
