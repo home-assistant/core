@@ -200,7 +200,7 @@ class ApiConfig:
 class SiteServerConfig:
     """Configuration for a single TCPSite."""
 
-    server_host: list[str]
+    server_host: list[str] | None
     server_port: int
     ssl_certificate: str | None
     ssl_peer_certificate: str | None
@@ -212,7 +212,7 @@ class SiteServerConfig:
 def _create_site_server_config_from_dict(conf: ConfData) -> SiteServerConfig:
     """Create a SiteServerConfig from a dict."""
     return SiteServerConfig(
-        server_host=conf.get(CONF_SERVER_HOST) or [],
+        server_host=conf.get(CONF_SERVER_HOST),
         server_port=conf[CONF_SERVER_PORT],
         ssl_certificate=conf.get(CONF_SSL_CERTIFICATE),
         ssl_peer_certificate=conf.get(CONF_SSL_PEER_CERTIFICATE),

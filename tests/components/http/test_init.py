@@ -288,23 +288,23 @@ async def test_emergency_ssl_certificate_when_invalid(
     )
 
     hass.config.safe_mode = True
-    assert (
-        await async_setup_component(
-            hass,
-            "http",
-            {
-                "http": {"ssl_certificate": cert_path, "ssl_key": key_path},
-            },
+    with patch.object(hass.loop, "create_server"):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "http": {"ssl_certificate": cert_path, "ssl_key": key_path},
+                },
+            )
+            is True
         )
-        is True
-    )
-
-    await hass.async_start()
-    await hass.async_block_till_done()
-    assert (
-        "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
-        in caplog.text
-    )
+        await hass.async_start()
+        await hass.async_block_till_done()
+        assert (
+            "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+            in caplog.text
+        )
 
     assert len(hass.http.sites) == 1
 
@@ -340,7 +340,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 
     with patch(
         "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
-    ) as mock_get_url:
+    ) as mock_get_url, patch.object(hass.loop, "create_server"):
         assert (
             await async_setup_component(
                 hass,
@@ -375,7 +375,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
 
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
-    ) as mock_builder:
+    ) as mock_builder, patch.object(hass.loop, "create_server"):
         assert (
             await async_setup_component(
                 hass,
@@ -412,7 +412,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
 
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
-    ) as mock_builder:
+    ) as mock_builder, patch.object(hass.loop, "create_server"):
         assert (
             await async_setup_component(
                 hass,
@@ -534,7 +534,9 @@ async def test_multiple_ssl_profiles(hass: HomeAssistant, tmp_path: Path) -> Non
     ) as mock_server_context_modern, patch(
         "homeassistant.util.ssl.server_context_intermediate",
         side_effect=server_context_intermediate,
-    ) as mock_server_context_intermediate:
+    ) as mock_server_context_intermediate, patch.object(
+        hass.loop, "create_server"
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -578,7 +580,7 @@ async def test_ssl_for_external_no_ssl_internal(
     with patch("ssl.SSLContext.load_cert_chain"), patch(
         "homeassistant.util.ssl.server_context_modern",
         side_effect=server_context_modern,
-    ) as mock_server_context_modern:
+    ) as mock_server_context_modern, patch.object(hass.loop, "create_server"):
         assert (
             await async_setup_component(
                 hass,
