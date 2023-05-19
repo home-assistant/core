@@ -380,7 +380,7 @@ class SlowPWMEntity(RestoreNumber):
                 "homeassistant",
                 SERVICE_TURN_ON,
                 {ATTR_ENTITY_ID: self._attr_timed_output[0]},
-                False,
+                True,
             )
         elif self._attr_timed_output[0]:
             # Make sure output is switched off as the off-moment was already passed
@@ -389,7 +389,7 @@ class SlowPWMEntity(RestoreNumber):
                 "homeassistant",
                 SERVICE_TURN_OFF,
                 {ATTR_ENTITY_ID: self._attr_timed_output[0]},
-                False,
+                True,
             )
         self.async_write_ha_state()
 
@@ -404,7 +404,7 @@ class SlowPWMEntity(RestoreNumber):
                 "homeassistant",
                 SERVICE_TURN_OFF,
                 {ATTR_ENTITY_ID: self._attr_timed_output[0]},
-                False,
+                True,
             )
         self._listener_off = None
         self.async_write_ha_state()
