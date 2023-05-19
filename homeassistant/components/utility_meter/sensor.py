@@ -426,11 +426,7 @@ class UtilityMeterSensor(RestoreSensor):
         if (
             source_state := self.hass.states.get(self._sensor_source_id)
         ) is None or source_state.state == STATE_UNAVAILABLE:
-            self._attr_available = False
-            self.async_write_ha_state()
             return
-
-        self._attr_available = True
 
         old_state: State | None = event.data.get("old_state")
         new_state: State = event.data.get("new_state")  # type: ignore[assignment] # a state change event always has a new state

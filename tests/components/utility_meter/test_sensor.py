@@ -229,7 +229,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "3"
 
 
 @pytest.mark.parametrize(
