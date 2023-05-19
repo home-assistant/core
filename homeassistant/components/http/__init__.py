@@ -90,8 +90,10 @@ SAVE_DELAY: Final = 180
 
 CONF_SERVERS = "servers"
 
-SERVER_SCHEMA = {
-    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
+SERVER_SCHEMA_WITHOUT_PORT = {
+    vol.Optional(CONF_SERVER_HOST): vol.All(
+        cv.ensure_list, vol.Length(min=1), [cv.string]
+    ),
     vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
     vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
     vol.Optional(CONF_SSL_KEY): cv.isfile,
@@ -99,6 +101,13 @@ SERVER_SCHEMA = {
         [SSL_INTERMEDIATE, SSL_MODERN]
     ),
 }
+
+OPTIONAL_PORT = {vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port}
+
+_EXCLUSIVE_PORT_KEY = vol.Exclusive(CONF_SERVER_PORT, "server")
+_EXCLUSIVE_PORT_KEY.default = vol.default_factory(SERVER_PORT)
+
+EXCLUSIVE_PORT = {_EXCLUSIVE_PORT_KEY: cv.port}
 
 
 def _has_all_unique_ports(servers: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -112,29 +121,19 @@ SERVERS_EXCLUSIVE_MESSAGE = (
     'Configure one server at top level or configure multiple servers under "servers"'
 )
 
+
 HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
     vol.Schema(
         {
-            vol.Exclusive(
-                CONF_SERVER_HOST, "servers", msg=SERVERS_EXCLUSIVE_MESSAGE
-            ): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
-            **SERVER_SCHEMA,
+            **SERVER_SCHEMA_WITHOUT_PORT,
+            **EXCLUSIVE_PORT,
             vol.Optional(CONF_BASE_URL): cv.string,
             vol.Exclusive(
                 CONF_SERVERS, "servers", msg=SERVERS_EXCLUSIVE_MESSAGE
             ): vol.All(
                 cv.ensure_list,
-                [
-                    vol.Schema(
-                        {
-                            vol.Optional(CONF_SERVER_HOST): vol.All(
-                                cv.ensure_list, vol.Length(min=1), [cv.string]
-                            )
-                        }
-                        | SERVER_SCHEMA
-                    )
-                ],
+                [vol.Schema({**SERVER_SCHEMA_WITHOUT_PORT, **OPTIONAL_PORT})],
                 _has_all_unique_ports,
             ),
             vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
