@@ -282,7 +282,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         local_ip,
         primary_host,
         primary_server_conf.server_port,
-        all(site_config.ssl_certificate is not None for site_config in site_configs),
+        primary_server_conf.ssl_certificate is not None,
     )
 
     return True
