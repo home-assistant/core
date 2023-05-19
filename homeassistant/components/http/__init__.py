@@ -468,7 +468,8 @@ class HomeAssistantHTTP:
     def _create_ssl_contexts(self) -> None:
         for site in self.site_configs:
             context: ssl.SSLContext | None = None
-            assert site.ssl_certificate is not None
+            if site.ssl_certificate is None:
+                continue
             try:
                 if site.ssl_profile == SSL_INTERMEDIATE:
                     context = ssl_util.server_context_intermediate()

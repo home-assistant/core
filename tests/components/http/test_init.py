@@ -519,3 +519,89 @@ async def test_hass_access_logger_at_info_level(
     test_logger.setLevel(logging.WARNING)
     logger.log(mock_request, response, time.time())
     assert "42" not in caplog.text
+
+
+async def test_multiple_ssl_profiles(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test different ssl profiles on different ports."""
+
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with patch("ssl.SSLContext.load_cert_chain"), patch(
+        "homeassistant.util.ssl.server_context_modern",
+        side_effect=server_context_modern,
+    ) as mock_server_context_modern, patch(
+        "homeassistant.util.ssl.server_context_intermediate",
+        side_effect=server_context_intermediate,
+    ) as mock_server_context_intermediate:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "http": {
+                        "servers": [
+                            {
+                                "ssl_certificate": cert_path,
+                                "ssl_key": key_path,
+                            },
+                            {
+                                "ssl_profile": "intermediate",
+                                "ssl_certificate": cert_path,
+                                "ssl_key": key_path,
+                                "server_port": "8124",
+                            },
+                        ]
+                    }
+                },
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(mock_server_context_modern.mock_calls) == 1
+    assert len(mock_server_context_intermediate.mock_calls) == 1
+    assert len(hass.http.sites) == 2
+
+
+async def test_ssl_for_external_no_ssl_internal(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test ssl for external and no ssl for internal."""
+
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with patch("ssl.SSLContext.load_cert_chain"), patch(
+        "homeassistant.util.ssl.server_context_modern",
+        side_effect=server_context_modern,
+    ) as mock_server_context_modern:
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "http": {
+                        "servers": [
+                            {
+                                "ssl_certificate": cert_path,
+                                "ssl_key": key_path,
+                            },
+                            {
+                                "server_port": "8124",
+                            },
+                        ]
+                    }
+                },
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(mock_server_context_modern.mock_calls) == 1
+
+    assert len(hass.http.sites) == 2
