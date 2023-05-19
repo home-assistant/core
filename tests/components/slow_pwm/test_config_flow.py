@@ -23,7 +23,7 @@ from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_mock_service
 
 
 @pytest.mark.parametrize("platform", ("number",))
@@ -32,6 +32,9 @@ async def test_config_flow(
 ) -> None:  # pylint: disable=W0613
     """Test the config flow."""
     outputs = ["switch.output_1", "switch.output_2"]
+
+    async_mock_service(hass, "homeassistant", "turn_on")
+    async_mock_service(hass, "homeassistant", "turn_off")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -88,6 +91,9 @@ async def test_options(hass: HomeAssistant, platform: str) -> None:
     """Test reconfiguring."""
     outputs_1 = ["switch.output_1", "switch.output_2"]
     outputs_2 = ["switch.output_1", "switch.output_2", "switch.output_3"]
+
+    async_mock_service(hass, "homeassistant", "turn_on")
+    async_mock_service(hass, "homeassistant", "turn_off")
 
     # Setup the config entry
     config_entry = MockConfigEntry(

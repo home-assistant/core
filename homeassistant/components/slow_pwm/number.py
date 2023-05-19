@@ -27,7 +27,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -170,10 +170,13 @@ class SlowPWMEntity(RestoreNumber):
             )
 
         # After full startup, set outputs and timers & communicate states to the physical outputs
-        async def ha_started(_event=None):
+        async def _async_startup(_event=None):
             await self.async_set_native_value(self._attr_native_value)
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, ha_started)
+        if self.hass.state == CoreState.running:
+            await _async_startup()
+        else:
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
     async def async_will_remove_from_hass(self):
         """Handle entity about to be removed from hass."""
@@ -302,7 +305,6 @@ class SlowPWMEntity(RestoreNumber):
         """Set outputs accordingly to output states by service calls to hass."""
 
         for output, switch_on in self._outputs.items():
-            _LOGGER.info("Now in pwm start update %s:%s. ", output, switch_on)
             action = SERVICE_TURN_ON if switch_on else SERVICE_TURN_OFF
             service_data = {ATTR_ENTITY_ID: output}
             await self._hass.services.async_call(

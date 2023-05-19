@@ -6,7 +6,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_mock_service
 
 
 @pytest.mark.parametrize("platform", ("number",))
@@ -16,6 +16,9 @@ async def test_setup_and_remove_config_entry(
 ) -> None:
     """Test setting up and removing a config entry."""
     outputs = ["sensor.output_1", "sensor.output_2"]
+
+    async_mock_service(hass, "homeassistant", "turn_on")
+    async_mock_service(hass, "homeassistant", "turn_off")
 
     registry = er.async_get(hass)
     slow_pwm_entity_id = f"{platform}.my_slow_pwm"
