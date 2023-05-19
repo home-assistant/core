@@ -106,7 +106,7 @@ class YeelightScanner:
 
         await self._async_wait_connected()
         self._track_interval = async_track_time_interval(
-            self._hass, self.async_scan, DISCOVERY_INTERVAL
+            self._hass, self.async_scan, DISCOVERY_INTERVAL, cancel_on_shutdown=True
         )
         self.async_scan()
 
