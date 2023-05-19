@@ -605,14 +605,19 @@ class HomeAssistantHTTP:
 
             if isinstance(result, Exception):
                 _LOGGER.error(
-                    "Failed to create HTTP server at port %d: %s",
+                    "Failed to create HTTP server at port %s:%d: %s",
+                    site_config.server_host,
                     site_config.server_port,
                     result,
                 )
                 continue
 
             self.sites.append(sites[idx])
-            _LOGGER.info("Now listening on port %d", site_config.server_port)
+            _LOGGER.info(
+                "Now listening on %s:%d",
+                site_config.server_host,
+                site_config.server_port,
+            )
 
     async def stop(self) -> None:
         """Stop the aiohttp server."""
