@@ -622,7 +622,7 @@ class HomeAssistantHTTP:
     async def stop(self) -> None:
         """Stop the aiohttp server."""
         if self.sites:
-            await asyncio.gather(*[site.stop() for site in self.sites])
+            await asyncio.gather(*(site.stop() for site in self.sites))
         if self.runner is not None:
             await self.runner.cleanup()
 
