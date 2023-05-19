@@ -99,6 +99,13 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=DEGREE,
     ),
+    SunSensorEntityDescription(
+        key="solar_rising",
+        translation_key="solar_rising",
+        icon="mdi:sun-clock",
+        value_fn=lambda data: data.rising,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
