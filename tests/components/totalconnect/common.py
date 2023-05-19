@@ -308,6 +308,7 @@ RESPONSE_USER_CODE_INVALID = {
     "ResultData": "testing user code invalid",
 }
 RESPONSE_SUCCESS = {"ResultCode": ResultCode.SUCCESS.value}
+RESPONSE_BYPASS_FAILED = {"ResultCode": ResultCode.FAILED_TO_BYPASS_ZONE.value}
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
