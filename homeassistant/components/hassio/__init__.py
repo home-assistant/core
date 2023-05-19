@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import os
 from typing import Any, NamedTuple
@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     DOMAIN as HASS_DOMAIN,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     callback,
@@ -72,6 +73,7 @@ from .const import (
     DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     SupervisorEntityModel,
 )
@@ -83,9 +85,12 @@ from .handler import (  # noqa: F401
     async_get_addon_discovery_info,
     async_get_addon_info,
     async_get_addon_store_info,
+    async_get_yellow_settings,
     async_install_addon,
+    async_reboot_host,
     async_restart_addon,
     async_set_addon_options,
+    async_set_yellow_settings,
     async_start_addon,
     async_stop_addon,
     async_uninstall_addon,
@@ -126,7 +131,6 @@ DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
-DATA_SUPERVISOR_ISSUES = "supervisor_issues"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
@@ -492,7 +496,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             DOMAIN, service, async_service_handler, schema=settings.schema
         )
 
-    async def update_info_data(now):
+    async def update_info_data(_: datetime | None = None) -> None:
         """Update last available supervisor information."""
 
         try:
@@ -516,11 +520,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
 
         async_track_point_in_utc_time(
-            hass, update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
+            hass,
+            HassJob(update_info_data, cancel_on_shutdown=True),
+            utcnow() + HASSIO_UPDATE_INTERVAL,
         )
 
     # Fetch data
-    await update_info_data(None)
+    await update_info_data()
 
     async def async_handle_core_service(call: ServiceCall) -> None:
         """Service handler for handling core services."""
@@ -584,13 +590,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await async_setup_addon_panel(hass, hassio)
 
     # Setup hardware integration for the detected board type
-    async def _async_setup_hardware_integration(hass):
+    async def _async_setup_hardware_integration(_: datetime | None = None) -> None:
         """Set up hardaware integration for the detected board type."""
         if (os_info := get_os_info(hass)) is None:
             # os info not yet fetched from supervisor, retry later
             async_track_point_in_utc_time(
                 hass,
-                _async_setup_hardware_integration,
+                async_setup_hardware_integration_job,
                 utcnow() + HASSIO_UPDATE_INTERVAL,
             )
             return
@@ -604,14 +610,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             )
         )
 
-    await _async_setup_hardware_integration(hass)
+    async_setup_hardware_integration_job = HassJob(
+        _async_setup_hardware_integration, cancel_on_shutdown=True
+    )
+
+    await _async_setup_hardware_integration()
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
     )
 
     # Start listening for problems with supervisor and making issues
-    hass.data[DATA_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
+    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
     await issues.setup()
 
     return True
@@ -870,23 +880,25 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             self.hassio.get_os_info(),
         )
 
-        addons = [
-            addon
-            for addon in self.hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
-            if addon[ATTR_STATE] == ATTR_STARTED
+        all_addons = self.hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
+        started_addons = [
+            addon for addon in all_addons if addon[ATTR_STATE] == ATTR_STARTED
         ]
         stats_data = await asyncio.gather(
-            *[self._update_addon_stats(addon[ATTR_SLUG]) for addon in addons]
+            *[self._update_addon_stats(addon[ATTR_SLUG]) for addon in started_addons]
         )
         self.hass.data[DATA_ADDONS_STATS] = dict(stats_data)
         self.hass.data[DATA_ADDONS_CHANGELOGS] = dict(
             await asyncio.gather(
-                *[self._update_addon_changelog(addon[ATTR_SLUG]) for addon in addons]
+                *[
+                    self._update_addon_changelog(addon[ATTR_SLUG])
+                    for addon in all_addons
+                ]
             )
         )
         self.hass.data[DATA_ADDONS_INFO] = dict(
             await asyncio.gather(
-                *[self._update_addon_info(addon[ATTR_SLUG]) for addon in addons]
+                *[self._update_addon_info(addon[ATTR_SLUG]) for addon in all_addons]
             )
         )
 

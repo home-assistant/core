@@ -37,7 +37,7 @@ class PlugwiseSelectEntityDescription(
 SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_schedule",
-        name="Thermostat schedule",
+        translation_key="select_schedule",
         icon="mdi:calendar-clock",
         command=lambda api, loc, opt: api.set_schedule_state(loc, opt, STATE_ON),
         current_option_key="selected_schedule",
@@ -45,20 +45,18 @@ SELECT_TYPES = (
     ),
     PlugwiseSelectEntityDescription(
         key="select_regulation_mode",
-        name="Regulation mode",
+        translation_key="regulation_mode",
         icon="mdi:hvac",
         entity_category=EntityCategory.CONFIG,
-        translation_key="regulation_mode",
         command=lambda api, loc, opt: api.set_regulation_mode(opt),
         current_option_key="regulation_mode",
         options_key="regulation_modes",
     ),
     PlugwiseSelectEntityDescription(
         key="select_dhw_mode",
-        name="DHW mode",
+        translation_key="dhw_mode",
         icon="mdi:shower",
         entity_category=EntityCategory.CONFIG,
-        translation_key="dhw_mode",
         command=lambda api, loc, opt: api.set_dhw_mode(opt),
         current_option_key="dhw_mode",
         options_key="dhw_modes",

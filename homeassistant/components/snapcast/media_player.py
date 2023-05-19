@@ -42,6 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT): cv.port}
 )
 
+STREAM_STATUS = {
+    "idle": MediaPlayerState.IDLE,
+    "playing": MediaPlayerState.PLAYING,
+    "unknown": None,
+}
+
 
 def register_services():
     """Register snapcast services."""
@@ -157,11 +163,9 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
-        return {
-            "idle": MediaPlayerState.IDLE,
-            "playing": MediaPlayerState.PLAYING,
-            "unknown": None,
-        }.get(self._group.stream_status)
+        if self.is_volume_muted:
+            return MediaPlayerState.IDLE
+        return STREAM_STATUS.get(self._group.stream_status)
 
     @property
     def unique_id(self):
@@ -171,7 +175,7 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{GROUP_PREFIX}{self._group.identifier}"
+        return f"{self._group.friendly_name} {GROUP_SUFFIX}"
 
     @property
     def source(self):
@@ -192,12 +196,6 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     def source_list(self):
         """List of available input sources."""
         return list(self._group.streams_by_name().keys())
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
-        return {"friendly_name": name}
 
     async def async_select_source(self, source: str) -> None:
         """Set input source."""
@@ -266,7 +264,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{CLIENT_PREFIX}{self._client.identifier}"
+        return f"{self._client.friendly_name} {CLIENT_SUFFIX}"
 
     @property
     def source(self):
@@ -289,11 +287,13 @@ class SnapcastClientDevice(MediaPlayerEntity):
         return list(self._client.group.streams_by_name().keys())
 
     @property
-    def state(self) -> MediaPlayerState:
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self._client.connected:
-            return MediaPlayerState.ON
-        return MediaPlayerState.OFF
+            if self.is_volume_muted or self._client.group.muted:
+                return MediaPlayerState.IDLE
+            return STREAM_STATUS.get(self._client.group.stream_status)
+        return MediaPlayerState.STANDBY
 
     @property
     def extra_state_attributes(self):
@@ -301,8 +301,6 @@ class SnapcastClientDevice(MediaPlayerEntity):
         state_attrs = {}
         if self.latency is not None:
             state_attrs["latency"] = self.latency
-        name = f"{self._client.friendly_name} {CLIENT_SUFFIX}"
-        state_attrs["friendly_name"] = name
         return state_attrs
 
     @property

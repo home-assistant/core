@@ -35,9 +35,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from . import MetDataUpdateCoordinator
 from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
 
-ATTRIBUTION = (
-    "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute."
-)
 DEFAULT_NAME = "Met.no"
 
 
@@ -74,6 +71,10 @@ def format_condition(condition: str) -> str:
 class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
+    _attr_attribution = (
+        "Weather forecast from met.no, delivered by the Norwegian "
+        "Meteorological Institute."
+    )
     _attr_has_entity_name = True
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
@@ -172,11 +173,6 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_WIND_BEARING]
         )
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def forecast(self) -> list[Forecast] | None:

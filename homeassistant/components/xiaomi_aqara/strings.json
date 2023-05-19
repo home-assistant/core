@@ -6,7 +6,7 @@
         "description": "If the IP and MAC addresses are left empty, auto-discovery is used",
         "data": {
           "interface": "The network interface to use",
-          "host": "[%key:common::config_flow::data::ip%] (optional)",
+          "host": "IP address (optional)",
           "mac": "Mac Address (optional)"
         }
       },
@@ -29,7 +29,7 @@
       "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
       "invalid_interface": "Invalid network interface",
       "invalid_key": "Invalid gateway key",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%], see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+      "invalid_host": "Invalid hostname or IP address, see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
       "invalid_mac": "Invalid Mac Address"
     },
     "abort": {

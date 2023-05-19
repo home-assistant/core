@@ -135,8 +135,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_zeroconf": "None",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
-    "mqtt_mock_entry_no_yaml_config": "MqttMockHAClientGenerator",
-    "mqtt_mock_entry_with_yaml_config": "MqttMockHAClientGenerator",
+    "mqtt_mock_entry": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
     "requests_mock": "requests_mock.Mocker",
@@ -201,6 +200,14 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "DeviceEntry",
             },
             return_type="bool",
+        ),
+        TypeHintMatch(
+            function_name="async_reset_platform",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+            },
+            return_type=None,
         ),
     ],
     "__any_platform__": [

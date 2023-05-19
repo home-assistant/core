@@ -38,6 +38,7 @@ class LaMetricSensorEntityDescription(
 SENSORS = [
     LaMetricSensorEntityDescription(
         key="rssi",
+        translation_key="rssi",
         name="Wi-Fi signal",
         icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,

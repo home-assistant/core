@@ -239,6 +239,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
 
     # Load the registries and cache the result of platform.uname().processor
     entity.async_setup(hass)
+    template.async_setup(hass)
     await asyncio.gather(
         area_registry.async_load(hass),
         device_registry.async_load(hass),
@@ -378,6 +379,11 @@ def async_enable_logging(
     # If the above initialization failed for any reason, setup the default
     # formatting.  If the above succeeds, this will result in a no-op.
     logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
+
+    # Capture warnings.warn(...) and friends messages in logs.
+    # The standard destination for them is stderr, which may end up unnoticed.
+    # This way they're where other messages are, and can be filtered as usual.
+    logging.captureWarnings(True)
 
     # Suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
@@ -628,6 +634,9 @@ async def _async_set_up_integrations(
         - stage_1_domains
     )
 
+    # Enables after dependencies when setting up stage 1 domains
+    async_set_domains_to_be_loaded(hass, stage_1_domains)
+
     # Start setup
     if stage_1_domains:
         _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
@@ -639,7 +648,7 @@ async def _async_set_up_integrations(
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
-    # Enables after dependencies
+    # Add after dependencies when setting up stage 2 domains
     async_set_domains_to_be_loaded(hass, stage_2_domains)
 
     if stage_2_domains:

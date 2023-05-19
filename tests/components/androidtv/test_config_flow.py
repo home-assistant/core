@@ -48,14 +48,14 @@ INVALID_MAC = "ff:ff:ff:ff:ff:ff"
 HOST = "127.0.0.1"
 VALID_DETECT_RULE = [{"paused": {"media_session_state": 3}}]
 
-# Android TV device with Python ADB implementation
+# Android device with Python ADB implementation
 CONFIG_PYTHON_ADB = {
     CONF_HOST: HOST,
     CONF_PORT: DEFAULT_PORT,
     CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
 }
 
-# Android TV device with ADB server
+# Android device with ADB server
 CONFIG_ADB_SERVER = {
     CONF_HOST: HOST,
     CONF_PORT: DEFAULT_PORT,
@@ -70,7 +70,7 @@ CONNECT_METHOD = (
 
 
 class MockConfigDevice:
-    """Mock class to emulate Android TV device."""
+    """Mock class to emulate Android device."""
 
     def __init__(self, eth_mac=ETH_MAC, wifi_mac=None):
         """Initialize a fake device to test config flow."""

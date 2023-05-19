@@ -26,10 +26,10 @@ def no_platforms():
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass: HomeAssistant, mqtt_mock_entry_no_yaml_config):
+async def setup_comp(hass: HomeAssistant, mqtt_mock_entry):
     """Initialize components."""
     mock_component(hass, "group")
-    return await mqtt_mock_entry_no_yaml_config()
+    return await mqtt_mock_entry()
 
 
 async def test_if_fires_on_topic_match(hass: HomeAssistant, calls) -> None:
