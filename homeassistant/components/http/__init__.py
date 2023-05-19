@@ -193,12 +193,10 @@ class SiteServerConfig:
     ssl_context: ssl.SSLContext | None = None
 
 
-def _create_site_server_config_from_dict(
-    conf: ConfData | dict[str, Any]
-) -> SiteServerConfig:
+def _create_site_server_config_from_dict(conf: ConfData) -> SiteServerConfig:
     """Create a SiteServerConfig from a dict."""
     return SiteServerConfig(
-        server_host=conf[CONF_SERVER_HOST],
+        server_host=conf.get(CONF_SERVER_HOST) or [],
         server_port=conf[CONF_SERVER_PORT],
         ssl_certificate=conf.get(CONF_SSL_CERTIFICATE),
         ssl_peer_certificate=conf.get(CONF_SSL_PEER_CERTIFICATE),
@@ -223,11 +221,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     site_configs: list[SiteServerConfig] = []
 
-    if CONF_SERVERS in config[DOMAIN]:
-        site_configs = [
-            _create_site_server_config_from_dict(conf)
-            for conf in config[DOMAIN][CONF_SERVERS]
-        ]
+    if server_cfg := conf.get(CONF_SERVERS):
+        servers = cast(list[ConfData], server_cfg)
+        site_configs = [_create_site_server_config_from_dict(cfg) for cfg in servers]
     else:
         site_configs = [_create_site_server_config_from_dict(conf)]
 
