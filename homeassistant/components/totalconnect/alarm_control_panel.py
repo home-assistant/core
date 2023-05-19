@@ -4,7 +4,11 @@ from __future__ import annotations
 import logging
 
 from total_connect_client import ArmingHelper
-from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
+from total_connect_client.exceptions import (
+    BadResultCodeError,
+    FailedToBypassZone,
+    UsercodeInvalid,
+)
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -293,6 +297,10 @@ class TotalConnectAlarm(
         """Bypass the zone."""
         try:
             await self.hass.async_add_executor_job(self._bypass_zone, zone_id)
+        except FailedToBypassZone as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to bypass zone {zone_id}."
+            ) from error
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
