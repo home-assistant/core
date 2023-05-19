@@ -91,9 +91,6 @@ SAVE_DELAY: Final = 180
 CONF_SERVERS = "servers"
 
 SERVER_SCHEMA = {
-    vol.Optional(CONF_SERVER_HOST): vol.All(
-        cv.ensure_list, vol.Length(min=1), [cv.string]
-    ),
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
     vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
@@ -111,14 +108,34 @@ def _has_all_unique_ports(servers: list[dict[str, Any]]) -> list[dict[str, Any]]
     return servers
 
 
+SERVERS_EXCLUSIVE_MESSAGE = (
+    'Configure one server at top level or configure multiple servers under "servers"'
+)
+
 HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
     vol.Schema(
         {
+            vol.Exclusive(
+                CONF_SERVER_HOST, "servers", msg=SERVERS_EXCLUSIVE_MESSAGE
+            ): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
             **SERVER_SCHEMA,
             vol.Optional(CONF_BASE_URL): cv.string,
-            vol.Optional(CONF_SERVERS): vol.All(
-                cv.ensure_list, [vol.Schema(SERVER_SCHEMA)], _has_all_unique_ports
+            vol.Exclusive(
+                CONF_SERVERS, "servers", msg=SERVERS_EXCLUSIVE_MESSAGE
+            ): vol.All(
+                cv.ensure_list,
+                [
+                    vol.Schema(
+                        {
+                            vol.Optional(CONF_SERVER_HOST): vol.All(
+                                cv.ensure_list, vol.Length(min=1), [cv.string]
+                            )
+                        }
+                        | SERVER_SCHEMA
+                    )
+                ],
+                _has_all_unique_ports,
             ),
             vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
                 cv.ensure_list, [cv.string]
