@@ -24,7 +24,7 @@ def cancelling(task: Future[Any]) -> bool:
     """Return True if task is done or cancelling."""
     # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancelling
     # is new in Python 3.11
-    return bool((cancelling := getattr(task, "cancelling", None)) and cancelling())
+    return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
 
 
 def run_callback_threadsafe(
