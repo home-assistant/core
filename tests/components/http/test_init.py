@@ -536,7 +536,7 @@ async def test_multiple_ssl_profiles(hass: HomeAssistant, tmp_path: Path) -> Non
         side_effect=server_context_intermediate,
     ) as mock_server_context_intermediate, patch.object(
         hass.loop, "create_server"
-    ):
+    ) as mock_create_server:
         assert (
             await async_setup_component(
                 hass,
@@ -566,6 +566,7 @@ async def test_multiple_ssl_profiles(hass: HomeAssistant, tmp_path: Path) -> Non
     assert len(mock_server_context_modern.mock_calls) == 1
     assert len(mock_server_context_intermediate.mock_calls) == 1
     assert len(hass.http.sites) == 2
+    assert len(mock_create_server.mock_calls) == 2
 
 
 async def test_ssl_for_external_no_ssl_internal(
@@ -580,7 +581,9 @@ async def test_ssl_for_external_no_ssl_internal(
     with patch("ssl.SSLContext.load_cert_chain"), patch(
         "homeassistant.util.ssl.server_context_modern",
         side_effect=server_context_modern,
-    ) as mock_server_context_modern, patch.object(hass.loop, "create_server"):
+    ) as mock_server_context_modern, patch.object(
+        hass.loop, "create_server"
+    ) as mock_create_server:
         assert (
             await async_setup_component(
                 hass,
@@ -605,5 +608,5 @@ async def test_ssl_for_external_no_ssl_internal(
         await hass.async_block_till_done()
 
     assert len(mock_server_context_modern.mock_calls) == 1
-
+    assert len(mock_create_server.mock_calls) == 2
     assert len(hass.http.sites) == 2
