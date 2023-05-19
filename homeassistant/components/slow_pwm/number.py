@@ -215,7 +215,7 @@ class SlowPWMEntity(RestoreNumber):
         # what outputs should be off, and what should be timed
         threshold = (
             self._attr_native_min_value - self._minimal_switch_value
-        )  # a): clip on minimal switch time; in this case output will be on.
+        )  # clip on minimal switch time; in this case output will be on.
         timed_output = ""
         for output in self._outputs:
             self._outputs[output] = (
@@ -303,7 +303,6 @@ class SlowPWMEntity(RestoreNumber):
 
     async def _async_apply_outputs(self):
         """Set outputs accordingly to output states by service calls to hass."""
-
         for output, switch_on in self._outputs.items():
             action = SERVICE_TURN_ON if switch_on else SERVICE_TURN_OFF
             service_data = {ATTR_ENTITY_ID: output}
