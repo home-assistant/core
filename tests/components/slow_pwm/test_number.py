@@ -167,6 +167,9 @@ async def test_cycle_in_past(hass: HomeAssistant, setup_comp) -> None:
         {ATTR_VALUE: 0, ATTR_ENTITY_ID: slow_pwm},
         blocking=True,
     )
+    # Block twice to enable setting of the output
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
     await asyncio.sleep(cycle_time * 1.1)
     # Now set value to 50%. Output should be on.
     assert await hass.services.async_call(
