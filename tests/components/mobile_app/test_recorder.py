@@ -18,7 +18,7 @@ from tests.components.recorder.common import async_wait_recording_done
 async def test_exclude_attributes(
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    create_registrations: tuple[Any, Any],
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
     """Test binary_sensor has event_id and event_score excluded from recording."""

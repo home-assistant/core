@@ -19,7 +19,7 @@ from tests.typing import ClientSessionGenerator
 @pytest.fixture
 async def create_registrations(
     hass: HomeAssistant, authed_api_client: TestClient
-) -> tuple[Any, Any]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return two new registrations."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -28,14 +28,14 @@ async def create_registrations(
     )
 
     assert enc_reg.status == HTTPStatus.CREATED
-    enc_reg_json = await enc_reg.json()
+    enc_reg_json: dict[str, Any] = await enc_reg.json()
 
     clear_reg = await authed_api_client.post(
         "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
     )
 
     assert clear_reg.status == HTTPStatus.CREATED
-    clear_reg_json = await clear_reg.json()
+    clear_reg_json: dict[str, Any] = await clear_reg.json()
 
     await hass.async_block_till_done()
 
