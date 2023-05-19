@@ -282,7 +282,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         local_ip,
         primary_host,
         primary_server_conf.server_port,
-        primary_server_conf.ssl_certificate is not None,
+        all(site_config.ssl_certificate is not None for site_config in site_configs),
     )
 
     return True
@@ -364,14 +364,8 @@ class HomeAssistantHTTP:
         self.trusted_proxies = trusted_proxies
         self.runner: web.AppRunner | None = None
         self.sites: list[HomeAssistantTCPSite] = []
-        self.ssl_certificate: str | None = None
-        self.server_port: int | None = None
         # For backwards compat
-        for site in site_configs:
-            if self.ssl_certificate is None and site.ssl_certificate:
-                self.ssl_certificate = site.ssl_certificate
-            if self.server_port is None and site.server_port:
-                self.server_port = site.server_port
+        self.server_port: int = site_configs[0].server_port
 
     async def async_initialize(
         self,
