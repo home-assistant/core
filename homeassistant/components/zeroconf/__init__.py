@@ -15,6 +15,7 @@ import sys
 from typing import Any, Final, cast
 
 import voluptuous as vol
+from yarl import URL
 from zeroconf import (
     BadTypeInNameException,
     InterfaceChoice,
@@ -267,14 +268,16 @@ async def _async_register_hass_zc_service(
     }
 
     # Get instance URL's
+    external_url: str | None = None
     with suppress(NoURLAvailableError):
-        params["external_url"] = get_url(hass, allow_internal=False)
+        params["external_url"] = external_url = get_url(hass, allow_internal=False)
 
+    internal_url: str | None = None
     with suppress(NoURLAvailableError):
-        params["internal_url"] = get_url(hass, allow_external=False)
+        params["internal_url"] = internal_url = get_url(hass, allow_external=False)
 
     # Set old base URL based on external or internal
-    params["base_url"] = params["external_url"] or params["internal_url"]
+    params["base_url"] = external_url or internal_url
 
     adapters = await network.async_get_adapters(hass)
 
@@ -289,12 +292,19 @@ async def _async_register_hass_zc_service(
 
     _suppress_invalid_properties(params)
 
+    server_port: int | None = None
+    with contextlib.suppress(ValueError):
+        if (preferred_url := (internal_url or external_url)) and (
+            url_host := URL(preferred_url).host
+        ):
+            server_port = int(url_host.partition(":")[1])
+
     info = AsyncServiceInfo(
         ZEROCONF_TYPE,
         name=f"{valid_location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
         addresses=address_list,
-        port=hass.http.server_port,
+        port=server_port or hass.http.server_port,
         properties=params,
     )
 

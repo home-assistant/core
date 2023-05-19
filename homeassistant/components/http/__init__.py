@@ -364,6 +364,14 @@ class HomeAssistantHTTP:
         self.trusted_proxies = trusted_proxies
         self.runner: web.AppRunner | None = None
         self.sites: list[HomeAssistantTCPSite] = []
+        self.ssl_certificate: str | None = None
+        self.server_port: int | None = None
+        # For backwards compat
+        for site in site_configs:
+            if self.ssl_certificate is None and site.ssl_certificate:
+                self.ssl_certificate = site.ssl_certificate
+            if self.server_port is None and site.server_port:
+                self.server_port = site.server_port
 
     async def async_initialize(
         self,
