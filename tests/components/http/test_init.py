@@ -567,6 +567,9 @@ async def test_multiple_ssl_profiles(hass: HomeAssistant, tmp_path: Path) -> Non
     assert len(mock_server_context_intermediate.mock_calls) == 1
     assert len(hass.http.sites) == 2
     assert len(mock_create_server.mock_calls) == 2
+    # If all sites are using ssl use_ssl should be True
+    # for backwards compatibility
+    assert hass.config.api.use_ssl is True
 
 
 async def test_ssl_for_external_no_ssl_internal(
@@ -610,3 +613,6 @@ async def test_ssl_for_external_no_ssl_internal(
     assert len(mock_server_context_modern.mock_calls) == 1
     assert len(mock_create_server.mock_calls) == 2
     assert len(hass.http.sites) == 2
+    # If there is at least one site not using ssl, use_ssl
+    # should be False for backwards compatibility
+    assert hass.config.api.use_ssl is False
