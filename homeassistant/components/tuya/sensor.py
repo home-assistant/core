@@ -1015,6 +1015,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
+    # Smart Water Timer
+    # UNDOCUMENTED
+    "sfkzq": (*BATTERY_SENSORS,),
 }
 
 # Socket (duplicate of `kg`)
