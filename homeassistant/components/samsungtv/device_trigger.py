@@ -42,7 +42,7 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    if [TURN_ON_PLATFORM_TYPE, TURN_OFF_PLATFORM_TYPE].count(config[CONF_TYPE]) == 1:
+    if config[CONF_TYPE] in [TURN_ON_PLATFORM_TYPE, TURN_OFF_PLATFORM_TYPE]:
         device_id = config[CONF_DEVICE_ID]
         try:
             device = async_get_device_entry_by_device_id(hass, device_id)
@@ -73,7 +73,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_type = config[CONF_TYPE]
-    if [TURN_ON_PLATFORM_TYPE, TURN_OFF_PLATFORM_TYPE].count(trigger_type) == 1:
+    if config[CONF_TYPE] in [TURN_ON_PLATFORM_TYPE, TURN_OFF_PLATFORM_TYPE]:
         trigger_config = {
             CONF_PLATFORM: trigger_type,
             CONF_DEVICE_ID: config[CONF_DEVICE_ID],
