@@ -89,6 +89,7 @@ STORAGE_VERSION: Final = 1
 SAVE_DELAY: Final = 180
 
 CONF_SERVERS = "servers"
+SERVERS_GROUP = "servers"
 
 SERVER_SCHEMA_WITHOUT_PORT = {
     vol.Optional(CONF_SERVER_HOST): vol.All(
@@ -104,7 +105,7 @@ SERVER_SCHEMA_WITHOUT_PORT = {
 
 OPTIONAL_PORT = {vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port}
 
-_EXCLUSIVE_PORT_KEY = vol.Exclusive(CONF_SERVER_PORT, "server")
+_EXCLUSIVE_PORT_KEY = vol.Exclusive(CONF_SERVER_PORT, SERVERS_GROUP)
 _EXCLUSIVE_PORT_KEY.default = vol.default_factory(SERVER_PORT)
 
 EXCLUSIVE_PORT = {_EXCLUSIVE_PORT_KEY: cv.port}
@@ -138,7 +139,7 @@ HTTP_SCHEMA: Final = vol.All(
             **EXCLUSIVE_PORT,
             vol.Optional(CONF_BASE_URL): cv.string,
             vol.Exclusive(
-                CONF_SERVERS, "servers", msg=SERVERS_EXCLUSIVE_MESSAGE
+                CONF_SERVERS, SERVERS_GROUP, msg=SERVERS_EXCLUSIVE_MESSAGE
             ): vol.All(
                 cv.ensure_list,
                 [vol.Schema({**SERVER_SCHEMA_WITHOUT_PORT, **OPTIONAL_PORT})],
