@@ -147,7 +147,7 @@ PARTITIONS_TRIGGERED_CARBON_MONOXIDE = {
 PARTITIONS_UNKNOWN = {"PartitionInfo": PARTITION_INFO_UNKNOWN}
 
 ZONE_NORMAL = {
-    "ZoneID": "1",
+    "ZoneID": 1,
     "ZoneDescription": "Security",
     "ZoneStatus": ZoneStatus.FAULT,
     "ZoneTypeId": ZoneType.SECURITY,
@@ -155,23 +155,23 @@ ZONE_NORMAL = {
     "CanBeBypassed": 1,
 }
 ZONE_2 = {
-    "ZoneID": "2",
+    "ZoneID": 2,
     "ZoneDescription": "Fire",
     "ZoneStatus": ZoneStatus.LOW_BATTERY,
     "ZoneTypeId": ZoneType.FIRE_SMOKE,
     "PartitionId": "1",
-    "CanBeBypassed": 1,
+    "CanBeBypassed": 0,
 }
 ZONE_3 = {
-    "ZoneID": "3",
+    "ZoneID": 3,
     "ZoneDescription": "Gas",
     "ZoneStatus": ZoneStatus.TAMPER,
     "ZoneTypeId": ZoneType.CARBON_MONOXIDE,
     "PartitionId": "1",
-    "CanBeBypassed": 1,
+    "CanBeBypassed": 0,
 }
 ZONE_4 = {
-    "ZoneID": "4",
+    "ZoneID": 4,
     "ZoneDescription": "Motion",
     "ZoneStatus": ZoneStatus.NORMAL,
     "ZoneTypeId": ZoneType.INTERIOR_FOLLOWER,
@@ -179,7 +179,7 @@ ZONE_4 = {
     "CanBeBypassed": 1,
 }
 ZONE_5 = {
-    "ZoneID": "5",
+    "ZoneID": 5,
     "ZoneDescription": "Medical",
     "ZoneStatus": ZoneStatus.NORMAL,
     "ZoneTypeId": ZoneType.PROA7_MEDICAL,
@@ -188,7 +188,7 @@ ZONE_5 = {
 }
 # 99 is an unknown ZoneType
 ZONE_6 = {
-    "ZoneID": "6",
+    "ZoneID": 6,
     "ZoneDescription": "Medical",
     "ZoneStatus": ZoneStatus.NORMAL,
     "ZoneTypeId": 99,
@@ -343,7 +343,7 @@ ZONE_DETAILS_NORMAL = {
     "Batterylevel": "-1",
     "Signalstrength": "-1",
     "zoneAdditionalInfo": None,
-    "ZoneID": "1",
+    "ZoneID": 1,
     "ZoneStatus": ZoneStatus.NORMAL,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
