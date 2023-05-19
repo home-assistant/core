@@ -236,10 +236,17 @@ class SensorFilter(SensorEntity):
             self.async_write_ha_state()
             return
 
-        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            self._state = new_state.state
+        if new_state.state == STATE_UNKNOWN:
+            self._state = None
             self.async_write_ha_state()
             return
+
+        if new_state.state == STATE_UNAVAILABLE:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+
+        self._attr_available = True
 
         temp_state = _State(new_state.last_updated, new_state.state)
 
