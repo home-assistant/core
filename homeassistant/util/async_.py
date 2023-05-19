@@ -20,14 +20,11 @@ _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
-def done_or_cancelling(task: Future[Any]) -> bool:
+def cancelling(task: Future[Any]) -> bool:
     """Return True if task is done or cancelling."""
     # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancelling
     # is new in Python 3.11
-    return bool(
-        task.done()
-        or ((cancelling := getattr(task, "cancelling", None)) and cancelling())
-    )
+    return bool((cancelling := getattr(task, "cancelling", None)) and cancelling())
 
 
 def run_callback_threadsafe(

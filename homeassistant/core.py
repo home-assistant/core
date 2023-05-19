@@ -83,7 +83,7 @@ from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .helpers.json import json_dumps
 from .util import dt as dt_util, location, ulid as ulid_util
 from .util.async_ import (
-    done_or_cancelling,
+    cancelling,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
@@ -685,7 +685,7 @@ class HomeAssistant:
         while tasks := [
             task
             for task in self._tasks
-            if task is not current_task and not done_or_cancelling(task)
+            if task is not current_task and not cancelling(task)
         ]:
             await self._await_and_log_pending(tasks)
 
@@ -799,7 +799,7 @@ class HomeAssistant:
         # while we are awaiting canceled tasks to get their result
         # which will result in the set size changing during iteration
         for task in list(running_tasks):
-            if done_or_cancelling(task):
+            if task.done() or cancelling(task):
                 # Since we made a copy we need to check
                 # to see if the task finished while we
                 # were awaiting another task
