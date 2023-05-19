@@ -6,7 +6,6 @@ import logging
 from bluetooth_sensor_state_data import BluetoothData
 from construct.core import StreamError
 from home_assistant_bluetooth import BluetoothServiceInfo
-from sensor_state_data import DeviceClass, Units
 from victron_ble.devices import (
     BatteryMonitor,
     BatteryMonitorData,
@@ -31,6 +30,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, VICTRON_IDENTIFIER
+from .custom_state_data import SensorDeviceClass, Units
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,33 +116,33 @@ class VictronBluetoothDeviceData(BluetoothData):
     def _update_battery_monitor(self, data: BatteryMonitorData) -> None:
         self.update_sensor(
             "Remaining Minutes",
-            Units.TIME_MINUTES,
+            Units.TIME_MINUTES,  # type: ignore [arg-type]
             data.get_remaining_mins(),
-            DeviceClass.DURATION,
+            SensorDeviceClass.DURATION,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Current",
-            Units.ELECTRIC_CURRENT_AMPERE,
+            Units.ELECTRIC_CURRENT_AMPERE,  # type: ignore [arg-type]
             data.get_current(),
-            DeviceClass.CURRENT,
+            SensorDeviceClass.CURRENT,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Voltage",
-            Units.ELECTRIC_POTENTIAL_VOLT,
+            Units.ELECTRIC_POTENTIAL_VOLT,  # type: ignore [arg-type]
             data.get_voltage(),
-            DeviceClass.VOLTAGE,
+            SensorDeviceClass.VOLTAGE,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "State of Charge",
-            Units.PERCENTAGE,
+            Units.PERCENTAGE,  # type: ignore [arg-type]
             data.get_soc(),
-            DeviceClass.BATTERY,
+            SensorDeviceClass.BATTERY,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Consumed Amp Hours",
-            Units.ELECTRIC_CURRENT_FLOW_AMPERE_HOURS,
+            Units.ELECTRIC_CURRENT_FLOW_AMPERE_HOUR,  # type: ignore [arg-type]
             data.get_consumed_ah(),
-            DeviceClass.CURRENT_FLOW,
+            SensorDeviceClass.CURRENT_FLOW,  # type: ignore [arg-type]
         )
         alarm = data.get_alarm()
         if alarm is not None:
@@ -161,21 +161,21 @@ class VictronBluetoothDeviceData(BluetoothData):
         )
         self.update_sensor(
             "Temperature",
-            Units.TEMP_CELSIUS,
+            Units.TEMP_CELSIUS,  # type: ignore [arg-type]
             data.get_temperature(),
-            DeviceClass.TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Secondary Voltage",
-            Units.ELECTRIC_POTENTIAL_VOLT,
+            Units.ELECTRIC_POTENTIAL_VOLT,  # type: ignore [arg-type]
             data.get_starter_voltage(),
-            DeviceClass.VOLTAGE,
+            SensorDeviceClass.VOLTAGE,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Midpoint Voltage",
-            Units.ELECTRIC_POTENTIAL_VOLT,
+            Units.ELECTRIC_POTENTIAL_VOLT,  # type: ignore [arg-type]
             data.get_midpoint_voltage(),
-            DeviceClass.VOLTAGE,
+            SensorDeviceClass.VOLTAGE,  # type: ignore [arg-type]
         )
 
     def _update_dc_energy_meter(self, data: DcEnergyMeterData) -> None:
@@ -189,15 +189,15 @@ class VictronBluetoothDeviceData(BluetoothData):
         )
         self.update_sensor(
             "Current",
-            Units.ELECTRIC_CURRENT_AMPERE,
+            Units.ELECTRIC_CURRENT_AMPERE,  # type: ignore [arg-type]
             data.get_current(),
-            DeviceClass.CURRENT,
+            SensorDeviceClass.CURRENT,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Voltage",
-            Units.ELECTRIC_POTENTIAL_VOLT,
+            Units.ELECTRIC_POTENTIAL_VOLT,  # type: ignore [arg-type]
             data.get_voltage(),
-            DeviceClass.VOLTAGE,
+            SensorDeviceClass.VOLTAGE,  # type: ignore [arg-type]
         )
         alarm = data.get_alarm()
         if alarm is not None:
@@ -211,9 +211,9 @@ class VictronBluetoothDeviceData(BluetoothData):
         )
         self.update_sensor(
             "Temperature",
-            Units.TEMP_CELSIUS,
+            Units.TEMP_CELSIUS,  # type: ignore [arg-type]
             data.get_temperature(),
-            DeviceClass.TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Aux Mode",
@@ -222,15 +222,15 @@ class VictronBluetoothDeviceData(BluetoothData):
         )
         self.update_sensor(
             "Temperature",
-            Units.TEMP_CELSIUS,
+            Units.TEMP_CELSIUS,  # type: ignore [arg-type]
             data.get_temperature(),
-            DeviceClass.TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Secondary Voltage",
-            Units.ELECTRIC_POTENTIAL_VOLT,
+            Units.ELECTRIC_POTENTIAL_VOLT,  # type: ignore [arg-type]
             data.get_starter_voltage(),
-            DeviceClass.VOLTAGE,
+            SensorDeviceClass.VOLTAGE,  # type: ignore [arg-type]
         )
 
     def _update_solar_charger(self, data: SolarChargerData) -> None:
@@ -244,33 +244,33 @@ class VictronBluetoothDeviceData(BluetoothData):
         )
         self.update_sensor(
             "Battery Voltage",
-            Units.ELECTRIC_POTENTIAL_VOLT,
+            Units.ELECTRIC_POTENTIAL_VOLT,  # type: ignore [arg-type]
             data.get_battery_voltage(),
-            DeviceClass.VOLTAGE,
+            SensorDeviceClass.VOLTAGE,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Battery Current",
-            Units.ELECTRIC_CURRENT_AMPERE,
+            Units.ELECTRIC_CURRENT_AMPERE,  # type: ignore [arg-type]
             data.get_battery_charging_current(),
-            DeviceClass.CURRENT,
+            SensorDeviceClass.CURRENT,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Yield Today",
-            Units.ENERGY_WATT_HOUR,
+            Units.ENERGY_WATT_HOUR,  # type: ignore [arg-type]
             data.get_yield_today(),
-            DeviceClass.ENERGY,
+            SensorDeviceClass.ENERGY,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Power",
-            Units.POWER_WATT,
+            Units.POWER_WATT,  # type: ignore [arg-type]
             data.get_solar_power(),
-            DeviceClass.POWER,
+            SensorDeviceClass.POWER,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "External Device Load",
-            Units.ELECTRIC_CURRENT_AMPERE,
+            Units.ELECTRIC_CURRENT_AMPERE,  # type: ignore [arg-type]
             data.get_external_device_load(),
-            DeviceClass.CURRENT,
+            SensorDeviceClass.CURRENT,  # type: ignore [arg-type]
         )
 
     def _update_vebus(self, data: VEBusData) -> None:
@@ -292,39 +292,39 @@ class VictronBluetoothDeviceData(BluetoothData):
         )
         self.update_sensor(
             "AC In Power",
-            Units.POWER_WATT,
+            Units.POWER_WATT,  # type: ignore [arg-type]
             data.get_ac_in_power(),
-            DeviceClass.POWER,
+            SensorDeviceClass.POWER,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "AC Out Power",
-            Units.POWER_WATT,
+            Units.POWER_WATT,  # type: ignore [arg-type]
             data.get_ac_out_power(),
-            DeviceClass.POWER,
+            SensorDeviceClass.POWER,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Battery Current",
-            Units.ELECTRIC_CURRENT_AMPERE,
+            Units.ELECTRIC_CURRENT_AMPERE,  # type: ignore [arg-type]
             data.get_battery_current(),
-            DeviceClass.CURRENT,
+            SensorDeviceClass.CURRENT,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Battery Voltage",
-            Units.ELECTRIC_POTENTIAL_VOLT,
+            Units.ELECTRIC_POTENTIAL_VOLT,  # type: ignore [arg-type]
             data.get_battery_voltage(),
-            DeviceClass.VOLTAGE,
+            SensorDeviceClass.VOLTAGE,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "Battery Temperature",
-            Units.TEMP_CELSIUS,
+            Units.TEMP_CELSIUS,  # type: ignore [arg-type]
             data.get_battery_temperature(),
-            DeviceClass.TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE,  # type: ignore [arg-type]
         )
         self.update_sensor(
             "State of Charge",
-            Units.PERCENTAGE,
+            Units.PERCENTAGE,  # type: ignore [arg-type]
             data.get_soc(),
-            DeviceClass.BATTERY,
+            SensorDeviceClass.BATTERY,  # type: ignore [arg-type]
         )
 
 

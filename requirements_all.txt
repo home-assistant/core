@@ -2382,7 +2382,7 @@ sense_energy==0.12.1
 sensirion-ble==0.1.1
 
 # homeassistant.components.victron_ble
-sensor-state-data==2.14.0
+sensor-state-data==2.15.1
 
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.3
