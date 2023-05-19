@@ -138,7 +138,7 @@ def _relocated_with_message(key: str, new_location: str) -> Callable[[dict], dic
             )
         if key in config:
             _LOGGER.warning(
-                "The '%s' option %s has moved to '%s', please update your configuration.",
+                "The '%s' option %s has moved to '%s', please update your configuration",
                 key,
                 near,
                 new_location,
