@@ -76,7 +76,7 @@ GET_WEBSERVER_MOCK = {
     },
 }
 
-GET_WEBSERVER_MOCK_DEVICES = {
+GET_WEBSERVER_MOCK_DEVICES = GET_WEBSERVER_MOCK | {
     API_DEVICES: [
         {
             API_DEVICE_ID: "system1",
@@ -137,10 +137,10 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
 
 
 def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
-    """Mock API device status."""
+    """Mock API webserver status."""
 
     if devices:
-        return GET_WEBSERVER_MOCK | GET_WEBSERVER_MOCK_DEVICES
+        return GET_WEBSERVER_MOCK_DEVICES
 
     return GET_WEBSERVER_MOCK
 
