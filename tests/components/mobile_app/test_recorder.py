@@ -1,4 +1,4 @@
-"""The tests for unifiprotect recorder."""
+"""The tests for mobile_app recorder."""
 from __future__ import annotations
 
 from http import HTTPStatus
