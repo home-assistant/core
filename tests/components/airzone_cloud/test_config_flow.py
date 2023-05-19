@@ -13,9 +13,9 @@ from homeassistant.core import HomeAssistant
 from .util import (
     CONFIG,
     GET_INSTALLATIONS_MOCK,
-    GET_WEBSERVER_MOCK,
     WS_ID,
     mock_get_device_status,
+    mock_get_webserver,
 )
 
 
@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
         side_effect=None,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
-        return_value=GET_WEBSERVER_MOCK,
+        side_effect=mock_get_webserver,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
         return_value=None,
@@ -100,7 +100,7 @@ async def test_installations_list_error(hass: HomeAssistant) -> None:
         side_effect=None,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
-        return_value=GET_WEBSERVER_MOCK,
+        return_value=mock_get_webserver,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
         return_value=None,

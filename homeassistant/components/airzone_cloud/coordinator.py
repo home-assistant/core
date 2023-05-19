@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AirzoneUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching data from the Airzone device."""
+    """Class to manage fetching data from the Airzone Cloud device."""
 
     def __init__(self, hass: HomeAssistant, airzone: AirzoneCloudApi) -> None:
         """Initialize."""

@@ -32,6 +32,7 @@ from aioairzone_cloud.const import (
     API_ZONE_NUMBER,
 )
 from aioairzone_cloud.device import Device
+from aioairzone_cloud.webserver import WebServer
 
 from homeassistant.components.airzone_cloud import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
@@ -73,6 +74,9 @@ GET_WEBSERVER_MOCK = {
         API_CONNECTION_DATE: "2023-05-07T12:55:51.000Z",
         API_DISCONNECTION_DATE: "2023-01-01T22:26:55.376Z",
     },
+}
+
+GET_WEBSERVER_MOCK_DEVICES = {
     API_DEVICES: [
         {
             API_DEVICE_ID: "system1",
@@ -132,6 +136,15 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     }
 
 
+def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
+    """Mock API device status."""
+
+    if devices:
+        return GET_WEBSERVER_MOCK | GET_WEBSERVER_MOCK_DEVICES
+
+    return GET_WEBSERVER_MOCK
+
+
 async def async_init_integration(
     hass: HomeAssistant,
 ) -> None:
@@ -152,7 +165,7 @@ async def async_init_integration(
         return_value=GET_INSTALLATIONS_MOCK,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
-        return_value=GET_WEBSERVER_MOCK,
+        side_effect=mock_get_webserver,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
         return_value=None,

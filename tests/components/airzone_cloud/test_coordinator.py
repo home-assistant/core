@@ -13,8 +13,8 @@ from homeassistant.util.dt import utcnow
 from .util import (
     CONFIG,
     GET_INSTALLATIONS_MOCK,
-    GET_WEBSERVER_MOCK,
     mock_get_device_status,
+    mock_get_webserver,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -26,7 +26,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         data=CONFIG,
         domain=DOMAIN,
-        unique_id="airzone_unique_id",
+        unique_id="airzone_cloud_unique_id",
     )
     config_entry.add_to_hass(hass)
 
@@ -38,7 +38,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         return_value=GET_INSTALLATIONS_MOCK,
     ) as mock_installations, patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
-        return_value=GET_WEBSERVER_MOCK,
+        side_effect=mock_get_webserver,
     ) as mock_webserver, patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
         return_value=None,

@@ -7,7 +7,6 @@ from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.common import ConnectionOptions
 from aioairzone_cloud.const import AZD_ID, AZD_NAME, AZD_WEBSERVERS
 from aioairzone_cloud.exceptions import AirzoneCloudError, LoginError
-from aiohttp.client_exceptions import ClientConnectorError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -25,14 +24,14 @@ from .const import DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle config flow for an Airzone device."""
+    """Handle config flow for an Airzone Cloud device."""
 
     airzone: AirzoneCloudApi
 
     async def async_step_inst_pick(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Show how to enable local API."""
+        """Handle the installation selection."""
         errors = {}
         options: dict[str, str] = {}
 
@@ -101,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self.airzone.login()
                 await self.airzone.api_get_user()
-            except (ClientConnectorError, LoginError):
+            except (AirzoneCloudError, LoginError):
                 errors["base"] = "cannot_connect"
             else:
                 return await self.async_step_inst_pick()

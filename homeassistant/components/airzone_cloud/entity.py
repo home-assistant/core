@@ -14,15 +14,15 @@ from .coordinator import AirzoneUpdateCoordinator
 
 
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
-    """Define an Airzone entity."""
+    """Define an Airzone Cloud entity."""
 
     def get_airzone_value(self, key: str) -> Any:
-        """Return Airzone entity value by key."""
+        """Return Airzone Cloud entity value by key."""
         raise NotImplementedError()
 
 
 class AirzoneZoneEntity(AirzoneEntity):
-    """Define an Airzone Zone entity."""
+    """Define an Airzone Cloud Zone entity."""
 
     def __init__(
         self,

@@ -41,7 +41,7 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Add Airzone sensors from a config_entry."""
+    """Add Airzone Cloud sensors from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = []
@@ -62,7 +62,7 @@ async def async_setup_entry(
 
 
 class AirzoneSensor(AirzoneEntity, SensorEntity):
-    """Define an Airzone sensor."""
+    """Define an Airzone Cloud sensor."""
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -77,7 +77,7 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
 
 
 class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
-    """Define an Airzone zone sensor."""
+    """Define an Airzone Cloud Zone sensor."""
 
     def __init__(
         self,

@@ -16,7 +16,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Airzone from a config entry."""
+    """Set up Airzone Cloud from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
