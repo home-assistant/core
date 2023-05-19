@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+from typing import Any
+
+from aiohttp.test_utils import TestClient
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
@@ -13,7 +16,10 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    recorder_mock: Recorder, hass: HomeAssistant, create_registrations, webhook_client
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    create_registrations: tuple[Any, Any],
+    webhook_client: TestClient,
 ) -> None:
     """Test binary_sensor has event_id and event_score excluded from recording."""
     webhook_id = create_registrations[1]["webhook_id"]
