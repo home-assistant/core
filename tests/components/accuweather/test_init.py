@@ -5,9 +5,11 @@ from unittest.mock import patch
 from accuweather import ApiError
 
 from homeassistant.components.accuweather.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import init_integration
@@ -113,3 +115,21 @@ async def test_update_interval_forecast(hass: HomeAssistant) -> None:
 
         assert mock_current.call_count == 1
         assert mock_forecast.call_count == 1
+
+
+async def test_remove_ozone_sensors(hass: HomeAssistant) -> None:
+    """Test remove ozone sensors from registry."""
+    registry = er.async_get(hass)
+
+    registry.async_get_or_create(
+        SENSOR_PLATFORM,
+        DOMAIN,
+        "0123456-ozone-0",
+        suggested_object_id="home_ozone_0d",
+        disabled_by=None,
+    )
+
+    await init_integration(hass)
+
+    entry = registry.async_get("sensor.home_ozone_0d")
+    assert entry is None

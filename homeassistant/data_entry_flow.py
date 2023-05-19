@@ -48,7 +48,7 @@ RESULT_TYPE_MENU = "menu"
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
 
 
-@dataclass
+@dataclass(slots=True)
 class BaseServiceInfo:
     """Base class for discovery ServiceInfo."""
 

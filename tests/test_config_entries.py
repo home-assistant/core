@@ -276,7 +276,7 @@ async def test_remove_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> bool:
         """Mock setting up entry."""
-        hass.config_entries.async_setup_platforms(entry, ["light"])
+        await hass.config_entries.async_forward_entry_setups(entry, ["light"])
         return True
 
     async def mock_unload_entry(
@@ -2657,7 +2657,7 @@ async def test_async_setup_update_entry(hass: HomeAssistant) -> None:
         (config_entries.SOURCE_ZEROCONF, BaseServiceInfo()),
         (
             config_entries.SOURCE_HASSIO,
-            HassioServiceInfo(config={}, name="Test", slug="test"),
+            HassioServiceInfo(config={}, name="Test", slug="test", uuid="1234"),
         ),
     ),
 )
@@ -3867,7 +3867,7 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     event = asyncio.Event()
     results = []
 
-    async def test_task():
+    async def test_task() -> None:
         try:
             await event.wait()
             results.append("normal")
@@ -3875,9 +3875,14 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
             results.append("background")
             raise
 
+    async def test_unload() -> None:
+        await event.wait()
+        results.append("on_unload")
+
+    entry.async_on_unload(test_unload)
     entry.async_create_task(hass, test_task())
     entry.async_create_background_task(hass, test_task(), "background-task-name")
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
-    await entry._async_process_on_unload()
-    assert results == ["background", "normal"]
+    await entry._async_process_on_unload(hass)
+    assert results == ["on_unload", "background", "normal"]

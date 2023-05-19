@@ -9,7 +9,7 @@ from bimmer_connected.vehicle.charging_profile import ChargingMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfElectricCurrent
+from homeassistant.const import UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,19 +37,6 @@ class BMWSelectEntityDescription(SelectEntityDescription, BMWRequiredKeysMixin):
 
 
 SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
-    # --- Generic ---
-    "target_soc": BMWSelectEntityDescription(
-        key="target_soc",
-        name="Target SoC",
-        is_available=lambda v: v.is_remote_set_target_soc_enabled,
-        options=[str(i * 5 + 20) for i in range(17)],
-        current_option=lambda v: str(v.fuel_and_battery.charging_target),
-        remote_service=lambda v, o: v.remote_services.trigger_charging_settings_update(
-            target_soc=int(o)
-        ),
-        icon="mdi:battery-charging-medium",
-        unit_of_measurement=PERCENTAGE,
-    ),
     "ac_limit": BMWSelectEntityDescription(
         key="ac_limit",
         name="AC Charging Limit",

@@ -10,7 +10,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reauth_confim": {
+      "reauth_confirm": {
         "title": "Reauthenticate the Powerwall",
         "description": "[%key:component::powerwall::config::step::user::description%]",
         "data": {

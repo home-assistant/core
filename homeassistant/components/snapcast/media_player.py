@@ -175,7 +175,7 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{GROUP_PREFIX}{self._group.identifier}"
+        return f"{self._group.friendly_name} {GROUP_SUFFIX}"
 
     @property
     def source(self):
@@ -196,12 +196,6 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     def source_list(self):
         """List of available input sources."""
         return list(self._group.streams_by_name().keys())
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
-        return {"friendly_name": name}
 
     async def async_select_source(self, source: str) -> None:
         """Set input source."""
@@ -270,7 +264,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{CLIENT_PREFIX}{self._client.identifier}"
+        return f"{self._client.friendly_name} {CLIENT_SUFFIX}"
 
     @property
     def source(self):
@@ -307,8 +301,6 @@ class SnapcastClientDevice(MediaPlayerEntity):
         state_attrs = {}
         if self.latency is not None:
             state_attrs["latency"] = self.latency
-        name = f"{self._client.friendly_name} {CLIENT_SUFFIX}"
-        state_attrs["friendly_name"] = name
         return state_attrs
 
     @property

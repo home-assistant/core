@@ -65,13 +65,14 @@ async def ws_set_preferred_dataset(
     dataset_id = msg["dataset_id"]
 
     store = await dataset_store.async_get_store(hass)
-    if not (store.async_get(dataset_id)):
+    try:
+        store.preferred_dataset = dataset_id
+    except KeyError:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown dataset"
         )
         return
 
-    store.preferred_dataset = dataset_id
     connection.send_result(msg["id"])
 
 

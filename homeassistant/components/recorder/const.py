@@ -19,7 +19,9 @@ EVENT_RECORDER_HOURLY_STATISTICS_GENERATED = "recorder_hourly_statistics_generat
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 
-MAX_QUEUE_BACKLOG = 65000
+MAX_QUEUE_BACKLOG_MIN_VALUE = 65000
+ESTIMATED_QUEUE_ITEM_SIZE = 10240
+QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY = 0.65
 
 # The maximum number of rows (events) we purge in one delete statement
 

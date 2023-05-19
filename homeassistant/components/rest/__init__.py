@@ -43,7 +43,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_ENCODING,
+    CONF_SSL_CIPHER_LIST,
     COORDINATOR,
+    DEFAULT_SSL_CIPHER_LIST,
     DOMAIN,
     PLATFORM_IDX,
     REST,
@@ -185,6 +187,7 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
     method: str = config[CONF_METHOD]
     payload: str | None = config.get(CONF_PAYLOAD)
     verify_ssl: bool = config[CONF_VERIFY_SSL]
+    ssl_cipher_list: str = config.get(CONF_SSL_CIPHER_LIST, DEFAULT_SSL_CIPHER_LIST)
     username: str | None = config.get(CONF_USERNAME)
     password: str | None = config.get(CONF_PASSWORD)
     headers: dict[str, str] | None = config.get(CONF_HEADERS)
@@ -218,5 +221,6 @@ def create_rest_data_from_config(hass: HomeAssistant, config: ConfigType) -> Res
         params,
         payload,
         verify_ssl,
+        ssl_cipher_list,
         timeout,
     )
