@@ -306,7 +306,7 @@ async def test_emergency_ssl_certificate_when_invalid(
         in caplog.text
     )
 
-    assert hass.http.site is not None
+    assert len(hass.http.sites) == 1
 
 
 async def test_emergency_ssl_certificate_not_used_when_not_safe_mode(
@@ -360,7 +360,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
         in caplog.text
     )
 
-    assert hass.http.site is not None
+    assert len(hass.http.sites) == 1
 
 
 async def test_invalid_ssl_and_cannot_create_emergency_cert(
@@ -391,7 +391,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
     assert len(mock_builder.mock_calls) == 1
 
-    assert hass.http.site is not None
+    assert len(hass.http.sites) == 1
 
 
 async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
@@ -425,11 +425,12 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
                     },
                 },
             )
-            is False
+            is True
         )
         await hass.async_start()
         await hass.async_block_till_done()
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
+    # We should fallback to non-ssl so they can still access the system
     assert len(mock_builder.mock_calls) == 1
 
 
