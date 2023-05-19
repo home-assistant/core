@@ -124,12 +124,14 @@ SERVERS_EXCLUSIVE_MESSAGE = (
 
 HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
-    cv.deprecated(CONF_SERVER_HOST),
-    cv.deprecated(CONF_SERVER_PORT),
-    cv.deprecated(CONF_SSL_CERTIFICATE),
-    cv.deprecated(CONF_SSL_PEER_CERTIFICATE),
-    cv.deprecated(CONF_SSL_KEY),
-    cv.deprecated(CONF_SSL_PROFILE),
+    cv.deprecated(CONF_SERVER_HOST, replacement_key="servers[0].server_host"),
+    cv.deprecated(CONF_SERVER_PORT, replacement_key="servers[0].server_port"),
+    cv.deprecated(CONF_SSL_CERTIFICATE, replacement_key="servers[0].ssl_certificate"),
+    cv.deprecated(
+        CONF_SSL_PEER_CERTIFICATE, replacement_key="servers[0].ssl_peer_certificate"
+    ),
+    cv.deprecated(CONF_SSL_KEY, replacement_key="servers[0].ssl_key"),
+    cv.deprecated(CONF_SSL_PROFILE, replacement_key="servers[0].ssl_profile"),
     vol.Schema(
         {
             **SERVER_SCHEMA_WITHOUT_PORT,
