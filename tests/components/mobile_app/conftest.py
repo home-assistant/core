@@ -43,7 +43,9 @@ async def create_registrations(
 
 
 @pytest.fixture
-async def push_registration(hass: HomeAssistant, authed_api_client: TestClient) -> Any:
+async def push_registration(
+    hass: HomeAssistant, authed_api_client: TestClient
+) -> dict[str, Any]:
     """Return registration with push notifications enabled."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
