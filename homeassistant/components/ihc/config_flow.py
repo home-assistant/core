@@ -12,7 +12,6 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from .const import CONF_AUTOSETUP, DOMAIN
 from .util import get_controller_serial
 
-CONFIG_FLOW_VERSION = 1
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
@@ -50,7 +49,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IHC."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
