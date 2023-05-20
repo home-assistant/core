@@ -20,7 +20,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
+    PERCENTAGE,
     UnitOfDataRate,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -37,15 +39,19 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DURATION = "duration"
 CONF_PARALLEL = "parallel"
 CONF_MANUAL = "manual"
+CONF_BANDWIDTH = "bandwidth"
 
 DEFAULT_DURATION = 10
 DEFAULT_PORT = 5201
 DEFAULT_PARALLEL = 1
 DEFAULT_PROTOCOL = "tcp"
 DEFAULT_INTERVAL = timedelta(minutes=60)
+DEFAULT_BANDWIDTH = 0
 
 ATTR_DOWNLOAD = "download"
 ATTR_UPLOAD = "upload"
+ATTR_JITTER = "jitter"
+ATTR_PACKET_LOSS = "loss"
 ATTR_VERSION = "Version"
 ATTR_HOST = "host"
 
@@ -66,6 +72,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),
+    SensorEntityDescription(
+        key=ATTR_JITTER,
+        name=ATTR_JITTER.capitalize(),
+        icon="mdi:timer",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+    ),
+    SensorEntityDescription(
+        key=ATTR_PACKET_LOSS,
+        name="Packet Loss",
+        icon="mdi:lan-disconnect",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
@@ -78,6 +100,7 @@ HOST_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.Range(5, 10),
         vol.Optional(CONF_PARALLEL, default=DEFAULT_PARALLEL): vol.Range(1, 20),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.In(PROTOCOLS),
+        vol.Optional(CONF_BANDWIDTH, default=DEFAULT_BANDWIDTH): vol.All(int, vol.Range(min=0)),
     }
 )
 
@@ -144,7 +167,13 @@ class Iperf3Data:
         """Initialize the data object."""
         self._hass = hass
         self._host = host
-        self.data = {ATTR_DOWNLOAD: None, ATTR_UPLOAD: None, ATTR_VERSION: None}
+        self.data = {
+            ATTR_DOWNLOAD: None,
+            ATTR_UPLOAD: None,
+            ATTR_VERSION: None,
+            ATTR_JITTER: None,
+            ATTR_PACKET_LOSS: None,
+        }
 
     def create_client(self):
         """Create a new iperf3 client to use for measurement."""
@@ -154,6 +183,8 @@ class Iperf3Data:
         client.port = self._host[CONF_PORT]
         client.num_streams = self._host[CONF_PARALLEL]
         client.protocol = self._host[CONF_PROTOCOL]
+        if self._host[CONF_BANDWIDTH] != 0:
+            client.bandwidth = self._host[CONF_BANDWIDTH]
         client.verbose = False
         return client
 
@@ -181,6 +212,8 @@ class Iperf3Data:
                 result, "Mbps", None
             )
             self.data[ATTR_VERSION] = getattr(result, "version", None)
+            self.data[ATTR_JITTER] = getattr(result, "jitter_ms", None)
+            self.data[ATTR_PACKET_LOSS] = getattr(result, "lost_percent", None)
         else:
             result = self._run_test(ATTR_DOWNLOAD)
             self.data[ATTR_DOWNLOAD] = getattr(result, "received_Mbps", None)
