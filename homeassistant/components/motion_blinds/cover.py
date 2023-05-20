@@ -279,7 +279,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             self._previous_positions = []
             self._requesting_position = None
 
-    async def async_request_position_till_stop(self, delay = UPDATE_INTERVAL_MOVING):
+    async def async_request_position_till_stop(self, delay=UPDATE_INTERVAL_MOVING):
         """Request the position of the blind every UPDATE_INTERVAL_MOVING seconds until it stops moving."""
         self._previous_positions = []
         if self.current_cover_position is None:
@@ -335,7 +335,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
 
-        await self.async_request_position_till_stop(delay = 3)
+        await self.async_request_position_till_stop(delay=3)
 
 
 class MotionTiltDevice(MotionPositionDevice):
@@ -381,7 +381,7 @@ class MotionTiltDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
 
-        await self.async_request_position_till_stop(delay = 3)
+        await self.async_request_position_till_stop(delay=3)
 
 
 class MotionTiltOnlyDevice(MotionTiltDevice):
@@ -513,4 +513,4 @@ class MotionTDBUDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop, self._motor_key)
 
-        await self.async_request_position_till_stop(delay = 3)
+        await self.async_request_position_till_stop(delay=3)
