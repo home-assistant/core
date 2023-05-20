@@ -4,16 +4,16 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 
-from roombapy import RoombaFactory
-from roombapy.discovery import RoombaDiscovery
-from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components import dhcp
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from roombapy import RoombaFactory
+from roombapy.discovery import RoombaDiscovery
+from roombapy.getpassword import RoombaPassword
 
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
@@ -85,15 +85,28 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle zeroconf discovery."""
+        return await self._async_step_discovery(
+            discovery_info.host, discovery_info.hostname.rstrip(".local.")
+        )
+
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
+        return await self._async_step_discovery(
+            discovery_info.ip, discovery_info.hostname
+        )
 
-        if not discovery_info.hostname.startswith(("irobot-", "roomba-")):
+    async def _async_step_discovery(self, ip_address: str, hostname: str) -> FlowResult:
+        self._async_abort_entries_match({CONF_HOST: ip_address})
+
+        if not hostname.startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
-        self.host = discovery_info.ip
-        self.blid = _async_blid_from_hostname(discovery_info.hostname)
+        self.host = ip_address
+        self.blid = _async_blid_from_hostname(hostname)
         await self.async_set_unique_id(self.blid)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
 
