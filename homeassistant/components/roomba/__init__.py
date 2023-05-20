@@ -4,7 +4,6 @@ from functools import partial
 import logging
 
 import async_timeout
-from roombapy import RoombaConnectionError, RoombaFactory
 
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
@@ -16,6 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from roombapy import RoombaConnectionError, RoombaFactory
 
 from .const import (
     BLID,
