@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from smartclim_ble import BeeWiSmartClimAdvertisement, SensorData
+from smartclim_ble import BeeWiSmartClimAdvertisement, SmartClimSensorData
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,7 +38,7 @@ class SmartClimConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the Bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
-        device = SensorData()
+        device = SmartClimSensorData()
         if not device.supported_data(discovery_info.advertisement):
             return self.async_abort(reason="not_supported")
         adv = BeeWiSmartClimAdvertisement(
@@ -85,7 +85,7 @@ class SmartClimConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if address in current_addresses or address in self._discovered_devices:
                 continue
 
-            device = SensorData()
+            device = SmartClimSensorData()
             if device.supported_data(discovery_info.advertisement):
                 self._discovered_devices[
                     address
