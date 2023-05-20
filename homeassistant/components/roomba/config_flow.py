@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
+import logging
 
 import voluptuous as vol
 
@@ -36,6 +37,8 @@ MAX_NUM_DEVICES_TO_DISCOVER = 25
 
 AUTH_HELP_URL_KEY = "auth_help_url"
 AUTH_HELP_URL_VALUE = "https://www.home-assistant.io/integrations/roomba/#manually-retrieving-your-credentials"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -100,6 +103,14 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_step_discovery(self, ip_address: str, hostname: str) -> FlowResult:
+        """Handle any discovery."""
+        _LOGGER.debug(
+            "Roomba discovered at %s (%s) (source=%s) (context=%s)",
+            ip_address,
+            hostname,
+            self.source,
+            self.context,
+        )
         self._async_abort_entries_match({CONF_HOST: ip_address})
 
         if not hostname.startswith(("irobot-", "roomba-")):
