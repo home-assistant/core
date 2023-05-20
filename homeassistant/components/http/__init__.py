@@ -128,7 +128,7 @@ SERVERS_EXCLUSIVE_MESSAGE = (
 def _relocated_with_message(key: str, new_location: str) -> Callable[[dict], dict]:
     """Log key as relocated with a message."""
 
-    def validator(config: dict) -> dict:
+    def validator(config: ConfigType) -> ConfigType:
         """Check if key is in config and log the new location."""
         near = ""
         with contextlib.suppress(AttributeError):
