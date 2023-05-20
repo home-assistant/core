@@ -93,7 +93,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         return await self._async_step_discovery(
-            discovery_info.host, discovery_info.hostname.rstrip(".local.")
+            discovery_info.host, discovery_info.hostname.lower().rstrip(".local.")
         )
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
@@ -119,7 +119,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = ip_address
         self.blid = _async_blid_from_hostname(hostname)
         await self.async_set_unique_id(self.blid)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
 
         # Because the hostname is so long some sources may
         # truncate the hostname since it will be longer than
@@ -127,7 +127,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # going for a longer hostname we abort so the user
         # does not see two flows if discovery fails.
         for progress in self._async_in_progress():
-            flow_unique_id = progress["context"]["unique_id"]
+            flow_unique_id: str = progress["context"]["unique_id"]
             if flow_unique_id.startswith(self.blid):
                 return self.async_abort(reason="short_blid")
             if self.blid.startswith(flow_unique_id):
