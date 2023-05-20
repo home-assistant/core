@@ -49,7 +49,6 @@ from .const import (
     EVENT_GROUP_OFF_FAST,
     EVENT_GROUP_ON,
     EVENT_GROUP_ON_FAST,
-    ON_OFF_EVENTS,
     SIGNAL_ADD_DEFAULT_LINKS,
     SIGNAL_ADD_DEVICE_OVERRIDE,
     SIGNAL_ADD_ENTITIES,
@@ -102,8 +101,8 @@ def _register_event(event: Event, listener: Callable) -> None:
     event.subscribe(listener, force_strong_ref=True)
 
 
-def add_on_off_event_device(hass: HomeAssistant, device: Device) -> None:
-    """Register an Insteon device as an on/off event device."""
+def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
+    """Register Insteon device events."""
 
     @callback
     def async_fire_group_on_off_event(
@@ -157,12 +156,8 @@ def register_new_device_callback(hass):
         await device.async_status()
         platforms = get_device_platforms(device)
         for platform in platforms:
-            if platform == ON_OFF_EVENTS:
-                add_on_off_event_device(hass, device)
-
-            else:
-                signal = f"{SIGNAL_ADD_ENTITIES}_{platform}"
-                dispatcher_send(hass, signal, {"address": device.address})
+            signal = f"{SIGNAL_ADD_ENTITIES}_{platform}"
+            dispatcher_send(hass, signal, {"address": device.address})
 
     devices.subscribe(async_new_insteon_device, force_strong_ref=True)
 
