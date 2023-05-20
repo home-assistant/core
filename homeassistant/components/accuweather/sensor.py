@@ -33,9 +33,9 @@ from .const import (
     API_METRIC,
     ATTR_CATEGORY,
     ATTR_DIRECTION,
-    ATTR_ENGLISH,
     ATTR_FORECAST,
     ATTR_LEVEL,
+    ATTR_LOCALIZED,
     ATTR_SPEED,
     ATTR_VALUE,
     ATTRIBUTION,
@@ -68,9 +68,6 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         icon="mdi:air-filter",
         name="Air quality",
         value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
-        device_class=SensorDeviceClass.ENUM,
-        options=["good", "hazardous", "high", "low", "moderate", "unhealthy"],
-        translation_key="air_quality",
     ),
     AccuWeatherSensorDescription(
         key="CloudCoverDay",
@@ -221,7 +218,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_LOCALIZED]},
     ),
     AccuWeatherSensorDescription(
         key="WindGustNight",
@@ -230,7 +227,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_LOCALIZED]},
     ),
     AccuWeatherSensorDescription(
         key="WindDay",
@@ -238,7 +235,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         name="Wind day",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_LOCALIZED]},
     ),
     AccuWeatherSensorDescription(
         key="WindNight",
@@ -246,7 +243,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         name="Wind night",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][ATTR_VALUE]),
-        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_ENGLISH]},
+        attr_fn=lambda data: {"direction": data[ATTR_DIRECTION][ATTR_LOCALIZED]},
     ),
 )
 
@@ -316,10 +313,8 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="PressureTendency",
-        device_class=SensorDeviceClass.ENUM,
         icon="mdi:gauge",
         name="Pressure tendency",
-        options=["falling", "rising", "steady"],
         translation_key="pressure_tendency",
         value_fn=lambda data: cast(str, data["LocalizedText"]).lower(),
     ),

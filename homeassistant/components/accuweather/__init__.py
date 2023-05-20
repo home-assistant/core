@@ -91,7 +91,9 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize."""
         self.location_key = location_key
         self.forecast = forecast
-        self.accuweather = AccuWeather(api_key, session, location_key=location_key)
+        self.accuweather = AccuWeather(
+            api_key, session, language=hass.config.language, location_key=location_key
+        )
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, location_key)},
