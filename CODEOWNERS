@@ -309,6 +309,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/egardia/ @jeroenterheerdt
 /homeassistant/components/eight_sleep/ @mezz64 @raman325
 /tests/components/eight_sleep/ @mezz64 @raman325
+/homeassistant/components/electrasmart/ @jafar-atili
+/tests/components/electrasmart/ @jafar-atili
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
 /homeassistant/components/elkm1/ @gwww @bdraco
