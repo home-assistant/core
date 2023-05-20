@@ -24,6 +24,7 @@ TYPE_TO_PLATFORM = {
     "EF": Platform.CLIMATE,
 }
 
+NEVER_TIME = -120.0  # Time that will never match time.monotonic()
 ACTIVE_UPDATES_INTERVAL = 4  # Consider active for 4x the update interval
 METEO_UPDATE_INTERVAL = timedelta(minutes=5)
 REMOTE_UPDATE_INTERVAL = timedelta(seconds=60)

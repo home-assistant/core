@@ -10,12 +10,10 @@ from typing import TypeVar
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import POLLING_FALLBACK_SECONDS
+from .const import NEVER_TIME, POLLING_FALLBACK_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 _DataT = TypeVar("_DataT")
-
-NEVER_TIME = -120.0  # Time that will never match time.monotonic()
 
 
 class LookinPushCoordinator:
