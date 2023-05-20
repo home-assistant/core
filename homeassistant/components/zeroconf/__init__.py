@@ -542,6 +542,12 @@ def async_get_homekit_discovery_domain(
     return None
 
 
+@lru_cache(maxsize=256)  # matches to the cache in zeroconf itself
+def _stringify_ip_address(ip_addr: IPv4Address | IPv6Address) -> str:
+    """Stringify an IP address."""
+    return str(ip_addr)
+
+
 def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     """Return prepared info from mDNS entries."""
     properties: dict[str, Any] = {"_raw": {}}
@@ -569,7 +575,7 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     host: str | None = None
     for ip_addr in ip_addresses:
         if not ip_addr.is_link_local and not ip_addr.is_unspecified:
-            host = str(ip_addr)
+            host = _stringify_ip_address(ip_addr)
             break
     if not host:
         return None
@@ -577,7 +583,7 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     assert service.server is not None, "server cannot be none if there are addresses"
     return ZeroconfServiceInfo(
         host=host,
-        addresses=[str(ip_addr) for ip_addr in ip_addresses],
+        addresses=[_stringify_ip_address(ip_addr) for ip_addr in ip_addresses],
         port=service.port,
         hostname=service.server,
         type=service.type,
