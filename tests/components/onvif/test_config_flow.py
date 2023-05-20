@@ -1,6 +1,8 @@
 """Test ONVIF config flow."""
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.onvif import DOMAIN, config_flow
@@ -597,7 +599,8 @@ async def test_flow_manual_entry_wrong_password(hass: HomeAssistant) -> None:
         }
 
 
-async def test_option_flow(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("option_value", [True, False])
+async def test_option_flow(hass: HomeAssistant, option_value: bool) -> None:
     """Test config flow options."""
     entry, _, _ = await setup_onvif_integration(hass)
 
@@ -613,7 +616,8 @@ async def test_option_flow(hass: HomeAssistant) -> None:
         user_input={
             config_flow.CONF_EXTRA_ARGUMENTS: "",
             config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
-            config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
+            config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: option_value,
+            config_flow.CONF_ENABLE_WEBHOOKS: option_value,
         },
     )
 
@@ -621,7 +625,8 @@ async def test_option_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {
         config_flow.CONF_EXTRA_ARGUMENTS: "",
         config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
-        config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
+        config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: option_value,
+        config_flow.CONF_ENABLE_WEBHOOKS: option_value,
     }
 
 

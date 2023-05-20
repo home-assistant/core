@@ -174,7 +174,7 @@ def valid_domain(domain: str) -> bool:
     return VALID_DOMAIN.match(domain) is not None
 
 
-@functools.lru_cache(64)
+@functools.lru_cache(512)
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format.
 
@@ -1224,7 +1224,6 @@ class State:
         "domain",
         "object_id",
         "_as_dict",
-        "_as_compressed_state",
         "_as_dict_json",
         "_as_compressed_state_json",
     )
@@ -1262,7 +1261,6 @@ class State:
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
-        self._as_compressed_state: dict[str, Any] | None = None
         self._as_dict_json: str | None = None
         self._as_compressed_state_json: str | None = None
 
@@ -1312,8 +1310,6 @@ class State:
 
         Sends c (context) as a string if it only contains an id.
         """
-        if self._as_compressed_state:
-            return self._as_compressed_state
         state_context = self.context
         if state_context.parent_id is None and state_context.user_id is None:
             context: dict[str, Any] | str = state_context.id
@@ -1329,7 +1325,6 @@ class State:
             compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
                 self.last_updated
             )
-        self._as_compressed_state = compressed_state
         return compressed_state
 
     def as_compressed_state_json(self) -> str:

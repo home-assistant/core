@@ -20,7 +20,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
+from .const import (
+    CONF_ENABLE_WEBHOOKS,
+    CONF_SNAPSHOT_AUTH,
+    DEFAULT_ARGUMENTS,
+    DEFAULT_ENABLE_WEBHOOKS,
+    DOMAIN,
+)
 from .device import ONVIFDevice
 
 LOGGER = logging.getLogger(__name__)
@@ -143,6 +149,7 @@ async def async_populate_options(hass, entry):
     options = {
         CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
         CONF_RTSP_TRANSPORT: next(iter(RTSP_TRANSPORTS)),
+        CONF_ENABLE_WEBHOOKS: DEFAULT_ENABLE_WEBHOOKS,
     }
 
     hass.config_entries.async_update_entry(entry, options=options)
