@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+from roombapy import RoombaConnectionError, RoombaInfo
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp, zeroconf
@@ -9,7 +10,6 @@ from homeassistant.components.roomba import config_flow
 from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from roombapy import RoombaConnectionError, RoombaInfo
 
 from tests.common import MockConfigEntry
 
