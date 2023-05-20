@@ -113,7 +113,7 @@ _EXCLUSIVE_PORT_KEY.default = vol.default_factory(SERVER_PORT)
 EXCLUSIVE_PORT = {_EXCLUSIVE_PORT_KEY: cv.port}
 
 
-def _has_all_unique_ports(servers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _has_all_unique_ports(servers: list[ConfigType]) -> list[ConfigType]:
     """Validate that each http service has a unique port."""
     ports = [list[CONF_SERVER_PORT] for list in servers]
     vol.Schema(vol.Unique())(ports)
