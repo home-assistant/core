@@ -28,7 +28,9 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     ABSOLUTE_MOVE,
+    CONF_ENABLE_WEBHOOKS,
     CONTINUOUS_MOVE,
+    DEFAULT_ENABLE_WEBHOOKS,
     GET_CAPABILITIES_EXCEPTIONS,
     GOTOPRESET_MOVE,
     LOGGER,
@@ -52,6 +54,7 @@ class ONVIFDevice:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
         self.config_entry: ConfigEntry = config_entry
+        self._original_options = dict(config_entry.options)
         self.available: bool = True
 
         self.info: DeviceInfo = DeviceInfo()
@@ -62,6 +65,13 @@ class ONVIFDevice:
         self.platforms: list[Platform] = []
 
         self._dt_diff_seconds: float = 0
+
+    async def _async_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        if self._original_options != entry.options:
+            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
     @property
     def name(self) -> str:
@@ -150,6 +160,14 @@ class ONVIFDevice:
         LOGGER.debug("%s: starting events", self.name)
         self.capabilities.events = await self.async_start_events()
         LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
+
+        # Bind the listener to the ONVIFDevice instance since
+        # async_update_listener only creates a weak reference to the listener
+        # and we need to make sure it doesn't get garbage collected since only
+        # the ONVIFDevice instance is stored in hass.data
+        self.config_entry.async_on_unload(
+            self.config_entry.add_update_listener(self._async_update_listener)
+        )
 
     async def async_stop(self, event=None):
         """Shut it all down."""
@@ -357,7 +375,12 @@ class ONVIFDevice:
                 "WSPullPointSupport"
             )
             LOGGER.debug("%s: WSPullPointSupport: %s", self.name, pull_point_support)
-            return await self.events.async_start(pull_point_support is not False, True)
+            return await self.events.async_start(
+                pull_point_support is not False,
+                self.config_entry.options.get(
+                    CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
+                ),
+            )
 
         return False
 
