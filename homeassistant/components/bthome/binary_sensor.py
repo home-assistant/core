@@ -1,6 +1,8 @@
 """Support for BTHome binary sensors."""
 from __future__ import annotations
 
+import logging
+
 from bthome_ble import (
     BinarySensorDeviceClass as BTHomeBinarySensorDeviceClass,
     SensorUpdate,
@@ -13,18 +15,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.components.bluetooth.passive_update_processor import (
-    PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothProcessorEntity,
 )
-from homeassistant.const import ATTR_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
-from .coordinator import BTHomePassiveBluetoothProcessorCoordinator
+from .coordinator import (
+    BTHomePassiveBluetoothDataProcessor,
+    BTHomePassiveBluetoothProcessorCoordinator,
+)
 from .device import device_key_to_bluetooth_entity_key
+
+_LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSOR_DESCRIPTIONS = {
     BTHomeBinarySensorDeviceClass.BATTERY: BinarySensorEntityDescription(
@@ -177,7 +182,9 @@ async def async_setup_entry(
     coordinator: BTHomePassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
-    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
+    processor = BTHomePassiveBluetoothDataProcessor(
+        sensor_update_to_bluetooth_data_update
+    )
     entry.async_on_unload(
         processor.async_add_entities_listener(
             BTHomeBluetoothBinarySensorEntity, async_add_entities
@@ -187,7 +194,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothBinarySensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[bool | None]],
+    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor],
     BinarySensorEntity,
 ):
     """Representation of a BTHome binary sensor."""
@@ -200,11 +207,7 @@ class BTHomeBluetoothBinarySensorEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.device_info:
-            if self.device_info[ATTR_MODEL] and self.device_info[ATTR_MODEL].endswith(
-                "(trigger based device)"
-            ):
-                # Trigger based devices sleep for an indeterminate amount of time
-                # so there is no way to track their availability.
-                return True
-        return super().available
+        coordinator: BTHomePassiveBluetoothProcessorCoordinator = (
+            self.processor.coordinator
+        )
+        return coordinator.device_data.sleepy_device or super().available

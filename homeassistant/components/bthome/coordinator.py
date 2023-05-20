@@ -10,6 +10,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
 )
 from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothDataProcessor,
     PassiveBluetoothProcessorCoordinator,
 )
 from homeassistant.core import HomeAssistant
@@ -33,3 +34,9 @@ class BTHomePassiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordi
         super().__init__(hass, logger, address, mode, update_method, connectable)
         self.discovered_device_classes = discovered_device_classes
         self.device_data = device_data
+
+
+class BTHomePassiveBluetoothDataProcessor(PassiveBluetoothDataProcessor):
+    """Define a BTHome Bluetooth Passive Update Data Processor."""
+
+    coordinator: BTHomePassiveBluetoothProcessorCoordinator
