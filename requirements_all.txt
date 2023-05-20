@@ -1607,6 +1607,9 @@ pyefergy==22.1.1
 # homeassistant.components.eight_sleep
 pyeight==0.3.2
 
+# homeassistant.components.electrasmart
+pyelectra==1.2.0
+
 # homeassistant.components.emby
 pyemby==1.8
 
