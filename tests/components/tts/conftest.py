@@ -2,7 +2,7 @@
 
 From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 """
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -60,22 +60,14 @@ def mock_init_cache_dir(
 
 
 @pytest.fixture
-def init_cache_dir_side_effect(
-    hass: HomeAssistant,
-) -> Callable[[HomeAssistant, str], str]:
+def init_cache_dir_side_effect() -> Any:
     """Return the cache dir."""
-
-    def side_effect(hass: HomeAssistant, cache_dir: str) -> str:
-        """Return the cache dir."""
-        return hass.config.path(cache_dir)
-
-    return side_effect
+    return None
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request):
     """Mock the TTS cache dir with empty dir."""
-    mock_init_cache_dir.side_effect = None
     mock_init_cache_dir.return_value = str(tmp_path)
 
     # Restore original get cache files behavior, we're working with a real dir.

@@ -191,6 +191,7 @@ class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
     SENSOR_ATTR = "present_value"
+    _attr_name: str = "Analog input"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_POWER_CONFIGURATION)
@@ -247,13 +248,16 @@ class Battery(Sensor):
         return state_attrs
 
 
-@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
+    stop_on_match_group=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
+    models={"VZM31-SN", "SP 234", "outletv4"},
+)
 class ElectricalMeasurement(Sensor):
     """Active power measurement."""
 
     SENSOR_ATTR = "active_power"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
-    _attr_should_poll = True  # BaseZhaEntity defaults to False
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Active power"
     _attr_native_unit_of_measurement: str = UnitOfPower.WATT
@@ -283,6 +287,16 @@ class ElectricalMeasurement(Sensor):
             return round(value, self._decimals)
         return round(value)
 
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
+    stop_on_match_group=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
+)
+class PolledElectricalMeasurement(ElectricalMeasurement):
+    """Polled active power measurement."""
+
+    _attr_should_poll = True  # BaseZhaEntity defaults to False
+
     async def async_update(self) -> None:
         """Retrieve latest state."""
         if not self.available:
@@ -298,7 +312,6 @@ class ElectricalMeasurementApparentPower(
 
     SENSOR_ATTR = "apparent_power"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
-    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "Apparent power"
     _attr_native_unit_of_measurement = UnitOfApparentPower.VOLT_AMPERE
     _div_mul_prefix = "ac_power"
@@ -310,7 +323,6 @@ class ElectricalMeasurementRMSCurrent(ElectricalMeasurement, id_suffix="rms_curr
 
     SENSOR_ATTR = "rms_current"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
-    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "RMS current"
     _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
     _div_mul_prefix = "ac_current"
@@ -322,7 +334,6 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
 
     SENSOR_ATTR = "rms_voltage"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
-    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "RMS voltage"
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _div_mul_prefix = "ac_voltage"
@@ -334,7 +345,6 @@ class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_freque
 
     SENSOR_ATTR = "ac_frequency"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
-    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "AC frequency"
     _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
     _div_mul_prefix = "ac_frequency"
@@ -346,7 +356,6 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_f
 
     SENSOR_ATTR = "power_factor"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
-    _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_name: str = "Power factor"
     _attr_native_unit_of_measurement = PERCENTAGE
 

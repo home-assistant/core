@@ -21,19 +21,21 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import MATCH_ALL
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     intent,
+    start,
     template,
     translation,
 )
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
-from .const import DOMAIN
+from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
@@ -73,6 +75,34 @@ def _get_language_variations(language: str) -> Iterable[str]:
         yield lang
 
 
+@core.callback
+def async_setup(hass: core.HomeAssistant) -> None:
+    """Set up entity registry listener for the default agent."""
+    entity_registry = er.async_get(hass)
+    for entity_id in entity_registry.entities:
+        async_should_expose(hass, DOMAIN, entity_id)
+
+    @core.callback
+    def async_entity_state_listener(
+        changed_entity: str,
+        old_state: core.State | None,
+        new_state: core.State | None,
+    ):
+        """Set expose flag on new entities."""
+        if old_state is not None or new_state is None:
+            return
+        async_should_expose(hass, DOMAIN, changed_entity)
+
+    @core.callback
+    def async_hass_started(hass: core.HomeAssistant) -> None:
+        """Set expose flag on all entities."""
+        for state in hass.states.async_all():
+            async_should_expose(hass, DOMAIN, state.entity_id)
+        async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
+
+    start.async_at_started(hass, async_hass_started)
+
+
 class DefaultAgent(AbstractConversationAgent):
     """Default agent for conversation agent."""
 
@@ -108,6 +138,11 @@ class DefaultAgent(AbstractConversationAgent):
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             self._async_handle_entity_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
+            core.EVENT_STATE_CHANGED,
+            self._async_handle_state_changed,
             run_immediately=True,
         )
         async_listen_entity_updates(
@@ -166,6 +201,7 @@ class DefaultAgent(AbstractConversationAgent):
                 user_input.text,
                 user_input.context,
                 language,
+                assistant=DOMAIN,
             )
         except intent.IntentHandleError:
             _LOGGER.exception("Intent handling error")
@@ -455,9 +491,16 @@ class DefaultAgent(AbstractConversationAgent):
     @core.callback
     def _async_handle_entity_registry_changed(self, event: core.Event) -> None:
         """Clear names list cache when an entity registry entry has changed."""
-        if event.data["action"] == "update" and not any(
+        if event.data["action"] != "update" or not any(
             field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         ):
+            return
+        self._slot_lists = None
+
+    @core.callback
+    def _async_handle_state_changed(self, event: core.Event) -> None:
+        """Clear names list cache when a state is added or removed from the state machine."""
+        if event.data.get("old_state") and event.data.get("new_state"):
             return
         self._slot_lists = None
 
@@ -472,31 +515,39 @@ class DefaultAgent(AbstractConversationAgent):
             return self._slot_lists
 
         area_ids_with_entities: set[str] = set()
-        all_entities = er.async_get(self.hass)
-        entities = [
-            entity
-            for entity in all_entities.entities.values()
-            if async_should_expose(self.hass, DOMAIN, entity.entity_id)
+        entity_registry = er.async_get(self.hass)
+        states = [
+            state
+            for state in self.hass.states.async_all()
+            if async_should_expose(self.hass, DOMAIN, state.entity_id)
         ]
         devices = dr.async_get(self.hass)
 
         # Gather exposed entity names
         entity_names = []
-        for entity in entities:
+        for state in states:
             # Checked against "requires_context" and "excludes_context" in hassil
-            context = {"domain": entity.domain}
-            if entity.device_class:
-                context[ATTR_DEVICE_CLASS] = entity.device_class
+            context = {"domain": state.domain}
+            if state.attributes:
+                # Include some attributes
+                for attr in DEFAULT_EXPOSED_ATTRIBUTES:
+                    if attr not in state.attributes:
+                        continue
+                    context[attr] = state.attributes[attr]
+
+            entity = entity_registry.async_get(state.entity_id)
+
+            if not entity:
+                # Default name
+                entity_names.append((state.name, state.name, context))
+                continue
 
             if entity.aliases:
                 for alias in entity.aliases:
                     entity_names.append((alias, alias, context))
 
             # Default name
-            name = entity.async_friendly_name(self.hass) or entity.entity_id.replace(
-                "_", " "
-            )
-            entity_names.append((name, name, context))
+            entity_names.append((state.name, state.name, context))
 
             if entity.area_id:
                 # Expose area too

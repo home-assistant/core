@@ -111,7 +111,9 @@ async def test_webhook_post(
     assert len(events) == 1
 
 
-async def test_webhook_allowed_methods_internet(hass, hass_client_no_auth):
+async def test_webhook_allowed_methods_internet(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test the webhook obeys allowed_methods and local_only options."""
     events = []
 

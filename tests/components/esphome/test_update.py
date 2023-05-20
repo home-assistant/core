@@ -1,4 +1,5 @@
 """Test ESPHome update entities."""
+import asyncio
 import dataclasses
 from unittest.mock import Mock, patch
 
@@ -197,3 +198,43 @@ async def test_update_device_state_for_availability(
 
     state = hass.states.get("update.none_firmware")
     assert state.state == "on"
+
+
+async def test_update_entity_dashboard_not_available_startup(
+    hass: HomeAssistant, mock_config_entry, mock_device_info, mock_dashboard
+) -> None:
+    """Test ESPHome update entity when dashboard is not available at startup."""
+    with patch(
+        "homeassistant.components.esphome.update.DomainData.get_entry_data",
+        return_value=Mock(available=True, device_info=mock_device_info),
+    ), patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        side_effect=asyncio.TimeoutError,
+    ):
+        await async_get_dashboard(hass).async_refresh()
+        assert await hass.config_entries.async_forward_entry_setup(
+            mock_config_entry, "update"
+        )
+
+    state = hass.states.get("update.none_firmware")
+    assert state is None
+
+    mock_dashboard["configured"] = [
+        {
+            "name": "test",
+            "current_version": "2023.2.0-dev",
+            "configuration": "test.yaml",
+        }
+    ]
+    await async_get_dashboard(hass).async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.none_firmware")
+    assert state.state == "on"
+    expected_attributes = {
+        "latest_version": "2023.2.0-dev",
+        "installed_version": "1.0.0",
+        "supported_features": UpdateEntityFeature.INSTALL,
+    }
+    for key, expected_value in expected_attributes.items():
+        assert state.attributes.get(key) == expected_value

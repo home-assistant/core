@@ -386,7 +386,10 @@ omit =
     homeassistant/components/foscam/camera.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
+    homeassistant/components/freebox/camera.py
     homeassistant/components/freebox/device_tracker.py
+    homeassistant/components/freebox/home_base.py
+    homeassistant/components/freebox/router.py
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/common.py
@@ -785,6 +788,7 @@ omit =
     homeassistant/components/nibe_heatpump/select.py
     homeassistant/components/nibe_heatpump/sensor.py
     homeassistant/components/nibe_heatpump/switch.py
+    homeassistant/components/nibe_heatpump/water_heater.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
@@ -830,6 +834,7 @@ omit =
     homeassistant/components/onvif/event.py
     homeassistant/components/onvif/parsers.py
     homeassistant/components/onvif/sensor.py
+    homeassistant/components/onvif/util.py
     homeassistant/components/open_meteo/weather.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
@@ -996,7 +1001,6 @@ omit =
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/roborock/coordinator.py
-    homeassistant/components/roborock/vacuum.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
@@ -1289,7 +1293,6 @@ omit =
     homeassistant/components/toon/switch.py
     homeassistant/components/torque/sensor.py
     homeassistant/components/totalconnect/__init__.py
-    homeassistant/components/totalconnect/binary_sensor.py
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/tplink_omada/__init__.py
@@ -1532,6 +1535,8 @@ omit =
     homeassistant/components/zwave_me/sensor.py
     homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
+    homeassistant/components/electrasmart/climate.py
+    homeassistant/components/electrasmart/__init__.py
 
 [report]
 # Regexes for lines to exclude from consideration

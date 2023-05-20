@@ -44,6 +44,8 @@ async def async_setup_entry(
 class DemoProviderEntity(SpeechToTextEntity):
     """Demo speech API provider entity."""
 
+    _attr_name = "Demo STT"
+
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
