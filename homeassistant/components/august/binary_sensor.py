@@ -50,6 +50,7 @@ def _retrieve_online_state(data: AugustData, detail: DoorbellDetail) -> bool:
 
 
 def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    assert data.activity_stream is not None
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_MOTION}
     )
@@ -61,6 +62,7 @@ def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
 
 
 def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    assert data.activity_stream is not None
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_IMAGE_CAPTURE}
     )
@@ -72,6 +74,7 @@ def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> b
 
 
 def _retrieve_ding_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    assert data.activity_stream is not None
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_DING}
     )
@@ -211,6 +214,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
     @callback
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
+        assert self._data.activity_stream is not None
         door_activity = self._data.activity_stream.get_latest_device_activity(
             self._device_id, {ActivityType.DOOR_OPERATION}
         )
