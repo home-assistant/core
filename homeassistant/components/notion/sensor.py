@@ -11,11 +11,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
-from .const import DOMAIN, LOGGER, SENSOR_TEMPERATURE
+from .const import DOMAIN, SENSOR_TEMPERATURE
 from .model import NotionEntityDescriptionMixin
 
 
@@ -63,15 +63,24 @@ async def async_setup_entry(
 class NotionSensor(NotionEntity, SensorEntity):
     """Define a Notion sensor."""
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Fetch new state data for the sensor."""
-        listener = self.coordinator.data.listeners[self._listener_id]
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor."""
+        if self.listener.listener_kind == ListenerKind.TEMPERATURE:
+            if not self.coordinator.data.user_preferences:
+                return None
+            if self.coordinator.data.user_preferences.celsius_enabled:
+                return UnitOfTemperature.CELSIUS
+            return UnitOfTemperature.FAHRENHEIT
+        return None
 
-        if listener.listener_kind == ListenerKind.TEMPERATURE:
-            self._attr_native_value = round(listener.status.temperature, 1)  # type: ignore[attr-defined]
-        else:
-            LOGGER.error(
-                "Unknown listener type for sensor %s",
-                self.coordinator.data.sensors[self._sensor_id],
-            )
+    @property
+    def native_value(self) -> str | None:
+        """Return the value reported by the sensor.
+
+        The Notion API only returns a localized string for temperature (e.g. "70°"); we
+        simply remove the degree symbol:
+        """
+        if not self.listener.status_localized:
+            return None
+        return self.listener.status_localized.state[:-1]
