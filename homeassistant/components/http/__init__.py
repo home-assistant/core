@@ -125,7 +125,9 @@ SERVERS_EXCLUSIVE_MESSAGE = (
 )
 
 
-def _relocated_with_message(key: str, new_location: str) -> Callable[[ConfigType], ConfigType]:
+def _relocated_with_message(
+    key: str, new_location: str
+) -> Callable[[ConfigType], ConfigType]:
     """Log key as relocated with a message."""
 
     def validator(config: ConfigType) -> ConfigType:
