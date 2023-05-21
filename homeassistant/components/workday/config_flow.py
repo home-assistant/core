@@ -230,7 +230,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("abort_check in options with %s", combined_input)
             self._async_abort_entries_match(abort_match)
 
-            LOGGER.debug("Has errors occurred %s", errors)
+            LOGGER.debug("Errors have occurred %s", errors)
             if not errors:
                 LOGGER.debug("No duplicate, no errors, creating entry")
                 return self.async_create_entry(
@@ -299,7 +299,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
         new_schema = self.add_suggested_values_to_schema(
             schema, user_input or self.options
         )
-        LOGGER.debug("Has errors occurred %s", errors)
+        LOGGER.debug("Errors have occurred in options %s", errors)
         return self.async_show_form(
             step_id="init",
             data_schema=new_schema,
