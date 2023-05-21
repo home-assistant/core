@@ -341,10 +341,15 @@ class KodiEntity(MediaPlayerEntity):
 
     @callback
     def async_on_key_press(self, sender, data):
-        """Handle a incomming key press notification."""
+        """Handle a incoming key press notification."""
         self.hass.bus.async_fire(
             f"{DOMAIN}_keypress",
-            {CONF_TYPE: "keypress", CONF_DEVICE_ID: self._device_id, "sender": sender, "data": data},
+            {
+                CONF_TYPE: "keypress",
+                CONF_DEVICE_ID: self._device_id,
+                "sender": sender,
+                "data": data,
+            },
         )
 
     async def async_on_quit(self, sender, data):
@@ -469,9 +474,7 @@ class KodiEntity(MediaPlayerEntity):
         self._connection.server.Application.OnVolumeChanged = (
             self.async_on_volume_changed
         )
-        self._connection.server.Other.OnKeyPress = (
-            self.async_on_key_press
-        )
+        self._connection.server.Other.OnKeyPress = self.async_on_key_press
         self._connection.server.System.OnQuit = self.async_on_quit
         self._connection.server.System.OnRestart = self.async_on_quit
         self._connection.server.System.OnSleep = self.async_on_quit
