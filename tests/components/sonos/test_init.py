@@ -291,7 +291,7 @@ async def test_async_poll_manual_hosts_5(
         "homeassistant.components.sonos.DISCOVERY_INTERVAL"
     ) as mock_discovery_interval:
         # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.2, 60])
+        mock_discovery_interval.total_seconds = Mock(side_effect=[0.5, 60])
 
         await _setup_hass(hass)
 
@@ -300,7 +300,7 @@ async def test_async_poll_manual_hosts_5(
 
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             await hass.async_block_till_done()
             assert "Activity on Living Room" in caplog.text
             assert "Activity on Bedroom" in caplog.text
@@ -327,7 +327,7 @@ async def test_async_poll_manual_hosts_6(
         "homeassistant.components.sonos.DISCOVERY_INTERVAL"
     ) as mock_discovery_interval:
         # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.2, 60])
+        mock_discovery_interval.total_seconds = Mock(side_effect=[0.5, 60])
         await _setup_hass(hass)
 
         assert "media_player.bedroom" in entity_registry.entities
@@ -336,7 +336,7 @@ async def test_async_poll_manual_hosts_6(
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
             # Delay for second iteration and other tasks
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             await hass.async_block_till_done()
             assert "Activity on Living Room" not in caplog.text
             assert "Activity on Bedroom" not in caplog.text
