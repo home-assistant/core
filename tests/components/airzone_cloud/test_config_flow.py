@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .util import (
     CONFIG,
+    GET_INSTALLATION_MOCK,
     GET_INSTALLATIONS_MOCK,
     WS_ID,
     mock_get_device_status,
@@ -28,6 +29,9 @@ async def test_form(hass: HomeAssistant) -> None:
     ) as mock_setup_entry, patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_status",
         side_effect=mock_get_device_status,
+    ), patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installation",
+        return_value=GET_INSTALLATION_MOCK,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installations",
         return_value=GET_INSTALLATIONS_MOCK,

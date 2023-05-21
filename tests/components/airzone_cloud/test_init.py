@@ -28,13 +28,10 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.list_installations",
         return_value=[],
     ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.update_systems",
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.update_installation",
         return_value=None,
     ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.update_webservers",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.update_zones",
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.update",
         return_value=None,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

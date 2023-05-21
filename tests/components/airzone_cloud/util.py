@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 from aioairzone_cloud.const import (
+    API_AUTH_LOGIN,
     API_AZ_SYSTEM,
     API_AZ_ZONE,
     API_CELSIUS,
@@ -14,19 +15,25 @@ from aioairzone_cloud.const import (
     API_DEVICES,
     API_DISCONNECTION_DATE,
     API_FAH,
+    API_GROUPS,
     API_HUMIDITY,
     API_INSTALLATION_ID,
     API_INSTALLATIONS,
     API_IS_CONNECTED,
     API_LOCAL_TEMP,
+    API_META,
     API_NAME,
+    API_REFRESH_TOKEN,
     API_STAT_AP_MAC,
     API_STAT_CHANNEL,
     API_STAT_QUALITY,
     API_STAT_SSID,
     API_STATUS,
     API_SYSTEM_NUMBER,
+    API_TOKEN,
+    API_TYPE,
     API_WS_FW,
+    API_WS_ID,
     API_WS_IDS,
     API_WS_TYPE,
     API_ZONE_NUMBER,
@@ -46,6 +53,44 @@ CONFIG = {
     CONF_ID: "inst1",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
+}
+
+GET_INSTALLATION_MOCK = {
+    API_GROUPS: [
+        {
+            API_NAME: "Group",
+            API_DEVICES: [
+                {
+                    API_DEVICE_ID: "system1",
+                    API_TYPE: API_AZ_SYSTEM,
+                    API_META: {
+                        API_SYSTEM_NUMBER: 1,
+                    },
+                    API_WS_ID: WS_ID,
+                },
+                {
+                    API_DEVICE_ID: "zone1",
+                    API_NAME: "Salon",
+                    API_TYPE: API_AZ_ZONE,
+                    API_META: {
+                        API_SYSTEM_NUMBER: 1,
+                        API_ZONE_NUMBER: 1,
+                    },
+                    API_WS_ID: WS_ID,
+                },
+                {
+                    API_DEVICE_ID: "zone2",
+                    API_NAME: "Dormitorio",
+                    API_TYPE: API_AZ_ZONE,
+                    API_META: {
+                        API_SYSTEM_NUMBER: 1,
+                        API_ZONE_NUMBER: 2,
+                    },
+                    API_WS_ID: WS_ID,
+                },
+            ],
+        },
+    ],
 }
 
 GET_INSTALLATIONS_MOCK = {
@@ -110,6 +155,18 @@ GET_WEBSERVER_MOCK_DEVICES = GET_WEBSERVER_MOCK | {
 }
 
 
+def mock_api_request(method: str, path: str, json: Any | None = None) -> dict[str, Any]:
+    """Mock API device status."""
+
+    if path.endswith(API_AUTH_LOGIN):
+        return {
+            API_TOKEN: "token",
+            API_REFRESH_TOKEN: "refresh-token",
+        }
+
+    return {}
+
+
 def mock_get_device_status(device: Device) -> dict[str, Any]:
     """Mock API device status."""
 
@@ -161,14 +218,17 @@ async def async_init_integration(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_status",
         side_effect=mock_get_device_status,
     ), patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installation",
+        return_value=GET_INSTALLATION_MOCK,
+    ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installations",
         return_value=GET_INSTALLATIONS_MOCK,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
         side_effect=mock_get_webserver,
     ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
-        return_value=None,
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_request",
+        side_effect=mock_api_request,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
