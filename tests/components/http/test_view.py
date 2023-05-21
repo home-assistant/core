@@ -86,3 +86,13 @@ async def test_not_running(mock_request_with_stopping: Mock) -> None:
         AsyncMock(side_effect=Unauthorized),
     )(mock_request_with_stopping)
     assert response.status == HTTPStatus.SERVICE_UNAVAILABLE
+
+
+async def test_invalid_handler(mock_request: Mock) -> None:
+    """Test an invalid handler."""
+    with pytest.raises(TypeError):
+        await request_handler_factory(
+            mock_request.app["hass"],
+            Mock(requires_auth=False),
+            AsyncMock(return_value=["not valid"]),
+        )(mock_request)
