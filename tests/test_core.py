@@ -33,8 +33,9 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.core import HassJob, HomeAssistant, State
+from homeassistant.core import HassJob, HomeAssistant, ServiceResult, State
 from homeassistant.exceptions import (
+    HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
     MaxLengthExceeded,
@@ -1080,6 +1081,100 @@ async def test_serviceregistry_callback_service_raise_exception(
     # Non-blocking service call never throw exception
     hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
     await hass.async_block_till_done()
+
+
+async def test_serviceregistry_return_values(hass: HomeAssistant) -> None:
+    """Test service call for a service that has return values."""
+
+    def service_handler(_) -> ServiceResult:
+        """Service handler coroutine."""
+        return {"test-reply": "test-value1"}
+
+    hass.services.async_register(
+        "test_domain",
+        "test_service",
+        service_handler,
+    )
+    result = await hass.services.async_call(
+        "test_domain",
+        "test_service",
+        service_data={},
+        blocking=True,
+        return_values=True,
+    )
+    await hass.async_block_till_done()
+    assert result == {"test-reply": "test-value1"}
+
+
+async def test_serviceregistry_async_return_values(hass: HomeAssistant) -> None:
+    """Test service call for an async service that has return values."""
+
+    async def service_handler(_) -> ServiceResult:
+        """Service handler coroutine."""
+        return {"test-reply": "test-value1"}
+
+    hass.services.async_register(
+        "test_domain",
+        "test_service",
+        service_handler,
+    )
+    result = await hass.services.async_call(
+        "test_domain",
+        "test_service",
+        service_data={},
+        blocking=True,
+        return_values=True,
+    )
+    await hass.async_block_till_done()
+    assert result == {"test-reply": "test-value1"}
+
+
+async def test_services_call_return_values_requires_blocking(
+    hass: HomeAssistant,
+) -> None:
+    """Test that non-blocking service calls cannot return values."""
+    async_mock_service(hass, "test_domain", "test_service")
+    with pytest.raises(ValueError, match="when blocking=False"):
+        await hass.services.async_call(
+            "test_domain",
+            "test_service",
+            service_data={},
+            blocking=False,
+            return_values=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("return_value", "expected_error"),
+    [
+        (True, "expected a dictionary"),
+        (False, "expected a dictionary"),
+        ("some-value", "expected a dictionary"),
+    ],
+)
+async def test_serviceregistry_return_values_invalid(
+    hass: HomeAssistant, return_value: Any, expected_error: str
+) -> None:
+    """Test service call return values are not returned when there is no result schema."""
+
+    def service_handler(_) -> ServiceResult:
+        """Service handler coroutine."""
+        return return_value
+
+    hass.services.async_register(
+        "test_domain",
+        "test_service",
+        service_handler,
+    )
+    with pytest.raises(HomeAssistantError, match=expected_error):
+        await hass.services.async_call(
+            "test_domain",
+            "test_service",
+            service_data={},
+            blocking=True,
+            return_values=True,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_config_defaults() -> None:

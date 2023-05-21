@@ -88,6 +88,7 @@ from .util.async_ import (
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
+from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
 from .util.unit_system import (
@@ -130,6 +131,7 @@ DOMAIN = "homeassistant"
 # How long to wait to log tasks that are blocking
 BLOCK_LOG_TIMEOUT = 60
 
+ServiceResult = bool | JsonObjectType | None
 
 class ConfigSource(StrEnum):
     """Source of core configuration."""
@@ -1659,11 +1661,10 @@ class Service:
 
     def __init__(
         self,
-        func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
+        func: Callable[[ServiceCall], Coroutine[Any, Any, ServiceResult] | None],
         schema: vol.Schema | None,
         domain: str,
         service: str,
-        context: Context | None = None,
     ) -> None:
         """Initialize a service."""
         self.job = HassJob(func, f"service {domain}.{service}")
@@ -1731,7 +1732,10 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResult] | None,
+        ],
         schema: vol.Schema | None = None,
     ) -> None:
         """Register a service.
@@ -1747,18 +1751,26 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
+        service_func: Callable[
+            [ServiceCall], Coroutine[Any, Any, ServiceResult] | None
+        ],
         schema: vol.Schema | None = None,
     ) -> None:
         """Register a service.
 
-        Schema is called to coerce and validate the service data.
+        Schema is called to coerce and validate the service data. The result schema (optional)
+        allows the service call to support dict return values and is used to validate the result.
 
         This method must be run in the event loop.
         """
         domain = domain.lower()
         service = service.lower()
-        service_obj = Service(service_func, schema, domain, service)
+        service_obj = Service(
+            service_func,
+            schema,
+            domain,
+            service,
+        )
 
         if domain in self._services:
             self._services[domain][service] = service_obj
@@ -1805,13 +1817,22 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Context | None = None,
         target: dict[str, Any] | None = None,
-    ) -> bool | None:
+        return_values: bool = False,
+    ) -> ServiceResult:
         """Call a service.
 
         See description of async_call for details.
         """
         return asyncio.run_coroutine_threadsafe(
-            self.async_call(domain, service, service_data, blocking, context, target),
+            self.async_call(
+                domain,
+                service,
+                service_data,
+                blocking,
+                context,
+                target,
+                return_values,
+            ),
             self._hass.loop,
         ).result()
 
@@ -1823,10 +1844,15 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Context | None = None,
         target: dict[str, Any] | None = None,
-    ) -> None:
+        return_values: bool = False,
+    ) -> ServiceResult:
         """Call a service.
 
         Specify blocking=True to wait until service is executed.
+
+        If return_values=True, indicates that the caller can consume return values
+        from the service, if any. Return values are a dict that can be returned by the
+        standard JSON serialization process. Return values can only be used with blocking=True.
 
         This method will fire an event to indicate the service has been called.
 
@@ -1839,6 +1865,9 @@ class ServiceRegistry:
         service = service.lower()
         context = context or Context()
         service_data = service_data or {}
+
+        if return_values and not blocking:
+            raise ValueError("Invalid argument return_values=True when blocking=False")
 
         try:
             handler = self._services[domain][service]
@@ -1879,11 +1908,19 @@ class ServiceRegistry:
             self._run_service_in_background(coro, service_call)
             return
 
-        await coro
+        response_data = await coro
+        if not return_values:
+            return
+        if not isinstance(response_data, dict):
+            raise HomeAssistantError(
+                f"Service response data expected a dictionary, was {type(response_data)}"
+            )
+        return response_data
+
 
     def _run_service_in_background(
         self,
-        coro_or_task: Coroutine[Any, Any, None] | asyncio.Task[None],
+        coro_or_task: Coroutine[Any, Any, ServiceResult] | asyncio.Task[ServiceResult],
         service_call: ServiceCall,
     ) -> None:
         """Run service call in background, catching and logging any exceptions."""
@@ -1909,18 +1946,21 @@ class ServiceRegistry:
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
-    ) -> None:
+    ) -> ServiceResult:
         """Execute a service."""
         if handler.job.job_type == HassJobType.Coroutinefunction:
-            await cast(Callable[[ServiceCall], Awaitable[None]], handler.job.target)(
+            return await cast(
+                Callable[[ServiceCall], Awaitable[ServiceResult]],
+                handler.job.target,
+            )(service_call)
+        if handler.job.job_type == HassJobType.Callback:
+            return cast(Callable[[ServiceCall], ServiceResult], handler.job.target)(
                 service_call
             )
-        elif handler.job.job_type == HassJobType.Callback:
-            cast(Callable[[ServiceCall], None], handler.job.target)(service_call)
-        else:
-            await self._hass.async_add_executor_job(
-                cast(Callable[[ServiceCall], None], handler.job.target), service_call
-            )
+        return await self._hass.async_add_executor_job(
+            cast(Callable[[ServiceCall], ServiceResult], handler.job.target),
+            service_call,
+        )
 
 
 class Config:

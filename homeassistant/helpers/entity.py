@@ -33,7 +33,14 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    Event,
+    HomeAssistant,
+    ServiceResult,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
@@ -1130,13 +1137,15 @@ class Entity(ABC):
         """Return the representation."""
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
-    async def async_request_call(self, coro: Coroutine[Any, Any, Any]) -> None:
+    async def async_request_call(
+        self, coro: Coroutine[Any, Any, ServiceResult]
+    ) -> ServiceResult:
         """Process request batched."""
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
         try:
-            await coro
+            return await coro
         finally:
             if self.parallel_updates:
                 self.parallel_updates.release()

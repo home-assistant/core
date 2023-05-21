@@ -16,7 +16,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_SERVICE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -66,7 +66,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         payload: dict[str, Any] = {ATTR_MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
 
-        tasks: list[asyncio.Task[bool | None]] = []
+        tasks: list[asyncio.Task[ServiceResult]] = []
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
             if (default_data := entity.get(ATTR_DATA)) is not None:
