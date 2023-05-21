@@ -58,6 +58,16 @@ async def test_get_triggers(
         }
         for trigger in ["turn_off", "turn_on"]
     ]
+    expected_triggers.append(
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "keypress",
+            "device_id": device_entry.id,
+            "entity_id": f"{MP_DOMAIN}.kodi_5678",
+            "metadata": {"secondary": False},
+        }
+    )
 
     # Test triggers are either kodi specific triggers or media_player entity triggers
     triggers = await async_get_device_automations(
