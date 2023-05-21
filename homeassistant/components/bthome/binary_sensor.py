@@ -1,8 +1,6 @@
 """Support for BTHome binary sensors."""
 from __future__ import annotations
 
-import logging
-
 from bthome_ble import (
     BinarySensorDeviceClass as BTHomeBinarySensorDeviceClass,
     SensorUpdate,
@@ -28,8 +26,6 @@ from .coordinator import (
     BTHomePassiveBluetoothProcessorCoordinator,
 )
 from .device import device_key_to_bluetooth_entity_key
-
-_LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSOR_DESCRIPTIONS = {
     BTHomeBinarySensorDeviceClass.BATTERY: BinarySensorEntityDescription(
