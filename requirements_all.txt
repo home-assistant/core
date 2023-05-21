@@ -71,7 +71,7 @@ WSDiscovery==2.0.0
 WazeRouteCalculator==0.14
 
 # homeassistant.components.accuweather
-accuweather==0.5.2
+accuweather==1.0.0
 
 # homeassistant.components.adax
 adax==0.2.0
@@ -431,7 +431,7 @@ beautifulsoup4==4.11.1
 bellows==0.35.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.13.5
+bimmer_connected==0.13.6
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1154,7 +1154,7 @@ moehlenhoff-alpha2==1.3.0
 mopeka_iot_ble==0.4.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.17
+motionblinds==0.6.18
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1607,6 +1607,9 @@ pyefergy==22.1.1
 # homeassistant.components.eight_sleep
 pyeight==0.3.2
 
+# homeassistant.components.electrasmart
+pyelectra==1.2.0
+
 # homeassistant.components.emby
 pyemby==1.8
 
@@ -1865,7 +1868,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.7.8
+pyoverkiz==1.7.9
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1877,7 +1880,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.16
+pypck==0.7.17
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -2111,7 +2114,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.8.3
+python-roborock==0.17.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2233,7 +2236,7 @@ radiotherm==2.1.0
 raincloudy==0.0.7
 
 # homeassistant.components.rapt_ble
-rapt-ble==0.1.0
+rapt-ble==0.1.1
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
@@ -2409,7 +2412,7 @@ spotipy==2.23.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==2.0.13
+sqlalchemy==2.0.15
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2694,7 +2697,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.1.17
 
 # homeassistant.components.august
-yalexs==1.3.3
+yalexs==1.4.6
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
