@@ -77,6 +77,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Check permissions
             await fbx.system.get_config()
             await fbx.lan.get_hosts_list()
+            await fbx.lcd.get_configuration()
 
             # Close connection
             await fbx.close()

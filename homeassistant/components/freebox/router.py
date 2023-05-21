@@ -13,7 +13,11 @@ from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.home import Home
 from freebox_api.api.wifi import Wifi
-from freebox_api.exceptions import HttpRequestError, NotOpenError
+from freebox_api.exceptions import (
+    HttpRequestError,
+    InsufficientPermissionsError,
+    NotOpenError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -77,6 +81,7 @@ class FreeboxRouter:
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
+        self.lcd_settings: dict[str, Any] = {}
         self.listeners: list[dict[str, Any]] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
@@ -84,6 +89,21 @@ class FreeboxRouter:
         await self.update_device_trackers()
         await self.update_sensors()
         await self.update_home_devices()
+        await self.update_lcd_settings()
+
+    async def update_lcd_settings(self) -> None:
+        """Update LCD settings."""
+        try:
+            tmp_lcd_settings = await self._api.lcd.get_configuration()
+
+            self.lcd_settings = {
+                "lcd_orientation": tmp_lcd_settings["orientation"],
+                "lcd_brightness": tmp_lcd_settings["brightness"],
+                "lcd_hide_wifi_key": tmp_lcd_settings["hide_wifi_key"],
+                "lcd_orientation_forced": tmp_lcd_settings["orientation_forced"],
+            }
+        except (HttpRequestError, NotOpenError, InsufficientPermissionsError):
+            _LOGGER.error("Unable to update Freebox LCD settings")
 
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
@@ -179,6 +199,16 @@ class FreeboxRouter:
         if new_device:
             async_dispatcher_send(self.hass, self.signal_home_device_new)
 
+    async def set_brightness(self, brightness: int) -> None:
+        """Set the brightness of the Freebox."""
+        try:
+            await self._api.lcd.set_configuration(lcd_config={"brightness": brightness})
+
+            async_dispatcher_send(self.hass, self.signal_lcd_update)
+        except InsufficientPermissionsError as exc:
+            _LOGGER.warning("Insufficient permissions to set brightness")
+            raise InsufficientPermissionsError from exc
+
     async def reboot(self) -> None:
         """Reboot the Freebox."""
         await self._api.system.reboot()
@@ -224,6 +254,11 @@ class FreeboxRouter:
     def signal_home_device_update(self) -> str:
         """Event specific per Freebox entry to signal update in home devices."""
         return f"{DOMAIN}-{self._host}-home-device-update"
+
+    @property
+    def signal_lcd_update(self) -> str:
+        """Event specific per Freebox entry to signal update in lcd."""
+        return f"{DOMAIN}-{self._host}-lcd-update"
 
     @property
     def sensors(self) -> dict[str, Any]:

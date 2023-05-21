@@ -22,6 +22,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.CAMERA,
+    Platform.NUMBER,
 ]
 
 DEFAULT_DEVICE_NAME = "Unknown device"
