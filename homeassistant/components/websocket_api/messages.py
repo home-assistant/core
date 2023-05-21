@@ -18,7 +18,6 @@ from homeassistant.core import Event, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP, find_paths_unserializable_data
 from homeassistant.util.json import format_unserializable_data
-from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import const
 
@@ -44,9 +43,15 @@ ENTITY_EVENT_REMOVE = "r"
 ENTITY_EVENT_CHANGE = "c"
 
 
-def result_message(iden: JSON_TYPE | int, result: Any = None) -> dict[str, Any]:
+def result_message(iden: int, result: Any = None) -> dict[str, Any]:
     """Return a success result message."""
     return {"id": iden, "type": const.TYPE_RESULT, "success": True, "result": result}
+
+
+def construct_result_message(iden: int, payload: str) -> str:
+    """Construct a success result message JSON."""
+    iden_str = str(iden)
+    return f'{{"id":{iden_str},"type":"result","success":true,"result":{payload}}}'
 
 
 def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
@@ -59,7 +64,13 @@ def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
     }
 
 
-def event_message(iden: JSON_TYPE | int, event: Any) -> dict[str, Any]:
+def construct_event_message(iden: int, payload: str) -> str:
+    """Construct an event message JSON."""
+    iden_str = str(iden)
+    return f'{{"id":{iden_str},"type":"event","event":{payload}}}'
+
+
+def event_message(iden: int, event: Any) -> dict[str, Any]:
     """Return an event message."""
     return {"id": iden, "type": "event", "event": event}
 
@@ -83,7 +94,7 @@ def _cached_event_message(event: Event) -> str:
     The IDEN_TEMPLATE is used which will be replaced
     with the actual iden in cached_event_message
     """
-    return message_to_json(event_message(IDEN_TEMPLATE, event))
+    return message_to_json({"id": IDEN_TEMPLATE, "type": "event", "event": event})
 
 
 def cached_state_diff_message(iden: int, event: Event) -> str:
@@ -105,7 +116,9 @@ def _cached_state_diff_message(event: Event) -> str:
     The IDEN_TEMPLATE is used which will be replaced
     with the actual iden in cached_event_message
     """
-    return message_to_json(event_message(IDEN_TEMPLATE, _state_diff_event(event)))
+    return message_to_json(
+        {"id": IDEN_TEMPLATE, "type": "event", "event": _state_diff_event(event)}
+    )
 
 
 def _state_diff_event(event: Event) -> dict:
