@@ -104,7 +104,7 @@ def config_entry_fixture():
     return MockConfigEntry(domain=DOMAIN, title="Sonos")
 
 
-class MockSoco(MagicMock):
+class MockSoCo(MagicMock):
     """Mock the Soco Object."""
 
     @property
@@ -113,7 +113,7 @@ class MockSoco(MagicMock):
         return {self}
 
 
-class SocoMockFactory:
+class SoCoMockFactory:
     """Factory for creating SoCo Mocks."""
 
     def __init__(
@@ -125,14 +125,16 @@ class SocoMockFactory:
         alarm_clock,
     ) -> None:
         """Initialize the mock factory."""
-        self.mock_list: dict[str, MockSoco] = {}
+        self.mock_list: dict[str, MockSoCo] = {}
         self.music_library = music_library
         self.speaker_info = speaker_info
         self.current_track_info = current_track_info_empty
         self.battery_info = battery_info
         self.alarm_clock = alarm_clock
 
-    def cache_mock(self, mock_soco: MockSoco, ip_address: str) -> MockSoco:
+    def cache_mock(
+        self, mock_soco: MockSoCo, ip_address: str, name: str = "Zone A"
+    ) -> MockSoCo:
         """Put a user created mock into the cache."""
         mock_soco.mock_add_spec(SoCo)
         mock_soco.ip_address = ip_address
@@ -144,7 +146,11 @@ class SocoMockFactory:
         mock_soco.music_library = self.music_library
         mock_soco.get_current_track_info.return_value = self.current_track_info
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
-        mock_soco.get_speaker_info.return_value = self.speaker_info
+        my_speaker_info = self.speaker_info.copy()
+        my_speaker_info["zone_name"] = name
+        my_speaker_info["uid"] = mock_soco.uid
+        mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
+
         mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
         mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
         mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
@@ -181,7 +187,7 @@ class SocoMockFactory:
             ip_address = "192.168.42.2"
         if ip_address in self.mock_list:
             return self.mock_list[ip_address]
-        mock_soco = MockSoco(name=f"Soco Mock {ip_address}")
+        mock_soco = MockSoCo(name=f"Soco Mock {ip_address}")
         self.cache_mock(mock_soco, ip_address)
         return mock_soco
 
@@ -196,7 +202,7 @@ def soco_factory(
     music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
 ):
     """Create factory for instantiating SoCo mocks."""
-    factory = SocoMockFactory(
+    factory = SoCoMockFactory(
         music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
     )
     with patch("homeassistant.components.sonos.SoCo", new=factory.get_mock), patch(
@@ -207,7 +213,7 @@ def soco_factory(
 
 @pytest.fixture(name="soco")
 def soco_fixture(soco_factory):
-    """Create a mock soco SoCo fixture."""
+    """Create a default mock soco SoCo fixture."""
     return soco_factory.get_mock()
 
 
