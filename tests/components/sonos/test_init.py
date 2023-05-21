@@ -8,10 +8,14 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import sonos, zeroconf
 from homeassistant.components.sonos import SonosDiscoveryManager
-from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
+from homeassistant.components.sonos.const import (
+    DATA_SONOS_DISCOVERY_MANAGER,
+    SONOS_SPEAKER_ACTIVITY,
+)
 from homeassistant.components.sonos.exception import SonosUpdateError
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockSoCo, SoCoMockFactory
@@ -274,6 +278,29 @@ async def test_async_poll_manual_hosts_4(
         )
 
 
+class SpeakerActivity:
+    """Unit test class to track speaker activity messages."""
+
+    def __init__(self, hass: HomeAssistant, soco: MockSoCo) -> None:
+        """Create the object from soco."""
+        self.soco = soco
+        self.hass = hass
+        self.call_count: int = 0
+        self.event = asyncio.Event()
+        async_dispatcher_connect(
+            self.hass,
+            f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}",
+            self.speaker_activity,
+        )
+
+    @callback
+    def speaker_activity(self, source: str) -> None:
+        """Track the last activity on this speaker, set availability and resubscribe."""
+        if source == "manual zone scan":
+            self.event.set()
+            self.call_count += 1
+
+
 async def test_async_poll_manual_hosts_5(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -284,9 +311,11 @@ async def test_async_poll_manual_hosts_5(
     soco_1 = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
     soco_1.renderingControl = Mock()
     soco_1.renderingControl.GetVolume = Mock()
+    speaker_1_activity = SpeakerActivity(hass, soco_1)
     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     soco_2.renderingControl = Mock()
     soco_2.renderingControl.GetVolume = Mock()
+    speaker_2_activity = SpeakerActivity(hass, soco_2)
     with patch(
         "homeassistant.components.sonos.DISCOVERY_INTERVAL"
     ) as mock_discovery_interval:
@@ -300,8 +329,12 @@ async def test_async_poll_manual_hosts_5(
 
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
-            await asyncio.sleep(1.0)
+            await asyncio.wait(
+                [speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
+            )
             await hass.async_block_till_done()
+            assert speaker_1_activity.call_count == 1
+            assert speaker_2_activity.call_count == 1
             assert "Activity on Living Room" in caplog.text
             assert "Activity on Bedroom" in caplog.text
 
@@ -318,10 +351,12 @@ async def test_async_poll_manual_hosts_6(
     soco_1.renderingControl = Mock()
     soco_1.renderingControl.GetVolume = Mock()
     soco_1.renderingControl.GetVolume.side_effect = SonosUpdateError()
+    speaker_1_activity = SpeakerActivity(hass, soco_1)
     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     soco_2.renderingControl = Mock()
     soco_2.renderingControl.GetVolume = Mock()
     soco_2.renderingControl.GetVolume.side_effect = SonosUpdateError()
+    speaker_2_activity = SpeakerActivity(hass, soco_2)
 
     with patch(
         "homeassistant.components.sonos.DISCOVERY_INTERVAL"
@@ -335,11 +370,14 @@ async def test_async_poll_manual_hosts_6(
 
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
-            # Delay for second iteration and other tasks
-            await asyncio.sleep(1.0)
+            # The discovery events should not fire, wait with a timeout.
+            with pytest.raises(asyncio.TimeoutError):
+                await asyncio.wait_for(speaker_1_activity.event.wait(), 1.0)
             await hass.async_block_till_done()
             assert "Activity on Living Room" not in caplog.text
             assert "Activity on Bedroom" not in caplog.text
+            assert speaker_1_activity.call_count == 0
+            assert speaker_2_activity.call_count == 0
 
 
 async def test_async_poll_manual_hosts_7(
