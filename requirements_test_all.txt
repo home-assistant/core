@@ -1847,7 +1847,7 @@ twentemilieu==1.0.0
 twilio==6.32.0
 
 # homeassistant.components.twitch
-twitchAPI==2.5.2
+twitchAPI==3.10.0
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
