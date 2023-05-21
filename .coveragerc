@@ -392,6 +392,7 @@ omit =
     homeassistant/components/freebox/router.py
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
+    homeassistant/components/freebox/number.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/device_tracker.py
     homeassistant/components/fritz/services.py
