@@ -145,7 +145,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
 
     def wait_for_state(self, target_state: str, timeout: int = 5) -> None:
         """Wait for alarm panel to arm/disarm."""
-        if target_state.startswith("disarm"):
+        if target_state == STATE_ALARM_DISARMED:
             self._attr_state = STATE_ALARM_DISARMING
         else:
             self._attr_state = STATE_ALARM_ARMING
