@@ -5673,7 +5673,7 @@
     "time_date": {
       "name": "Time & Date",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "tmb": {

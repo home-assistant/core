@@ -6,29 +6,25 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_DISPLAY_OPTIONS
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
+from .const import CONF_DISPLAY_OPTIONS, DOMAIN, OPTION_TYPES, TIME_STR_FORMAT
+
 _LOGGER = logging.getLogger(__name__)
-
-TIME_STR_FORMAT = "%H:%M"
-
-OPTION_TYPES = {
-    "time": "Time",
-    "date": "Date",
-    "date_time": "Date & Time",
-    "date_time_utc": "Date & Time (UTC)",
-    "date_time_iso": "Date & Time (ISO)",
-    "time_date": "Time & Date",
-    "beat": "Internet Time",
-    "time_utc": "Time (UTC)",
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -45,33 +41,59 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Time and Date sensor."""
-    if hass.config.time_zone is None:
-        _LOGGER.error("Timezone is not set in Home Assistant configuration")
-        return False
-
-    async_add_entities(
-        [TimeDateSensor(hass, variable) for variable in config[CONF_DISPLAY_OPTIONS]]
+    """Set up the Time & Date sensor."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.9.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
     )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Time & Date sensor."""
+    entities = []
+    for option_type in OPTION_TYPES:
+        status = option_type in entry.data.get(CONF_DISPLAY_OPTIONS, OPTION_TYPES)
+        entities.append(TimeDateSensor(hass, option_type, status, entry.entry_id))
+    async_add_entities(entities)
 
 
 class TimeDateSensor(SensorEntity):
     """Implementation of a Time and Date sensor."""
 
-    def __init__(self, hass, option_type):
+    _attr_has_entity_name = True
+
+    def __init__(self, hass, option_type, status, entry_id):
         """Initialize the sensor."""
-        self._name = OPTION_TYPES[option_type]
+        self._attr_name = OPTION_TYPES[option_type]
+        self._attr_unique_id = f"{option_type}_{entry_id}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            name="Time & Date",
+        )
+        self._attr_entity_registry_enabled_default = status
+        self.entity_id = ENTITY_ID_FORMAT.format(option_type)
         self.type = option_type
         self._state = None
         self.hass = hass
         self.unsub = None
 
         self._update_internal_state(dt_util.utcnow())
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def native_value(self):

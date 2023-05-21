@@ -1,0 +1,23 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "display_options": "Options"
+        }
+      }
+    },
+    "error": {
+      "timezone_not_exist": "Timezone is not set in Home Assistant configuration"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Time & Date YAML configuration is being removed",
+      "description": "Configuring Time & Date using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Workday YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

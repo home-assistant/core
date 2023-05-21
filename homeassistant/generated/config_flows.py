@@ -453,6 +453,7 @@ FLOWS = {
         "tibber",
         "tile",
         "tilt_ble",
+        "time_date",
         "tolo",
         "tomorrowio",
         "toon",
