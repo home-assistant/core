@@ -201,7 +201,9 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
             raise UpdateFailed(
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
-        count: int = len(message_ids := lines[0].split())
+        if not (count := len(message_ids := lines[0].split())):
+            self._last_message_id = None
+            return 0
         last_message_id = (
             str(message_ids[-1:][0], encoding=self.config_entry.data[CONF_CHARSET])
             if count

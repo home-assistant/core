@@ -2357,6 +2357,7 @@
       }),
     ]),
     'info': dict({
+      'gcid': 'SOME_GCID',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',
@@ -3860,6 +3861,7 @@
       }),
     ]),
     'info': dict({
+      'gcid': 'SOME_GCID',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',
@@ -4692,6 +4694,7 @@
       }),
     ]),
     'info': dict({
+      'gcid': 'SOME_GCID',
       'password': '**REDACTED**',
       'refresh_token': '**REDACTED**',
       'region': 'rest_of_world',
