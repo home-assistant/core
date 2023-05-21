@@ -380,6 +380,11 @@ def async_enable_logging(
     # formatting.  If the above succeeds, this will result in a no-op.
     logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
 
+    # Capture warnings.warn(...) and friends messages in logs.
+    # The standard destination for them is stderr, which may end up unnoticed.
+    # This way they're where other messages are, and can be filtered as usual.
+    logging.captureWarnings(True)
+
     # Suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
