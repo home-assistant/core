@@ -40,6 +40,7 @@ from .const import (
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
     DOMAIN,
+    LOGGER,
 )
 
 NONE_SENTINEL = "none"
@@ -168,8 +169,17 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         new_config = config.copy()
         new_config[CONF_PROVINCE] = config.get(CONF_PROVINCE)
+        LOGGER.debug("Importing with %s", new_config)
 
         self._async_abort_entries_match(abort_match)
+
+        self.data[CONF_NAME] = config.get(CONF_NAME, DEFAULT_NAME)
+        self.data[CONF_COUNTRY] = config[CONF_COUNTRY]
+        LOGGER.debug(
+            "No duplicate, next step with name %s for country %s",
+            self.data[CONF_NAME],
+            self.data[CONF_COUNTRY],
+        )
         return await self.async_step_options(user_input=new_config)
 
     async def async_step_user(
@@ -217,9 +227,12 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
                 CONF_PROVINCE: combined_input[CONF_PROVINCE],
             }
-
+            LOGGER.debug("abort_check in options with %s", combined_input)
             self._async_abort_entries_match(abort_match)
+
+            LOGGER.debug("Errors have occurred %s", errors)
             if not errors:
+                LOGGER.debug("No duplicate, no errors, creating entry")
                 return self.async_create_entry(
                     title=combined_input[CONF_NAME],
                     data={},
@@ -234,6 +247,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="options",
             data_schema=new_schema,
             errors=errors,
+            description_placeholders={"name": self.data[CONF_NAME]},
         )
 
 
@@ -260,6 +274,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             except RemoveDatesError:
                 errors["remove_holidays"] = "remove_holiday_error"
             else:
+                LOGGER.debug("abort_check in options with %s", combined_input)
                 try:
                     self._async_abort_entries_match(
                         {
@@ -284,7 +299,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
         new_schema = self.add_suggested_values_to_schema(
             schema, user_input or self.options
         )
-
+        LOGGER.debug("Errors have occurred in options %s", errors)
         return self.async_show_form(
             step_id="init",
             data_schema=new_schema,
