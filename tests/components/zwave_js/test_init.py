@@ -963,7 +963,7 @@ async def test_removed_device(
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 31
+    assert len(entity_entries) == 36
 
     # Remove a node and reload the entry
     old_node = driver.controller.nodes.pop(13)
@@ -975,7 +975,7 @@ async def test_removed_device(
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 2
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 18
+    assert len(entity_entries) == 23
     assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None
 
 
@@ -1363,6 +1363,7 @@ async def test_disabled_entity_on_value_removed(
 
     # re-enable this default-disabled entity
     sensor_cover_entity = "sensor.4_in_1_sensor_cover_status"
+    idle_cover_status_button_entity = "button.4_in_1_sensor_idle_cover_status"
     er_reg.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
     await hass.async_block_till_done()
 
@@ -1376,6 +1377,10 @@ async def test_disabled_entity_on_value_removed(
     assert integration.state is ConfigEntryState.LOADED
 
     state = hass.states.get(sensor_cover_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    state = hass.states.get(idle_cover_status_button_entity)
     assert state
     assert state.state != STATE_UNAVAILABLE
 
@@ -1472,6 +1477,10 @@ async def test_disabled_entity_on_value_removed(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
+    state = hass.states.get(idle_cover_status_button_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
     # existing entities and the entities with removed values should be unavailable
     new_unavailable_entities = {
         state.entity_id
@@ -1480,6 +1489,11 @@ async def test_disabled_entity_on_value_removed(
     }
     assert (
         unavailable_entities
-        | {battery_level_entity, binary_cover_entity, sensor_cover_entity}
+        | {
+            battery_level_entity,
+            binary_cover_entity,
+            sensor_cover_entity,
+            idle_cover_status_button_entity,
+        }
         == new_unavailable_entities
     )

@@ -163,6 +163,7 @@ class SoCoMockFactory:
         mock_soco.loudness = True
         mock_soco.volume = 19
         mock_soco.audio_delay = 2
+        mock_soco.balance = (61, 100)
         mock_soco.bass = 1
         mock_soco.treble = -1
         mock_soco.mic_enabled = False

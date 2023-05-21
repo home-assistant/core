@@ -5,7 +5,7 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -13,6 +13,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .discovery import ZwaveDiscoveryInfo
+from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
@@ -27,6 +29,17 @@ async def async_setup_entry(
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
     @callback
+    def async_add_button(info: ZwaveDiscoveryInfo) -> None:
+        """Add Z-Wave Button."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
+        entities: list[ZWaveBaseEntity] = []
+        if info.platform_hint == "notification idle":
+            entities.append(ZWaveNotificationIdleButton(config_entry, driver, info))
+
+        async_add_entities(entities)
+
+    @callback
     def async_add_ping_button_entity(node: ZwaveNode) -> None:
         """Add ping button entity."""
         driver = client.driver
@@ -38,6 +51,14 @@ async def async_setup_entry(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_ping_button_entity",
             async_add_ping_button_entity,
+        )
+    )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{BUTTON_DOMAIN}",
+            async_add_button,
         )
     )
 
@@ -88,3 +109,25 @@ class ZWaveNodePingButton(ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         self.hass.async_create_task(self.node.async_ping())
+
+
+class ZWaveNotificationIdleButton(ZWaveBaseEntity, ButtonEntity):
+    """Button to idle Notification CC values."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZWaveNotificationIdleButton entity."""
+        super().__init__(config_entry, driver, info)
+        self._attr_name = self.generate_name(
+            include_value_name=True, name_prefix="Idle"
+        )
+        self._attr_unique_id = f"{self._attr_unique_id}.notification_idle"
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self.info.node.async_manually_idle_notification_value(
+            self.info.primary_value
+        )

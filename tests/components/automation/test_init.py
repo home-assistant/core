@@ -1539,6 +1539,7 @@ async def test_automation_restore_last_triggered_with_initial_state(
 
 async def test_extraction_functions(hass: HomeAssistant) -> None:
     """Test extraction functions."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     assert await async_setup_component(
         hass,

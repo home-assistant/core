@@ -57,10 +57,12 @@ homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.analytics.*
+homeassistant.components.anova.*
 homeassistant.components.anthemav.*
 homeassistant.components.apcupsd.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aseko_pool_live.*
+homeassistant.components.assist_pipeline.*
 homeassistant.components.asuswrt.*
 homeassistant.components.auth.*
 homeassistant.components.automation.*
@@ -103,6 +105,7 @@ homeassistant.components.dormakaba_dkey.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
+homeassistant.components.electrasmart.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
@@ -168,6 +171,7 @@ homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
+homeassistant.components.imap.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
@@ -175,6 +179,7 @@ homeassistant.components.iqvia.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
+homeassistant.components.jvc_projector.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
@@ -282,6 +287,7 @@ homeassistant.components.smhi.*
 homeassistant.components.snooz.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
+homeassistant.components.sql.*
 homeassistant.components.ssdp.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*

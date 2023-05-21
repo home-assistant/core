@@ -72,7 +72,7 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2022.12.4"
+STABLE_BLE_VERSION_STR = "2023.4.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
@@ -288,36 +288,46 @@ async def async_setup_entry(  # noqa: C901
 
     voice_assistant_udp_server: VoiceAssistantUDPServer | None = None
 
-    def handle_pipeline_event(
+    def _handle_pipeline_event(
         event_type: VoiceAssistantEventType, data: dict[str, str] | None
     ) -> None:
-        """Handle a voice assistant pipeline event."""
         cli.send_voice_assistant_event(event_type, data)
 
-    async def handle_pipeline_start() -> int | None:
+    def _handle_pipeline_finished() -> None:
+        nonlocal voice_assistant_udp_server
+
+        entry_data.async_set_assist_pipeline_state(False)
+
+        if voice_assistant_udp_server is not None:
+            voice_assistant_udp_server.close()
+            voice_assistant_udp_server = None
+
+    async def _handle_pipeline_start() -> int | None:
         """Start a voice assistant pipeline."""
         nonlocal voice_assistant_udp_server
 
         if voice_assistant_udp_server is not None:
             return None
 
-        voice_assistant_udp_server = VoiceAssistantUDPServer(hass)
+        voice_assistant_udp_server = VoiceAssistantUDPServer(
+            hass, entry_data, _handle_pipeline_event, _handle_pipeline_finished
+        )
         port = await voice_assistant_udp_server.start_server()
 
         hass.async_create_background_task(
-            voice_assistant_udp_server.run_pipeline(handle_pipeline_event),
+            voice_assistant_udp_server.run_pipeline(),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
+        entry_data.async_set_assist_pipeline_state(True)
 
         return port
 
-    async def handle_pipeline_stop() -> None:
+    async def _handle_pipeline_stop() -> None:
         """Stop a voice assistant pipeline."""
         nonlocal voice_assistant_udp_server
 
         if voice_assistant_udp_server is not None:
             voice_assistant_udp_server.stop()
-            voice_assistant_udp_server = None
 
     async def on_connect() -> None:
         """Subscribe to states and list entities on successful API login."""
@@ -366,8 +376,8 @@ async def async_setup_entry(  # noqa: C901
             if device_info.voice_assistant_version:
                 entry_data.disconnect_callbacks.append(
                     await cli.subscribe_voice_assistant(
-                        handle_pipeline_start,
-                        handle_pipeline_stop,
+                        _handle_pipeline_start,
+                        _handle_pipeline_stop,
                     )
                 )
 
@@ -894,3 +904,40 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         if not self._static_info.entity_category:
             return None
         return ENTITY_CATEGORIES.from_esphome(self._static_info.entity_category)
+
+
+class EsphomeAssistEntity(Entity):
+    """Define a base entity for Assist Pipeline entities."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(self, entry_data: RuntimeEntryData) -> None:
+        """Initialize the binary sensor."""
+        self._entry_data: RuntimeEntryData = entry_data
+        self._attr_unique_id = (
+            f"{self._device_info.mac_address}-{self.entity_description.key}"
+        )
+
+    @property
+    def _device_info(self) -> EsphomeDeviceInfo:
+        assert self._entry_data.device_info is not None
+        return self._entry_data.device_info
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device registry information for this entity."""
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
+        )
+
+    @callback
+    def _update(self) -> None:
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register update callback."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._entry_data.async_subscribe_assist_pipeline_update(self._update)
+        )

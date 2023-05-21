@@ -161,7 +161,7 @@ async def test_webhook_head(hass: HomeAssistant, mock_client) -> None:
     assert len(hooks) == 1  # Should not have been called
 
 
-async def test_webhook_get(hass, mock_client):
+async def test_webhook_get(hass: HomeAssistant, mock_client) -> None:
     """Test sending a get request to a webhook."""
     hooks = []
     webhook_id = webhook.async_generate_id()
@@ -191,7 +191,7 @@ async def test_webhook_get(hass, mock_client):
     assert len(hooks) == 1  # Should not have been called
 
 
-async def test_webhook_not_allowed_method(hass):
+async def test_webhook_not_allowed_method(hass: HomeAssistant) -> None:
     """Test that an exception is raised if an unsupported method is used."""
     webhook_id = webhook.async_generate_id()
 

@@ -12,7 +12,7 @@ from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.exceptions import ConversionError, XKNXException
+from xknx.exceptions import ConversionError, CouldNotParseTelegram, XKNXException
 from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
 from xknx.telegram import AddressFilter, Telegram
 from xknx.telegram.address import (
@@ -71,6 +71,7 @@ from .const import (
 )
 from .device import KNXInterfaceDevice
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
+from .project import KNXProject
 from .schema import (
     BinarySensorSchema,
     ButtonSchema,
@@ -91,6 +92,8 @@ from .schema import (
     ga_validator,
     sensor_type_validator,
 )
+from .telegrams import Telegrams
+from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -222,6 +225,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     conf = dict(conf)
     hass.data[DATA_KNX_CONFIG] = conf
+
     return True
 
 
@@ -304,6 +308,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
+    await register_panel(hass)
+
     return True
 
 
@@ -368,6 +374,8 @@ class KNXModule:
         self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
         self.entry = entry
 
+        self.project = KNXProject(hass=hass, entry=entry)
+
         self.xknx = XKNX(
             connection_config=self.connection_config(),
             rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
@@ -376,6 +384,7 @@ class KNXModule:
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
+        self.telegrams = Telegrams(hass, self.xknx, self.project)
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx
         )
@@ -393,6 +402,7 @@ class KNXModule:
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
+        await self.project.load_project()
         await self.xknx.start()
 
     async def stop(self, event: Event | None = None) -> None:
@@ -513,31 +523,29 @@ class KNXModule:
             )
         ):
             data = telegram.payload.value.value
-
-            if isinstance(data, tuple):
-                if transcoder := (
-                    self._group_address_transcoder.get(telegram.destination_address)
-                    or next(
+            if transcoder := (
+                self._group_address_transcoder.get(telegram.destination_address)
+                or next(
+                    (
+                        _transcoder
+                        for _filter, _transcoder in self._address_filter_transcoder.items()
+                        if _filter.match(telegram.destination_address)
+                    ),
+                    None,
+                )
+            ):
+                try:
+                    value = transcoder.from_knx(telegram.payload.value)
+                except (ConversionError, CouldNotParseTelegram) as err:
+                    _LOGGER.warning(
                         (
-                            _transcoder
-                            for _filter, _transcoder in self._address_filter_transcoder.items()
-                            if _filter.match(telegram.destination_address)
+                            "Error in `knx_event` at decoding type '%s' from"
+                            " telegram %s\n%s"
                         ),
-                        None,
+                        transcoder.__name__,
+                        telegram,
+                        err,
                     )
-                ):
-                    try:
-                        value = transcoder.from_knx(data)
-                    except ConversionError as err:
-                        _LOGGER.warning(
-                            (
-                                "Error in `knx_event` at decoding type '%s' from"
-                                " telegram %s\n%s"
-                            ),
-                            transcoder.__name__,
-                            telegram,
-                            err,
-                        )
 
         self.hass.bus.async_fire(
             "knx_event",
@@ -656,7 +664,7 @@ class KNXModule:
             transcoder = DPTBase.parse_transcoder(attr_type)
             if transcoder is None:
                 raise ValueError(f"Invalid type for knx.send service: {attr_type}")
-            payload = DPTArray(transcoder.to_knx(attr_payload))
+            payload = transcoder.to_knx(attr_payload)
         elif isinstance(attr_payload, int):
             payload = DPTBinary(attr_payload)
         else:
