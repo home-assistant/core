@@ -8,9 +8,11 @@ Unwetterwarnungen (Stufe 3)
 Warnungen vor markantem Wetter (Stufe 2)
 Wetterwarnungen (Stufe 1)
 """
+
 from __future__ import annotations
 
-from dwdwfsapi import DwdWeatherWarningsAPI
+from typing import Final
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,10 +20,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
@@ -43,8 +47,8 @@ from .const import (
     ATTR_WARNING_COUNT,
     CONF_REGION_NAME,
     CURRENT_WARNING_SENSOR,
-    DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     LOGGER,
 )
 
@@ -60,39 +64,59 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:close-octagon-outline",
     ),
 )
-MONITORED_CONDITIONS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
+# Should be removed together with the old YAML configuration.
+YAML_MONITORED_CONDITIONS: Final = [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_REGION_NAME): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=list(MONITORED_CONDITIONS)
-        ): vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+            CONF_MONITORED_CONDITIONS, default=YAML_MONITORED_CONDITIONS
+        ): vol.All(cv.ensure_list, [vol.In(YAML_MONITORED_CONDITIONS)]),
     }
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the DWD-Weather-Warnings sensor."""
-    name = config.get(CONF_NAME)
-    region_name = config.get(CONF_REGION_NAME)
+    """Import the configurations from YAML to config flows."""
+    # Show issue as long as the YAML configuration exists.
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.8.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
 
-    api = WrappedDwDWWAPI(DwdWeatherWarningsAPI(region_name))
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
-    sensors = [
-        DwdWeatherWarningsSensor(api, name, description)
-        for description in SENSOR_TYPES
-        if description.key in config[CONF_MONITORED_CONDITIONS]
-    ]
 
-    add_entities(sensors, True)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up entities from config entry."""
+    api = WrappedDwDWWAPI(hass.data[DOMAIN][entry.entry_id])
+
+    async_add_entities(
+        [
+            DwdWeatherWarningsSensor(api, entry.title, entry.unique_id, description)
+            for description in SENSOR_TYPES
+        ],
+        True,
+    )
 
 
 class DwdWeatherWarningsSensor(SensorEntity):
@@ -104,23 +128,26 @@ class DwdWeatherWarningsSensor(SensorEntity):
         self,
         api,
         name,
+        unique_id,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a DWD-Weather-Warnings sensor."""
         self._api = api
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
     @property
     def native_value(self):
-        """Return the state of the device."""
+        """Return the state of the sensor."""
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
             return self._api.api.current_warning_level
+
         return self._api.api.expected_warning_level
 
     @property
     def extra_state_attributes(self):
-        """Return the state attributes of the DWD-Weather-Warnings."""
+        """Return the state attributes of the sensor."""
         data = {
             ATTR_REGION_NAME: self._api.api.warncell_name,
             ATTR_REGION_ID: self._api.api.warncell_id,

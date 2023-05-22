@@ -150,10 +150,14 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{airthings_device.device_id}_{entity_description.key}"
         self._id = airthings_device.device_id
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://dashboard.airthings.com/",
+            configuration_url=(
+                "https://dashboard.airthings.com/devices/"
+                f"{airthings_device.device_id}"
+            ),
             identifiers={(DOMAIN, airthings_device.device_id)},
             name=airthings_device.name,
             manufacturer="Airthings",
+            model=airthings_device.device_type.replace("_", " ").lower().title(),
         )
 
     @property

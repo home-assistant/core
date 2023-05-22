@@ -104,7 +104,7 @@ async def test_update_interval_forecast(hass: HomeAssistant) -> None:
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
         return_value=current,
     ) as mock_current, patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
+        "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
         return_value=forecast,
     ) as mock_forecast:
         assert mock_current.call_count == 0
