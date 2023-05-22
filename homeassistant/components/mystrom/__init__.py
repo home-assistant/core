@@ -8,6 +8,7 @@ import aiohttp
 from pymystrom.bulb import MyStromBulb
 from pymystrom.exceptions import MyStromConnectionError
 from pymystrom.switch import MyStromSwitch
+from pymystrom import get_device_info
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -19,21 +20,6 @@ from .const import DOMAIN
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def get_device_info(host: str) -> dict[str, Any]:
-    """Get the device info of a myStrom device."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"http://{host}/api/v1/info") as response:
-            if response.status != 200:
-                async with session.get(f"http://{host}/info.json") as response:
-                    if response.status != 200:
-                        raise MyStromConnectionError()
-            content_type = response.headers.get("Content-Type", "")
-            if "application/json" in content_type:
-                return await response.json()
-            raise MyStromConnectionError()
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up myStrom from a config entry."""
