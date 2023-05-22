@@ -5,10 +5,10 @@ import logging
 from typing import Any
 
 import aiohttp
+from pymystrom import get_device_info
 from pymystrom.bulb import MyStromBulb
 from pymystrom.exceptions import MyStromConnectionError
 from pymystrom.switch import MyStromSwitch
-from pymystrom import get_device_info
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
