@@ -115,7 +115,9 @@ class MatterAdapter:
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
-            model=basic_info.productName or device_type.__name__ if device_type else None,
+            model=basic_info.productName or device_type.__class__.__name__
+            if device_type
+            else None,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
 
