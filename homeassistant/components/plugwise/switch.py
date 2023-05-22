@@ -101,7 +101,7 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}-{description.key}"
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.entity_description.value_fn(self.device["switches"])
 
