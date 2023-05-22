@@ -113,6 +113,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
             await self.async_set_percentage(percentage)
         elif preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
+        else:
             if self.info.primary_value.command_class != CommandClass.SWITCH_MULTILEVEL:
                 raise HomeAssistantError(
                     "`percentage` or `preset_mode` must be provided"
