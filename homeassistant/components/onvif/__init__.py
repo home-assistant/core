@@ -5,6 +5,7 @@ import logging
 
 from httpx import RequestError
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
+from onvif.util import is_auth_error, stringify_onvif_error
 from zeep.exceptions import Fault, TransportError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
@@ -19,9 +20,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
+from .const import (
+    CONF_ENABLE_WEBHOOKS,
+    CONF_SNAPSHOT_AUTH,
+    DEFAULT_ARGUMENTS,
+    DEFAULT_ENABLE_WEBHOOKS,
+    DOMAIN,
+)
 from .device import ONVIFDevice
-from .util import is_auth_error, stringify_onvif_error
 
 LOGGER = logging.getLogger(__name__)
 
@@ -143,6 +149,7 @@ async def async_populate_options(hass, entry):
     options = {
         CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
         CONF_RTSP_TRANSPORT: next(iter(RTSP_TRANSPORTS)),
+        CONF_ENABLE_WEBHOOKS: DEFAULT_ENABLE_WEBHOOKS,
     }
 
     hass.config_entries.async_update_entry(entry, options=options)
