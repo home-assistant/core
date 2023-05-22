@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from twitchAPI.helper import first
 from twitchAPI.twitch import (
-    AuthScope,
     AuthType,
     InvalidTokenException,
     MissingScopeException,
