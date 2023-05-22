@@ -19,6 +19,7 @@ Other integrations may use this integration with these steps:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import Any
 
@@ -109,8 +110,11 @@ async def _async_setup_internal_server(hass: HomeAssistant, entry: ConfigEntry) 
                 peer_connections.discard(peer_connection)
 
         # open media source
+        _LOGGER.debug("Starting stream %s", stream_source)
         player = MediaPlayer(stream_source, decode=False)
-        peer_connection.addTrack(player.audio)
+        with contextlib.suppress(AttributeError):
+            peer_connection.addTrack(player.audio)
+
         video_sender = peer_connection.addTrack(player.video)
 
         # force H264 codec
