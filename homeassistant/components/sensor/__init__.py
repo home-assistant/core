@@ -548,7 +548,9 @@ class SensorEntity(Entity):
                 ) from err
 
         # Enum checks
-        if device_class == SensorDeviceClass.ENUM or self.options is not None:
+        if (
+            options := self.options
+        ) is not None or device_class == SensorDeviceClass.ENUM:
             if device_class != SensorDeviceClass.ENUM:
                 reason = "is missing the enum device class"
                 if device_class is not None:
@@ -557,7 +559,7 @@ class SensorEntity(Entity):
                     f"Sensor {self.entity_id} is providing enum options, but {reason}"
                 )
 
-            if (options := self.options) and value not in options:
+            if options and value not in options:
                 raise ValueError(
                     f"Sensor {self.entity_id} provides state value '{value}', "
                     "which is not in the list of options provided"

@@ -16,7 +16,7 @@ from homeassistant.components.alexa import (
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.aiohttp import MockRequest, serialize_response
@@ -76,7 +76,7 @@ class CloudClient(Interface):
         return self._hass.http.runner
 
     @property
-    def cloudhooks(self) -> dict[str, dict[str, str]]:
+    def cloudhooks(self) -> dict[str, dict[str, str | bool]]:
         """Return list of cloudhooks."""
         return self._prefs.cloudhooks
 
@@ -96,8 +96,6 @@ class CloudClient(Interface):
             async with self._alexa_config_init_lock:
                 if self._alexa_config is not None:
                     return self._alexa_config
-
-                assert self.cloud is not None
 
                 cloud_user = await self._prefs.get_cloud_user()
 
@@ -119,8 +117,6 @@ class CloudClient(Interface):
             async with self._google_config_init_lock:
                 if self._google_config is not None:
                     return self._google_config
-
-                assert self.cloud is not None
 
                 cloud_user = await self._prefs.get_cloud_user()
 
@@ -154,9 +150,11 @@ class CloudClient(Interface):
                         ),
                         err,
                     )
-                async_call_later(self._hass, 30, enable_alexa)
+                async_call_later(self._hass, 30, enable_alexa_job)
             except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
                 pass
+
+        enable_alexa_job = HassJob(enable_alexa, cancel_on_shutdown=True)
 
         async def enable_google(_):
             """Enable Google."""
@@ -270,6 +268,8 @@ class CloudClient(Interface):
         if payload and (region := payload.get("region")):
             self._relayer_region = region
 
-    async def async_cloudhooks_update(self, data: dict[str, dict[str, str]]) -> None:
+    async def async_cloudhooks_update(
+        self, data: dict[str, dict[str, str | bool]]
+    ) -> None:
         """Update local list of cloudhooks."""
         await self._prefs.async_update(cloudhooks=data)

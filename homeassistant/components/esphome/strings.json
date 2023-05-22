@@ -48,8 +48,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "call_active": {
-        "name": "Call Active"
+      "assist_in_progress": {
+        "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"
       }
     },
     "select": {

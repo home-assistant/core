@@ -194,6 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         conf = dict(entry.data)
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_yaml = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+        await async_create_certificate_temp_files(hass, conf)
         client = MQTT(hass, entry, conf)
         if DOMAIN in hass.data:
             mqtt_data = get_mqtt_data(hass)
@@ -206,7 +207,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
         client.start(mqtt_data)
 
-        await async_create_certificate_temp_files(hass, dict(entry.data))
         # Restore saved subscriptions
         if mqtt_data.subscriptions_to_restore:
             mqtt_data.client.async_restore_tracked_subscriptions(

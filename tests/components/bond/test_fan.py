@@ -25,8 +25,14 @@ from homeassistant.components.fan import (
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    FanEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -211,9 +217,9 @@ async def test_turn_on_fan_preset_mode(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
         props={"max_speed": 6},
     )
-    assert hass.states.get("fan.name_1").attributes[ATTR_PRESET_MODES] == [
-        PRESET_MODE_BREEZE
-    ]
+    state = hass.states.get("fan.name_1")
+    assert state.attributes[ATTR_PRESET_MODES] == [PRESET_MODE_BREEZE]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & FanEntityFeature.PRESET_MODE
 
     with patch_bond_action() as mock_set_preset_mode, patch_bond_device_state():
         await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)

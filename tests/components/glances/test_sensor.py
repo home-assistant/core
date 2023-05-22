@@ -43,7 +43,7 @@ async def test_sensor_states(hass: HomeAssistant) -> None:
 )
 async def test_migrate_unique_id(
     hass: HomeAssistant, object_id: str, old_unique_id: str, new_unique_id: str
-):
+) -> None:
     """Test unique id migration."""
     old_config_data = {**MOCK_USER_INPUT, "name": "Glances"}
     entry = MockConfigEntry(domain=DOMAIN, data=old_config_data)

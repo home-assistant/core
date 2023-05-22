@@ -347,7 +347,7 @@ class OnOffClientClusterHandler(ClientClusterHandler):
 class OnOffClusterHandler(ClusterHandler):
     """Cluster handler for the OnOff Zigbee cluster."""
 
-    ON_OFF = 0
+    ON_OFF = general.OnOff.attributes_by_name["on_off"].id
     REPORT_CONFIG = (AttrReportConfig(attr="on_off", config=REPORT_CONFIG_IMMEDIATE),)
     ZCL_INIT_ATTRS = {
         "start_up_on_off": True,
@@ -373,6 +373,15 @@ class OnOffClusterHandler(ClusterHandler):
             self.ZCL_INIT_ATTRS["power_on_state"] = True
             if self.cluster.endpoint.model == "TS011F":
                 self.ZCL_INIT_ATTRS["child_lock"] = True
+
+    @classmethod
+    def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
+        """Filter the cluster match for specific devices."""
+        return not (
+            cluster.endpoint.device.manufacturer == "Konke"
+            and cluster.endpoint.device.model
+            in ("3AFE280100510001", "3AFE170100510001")
+        )
 
     @property
     def on_off(self) -> bool | None:
