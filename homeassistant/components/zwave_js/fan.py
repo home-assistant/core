@@ -118,7 +118,9 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
                     "`percentage` or `preset_mode` must be provided"
                 )
             # If this is a Multilevel Switch CC value, we do an optimistic state update
-            await self.info.node.async_set_value(target_value, SET_TO_PREVIOUS_VALUE)
+            await self.info.node.async_set_value(
+                self._target_value, SET_TO_PREVIOUS_VALUE
+            )
             self._use_optimistic_state = True
             self.async_write_ha_state()
 
