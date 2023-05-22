@@ -17,14 +17,24 @@ from .common import load_and_parse_node_fixture, setup_integration_with_node_fix
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize(
+    ("config", "name"),
+    [
+        ("onoff-light", "Mock OnOff Light"),
+        ("onoff-light-alt-name", "Mock OnOff Light"),
+        ("onoff-light-no-name", "Mock Light"),
+    ],
+)
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
     matter_client: MagicMock,
+    config: str,
+    name: str,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     await setup_integration_with_node_fixture(
         hass,
-        "onoff-light",
+        config,
         matter_client,
     )
 
@@ -37,7 +47,7 @@ async def test_device_registry_single_node_device(
     # test serial id present as additional identifier
     assert (DOMAIN, "serial_12345678") in entry.identifiers
 
-    assert entry.name == "Mock OnOff Light"
+    assert entry.name == name
     assert entry.manufacturer == "Nabu Casa"
     assert entry.model == "Mock Light"
     assert entry.hw_version == "v1.0"
