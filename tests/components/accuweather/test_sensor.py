@@ -717,7 +717,7 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
         return_value=current,
     ) as mock_current, patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
+        "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
         return_value=forecast,
     ) as mock_forecast, patch(
         "homeassistant.components.accuweather.AccuWeather.requests_remaining",
