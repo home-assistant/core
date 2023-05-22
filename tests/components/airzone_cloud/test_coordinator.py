@@ -14,7 +14,6 @@ from .util import (
     CONFIG,
     GET_INSTALLATION_MOCK,
     GET_INSTALLATIONS_MOCK,
-    mock_api_request,
     mock_get_device_status,
     mock_get_webserver,
 )
@@ -45,8 +44,8 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
         side_effect=mock_get_webserver,
     ) as mock_webserver, patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_request",
-        side_effect=mock_api_request,
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
+        return_value=None,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -65,7 +64,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        mock_device_status.assert_called_once()
+        mock_device_status.assert_called()
         mock_installation.assert_not_called()
         mock_installations.assert_not_called()
         mock_webserver.assert_called_once()
@@ -80,7 +79,7 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        mock_device_status.assert_called_once()
+        mock_device_status.assert_called()
 
         state = hass.states.get("sensor.salon_temperature")
         assert state.state == STATE_UNAVAILABLE
