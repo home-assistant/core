@@ -3,6 +3,7 @@ from abc import abstractmethod
 
 from yalexs.doorbell import Doorbell
 from yalexs.lock import Lock
+from yalexs.util import get_configuration_url
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -30,7 +31,7 @@ class AugustEntityMixin(Entity):
             name=device.device_name,
             sw_version=self._detail.firmware_version,
             suggested_area=_remove_device_types(device.device_name, DEVICE_TYPES),
-            configuration_url="https://account.august.com",
+            configuration_url=get_configuration_url(data.brand),
         )
 
     @property
