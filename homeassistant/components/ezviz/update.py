@@ -46,9 +46,10 @@ async def async_setup_entry(
     )
 
 
-class EzvizUpdateEntity(EzvizEntity, UpdateEntity[EzvizDataUpdateCoordinator]):
+class EzvizUpdateEntity(EzvizEntity, UpdateEntity):
     """Representation of a EZVIZ Update entity."""
 
+    coordinator: EzvizDataUpdateCoordinator
     _attr_has_entity_name = True
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL
