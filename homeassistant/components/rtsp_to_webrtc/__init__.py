@@ -107,7 +107,7 @@ async def _async_setup_internal_server(hass: HomeAssistant, entry: ConfigEntry) 
         offer = RTCSessionDescription(sdp=offer_sdp, type="offer")
         if stun_server := entry.options.get(CONF_STUN_SERVER):
             peer_connection = RTCPeerConnection(
-                RTCConfiguration([RTCIceServer(urls=[f"stun:{stun_server}"])])
+                RTCConfiguration([RTCIceServer(urls=f"stun:{stun_server}")])
             )
         else:
             peer_connection = RTCPeerConnection()
