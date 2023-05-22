@@ -184,7 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             options=entry.options | {DATA_SERVER_URL: entry.data[DATA_SERVER_URL]},
         )
 
-    if entry.options[DATA_SERVER_URL]:
+    if entry.options.get(DATA_SERVER_URL):
         await _async_setup_external_server(hass, entry)
     else:
         await _async_setup_internal_server(hass, entry)
