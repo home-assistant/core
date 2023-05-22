@@ -24,7 +24,7 @@ from homeassistant.components.counter import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .common import async_decrement, async_increment, async_reset
@@ -443,7 +443,9 @@ async def test_counter_max(hass: HomeAssistant, hass_admin_user: MockUser) -> No
     assert state2.state == "-1"
 
 
-async def test_configure(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
+async def test_configure(
+    hass: HomeAssistant, hass_admin_user: MockUser, issue_registry: ir.IssueRegistry
+) -> None:
     """Test that setting values through configure works."""
     assert await async_setup_component(
         hass, "counter", {"counter": {"test": {"maximum": "10", "initial": "10"}}}
@@ -467,6 +469,11 @@ async def test_configure(hass: HomeAssistant, hass_admin_user: MockUser) -> None
     assert state is not None
     assert state.state == "0"
     assert state.attributes.get("maximum") == 0
+
+    # Ensure an issue is raised for the use of this deprecated service
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_configure_service"
+    )
 
     # disable max
     await hass.services.async_call(
