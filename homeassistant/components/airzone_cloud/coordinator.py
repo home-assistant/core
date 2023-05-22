@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.exceptions import AirzoneCloudError, TooManyRequests
@@ -42,4 +42,4 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.error("Too many API requests")
             except AirzoneCloudError as error:
                 raise UpdateFailed(error) from error
-            return cast(dict[str, Any], self.airzone.data())
+            return self.airzone.data()
