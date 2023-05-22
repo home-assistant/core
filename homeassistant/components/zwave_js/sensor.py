@@ -405,8 +405,8 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
-        if super().native_unit_of_measurement is not None:
-            return super().native_unit_of_measurement
+        if (unit := super().native_unit_of_measurement) is not None:
+            return unit
         if self.info.primary_value.metadata.unit is None:
             return None
         return str(self.info.primary_value.metadata.unit)
