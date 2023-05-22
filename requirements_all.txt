@@ -968,7 +968,7 @@ ical==4.5.1
 icmplib==3.0
 
 # homeassistant.components.network
-ifaddr==0.1.7
+ifaddr==0.2.0
 
 # homeassistant.components.iglo
 iglo==1.2.7
