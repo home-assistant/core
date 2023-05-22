@@ -367,6 +367,12 @@ class Entity(ABC):
                 report_implicit_device_name()
                 return True
             return False
+
+        if name_translation_key := self.__name_translation_key():
+            assert self.platform
+            if name_translation_key in self.platform.platform_translations:
+                return False
+
         if hasattr(self, "entity_description"):
             if (name := self.entity_description.name) is DEVICE_NAME:
                 return True
@@ -406,6 +412,16 @@ class Entity(ABC):
         )
         return self.platform.component_translations.get(name_translation_key)
 
+    def __name_translation_key(self) -> str | None:
+        """Return translation key for entity name."""
+        if self.translation_key is None:
+            return None
+        assert self.platform
+        return (
+            f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
+            f".{self.translation_key}.name"
+        )
+
     @property
     def name(self) -> str | None:
         """Return the name of the entity.
@@ -418,12 +434,10 @@ class Entity(ABC):
             if name is DEVICE_NAME:
                 return None
             return name
-        if self.translation_key is not None and self.has_entity_name:
+        if self.has_entity_name and (
+            name_translation_key := self.__name_translation_key()
+        ):
             assert self.platform
-            name_translation_key = (
-                f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
-                f".{self.translation_key}.name"
-            )
             if name_translation_key in self.platform.platform_translations:
                 name = self.platform.platform_translations[name_translation_key]
                 return name
