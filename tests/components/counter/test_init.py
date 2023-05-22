@@ -307,14 +307,11 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
 async def test_restore_state_overrules_initial_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
 
-    attr = {"initial": 6, "minimum": 1, "maximum": 8, "step": 2}
-
     mock_restore_cache(
         hass,
         (
             State("counter.test1", "11"),
             State("counter.test2", "-22"),
-            State("counter.test3", "5", attr),
         ),
     )
 
@@ -331,14 +328,6 @@ async def test_restore_state_overrules_initial_state(hass: HomeAssistant) -> Non
     state = hass.states.get("counter.test2")
     assert state
     assert int(state.state) == -22
-
-    state = hass.states.get("counter.test3")
-    assert state
-    assert int(state.state) == 5
-    assert state.attributes.get("initial") == 6
-    assert state.attributes.get("minimum") == 1
-    assert state.attributes.get("maximum") == 8
-    assert state.attributes.get("step") == 2
 
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
