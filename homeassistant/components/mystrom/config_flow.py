@@ -6,9 +6,8 @@ import logging
 import re
 from typing import Any
 
-from pymystrom.exceptions import MyStromConnectionError
 from pymystrom import get_device_info
-
+from pymystrom.exceptions import MyStromConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
