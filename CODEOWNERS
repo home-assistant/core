@@ -309,6 +309,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/egardia/ @jeroenterheerdt
 /homeassistant/components/eight_sleep/ @mezz64 @raman325
 /tests/components/eight_sleep/ @mezz64 @raman325
+/homeassistant/components/electrasmart/ @jafar-atili
+/tests/components/electrasmart/ @jafar-atili
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
 /homeassistant/components/elkm1/ @gwww @bdraco
@@ -451,6 +453,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/google_assistant_sdk/ @tronikos
 /tests/components/google_assistant_sdk/ @tronikos
 /homeassistant/components/google_cloud/ @lufton
+/homeassistant/components/google_generative_ai_conversation/ @tronikos
+/tests/components/google_generative_ai_conversation/ @tronikos
 /homeassistant/components/google_mail/ @tkdrob
 /tests/components/google_mail/ @tkdrob
 /homeassistant/components/google_sheets/ @tkdrob
@@ -789,6 +793,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/netdata/ @fabaff
 /homeassistant/components/netgear/ @hacf-fr @Quentame @starkillerOG
 /tests/components/netgear/ @hacf-fr @Quentame @starkillerOG
+/homeassistant/components/netgear_lte/ @tkdrob
 /homeassistant/components/network/ @home-assistant/core
 /tests/components/network/ @home-assistant/core
 /homeassistant/components/nexia/ @bdraco

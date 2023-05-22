@@ -21,6 +21,23 @@ reset:
     entity:
       domain: counter
 
+set_value:
+  name: Set
+  description: Set the counter value
+  target:
+    entity:
+      domain: counter
+  fields:
+    value:
+      name: Value
+      required: true
+      description: The new counter value the entity should be set to.
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          mode: box
+
 configure:
   name: Configure
   description: Change counter parameters.

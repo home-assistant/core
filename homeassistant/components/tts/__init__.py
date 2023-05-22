@@ -206,6 +206,7 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TTS."""
     websocket_api.async_register_command(hass, websocket_list_engines)
+    websocket_api.async_register_command(hass, websocket_get_engine)
     websocket_api.async_register_command(hass, websocket_list_engine_voices)
 
     # Legacy config options
@@ -966,6 +967,47 @@ def websocket_list_engines(
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"providers": providers})
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "tts/engine/get",
+        vol.Required("engine_id"): str,
+    }
+)
+@callback
+def websocket_get_engine(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Get text to speech engine info."""
+    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
+    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+
+    engine_id = msg["engine_id"]
+    provider_info: dict[str, Any]
+
+    provider: TextToSpeechEntity | Provider | None = next(
+        (entity for entity in component.entities if entity.entity_id == engine_id), None
+    )
+    if not provider:
+        provider = manager.providers.get(engine_id)
+
+    if not provider:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_FOUND,
+            f"tts engine {engine_id} not found",
+        )
+        return
+
+    provider_info = {
+        "engine_id": engine_id,
+        "supported_languages": provider.supported_languages,
+    }
+
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"provider": provider_info})
     )
 
 
