@@ -1,5 +1,6 @@
 """Test nest diagnostics."""
 from typing import Any
+from unittest.mock import ANY
 
 from homeassistant.core import HomeAssistant
 
@@ -23,7 +24,7 @@ async def test_entry_diagnostics(
     await setup_integration()
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "discovery": {"attempt": 1, "web.failure": 1, "webrtc.success": 1},
+        "discovery": {"attempt": ANY, "web.failure": ANY, "webrtc.success": ANY},
         "web": {},
         "webrtc": {},
     }

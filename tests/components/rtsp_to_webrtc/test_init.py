@@ -46,15 +46,15 @@ async def test_setup_success(
 
 
 @pytest.mark.parametrize("config_entry_data", [{}])
-async def test_invalid_config_entry(
+async def test_default_to_internal_server(
     hass: HomeAssistant, rtsp_to_webrtc_client: Any, setup_integration: ComponentSetup
 ) -> None:
-    """Test a config entry with missing required fields."""
+    """Test the default is the internal server."""
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.SETUP_ERROR
+    assert entries[0].state is ConfigEntryState.LOADED
 
 
 async def test_setup_server_failure(

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import rtsp_to_webrtc
 import voluptuous as vol
@@ -23,6 +24,9 @@ DATA_SCHEMA = vol.Schema({})
 
 async def _test_connection(hass: HomeAssistant, url: str) -> str | None:
     """Test the connection and return any relevant errors."""
+    result = urlparse(url)
+    if not all([result.scheme, result.netloc]):
+        return "invalid_url"
     client = rtsp_to_webrtc.client.Client(async_get_clientsession(hass), url)
     try:
         await client.heartbeat()

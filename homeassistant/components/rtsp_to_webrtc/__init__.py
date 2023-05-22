@@ -47,6 +47,7 @@ DATA_SERVER_URL = "server_url"
 DATA_UNSUB = "unsub"
 TIMEOUT = 10
 CONF_STUN_SERVER = "stun_server"
+LISTENER = "listener"
 
 
 async def _async_setup_external_server(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -174,6 +175,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class ReloadListener:
+    """Listen for config entry reloads."""
+
+    def __init__(self, original_options: dict[str, Any]) -> None:
+        """Initialize the listener."""
+        self.original_options = original_options
+
+    async def async_reload_entry(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Reload config entry when options change."""
+        if self.original_options != entry.options:
+            await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RTSPtoWebRTC from a config entry."""
     if DATA_SERVER_URL in entry.data:
@@ -189,11 +203,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         await _async_setup_internal_server(hass, entry)
 
-    hass.data.setdefault(DOMAIN, {})[CONF_STUN_SERVER] = entry.options.get(
-        CONF_STUN_SERVER, ""
+    listener = ReloadListener(dict(entry.options))
+    hass.data.setdefault(DOMAIN, {}).update(
+        {
+            CONF_STUN_SERVER: entry.options.get(CONF_STUN_SERVER, ""),
+            LISTENER: listener,
+        }
     )
 
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    entry.async_on_unload(entry.add_update_listener(listener.async_reload_entry))
 
     websocket_api.async_register_command(hass, ws_get_settings)
 
@@ -205,12 +223,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN in hass.data:
         del hass.data[DOMAIN]
     return True
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload config entry when options change."""
-    if hass.data[DOMAIN][CONF_STUN_SERVER] != entry.options.get(CONF_STUN_SERVER, ""):
-        await hass.config_entries.async_reload(entry.entry_id)
 
 
 @websocket_api.websocket_command(
