@@ -1521,7 +1521,7 @@ python-matter-server==3.2.0
 python-miio==0.5.12
 
 # homeassistant.components.mystrom
-python-mystrom==1.1.2
+python-mystrom==2.2.0
 
 # homeassistant.components.nest
 python-nest==4.2.0

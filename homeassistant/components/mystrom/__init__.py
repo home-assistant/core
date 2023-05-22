@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-import aiohttp
 from pymystrom import get_device_info
 from pymystrom.bulb import MyStromBulb
 from pymystrom.exceptions import MyStromConnectionError
@@ -20,6 +18,7 @@ from .const import DOMAIN
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up myStrom from a config entry."""
