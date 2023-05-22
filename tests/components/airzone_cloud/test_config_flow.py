@@ -36,9 +36,6 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installations",
         return_value=GET_INSTALLATIONS_MOCK,
     ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_user",
-        side_effect=None,
-    ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
         side_effect=mock_get_webserver,
     ), patch(
@@ -99,9 +96,6 @@ async def test_installations_list_error(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_installations",
         side_effect=AirzoneCloudError,
-    ), patch(
-        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_user",
-        side_effect=None,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
         return_value=mock_get_webserver,

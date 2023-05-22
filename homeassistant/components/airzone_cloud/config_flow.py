@@ -99,7 +99,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.airzone.login()
-                await self.airzone.api_get_user()
             except (AirzoneCloudError, LoginError):
                 errors["base"] = "cannot_connect"
             else:
