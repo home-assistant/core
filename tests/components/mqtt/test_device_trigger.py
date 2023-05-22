@@ -45,10 +45,10 @@ def binary_sensor_and_sensor_only():
 async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test we get the expected triggers from a discovered mqtt device."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -81,10 +81,10 @@ async def test_get_triggers(
 async def test_get_unknown_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test we don't get unknown triggers."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     # Discover a sensor (without device triggers)
     data1 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
@@ -128,10 +128,10 @@ async def test_get_unknown_triggers(
 async def test_get_non_existing_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test getting non existing triggers."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     # Discover a sensor (without device triggers)
     data1 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
@@ -152,10 +152,10 @@ async def test_get_non_existing_triggers(
 async def test_discover_bad_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test bad discovery message."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     # Test sending bad data
     data0 = (
         '{ "automation_type":"trigger",'
@@ -202,10 +202,10 @@ async def test_discover_bad_triggers(
 async def test_update_remove_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers can be updated and removed."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     config1 = {
         "automation_type": "trigger",
         "device": {"identifiers": ["0AFFD2"]},
@@ -272,10 +272,10 @@ async def test_if_fires_on_mqtt_message(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     calls,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -351,10 +351,10 @@ async def test_if_fires_on_mqtt_message_template(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     calls,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -432,10 +432,10 @@ async def test_if_fires_on_mqtt_message_late_discover(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     calls,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing of MQTT device triggers discovered after setup."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data0 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -519,10 +519,10 @@ async def test_if_fires_on_mqtt_message_after_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     calls,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers firing after update."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -598,10 +598,10 @@ async def test_if_fires_on_mqtt_message_after_update(
 async def test_no_resubscribe_same_topic(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test subscription to topics without change."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -646,10 +646,10 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     calls,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers not firing after removal."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -712,13 +712,13 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     calls,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test triggers not firing after removal."""
     assert await async_setup_component(hass, "config", {})
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
 
     ws_client = await hass_ws_client(hass)
 
@@ -783,10 +783,10 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
 async def test_attach_remove(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test attach and removal of trigger."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -841,10 +841,10 @@ async def test_attach_remove(
 async def test_attach_remove_late(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test attach and removal of trigger ."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data0 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -907,10 +907,10 @@ async def test_attach_remove_late(
 async def test_attach_remove_late2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test attach and removal of trigger ."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data0 = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -969,10 +969,10 @@ async def test_attach_remove_late2(
 
 
 async def test_entity_device_info_with_connection(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT device registry integration."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     registry = dr.async_get(hass)
 
     data = json.dumps(
@@ -1007,10 +1007,10 @@ async def test_entity_device_info_with_connection(
 
 
 async def test_entity_device_info_with_identifier(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test MQTT device registry integration."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     registry = dr.async_get(hass)
 
     data = json.dumps(
@@ -1043,10 +1043,10 @@ async def test_entity_device_info_with_identifier(
 
 
 async def test_entity_device_info_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test device registry update."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     registry = dr.async_get(hass)
 
     config = {
@@ -1086,10 +1086,10 @@ async def test_cleanup_trigger(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test trigger discovery topic is cleaned when device is removed from registry."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
@@ -1142,10 +1142,10 @@ async def test_cleanup_trigger(
 async def test_cleanup_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test removal from device registry when trigger is removed."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     config = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -1178,10 +1178,10 @@ async def test_cleanup_device(
 async def test_cleanup_device_several_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test removal from device registry when the last trigger is removed."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     config1 = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -1240,13 +1240,13 @@ async def test_cleanup_device_several_triggers(
 async def test_cleanup_device_with_entity1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test removal from device registry for device with entity.
 
     Trigger removed first, then entity.
     """
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     config1 = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -1301,13 +1301,13 @@ async def test_cleanup_device_with_entity1(
 async def test_cleanup_device_with_entity2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test removal from device registry for device with entity.
 
     Entity removed first, then trigger.
     """
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     config1 = {
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -1360,13 +1360,13 @@ async def test_cleanup_device_with_entity2(
 
 
 async def test_trigger_debug_info(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
     """
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     registry = dr.async_get(hass)
 
     config1 = {

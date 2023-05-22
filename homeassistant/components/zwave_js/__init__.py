@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Coroutine
+from contextlib import suppress
 from typing import Any
 
 from async_timeout import timeout
@@ -792,7 +793,11 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     for task in platform_setup_tasks:
         task.cancel()
 
-    await asyncio.gather(listen_task, start_client_task, *platform_setup_tasks)
+    tasks = (listen_task, start_client_task, *platform_setup_tasks)
+    await asyncio.gather(*tasks, return_exceptions=True)
+    for task in tasks:
+        with suppress(asyncio.CancelledError):
+            await task
 
     if client.connected:
         await client.disconnect()

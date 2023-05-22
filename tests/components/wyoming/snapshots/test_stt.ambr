@@ -1,0 +1,42 @@
+# serializer version: 1
+# name: test_streaming_audio
+  list([
+    dict({
+      'data': dict({
+        'channels': 1,
+        'rate': 16000,
+        'timestamp': None,
+        'width': 2,
+      }),
+      'payload': None,
+      'type': 'audio-start',
+    }),
+    dict({
+      'data': dict({
+        'channels': 1,
+        'rate': 16000,
+        'timestamp': None,
+        'width': 2,
+      }),
+      'payload': 'chunk1',
+      'type': 'audio-chunk',
+    }),
+    dict({
+      'data': dict({
+        'channels': 1,
+        'rate': 16000,
+        'timestamp': None,
+        'width': 2,
+      }),
+      'payload': 'chunk2',
+      'type': 'audio-chunk',
+    }),
+    dict({
+      'data': dict({
+        'timestamp': None,
+      }),
+      'payload': None,
+      'type': 'audio-stop',
+    }),
+  ])
+# ---

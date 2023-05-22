@@ -1,7 +1,12 @@
 """Supervisor events monitor."""
 from __future__ import annotations
 
-from typing import Any
+import asyncio
+from dataclasses import dataclass, field
+import logging
+from typing import Any, TypedDict
+
+from typing_extensions import NotRequired
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -14,6 +19,8 @@ from homeassistant.helpers.issue_registry import (
 from .const import (
     ATTR_DATA,
     ATTR_HEALTHY,
+    ATTR_ISSUES,
+    ATTR_SUGGESTIONS,
     ATTR_SUPPORTED,
     ATTR_UNHEALTHY,
     ATTR_UNHEALTHY_REASONS,
@@ -23,18 +30,25 @@ from .const import (
     ATTR_WS_EVENT,
     DOMAIN,
     EVENT_HEALTH_CHANGED,
+    EVENT_ISSUE_CHANGED,
+    EVENT_ISSUE_REMOVED,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
+    PLACEHOLDER_KEY_REFERENCE,
     UPDATE_KEY_SUPERVISOR,
 )
-from .handler import HassIO
+from .handler import HassIO, HassioAPIError
 
+ISSUE_KEY_UNHEALTHY = "unhealthy"
+ISSUE_KEY_UNSUPPORTED = "unsupported"
 ISSUE_ID_UNHEALTHY = "unhealthy_system"
 ISSUE_ID_UNSUPPORTED = "unsupported_system"
 
 INFO_URL_UNHEALTHY = "https://www.home-assistant.io/more-info/unhealthy"
 INFO_URL_UNSUPPORTED = "https://www.home-assistant.io/more-info/unsupported"
+
+PLACEHOLDER_KEY_REASON = "reason"
 
 UNSUPPORTED_REASONS = {
     "apparmor",
@@ -69,6 +83,88 @@ UNHEALTHY_REASONS = {
     "untrusted",
 }
 
+# Keys (type + context) of issues that when found should be made into a repair
+ISSUE_KEYS_FOR_REPAIRS = {
+    "issue_system_multiple_data_disks",
+    "issue_system_reboot_required",
+}
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class SuggestionDataType(TypedDict):
+    """Suggestion dictionary as received from supervisor."""
+
+    uuid: str
+    type: str
+    context: str
+    reference: str | None
+
+
+@dataclass(slots=True, frozen=True)
+class Suggestion:
+    """Suggestion from Supervisor which resolves an issue."""
+
+    uuid: str
+    type_: str
+    context: str
+    reference: str | None = None
+
+    @property
+    def key(self) -> str:
+        """Get key for suggestion (combination of context and type)."""
+        return f"{self.context}_{self.type_}"
+
+    @classmethod
+    def from_dict(cls, data: SuggestionDataType) -> Suggestion:
+        """Convert from dictionary representation."""
+        return cls(
+            uuid=data["uuid"],
+            type_=data["type"],
+            context=data["context"],
+            reference=data["reference"],
+        )
+
+
+class IssueDataType(TypedDict):
+    """Issue dictionary as received from supervisor."""
+
+    uuid: str
+    type: str
+    context: str
+    reference: str | None
+    suggestions: NotRequired[list[SuggestionDataType]]
+
+
+@dataclass(slots=True, frozen=True)
+class Issue:
+    """Issue from Supervisor."""
+
+    uuid: str
+    type_: str
+    context: str
+    reference: str | None = None
+    suggestions: list[Suggestion] = field(default_factory=list, compare=False)
+
+    @property
+    def key(self) -> str:
+        """Get key for issue (combination of context and type)."""
+        return f"issue_{self.context}_{self.type_}"
+
+    @classmethod
+    def from_dict(cls, data: IssueDataType) -> Issue:
+        """Convert from dictionary representation."""
+        suggestions: list[SuggestionDataType] = data.get("suggestions", [])
+        return cls(
+            uuid=data["uuid"],
+            type_=data["type"],
+            context=data["context"],
+            reference=data["reference"],
+            suggestions=[
+                Suggestion.from_dict(suggestion) for suggestion in suggestions
+            ],
+        )
+
 
 class SupervisorIssues:
     """Create issues from supervisor events."""
@@ -79,6 +175,7 @@ class SupervisorIssues:
         self._client = client
         self._unsupported_reasons: set[str] = set()
         self._unhealthy_reasons: set[str] = set()
+        self._issues: dict[str, Issue] = {}
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -87,14 +184,14 @@ class SupervisorIssues:
 
     @unhealthy_reasons.setter
     def unhealthy_reasons(self, reasons: set[str]) -> None:
-        """Set unhealthy reasons. Create or delete issues as necessary."""
+        """Set unhealthy reasons. Create or delete repairs as necessary."""
         for unhealthy in reasons - self.unhealthy_reasons:
             if unhealthy in UNHEALTHY_REASONS:
-                translation_key = f"unhealthy_{unhealthy}"
+                translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
                 translation_placeholders = None
             else:
-                translation_key = "unhealthy"
-                translation_placeholders = {"reason": unhealthy}
+                translation_key = ISSUE_KEY_UNHEALTHY
+                translation_placeholders = {PLACEHOLDER_KEY_REASON: unhealthy}
 
             async_create_issue(
                 self._hass,
@@ -119,14 +216,14 @@ class SupervisorIssues:
 
     @unsupported_reasons.setter
     def unsupported_reasons(self, reasons: set[str]) -> None:
-        """Set unsupported reasons. Create or delete issues as necessary."""
+        """Set unsupported reasons. Create or delete repairs as necessary."""
         for unsupported in reasons - UNSUPPORTED_SKIP_REPAIR - self.unsupported_reasons:
             if unsupported in UNSUPPORTED_REASONS:
-                translation_key = f"unsupported_{unsupported}"
+                translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
                 translation_placeholders = None
             else:
-                translation_key = "unsupported"
-                translation_placeholders = {"reason": unsupported}
+                translation_key = ISSUE_KEY_UNSUPPORTED
+                translation_placeholders = {PLACEHOLDER_KEY_REASON: unsupported}
 
             async_create_issue(
                 self._hass,
@@ -144,6 +241,61 @@ class SupervisorIssues:
 
         self._unsupported_reasons = reasons
 
+    def add_issue(self, issue: Issue) -> None:
+        """Add or update an issue in the list. Create or update a repair if necessary."""
+        if issue.key in ISSUE_KEYS_FOR_REPAIRS:
+            placeholders: dict[str, str] | None = None
+            if issue.reference:
+                placeholders = {PLACEHOLDER_KEY_REFERENCE: issue.reference}
+            async_create_issue(
+                self._hass,
+                DOMAIN,
+                issue.uuid,
+                is_fixable=bool(issue.suggestions),
+                severity=IssueSeverity.WARNING,
+                translation_key=issue.key,
+                translation_placeholders=placeholders,
+            )
+
+        self._issues[issue.uuid] = issue
+
+    async def add_issue_from_data(self, data: IssueDataType) -> None:
+        """Add issue from data to list after getting latest suggestions."""
+        try:
+            suggestions = (await self._client.get_suggestions_for_issue(data["uuid"]))[
+                ATTR_SUGGESTIONS
+            ]
+            self.add_issue(
+                Issue(
+                    uuid=data["uuid"],
+                    type_=data["type"],
+                    context=data["context"],
+                    reference=data["reference"],
+                    suggestions=[
+                        Suggestion.from_dict(suggestion) for suggestion in suggestions
+                    ],
+                )
+            )
+        except HassioAPIError:
+            _LOGGER.error(
+                "Could not get suggestions for supervisor issue %s, skipping it",
+                data["uuid"],
+            )
+
+    def remove_issue(self, issue: Issue) -> None:
+        """Remove an issue from the list. Delete a repair if necessary."""
+        if issue.uuid not in self._issues:
+            return
+
+        if issue.key in ISSUE_KEYS_FOR_REPAIRS:
+            async_delete_issue(self._hass, DOMAIN, issue.uuid)
+
+        del self._issues[issue.uuid]
+
+    def get_issue(self, issue_id: str) -> Issue | None:
+        """Get issue from key."""
+        return self._issues.get(issue_id)
+
     async def setup(self) -> None:
         """Create supervisor events listener."""
         await self.update()
@@ -153,10 +305,21 @@ class SupervisorIssues:
         )
 
     async def update(self) -> None:
-        """Update issuess from Supervisor resolution center."""
+        """Update issues from Supervisor resolution center."""
         data = await self._client.get_resolution_info()
         self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
         self.unsupported_reasons = set(data[ATTR_UNSUPPORTED])
+
+        # Remove any cached issues that weren't returned
+        for issue_id in set(self._issues.keys()) - {
+            issue["uuid"] for issue in data[ATTR_ISSUES]
+        }:
+            self.remove_issue(self._issues[issue_id])
+
+        # Add/update any issues that came back
+        await asyncio.gather(
+            *[self.add_issue_from_data(issue) for issue in data[ATTR_ISSUES]]
+        )
 
     @callback
     def _supervisor_events_to_issues(self, event: dict[str, Any]) -> None:
@@ -183,3 +346,9 @@ class SupervisorIssues:
                 if event[ATTR_DATA][ATTR_SUPPORTED]
                 else set(event[ATTR_DATA][ATTR_UNSUPPORTED_REASONS])
             )
+
+        elif event[ATTR_WS_EVENT] == EVENT_ISSUE_CHANGED:
+            self.add_issue(Issue.from_dict(event[ATTR_DATA]))
+
+        elif event[ATTR_WS_EVENT] == EVENT_ISSUE_REMOVED:
+            self.remove_issue(Issue.from_dict(event[ATTR_DATA]))

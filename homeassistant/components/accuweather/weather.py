@@ -1,8 +1,7 @@
 """Support for the AccuWeather service."""
 from __future__ import annotations
 
-from statistics import mean
-from typing import Any, cast
+from typing import cast
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -110,16 +109,6 @@ class AccuWeatherEntity(
         return cast(float, self.coordinator.data["Visibility"][API_METRIC]["Value"])
 
     @property
-    def ozone(self) -> int | None:
-        """Return the ozone level."""
-        # We only have ozone data for certain locations and only in the forecast data.
-        if self.coordinator.forecast and self.coordinator.data[ATTR_FORECAST][0].get(
-            "Ozone"
-        ):
-            return cast(int, self.coordinator.data[ATTR_FORECAST][0]["Ozone"]["Value"])
-        return None
-
-    @property
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if not self.coordinator.forecast:
@@ -130,15 +119,10 @@ class AccuWeatherEntity(
                 ATTR_FORECAST_TIME: utc_from_timestamp(item["EpochDate"]).isoformat(),
                 ATTR_FORECAST_NATIVE_TEMP: item["TemperatureMax"]["Value"],
                 ATTR_FORECAST_NATIVE_TEMP_LOW: item["TemperatureMin"]["Value"],
-                ATTR_FORECAST_NATIVE_PRECIPITATION: self._calc_precipitation(item),
-                ATTR_FORECAST_PRECIPITATION_PROBABILITY: round(
-                    mean(
-                        [
-                            item["PrecipitationProbabilityDay"],
-                            item["PrecipitationProbabilityNight"],
-                        ]
-                    )
-                ),
+                ATTR_FORECAST_NATIVE_PRECIPITATION: item["TotalLiquidDay"]["Value"],
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: item[
+                    "PrecipitationProbabilityDay"
+                ],
                 ATTR_FORECAST_NATIVE_WIND_SPEED: item["WindDay"]["Speed"]["Value"],
                 ATTR_FORECAST_WIND_BEARING: item["WindDay"]["Direction"]["Degrees"],
                 ATTR_FORECAST_CONDITION: [
@@ -147,18 +131,3 @@ class AccuWeatherEntity(
             }
             for item in self.coordinator.data[ATTR_FORECAST]
         ]
-
-    @staticmethod
-    def _calc_precipitation(day: dict[str, Any]) -> float:
-        """Return sum of the precipitation."""
-        precip_sum = 0
-        precip_types = ["Rain", "Snow", "Ice"]
-        for precip in precip_types:
-            precip_sum = sum(
-                [
-                    precip_sum,
-                    day[f"{precip}Day"]["Value"],
-                    day[f"{precip}Night"]["Value"],
-                ]
-            )
-        return round(precip_sum, 1)

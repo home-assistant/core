@@ -255,6 +255,32 @@ SUMMARY:Event with a provided Timezone
 END:VEVENT
 END:VCALENDAR
 """,
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:16
+DTSTAMP:20171125T000000Z
+DTSTART:20171127
+DTEND:20171128
+SUMMARY:All day event with same start and end
+LOCATION:Hamburg
+END:VEVENT
+END:VCALENDAR
+""",
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:17
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T010000
+DTEND:20171127T010000
+SUMMARY:Event with no duration
+LOCATION:Hamburg
+END:VEVENT
+END:VCALENDAR
+""",
 ]
 
 CALDAV_CONFIG = {
@@ -1001,7 +1027,7 @@ async def test_get_events(hass: HomeAssistant, calendar, get_api_events) -> None
     await hass.async_block_till_done()
 
     events = await get_api_events("calendar.private")
-    assert len(events) == 16
+    assert len(events) == 18
     assert calendar.call
 
 

@@ -26,7 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -86,7 +85,9 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
     ) -> None:
         """Initialize the fan."""
         super().__init__(config_entry, driver, info)
-        self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+        assert target_value
+        self._target_value = target_value
 
         self._use_optimistic_state: bool = False
 
@@ -99,9 +100,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
                 percentage_to_ranged_value(DEFAULT_SPEED_RANGE, percentage)
             )
 
-        if (target_value := self._target_value) is None:
-            raise HomeAssistantError("Missing target value on device.")
-        await self.info.node.async_set_value(target_value, zwave_speed)
+        await self.info.node.async_set_value(self._target_value, zwave_speed)
 
     async def async_turn_on(
         self,
@@ -114,9 +113,6 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
             await self.async_set_percentage(percentage)
         elif preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
-        else:
-            if (target_value := self._target_value) is None:
-                raise HomeAssistantError("Missing target value on device.")
             if self.info.primary_value.command_class != CommandClass.SWITCH_MULTILEVEL:
                 raise HomeAssistantError(
                     "`percentage` or `preset_mode` must be provided"
@@ -128,9 +124,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if (target_value := self._target_value) is None:
-            raise HomeAssistantError("Missing target value on device.")
-        await self.info.node.async_set_value(target_value, 0)
+        await self.info.node.async_set_value(self._target_value, 0)
 
     @property
     def is_on(self) -> bool | None:
@@ -158,11 +152,6 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         """Return the step size for percentage."""
         return 1
 
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return int_states_in_range(DEFAULT_SPEED_RANGE)
-
 
 class ValueMappingZwaveFan(ZwaveFan):
     """A Zwave fan with a value mapping data (e.g., 1-24 is low)."""
@@ -178,18 +167,14 @@ class ValueMappingZwaveFan(ZwaveFan):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        if (target_value := self._target_value) is None:
-            raise HomeAssistantError("Missing target value on device.")
         zwave_speed = self.percentage_to_zwave_speed(percentage)
-        await self.info.node.async_set_value(target_value, zwave_speed)
+        await self.info.node.async_set_value(self._target_value, zwave_speed)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if (target_value := self._target_value) is None:
-            raise HomeAssistantError("Missing target value on device.")
         for zwave_value, mapped_preset_mode in self.fan_value_mapping.presets.items():
             if preset_mode == mapped_preset_mode:
-                await self.info.node.async_set_value(target_value, zwave_value)
+                await self.info.node.async_set_value(self._target_value, zwave_value)
                 return
 
         raise NotValidPresetModeError(
@@ -289,12 +274,9 @@ class ValueMappingZwaveFan(ZwaveFan):
             assert step_percentage
 
             if percentage <= step_percentage:
-                return max_speed
+                break
 
-        # This shouldn't actually happen; the last entry in
-        # `self.fan_value_mapping.speeds` should map to 100%.
-        (_, last_max_speed) = self.fan_value_mapping.speeds[-1]
-        return last_max_speed
+        return max_speed
 
     def zwave_speed_to_percentage(self, zwave_speed: int) -> int | None:
         """Convert a Zwave speed to a percentage.
