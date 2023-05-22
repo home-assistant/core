@@ -56,6 +56,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE = "source"
 ATTR_USER_ID = "user_id"
+ATTR_DEVICE_TRACKERS = "device_trackers"
 
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
@@ -354,7 +355,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass, create_list=False)
 
@@ -446,6 +447,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
             data[ATTR_SOURCE] = self._source
         if (user_id := self._config.get(CONF_USER_ID)) is not None:
             data[ATTR_USER_ID] = user_id
+        data[ATTR_DEVICE_TRACKERS] = self.device_trackers
         return data
 
     @property

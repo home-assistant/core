@@ -302,8 +302,8 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
         await hass.async_block_till_done()
         calls = async_mock_service(hass, DOMAIN, "warning_device_warn")
 
-        channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
-        channel.zha_send_event(COMMAND_SINGLE, [])
+        cluster_handler = zha_device.endpoints[1].client_cluster_handlers["1:0x0006"]
+        cluster_handler.zha_send_event(COMMAND_SINGLE, [])
         await hass.async_block_till_done()
 
         assert len(calls) == 1
@@ -350,8 +350,8 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
 async def test_invalid_zha_event_type(hass: HomeAssistant, device_ias) -> None:
     """Test that unexpected types are not passed to `zha_send_event`."""
     zigpy_device, zha_device = device_ias
-    channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
+    cluster_handler = zha_device._endpoints[1].client_cluster_handlers["1:0x0006"]
 
     # `zha_send_event` accepts only zigpy responses, lists, and dicts
     with pytest.raises(TypeError):
-        channel.zha_send_event(COMMAND_SINGLE, 123)
+        cluster_handler.zha_send_event(COMMAND_SINGLE, 123)

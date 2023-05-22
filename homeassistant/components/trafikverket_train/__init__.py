@@ -2,6 +2,11 @@
 from __future__ import annotations
 
 from pytrafikverket import TrafikverketTrain
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleTrainStationsFound,
+    NoTrainStationFound,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -21,9 +26,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         to_station = await train_api.async_get_train_station(entry.data[CONF_TO])
         from_station = await train_api.async_get_train_station(entry.data[CONF_FROM])
-    except ValueError as error:
-        if "Invalid authentication" in error.args[0]:
-            raise ConfigEntryAuthFailed from error
+    except InvalidAuthentication as error:
+        raise ConfigEntryAuthFailed from error
+    except (NoTrainStationFound, MultipleTrainStationsFound) as error:
         raise ConfigEntryNotReady(
             f"Problem when trying station {entry.data[CONF_FROM]} to"
             f" {entry.data[CONF_TO]}. Error: {error} "

@@ -209,7 +209,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 

@@ -34,7 +34,7 @@ async def test_form_create_entry_without_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
@@ -64,7 +64,7 @@ async def test_form_create_entry_with_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(

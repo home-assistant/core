@@ -82,7 +82,7 @@ class DatasetStore:
         """Initialize the dataset store."""
         self.hass = hass
         self.datasets: dict[str, DatasetEntry] = {}
-        self.preferred_dataset: str | None = None
+        self._preferred_dataset: str | None = None
         self._store: Store[dict[str, Any]] = Store(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -103,14 +103,14 @@ class DatasetStore:
         entry = DatasetEntry(source=source, tlv=tlv)
         self.datasets[entry.id] = entry
         # Set to preferred if there is no preferred dataset
-        if self.preferred_dataset is None:
-            self.preferred_dataset = entry.id
+        if self._preferred_dataset is None:
+            self._preferred_dataset = entry.id
         self.async_schedule_save()
 
     @callback
     def async_delete(self, dataset_id: str) -> None:
         """Delete dataset."""
-        if self.preferred_dataset == dataset_id:
+        if self._preferred_dataset == dataset_id:
             raise DatasetPreferredError("attempt to remove preferred dataset")
         del self.datasets[dataset_id]
         self.async_schedule_save()
@@ -119,6 +119,21 @@ class DatasetStore:
     def async_get(self, dataset_id: str) -> DatasetEntry | None:
         """Get dataset by id."""
         return self.datasets.get(dataset_id)
+
+    @property
+    @callback
+    def preferred_dataset(self) -> str | None:
+        """Get the id of the preferred dataset."""
+        return self._preferred_dataset
+
+    @preferred_dataset.setter
+    @callback
+    def preferred_dataset(self, dataset_id: str) -> None:
+        """Set the preferred dataset."""
+        if dataset_id not in self.datasets:
+            raise KeyError("unknown dataset")
+        self._preferred_dataset = dataset_id
+        self.async_schedule_save()
 
     async def async_load(self) -> None:
         """Load the datasets."""
@@ -139,7 +154,7 @@ class DatasetStore:
             preferred_dataset = data["preferred_dataset"]
 
         self.datasets = datasets
-        self.preferred_dataset = preferred_dataset
+        self._preferred_dataset = preferred_dataset
 
     @callback
     def async_schedule_save(self) -> None:
@@ -151,7 +166,7 @@ class DatasetStore:
         """Return data of datasets to store in a file."""
         data: dict[str, Any] = {}
         data["datasets"] = [dataset.to_json() for dataset in self.datasets.values()]
-        data["preferred_dataset"] = self.preferred_dataset
+        data["preferred_dataset"] = self._preferred_dataset
         return data
 
 

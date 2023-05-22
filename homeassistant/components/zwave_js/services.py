@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, CommandStatus
-from zwave_js_server.exceptions import SetValueFailed
+from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ValueDataType, get_value_id_str
@@ -604,13 +604,16 @@ class ZWaveServices:
         ):
             new_value = str(new_value)
 
-        success = await async_multicast_set_value(
-            client=client,
-            new_value=new_value,
-            value_data=value,
-            nodes=None if broadcast else list(nodes),
-            options=options,
-        )
+        try:
+            success = await async_multicast_set_value(
+                client=client,
+                new_value=new_value,
+                value_data=value,
+                nodes=None if broadcast else list(nodes),
+                options=options,
+            )
+        except FailedZWaveCommand as err:
+            raise HomeAssistantError("Unable to set value via multicast") from err
 
         if success is False:
             raise HomeAssistantError(

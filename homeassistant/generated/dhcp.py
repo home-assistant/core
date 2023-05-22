@@ -98,6 +98,18 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "C8F742*",
     },
     {
+        "domain": "broadlink",
+        "macaddress": "E81656*",
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "E87072*",
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "EC0BAE*",
+    },
+    {
         "domain": "dlink",
         "hostname": "dsp-w215",
     },
@@ -338,6 +350,10 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "oncue",
         "hostname": "kohlergen*",
         "macaddress": "00146F*",
+    },
+    {
+        "domain": "onvif",
+        "registered_devices": True,
     },
     {
         "domain": "overkiz",

@@ -32,6 +32,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DEVICE_CLASS_NAME
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
@@ -349,6 +350,10 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         """Initialize Tomorrow.io Sensor Entity."""
         super().__init__(config_entry, coordinator, api_version)
         self.entity_description = description
+        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
+        # the assert satisfies the type checker and will catch attempts
+        # to use DEVICE_CLASS_NAME in the entity descriptions.
+        assert description.name is not DEVICE_CLASS_NAME
         self._attr_name = f"{self._config_entry.data[CONF_NAME]} - {description.name}"
         self._attr_unique_id = (
             f"{self._config_entry.unique_id}_{slugify(description.name)}"

@@ -1,6 +1,6 @@
 """Tests for the Sonos config flow."""
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -86,16 +86,16 @@ async def test_async_poll_manual_hosts_warnings(
         manager, "_async_handle_discovery_message"
     ), patch("homeassistant.components.sonos.async_call_later"), patch(
         "homeassistant.components.sonos.async_dispatcher_send"
-    ), patch.object(
-        hass, "async_add_executor_job", new=AsyncMock()
-    ) as mock_async_add_executor_job:
-        mock_async_add_executor_job.side_effect = [
+    ), patch(
+        "homeassistant.components.sonos.sync_get_visible_zones",
+        side_effect=[
             OSError(),
             OSError(),
             [],
             [],
             OSError(),
-        ]
+        ],
+    ):
         # First call fails, it should be logged as a WARNING message
         caplog.clear()
         await manager.async_poll_manual_hosts()

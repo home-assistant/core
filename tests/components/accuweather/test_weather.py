@@ -14,7 +14,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY,
@@ -46,7 +45,6 @@ async def test_weather_without_forecast(hass: HomeAssistant) -> None:
     assert state.state == "sunny"
     assert not state.attributes.get(ATTR_FORECAST)
     assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 67
-    assert not state.attributes.get(ATTR_WEATHER_OZONE)
     assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1012.0
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 22.6
     assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1
@@ -68,7 +66,6 @@ async def test_weather_with_forecast(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "sunny"
     assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 67
-    assert state.attributes.get(ATTR_WEATHER_OZONE) == 32
     assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1012.0
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 22.6
     assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1
@@ -77,8 +74,8 @@ async def test_weather_with_forecast(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     forecast = state.attributes.get(ATTR_FORECAST)[0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == "lightning-rainy"
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION) == 4.8
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 58
+    assert forecast.get(ATTR_FORECAST_PRECIPITATION) == 2.5
+    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 60
     assert forecast.get(ATTR_FORECAST_TEMP) == 29.5
     assert forecast.get(ATTR_FORECAST_TEMP_LOW) == 15.4
     assert forecast.get(ATTR_FORECAST_TIME) == "2020-07-26T05:00:00+00:00"
@@ -144,7 +141,7 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
         return_value=current,
     ) as mock_current, patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
+        "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast",
         return_value=forecast,
     ) as mock_forecast, patch(
         "homeassistant.components.accuweather.AccuWeather.requests_remaining",

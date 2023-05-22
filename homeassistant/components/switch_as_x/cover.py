@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.cover import CoverEntity, CoverEntityFeature
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,6 +40,7 @@ async def async_setup_entry(
             CoverSwitch(
                 hass,
                 config_entry.title,
+                COVER_DOMAIN,
                 entity_id,
                 config_entry.entry_id,
             )
