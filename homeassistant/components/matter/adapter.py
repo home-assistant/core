@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from matter_server.common.models import EventType, ServerInfoMessage
 from matter_server.client.models.device_types import BridgedDevice
+from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -18,10 +18,7 @@ from .helpers import get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
-    from matter_server.client.models.node import (
-        MatterEndpoint,
-        MatterNode,
-    )
+    from matter_server.client.models.node import MatterEndpoint, MatterNode
 
 
 class MatterAdapter:
@@ -93,7 +90,9 @@ class MatterAdapter:
             get_clean_name(basic_info.nodeLabel)
             or get_clean_name(basic_info.productLabel)
             or get_clean_name(basic_info.productName)
-            or device_type.__class__.__name__ if device_type else None
+            or device_type.__class__.__name__
+            if device_type
+            else None
         )
 
         # handle bridged devices
