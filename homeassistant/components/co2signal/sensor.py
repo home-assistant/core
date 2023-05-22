@@ -35,13 +35,13 @@ class CO2SensorEntityDescription(SensorEntityDescription):
 SENSORS = (
     CO2SensorEntityDescription(
         key="carbonIntensity",
-        name="CO2 intensity",
+        translation_key="carbon_intensity",
         unique_id="co2intensity",
         # No unit, it's extracted from response.
     ),
     CO2SensorEntityDescription(
         key="fossilFuelPercentage",
-        name="Grid fossil fuel percentage",
+        translation_key="fossil_fuel_percentage",
         native_unit_of_measurement=PERCENTAGE,
     ),
 )

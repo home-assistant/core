@@ -89,7 +89,8 @@ class BondFan(BondEntity, FanEntity):
             features |= FanEntityFeature.SET_SPEED
         if self._device.supports_direction():
             features |= FanEntityFeature.DIRECTION
-
+        if self._device.has_action(Action.BREEZE_ON):
+            features |= FanEntityFeature.PRESET_MODE
         return features
 
     @property

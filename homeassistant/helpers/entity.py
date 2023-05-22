@@ -52,6 +52,16 @@ DATA_ENTITY_SOURCE = "entity_info"
 SOURCE_CONFIG_ENTRY = "config_entry"
 SOURCE_PLATFORM_CONFIG = "platform_config"
 
+
+class DeviceClassName(Enum):
+    """Singleton to use device class name."""
+
+    _singleton = 0
+
+
+DEVICE_CLASS_NAME = DeviceClassName._singleton  # pylint: disable=protected-access
+
+
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
@@ -205,7 +215,7 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-@dataclass
+@dataclass(slots=True)
 class EntityDescription:
     """A class that describes Home Assistant entities."""
 
@@ -219,7 +229,7 @@ class EntityDescription:
     force_update: bool = False
     icon: str | None = None
     has_entity_name: bool = False
-    name: str | None = None
+    name: str | DeviceClassName | None = None
     translation_key: str | None = None
     unit_of_measurement: str | None = None
 
@@ -248,6 +258,10 @@ class Entity(ABC):
 
     # If we reported this entity is updated while disabled
     _disabled_reported = False
+
+    # If we reported this entity is using async_update_ha_state, while
+    # it should be using async_write_ha_state.
+    _async_update_ha_state_reported = False
 
     # Protect for multiple updates
     _update_staged = False
@@ -284,7 +298,7 @@ class Entity(ABC):
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
-    _attr_name: str | None
+    _attr_name: str | DeviceClassName | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
@@ -314,10 +328,24 @@ class Entity(ABC):
             return self.entity_description.has_entity_name
         return False
 
+    def _device_class_name(self) -> str | None:
+        """Return a translated name of the entity based on its device class."""
+        assert self.platform
+        if not self.has_entity_name:
+            return None
+        device_class_key = self.device_class or "_"
+        name_translation_key = (
+            f"component.{self.platform.domain}.entity_component."
+            f"{device_class_key}.name"
+        )
+        return self.platform.component_translations.get(name_translation_key)
+
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
+            if self._attr_name is DEVICE_CLASS_NAME:
+                return self._device_class_name()
             return self._attr_name
         if self.translation_key is not None and self.has_entity_name:
             assert self.platform
@@ -325,10 +353,12 @@ class Entity(ABC):
                 f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
                 f".{self.translation_key}.name"
             )
-            if name_translation_key in self.platform.entity_translations:
-                name: str = self.platform.entity_translations[name_translation_key]
+            if name_translation_key in self.platform.platform_translations:
+                name: str = self.platform.platform_translations[name_translation_key]
                 return name
         if hasattr(self, "entity_description"):
+            if self.entity_description.name is DEVICE_CLASS_NAME:
+                return self._device_class_name()
             return self.entity_description.name
         return None
 
@@ -551,6 +581,19 @@ class Entity(ABC):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
+        elif not self._async_update_ha_state_reported:
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                (
+                    "Entity %s (%s) is using self.async_update_ha_state(), without"
+                    " enabling force_update. Instead it should use"
+                    " self.async_write_ha_state(), please %s"
+                ),
+                self.entity_id,
+                type(self),
+                report_issue,
+            )
+            self._async_update_ha_state_reported = True
 
         self._async_write_ha_state()
 
@@ -698,7 +741,13 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.add_job(self.async_update_ha_state(force_refresh))
+        if force_refresh:
+            self.hass.create_task(
+                self.async_update_ha_state(force_refresh),
+                f"Entity {self.entity_id} schedule update ha state",
+            )
+        else:
+            self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh: bool = False) -> None:
@@ -720,6 +769,15 @@ class Entity(ABC):
         else:
             self.async_write_ha_state()
 
+    @callback
+    def _async_slow_update_warning(self) -> None:
+        """Log a warning if update is taking too long."""
+        _LOGGER.warning(
+            "Update of %s is taking over %s seconds",
+            self.entity_id,
+            SLOW_UPDATE_WARNING,
+        )
+
     async def async_device_update(self, warning: bool = True) -> None:
         """Process 'update' or 'async_update' from entity.
 
@@ -727,42 +785,32 @@ class Entity(ABC):
         """
         if self._update_staged:
             return
+
+        hass = self.hass
+        assert hass is not None
+
         self._update_staged = True
 
         # Process update sequential
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
+        if warning:
+            update_warn = hass.loop.call_later(
+                SLOW_UPDATE_WARNING, self._async_slow_update_warning
+            )
+
         try:
-            task: asyncio.Future[None]
             if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(
-                    self.async_update(), f"Entity async update {self.entity_id}"
-                )
+                await self.async_update()
             elif hasattr(self, "update"):
-                task = self.hass.async_add_executor_job(self.update)
+                await hass.async_add_executor_job(self.update)
             else:
                 return
-
-            if not warning:
-                await task
-                return
-
-            finished, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
-
-            for done in finished:
-                if exc := done.exception():
-                    raise exc
-                return
-
-            _LOGGER.warning(
-                "Update of %s is taking over %s seconds",
-                self.entity_id,
-                SLOW_UPDATE_WARNING,
-            )
-            await task
         finally:
             self._update_staged = False
+            if warning:
+                update_warn.cancel()
             if self.parallel_updates:
                 self.parallel_updates.release()
 
@@ -945,25 +993,6 @@ class Entity(ABC):
         self.entity_id = self.registry_entry.entity_id
         await self.platform.async_add_entities([self])
 
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        if not isinstance(other, self.__class__):
-            return False
-
-        # Can only decide equality if both have a unique id
-        if self.unique_id is None or other.unique_id is None:
-            return False
-
-        # Ensure they belong to the same platform
-        if self.platform is not None or other.platform is not None:
-            if self.platform is None or other.platform is None:
-                return False
-
-            if self.platform.platform != other.platform.platform:
-                return False
-
-        return self.unique_id == other.unique_id
-
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
@@ -997,7 +1026,7 @@ class Entity(ABC):
         return report_issue
 
 
-@dataclass
+@dataclass(slots=True)
 class ToggleEntityDescription(EntityDescription):
     """A class that describes toggle entities."""
 

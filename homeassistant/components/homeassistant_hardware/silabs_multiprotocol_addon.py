@@ -22,12 +22,7 @@ from homeassistant.components.hassio import (
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.components.zha.radio_manager import ZhaMultiPANMigrationHelper
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import (
-    AbortFlow,
-    FlowHandler,
-    FlowManager,
-    FlowResult,
-)
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 
@@ -82,20 +77,18 @@ def is_multiprotocol_url(url: str) -> bool:
     return parsed.host == hostname
 
 
-class BaseMultiPanFlow(FlowHandler, ABC):
-    """Support configuring the Silicon Labs Multiprotocol add-on."""
+class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
+    """Handle an options flow for the Silicon Labs Multiprotocol add-on."""
 
-    def __init__(self) -> None:
-        """Set up flow instance."""
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Set up the options flow."""
         # If we install the add-on we should uninstall it on entry remove.
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self._zha_migration_mgr: ZhaMultiPANMigrationHelper | None = None
-
-    @property
-    @abstractmethod
-    def flow_manager(self) -> FlowManager:
-        """Return the flow manager of the flow."""
+        self.config_entry = config_entry
+        self.original_addon_config: dict[str, Any] | None = None
+        self.revert_reason: str | None = None
 
     @abstractmethod
     async def _async_serial_port_settings(self) -> SerialPortSettings:
@@ -117,81 +110,10 @@ class BaseMultiPanFlow(FlowHandler, ABC):
     def _zha_name(self) -> str:
         """Return the ZHA name."""
 
-    async def async_step_install_addon(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Install Silicon Labs Multiprotocol add-on."""
-        if not self.install_task:
-            self.install_task = self.hass.async_create_task(self._async_install_addon())
-            return self.async_show_progress(
-                step_id="install_addon", progress_action="install_addon"
-            )
-
-        try:
-            await self.install_task
-        except AddonError as err:
-            self.install_task = None
-            _LOGGER.error(err)
-            return self.async_show_progress_done(next_step_id="install_failed")
-
-        self.install_task = None
-
-        return self.async_show_progress_done(next_step_id="configure_addon")
-
-    async def async_step_install_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Add-on installation failed."""
-        return self.async_abort(reason="addon_install_failed")
-
-    async def async_step_start_addon(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Start Silicon Labs Multiprotocol add-on."""
-        if not self.start_task:
-            self.start_task = self.hass.async_create_task(self._async_start_addon())
-            return self.async_show_progress(
-                step_id="start_addon", progress_action="start_addon"
-            )
-
-        try:
-            await self.start_task
-        except (AddonError, AbortFlow) as err:
-            self.start_task = None
-            _LOGGER.error(err)
-            return self.async_show_progress_done(next_step_id="start_failed")
-
-        self.start_task = None
-        return self.async_show_progress_done(next_step_id="finish_addon_setup")
-
-    async def async_step_start_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Add-on start failed."""
-        return self.async_abort(reason="addon_start_failed")
-
-    async def _async_start_addon(self) -> None:
-        """Start Silicon Labs Multiprotocol add-on."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
-        try:
-            await addon_manager.async_schedule_start_addon()
-        finally:
-            # Continue the flow after show progress when the task is done.
-            self.hass.async_create_task(
-                self.flow_manager.async_configure(flow_id=self.flow_id)
-            )
-
-    @abstractmethod
-    async def async_step_configure_addon(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Configure the Silicon Labs Multiprotocol add-on."""
-
-    @abstractmethod
-    async def async_step_finish_addon_setup(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Finish setup of the Silicon Labs Multiprotocol add-on."""
+    @property
+    def flow_manager(self) -> config_entries.OptionsFlowManager:
+        """Return the correct flow manager."""
+        return self.hass.config_entries.options
 
     async def _async_get_addon_info(self) -> AddonInfo:
         """Return and cache Silicon Labs Multiprotocol add-on info."""
@@ -223,22 +145,6 @@ class BaseMultiPanFlow(FlowHandler, ABC):
             self.hass.async_create_task(
                 self.flow_manager.async_configure(flow_id=self.flow_id)
             )
-
-
-class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
-    """Handle an options flow for the Silicon Labs Multiprotocol add-on."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Set up the options flow."""
-        super().__init__()
-        self.config_entry = config_entry
-        self.original_addon_config: dict[str, Any] | None = None
-        self.revert_reason: str | None = None
-
-    @property
-    def flow_manager(self) -> config_entries.OptionsFlowManager:
-        """Return the correct flow manager."""
-        return self.hass.config_entries.options
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -275,6 +181,33 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
             return self.async_create_entry(title="", data={})
 
         return await self.async_step_install_addon()
+
+    async def async_step_install_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Install Silicon Labs Multiprotocol add-on."""
+        if not self.install_task:
+            self.install_task = self.hass.async_create_task(self._async_install_addon())
+            return self.async_show_progress(
+                step_id="install_addon", progress_action="install_addon"
+            )
+
+        try:
+            await self.install_task
+        except AddonError as err:
+            self.install_task = None
+            _LOGGER.error(err)
+            return self.async_show_progress_done(next_step_id="install_failed")
+
+        self.install_task = None
+
+        return self.async_show_progress_done(next_step_id="configure_addon")
+
+    async def async_step_install_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Add-on installation failed."""
+        return self.async_abort(reason="addon_install_failed")
 
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
@@ -321,6 +254,43 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
             await self._async_set_addon_config(new_addon_config)
 
         return await self.async_step_start_addon()
+
+    async def async_step_start_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Start Silicon Labs Multiprotocol add-on."""
+        if not self.start_task:
+            self.start_task = self.hass.async_create_task(self._async_start_addon())
+            return self.async_show_progress(
+                step_id="start_addon", progress_action="start_addon"
+            )
+
+        try:
+            await self.start_task
+        except (AddonError, AbortFlow) as err:
+            self.start_task = None
+            _LOGGER.error(err)
+            return self.async_show_progress_done(next_step_id="start_failed")
+
+        self.start_task = None
+        return self.async_show_progress_done(next_step_id="finish_addon_setup")
+
+    async def async_step_start_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Add-on start failed."""
+        return self.async_abort(reason="addon_start_failed")
+
+    async def _async_start_addon(self) -> None:
+        """Start Silicon Labs Multiprotocol add-on."""
+        addon_manager: AddonManager = get_addon_manager(self.hass)
+        try:
+            await addon_manager.async_schedule_start_addon()
+        finally:
+            # Continue the flow after show progress when the task is done.
+            self.hass.async_create_task(
+                self.flow_manager.async_configure(flow_id=self.flow_id)
+            )
 
     async def async_step_finish_addon_setup(
         self, user_input: dict[str, Any] | None = None
