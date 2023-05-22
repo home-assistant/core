@@ -20,6 +20,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     UV_INDEX,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -119,7 +120,9 @@ async def test_sensor_without_forecast(hass: HomeAssistant) -> None:
     assert entry.unique_id == "0123456-uvindex"
 
 
-async def test_sensor_with_forecast(hass: HomeAssistant) -> None:
+async def test_sensor_with_forecast(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test states of the sensor with forecast."""
     await init_integration(hass, forecast=True)
     registry = er.async_get(hass)
@@ -214,6 +217,55 @@ async def test_sensor_with_forecast(hass: HomeAssistant) -> None:
     entry = registry.async_get("sensor.home_air_quality_0d")
     assert entry
     assert entry.unique_id == "0123456-airquality-0"
+
+    state = hass.states.get("sensor.home_solar_irradiance_day_0d")
+    assert state
+    assert state.state == "7447.1"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:weather-sunny"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfIrradiance.WATTS_PER_SQUARE_METER
+    )
+
+    entry = registry.async_get("sensor.home_solar_irradiance_day_0d")
+    assert entry
+    assert entry.unique_id == "0123456-solarirradianceday-0"
+
+    state = hass.states.get("sensor.home_solar_irradiance_night_0d")
+    assert state
+    assert state.state == "271.6"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:weather-sunny"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfIrradiance.WATTS_PER_SQUARE_METER
+    )
+
+    entry = registry.async_get("sensor.home_solar_irradiance_night_0d")
+    assert entry
+    assert entry.unique_id == "0123456-solarirradiancenight-0"
+
+    state = hass.states.get("sensor.home_condition_day_0d")
+    assert state
+    assert (
+        state.state
+        == "Clouds and sunshine with a couple of showers and a thunderstorm around late this afternoon"
+    )
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+
+    entry = registry.async_get("sensor.home_condition_day_0d")
+    assert entry
+    assert entry.unique_id == "0123456-longphraseday-0"
+
+    state = hass.states.get("sensor.home_condition_night_0d")
+    assert state
+    assert state.state == "Partly cloudy"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+
+    entry = registry.async_get("sensor.home_condition_night_0d")
+    assert entry
+    assert entry.unique_id == "0123456-longphrasenight-0"
 
 
 async def test_sensor_disabled(hass: HomeAssistant) -> None:
