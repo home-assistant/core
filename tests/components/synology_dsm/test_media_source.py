@@ -49,7 +49,9 @@ def dsm_with_photos() -> MagicMock:
 
     dsm.photos.get_albums = AsyncMock(return_value=[SynoPhotosAlbum(1, "Album 1", 10)])
     dsm.photos.get_items_from_album = AsyncMock(
-        return_value=[SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm")]
+        return_value=[
+            SynoPhotosItem(10, "", "filename.jpg", 12345, "10_1298753", "sm", False)
+        ]
     )
     dsm.photos.get_item_thumbnail_url = AsyncMock(
         return_value="http://my.thumbnail.url"
