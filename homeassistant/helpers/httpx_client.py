@@ -12,6 +12,7 @@ from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __v
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.ssl import (
+    CONF_SSL_ALLOW_UNSAFE_RENEGOTIATION,
     SSLCipherList,
     client_context,
     create_no_verify_ssl_context,
@@ -71,12 +72,13 @@ def create_async_httpx_client(
 
     This method must be run in the event loop.
     """
+    ssl_args = {
+        CONF_SSL_ALLOW_UNSAFE_RENEGOTIATION: allow_legacy_insecure_renegotiation
+    }
     ssl_context = (
-        client_context(ssl_cipher_list, allow_legacy_insecure_renegotiation)
+        client_context(ssl_cipher_list, **ssl_args)
         if verify_ssl
-        else create_no_verify_ssl_context(
-            ssl_cipher_list, allow_legacy_insecure_renegotiation
-        )
+        else create_no_verify_ssl_context(ssl_cipher_list, **ssl_args)
     )
     client = HassHttpXAsyncClient(
         verify=ssl_context,

@@ -3,6 +3,7 @@ import contextlib
 from functools import cache
 from os import environ
 import ssl
+from typing import Any
 
 import certifi
 
@@ -16,6 +17,8 @@ class SSLCipherList(StrEnum):
     INTERMEDIATE = "intermediate"
     MODERN = "modern"
 
+
+CONF_SSL_ALLOW_UNSAFE_RENEGOTIATION = "ssl_allow_unsafe_renegotiation"
 
 SSL_CIPHER_LISTS = {
     SSLCipherList.INTERMEDIATE: (
@@ -64,7 +67,7 @@ SSL_CIPHER_LISTS = {
 @cache
 def create_no_verify_ssl_context(
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
-    allow_legacy_insecure_renegotiation: bool = False,
+    **kwargs: dict[str, Any],
 ) -> ssl.SSLContext:
     """Return an SSL context that does not verify the server certificate.
 
@@ -75,7 +78,7 @@ def create_no_verify_ssl_context(
     """
     sslcontext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
-    if allow_legacy_insecure_renegotiation:
+    if kwargs.get(CONF_SSL_ALLOW_UNSAFE_RENEGOTIATION):
         # ssl.OP_LEGACY_SERVER_CONNECT is only available in Python 3.12a4+
         sslcontext.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
 
@@ -94,7 +97,7 @@ def create_no_verify_ssl_context(
 @cache
 def client_context(
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
-    allow_legacy_insecure_renegotiation: bool = False,
+    **kwargs: dict[str, Any],
 ) -> ssl.SSLContext:
     """Return an SSL context for making requests."""
 
@@ -107,7 +110,7 @@ def client_context(
         purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
     )
 
-    if allow_legacy_insecure_renegotiation:
+    if kwargs.get(CONF_SSL_ALLOW_UNSAFE_RENEGOTIATION):
         # ssl.OP_LEGACY_SERVER_CONNECT is only available in Python 3.12a4+
         sslcontext.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
 
