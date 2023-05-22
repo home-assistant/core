@@ -81,7 +81,14 @@ class MatterAdapter:
 
         basic_info = endpoint.device_info
         # use (first) DeviceType of the endpoint as fallback product name
-        device_type = next((x for x in endpoint.device_types if x != BridgedDevice), None)
+        device_type = next(
+            (
+                x
+                for x in endpoint.device_types
+                if x.device_type != BridgedDevice.device_type
+            ),
+            None,
+        )
         name = (
             get_clean_name(basic_info.nodeLabel)
             or get_clean_name(basic_info.productLabel)
