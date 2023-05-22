@@ -24,11 +24,14 @@ from homeassistant.util.ssl import SSLCipherList
 from .const import (
     CONF_CHARSET,
     CONF_FOLDER,
+    CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
     CONF_SERVER,
     CONF_SSL_CIPHER_LIST,
+    DEFAULT_MAX_MESSAGE_SIZE,
     DEFAULT_PORT,
     DOMAIN,
+    MAX_MESSAGE_SIZE_LIMIT,
 )
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
@@ -55,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema(
 CONFIG_SCHEMA_ADVANCED = {
     vol.Optional(
         CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
-    ): CIPHER_SELECTOR
+    ): CIPHER_SELECTOR,
 }
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -64,6 +67,13 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
     }
 )
+
+OPTIONS_SCHEMA_ADVANCED = {
+    vol.Optional(CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE): vol.All(
+        cv.positive_int,
+        vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
+    )
+}
 
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
@@ -233,6 +243,9 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
                     )
                     return self.async_create_entry(data={})
 
-        schema = self.add_suggested_values_to_schema(OPTIONS_SCHEMA, entry_data)
+        schema = OPTIONS_SCHEMA
+        if self.show_advanced_options:
+            schema = schema.extend(OPTIONS_SCHEMA_ADVANCED)
+        schema = self.add_suggested_values_to_schema(schema, entry_data)
 
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
