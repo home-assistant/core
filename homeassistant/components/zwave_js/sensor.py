@@ -493,7 +493,7 @@ class ZWaveListSensor(ZwaveSensor):
         return {ATTR_VALUE: value}
 
 
-class ZWaveConfigParameterSensor(ZwaveSensor):
+class ZWaveConfigParameterSensor(ZWaveListSensor):
     """Representation of a Z-Wave config parameter sensor."""
 
     def __init__(
