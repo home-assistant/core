@@ -1,8 +1,6 @@
 """Support for Hydrawise sprinkler sensors."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,9 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
-from . import DATA_HYDRAWISE, HydrawiseEntity
-
-_LOGGER = logging.getLogger(__name__)
+from . import HydrawiseEntity
+from .const import DATA_HYDRAWISE, LOGGER
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -76,7 +73,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     def update(self) -> None:
         """Get the latest data and updates the states."""
         mydata = self.hass.data[DATA_HYDRAWISE].data
-        _LOGGER.debug("Updating Hydrawise sensor: %s", self.name)
+        LOGGER.debug("Updating Hydrawise sensor: %s", self.name)
         relay_data = mydata.relays[self.data["relay"] - 1]
         if self.entity_description.key == "watering_time":
             if relay_data["timestr"] == "Now":
@@ -85,7 +82,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
                 self._attr_native_value = 0
         else:  # _sensor_type == 'next_cycle'
             next_cycle = min(relay_data["time"], TWO_YEAR_SECONDS)
-            _LOGGER.debug("New cycle time: %s", next_cycle)
+            LOGGER.debug("New cycle time: %s", next_cycle)
             self._attr_native_value = dt.utc_from_timestamp(
                 dt.as_timestamp(dt.now()) + next_cycle
             )
