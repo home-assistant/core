@@ -10,6 +10,7 @@ from .const import (
     DATA_CONNECTION_GET_STATUS,
     DATA_HOME_GET_NODES,
     DATA_LAN_GET_HOSTS_LIST,
+    DATA_LCD_GET_CONFIGURATION,
     DATA_STORAGE_GET_DISKS,
     DATA_SYSTEM_GET_CONFIG,
     WIFI_GET_GLOBAL_CONFIG,
@@ -65,5 +66,9 @@ def mock_router(mock_device_registry_devices):
         instance.wifi.get_global_config = AsyncMock(return_value=WIFI_GET_GLOBAL_CONFIG)
         # device_tracker
         instance.lan.get_hosts_list = AsyncMock(return_value=DATA_LAN_GET_HOSTS_LIST)
+        # lcd configuration
+        instance.lcd.get_configuration = AsyncMock(
+            return_value=DATA_LCD_GET_CONFIGURATION
+        )
         instance.close = AsyncMock()
         yield service_mock

@@ -411,6 +411,14 @@ DATA_LAN_GET_HOSTS_LIST = [
     },
 ]
 
+# lcd configuration
+DATA_LCD_GET_CONFIGURATION = {
+    "brightness": 100,
+    "orientation": 0,
+    "orientation_forced": False,
+    "hide_wifi_key": False,
+}
+
 
 DATA_HOME_GET_NODES = [
     {
