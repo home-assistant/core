@@ -73,7 +73,7 @@ class MatterAdapter:
         """Create a device registry entry for a MatterNode."""
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
 
-        def get_clean_name(name: str | None):
+        def get_clean_name(name: str | None) -> str | None:
             if name is None:
                 return name
             name = name.replace("\x00", "")
