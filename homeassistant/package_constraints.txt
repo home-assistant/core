@@ -4,6 +4,7 @@ PyTurboJPEG==1.6.7
 aiodiscover==1.4.16
 aiohttp==3.8.4
 aiohttp_cors==0.7.0
+aiortc==1.5.0
 astral==2.2
 async-upnp-client==0.33.2
 async_timeout==4.0.2
@@ -44,6 +45,7 @@ python-slugify==4.0.1
 pyudev==0.23.2
 pyyaml==6.0
 requests==2.31.0
+rtsp-to-webrtc==0.5.1
 scapy==2.5.0
 sqlalchemy==2.0.15
 typing-extensions>=4.5.0,<5.0

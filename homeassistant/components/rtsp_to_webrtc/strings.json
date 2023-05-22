@@ -3,10 +3,8 @@
     "step": {
       "user": {
         "title": "Configure RTSPtoWebRTC",
-        "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.",
-        "data": {
-          "server_url": "RTSPtoWebRTC server URL e.g. https://example.com"
-        }
+        "description": "The RTSPtoWebRTC integration translates RTSP streams into WebRTC.",
+        "data": {}
       },
       "hassio_confirm": {
         "title": "RTSPtoWebRTC via Home Assistant add-on",
@@ -27,10 +25,17 @@
   "options": {
     "step": {
       "init": {
+        "description": "The RTSPtoWebRTC integration will use the internal server to translate RTSP streams into WebRTC if one is not provided. Enter the URL to the RTSPtoWebRTC server if you wish to use an external server.",
         "data": {
+          "server_url": "RTSPtoWebRTC server URL (optional)",
           "stun_server": "Stun server address (host:port)"
         }
       }
+    },
+    "error": {
+      "invalid_url": "Must be a valid RTSPtoWebRTC server URL e.g. https://example.com",
+      "server_failure": "RTSPtoWebRTC server returned an error. Check logs for more information.",
+      "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information."
     }
   }
 }

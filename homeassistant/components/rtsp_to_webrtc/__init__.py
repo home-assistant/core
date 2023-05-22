@@ -18,9 +18,12 @@ Other integrations may use this integration with these steps:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
+from aiortc import RTCPeerConnection, RTCSessionDescription
+from aiortc.contrib.media import MediaPlayer
 import async_timeout
 from rtsp_to_webrtc.client import get_adaptive_client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
@@ -28,10 +31,12 @@ from rtsp_to_webrtc.interface import WebRTCClientInterface
 import voluptuous as vol
 
 from homeassistant.components import camera, websocket_api
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,22 +47,19 @@ TIMEOUT = 10
 CONF_STUN_SERVER = "stun_server"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up RTSPtoWebRTC from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
+async def _async_setup_external_server(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Set up the external RTSPToWebRTC server."""
     client: WebRTCClientInterface
+    server_url: str = entry.options[DATA_SERVER_URL]
     try:
         async with async_timeout.timeout(TIMEOUT):
             client = await get_adaptive_client(
-                async_get_clientsession(hass), entry.data[DATA_SERVER_URL]
+                async_get_clientsession(hass), server_url
             )
     except ResponseError as err:
         raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError) as err:
         raise ConfigEntryNotReady from err
-
-    hass.data[DOMAIN][CONF_STUN_SERVER] = entry.options.get(CONF_STUN_SERVER, "")
 
     async def async_offer_for_stream_source(
         stream_source: str,
@@ -83,6 +85,98 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, DOMAIN, async_offer_for_stream_source
         )
     )
+
+
+async def _async_setup_internal_server(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Set up the internal RTSPToWebRTC server."""
+    peer_connections: set[RTCPeerConnection] = set()
+
+    async def _async_offer_for_stream_source(
+        stream_source: str,
+        offer_sdp: str,
+    ) -> str:
+        """Handle the signal path for a WebRTC stream."""
+        offer = RTCSessionDescription(sdp=offer_sdp, type="offer")
+        peer_connection = RTCPeerConnection()
+        peer_connections.add(peer_connection)
+
+        @peer_connection.on("connectionstatechange")  # type: ignore[misc]
+        async def _on_connection_state_change() -> None:
+            _LOGGER.debug("Connection state is %s", peer_connection.connectionState)
+            if peer_connection.connectionState == "failed":
+                await peer_connection.close()
+                peer_connections.discard(peer_connection)
+
+        # open media source
+        player = MediaPlayer(stream_source)
+        peer_connection.addTrack(player.audio)
+        peer_connection.addTrack(player.video)
+        await peer_connection.setRemoteDescription(offer)
+        answer = await peer_connection.createAnswer()
+        await peer_connection.setLocalDescription(answer)
+        sdp_answer: str = peer_connection.localDescription.sdp
+        _LOGGER.debug("answer=%s", sdp_answer)
+        return sdp_answer
+
+    async def async_offer_for_stream_source(
+        stream_source: str,
+        offer_sdp: str,
+        stream_id: str,
+    ) -> str:
+        """Handle the signal path for a WebRTC stream."""
+        try:
+            return await _async_offer_for_stream_source(stream_source, offer_sdp)
+        except Exception as err:
+            _LOGGER.exception("Error handling offer for stream %s", stream_id)
+            raise HomeAssistantError(str(err)) from err
+
+    async def on_shutdown(event: Event) -> None:
+        # close peer connections
+        await asyncio.gather(
+            *[peer_connection.close() for peer_connection in peer_connections]
+        )
+        peer_connections.clear()
+
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_shutdown)
+
+    entry.async_on_unload(
+        camera.async_register_rtsp_to_web_rtc_provider(
+            hass, DOMAIN, async_offer_for_stream_source
+        )
+    )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Track the state of the sun."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up RTSPtoWebRTC from a config entry."""
+    if DATA_SERVER_URL in entry.data:
+        # Server is optional now, but was required in the past
+        hass.config_entries.async_update_entry(
+            entry,
+            data={},
+            options=entry.options | {DATA_SERVER_URL: entry.data[DATA_SERVER_URL]},
+        )
+
+    if entry.options[DATA_SERVER_URL]:
+        await _async_setup_external_server(hass, entry)
+    else:
+        await _async_setup_internal_server(hass, entry)
+
+    hass.data.setdefault(DOMAIN, {})[CONF_STUN_SERVER] = entry.options.get(
+        CONF_STUN_SERVER, ""
+    )
+
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     websocket_api.async_register_command(hass, ws_get_settings)
