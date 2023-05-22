@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     PERCENTAGE,
     UV_INDEX,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -105,6 +106,16 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         value_fn=lambda data: cast(float, data),
     ),
     AccuWeatherSensorDescription(
+        key="LongPhraseDay",
+        name="Condition day",
+        value_fn=lambda data: cast(str, data),
+    ),
+    AccuWeatherSensorDescription(
+        key="LongPhraseNight",
+        name="Condition night",
+        value_fn=lambda data: cast(str, data),
+    ),
+    AccuWeatherSensorDescription(
         key="Mold",
         icon="mdi:blur",
         name="Mold pollen",
@@ -152,6 +163,22 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         name="RealFeel temperature shade min",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+    ),
+    AccuWeatherSensorDescription(
+        key="SolarIrradianceDay",
+        icon="mdi:weather-sunny",
+        name="Solar irradiance day",
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+        value_fn=lambda data: cast(float, data[ATTR_VALUE]),
+    ),
+    AccuWeatherSensorDescription(
+        key="SolarIrradianceNight",
+        icon="mdi:weather-sunny",
+        name="Solar irradiance night",
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         value_fn=lambda data: cast(float, data[ATTR_VALUE]),
     ),
     AccuWeatherSensorDescription(
