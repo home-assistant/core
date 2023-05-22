@@ -21,6 +21,14 @@ if TYPE_CHECKING:
     from matter_server.client.models.node import MatterEndpoint, MatterNode
 
 
+def get_clean_name(name: str | None) -> str | None:
+    """Strip spaces and null char from the name."""
+    if name is None:
+        return name
+    name = name.replace("\x00", "")
+    return name.strip()
+
+
 class MatterAdapter:
     """Connect Matter into Home Assistant."""
 
@@ -70,12 +78,6 @@ class MatterAdapter:
         """Create a device registry entry for a MatterNode."""
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
 
-        def get_clean_name(name: str | None) -> str | None:
-            if name is None:
-                return name
-            name = name.replace("\x00", "")
-            return name.strip()
-
         basic_info = endpoint.device_info
         # use (first) DeviceType of the endpoint as fallback product name
         device_type = next(
@@ -114,6 +116,11 @@ class MatterAdapter:
             # prefix identifier with 'serial_' to be able to filter it
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
 
+        model = (
+            get_clean_name(basic_info.productName) or device_type.__class__.__name__
+            if device_type
+            else None
+        )
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
@@ -121,9 +128,7 @@ class MatterAdapter:
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
-            model=basic_info.productName or device_type.__class__.__name__
-            if device_type
-            else None,
+            model=model,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
 
