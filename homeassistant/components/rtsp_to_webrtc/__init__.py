@@ -24,6 +24,7 @@ from typing import Any
 
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaPlayer
+from aiortc.rtcrtpsender import RTCRtpSender
 import async_timeout
 from rtsp_to_webrtc.client import get_adaptive_client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
@@ -108,9 +109,20 @@ async def _async_setup_internal_server(hass: HomeAssistant, entry: ConfigEntry) 
                 peer_connections.discard(peer_connection)
 
         # open media source
-        player = MediaPlayer(stream_source)
+        player = MediaPlayer(stream_source, decode=False)
         peer_connection.addTrack(player.audio)
-        peer_connection.addTrack(player.video)
+        video_sender = peer_connection.addTrack(player.video)
+
+        # force H264 codec
+        forced_codec = "video/H264"
+        kind = forced_codec.split("/", maxsplit=1)[0]
+        codecs = RTCRtpSender.getCapabilities(kind).codecs
+        transceiver = next(
+            t for t in peer_connection.getTransceivers() if t.sender == video_sender
+        )
+        transceiver.setCodecPreferences(
+            [codec for codec in codecs if codec.mimeType == forced_codec]
+        )
         await peer_connection.setRemoteDescription(offer)
         answer = await peer_connection.createAnswer()
         await peer_connection.setLocalDescription(answer)
