@@ -7,6 +7,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -252,6 +253,13 @@ async def test_config_parameter_sensor(
     assert state
     assert state.state == "Disable Away Manual Lock"
     assert state.attributes[ATTR_VALUE] == 0
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == [
+        "Disable Away Manual Lock",
+        "Disable Away Auto Lock",
+        "Enable Away Manual Lock",
+        "Enable Away Auto Lock",
+    ]
 
     event = Event(
         "value updated",
