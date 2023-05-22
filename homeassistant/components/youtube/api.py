@@ -35,12 +35,13 @@ class AsyncConfigEntryAuth(OAuthClientAuthHandler):
 
     async def get_resource(self) -> Resource:
         """Create executor job to get current resource."""
-        return await self.hass.async_add_executor_job(self._get_resource)
+        credentials = Credentials(await self.check_and_refresh_token())
+        return await self.hass.async_add_executor_job(self._get_resource, credentials)
 
-    async def _get_resource(self) -> Resource:
+    def _get_resource(self, credentials: Credentials) -> Resource:
         """Get current resource."""
         return build(
             "youtube",
             "v3",
-            credentials=Credentials(await self.check_and_refresh_token()),
+            credentials=credentials,
         )

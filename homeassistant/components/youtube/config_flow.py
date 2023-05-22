@@ -111,7 +111,7 @@ class OAuth2FlowHandler(
         )
 
     async def _get_resource(self, token: str) -> Resource:
-        async def _build_resource() -> Resource:
+        def _build_resource() -> Resource:
             return build(
                 "youtube",
                 "v3",
