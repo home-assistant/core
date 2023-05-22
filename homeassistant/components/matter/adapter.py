@@ -26,7 +26,7 @@ def get_clean_name(name: str | None) -> str | None:
     if name is None:
         return name
     name = name.replace("\x00", "")
-    return name.strip()
+    return name.strip() or None
 
 
 class MatterAdapter:
