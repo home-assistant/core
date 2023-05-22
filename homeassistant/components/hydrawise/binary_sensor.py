@@ -15,8 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import HydrawiseEntity
 from .const import DATA_HYDRAWISE, LOGGER
+from .entity import HydrawiseEntity
 
 BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     key="status",
