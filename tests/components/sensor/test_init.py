@@ -1758,6 +1758,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.SULPHUR_DIOXIDE,
         SensorDeviceClass.TEMPERATURE,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         SensorDeviceClass.VOLTAGE,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,

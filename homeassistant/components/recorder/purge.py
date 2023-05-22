@@ -245,12 +245,12 @@ def _select_state_attributes_ids_to_purge(
     """Return sets of state and attribute ids to purge."""
     state_ids = set()
     attributes_ids = set()
-    for state in session.execute(
+    for state_id, attributes_id in session.execute(
         find_states_to_purge(dt_util.utc_to_timestamp(purge_before))
     ).all():
-        state_ids.add(state.state_id)
-        if state.attributes_id:
-            attributes_ids.add(state.attributes_id)
+        state_ids.add(state_id)
+        if attributes_id:
+            attributes_ids.add(attributes_id)
     _LOGGER.debug(
         "Selected %s state ids and %s attributes_ids to remove",
         len(state_ids),
@@ -265,12 +265,12 @@ def _select_event_data_ids_to_purge(
     """Return sets of event and data ids to purge."""
     event_ids = set()
     data_ids = set()
-    for event in session.execute(
+    for event_id, data_id in session.execute(
         find_events_to_purge(dt_util.utc_to_timestamp(purge_before))
     ).all():
-        event_ids.add(event.event_id)
-        if event.data_id:
-            data_ids.add(event.data_id)
+        event_ids.add(event_id)
+        if data_id:
+            data_ids.add(data_id)
     _LOGGER.debug(
         "Selected %s event ids and %s data_ids to remove", len(event_ids), len(data_ids)
     )
@@ -412,7 +412,7 @@ def _select_statistics_runs_to_purge(
     Takes care to keep the newest run.
     """
     statistic_runs = session.execute(find_statistics_runs_to_purge(purge_before)).all()
-    statistic_runs_list = [run.run_id for run in statistic_runs]
+    statistic_runs_list = [run_id for (run_id,) in statistic_runs]
     # Exclude the newest statistics run
     if (
         last_run := session.execute(find_latest_statistics_runs_run_id()).scalar()
@@ -431,7 +431,7 @@ def _select_short_term_statistics_to_purge(
         find_short_term_statistics_to_purge(purge_before)
     ).all()
     _LOGGER.debug("Selected %s short term statistics to remove", len(statistics))
-    return [statistic.id for statistic in statistics]
+    return [statistic_id for (statistic_id,) in statistics]
 
 
 def _select_legacy_detached_state_and_attributes_and_data_ids_to_purge(
@@ -451,10 +451,10 @@ def _select_legacy_detached_state_and_attributes_and_data_ids_to_purge(
     _LOGGER.debug("Selected %s state ids to remove", len(states))
     state_ids = set()
     attributes_ids = set()
-    for state in states:
-        if state_id := state.state_id:
+    for state_id, attributes_id in states:
+        if state_id:
             state_ids.add(state_id)
-        if attributes_id := state.attributes_id:
+        if attributes_id:
             attributes_ids.add(attributes_id)
     return state_ids, attributes_ids
 
@@ -478,13 +478,13 @@ def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
     state_ids = set()
     attributes_ids = set()
     data_ids = set()
-    for event in events:
-        event_ids.add(event.event_id)
-        if state_id := event.state_id:
+    for event_id, data_id, state_id, attributes_id in events:
+        event_ids.add(event_id)
+        if state_id:
             state_ids.add(state_id)
-        if attributes_id := event.attributes_id:
+        if attributes_id:
             attributes_ids.add(attributes_id)
-        if data_id := event.data_id:
+        if data_id:
             data_ids.add(data_id)
     return event_ids, state_ids, attributes_ids, data_ids
 
@@ -726,7 +726,7 @@ def _purge_filtered_events(
             .filter(States.event_id.in_(event_ids_set))
             .all()
         )
-        and (state_ids := {state.state_id for state in states})
+        and (state_ids := {state_id for (state_id,) in states})
     ):
         # These are legacy states that are linked to an event that are no longer
         # created but since we did not remove them when we stopped adding new ones

@@ -444,8 +444,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 class ZwaveBlackIsOffLight(ZwaveLight):
     """Representation of a Z-Wave light where setting the color to black turns it off.
 
-    Currently only supports lights with RGB, no color temperature,
-    and no white channels.
+    Currently only supports lights with RGB, no color temperature, and no white
+    channels.
     """
 
     def __init__(
@@ -471,13 +471,12 @@ class ZwaveBlackIsOffLight(ZwaveLight):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await super().async_turn_on(**kwargs)
-
         if (
             kwargs.get(ATTR_RGBW_COLOR) is not None
             or kwargs.get(ATTR_COLOR_TEMP) is not None
             or kwargs.get(ATTR_HS_COLOR) is not None
         ):
+            await super().async_turn_on(**kwargs)
             return
 
         transition = kwargs.get(ATTR_TRANSITION)

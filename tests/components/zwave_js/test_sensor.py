@@ -7,6 +7,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -102,6 +104,30 @@ async def test_numeric_sensor(
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": express_controls_ezmultipli.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Illuminance",
+                "propertyName": "Illuminance",
+                "newValue": None,
+                "prevValue": 61,
+            },
+        },
+    )
+
+    express_controls_ezmultipli.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.hsm200_illuminance")
+    assert state
+    assert state.state == "0"
+
 
 async def test_energy_sensors(
     hass: HomeAssistant, hank_binary_switch, integration
@@ -162,7 +188,35 @@ async def test_disabled_notification_sensor(
 
     state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
     assert state.state == "Motion detection"
-    assert state.attributes["value"] == 8
+    assert state.attributes[ATTR_VALUE] == 8
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == ["idle", "Motion detection"]
+
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Notification",
+                "commandClass": 113,
+                "endpoint": 0,
+                "property": "Home Security",
+                "propertyKey": "Motion sensor status",
+                "newValue": None,
+                "prevValue": 0,
+                "propertyName": "Home Security",
+                "propertyKeyName": "Motion sensor status",
+            },
+        },
+    )
+
+    multisensor_6.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_disabled_indcator_sensor(
@@ -178,7 +232,7 @@ async def test_disabled_indcator_sensor(
 
 
 async def test_config_parameter_sensor(
-    hass: HomeAssistant, climate_adc_t3000, integration
+    hass: HomeAssistant, climate_adc_t3000, lock_id_lock_as_id150, integration
 ) -> None:
     """Test config parameter sensor is created."""
     sensor_entity_id = "sensor.adc_t3000_system_configuration_cool_stages"
@@ -206,6 +260,16 @@ async def test_config_parameter_sensor(
     state = hass.states.get(sensor_with_states_entity_id)
     assert state
     assert state.state == "C-Wire"
+
+    updated_entry = ent_reg.async_update_entity(
+        entity_entry.entity_id, **{"disabled_by": None}
+    )
+    assert updated_entry != entity_entry
+    assert updated_entry.disabled is False
+
+    # reload integration and check if entity is correctly there
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_node_status_sensor(

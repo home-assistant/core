@@ -38,7 +38,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -312,11 +311,7 @@ async def async_setup_entry(
 
         entity_description = get_entity_description(data)
 
-        if info.platform_hint == "string_sensor":
-            entities.append(
-                ZWaveStringSensor(config_entry, driver, info, entity_description)
-            )
-        elif info.platform_hint == "numeric_sensor":
+        if info.platform_hint == "numeric_sensor":
             entities.append(
                 ZWaveNumericSensor(
                     config_entry,
@@ -341,12 +336,7 @@ async def async_setup_entry(
                 ZWaveMeterSensor(config_entry, driver, info, entity_description)
             )
         else:
-            LOGGER.warning(
-                "Sensor not implemented for %s/%s",
-                info.platform_hint,
-                info.primary_value.property_name,
-            )
-            return
+            entities.append(ZwaveSensor(config_entry, driver, info, entity_description))
 
         async_add_entities(entities)
 
@@ -384,7 +374,7 @@ async def async_setup_entry(
     )
 
 
-class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
+class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
     def __init__(
@@ -419,19 +409,17 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
             return self.info.primary_value.value
         return str(self.info.primary_value.metadata.states[key])
 
-
-class ZWaveStringSensor(ZwaveSensorBase):
-    """Representation of a Z-Wave String sensor."""
-
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
+        if (unit := super().native_unit_of_measurement) is not None:
+            return unit
         if self.info.primary_value.metadata.unit is None:
             return None
         return str(self.info.primary_value.metadata.unit)
 
 
-class ZWaveNumericSensor(ZwaveSensorBase):
+class ZWaveNumericSensor(ZwaveSensor):
     """Representation of a Z-Wave Numeric sensor."""
 
     @callback
@@ -448,18 +436,6 @@ class ZWaveNumericSensor(ZwaveSensorBase):
             return 0
         return round(float(self.info.primary_value.value), 2)
 
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return unit of measurement the value is expressed in."""
-        if self.entity_description.native_unit_of_measurement is not None:
-            return self.entity_description.native_unit_of_measurement
-        if self._attr_native_unit_of_measurement is not None:
-            return self._attr_native_unit_of_measurement
-        if self.info.primary_value.metadata.unit is None:
-            return None
-
-        return str(self.info.primary_value.metadata.unit)
-
 
 class ZWaveMeterSensor(ZWaveNumericSensor):
     """Representation of a Z-Wave Meter CC sensor."""
@@ -467,21 +443,18 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
     @property
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
         """Return extra state attributes."""
-        if meter_type := get_meter_type(self.info.primary_value):
-            return {
-                ATTR_METER_TYPE: meter_type.value,
-                ATTR_METER_TYPE_NAME: meter_type.name,
-            }
-        return None
+        meter_type = get_meter_type(self.info.primary_value)
+        return {
+            ATTR_METER_TYPE: meter_type.value,
+            ATTR_METER_TYPE_NAME: meter_type.name,
+        }
 
     async def async_reset_meter(
         self, meter_type: int | None = None, value: int | None = None
     ) -> None:
         """Reset meter(s) on device."""
         node = self.info.node
-        primary_value = self.info.primary_value
-        if (endpoint := primary_value.endpoint) is None:
-            raise HomeAssistantError("Missing endpoint on device.")
+        endpoint = self.info.primary_value.endpoint or 0
         options = {}
         if meter_type is not None:
             options[RESET_METER_OPTION_TYPE] = meter_type
@@ -494,19 +467,19 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
         LOGGER.debug(
             "Meters on node %s endpoint %s reset with the following options: %s",
             node,
-            primary_value.endpoint,
+            endpoint,
             options,
         )
 
 
-class ZWaveListSensor(ZwaveSensorBase):
-    """Representation of a Z-Wave List sensor with multiple states."""
+class ZWaveListSensor(ZwaveSensor):
+    """Representation of a Z-Wave Numeric sensor with multiple states."""
 
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
-        if super().device_class is not None:
-            return super().device_class
+        if (device_class := super().device_class) is not None:
+            return device_class
         if self.info.primary_value.metadata.states:
             return SensorDeviceClass.ENUM
         return None
@@ -520,7 +493,7 @@ class ZWaveListSensor(ZwaveSensorBase):
         return {ATTR_VALUE: value}
 
 
-class ZWaveConfigParameterSensor(ZwaveSensorBase):
+class ZWaveConfigParameterSensor(ZWaveListSensor):
     """Representation of a Z-Wave config parameter sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -549,8 +522,8 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
-        if super().device_class is not None:
-            return super().device_class
+        if (device_class := super(ZwaveSensor, self).device_class) is not None:
+            return device_class
         if (
             self._primary_value.configuration_value_type
             == ConfigurationValueType.ENUMERATED
