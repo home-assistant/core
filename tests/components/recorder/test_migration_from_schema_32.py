@@ -564,6 +564,120 @@ async def test_migrate_event_type_ids(
     assert mapped["event_type_two"] is not None
 
 
+@pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
+async def test_migrate_event_type_ids_with_previous_non_existent(
+    async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
+) -> None:
+    """Test we can migrate event_types to the EventTypes table with a previous non-existent event type."""
+    instance = await async_setup_recorder_instance(hass)
+    event_type_manager = instance.event_type_manager
+    await async_wait_recording_done(hass)
+
+    def _insert_events():
+        with session_scope(hass=hass) as session:
+            session.add_all(
+                (
+                    Events(
+                        event_type="event_type_one",
+                        origin_idx=0,
+                        time_fired_ts=1677721632.452529,
+                    ),
+                    Events(
+                        event_type="event_type_one",
+                        origin_idx=0,
+                        time_fired_ts=1677721632.552529,
+                    ),
+                    Events(
+                        event_type="event_type_two",
+                        origin_idx=0,
+                        time_fired_ts=1677721632.552529,
+                    ),
+                    Events(
+                        event_type="event_type_three",
+                        origin_idx=0,
+                        time_fired_ts=1677721632.552529,
+                    ),
+                )
+            )
+
+    await instance.async_add_executor_job(_insert_events)
+
+    await async_wait_recording_done(hass)
+
+    def _populate_cache():
+        with session_scope(hass=hass) as session:
+            event_type_manager.get_many(("event_type_one", "event_type_three"), session)
+
+    await instance.async_add_executor_job(_populate_cache)
+
+    def _get_event_type():
+        with session_scope(hass=hass) as session:
+            return event_type_manager.get("event_type_one", session)
+
+    assert await instance.async_add_executor_job(_get_event_type) is None
+
+    assert "event_type_one" in event_type_manager._non_existent_event_types
+
+    hass.bus.async_fire("event_type_one", {})
+    hass.bus.async_fire("event_type_one", {})
+    hass.bus.async_fire("event_type_one", {})
+    hass.bus.async_fire("event_type_three", {})
+
+    assert "event_type_one" in event_type_manager._non_existent_event_types
+    assert "event_type_two" not in event_type_manager._non_existent_event_types
+    assert "event_type_three" in event_type_manager._non_existent_event_types
+
+    # This is a threadsafe way to add a task to the recorder
+    instance.queue_task(EventTypeIDMigrationTask())
+    await async_recorder_block_till_done(hass)
+
+    assert "event_type_one" not in event_type_manager._non_existent_event_types
+    assert "event_type_three" not in event_type_manager._non_existent_event_types
+
+    def _fetch_migrated_events():
+        with session_scope(hass=hass, read_only=True) as session:
+            events = (
+                session.query(Events.event_id, Events.time_fired, EventTypes.event_type)
+                .filter(
+                    Events.event_type_id.in_(
+                        select_event_type_ids(
+                            (
+                                "event_type_one",
+                                "event_type_two",
+                            )
+                        )
+                    )
+                )
+                .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+                .all()
+            )
+            assert len(events) == 6
+            result = {}
+            for event in events:
+                result.setdefault(event.event_type, []).append(
+                    {
+                        "event_id": event.event_id,
+                        "time_fired": event.time_fired,
+                        "event_type": event.event_type,
+                    }
+                )
+            return result
+
+    events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
+    assert len(events_by_type["event_type_one"]) == 5  # 2 + 3 from above
+    assert len(events_by_type["event_type_two"]) == 1
+
+    def _get_many():
+        with session_scope(hass=hass, read_only=True) as session:
+            return instance.event_type_manager.get_many(
+                ("event_type_one", "event_type_two"), session
+            )
+
+    mapped = await instance.async_add_executor_job(_get_many)
+    assert mapped["event_type_one"] is not None
+    assert mapped["event_type_two"] is not None
+
+
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 async def test_migrate_entity_ids(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
