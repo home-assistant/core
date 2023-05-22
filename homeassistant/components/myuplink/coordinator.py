@@ -4,6 +4,7 @@ import logging
 
 import async_timeout
 from myuplink.api import MyUplinkAPI
+from myuplink.models import DevicePoint
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -38,21 +39,20 @@ class MyUplinkDataCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from the myUplink API."""
         async with async_timeout.timeout(10):
-
             _LOGGER.debug("Coordinator preparing updating")
 
-            data = {}
+            data: dict[str, any] = {}
 
             # Get systems
             mu_systems = await self.mu_api.async_get_systems()
             data[MU_DATAGROUP_SYSTEMS] = mu_systems
 
             # Get device info
-            devices = {}
+            devices: dict[str, dict[str, str]] = {}
             device_ids = await self.get_system_device_ids()
             for device_id in device_ids:
                 api_device_info = await self.mu_api.async_get_device(device_id)
-                device_info = {}
+                device_info: dict[str, str] = {}
                 device_info[
                     MU_DEVICE_FIRMWARE_CURRENT
                 ] = api_device_info.firmwareCurrent
@@ -64,11 +64,10 @@ class MyUplinkDataCoordinator(DataUpdateCoordinator):
                 devices[device_id] = device_info
 
             # Get device points (data)
-            points = {}
+            points: dict[str, dict[str, DevicePoint]] = {}
             for device_id in device_ids:
-
                 api_device_points = await self.mu_api.async_get_device_points(device_id)
-                point_info = {}
+                point_info: dict[str, DevicePoint] = {}
                 for point in api_device_points:
                     point_info[point.parameter_id] = point
 
