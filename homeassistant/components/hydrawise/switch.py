@@ -17,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import HydrawiseEntity
 from .const import (
     ALLOWED_WATERING_TIME,
     CONF_WATERING_TIME,
@@ -25,6 +24,7 @@ from .const import (
     DEFAULT_WATERING_TIME,
     LOGGER,
 )
+from .entity import HydrawiseEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
