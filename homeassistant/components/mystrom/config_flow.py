@@ -7,6 +7,8 @@ import re
 from typing import Any
 
 from pymystrom.exceptions import MyStromConnectionError
+from pymystrom import get_device_info
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from . import get_device_info
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
