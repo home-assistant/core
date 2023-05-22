@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up YouTube from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
-    auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
+    auth = AsyncConfigEntryAuth(hass, async_get_clientsession(hass), session)
     try:
         await auth.check_and_refresh_token()
     except ClientResponseError as err:
