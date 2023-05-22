@@ -5,6 +5,7 @@ from google.oauth2.utils import OAuthClientAuthHandler
 from googleapiclient.discovery import Resource, build
 
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
@@ -13,11 +14,13 @@ class AsyncConfigEntryAuth(OAuthClientAuthHandler):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         websession: ClientSession,
         oauth2_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize YouTube Auth."""
         self.oauth_session = oauth2_session
+        self.hass = hass
         super().__init__(websession)
 
     @property
@@ -31,6 +34,10 @@ class AsyncConfigEntryAuth(OAuthClientAuthHandler):
         return self.access_token
 
     async def get_resource(self) -> Resource:
+        """Create executor job to get current resource."""
+        return await self.hass.async_add_executor_job(self._get_resource)
+
+    async def _get_resource(self) -> Resource:
         """Get current resource."""
         return build(
             "youtube",

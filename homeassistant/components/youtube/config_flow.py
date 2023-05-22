@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
+from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 import voluptuous as vol
@@ -28,7 +28,7 @@ class OAuth2FlowHandler(
     """Config flow to handle Google OAuth2 authentication."""
 
     _data: dict[str, Any] = {}
-    _own_channel: dict[str, Any] = {}
+    _title: str = ""
 
     DOMAIN = DOMAIN
 
@@ -50,11 +50,7 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
         try:
-            service = build(
-                "youtube",
-                "v3",
-                credentials=Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
-            )
+            service = await self._get_resource(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
             # pylint: disable=no-member
             own_channel_request: HttpRequest = service.channels().list(
                 part="snippet", mine=True
@@ -72,7 +68,7 @@ class OAuth2FlowHandler(
         except Exception as ex:  # pylint: disable=broad-except
             LOGGER.error("Unknown error occurred: %s", ex.args)
             return self.async_abort(reason="unknown")
-        self._own_channel = own_channel
+        self._title = own_channel["snippet"]["title"]
         self._data = data
 
         await self.async_set_unique_id(own_channel["id"])
@@ -84,17 +80,13 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select which channels to track."""
-        service = build(
-            "youtube",
-            "v3",
-            credentials=Credentials(self._data[CONF_TOKEN][CONF_ACCESS_TOKEN]),
-        )
         if user_input:
             return self.async_create_entry(
-                title=self._own_channel["snippet"]["title"],
+                title=self._title,
                 data=self._data,
                 options=user_input,
             )
+        service = await self._get_resource(self._data[CONF_TOKEN][CONF_ACCESS_TOKEN])
         # pylint: disable=no-member
         subscription_request: HttpRequest = service.subscriptions().list(
             part="snippet", mine=True, maxResults=50
@@ -117,3 +109,13 @@ class OAuth2FlowHandler(
                 }
             ),
         )
+
+    async def _get_resource(self, token: str) -> Resource:
+        async def _build_resource() -> Resource:
+            return build(
+                "youtube",
+                "v3",
+                credentials=Credentials(token),
+            )
+
+        return await self.hass.async_add_executor_job(_build_resource)
