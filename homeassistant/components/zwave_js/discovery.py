@@ -240,6 +240,12 @@ SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     type={ValueType.NUMBER},
 )
 
+SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SWITCH_MULTILEVEL},
+    property={TARGET_VALUE_PROPERTY},
+    type={ValueType.NUMBER},
+)
+
 SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_BINARY}, property={CURRENT_VALUE_PROPERTY}
 )
@@ -261,6 +267,7 @@ DISCOVERY_SCHEMAS = [
         product_id={0x3131},
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA],
     ),
     # GE/Jasco - In-Wall Smart Fan Control - 12730 / ZW4002
     ZWaveDiscoverySchema(
@@ -842,6 +849,7 @@ DISCOVERY_SCHEMAS = [
         device_class_generic={"Multilevel Switch"},
         device_class_specific={"Fan Switch"},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA],
     ),
     # number platform
     # valve control for thermostats
