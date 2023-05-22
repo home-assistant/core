@@ -218,9 +218,48 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.OperationalStatus,
             clusters.WindowCovering.Attributes.Type,
         ),
-        optional_attributes=(
+        absent_attributes=(
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
             clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage,
         ),
-    )
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.COVER,
+        entity_description=CoverEntityDescription(key="MatterCoverPositionAwareLift"),
+        entity_class=MatterCover,
+        required_attributes=(
+            clusters.WindowCovering.Attributes.OperationalStatus,
+            clusters.WindowCovering.Attributes.Type,
+            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
+        ),
+        absent_attributes=(
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.COVER,
+        entity_description=CoverEntityDescription(key="MatterCoverPositionAwareTilt"),
+        entity_class=MatterCover,
+        required_attributes=(
+            clusters.WindowCovering.Attributes.OperationalStatus,
+            clusters.WindowCovering.Attributes.Type,
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage,
+        ),
+        absent_attributes=(
+            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.COVER,
+        entity_description=CoverEntityDescription(
+            key="MatterCoverPositionAwareLiftAndTilt"
+        ),
+        entity_class=MatterCover,
+        required_attributes=(
+            clusters.WindowCovering.Attributes.OperationalStatus,
+            clusters.WindowCovering.Attributes.Type,
+            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage,
+        ),
+    ),
 ]
