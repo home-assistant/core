@@ -471,8 +471,8 @@ class ZWaveListSensor(ZwaveSensor):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
-        if super().device_class is not None:
-            return super().device_class
+        if (device_class := super().device_class) is not None:
+            return device_class
         if self.info.primary_value.metadata.states:
             return SensorDeviceClass.ENUM
         return None
@@ -521,8 +521,8 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
-        if super().device_class is not None:
-            return super().device_class
+        if (device_class := super(ZwaveSensor, self).device_class) is not None:
+            return device_class
         if (
             self._primary_value.configuration_value_type
             == ConfigurationValueType.ENUMERATED
