@@ -7,6 +7,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -103,6 +105,30 @@ async def test_numeric_sensor(
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": express_controls_ezmultipli.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Illuminance",
+                "propertyName": "Illuminance",
+                "newValue": None,
+                "prevValue": 61,
+            },
+        },
+    )
+
+    express_controls_ezmultipli.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.hsm200_illuminance")
+    assert state
+    assert state.state == "0"
+
 
 async def test_energy_sensors(
     hass: HomeAssistant, hank_binary_switch, integration
@@ -165,6 +191,32 @@ async def test_disabled_notification_sensor(
     assert state.state == "Motion detection"
     assert state.attributes["value"] == 8
 
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Notification",
+                "commandClass": 113,
+                "endpoint": 0,
+                "property": "Home Security",
+                "propertyKey": "Motion sensor status",
+                "newValue": None,
+                "prevValue": 0,
+                "propertyName": "Home Security",
+                "propertyKeyName": "Motion sensor status",
+            },
+        },
+    )
+
+    multisensor_6.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_disabled_indcator_sensor(
     hass: HomeAssistant, climate_radio_thermostat_ct100_plus, integration
@@ -186,6 +238,53 @@ async def test_config_parameter_sensor(
     entity_entry = ent_reg.async_get(ID_LOCK_CONFIG_PARAMETER_SENSOR)
     assert entity_entry
     assert entity_entry.disabled
+
+    updated_entry = ent_reg.async_update_entity(
+        entity_entry.entity_id, **{"disabled_by": None}
+    )
+    assert updated_entry != entity_entry
+    assert updated_entry.disabled is False
+
+    # reload integration and check if entity is correctly there
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ID_LOCK_CONFIG_PARAMETER_SENSOR)
+    assert state
+    assert state.state == "Disable Away Manual Lock"
+    assert state.attributes[ATTR_VALUE] == 0
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == [
+        "Disable Away Manual Lock",
+        "Disable Away Auto Lock",
+        "Enable Away Manual Lock",
+        "Enable Away Auto Lock",
+    ]
+
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": lock_id_lock_as_id150.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 1,
+                "newValue": None,
+                "prevValue": 0,
+                "propertyName": "Door lock mode",
+            },
+        },
+    )
+
+    lock_id_lock_as_id150.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(ID_LOCK_CONFIG_PARAMETER_SENSOR)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_VALUE not in state.attributes
 
 
 async def test_node_status_sensor(
