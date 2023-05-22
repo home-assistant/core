@@ -24,7 +24,7 @@ from homeassistant.components.counter import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .common import async_decrement, async_increment, async_reset
@@ -307,14 +307,11 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
 async def test_restore_state_overrules_initial_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
 
-    attr = {"initial": 6, "minimum": 1, "maximum": 8, "step": 2}
-
     mock_restore_cache(
         hass,
         (
             State("counter.test1", "11"),
             State("counter.test2", "-22"),
-            State("counter.test3", "5", attr),
         ),
     )
 
@@ -331,14 +328,6 @@ async def test_restore_state_overrules_initial_state(hass: HomeAssistant) -> Non
     state = hass.states.get("counter.test2")
     assert state
     assert int(state.state) == -22
-
-    state = hass.states.get("counter.test3")
-    assert state
-    assert int(state.state) == 5
-    assert state.attributes.get("initial") == 6
-    assert state.attributes.get("minimum") == 1
-    assert state.attributes.get("maximum") == 8
-    assert state.attributes.get("step") == 2
 
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
@@ -443,7 +432,9 @@ async def test_counter_max(hass: HomeAssistant, hass_admin_user: MockUser) -> No
     assert state2.state == "-1"
 
 
-async def test_configure(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
+async def test_configure(
+    hass: HomeAssistant, hass_admin_user: MockUser, issue_registry: ir.IssueRegistry
+) -> None:
     """Test that setting values through configure works."""
     assert await async_setup_component(
         hass, "counter", {"counter": {"test": {"maximum": "10", "initial": "10"}}}
@@ -467,6 +458,11 @@ async def test_configure(hass: HomeAssistant, hass_admin_user: MockUser) -> None
     assert state is not None
     assert state.state == "0"
     assert state.attributes.get("maximum") == 0
+
+    # Ensure an issue is raised for the use of this deprecated service
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_configure_service"
+    )
 
     # disable max
     await hass.services.async_call(
