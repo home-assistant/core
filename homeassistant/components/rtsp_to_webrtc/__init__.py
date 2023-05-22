@@ -23,7 +23,12 @@ import contextlib
 import logging
 from typing import Any
 
-from aiortc import RTCPeerConnection, RTCSessionDescription
+from aiortc import (
+    RTCConfiguration,
+    RTCIceServer,
+    RTCPeerConnection,
+    RTCSessionDescription,
+)
 from aiortc.contrib.media import MediaPlayer
 from aiortc.rtcrtpsender import RTCRtpSender
 import async_timeout
@@ -100,7 +105,12 @@ async def _async_setup_internal_server(hass: HomeAssistant, entry: ConfigEntry) 
     ) -> str:
         """Handle the signal path for a WebRTC stream."""
         offer = RTCSessionDescription(sdp=offer_sdp, type="offer")
-        peer_connection = RTCPeerConnection()
+        if stun_server := entry.options.get(CONF_STUN_SERVER):
+            peer_connection = RTCPeerConnection(
+                RTCConfiguration([RTCIceServer(urls=[f"stun:{stun_server}"])])
+            )
+        else:
+            peer_connection = RTCPeerConnection()
         peer_connections.add(peer_connection)
 
         @peer_connection.on("connectionstatechange")  # type: ignore[misc]
