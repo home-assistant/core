@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any, cast
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.exceptions import AirzoneCloudError, TooManyRequests
@@ -18,7 +19,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-class AirzoneUpdateCoordinator(DataUpdateCoordinator):
+class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Airzone Cloud device."""
 
     def __init__(self, hass: HomeAssistant, airzone: AirzoneCloudApi) -> None:
@@ -32,7 +33,7 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         async with async_timeout.timeout(AIOAIRZONE_CLOUD_TIMEOUT_SEC):
             try:
@@ -41,4 +42,4 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.error("Too many API requests")
             except AirzoneCloudError as error:
                 raise UpdateFailed(error) from error
-            return self.airzone.data()
+            return cast(dict[str, Any], self.airzone.data())
