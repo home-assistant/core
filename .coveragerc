@@ -330,6 +330,7 @@ omit =
     homeassistant/components/ezviz/entity.py
     homeassistant/components/ezviz/sensor.py
     homeassistant/components/ezviz/switch.py
+    homeassistant/components/ezviz/update.py
     homeassistant/components/faa_delays/__init__.py
     homeassistant/components/faa_delays/binary_sensor.py
     homeassistant/components/familyhub/camera.py
