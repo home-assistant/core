@@ -1419,6 +1419,8 @@ class Recorder(threading.Thread):
         if self.event_session is None:
             return
         if self.recorder_runs_manager.active:
+            # .end will add to the event session
+            self._event_session_has_pending_writes = True
             self.recorder_runs_manager.end(self.event_session)
         try:
             self._commit_event_session_or_retry()
