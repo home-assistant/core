@@ -702,7 +702,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "sfkzq": (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
-            name="Water Valve (Set Countdown Required)",
+            name="Water Valve",
             icon="mdi:water-pump",
         ),
     ),
