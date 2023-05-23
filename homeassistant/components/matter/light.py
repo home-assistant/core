@@ -307,13 +307,22 @@ class MatterLight(MatterEntity, LightEntity):
 
                 assert capabilities is not None
 
-                if capabilities & ColorCapabilities.kHueSaturationSupported:
+                if (
+                    capabilities
+                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kHueSaturationSupported
+                ):
                     supported_color_modes.add(ColorMode.HS)
 
-                if capabilities & ColorCapabilities.kXYAttributesSupported:
+                if (
+                    capabilities
+                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kXYAttributesSupported
+                ):
                     supported_color_modes.add(ColorMode.XY)
 
-                if capabilities & ColorCapabilities.kColorTemperatureSupported:
+                if (
+                    capabilities
+                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kColorTemperatureSupported
+                ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
 
             self._attr_supported_color_modes = supported_color_modes
@@ -344,18 +353,6 @@ class MatterLight(MatterEntity, LightEntity):
             self._attr_brightness = self._get_brightness()
 
 
-# This enum should be removed once the ColorControlCapabilities enum is added to the CHIP (Matter) library
-# clusters.ColorControl.Bitmap.ColorCapabilities
-class ColorCapabilities(IntFlag):
-    """Color control capabilities bitmap."""
-
-    kHueSaturationSupported = 0x1
-    kEnhancedHueSupported = 0x2
-    kColorLoopSupported = 0x4
-    kXYAttributesSupported = 0x8
-    kColorTemperatureSupported = 0x10
-
-
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
@@ -376,7 +373,6 @@ DISCOVERY_SCHEMAS = [
         not_device_type=(
             device_types.OnOffPlugInUnit,
             device_types.DoorLock,
-            device_types.AllClustersAppServerExample
         ),
     ),
 ]
