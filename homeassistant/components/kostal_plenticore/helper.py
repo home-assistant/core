@@ -23,6 +23,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _DataT = TypeVar("_DataT")
+_KNOWN_HOSTNAME_IDS = ("Network:Hostname", "Hostname")
 
 
 class Plenticore:
@@ -69,6 +70,7 @@ class Plenticore:
         )
 
         # get some device meta data
+        hostname_id = await get_hostname_id(self._client)
         settings = await self._client.get_setting_values(
             {
                 "devices:local": [
@@ -78,7 +80,7 @@ class Plenticore:
                     "Properties:VersionIOC",
                     "Properties:VersionMC",
                 ],
-                "scb:network": ["Hostname"],
+                "scb:network": [hostname_id],
             }
         )
 
@@ -91,7 +93,7 @@ class Plenticore:
             identifiers={(DOMAIN, device_local["Properties:SerialNo"])},
             manufacturer="Kostal",
             model=f"{prod1} {prod2}",
-            name=settings["scb:network"]["Hostname"],
+            name=settings["scb:network"][hostname_id],
             sw_version=f'IOC: {device_local["Properties:VersionIOC"]}'
             + f' MC: {device_local["Properties:VersionMC"]}',
         )
@@ -403,3 +405,12 @@ class PlenticoreDataFormatter:
             return state
 
         return PlenticoreDataFormatter.EM_STATES.get(value)
+
+
+async def get_hostname_id(client: ApiClient) -> str:
+    """Check for known existing hostname ids."""
+    all_settings = await client.get_settings()
+    for entry in all_settings["scb:network"]:
+        if entry.id in _KNOWN_HOSTNAME_IDS:
+            return entry.id
+    raise ApiException("Hostname identifier not found in KNOWN_HOSTNAME_IDS")
