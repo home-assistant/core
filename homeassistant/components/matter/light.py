@@ -376,6 +376,7 @@ DISCOVERY_SCHEMAS = [
         not_device_type=(
             device_types.OnOffPlugInUnit,
             device_types.DoorLock,
+            device_types.AllClustersAppServerExample
         ),
     ),
 ]
