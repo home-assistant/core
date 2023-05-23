@@ -29,6 +29,15 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     ForecastSolarSensorEntityDescription(
+        key="energy_production_today_remaining",
+        name="Estimated energy production - remaining today",
+        state=lambda estimate: estimate.energy_production_today_remaining,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+    ),
+    ForecastSolarSensorEntityDescription(
         key="energy_production_tomorrow",
         name="Estimated energy production - tomorrow",
         state=lambda estimate: estimate.energy_production_tomorrow,

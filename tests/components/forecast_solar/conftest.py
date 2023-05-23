@@ -72,6 +72,7 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
         estimate.api_rate_limit = 60
         estimate.account_type.value = "public"
         estimate.energy_production_today = 100000
+        estimate.energy_production_today_remaining = 50000
         estimate.energy_production_tomorrow = 200000
         estimate.power_production_now = 300000
         estimate.power_highest_peak_time_today = datetime(
