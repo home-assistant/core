@@ -1,6 +1,7 @@
 """Test the myStrom config flow."""
 from unittest.mock import AsyncMock, patch
 
+from pymystrom.exceptions import MyStromConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -8,8 +9,6 @@ from homeassistant.components.mystrom.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from .conftest import ResponseMock
 
 DEVICE_MAC = "6001940376EB"
 
@@ -25,8 +24,8 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
     assert result["errors"] == {}
 
     with patch(
-        "aiohttp.ClientSession.get",
-        return_value=ResponseMock({"type": 101, "mac": DEVICE_MAC}, 200),
+        "pymystrom.get_device_info",
+        side_effect=AsyncMock(return_value={"type": 101, "mac": DEVICE_MAC}),
     ) as mock_session:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -58,8 +57,8 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
     assert result["errors"] == {}
 
     with patch(
-        "aiohttp.ClientSession.get",
-        return_value=ResponseMock({"type": 101, "mac": DEVICE_MAC}, 200),
+        "pymystrom.get_device_info",
+        return_value={"type": 101, "mac": DEVICE_MAC},
     ) as mock_session:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -86,8 +85,8 @@ async def test_form_duplicates(
     assert result["errors"] == {}
 
     with patch(
-        "aiohttp.ClientSession.get",
-        return_value=ResponseMock({"type": 101, "mac": DEVICE_MAC}, 200),
+        "pymystrom.get_device_info",
+        return_value={"type": 101, "mac": DEVICE_MAC},
     ) as mock_session:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -111,8 +110,8 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_HOST: "1.1.1.1",
     }
     with patch("pymystrom.switch.MyStromSwitch.get_state"), patch(
-        "aiohttp.ClientSession.get",
-        return_value=ResponseMock({"type": 101, "mac": DEVICE_MAC}, 200),
+        "pymystrom.get_device_info",
+        return_value={"type": 101, "mac": DEVICE_MAC},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
@@ -130,10 +129,8 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
         CONF_HOST: "1.1.1.1",
     }
     with patch("pymystrom.switch.MyStromSwitch.get_state"), patch(
-        "aiohttp.ClientSession.get",
-        return_value=ResponseMock(
-            {"type": 101, "mac": DEVICE_MAC}, 200, "application/text"
-        ),
+        "pymystrom.get_device_info",
+        side_effect=MyStromConnectionError(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf

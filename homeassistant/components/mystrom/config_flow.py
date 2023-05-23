@@ -6,7 +6,7 @@ import logging
 import re
 from typing import Any
 
-from pymystrom import get_device_info
+import pymystrom
 from pymystrom.exceptions import MyStromConnectionError
 import voluptuous as vol
 
@@ -46,7 +46,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not host_valid(data[CONF_HOST]):
         raise CannotConnect()
     try:
-        info = await get_device_info(data[CONF_HOST])
+        info = await pymystrom.get_device_info(data[CONF_HOST])
     except MyStromConnectionError as error:
         raise CannotConnect() from error
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from pymystrom import get_device_info
+import pymystrom
 from pymystrom.bulb import MyStromBulb
 from pymystrom.exceptions import MyStromConnectionError
 from pymystrom.switch import MyStromSwitch
@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     device = None
     try:
-        info = await get_device_info(host)
+        info = await pymystrom.get_device_info(host)
     except MyStromConnectionError as err:
         _LOGGER.error("No route to myStrom plug: %s", host)
         raise ConfigEntryNotReady() from err

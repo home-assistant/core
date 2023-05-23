@@ -1,12 +1,12 @@
 """Test the myStrom init."""
-from unittest.mock import PropertyMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
+
+from pymystrom.exceptions import MyStromConnectionError
 
 from homeassistant.components.mystrom.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-
-from .conftest import ResponseMock
 
 from tests.common import MockConfigEntry
 
@@ -20,8 +20,8 @@ DEVICE_NAME = "6001940376eb"
 async def init_integration(hass, platform, device_type, bulb_type="strip"):
     """Inititialize integration for testing."""
     with patch("homeassistant.components.mystrom.PLATFORMS", [platform]), patch(
-        "homeassistant.components.mystrom.get_device_info",
-        return_value={"type": device_type, "mac": DEVICE_MAC},
+        "pymystrom.get_device_info",
+        side_effect=AsyncMock(return_value={"type": device_type, "mac": DEVICE_MAC}),
     ), patch("pymystrom.switch.MyStromSwitch.get_state", return_value={}), patch(
         "pymystrom.bulb.MyStromBulb.get_state", return_value={}
     ), patch(
@@ -67,8 +67,8 @@ async def test_init_bulb(hass: HomeAssistant) -> None:
 async def test_init_of_unknown_bulb(hass: HomeAssistant) -> None:
     """Test the initialization of a unknown myStrom bulb."""
     with patch("homeassistant.components.mystrom.PLATFORMS", [Platform.LIGHT]), patch(
-        "homeassistant.components.mystrom.get_device_info",
-        return_value={"type": 102, "mac": DEVICE_MAC},
+        "pymystrom.get_device_info",
+        side_effect=AsyncMock(return_value={"type": 102, "mac": DEVICE_MAC}),
     ), patch("pymystrom.bulb.MyStromBulb.get_state", return_value={}), patch(
         "pymystrom.bulb.MyStromBulb.bulb_type", "new_type"
     ), patch(
@@ -94,8 +94,8 @@ async def test_init_of_unknown_bulb(hass: HomeAssistant) -> None:
 async def test_init_of_unknown_device(hass: HomeAssistant) -> None:
     """Test the initialization of a unsupported myStrom device."""
     with patch("homeassistant.components.mystrom.PLATFORMS", [Platform.SWITCH]), patch(
-        "homeassistant.components.mystrom.get_device_info",
-        return_value={"type": 103, "mac": DEVICE_MAC},
+        "pymystrom.get_device_info",
+        side_effect=AsyncMock(return_value={"type": 103, "mac": DEVICE_MAC}),
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
@@ -124,8 +124,8 @@ async def test_unload(hass: HomeAssistant) -> None:
 async def test_init_cannot_connect(hass: HomeAssistant) -> None:
     """Inititialize integration for testing."""
     with patch("homeassistant.components.mystrom.PLATFORMS", [Platform.SWITCH]), patch(
-        "aiohttp.ClientSession.get",
-        return_value=ResponseMock({"type": 101, "mac": "6001940376EB"}, 400),
+        "pymystrom.get_device_info",
+        side_effect=MyStromConnectionError(),
     ), patch("pymystrom.switch.MyStromSwitch.get_state", return_value={}), patch(
         "pymystrom.bulb.MyStromBulb.get_state", return_value={}
     ):
