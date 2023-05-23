@@ -28,7 +28,7 @@ home-assistant-bluetooth==1.10.0
 home-assistant-frontend==20230503.3
 home-assistant-intents==2023.4.26
 httpx==0.24.1
-ifaddr==0.1.7
+ifaddr==0.2.0
 janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
@@ -154,7 +154,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.22.3
+protobuf==4.23.1
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
