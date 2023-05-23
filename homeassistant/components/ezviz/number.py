@@ -16,16 +16,14 @@ from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
 
-NUMBER_TYPES: dict[str, NumberEntityDescription] = {
-    "detection_sensibility": NumberEntityDescription(
-        key="detection_sensibility",
-        name="Detection sensitivity",
-        icon="mdi:eye",
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=0,
-        native_step=1,
-    )
-}
+NUMBER_TYPES = NumberEntityDescription(
+    key="detection_sensibility",
+    name="Detection sensitivity",
+    icon="mdi:eye",
+    entity_category=EntityCategory.CONFIG,
+    native_min_value=0,
+    native_step=1,
+)
 
 
 async def async_setup_entry(
@@ -37,13 +35,11 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        [
-            EzvizSensor(coordinator, camera, sensor)
-            for camera in coordinator.data
-            for sensor, value in coordinator.data[camera].items()
-            if sensor in NUMBER_TYPES
-            if value is not None
-        ]
+        EzvizSensor(coordinator, camera, sensor, NUMBER_TYPES)
+        for camera in coordinator.data
+        for sensor, value in coordinator.data[camera].items()
+        if sensor in NUMBER_TYPES.key
+        if value
     )
 
 
@@ -53,7 +49,11 @@ class EzvizSensor(EzvizEntity, NumberEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: EzvizDataUpdateCoordinator, serial: str, sensor: str
+        self,
+        coordinator: EzvizDataUpdateCoordinator,
+        serial: str,
+        sensor: str,
+        description: NumberEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
@@ -64,7 +64,7 @@ class EzvizSensor(EzvizEntity, NumberEntity):
         )
         self._attr_unique_id = f"{serial}_{sensor}"
         self._attr_native_max_value = 100 if self.battery_cam_type else 6
-        self.entity_description = NUMBER_TYPES[sensor]
+        self.entity_description = description
 
     @property
     def native_value(self) -> float:
