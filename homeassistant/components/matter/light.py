@@ -112,7 +112,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
-                colorTemperature=color_temp,
+                colorTemperatureMireds=color_temp,
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
             )
