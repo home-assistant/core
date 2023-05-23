@@ -654,7 +654,7 @@ class PrometheusView(HomeAssistantView):
     url = API_ENDPOINT
     name = "api:prometheus"
 
-    def __init__(self, prometheus_cli, requires_auth: bool):
+    def __init__(self, prometheus_cli, requires_auth: bool) -> None:
         """Initialize Prometheus view."""
         self.requires_auth = requires_auth
         self.prometheus_cli = prometheus_cli
